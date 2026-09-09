@@ -7,10 +7,14 @@ async function migrate() {
 
   // 1. Seed Admin User
   const adminUsername = 'admin';
-  const adminPassword = process.env.ADMIN_INITIAL_PASSWORD || 'VantageHR_Admin_2026!'; // Use env var in prod
+  const adminPassword = process.env.ADMIN_INITIAL_PASSWORD; // Must be set via Secrets/env
   const existingUsers = await db.query(`SELECT * FROM users WHERE username = ${db.escapeString(adminUsername)}`);
   
   if (existingUsers.length === 0) {
+    if (!adminPassword) {
+      console.error('ERROR: ADMIN_INITIAL_PASSWORD environment variable is not set. Admin user cannot be seeded.');
+      process.exit(1);
+    }
     const hashedPassword = await auth.hashPassword(adminPassword);
     const id = randomUUID();
     await db.query(`INSERT INTO users (id, username, password_hash, role) VALUES (
