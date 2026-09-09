@@ -7,7 +7,7 @@ async function migrate() {
 
   // 1. Seed Admin User
   const adminUsername = 'admin';
-  const adminPassword = 'VantageHR_Admin_2026!';
+  const adminPassword = process.env.ADMIN_INITIAL_PASSWORD || 'VantageHR_Admin_2026!'; // Use env var in prod
   const existingUsers = await db.query(`SELECT * FROM users WHERE username = ${db.escapeString(adminUsername)}`);
   
   if (existingUsers.length === 0) {
