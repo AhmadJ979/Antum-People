@@ -9,9 +9,9 @@ const { exec } = require('child_process');
  */
 function query(sql) {
   return new Promise((resolve, reject) => {
-    // Escape double quotes inside the SQL command since we wrap the command in double quotes
-    // e.g. team-db "SELECT * FROM x WHERE name = \"test\""
-    const escapedSql = sql.replace(/"/g, '\\"');
+    // Escape double quotes and dollar signs inside the SQL command since we wrap the command in double quotes
+    // and exec runs in a shell.
+    const escapedSql = sql.replace(/"/g, '\\"').replace(/\$/g, '\\$');
     
     exec(`team-db "${escapedSql}"`, (error, stdout, stderr) => {
       if (error) {

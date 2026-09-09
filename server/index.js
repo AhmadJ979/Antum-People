@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const db = require('./db');
 const compliance = require('./compliance_engine');
+const auth = require('./auth');
 const fs = require('fs');
 
 const app = express();
@@ -10,6 +11,39 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+// -------------------------------------------------------------
+// AUTHENTICATION
+// -------------------------------------------------------------
+
+app.post('/api/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const users = await db.query(`SELECT * FROM users WHERE username = ${db.escapeString(username)}`);
+    
+    if (users.length === 0) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    const user = users[0];
+    const isValid = await auth.comparePassword(password, user.password_hash);
+    
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    const token = auth.generateToken(user);
+    res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Protect all /api routes except login
+app.use('/api', (req, res, next) => {
+  if (req.path === '/login' || req.path === '/health') return next();
+  auth.authenticateToken(req, res, next);
+});
 
 // Helper to generate UUIDs
 const generateId = () => {
@@ -100,7 +134,12 @@ function calculateEOSB(startDateStr, endDateStr, basicSalary, totalSalary, count
 app.get('/api/employees', async (req, res) => {
   try {
     const employees = await db.query(`SELECT * FROM employees ORDER BY start_date DESC`);
-    res.json(employees);
+    const decrypted = employees.map(emp => ({
+      ...emp,
+      national_id_value: auth.decrypt(emp.national_id_value),
+      national_id_iqama: auth.decrypt(emp.national_id_iqama)
+    }));
+    res.json(decrypted);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -110,7 +149,10 @@ app.get('/api/employees/:id', async (req, res) => {
   try {
     const employees = await db.query(`SELECT * FROM employees WHERE id = ${db.escapeString(req.params.id)}`);
     if (employees.length === 0) return res.status(404).json({ error: 'Employee not found' });
-    res.json(employees[0]);
+    const emp = employees[0];
+    emp.national_id_value = auth.decrypt(emp.national_id_value);
+    emp.national_id_iqama = auth.decrypt(emp.national_id_iqama);
+    res.json(emp);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -126,10 +168,13 @@ app.post('/api/employees', async (req, res) => {
     
     const eosbAccrued = calculateEOSB(data.start_date, null, bSalary, tSalary, country, 'resignation', parseFloat(data.unpaid_leave_days) || 0);
 
+    const encryptedNationalId = auth.encrypt(data.national_id_value);
+    const encryptedIqama = auth.encrypt(data.national_id_iqama);
+
     const insertSql = `
       INSERT INTO employees (
         id, first_name, last_name, email, department, role, manager_id, start_date, status, salary, basic_salary, 
-        recruitment_cost, national_id_type, national_id_value, data_residency_country, consent_granted, 
+        recruitment_cost, national_id_type, national_id_value, national_id_iqama, data_residency_country, consent_granted, 
         visa_status, visa_expiry_date, eosb_accrued, eosb_paid, termination_type, unpaid_leave_days
       )
       VALUES (
@@ -137,7 +182,8 @@ app.post('/api/employees', async (req, res) => {
         ${db.escapeString(data.email)}, ${db.escapeString(data.department)}, ${db.escapeString(data.role)},
         ${db.escapeString(data.manager_id)}, ${db.escapeString(data.start_date)}, 'onboarding',
         ${tSalary}, ${bSalary}, ${parseFloat(data.recruitment_cost) || 0},
-        ${db.escapeString(data.national_id_type)}, ${db.escapeString(data.national_id_value)},
+        ${db.escapeString(data.national_id_type)}, ${db.escapeString(encryptedNationalId)},
+        ${db.escapeString(encryptedIqama)},
         ${db.escapeString(country)}, 0, ${db.escapeString(data.visa_status)},
         ${db.escapeString(data.visa_expiry_date)}, ${eosbAccrued}, 0,
         'resignation', ${parseFloat(data.unpaid_leave_days) || 0}
@@ -145,9 +191,10 @@ app.post('/api/employees', async (req, res) => {
     `;
     await db.query(insertSql);
 
-    // Audit Log (Match schema)
+    // Audit Log (Match schema) - Encrypt sensitive data in audit logs too
+    const auditData = { ...data, national_id_value: encryptedNationalId, national_id_iqama: encryptedIqama };
     await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, new_values, timestamp)
-      VALUES (${db.escapeString(generateId())}, 'system', 'employee', ${db.escapeString(id)}, 'CREATE', ${db.escapeString(JSON.stringify(data))}, CURRENT_TIMESTAMP)`);
+      VALUES (${db.escapeString(generateId())}, 'system', 'employee', ${db.escapeString(id)}, 'CREATE', ${db.escapeString(JSON.stringify(auditData))}, CURRENT_TIMESTAMP)`);
 
     // Generate tasks (Match schema)
     const tasks = compliance.generateTasks(id, country === 'SA' || country === 'KSA' ? 'KSA' : 'UAE', 'onboarding');
@@ -173,8 +220,10 @@ app.put('/api/employees/:id', async (req, res) => {
 
     const updates = [];
     Object.keys(data).forEach(key => {
-      if (['first_name', 'last_name', 'email', 'department', 'role', 'manager_id', 'status', 'visa_status', 'visa_expiry_date', 'national_id_type', 'national_id_value', 'data_residency_country', 'start_date', 'end_date', 'fully_productive_date', 'termination_type'].includes(key)) {
+      if (['first_name', 'last_name', 'email', 'department', 'role', 'manager_id', 'status', 'visa_status', 'visa_expiry_date', 'national_id_type', 'data_residency_country', 'start_date', 'end_date', 'fully_productive_date', 'termination_type'].includes(key)) {
         updates.push(`${key} = ${db.escapeString(data[key])}`);
+      } else if (['national_id_value', 'national_id_iqama'].includes(key)) {
+        updates.push(`${key} = ${db.escapeString(auth.encrypt(data[key]))}`);
       } else if (['salary', 'basic_salary', 'recruitment_cost', 'eosb_paid', 'consent_granted', 'unpaid_leave_days'].includes(key)) {
         updates.push(`${key} = ${parseFloat(data[key]) || 0}`);
       }
@@ -200,9 +249,13 @@ app.put('/api/employees/:id', async (req, res) => {
       
       await db.query(`UPDATE employees SET ${updates.join(', ')} WHERE id = ${db.escapeString(empId)}`);
       
-      // Audit Log
+      // Audit Log - Encrypt sensitive data in audit logs
+      const auditNewValues = { ...data };
+      if (auditNewValues.national_id_value) auditNewValues.national_id_value = auth.encrypt(auditNewValues.national_id_value);
+      if (auditNewValues.national_id_iqama) auditNewValues.national_id_iqama = auth.encrypt(auditNewValues.national_id_iqama);
+
       await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, old_values, new_values, timestamp)
-        VALUES (${db.escapeString(generateId())}, 'system', 'employee', ${db.escapeString(empId)}, 'UPDATE', ${db.escapeString(JSON.stringify(emp))}, ${db.escapeString(JSON.stringify(data))}, CURRENT_TIMESTAMP)`);
+        VALUES (${db.escapeString(generateId())}, 'system', 'employee', ${db.escapeString(empId)}, 'UPDATE', ${db.escapeString(JSON.stringify(emp))}, ${db.escapeString(JSON.stringify(auditNewValues))}, CURRENT_TIMESTAMP)`);
 
       // Trigger offboarding tasks if status changed
       if (data.status === 'offboarding' && emp.status !== 'offboarding') {
@@ -271,6 +324,8 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
     const employees = await db.query(`SELECT * FROM employees WHERE id = ${db.escapeString(employeeId)}`);
     if (employees.length === 0) return res.status(404).json({ error: 'Employee not found' });
     const emp = employees[0];
+    emp.national_id_value = auth.decrypt(emp.national_id_value);
+    emp.national_id_iqama = auth.decrypt(emp.national_id_iqama);
 
     const templateData = {
       ...emp,
@@ -292,9 +347,14 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
 
 app.get('/api/compliance/report', async (req, res) => {
   const employees = await db.query(`SELECT * FROM employees`);
-  const total = employees.length;
-  const consent = employees.filter(e => e.consent_granted).length;
-  const alerts = employees.filter(e => e.visa_expiry_date && new Date(e.visa_expiry_date) < new Date(Date.now() + 60*24*60*60*1000));
+  const decrypted = employees.map(emp => ({
+    ...emp,
+    national_id_value: auth.decrypt(emp.national_id_value),
+    national_id_iqama: auth.decrypt(emp.national_id_iqama)
+  }));
+  const total = decrypted.length;
+  const consent = decrypted.filter(e => e.consent_granted).length;
+  const alerts = decrypted.filter(e => e.visa_expiry_date && new Date(e.visa_expiry_date) < new Date(Date.now() + 60*24*60*60*1000));
   res.json({ total, consentGranted: consent, visaAlerts: alerts.length, alerts });
 });
 
