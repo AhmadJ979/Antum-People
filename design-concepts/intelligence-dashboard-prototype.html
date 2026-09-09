@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VantageHR — Intelligence Dashboard</title>
+<style>
+  :root{
+    --teal:#0F766E; --teal-2:#14B8A6; --slate-900:#0F172A; --slate-600:#475569;
+    --slate-500:#64748B; --slate-400:#94A3B8; --slate-100:#F1F5F9; --slate-50:#F8FAFC;
+    --amber:#F59E0B; --red:#EF4444; --green:#22C55E; --blue:#3B82F6;
+    --card:#FFFFFF; --border:#E2E8F0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--slate-50);color:var(--slate-900);font-size:14px;line-height:1.5}
+  body.ar{font-family:'Segoe UI',Tahoma,'Noto Naskh Arabic',sans-serif}
+
+  .shell{display:flex;min-height:100vh}
+
+  /* SIDEBAR */
+  .sidebar{width:220px;background:var(--slate-900);color:#E2E8F0;padding:20px 14px;flex-shrink:0;display:flex;flex-direction:column;gap:4px}
+  .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;margin-bottom:18px;color:#fff}
+  .logo .mark{width:22px;height:22px;background:linear-gradient(135deg,var(--teal-2),var(--teal));border-radius:6px;display:inline-block}
+  .nav-item{padding:9px 12px;border-radius:8px;color:#CBD5E1;cursor:pointer;font-size:13.5px}
+  .nav-item:hover{background:#1E293B}
+  .nav-item.active{background:rgba(20,184,166,.16);color:#fff;border-right:3px solid var(--teal-2)}
+  body.ar .nav-item.active{border-right:none;border-left:3px solid var(--teal-2)}
+
+  /* MAIN */
+  .main{flex:1;padding:22px 26px;overflow-x:auto}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .title h1{font-size:20px;font-weight:700}
+  .title .sub{font-size:12px;color:var(--slate-500)}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+  .toggle{display:flex;background:var(--slate-100);border-radius:8px;padding:3px}
+  .toggle button{border:none;background:transparent;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;color:var(--slate-600)}
+  .toggle button.active{background:#fff;color:var(--teal);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .select{border:1px solid #CBD5E1;border-radius:8px;padding:6px 10px;font-size:13px;background:#fff;color:var(--slate-900)}
+
+  /* KPI CARDS */
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .kpi .label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--slate-500)}
+  .kpi .value{font-size:34px;font-weight:700;margin:6px 0 2px}
+  .kpi .delta{font-size:13px;font-weight:600}
+  .kpi .delta.up{color:var(--green)} .kpi .delta.down{color:var(--green)} .kpi .delta.warn{color:var(--amber)} .kpi .delta.bad{color:var(--red)}
+  .kpi .note{font-size:12px;color:var(--slate-400);margin-top:4px}
+
+  /* CHARTS GRID */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+  .card h3{font-size:15px;font-weight:600;margin-bottom:4px}
+  .card .caption{font-size:12px;color:var(--slate-500);margin-bottom:12px}
+  .so-what{font-size:12.5px;color:var(--teal);background:rgba(15,118,110,.06);border-radius:8px;padding:8px 10px;margin-top:12px;font-weight:500}
+
+  /* bar chart (retention) */
+  .bars{display:flex;flex-direction:column;gap:12px}
+  .bar-row{display:flex;align-items:center;gap:10px}
+  .bar-row .lbl{width:64px;font-size:12px;color:var(--slate-600)}
+  .bar-track{flex:1;height:20px;display:flex;align-items:center;position:relative}
+  .bar{height:18px;border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-size:11px;font-weight:600}
+  .bar.cohort{background:var(--teal)}
+  .bar.bench{background:#94A3B8;opacity:.9}
+
+  /* line chart (ttv) */
+  .linebox{width:100%;height:150px}
+  .linebox svg{width:100%;height:100%}
+
+  /* stacked EOSB */
+  .stack-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .stack-row .lbl{width:58px;font-size:12px;color:var(--slate-600)}
+  .stack-track{flex:1;height:22px;display:flex;border-radius:5px;overflow:hidden;background:var(--slate-100)}
+  .stack-uae{background:var(--teal)}
+  .stack-ksa{background:#F59E0B}
+  .legend{display:flex;gap:14px;font-size:12px;color:var(--slate-600);margin-top:8px}
+  .legend .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+
+  /* basis panel + watchlist */
+  .halfgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .basis-item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--slate-100)}
+  .basis-item:last-child{border-bottom:none}
+  .flag{font-size:20px}
+  .basis-item .amt{font-weight:700;font-size:15px}
+  .basis-item .basis{font-size:11.5px;color:var(--slate-500)}
+  .watch li{list-style:none;padding:8px 0;border-bottom:1px solid var(--slate-100);font-size:13px;display:flex;gap:8px}
+
+  body.ar .main{text-align:right}
+  body.ar .topbar{flex-direction:row-reverse}
+  body.ar .bars{direction:rtl}
+  body.ar .bar-row{direction:rtl}
+  body.ar .kpi .value{direction:ltr;text-align:right}
+
+  @media(max-width:1100px){ .kpi-row{grid-template-columns:repeat(2,1fr)} .grid,.halfgrid{grid-template-columns:1fr} }
+</style>
+</head>
+<body id="body">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="logo"><span class="mark"></span><span data-i18n="brand">VantageHR</span></div>
+      <div class="nav-item active" data-i18n="nav.dashboard">Intelligence Dashboard</div>
+      <div class="nav-item" data-i18n="nav.econ">Workforce Economics</div>
+      <div class="nav-item" data-i18n="nav.retention">Retention</div>
+      <div class="nav-item" data-i18n="nav.ttv">Time-to-Value</div>
+      <div class="nav-item" data-i18n="nav.eosb">EOSB Liability</div>
+      <div class="nav-item" data-i18n="nav.compliance">Compliance</div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="title">
+          <h1 data-i18n="title">Intelligence Dashboard</h1>
+          <div class="sub"><span data-i18n="refreshed">Last refreshed</span>: <span data-refresh>06/09/2026, 09:00</span></div>
+        </div>
+        <div class="controls">
+          <div class="toggle" role="tablist">
+            <button id="btn-en" class="active" data-i18n="lang.en">EN</button>
+            <button id="btn-ar" data-i18n="lang.ar">العربية</button>
+          </div>
+          <select class="select" id="currency">
+            <option value="AED">AED</option>
+            <option value="SAR">SAR</option>
+            <option value="USD">USD</option>
+          </select>
+          <select class="select">
+            <option data-i18n="jur.all">AE + SA</option>
+            <option>AE</option>
+            <option>SA</option>
+          </select>
+          <select class="select"><option>Q3 2026</option><option>Q4 2026</option></select>
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="label" data-i18n="kpi.retention">Retention Lift (1-yr)</div>
+          <div class="value"><span data-num="retention">+4.2%</span></div>
+          <div class="delta up"><span data-i18n="kpi.retention_delta">▲ +1.1 pts vs 2025</span></div>
+          <div class="note" data-i18n="kpi.retention_note">Cohort vs market benchmark</div>
+        </div>
+        <div class="kpi">
+          <div class="label" data-i18n="kpi.ttv">Time-to-Value (days)</div>
+          <div class="value"><span data-num="ttv">12.4</span><span style="font-size:18px" data-i18n="unit.d"> d</span></div>
+          <div class="delta down"><span data-i18n="kpi.ttv_delta">▼ -2.6 d vs 15 d target</span></div>
+          <div class="note" data-i18n="kpi.ttv_note">Start → full productivity</div>
+        </div>
+        <div class="kpi">
+          <div class="label" data-i18n="kpi.cph">Cost-per-Hire</div>
+          <div class="value"><span data-cur="18200">AED 18,200</span></div>
+          <div class="delta down"><span data-i18n="kpi.cph_delta">▼ -8% vs benchmark</span></div>
+          <div class="note" data-i18n="kpi.cph_note">Recruitment + onboarding</div>
+        </div>
+        <div class="kpi">
+          <div class="label" data-i18n="kpi.eosb">EOSB Liability (12-mo)</div>
+          <div class="value"><span data-cur="6300000">AED 6.3M</span></div>
+          <div class="delta bad"><span data-i18n="kpi.eosb_delta">▲ +12% QoQ</span></div>
+          <div class="note"><span data-i18n="kpi.eosb_note">AE 3.1 · SA 3.2</span></div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h3 data-i18n="chart.retention">Retention Lift — 1-Yr Cohort</h3>
+          <div class="caption" data-i18n="chart.retention_sub">Cohort vs benchmark</div>
+          <div class="bars">
+            <div class="bar-row"><span class="lbl">H1 2025</span><div class="bar-track"><div class="bar cohort" style="width:84%">84%</div></div><div class="bar-track" style="flex:.5"><div class="bar bench" style="width:80%">80%</div></div></div>
+            <div class="bar-row"><span class="lbl">H2 2025</span><div class="bar-track"><div class="bar cohort" style="width:89%">89%</div></div><div class="bar-track" style="flex:.5"><div class="bar bench" style="width:81%">81%</div></div></div>
+            <div class="bar-row"><span class="lbl">H1 2026</span><div class="bar-track"><div class="bar cohort" style="width:93%">93%*</div></div><div class="bar-track" style="flex:.5"><div class="bar bench" style="width:83%">83%</div></div></div>
+          </div>
+          <div class="legend"><span><span class="dot" style="background:var(--teal)"></span><span data-i18n="legend.cohort">Cohort</span></span><span><span class="dot" style="background:#94A3B8"></span><span data-i18n="legend.bench">Benchmark</span></span></div>
+          <div class="so-what" data-i18n="chart.retention_insight">Lift doubled in 3 cohorts — correlate with the 30-day onboarding checkpoint introduced H1 2026.</div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="chart.ttv">Time-to-Value Trend</h3>
+          <div class="caption" data-i18n="chart.ttv_sub">Average days to full productivity</div>
+          <div class="linebox">
+            <svg viewBox="0 0 320 150" preserveAspectRatio="none">
+              <polyline points="20,60 120,95 220,70 300,45" fill="none" stroke="#0F766E" stroke-width="2.5"/>
+              <line x1="0" y1="45" x2="320" y2="45" stroke="#F59E0B" stroke-dasharray="4 4" stroke-width="1"/>
+              <g fill="#0F766E">
+                <circle cx="20" cy="60" r="4"/><circle cx="120" cy="95" r="4"/><circle cx="220" cy="70" r="4"/><circle cx="300" cy="45" r="4"/>
+              </g>
+              <text x="8" y="38" font-size="10" fill="#B45309">target 15d</text>
+            </svg>
+          </div>
+          <div class="so-what" data-i18n="chart.ttv_insight">Engineering is the only dept over target — IT access provisioning is the 5.2-day bottleneck.</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <h3 data-i18n="chart.eosb">EOSB Liability Forecast — by Jurisdiction &amp; Quarter</h3>
+        <div class="caption" data-i18n="chart.eosb_sub">UAE (basic-salary basis) + KSA (total-salary basis)</div>
+        <div class="stack-row"><span class="lbl">Q3'26</span><div class="stack-track"><div class="stack-uae" style="width:47.5%"></div><div class="stack-ksa" style="width:52.5%"></div></div><span style="font-size:12px;color:var(--slate-600)">AED 4.0M</span></div>
+        <div class="stack-row"><span class="lbl">Q4'26</span><div class="stack-track"><div class="stack-uae" style="width:54%"></div><div class="stack-ksa" style="width:46%"></div></div><span style="font-size:12px;color:var(--slate-600)">AED 3.9M</span></div>
+        <div class="stack-row"><span class="lbl">Q1'27</span><div class="stack-track"><div class="stack-uae" style="width:48%"></div><div class="stack-ksa" style="width:52%"></div></div><span style="font-size:12px;color:var(--slate-600)">AED 5.0M ▲</span></div>
+        <div class="stack-row"><span class="lbl">Q2'27</span><div class="stack-track"><div class="stack-uae" style="width:50%"></div><div class="stack-ksa" style="width:50%"></div></div><span style="font-size:12px;color:var(--slate-600)">AED 4.4M</span></div>
+        <div class="legend"><span><span class="dot" style="background:var(--teal)"></span><span data-i18n="legend.ae">UAE</span></span><span><span class="dot" style="background:#F59E0B"></span><span data-i18n="legend.sa">KSA</span></span></div>
+        <div class="so-what" data-i18n="chart.eosb_insight">Q1'27 spikes +28% on 3 KSA end-of-contract exits — pre-fund AED 1.1M before 31 Dec 2026.</div>
+      </div>
+
+      <div class="halfgrid">
+        <div class="card">
+          <h3 data-i18n="chart.basis">EOSB Basis (jurisdiction)</h3>
+          <div class="basis-item">
+            <span class="flag">🇦🇪</span>
+            <div><div class="amt" data-cur="3100000">AED 3.1M</div><div class="basis"><span data-i18n="basis.ae">UAE · basic salary only · tiered resignation</span></div></div>
+          </div>
+          <div class="basis-item">
+            <span class="flag">🇸🇦</span>
+            <div><div class="amt" data-cur="3200000">SAR 3.2M</div><div class="basis"><span data-i18n="basis.sa">KSA · total salary · notice penalty applies</span></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3 data-i18n="chart.watch">Retention Risk Watchlist</h3>
+          <ul class="watch">
+            <li>🔴 <span data-i18n="watch.1">Sales — 22% turnover (&gt;15% limit)</span></li>
+            <li>🟡 <span data-i18n="watch.2">3 preventable exits this quarter</span></li>
+            <li>🟡 <span data-i18n="watch.3">Engineering — 4 high-flight-risk (career-growth signal)</span></li>
+          </ul>
+        </div>
+      </div>
+    </main>
+  </div>
+
+<script>
+  const I18N = {
+    en: {
+      brand:"VantageHR",
+      "nav.dashboard":"Intelligence Dashboard","nav.econ":"Workforce Economics","nav.retention":"Retention",
+      "nav.ttv":"Time-to-Value","nav.eosb":"EOSB Liability","nav.compliance":"Compliance",
+      title:"Intelligence Dashboard","refreshed":"Last refreshed",
+      "lang.en":"EN","lang.ar":"العربية",
+      "jur.all":"AE + SA",
+      "kpi.retention":"Retention Lift (1-yr)","kpi.retention_delta":"▲ +1.1 pts vs 2025","kpi.retention_note":"Cohort vs market benchmark",
+      "kpi.ttv":"Time-to-Value (days)","kpi.ttv_delta":"▼ -2.6 d vs 15 d target","kpi.ttv_note":"Start → full productivity","unit.d":" d",
+      "kpi.cph":"Cost-per-Hire","kpi.cph_delta":"▼ -8% vs benchmark","kpi.cph_note":"Recruitment + onboarding",
+      "kpi.eosb":"EOSB Liability (12-mo)","kpi.eosb_delta":"▲ +12% QoQ","kpi.eosb_note":"AE 3.1 · SA 3.2",
+      "chart.retention":"Retention Lift — 1-Yr Cohort","chart.retention_sub":"Cohort vs benchmark",
+      "legend.cohort":"Cohort","legend.bench":"Benchmark",
+      "chart.retention_insight":"Lift doubled in 3 cohorts — correlate with the 30-day onboarding checkpoint introduced H1 2026.",
+      "chart.ttv":"Time-to-Value Trend","chart.ttv_sub":"Average days to full productivity",
+      "chart.ttv_insight":"Engineering is the only dept over target — IT access provisioning is the 5.2-day bottleneck.",
+      "chart.eosb":"EOSB Liability Forecast — by Jurisdiction & Quarter",
+      "chart.eosb_sub":"UAE (basic-salary basis) + KSA (total-salary basis)",
+      "legend.ae":"UAE","legend.sa":"KSA",
+      "chart.eosb_insight":"Q1'27 spikes +28% on 3 KSA end-of-contract exits — pre-fund AED 1.1M before 31 Dec 2026.",
+      "chart.basis":"EOSB Basis (jurisdiction)",
+      "basis.ae":"UAE · basic salary only · tiered resignation",
+      "basis.sa":"KSA · total salary · notice penalty applies",
+      "chart.watch":"Retention Risk Watchlist",
+      "watch.1":"Sales — 22% turnover (>15% limit)",
+      "watch.2":"3 preventable exits this quarter",
+      "watch.3":"Engineering — 4 high-flight-risk (career-growth signal)"
+    },
+    ar: {
+      brand:"فانتاج إتش آر",
+      "nav.dashboard":"لوحة المعلومات الذكية","nav.econ":"اقتصاديات القوى العاملة","nav.retention":"الاحتفاظ",
+      "nav.ttv":"الوقت حتى الإنتاجية","nav.eosb":"التزامات نهاية الخدمة","nav.compliance":"الامتثال",
+      title:"لوحة المعلومات الذكية","refreshed":"آخر تحديث",
+      "lang.en":"EN","lang.ar":"العربية",
+      "jur.all":"الإمارات + السعودية",
+      "kpi.retention":"رفع معدل الاحتفاظ (سنة)","kpi.retention_delta":"▲ +١٫١ نقطة مقارنة بـ ٢٠٢٥","kpi.retention_note":"المجموعة مقابل معيار السوق",
+      "kpi.ttv":"الوقت حتى الإنتاجية (أيام)","kpi.ttv_delta":"▼ -٢٫٦ يوم مقابل هدف ١٥ يوم","kpi.ttv_note":"من البداية إلى الإنتاجية الكاملة","unit.d":" ي",
+      "kpi.cph":"تكلفة التوظيف","kpi.cph_delta":"▼ -٨٪ مقابل المعيار","kpi.cph_note":"التوظيف + التهيئة",
+      "kpi.eosb":"التزامات نهاية الخدمة (١٢ شهر)","kpi.eosb_delta":"▲ +١٢٪ ربع سنوي","kpi.eosb_note":"الإمارات ٣٫١ · السعودية ٣٫٢",
+      "chart.retention":"رفع معدل الاحتفاظ — مجموعات سنة واحدة","chart.retention_sub":"المجموعة مقابل المعيار",
+      "legend.cohort":"المجموعة","legend.bench":"المعيار",
+      "chart.retention_insight":"تضاعف معدل الرفع في ٣ مجموعات — اربطه بنقطة فحص التهيئة لليوم ٣٠ التي أُطلقت في النصف الأول ٢٠٢٦.",
+      "chart.ttv":"اتجاه الوقت حتى الإنتاجية","chart.ttv_sub":"متوسط الأيام حتى الإنتاجية الكاملة",
+      "chart.ttv_insight":"الهندسة هي القسم الوحيد فوق الهدف — توفير وصول تقنية المعلومات هو عنق الزجاجة (٥٫٢ يوم).",
+      "chart.eosb":"توقعات التزامات نهاية الخدمة — حسب الاختصاص والربع",
+      "chart.eosb_sub":"الإمارات (أساس الراتب الأساسي) + السعودية (أساس إجمالي الراتب)",
+      "legend.ae":"الإمارات","legend.sa":"السعودية",
+      "chart.eosb_insight":"الربع الأول ٢٠٢٧ يرتفع +٢٨٪ بسبب ٣ حالات انتهاء عقد سعودية — موّل ١٫١ مليون د.إ قبل ٣١ ديسمبر ٢٠٢٦.",
+      "chart.basis":"أساس احتساب نهاية الخدمة (حسب الاختصاص)",
+      "basis.ae":"الإمارات · الراتب الأساسي فقط · استقالة متدرجة",
+      "basis.sa":"السعودية · إجمالي الراتب · تُطبَّق غرامة الإشعار",
+      "chart.watch":"قائمة مراقبة مخاطر الاحتفاظ",
+      "watch.1":"المبيعات — دوران ٢٢٪ (حد ١٥٪)",
+      "watch.2":"٣ حالات خروج يمكن تفاديها هذا الربع",
+      "watch.3":"الهندسة — ٤ موظفين بخطر مغادرة مرتفع (إشارة نمو مهني)"
+    }
+  };
+
+  function setLang(lang){
+    const body=document.getElementById('body');
+    body.classList.toggle('ar', lang==='ar');
+    document.documentElement.lang = lang==='ar' ? 'ar' : 'en';
+    document.documentElement.dir  = lang==='ar' ? 'rtl' : 'ltr';
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const k=el.getAttribute('data-i18n');
+      if(I18N[lang][k]) el.textContent=I18N[lang][k];
+    });
+    document.getElementById('btn-en').classList.toggle('active', lang==='en');
+    document.getElementById('btn-ar').classList.toggle('active', lang==='ar');
+    // re-render currency + numerals
+    renderMoney();
+  }
+
+  function renderMoney(){
+    const lang=document.documentElement.lang==='ar'?'ar':'en';
+    document.querySelectorAll('[data-cur]').forEach(el=>{
+      const v=parseInt(el.getAttribute('data-cur'),10);
+      const cur=document.getElementById('currency').value;
+      const compact = v>=1000000 ? (v/1000000).toLocaleString(lang==='ar'?'ar-EG':'en-US',{maximumFractionDigits:1}) : v.toLocaleString();
+      const unit = v>=1000000 ? (lang==='ar'?' مليون':'M') : '';
+      if(lang==='ar'){ el.textContent = compact + unit + ' ' + (cur==='SAR'?'ر.س':'د.إ'); }
+      else { el.textContent = cur + ' ' + compact + unit; }
+    });
+    document.querySelectorAll('[data-num]').forEach(el=>{
+      const raw=el.getAttribute('data-num');
+      if(lang==='ar' && el.id!=='ttv') el.textContent = toArabic(raw);
+    });
+  }
+
+  function toArabic(s){
+    const map={'0':'٠','1':'١','2':'٢','3':'٣','4':'٤','5':'٥','6':'٦','7':'٧','8':'٨','9':'٩','.':'٫','+':'+','-':'-','%':'٪'};
+    return s.split('').map(c=>map[c]||c).join('');
+  }
+
+  document.getElementById('btn-en').addEventListener('click',()=>setLang('en'));
+  document.getElementById('btn-ar').addEventListener('click',()=>setLang('ar'));
+  document.getElementById('currency').addEventListener('change',renderMoney);
+  setLang('en');
+</script>
+</body>
+</html>

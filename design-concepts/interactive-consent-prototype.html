@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VantageHR — Interactive Privacy Consent & Template UI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --teal-deep: #0F766E; --teal: #14B8A6; --teal-light: #F0FDFA;
+    --slate-900: #0F172A; --slate-700: #334155; --slate-600: #475569;
+    --slate-500: #64748B; --slate-400: #94A3B8; --slate-200: #E2E8F0;
+    --slate-100: #F1F5F9; --slate-50: #F8FAFC;
+    --amber: #F59E0B; --red: #EF4444; --green: #22C55E; --blue: #3B82F6;
+    --white: #FFFFFF;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--slate-50); color: var(--slate-900); padding: 32px; }
+  .app-container { max-width: 1200px; margin: 0 auto; }
+  
+  .proto-nav { display: flex; gap: 4px; background: var(--white); border-radius: 12px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 32px; border: 1px solid var(--slate-100); }
+  .proto-nav button { flex: 1; padding: 10px 16px; border: none; background: transparent; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--slate-600); cursor: pointer; transition: all 0.15s; }
+  .proto-nav button:hover { background: var(--slate-50); }
+  .proto-nav button.active { background: var(--teal-deep); color: var(--white); font-weight: 600; }
+  .proto-section { display: none; }
+  .proto-section.active { display: block; }
+  
+  .section-title { font-size: 14px; font-weight: 700; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .section-heading { font-size: 22px; font-weight: 700; margin-bottom: 24px; color: var(--slate-900); }
+  .demo-card { background: var(--white); border-radius: 12px; padding: 28px; border: 1px solid var(--slate-100); box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 24px; }
+  
+  .lang-toggle-group { display: inline-flex; background: var(--slate-100); border-radius: 8px; padding: 3px; gap: 2px; }
+  .lang-toggle-btn { padding: 6px 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--slate-600); background: transparent; cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif; }
+  .lang-toggle-btn.active { background: var(--white); color: var(--teal-deep); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+  .lang-toggle-btn.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+  
+  .state-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 16px; }
+  .state-table th { text-align: left; padding: 8px 10px; font-weight: 600; color: var(--slate-500); text-transform: uppercase; font-size: 11px; letter-spacing: 0.03em; border-bottom: 2px solid var(--slate-200); }
+  .state-table td { padding: 8px 10px; border-bottom: 1px solid var(--slate-100); color: var(--slate-700); }
+  .state-table td:first-child { font-weight: 600; color: var(--slate-900); }
+  
+  .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .checkbox-col h4 { font-size: 13px; font-weight: 600; color: var(--slate-600); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .checkbox-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: background 0.15s; }
+  .checkbox-item:hover { background: var(--slate-50); }
+  .checkbox-item.error { background: #FEF2F2; border: 1px solid #FECACA; }
+  .checkbox-item.disabled { opacity: 0.5; cursor: not-allowed; }
+  .custom-checkbox { width: 18px; height: 18px; border: 2px solid var(--slate-400); border-radius: 4px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-size: 11px; }
+  .custom-checkbox.checked { background: var(--teal-deep); border-color: var(--teal-deep); color: var(--white); }
+  .custom-checkbox.checked::after { content: "\2713"; }
+  .custom-checkbox.error-state { border-color: var(--red); background: #FEF2F2; }
+  .checkbox-label { font-size: 13px; color: var(--slate-700); line-height: 1.4; }
+  .checkbox-label .sub { display: block; font-size: 11px; color: var(--slate-400); margin-top: 2px; }
+  .checkbox-label .ar-text { display: block; font-size: 12px; color: var(--slate-500); direction: rtl; margin-top: 3px; padding-top: 3px; border-top: 1px dashed var(--slate-200); }
+  .check-status { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 4px; margin-left: auto; }
+  .check-status.checked-s { background: #DCFCE7; color: #166534; }
+  .check-status.unchecked-s { background: var(--slate-100); color: var(--slate-500); }
+  .check-status.error-s { background: #FEE2E2; color: #991B1B; }
+  
+  .signature-section { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .signature-method { border: 2px solid var(--slate-200); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.15s; }
+  .signature-method:hover { border-color: var(--teal); }
+  .signature-method.selected { border-color: var(--teal-deep); background: var(--teal-light); }
+  .signature-method.completed { border-color: var(--green); }
+  .signature-method .method-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .signature-method .method-header .icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; background: var(--slate-100); }
+  .signature-method.selected .method-header .icon { background: var(--teal-deep); color: var(--white); }
+  .signature-method .method-title { font-size: 14px; font-weight: 600; color: var(--slate-900); }
+  .signature-method .method-desc { font-size: 12px; color: var(--slate-500); margin-top: 2px; }
+  .type-signature-area { border: 1px dashed var(--slate-300); border-radius: 8px; padding: 12px; min-height: 80px; margin-top: 12px; background: var(--white); }
+  .type-signature-area input { width: 100%; border: none; border-bottom: 2px solid var(--slate-200); padding: 8px 4px; font-size: 24px; font-family: 'Brush Script MT', cursive; color: var(--slate-700); outline: none; background: transparent; }
+  .type-signature-area input:focus { border-bottom-color: var(--teal-deep); }
+  .type-signature-area .sig-preview { margin-top: 8px; font-size: 11px; color: var(--slate-400); }
+  .sig-canvas-area { border: 1px solid var(--slate-200); border-radius: 8px; overflow: hidden; margin-top: 12px; background: var(--white); }
+  .sig-canvas-area canvas { display: block; width: 100%; height: 100px; cursor: crosshair; }
+  .sig-canvas-area .canvas-placeholder { display: flex; align-items: center; justify-content: center; height: 100px; color: var(--slate-400); font-size: 12px; }
+  .sig-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .sig-actions button { padding: 6px 14px; border: 1px solid var(--slate-200); border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--white); color: var(--slate-600); cursor: pointer; }
+  .sig-actions button.clear { color: var(--red); border-color: #FECACA; }
+  .sig-actions button.accept { background: var(--teal-deep); color: var(--white); border-color: var(--teal-deep); }
+  .signature-status { display: flex; align-items: center; gap: 8px; padding: 12px; background: #DCFCE7; border-radius: 8px; margin-top: 12px; font-size: 13px; font-weight: 500; color: #166534; }
+  .signature-status .check-icon { width: 24px; height: 24px; background: var(--green); color: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  
+  .mapping-container { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+  .mapping-templates { display: flex; flex-direction: column; gap: 8px; }
+  .mapping-temp-btn { padding: 10px 14px; border: 1px solid var(--slate-200); border-radius: 8px; background: var(--white); text-align: left; font-size: 13px; font-weight: 500; color: var(--slate-700); cursor: pointer; transition: all 0.15s; }
+  .mapping-temp-btn:hover { border-color: var(--teal); background: var(--teal-light); }
+  .mapping-temp-btn.active { border-color: var(--teal-deep); background: var(--teal-light); color: var(--teal-deep); font-weight: 600; }
+  .mapping-temp-btn .temp-badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 8px; }
+  .temp-badge.uae { background: #DBEAFE; color: #1E40AF; }
+  .temp-badge.ksa { background: #FEF3C7; color: #92400E; }
+  .temp-badge.both { background: #DCFCE7; color: #166534; }
+  .mapping-preview { background: var(--white); border: 1px solid var(--slate-200); border-radius: 12px; overflow: hidden; }
+  .mapping-preview-header { padding: 14px 18px; border-bottom: 1px solid var(--slate-100); display: flex; justify-content: space-between; align-items: center; background: var(--slate-50); }
+  .mapping-preview-header .name { font-size: 13px; font-weight: 600; color: var(--slate-900); }
+  .mapping-preview-header .badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+  .mapping-preview-body { padding: 18px; font-size: 13px; line-height: 1.8; color: var(--slate-700); }
+  .mapping-field { display: inline-flex; align-items: center; padding: 1px 6px; border-radius: 4px; font-weight: 500; font-size: 12px; gap: 4px; }
+  .mapping-field.filled { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
+  .mapping-field.empty { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+  .mapping-field.pending { background: var(--slate-100); color: var(--slate-500); border: 1px dashed var(--slate-300); }
+  .field-source { font-size: 10px; color: var(--slate-400); font-weight: 400; margin-left: 2px; }
+  .data-source-panel { margin-top: 16px; padding: 14px; background: var(--slate-50); border-radius: 8px; border: 1px solid var(--slate-100); }
+  .data-source-panel h5 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--slate-500); margin-bottom: 10px; }
+  .data-source-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; }
+  .data-source-item { display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: var(--white); border-radius: 6px; border: 1px solid var(--slate-200); }
+  .data-source-item .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); flex-shrink: 0; }
+  .data-source-item .field-name { font-weight: 600; color: var(--slate-700); }
+  .data-source-item .field-value { color: var(--slate-500); margin-left: auto; font-size: 11px; }
+  .flow-steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; flex-wrap: wrap; }
+  .flow-step { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; color: var(--slate-400); }
+  .flow-step .step-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; border: 2px solid var(--slate-200); color: var(--slate-400); flex-shrink: 0; }
+  .flow-step.completed .step-num { background: var(--teal-deep); border-color: var(--teal-deep); color: var(--white); }
+  .flow-step.active .step-num { border-color: var(--teal-deep); color: var(--teal-deep); }
+  .flow-step.completed .step-label { color: var(--slate-700); }
+  .flow-step.active .step-label { color: var(--teal-deep); font-weight: 600; }
+  .flow-connector { width: 40px; height: 2px; background: var(--slate-200); margin: 0 8px; flex-shrink: 0; }
+  .flow-connector.completed { background: var(--teal-deep); }
+  
+  .proto-intro { background: linear-gradient(135deg, var(--teal-deep), #115E59); color: var(--white); border-radius: 16px; padding: 32px; margin-bottom: 32px; }
+  .proto-intro h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .proto-intro p { font-size: 14px; opacity: 0.85; max-width: 600px; }
+</style>
+</head>
+<body>
+<div class="app-container">
+  <div class="proto-intro">
+    <h1>VantageHR — Interactive Privacy Consent &amp; Template UI</h1>
+    <p>High-fidelity interactive prototypes for the bilingual (Arabic/English) onboarding consent wizard — including language toggle states, checkbox interactions, e-signature capture, and template data mapping.</p>
+  </div>
+  
+  <div class="proto-nav">
+    <button class="active" onclick="showSection('lang-toggle', this)">🌐 Language Toggle</button>
+    <button onclick="showSection('checkboxes', this)">☑ Consent Checkboxes</button>
+    <button onclick="showSection('signature', this)">✍ E-Signature</button>
+    <button onclick="showSection('mapping', this)">📋 Template Mapping</button>
+  </div>
+  
+  <!-- SECTION 1: LANGUAGE TOGGLE -->
+  <div id="section-lang-toggle" class="proto-section active">
+    <div class="section-title">Component 1</div>
+    <h2 class="section-heading">Language Toggle — Interactive States</h2>
+    <div class="demo-card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">All Toggle States</h3>
+      <table class="state-table">
+        <tr><th style="width:120px">State</th><th style="width:280px">Visual</th><th>Description</th></tr>
+        <tr>
+          <td>Default (English)</td>
+          <td><div class="lang-toggle-group"><button class="lang-toggle-btn en active">🇬🇧 English</button><button class="lang-toggle-btn ar">🇸🇦 العربية</button></div></td>
+          <td>English is the default. Active tab = white bg + teal text.</td>
+        </tr>
+        <tr>
+          <td>Active (Arabic)</td>
+          <td><div class="lang-toggle-group"><button class="lang-toggle-btn en">🇬🇧 English</button><button class="lang-toggle-btn ar active">🇸🇦 العربية</button></div></td>
+          <td>User switches to Arabic. Consent panel flips to RTL direction.</td>
+        </tr>
+        <tr>
+          <td>Hover</td>
+          <td><div class="lang-toggle-group" style="background:#E2E8F0;"><button class="lang-toggle-btn" style="background:#DBEAFE;color:#0369A1;">🇬🇧 English</button><button class="lang-toggle-btn">🇸🇦 العربية</button></div></td>
+          <td>Hovered tab gets light blue bg. Non-active tab dims.</td>
+        </tr>
+        <tr>
+          <td>Disabled (submitted)</td>
+          <td><div class="lang-toggle-group" style="opacity:0.4;"><button class="lang-toggle-btn disabled" style="background:var(--slate-200);color:var(--slate-400);">🇬🇧 English</button><button class="lang-toggle-btn disabled">🇸🇦 العربية</button></div></td>
+          <td>After consent submitted, toggles greyed out (40% opacity).</td>
+        </tr>
+        <tr>
+          <td>KSA (Arabic first)</td>
+          <td><div class="lang-toggle-group"><button class="lang-toggle-btn ar active">🇸🇦 العربية</button><button class="lang-toggle-btn en">🇬🇧 English</button></div></td>
+          <td>For KSA PDPL, Arabic appears first, reflecting Arabic primacy.</td>
+        </tr>
+      </table>
+    </div>
+    <div class="demo-card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Live Demo — Click to Toggle</h3>
+      <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
+        <div><div class="lang-toggle-group" id="live-toggle"><button class="lang-toggle-btn en active" onclick="setLang('en')">🇬🇧 English</button><button class="lang-toggle-btn ar" onclick="setLang('ar')">🇸🇦 العربية</button></div></div>
+        <div style="font-size:12px;color:var(--slate-600);">Current: <strong id="current-lang">English 🇬🇧</strong><br>Direction: <strong id="current-dir">LTR</strong></div>
+        <div id="toggle-preview" style="font-size:13px;padding:12px 16px;background:var(--slate-100);border-radius:8px;flex:1;color:var(--slate-700);min-width:200px;">
+          <strong>Privacy Notice</strong><br>We collect and process your personal data for employment administration, payroll processing, workforce analytics, and compliance with UAE Labour Law.
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- SECTION 2: CHECKBOXES -->
+  <div id="section-checkboxes" class="proto-section">
+    <div class="section-title">Component 2</div>
+    <h2 class="section-heading">Consent Checkboxes — All Interaction States</h2>
+    <div class="demo-card">
+      <div class="checkbox-grid">
+        <div class="checkbox-col">
+          <h4>English Labels</h4>
+          <div class="checkbox-item"><div class="custom-checkbox checked"></div><div class="checkbox-label">I have read and understood the above Privacy Notice<span class="sub">Required for onboarding to proceed</span></div><div class="check-status checked-s">CHECKED</div></div>
+          <div class="checkbox-item"><div class="custom-checkbox"></div><div class="checkbox-label">I consent to the processing of my personal data for employment purposes<span class="sub">Contractual necessity — Article 4(2) UAE PDPL</span></div><div class="check-status unchecked-s">UNCHECKED</div></div>
+          <div class="checkbox-item" style="background:var(--slate-50);"><div class="custom-checkbox"></div><div class="checkbox-label">I consent to receive marketing communications (optional)<span class="sub">Can be withdrawn at any time</span></div><div class="check-status unchecked-s">HOVER</div></div>
+          <div class="checkbox-item error"><div class="custom-checkbox error-state"></div><div class="checkbox-label" style="color:#991B1B;">⚠ Please accept the Privacy Notice to continue<span class="sub" style="color:#FCA5A5;">This field is required</span></div><div class="check-status error-s">ERROR</div></div>
+          <div class="checkbox-item disabled"><div class="custom-checkbox checked" style="opacity:0.5;"></div><div class="checkbox-label" style="opacity:0.7;">Consent already submitted (locked)<span class="sub">Submitted on 15 June 2026 at 10:30 AM</span></div><div class="check-status unchecked-s">LOCKED</div></div>
+        </div>
+        <div class="checkbox-col">
+          <h4>Arabic Labels</h4>
+          <div class="checkbox-item"><div class="custom-checkbox checked"></div><div class="checkbox-label">لقد قرأت وفهمت إشعار الخصوصية أعلاه<span class="ar-text">Required for onboarding to proceed</span></div><div class="check-status checked-s">✓</div></div>
+          <div class="checkbox-item"><div class="custom-checkbox"></div><div class="checkbox-label">أوافق على معالجة بياناتي الشخصية لأغراض التوظيف<span class="ar-text">Contractual necessity under UAE PDPL</span></div><div class="check-status unchecked-s">—</div></div>
+          <div class="checkbox-item"><div class="custom-checkbox"></div><div class="checkbox-label">أوافق على تلقي الاتصالات التسويقية (اختياري)<span class="ar-text">Consent required — can be withdrawn</span></div><div class="check-status unchecked-s">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="demo-card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Live Checkbox Demo — Click to Toggle</h3>
+      <div id="live-checkboxes">
+        <div class="checkbox-item" onclick="toggleCheckbox(this)"><div class="custom-checkbox" id="cb-1"></div><div class="checkbox-label">I have read and understood the above Privacy Notice<span class="sub">Click to toggle</span></div></div>
+        <div class="checkbox-item" onclick="toggleCheckbox(this)"><div class="custom-checkbox" id="cb-2"></div><div class="checkbox-label">I consent to the processing of my personal data<span class="sub">Click to toggle</span></div></div>
+        <div class="checkbox-item" onclick="toggleCheckbox(this)"><div class="custom-checkbox" id="cb-3"></div><div class="checkbox-label">I consent to marketing communications (optional)<span class="sub">Click to toggle</span></div></div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--slate-500);">Status: <span id="cb-status">0 of 3 checked</span></div>
+    </div>
+  </div>
+  
+  <!-- SECTION 3: E-SIGNATURE -->
+  <div id="section-signature" class="proto-section">
+    <div class="section-title">Component 3</div>
+    <h2 class="section-heading">E-Signature Capture Component</h2>
+    <div class="demo-card">
+      <div class="flow-steps">
+        <div class="flow-step completed"><div class="step-num">✓</div><span class="step-label">Privacy Notice</span></div><div class="flow-connector completed"></div>
+        <div class="flow-step completed"><div class="step-num">✓</div><span class="step-label">Consent Given</span></div><div class="flow-connector completed"></div>
+        <div class="flow-step active"><div class="step-num">3</div><span class="step-label">Signature</span></div><div class="flow-connector"></div>
+        <div class="flow-step"><div class="step-num">4</div><span class="step-label">Confirm</span></div>
+      </div>
+      <div style="margin-bottom:16px;"><div style="font-size:13px;font-weight:600;color:var(--slate-900);margin-bottom:4px;">Choose your signature method</div><div style="font-size:12px;color:var(--slate-500);">All methods are legally binding under UAE/KSA electronic transactions laws.</div></div>
+      <div class="signature-section">
+        <div class="signature-method selected" id="sig-type" onclick="selectSigMethod('type')">
+          <div class="method-header"><div class="icon">⌨️</div><div><div class="method-title">Type Signature</div><div class="method-desc">Type your full name as signature</div></div></div>
+          <div class="type-signature-area"><input type="text" value="Sarah Ahmed" placeholder="Type your full name" oninput="updateSigPreview(this.value)"><div class="sig-preview">Preview: <span id="sig-preview" style="font-family:'Brush Script MT',cursive;font-size:20px;color:var(--slate-700);">Sarah Ahmed</span></div></div>
+        </div>
+        <div class="signature-method" id="sig-draw" onclick="selectSigMethod('draw')">
+          <div class="method-header"><div class="icon">✍️</div><div><div class="method-title">Draw Signature</div><div class="method-desc">Sign with mouse or touch</div></div></div>
+          <div class="sig-canvas-area" id="canvas-area"><canvas id="sig-canvas" width="460" height="100"></canvas></div>
+          <div class="sig-actions"><button class="clear" onclick="clearCanvas()">🗑 Clear</button><button class="accept" onclick="acceptSignature()">✓ Accept Signature</button></div>
+        </div>
+      </div>
+      <div id="signature-completed" style="display:none;margin-top:20px;">
+        <div style="font-size:12px;font-weight:600;color:var(--slate-500);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px;">Completed State</div>
+        <div class="signature-status"><div class="check-icon">✓</div><div>Signed by <strong>Sarah Ahmed</strong> on <strong>15 June 2026</strong> at <strong>10:30 AM GST</strong><div style="font-size:12px;font-weight:400;opacity:0.8;">IP: 192.168.1.100 · Consent v2.1 · Method: Type Signature</div></div></div>
+      </div>
+    </div>
+    <div class="demo-card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Signature Component — States Overview</h3>
+      <table class="state-table">
+        <tr><th style="width:140px">State</th><th style="width:200px">Visual Indicator</th><th>Behavior</th></tr>
+        <tr><td>Empty / Prompted</td><td>Dashed border, placeholder text</td><td>"Type your full name" placeholder. Canvas shows empty ready state</td></tr>
+        <tr><td>Typing (Type method)</td><td>Bottom border highlights teal</td><td>Cursive preview updates in real-time. Character limit: 100</td></tr>
+        <tr><td>Drawing (Canvas)</td><td>Solid border, crosshair cursor</td><td>Canvas captures mouse/touch path. "Clear" resets</td></tr>
+        <tr><td>Selected method</td><td>Teal border + light teal bg</td><td>Only one method active. Switching clears the other</td></tr>
+        <tr><td>Completed</td><td>Green border + success check</td><td>Green status bar: signer name, date, time, IP, version, method</td></tr>
+      </table>
+    </div>
+  </div>
+  
+  <!-- SECTION 4: TEMPLATE DATA MAPPING -->
+  <div id="section-mapping" class="proto-section">
+    <div class="section-title">Component 4</div>
+    <h2 class="section-heading">Template Data Mapping — Employee Fields → Documents</h2>
+    <div class="demo-card">
+      <div class="mapping-container">
+        <div class="mapping-sidebar">
+          <h4>Available Templates</h4>
+          <div class="mapping-templates">
+            <div class="mapping-temp-btn active" onclick="showTemplate('uae-contract')">📄 UAE Employment Contract <span class="temp-badge uae">🇦🇪 UAE</span></div>
+            <div class="mapping-temp-btn" onclick="showTemplate('ksa-contract')">📄 KSA Employment Contract <span class="temp-badge ksa">🇸🇦 KSA</span></div>
+            <div class="mapping-temp-btn" onclick="showTemplate('settlement')">📄 Final Settlement Statement <span class="temp-badge both">Both</span></div>
+            <div class="mapping-temp-btn" onclick="showTemplate('privacy')">📄 Privacy Notice <span class="temp-badge both">Both</span></div>
+          </div>
+          <div class="data-source-panel" style="margin-top:16px;">
+            <h5>Employee Data Sources</h5>
+            <div class="data-source-grid" style="grid-template-columns:1fr;">
+              <div class="data-source-item"><div class="dot"></div><span class="field-name">employees</span><span class="field-value">table</span></div>
+              <div class="data-source-item"><div class="dot"></div><span class="field-name">consent_records</span><span class="field-value">table</span></div>
+              <div class="data-source-item"><div class="dot"></div><span class="field-name">eosb_calculations</span><span class="field-value">table</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="mapping-preview">
+          <div class="mapping-preview-header"><span class="name" id="template-name">UAE Employment Contract</span><span class="badge" id="template-badge" style="background:#DBEAFE;color:#1E40AF;">🇦🇪 UAE</span></div>
+          <div class="mapping-preview-body" id="template-body">
+            <strong>PART 1: PARTY INFORMATION</strong><br><br>
+            <strong>Employer:</strong> Acme Tech FZ-LLC<br>
+            <strong>Employee:</strong> <span class="mapping-field filled">Sarah Ahmed <span class="field-source">← employees.first_name, last_name</span></span><br>
+            <strong>Nationality:</strong> <span class="mapping-field filled">Emirati <span class="field-source">← employees.nationality</span></span><br>
+            <strong>Passport No:</strong> <span class="mapping-field filled">AB1234567 <span class="field-source">← employees.passport_number</span></span><br>
+            <strong>Emirates ID:</strong> <span class="mapping-field filled">784-1999-1234567-1 <span class="field-source">← employees.emirates_id</span></span><br>
+            <strong>Date of Birth:</strong> <span class="mapping-field filled">15 Mar 1997 <span class="field-source">← employees.date_of_birth</span></span><br><br>
+            <strong>PART 2: CONTRACT TERMS</strong><br><br>
+            <strong>Job Title:</strong> <span class="mapping-field filled">Senior Developer <span class="field-source">← employees.role</span></span><br>
+            <strong>Department:</strong> <span class="mapping-field filled">Engineering <span class="field-source">← employees.department</span></span><br>
+            <strong>Start Date:</strong> <span class="mapping-field filled">15 Mar 2022 <span class="field-source">← employees.start_date</span></span><br>
+            <strong>Contract Type:</strong> <span class="mapping-field filled">Fixed-Term (3 years) <span class="field-source">← employees.contract_type</span></span><br>
+            <strong>Probation Period:</strong> <span class="mapping-field filled">6 months <span class="field-source">← employees.probation_end_date</span></span><br>
+            <strong>Basic Salary:</strong> <span class="mapping-field filled">AED 18,000 <span class="field-source">← employees.basic_salary</span></span><br>
+            <strong>Housing Allowance:</strong> <span class="mapping-field filled">AED 6,000 <span class="field-source">← employees.allowances_housing</span></span><br>
+            <strong>Transport Allowance:</strong> <span class="mapping-field filled">AED 2,000 <span class="field-source">← employees.allowances_transport</span></span><br>
+            <strong>Total Salary:</strong> <span class="mapping-field filled">AED 28,000 <span class="field-source">← calculated</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentLang = 'en';
+let drawing = false;
+
+function showSection(id, btn) {
+  document.querySelectorAll('.proto-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.proto-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('#live-toggle .lang-toggle-btn').forEach(b => b.classList.remove('active'));
+  if (lang === 'en') {
+    document.querySelector('#live-toggle .en').classList.add('active');
+    document.getElementById('current-lang').textContent = 'English 🇬🇧';
+    document.getElementById('current-dir').textContent = 'LTR';
+    document.getElementById('toggle-preview').style.direction = 'ltr';
+    document.getElementById('toggle-preview').innerHTML = '<strong>Privacy Notice</strong><br>We collect and process your personal data for employment administration, payroll processing, workforce analytics, and compliance with UAE Labour Law.';
+  } else {
+    document.querySelector('#live-toggle .ar').classList.add('active');
+    document.getElementById('current-lang').textContent = 'العربية 🇸🇦';
+    document.getElementById('current-dir').textContent = 'RTL';
+    document.getElementById('toggle-preview').style.direction = 'rtl';
+    document.getElementById('toggle-preview').innerHTML = '<strong>إشعار الخصوصية</strong><br>نقوم بجمع ومعالجة بياناتك الشخصية لأغراض إدارة التوظيف ومعالجة الرواتب وتحليلات القوى العاملة والامتثال لقانون العمل الإماراتي';
+  }
+}
+
+function toggleCheckbox(item) {
+  const cb = item.querySelector('.custom-checkbox');
+  cb.classList.toggle('checked');
+  updateCheckboxStatus();
+}
+
+function updateCheckboxStatus() {
+  const checked = document.querySelectorAll('#live-checkboxes .custom-checkbox.checked').length;
+  document.getElementById('cb-status').textContent = checked + ' of 3 checked';
+}
+
+function selectSigMethod(method) {
+  document.querySelectorAll('.signature-method').forEach(m => m.classList.remove('selected'));
+  if (method === 'type') {
+    document.getElementById('sig-type').classList.add('selected');
+  } else {
+    document.getElementById('sig-draw').classList.add('selected');
+  }
+}
+
+function updateSigPreview(val) {
+  document.getElementById('sig-preview').textContent = val || '(empty)';
+}
+
+function clearCanvas() {
+  const canvas = document.getElementById('sig-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function acceptSignature() {
+  document.getElementById('signature-completed').style.display = 'block';
+}
+
+// Canvas drawing
+document.addEventListener('DOMContentLoaded', function() {
+  const canvas = document.getElementById('sig-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#0F172A';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  
+  canvas.addEventListener('mousedown', function(e) {
+    drawing = true;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  });
+  
+  canvas.addEventListener('mousemove', function(e) {
+    if (!drawing) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  });
+  
+  canvas.addEventListener('mouseup', function() { drawing = false; });
+  canvas.addEventListener('mouseleave', function() { drawing = false; });
+});
+
+function showTemplate(tpl) {
+  document.querySelectorAll('.mapping-temp-btn').forEach(b => b.classList.remove('active'));
+  const templates = {
+    'uae-contract': { name: 'UAE Employment Contract', badge: '🇦🇪 UAE', badgeStyle: 'background:#DBEAFE;color:#1E40AF;', body: `<strong>PART 1: PARTY INFORMATION</strong><br><br>
+      <strong>Employer:</strong> Acme Tech FZ-LLC<br>
+      <strong>Employee:</strong> <span class="mapping-field filled">Sarah Ahmed <span class="field-source">← employees.first_name, last_name</span></span><br>
+      <strong>Nationality:</strong> <span class="mapping-field filled">Emirati <span class="field-source">← employees.nationality</span></span><br>
+      <strong>Passport No:</strong> <span class="mapping-field filled">AB1234567 <span class="field-source">← employees.passport_number</span></span><br>
+      <strong>Emirates ID:</strong> <span class="mapping-field filled">784-1999-1234567-1 <span class="field-source">← employees.emirates_id</span></span><br>
+      <strong>Date of Birth:</strong> <span class="mapping-field filled">15 Mar 1997 <span class="field-source">← employees.date_of_birth</span></span><br><br>
+      <strong>PART 2: CONTRACT TERMS</strong><br><br>
+      <strong>Job Title:</strong> <span class="mapping-field filled">Senior Developer <span class="field-source">← employees.role</span></span><br>
+      <strong>Department:</strong> <span class="mapping-field filled">Engineering <span class="field-source">← employees.department</span></span><br>
+      <strong>Start Date:</strong> <span class="mapping-field filled">15 Mar 2022 <span class="field-source">← employees.start_date</span></span><br>
+      <strong>Basic Salary:</strong> <span class="mapping-field filled">AED 18,000 <span class="field-source">← employees.basic_salary</span></span><br>
+      <strong>Housing:</strong> <span class="mapping-field filled">AED 6,000 <span class="field-source">← employees.allowances_housing</span></span><br>
+      <strong>Transport:</strong> <span class="mapping-field filled">AED 2,000 <span class="field-source">← employees.allowances_transport</span></span><br>
+      <strong>Total Salary:</strong> <span class="mapping-field filled">AED 28,000 <span class="field-source">← calculated</span></span>` },
+    'ksa-contract': { name: 'KSA Employment Contract', badge: '🇸🇦 KSA', badgeStyle: 'background:#FEF3C7;color:#92400E;', body: `<strong>PART 1: PARTY INFORMATION</strong><br><br>
+      <strong>Employer:</strong> Acme Tech Saudi LLC<br>
+      <strong>Employee:</strong> <span class="mapping-field filled">Omar Al Ghamdi <span class="field-source">← employees.first_name, last_name</span></span><br>
+      <strong>Nationality:</strong> <span class="mapping-field filled">Saudi <span class="field-source">← employees.nationality</span></span><br>
+      <strong>Iqama No:</strong> <span class="mapping-field filled">2XXXXXXXXXXXX <span class="field-source">← employees.iqama_number</span></span><br><br>
+      <strong>PART 2: CONTRACT TERMS</strong><br><br>
+      <strong>Job Title:</strong> <span class="mapping-field filled">Regional Manager <span class="field-source">← employees.role</span></span><br>
+      <strong>Start Date:</strong> <span class="mapping-field filled">10 Jan 2015 <span class="field-source">← employees.start_date</span></span><br>
+      <strong>Total Salary:</strong> <span class="mapping-field filled">SAR 22,000 <span class="field-source">← employees.total_salary</span></span><br>
+      <strong>Nitaqat Band:</strong> <span class="mapping-field filled">Medium Green <span class="field-source">← employees.nitaqat_band</span></span><br>
+      <strong>Qiwa Ref:</strong> <span class="mapping-field filled">Q-2024-123456 <span class="field-source">← employees.qiwa_reference</span></span>` },
+    'settlement': { name: 'Final Settlement Statement', badge: 'Both', badgeStyle: 'background:#DCFCE7;color:#166534;', body: `<strong>FINAL SETTLEMENT — UAE</strong><br><br>
+      <strong>Employee:</strong> <span class="mapping-field filled">Sarah Ahmed <span class="field-source">← employees.name</span></span><br><br>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr style="border-bottom:1px solid var(--slate-200);"><td style="padding:6px 0;"><strong>Item</strong></td><td style="padding:6px 0;text-align:right;"><strong>Amount</strong></td><td style="padding:6px 0;text-align:right;"><strong>Source</strong></td></tr>
+        <tr><td style="padding:4px 0;">Accrued Leave (15 days)</td><td style="padding:4px 0;text-align:right;">AED 9,000</td><td style="padding:4px 0;text-align:right;font-size:11px;color:var(--slate-400);">accrued_leave_days × daily_rate</td></tr>
+        <tr><td style="padding:4px 0;">Notice Pay (served)</td><td style="padding:4px 0;text-align:right;">AED 18,000</td><td style="padding:4px 0;text-align:right;font-size:11px;color:var(--slate-400);">notice_period_basic</td></tr>
+        <tr><td style="padding:4px 0;">End-of-Service Benefit</td><td style="padding:4px 0;text-align:right;"><strong>AED 35,700</strong></td><td style="padding:4px 0;text-align:right;font-size:11px;color:var(--slate-400);">← eosb_calculations.net_eosb</td></tr>
+        <tr style="border-top:2px solid var(--slate-900);"><td style="padding:6px 0;font-weight:700;">TOTAL SETTLEMENT</td><td style="padding:6px 0;text-align:right;font-weight:700;color:var(--teal-deep);">AED 62,700</td><td style="padding:6px 0;text-align:right;"></td></tr>
+      </table>` },
+    'privacy': { name: 'Privacy Notice', badge: 'Both (UAE/KSA)', badgeStyle: 'background:#DCFCE7;color:#166534;', body: `<strong>PRIVACY NOTICE FOR EMPLOYEES</strong><br><br>
+      <strong>Company:</strong> Acme Tech FZ-LLC / Acme Tech Saudi LLC<br>
+      <strong>Employee:</strong> <span class="mapping-field filled">Sarah Ahmed <span class="field-source">← employees.name</span></span><br><br>
+      <strong>Jurisdiction:</strong> <span class="mapping-field filled">UAE PDPL (Fed. Decree-Law No.45/2021) <span class="field-source">← employees.jurisdiction</span></span><br><br>
+      <strong>Consent Record:</strong><br>
+      - Consent Given: <span class="mapping-field filled">15 June 2026 <span class="field-source">← consent_records.granted_at</span></span><br>
+      - Consent Version: <span class="mapping-field filled">v2.1 (June 2026) <span class="field-source">← consent_records.consent_version</span></span><br>
+      - Lawful Basis: <span class="mapping-field filled">contractual_necessity, legitimate_interest <span class="field-source">← consent_records.lawful_basis</span></span><br>
+      - DPO Contact: <span class="mapping-field filled">dpo@acmetech.com <span class="field-source">← config.dpo_email</span></span>` }
+  };
+  
+  const t = templates[tpl];
+  document.getElementById('template-name').textContent = t.name;
+  document.getElementById('template-badge').textContent = t.badge;
+  document.getElementById('template-badge').style.cssText = t.badgeStyle;
+  document.getElementById('template-body').innerHTML = t.body;
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
