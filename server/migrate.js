@@ -23,7 +23,7 @@ async function migrate() {
       ${db.escapeString(hashedPassword)}, 
       'admin'
     )`);
-    console.log(`Admin user created: ${adminUsername} / ${adminPassword}`);
+    console.log(`Admin user seeded: ${adminUsername}`);
   } else {
     console.log('Admin user already exists.');
   }
