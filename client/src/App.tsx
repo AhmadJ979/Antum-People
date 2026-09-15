@@ -360,8 +360,8 @@ export default function App() {
                     </svg>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900">
-                    {(analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries.length - 1]?.lift ?? 0) > 0 ? '+' : ''}
-                    {analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries.length - 1]?.lift ?? 0}%
+                    {(analytics?.retentionLiftSeries?.length ?? 0) > 0 && (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) > 0 ? '+' : ''}
+                    {(analytics?.retentionLiftSeries?.length ?? 0) > 0 ? (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) : 0}%
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
                     <span className="mr-1">▲</span> +1.1 pts vs 2025
@@ -664,7 +664,7 @@ export default function App() {
                    <div className="p-4 bg-white/10 rounded-xl border border-white/5">
                       <div className="text-teal-300 text-[10px] font-bold uppercase mb-2">Retention Insight</div>
                       <p className="text-xs text-slate-200 leading-relaxed">
-                        Retention lift has {(analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries.length - 1]?.lift ?? 0) > 0 ? 'increased' : 'stabilized'} in recent cohorts. 
+                        Retention lift has {(analytics?.retentionLiftSeries?.length ?? 0) > 0 && (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) > 0 ? 'increased' : 'stabilized'} in recent cohorts. 
                         Correlates with new 30-day onboarding checkpoints.
                       </p>
                    </div>
