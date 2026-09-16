@@ -46,7 +46,7 @@ function encrypt(text) {
     return `${iv.toString('hex')}:${authTag}:${encrypted}`;
   } catch (err) {
     console.error('Encryption error:', err);
-    return text; // Fallback to plaintext if encryption fails (should handle better in prod)
+    throw new Error('Encryption failed'); // Ensure we never silently persist plaintext
   }
 }
 
