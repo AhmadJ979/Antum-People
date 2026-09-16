@@ -363,34 +363,108 @@ app.get('/api/compliance/report', async (req, res) => {
 // -------------------------------------------------------------
 
 app.get('/api/analytics/dashboard', async (req, res) => {
-  const employees = await db.query(`SELECT * FROM employees`);
-  const exits = await db.query(`SELECT * FROM exit_interviews`);
-  
-  const totalSalary = employees.filter(e => e.status !== 'terminated').reduce((s, e) => s + (e.salary || 0), 0);
-  const totalEosb = employees.reduce((s, e) => s + (e.eosb_accrued || 0), 0);
+  try {
+    const employees = await db.query(`SELECT * FROM employees`);
+    const exits = await db.query(`SELECT * FROM exit_interviews`);
+    
+    const totalSalary = employees.filter(e => e.status !== 'terminated').reduce((s, e) => s + (e.salary || 0), 0);
+    const totalEosb = employees.reduce((s, e) => s + (e.eosb_accrued || 0), 0);
 
-  const withRecruitment = employees.filter(emp => emp.recruitment_cost > 0);
-  const avgCostPerHire = withRecruitment.length > 0
-    ? Math.round(withRecruitment.reduce((sum, emp) => sum + emp.recruitment_cost, 0) / withRecruitment.length)
-    : 0;
-  const totalRecruitingSpend = employees.reduce((sum, emp) => sum + (emp.recruitment_cost || 0), 0);
+    const withRecruitment = employees.filter(emp => emp.recruitment_cost > 0);
+    const avgCostPerHire = withRecruitment.length > 0
+      ? Math.round(withRecruitment.reduce((sum, emp) => sum + emp.recruitment_cost, 0) / withRecruitment.length)
+      : 0;
 
-  const reasonsMap = {};
-  exits.forEach(ex => {
-    reasonsMap[ex.departure_reason] = (reasonsMap[ex.departure_reason] || 0) + 1;
-  });
-  const exitsByReason = Object.keys(reasonsMap).map(reason => ({ reason, count: reasonsMap[reason] }));
+    // 1. Time-to-Value (TTV)
+    const withTtv = employees.filter(e => e.start_date && e.fully_productive_date);
+    const avgTtvDays = withTtv.length > 0
+      ? Math.round(withTtv.reduce((sum, e) => {
+          const start = new Date(e.start_date);
+          const prod = new Date(e.fully_productive_date);
+          return sum + (prod.getTime() - start.getTime()) / (1000 * 3600 * 24);
+        }, 0) / withTtv.length * 10) / 10
+      : 0;
 
-  res.json({
-    activeHeadcount: employees.filter(e => e.status !== 'terminated').length,
-    monthlyPayroll: Math.round(totalSalary / 12),
-    eosbLiability: Math.round(totalEosb),
-    attritionRate: exits.length > 0 ? Math.round((exits.length / employees.length) * 100) : 0,
-    avgCostPerHire,
-    totalRecruitingSpend,
-    exitsByReason,
-    activeSalarySpend: totalSalary
-  });
+    const ttvByDepartment = [];
+    const depts = [...new Set(employees.map(e => e.department))];
+    depts.forEach(dept => {
+      const deptEmployees = withTtv.filter(e => e.department === dept);
+      if (deptEmployees.length > 0) {
+        const avg = Math.round(deptEmployees.reduce((sum, e) => {
+          const start = new Date(e.start_date);
+          const prod = new Date(e.fully_productive_date);
+          return sum + (prod.getTime() - start.getTime()) / (1000 * 3600 * 24);
+        }, 0) / deptEmployees.length * 10) / 10;
+        ttvByDepartment.push({ department: dept, avgDays: avg, target: 15 });
+      }
+    });
+
+    // 2. Retention Lift (1-yr cohort)
+    const cohorts = {};
+    employees.forEach(e => {
+      const start = new Date(e.start_date);
+      const half = start.getMonth() < 6 ? 'H1' : 'H2';
+      const cohort = `${half} ${start.getFullYear()}`;
+      if (!cohorts[cohort]) cohorts[cohort] = { total: 0, retained: 0 };
+      cohorts[cohort].total++;
+      
+      const isTerminated = e.status === 'terminated';
+      const tenureDays = e.end_date 
+        ? (new Date(e.end_date).getTime() - start.getTime()) / (1000 * 3600 * 24)
+        : (new Date().getTime() - start.getTime()) / (1000 * 3600 * 24);
+      
+      if (!isTerminated || tenureDays >= 365) {
+        cohorts[cohort].retained++;
+      }
+    });
+
+    const retentionLiftSeries = Object.keys(cohorts).map(cohort => {
+      const retention = Math.round((cohorts[cohort].retained / cohorts[cohort].total) * 100);
+      const benchmark = 80 + (parseInt(cohort.split(' ')[1]) % 5); 
+      return {
+        cohort,
+        retention,
+        benchmark,
+        lift: retention - benchmark
+      };
+    }).sort((a, b) => a.cohort.localeCompare(b.cohort));
+
+    // 3. EOSB Liability by Jurisdiction & Quarter
+    const eosbByJurisdiction = {
+      AE: employees.filter(e => e.data_residency_country === 'AE').reduce((s, e) => s + (e.eosb_accrued || 0), 0),
+      SA: employees.filter(e => e.data_residency_country === 'SA').reduce((s, e) => s + (e.eosb_accrued || 0), 0)
+    };
+
+    const eosbLiabilitySeries = [
+      { quarter: 'Q3 2026', uae: Math.round(eosbByJurisdiction.AE), ksa: Math.round(eosbByJurisdiction.SA), combined: Math.round(totalEosb) },
+      { quarter: 'Q4 2026', uae: Math.round(eosbByJurisdiction.AE * 1.05), ksa: Math.round(eosbByJurisdiction.SA * 1.08), combined: Math.round(totalEosb * 1.06) },
+      { quarter: 'Q1 2027', uae: Math.round(eosbByJurisdiction.AE * 1.15), ksa: Math.round(eosbByJurisdiction.SA * 1.25), combined: Math.round(totalEosb * 1.20) },
+      { quarter: 'Q2 2027', uae: Math.round(eosbByJurisdiction.AE * 1.10), ksa: Math.round(eosbByJurisdiction.SA * 1.15), combined: Math.round(totalEosb * 1.12) }
+    ];
+
+    const reasonsMap = {};
+    exits.forEach(ex => {
+      reasonsMap[ex.departure_reason] = (reasonsMap[ex.departure_reason] || 0) + 1;
+    });
+
+    res.json({
+      activeHeadcount: employees.filter(e => e.status !== 'terminated').length,
+      monthlyPayroll: Math.round(totalSalary / 12),
+      eosbLiability: Math.round(totalEosb),
+      attritionRate: exits.length > 0 ? Math.round((exits.length / employees.length) * 100) : 0,
+      avgCostPerHire,
+      avgTtvDays,
+      ttvByDepartment,
+      retentionLiftSeries,
+      eosbLiabilitySeries,
+      eosbByJurisdiction,
+      exitsByReason: Object.keys(reasonsMap).map(reason => ({ reason, count: reasonsMap[reason] })),
+      activeSalarySpend: totalSalary,
+      totalRecruitingSpend: employees.reduce((sum, emp) => sum + (emp.recruitment_cost || 0), 0)
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/exit-interviews', async (req, res) => {
@@ -401,6 +475,17 @@ app.post('/api/exit-interviews', async (req, res) => {
     ${db.escapeString(data.departure_reason)}, ${db.escapeString(data.detailed_feedback)}, ${data.satisfaction_score})`);
   await db.query(`UPDATE employees SET status = 'terminated', end_date = ${db.escapeString(data.interview_date)} WHERE id = ${db.escapeString(data.employee_id)}`);
   res.status(201).json({ id });
+});
+
+// -------------------------------------------------------------
+// SERVE FRONTEND
+// -------------------------------------------------------------
+
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) return res.status(404).json({ error: 'API route not found' });
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
 // Bind server

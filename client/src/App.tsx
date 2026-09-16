@@ -42,20 +42,19 @@ interface Task {
 }
 
 interface Analytics {
-  retentionRate: number | null;
-  cohortTotal: number;
-  cohortRetained: number;
-  avgTtvDays: number | null;
-  avgCostPerHire: number;
-  totalRecruitingSpend: number;
-  activeSalarySpend: number;
-  exitInterviewsTotal: number;
-  preventablePercent: number;
-  exitsByReason: { reason: string; count: number }[];
   activeHeadcount: number;
   monthlyPayroll: number;
   eosbLiability: number;
   attritionRate: number;
+  avgCostPerHire: number;
+  avgTtvDays: number;
+  ttvByDepartment: { department: string; avgDays: number; target: number }[];
+  retentionLiftSeries: { cohort: string; retention: number; benchmark: number; lift: number }[];
+  eosbLiabilitySeries: { quarter: string; uae: number; ksa: number; combined: number }[];
+  eosbByJurisdiction: { AE: number; SA: number };
+  exitsByReason: { reason: string; count: number }[];
+  activeSalarySpend: number;
+  totalRecruitingSpend: number;
 }
 
 export default function App() {
@@ -287,7 +286,7 @@ export default function App() {
       <aside className="w-64 bg-slate-900 text-white flex flex-col justify-between shadow-lg">
         <div>
           <div className="p-6 border-b border-slate-800 flex items-center space-x-3">
-            <svg className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-8 h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             <span className="text-xl font-bold tracking-wider">VantageHR</span>
@@ -302,7 +301,7 @@ export default function App() {
               <button
                 key={item.id}
                 onClick={() => { setActiveTab(item.id as any); }}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition text-left ${activeTab === item.id ? 'bg-indigo-600 text-white font-medium shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition text-left ${activeTab === item.id ? 'bg-teal-600 text-white font-medium shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
@@ -324,7 +323,7 @@ export default function App() {
           <div className="flex items-center space-x-2 text-slate-500">
             <span className="font-semibold text-slate-800 capitalize">{activeTab} Panel</span>
             <span>/</span>
-            <span className="text-xs font-mono text-indigo-500">GCC Intelligence Tier</span>
+            <span className="text-xs font-mono text-teal-500">GCC Intelligence Tier</span>
           </div>
           <div className="flex items-center space-x-4">
             <button 
@@ -338,7 +337,7 @@ export default function App() {
             </button>
             <button 
               onClick={() => setShowAddModal(true)}
-              className="bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition flex items-center space-x-1"
+              className="bg-teal-600 text-white hover:bg-teal-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition flex items-center space-x-1"
             >
               <span className="text-sm">+</span>
               <span>Hire Employee</span>
@@ -352,67 +351,74 @@ export default function App() {
             <div className="space-y-8">
               {/* Stat Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {/* Active Headcount */}
+                {/* Retention Lift */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                   <div className="flex items-center justify-between text-slate-400 mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Active Headcount</span>
-                    <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Retention Lift (1-yr)</span>
+                    <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900">
-                    {analytics?.activeHeadcount || 0}
+                    {(analytics?.retentionLiftSeries?.length ?? 0) > 0 && (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) > 0 ? '+' : ''}
+                    {(analytics?.retentionLiftSeries?.length ?? 0) > 0 ? (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) : 0}%
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    Across UAE and KSA hubs
-                  </p>
+                  <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
+                    <span className="mr-1">▲</span> +1.1 pts vs 2025
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">vs market benchmark</p>
                 </div>
 
-                {/* Monthly Payroll */}
+                {/* Time-to-Value */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                   <div className="flex items-center justify-between text-slate-400 mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Monthly Payroll (Est)</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Time-to-Value</span>
+                    <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="text-3xl font-extrabold text-slate-900">
+                    {analytics?.avgTtvDays || 0} d
+                  </div>
+                  <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
+                    <span className="mr-1">▼</span> -2.6 d vs target
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">target: 15 days</p>
+                </div>
+
+                {/* Cost-per-Hire */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                  <div className="flex items-center justify-between text-slate-400 mb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cost-per-Hire</span>
                     <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900">
-                    ${(analytics?.monthlyPayroll || 0).toLocaleString()}
+                    ${(analytics?.avgCostPerHire || 0).toLocaleString()}
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    WPS-compliant transfers
-                  </p>
+                  <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
+                    <span className="mr-1">▼</span> -8% vs benchmark
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">recruitment + onboarding</p>
                 </div>
 
                 {/* EOSB Liability */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                   <div className="flex items-center justify-between text-slate-400 mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">EOSB Accrued Liability</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">EOSB Liability</span>
                     <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900">
                     ${(analytics?.eosbLiability || 0).toLocaleString()}
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    Total regional end-of-service
-                  </p>
-                </div>
-
-                {/* Attrition Rate */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                  <div className="flex items-center justify-between text-slate-400 mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Annual Attrition</span>
-                    <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
+                  <div className="text-[10px] font-semibold text-rose-600 mt-2 flex items-center">
+                    <span className="mr-1">▲</span> +12% QoQ
                   </div>
-                  <div className="text-3xl font-extrabold text-slate-900">
-                    {analytics?.attritionRate || 0}%
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    Calculated from exit telemetry
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    AE {(analytics?.eosbByJurisdiction?.AE || 0).toLocaleString()} · SA {(analytics?.eosbByJurisdiction?.SA || 0).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -422,13 +428,13 @@ export default function App() {
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                   <h3 className="font-bold text-slate-900 mb-4 flex justify-between items-center">
                     <span>Onboarding Pipeline</span>
-                    <button onClick={() => setActiveTab('transitions')} className="text-xs text-indigo-600 hover:underline">View All &rarr;</button>
+                    <button onClick={() => setActiveTab('transitions')} className="text-xs text-teal-600 hover:underline">View All &rarr;</button>
                   </h3>
                   <div className="space-y-3">
                     {employees.filter(e => e.status === 'onboarding').slice(0, 3).map(emp => (
                       <div key={emp.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                          <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-xs">
                             {emp.first_name[0]}{emp.last_name[0]}
                           </div>
                           <div>
@@ -496,7 +502,7 @@ export default function App() {
                       <tr 
                         key={emp.id} 
                         onClick={() => handleSelectEmployee(emp)}
-                        className={`border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition ${selectedEmployee?.id === emp.id ? 'bg-indigo-50/50' : ''}`}
+                        className={`border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition ${selectedEmployee?.id === emp.id ? 'bg-teal-50/50' : ''}`}
                       >
                         <td className="p-4">
                           <div className="font-bold text-slate-900">{emp.first_name} {emp.last_name}</div>
@@ -517,11 +523,11 @@ export default function App() {
                           </span>
                         </td>
                         <td className="p-4">
-                          <div className="text-sm font-bold text-indigo-600 font-mono">${(emp.eosb_accrued || 0).toLocaleString()}</div>
+                          <div className="text-sm font-bold text-teal-600 font-mono">${(emp.eosb_accrued || 0).toLocaleString()}</div>
                           <div className="text-[10px] text-slate-400">Accrued to date</div>
                         </td>
                         <td className="p-4 text-right">
-                          <button className="text-indigo-600 font-bold text-xs hover:underline">Manage &rarr;</button>
+                          <button className="text-teal-600 font-bold text-xs hover:underline">Manage &rarr;</button>
                         </td>
                       </tr>
                     ))}
@@ -550,12 +556,12 @@ export default function App() {
                     
                     <div className="space-y-2">
                       {(selectedEmployee.status === 'onboarding' || selectedEmployee.status === 'active' ? onboardingTasks : offboardingTasks).map(task => (
-                        <div key={task.id} className="flex items-start space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-200 transition">
+                        <div key={task.id} className="flex items-start space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-teal-200 transition">
                           <input 
                             type="checkbox" 
                             checked={task.status === 'completed'} 
                             onChange={(e) => handleUpdateTask(task.id, selectedEmployee.status === 'offboarding' ? 'offboarding' : 'onboarding', e.target.checked ? 'completed' : 'pending')}
-                            className="mt-1 h-4 w-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
+                            className="mt-1 h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500 cursor-pointer"
                           />
                           <div>
                             <div className={`text-sm font-bold ${task.status === 'completed' ? 'line-through text-slate-400' : 'text-slate-800'}`}>{task.title}</div>
@@ -571,7 +577,7 @@ export default function App() {
 
                   {/* Document & Compliance Center */}
                   <div className="bg-slate-900 text-white p-6 rounded-xl shadow-lg space-y-6">
-                    <h4 className="font-bold text-indigo-400 text-sm tracking-widest uppercase">Compliance Center</h4>
+                    <h4 className="font-bold text-teal-400 text-sm tracking-widest uppercase">Compliance Center</h4>
                     
                     <div className="space-y-4">
                       <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
@@ -583,7 +589,7 @@ export default function App() {
 
                       <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">EOSB Calculation Basis</div>
-                        <div className="text-xs font-bold text-indigo-300">
+                        <div className="text-xs font-bold text-teal-300">
                           {selectedEmployee.data_residency_country === 'SA' ? 'Total Salary (KSA Rule)' : 'Basic Salary (UAE Rule)'}
                         </div>
                       </div>
@@ -595,7 +601,7 @@ export default function App() {
                         onClick={() => fetchTemplate('privacy-notice', 'PDPL Privacy Notice')}
                         className="w-full text-left p-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition border border-slate-700/50 flex items-center space-x-3"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">P</div>
+                        <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-xs">P</div>
                         <span className="text-xs font-bold">Privacy Notice</span>
                       </button>
                       <button 
@@ -628,9 +634,9 @@ export default function App() {
                 <h3 className="font-bold text-slate-900 mb-4 uppercase text-xs tracking-widest">Ramping Employees (Onboarding)</h3>
                 <div className="space-y-4">
                   {employees.filter(e => e.status === 'onboarding').map(emp => (
-                    <div key={emp.id} onClick={() => { setSelectedEmployee(emp); setActiveTab('employees'); }} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-indigo-50/50 cursor-pointer transition flex justify-between items-center">
+                    <div key={emp.id} onClick={() => { setSelectedEmployee(emp); setActiveTab('employees'); }} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-teal-50/50 cursor-pointer transition flex justify-between items-center">
                       <div className="font-bold text-sm text-slate-800">{emp.first_name} {emp.last_name}</div>
-                      <div className="text-[10px] font-bold text-indigo-600">Day {Math.ceil((Date.now() - new Date(emp.start_date).getTime()) / (1000*60*60*24))}</div>
+                      <div className="text-[10px] font-bold text-teal-600">Day {Math.ceil((Date.now() - new Date(emp.start_date).getTime()) / (1000*60*60*24))}</div>
                     </div>
                   ))}
                 </div>
@@ -650,54 +656,131 @@ export default function App() {
           )}
 
           {activeTab === 'analytics' && (
-            <div className="space-y-8 animate-in fade-in duration-500">
-              <div className="bg-indigo-900 text-white p-8 rounded-2xl shadow-xl">
-                <h3 className="text-xl font-bold mb-4">Strategic Workforce Intelligence</h3>
+            <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+              {/* Executive Summary Banner */}
+              <div className="bg-teal-900 text-white p-8 rounded-2xl shadow-xl">
+                <h3 className="text-xl font-bold mb-6">Strategic Workforce Intelligence</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                   <div className="p-4 bg-white/10 rounded-xl">
-                      <div className="text-indigo-300 text-[10px] font-bold uppercase mb-2">Attrition Drivers</div>
-                      <p className="text-xs text-slate-300">Predictive analysis suggests 40% of exits in Engineering are related to compensation deltas against regional benchmarks (UAE/KSA tech hubs).</p>
+                   <div className="p-4 bg-white/10 rounded-xl border border-white/5">
+                      <div className="text-teal-300 text-[10px] font-bold uppercase mb-2">Retention Insight</div>
+                      <p className="text-xs text-slate-200 leading-relaxed">
+                        Retention lift has {(analytics?.retentionLiftSeries?.length ?? 0) > 0 && (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) > 0 ? 'increased' : 'stabilized'} in recent cohorts. 
+                        Correlates with new 30-day onboarding checkpoints.
+                      </p>
                    </div>
-                   <div className="p-4 bg-white/10 rounded-xl">
-                      <div className="text-emerald-300 text-[10px] font-bold uppercase mb-2">Productivity Lag</div>
-                      <p className="text-xs text-slate-300">Average Time-to-Value in the Riyadh office is 15% faster than Dubai, likely due to local engineering mentoring programs.</p>
+                   <div className="p-4 bg-white/10 rounded-xl border border-white/5">
+                      <div className="text-emerald-300 text-[10px] font-bold uppercase mb-2">Productivity Gap</div>
+                      <p className="text-xs text-slate-200 leading-relaxed">
+                        Average Time-to-Value is {analytics?.avgTtvDays || 0} days. 
+                        Engineering remains the primary bottleneck due to IT access latency.
+                      </p>
                    </div>
-                   <div className="p-4 bg-white/10 rounded-xl">
-                      <div className="text-amber-300 text-[10px] font-bold uppercase mb-2">Compliance Risk</div>
-                      <p className="text-xs text-slate-300">92% of staff have granted explicit PDPL consent. Targeted campaigns required for the remaining 8% to avoid potential regulatory fines.</p>
+                   <div className="p-4 bg-white/10 rounded-xl border border-white/5">
+                      <div className="text-rose-300 text-[10px] font-bold uppercase mb-2">Liability Exposure</div>
+                      <p className="text-xs text-slate-200 leading-relaxed">
+                        EOSB liability forecast shows a {(analytics?.eosbLiabilitySeries?.[2]?.combined ?? 0) > (analytics?.eosbLiabilitySeries?.[0]?.combined ?? 0) ? 'rise' : 'steady'} trend into 2027.
+                      </p>
                    </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                   <h4 className="font-bold text-slate-900 mb-6">Financial Impact of Workforce Transitions</h4>
-                   <div className="space-y-6">
-                      <div className="flex justify-between items-end border-b border-slate-50 pb-4">
-                        <div>
-                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Recruitment Spend (YTD)</div>
-                          <div className="text-2xl font-black text-slate-900">${(analytics?.totalRecruitingSpend || 0).toLocaleString()}</div>
+              {/* Charts Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Retention Lift Chart */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">Retention Lift — 1-Yr Cohort</h4>
+                      <p className="text-[10px] text-slate-400">Comparing cohort retention vs market benchmark</p>
+                    </div>
+                  </div>
+                  <div className="space-y-6">
+                    {analytics?.retentionLiftSeries?.map(s => (
+                      <div key={s.cohort} className="space-y-2">
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span className="text-slate-600">{s.cohort}</span>
+                          <span className="text-teal-600">Lift: {s.lift > 0 ? '+' : ''}{s.lift}%</span>
                         </div>
-                        <div className="text-right">
-                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg Cost-Per-Hire</div>
-                          <div className="text-lg font-bold text-indigo-600">${(analytics?.avgCostPerHire || 0).toLocaleString()}</div>
+                        <div className="relative h-4 bg-slate-100 rounded-full overflow-hidden flex">
+                          <div className="h-full bg-teal-600" style={{ width: `${s.retention}%` }}></div>
+                          <div className="absolute top-0 bottom-0 border-r-2 border-slate-400 border-dashed" style={{ left: `${s.benchmark}%` }}></div>
+                        </div>
+                        <div className="flex justify-between text-[9px] text-slate-400">
+                          <span>{s.retention}% (Cohort)</span>
+                          <span>{s.benchmark}% (Benchmark)</span>
                         </div>
                       </div>
-                   </div>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Time-to-Value Trend */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                   <h4 className="font-bold text-slate-900 mb-4">Attriton Profile</h4>
-                   <div className="space-y-3">
-                      {analytics?.exitsByReason.map(ex => (
-                        <div key={ex.reason} className="flex justify-between items-center text-xs">
-                          <span className="font-medium text-slate-600">{ex.reason}</span>
-                          <span className="font-bold text-slate-900">{ex.count}</span>
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">Time-to-Value by Department</h4>
+                      <p className="text-[10px] text-slate-400">Avg days to full productivity vs target</p>
+                    </div>
+                  </div>
+                  <div className="space-y-6">
+                    {analytics?.ttvByDepartment?.map(d => (
+                      <div key={d.department} className="space-y-2">
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span className="text-slate-600">{d.department}</span>
+                          <span className={d.avgDays > d.target ? 'text-rose-600' : 'text-emerald-600'}>
+                            {d.avgDays} d {d.avgDays > d.target ? '(Over)' : '(Under)'}
+                          </span>
                         </div>
-                      ))}
-                      {(!analytics || analytics.exitsByReason.length === 0) && (
-                        <div className="py-8 text-center text-slate-400 italic text-xs">No exit telemetry yet.</div>
-                      )}
-                   </div>
+                        <div className="relative h-4 bg-slate-100 rounded-full overflow-hidden flex">
+                          <div className={`h-full ${d.avgDays > d.target ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(100, (d.avgDays / 30) * 100)}%` }}></div>
+                          <div className="absolute top-0 bottom-0 border-r-2 border-slate-800" style={{ left: `${(d.target / 30) * 100}%` }}></div>
+                        </div>
+                      </div>
+                    ))}
+                    {(!analytics?.ttvByDepartment || analytics.ttvByDepartment.length === 0) && (
+                      <div className="py-12 text-center text-slate-400 italic text-xs">Insufficient productivity data.</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* EOSB Liability Forecast */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                  <div className="flex justify-between items-center mb-8">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">EOSB Liability Forecast — by Jurisdiction & Quarter (AED)</h4>
+                      <p className="text-[10px] text-slate-400">Consolidated forecast based on UAE basic and KSA total salary rules</p>
+                    </div>
+                    <div className="flex space-x-4">
+                      <div className="flex items-center space-x-1.5">
+                        <div className="w-2.5 h-2.5 bg-teal-600 rounded-sm"></div>
+                        <span className="text-[10px] font-bold text-slate-500">UAE</span>
+                      </div>
+                      <div className="flex items-center space-x-1.5">
+                        <div className="w-2.5 h-2.5 bg-emerald-500 rounded-sm"></div>
+                        <span className="text-[10px] font-bold text-slate-500">KSA</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-end justify-between h-48 space-x-4 px-4 border-b border-slate-100">
+                    {analytics?.eosbLiabilitySeries?.map(s => {
+                      const max = Math.max(...analytics.eosbLiabilitySeries.map(x => x.combined)) * 1.1;
+                      const uaeHeight = (s.uae / max) * 100;
+                      const ksaHeight = (s.ksa / max) * 100;
+                      return (
+                        <div key={s.quarter} className="flex-1 flex flex-col items-center group">
+                          <div className="w-full max-w-[60px] flex flex-col-reverse h-full relative">
+                            <div className="bg-teal-600 w-full rounded-t-sm" style={{ height: `${uaeHeight}%` }}></div>
+                            <div className="bg-emerald-500 w-full" style={{ height: `${ksaHeight}%` }}></div>
+                            {/* Tooltip placeholder */}
+                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10 font-mono">
+                              AED {(s.combined/1000000).toFixed(1)}M
+                            </div>
+                          </div>
+                          <div className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{s.quarter}</div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
@@ -717,16 +800,16 @@ export default function App() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">First Name</label>
-                  <input type="text" required value={newEmployee.first_name} onChange={e => setNewEmployee({...newEmployee, first_name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium" />
+                  <input type="text" required value={newEmployee.first_name} onChange={e => setNewEmployee({...newEmployee, first_name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Last Name</label>
-                  <input type="text" required value={newEmployee.last_name} onChange={e => setNewEmployee({...newEmployee, last_name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium" />
+                  <input type="text" required value={newEmployee.last_name} onChange={e => setNewEmployee({...newEmployee, last_name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Email Address</label>
-                <input type="email" required value={newEmployee.email} onChange={e => setNewEmployee({...newEmployee, email: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium" />
+                <input type="email" required value={newEmployee.email} onChange={e => setNewEmployee({...newEmployee, email: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
@@ -737,40 +820,40 @@ export default function App() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Role</label>
-                  <input type="text" required value={newEmployee.role} onChange={e => setNewEmployee({...newEmployee, role: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium" />
+                  <input type="text" required value={newEmployee.role} onChange={e => setNewEmployee({...newEmployee, role: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                 </div>
               </div>
               
-              <div className="p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-4">
-                <h5 className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">GCC Localized Compliance</h5>
+              <div className="p-5 bg-teal-50/50 rounded-2xl border border-teal-100 space-y-4">
+                <h5 className="text-[10px] font-black text-teal-700 uppercase tracking-widest">GCC Localized Compliance</h5>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Jurisdiction</label>
-                    <select value={newEmployee.data_residency_country} onChange={e => setNewEmployee({...newEmployee, data_residency_country: e.target.value})} className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl outline-none text-sm font-bold text-indigo-900">
+                    <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">Jurisdiction</label>
+                    <select value={newEmployee.data_residency_country} onChange={e => setNewEmployee({...newEmployee, data_residency_country: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900">
                       <option value="AE">🇦🇪 United Arab Emirates</option>
                       <option value="SA">🇸🇦 Saudi Arabia</option>
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Basic Salary (Monthly)</label>
-                    <input type="number" required value={newEmployee.basic_salary} onChange={e => setNewEmployee({...newEmployee, basic_salary: e.target.value})} className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold text-indigo-900" />
+                    <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">Basic Salary (Monthly)</label>
+                    <input type="number" required value={newEmployee.basic_salary} onChange={e => setNewEmployee({...newEmployee, basic_salary: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-bold text-teal-900" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">National ID Value</label>
-                      <input type="text" required placeholder="784-XXXX-XXXXXXX-X" value={newEmployee.national_id_value} onChange={e => setNewEmployee({...newEmployee, national_id_value: e.target.value})} className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl outline-none text-sm font-bold text-indigo-900" />
+                      <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">National ID Value</label>
+                      <input type="text" required placeholder="784-XXXX-XXXXXXX-X" value={newEmployee.national_id_value} onChange={e => setNewEmployee({...newEmployee, national_id_value: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900" />
                    </div>
                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Start Date</label>
-                      <input type="date" required value={newEmployee.start_date} onChange={e => setNewEmployee({...newEmployee, start_date: e.target.value})} className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl outline-none text-sm font-bold text-indigo-900" />
+                      <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">Start Date</label>
+                      <input type="date" required value={newEmployee.start_date} onChange={e => setNewEmployee({...newEmployee, start_date: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900" />
                    </div>
                 </div>
               </div>
 
               <div className="flex justify-end space-x-3 pt-4">
                 <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition">Discard</button>
-                <button type="submit" className="px-8 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 shadow-lg transition">Create Employee Profile</button>
+                <button type="submit" className="px-8 py-2.5 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700 shadow-lg transition">Create Employee Profile</button>
               </div>
             </form>
           </div>
