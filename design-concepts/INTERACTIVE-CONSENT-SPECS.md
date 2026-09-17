@@ -1,4 +1,4 @@
-# VantageHR — Interactive Privacy Consent & Template UI Design Specs
+# Antum People — Interactive Privacy Consent & Template UI Design Specs
 
 > **Author:** Product Designer
 > **Date:** June 2026
@@ -297,4 +297,4 @@ Consent Step Entry
 
 ---
 
-*Version 1.0 — Product Designer, VantageHR | June 2026*
+*Version 1.0 — Product Designer, Antum | June 2026*

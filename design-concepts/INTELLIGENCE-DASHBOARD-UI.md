@@ -1,4 +1,4 @@
-# VantageHR — Intelligence Dashboard & Bilingual Reporting UI Design
+# Antum People — Intelligence Dashboard & Bilingual Reporting UI Design
 
 > **Author:** Product Designer
 > **Date:** September 2026
@@ -45,7 +45,7 @@ Top-level route: `Dashboard > Intelligence` (default landing view for leadership
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│ ● VantageHR   Intelligence Dashboard                                            │
+│ ● Antum People   Intelligence Dashboard                                            │
 │ ▸ Executive          [ EN ▾ | العربية ]   [Reporting: AED ▾]  [AE+SA ▾] [Q3 2026 ▾]│
 │ ▸ Workforce Economics                                                           │
 │ ▸ Retention                                                                    │
@@ -232,7 +232,7 @@ The same toggle pattern as the consent flow: a pill segmented control `EN ▾ | 
 ```
 LTR (EN)                              RTL (AR)
 ┌─────────────────────────┐           ┌─────────────────────────┐
-│ ● VantageHR   [EN|عربية]│           │ ● VantageHR   [عربية|EN]│
+│ ● Antum People   [EN|عربية]│           │ ● Antum People   [عربية|EN]│
 │ ┌──────┐                │           │                ┌──────┐ │
 │ │ Side │   Content      │    →      │   Content      │ Side │ │
 │ │ bar  │                │           │                │ bar  │ │
@@ -320,4 +320,4 @@ IntelligenceDashboard
 
 ---
 
-*Version 1.0 — Product Designer, VantageHR*
+*Version 1.0 — Product Designer, Antum*

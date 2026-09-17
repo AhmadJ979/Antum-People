@@ -1,7 +1,7 @@
-# VantageHR — Compliance & EOSB Management UI Design
+# Antum People — Compliance & EOSB Management UI Design
 
 > **Based on:** GCC Compliance Requirements Report (compliance-expert)
-> **Brand Alignment:** VantageHR Identity — Deep Teal `#0F766E`, Inter font, slate card system
+> **Brand Alignment:** Antum Identity — Deep Teal `#0F766E`, Inter font, slate card system
 > **Jurisdictions:** UAE & KSA
 
 ---
@@ -24,7 +24,7 @@ The Compliance Dashboard lives as a tab within the main Analytics section (sideb
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ [VantageHR Logo]  Dashboard > Compliance                  [🇦🇪 UAE] [🇸🇦 KSA]│
+│ [Antum People Logo]  Dashboard > Compliance                  [🇦🇪 UAE] [🇸🇦 KSA]│
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │ ┌──────────────────────────────────────────────────────────────────────┐    │
@@ -315,7 +315,7 @@ Step 1: Employee Details → Step 2: Contract Info → Step 3: Privacy Consent �
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  [VantageHR Logo]  Onboarding > Privacy Consent  [🌐 English] [🌐 العربية] │
+│  [Antum People Logo]  Onboarding > Privacy Consent  [🌐 English] [🌐 العربية] │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  Employee: Sarah Ahmed — Engineering                           Step 3 of 4 │
@@ -436,7 +436,7 @@ On submission, the system records in `consent_records`:
 
 ## 4. Brand Alignment Notes
 
-All three interfaces (Compliance Dashboard, EOSB Calculator, Privacy Consent) are aligned with the VantageHR brand system defined in `BRAND-IDENTITY.md`:
+All three interfaces (Compliance Dashboard, EOSB Calculator, Privacy Consent) are aligned with the Antum brand system defined in `BRAND-IDENTITY.md`:
 
 | Brand Element | Application |
 |---------------|-------------|
@@ -525,4 +525,4 @@ PrivacyConsentStep
 
 ---
 
-*Version 1.0 — Product Designer, VantageHR | June 2026*
+*Version 1.0 — Product Designer, Antum | June 2026*

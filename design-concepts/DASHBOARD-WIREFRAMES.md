@@ -1,4 +1,4 @@
-# VantageHR — Workforce Intelligence Dashboard Wireframes
+# Antum People — Workforce Intelligence Dashboard Wireframes
 
 ## Dashboard Architecture
 
@@ -13,7 +13,7 @@ The dashboard follows a **hierarchy of insight** approach:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ [VantageHR Logo]  Dashboard │ Employees │ Transitions │ Analytics  [👤]    │
+│ [Antum People Logo]  Dashboard │ Employees │ Transitions │ Analytics  [👤]    │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐                   │
@@ -58,7 +58,7 @@ The dashboard follows a **hierarchy of insight** approach:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ [VantageHR Logo]  Dashboard > Workforce Economics           [Export] [PDF] │
+│ [Antum People Logo]  Dashboard > Workforce Economics           [Export] [PDF] │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌────────────────────────────┐  ┌────────────────────────────┐            │
@@ -101,7 +101,7 @@ The dashboard follows a **hierarchy of insight** approach:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ [VantageHR Logo]  Dashboard > Retention Analytics       [Filter: Q2 2026]  │
+│ [Antum People Logo]  Dashboard > Retention Analytics       [Filter: Q2 2026]  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌────────────────────────────┐  ┌────────────────────────────┐            │
@@ -143,7 +143,7 @@ The dashboard follows a **hierarchy of insight** approach:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ [VantageHR Logo]  Dashboard > Time-to-Value          [Benchmark: Industry] │
+│ [Antum People Logo]  Dashboard > Time-to-Value          [Benchmark: Industry] │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌────────────────────────────┐  ┌────────────────────────────┐            │
@@ -209,4 +209,4 @@ Every wireframe component maps to a Tailwind utility class from our brand system
 
 ---
 
-*Version 1.0 — Product Designer, VantageHR*
+*Version 1.0 — Product Designer, Antum*
