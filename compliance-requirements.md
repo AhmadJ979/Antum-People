@@ -1,7 +1,8 @@
-# VantageHR — GCC Compliance Requirements Report
+# Antum People — GCC Compliance Requirements Report
 
 > **Author:** Compliance Expert (Agent)
 > **Date:** 2026-06-13
+> **Revision:** Brand updated to Antum People on 2026-09-17.
 > **Scope:** UAE & KSA — Labor Law, End-of-Service Benefits (EOSB), Data Privacy (PDPL)
 > **Audience:** Engineering (schema/datastore design), Product Design (UX flows), Lead (strategy/prioritization)
 
@@ -16,7 +17,7 @@
 5. [UAE PDPL (Federal Decree-Law No. 45 of 2021)](#5-uae-pdpl)
 6. [KSA PDPL (Personal Data Protection Law)](#6-ksa-pdpl)
 7. [Cross-Border & Dual-Jurisdiction Considerations](#7-cross-border)
-8. [Compliance Feature Recommendations for VantageHR](#8-feature-recommendations)
+8. [Compliance Feature Recommendations for Antum People](#8-feature-recommendations)
 9. [Appendix: Key Legal References](#9-appendix)
 
 ---
@@ -32,7 +33,7 @@
 
 ### 1.2 Onboarding Requirements
 
-| Requirement | Details | VantageHR Impact |
+| Requirement | Details | Antum People Impact |
 |---|---|---|
 | **Employment Contract** | Must be in writing (Arabic + English/other). Must be the standard MoHRE contract template. Must specify: salary, duration, work location, working hours, leave entitlements. | Schema needs contract_type (limited/unlimited), contract_language fields. Generate compliant contract templates. |
 | **Visa & Residency** | Employer-sponsored work visa required. Includes: entry permit, medical fitness test, Emirates ID, labour card, visa stamping. **Probation:** max 6 months, one extension allowed. | Track visa stages (status, expiry). Add probation_end_date field. Alert before visa/residency expiry. |
@@ -44,7 +45,7 @@
 
 ### 1.3 Offboarding Requirements
 
-| Requirement | Details | VantageHR Impact |
+| Requirement | Details | Antum People Impact |
 |---|---|---|
 | **Notice Period** | Min 30 days, max 90 days (per contract). Either party can give notice. During probation: 14 days' notice by employer, none by employee. | Capture notice_period_days, notice_type. Calculate EOSB effective date. |
 | **Termination Grounds** | Must be for a valid reason. Article 44 lists gross misconduct grounds for summary dismissal (no EOSB). | Categorise termination: resignation, redundancy, mutual_agreement, termination_with_cause, termination_without_cause. |
@@ -68,7 +69,7 @@
 
 ### 2.2 Onboarding Requirements
 
-| Requirement | Details | VantageHR Impact |
+| Requirement | Details | Antum People Impact |
 |---|---|---|
 | **Employment Contract** | Must be in Arabic (bilingual contracts permitted). Must specify: salary, duration, place of work, probation period, leave, notice period. Must be in writing. | Similar to UAE — support Arabic as mandatory language, contract templates. |
 | **Visa & Residency** | Employer-sponsored work visa. Includes: job offer (through Qiwa), visa issuance, medical exam, fingerprinting, Iqama (residency ID). | Track visa/Iqama stages. Qiwa integration potential. |
@@ -81,7 +82,7 @@
 
 ### 2.3 Offboarding Requirements
 
-| Requirement | Details | VantageHR Impact |
+| Requirement | Details | Antum People Impact |
 |---|---|---|
 | **Notice Period** | Min 30 days during probation (by employer). Post-probation: 60 days for indefinite contracts, 30 days for fixed-term. Employee side: 30 days (non-Saudi) / 60 days (Saudi). | notice_period_days, complex role-based rules. |
 | **Termination Grounds** | Must be for a valid reason. Art. 77 lists gross misconduct grounds. Art. 74 defines employer rights for summary dismissal. | Same categorisation as UAE but different qualifying criteria. |
@@ -300,11 +301,11 @@ function calculateEOSB_KSA(totalSalary, startDate, endDate, gaveProperNotice):
 - **Primary Law:** Federal Decree-Law No. 45 of 2021 on the Protection of Personal Data ("UAE PDPL").
 - **Effective Date:** Law published 20 September 2021; enforcement delayed. Enforcement began in 2024 with the establishment of the UAE Data Office.
 - **Regulator:** UAE Data Office (established 2022).
-- **Relationship with DIFC/ADGM:** The UAE PDPL is federal law. DIFC Law No. 5 of 2020 and ADGM Data Protection Regulations 2021 apply **within** those free zones. VantageHR must comply with whichever law applies based on the entity's location.
+- **Relationship with DIFC/ADGM:** The UAE PDPL is federal law. DIFC Law No. 5 of 2020 and ADGM Data Protection Regulations 2021 apply **within** those free zones. Antum must comply with whichever law applies based on the entity's location.
 
 ### 5.2 Key Requirements for Employee Data
 
-| Requirement | Details | VantageHR Impact |
+| Requirement | Details | Antum People Impact |
 |---|---|---|
 | **Consent** | Processing employee data requires explicit consent. For HR processing (contractual necessity), Art. 4(2) allows processing without consent. | Consent capture on onboarding. Purpose limitation notices. |
 | **Purpose Limitation** | Data must be collected for specified, explicit, legitimate purposes. | Privacy notice at data collection point. |
@@ -351,7 +352,7 @@ function calculateEOSB_KSA(totalSalary, startDate, endDate, gaveProperNotice):
 ### 5.4 Schema/Data Residency
 
 - Employee personal data must be stored **within UAE data centres** or servers.
-- If the VantageHR platform runs in a non-UAE jurisdiction, the employer (controller) remains responsible.
+- If the Antum People platform runs in a non-UAE jurisdiction, the employer (controller) remains responsible.
 - Recommendation: Deploy on UAE-based infrastructure (or ensure adequate safeguards for cross-border transfer).
 
 ---
@@ -366,7 +367,7 @@ function calculateEOSB_KSA(totalSalary, startDate, endDate, gaveProperNotice):
 
 ### 6.2 Key Requirements for Employee Data
 
-| Requirement | Details | VantageHR Impact |
+| Requirement | Details | Antum People Impact |
 |---|---|---|
 | **Consent** | Explicit consent required unless one of the legal exceptions applies (e.g., contractual necessity for employment). Art. 6 lists lawful bases. | Consent mechanism + lawful basis recording. |
 | **Purpose Limitation** | Data collected for specific, explicit, legitimate purpose. | Privacy notice at collection. Purpose tags on data fields. |
@@ -413,10 +414,10 @@ function calculateEOSB_KSA(totalSalary, startDate, endDate, gaveProperNotice):
 
 4. **Automated Decision-Making:**
    - Employees have the right to object to solely automated decision-making.
-   - VantageHR's predictive analytics ("Intelligence Tier") must offer human oversight.
+   - Antum People's predictive analytics ("Intelligence Tier") must offer human oversight.
 
 5. **Data Processing Agreement (DPA):**
-   - VantageHR (data processor) must have a DPA with the employer (data controller).
+   - Antum (data processor) must have a DPA with the employer (data controller).
    - DPA must specify: subject, duration, nature, purpose, data types, obligations.
 
 6. **Personal Data Breach Register:**
@@ -435,7 +436,7 @@ For enterprises operating across both UAE and KSA:
 |---|---|
 | **Data Residency** | Keep each country's employee data within that country. Do not commingle. |
 | **Group Transfers** | Intra-group transfers between UAE and KSA entities require adequacy assessment or SCCs. |
-| **Unified Platform** | Single VantageHR instance can serve both with data segregation by `jurisdiction` tag. |
+| **Unified Platform** | Single Antum People instance can serve both with data segregation by `jurisdiction` tag. |
 | **EOSB Engine** | Must be jurisdiction-aware: calculate differently based on employee's governing law. |
 | **Contract Templates** | Separate templates for UAE (MoHRE-based) and KSA (Qiwa-based). |
 
@@ -513,7 +514,7 @@ CREATE TABLE IF NOT EXISTS eosb_calculations (
 
 ---
 
-## 8. Compliance Feature Recommendations for VantageHR
+## 8. Compliance Feature Recommendations for Antum People
 
 ### Priority Matrix (P0 = must-have for MVP, P1 = v1.1, P2 = v2.0)
 
@@ -540,7 +541,7 @@ CREATE TABLE IF NOT EXISTS eosb_calculations (
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                  VantageHR                       │
+│                  Antum People                       │
 │  ┌──────────────┐    ┌──────────────────────┐   │
 │  │ UAE Data     │    │ KSA Data             │   │
 │  │ Partition    │    │ Partition            │   │

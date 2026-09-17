@@ -2,7 +2,8 @@
 
 > **Jurisdiction:** Kingdom of Saudi Arabia
 > **Governing Law:** Saudi Labor Law (Royal Decree M/51), as amended
-> **Status:** Template v1.0
+> **Status:** Template v1.1
+> **Revision:** Brand updated to Antum People on 2026-09-17.
 > **Note:** Must be registered with Qiwa portal. Arabic is the primary legal language. Contracts for non-Saudi nationals must be fixed-term.
 
 ---
@@ -142,7 +143,7 @@ EOSB shall be calculated in accordance with Articles 74–86 of Saudi Labor Law 
 
 > **Penalty for Failure to Give Proper Notice:** Up to 50% of EOSB may be deducted if the employee fails to serve the full notice period.
 
-Full calculation details are available in the VantageHR EOSB Engine.
+Full calculation details are available in the Antum People EOSB Engine.
 
 ---
 
@@ -205,9 +206,9 @@ This contract constitutes the entire agreement between the parties and supersede
 
 ---
 
-### ANNEX A: VANTAGEHR DATA IMPORT / الملحق أ: استيراد البيانات إلى VantageHR
+### ANNEX A: ANTUM PEOPLE DATA IMPORT / الملحق أ: استيراد البيانات إلى Antum People
 
-| VantageHR Field | Contract Source |
+| Antum People Field | Contract Source |
 |---|---|
 | `first_name`, `last_name` | Employee name |
 | `email` | Employee email |

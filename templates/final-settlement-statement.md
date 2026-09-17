@@ -1,7 +1,8 @@
 # Final Settlement Statement / مخالصة نهائية
 
 > **Jurisdiction:** UAE / KSA
-> **Status:** Template v1.0
+> **Status:** Template v1.1
+> **Revision:** Brand updated to Antum People on 2026-09-17.
 > **Note:** This document must be signed by the employee upon receipt of final dues.
 
 ---

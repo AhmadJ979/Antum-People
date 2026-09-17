@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>DPIA Questionnaire</title>
+<style>
+  :root {
+    --teal:#0F766E; --teal2:#14B8A6; --slate900:#0F172A; --slate600:#475569;
+    --slate50:#F8FAFC; --amber:#F59E0B; --red:#EF4444; --border:#E2E8F0;
+  }
+  * { box-sizing: border-box; }
+  @page { size: A4; margin: 16mm 14mm 16mm 14mm; }
+  html, body { margin:0; padding:0; }
+  body {
+    font-family: 'Inter','Segoe UI','DejaVu Sans',sans-serif;
+    color: var(--slate900); font-size: 10.5pt; line-height: 1.5;
+    background: #fff;
+  }
+  .lang[dir="rtl"] body, .lang[dir="rtl"] { font-family: 'DejaVu Sans', 'Segoe UI', sans-serif; }
+
+  .doc-header {
+    background: var(--teal); color:#fff; border-radius: 8px;
+    padding: 14px 18px; margin-bottom: 14px;
+  }
+  .doc-header .brand { font-size: 15pt; font-weight:700; letter-spacing:.5px; }
+  .doc-header .brand span { color: #99F6E4; }
+  .doc-header .sub { font-size: 9.5pt; color:#E6FFFA; margin-top:3px; }
+  .doc-header .meta { font-size: 8.5pt; color:#CCFBF1; margin-top:6px; border-top:1px solid rgba(255,255,255,.25); padding-top:6px; }
+
+  h1 { font-size: 17pt; color: var(--teal); margin: 0 0 2px 0; line-height:1.25; }
+  h1.ar { direction: rtl; text-align: right; }
+  h2 { font-size: 12.5pt; color: var(--slate900); margin: 18px 0 8px; border-bottom: 2px solid var(--teal2); padding-bottom: 4px; }
+  h3 { font-size: 11pt; color: var(--teal); margin: 14px 0 6px; }
+  h4 { font-size: 10.5pt; color: var(--slate900); margin: 10px 0 4px; }
+  p { margin: 5px 0; }
+  ul, ol { margin: 5px 0 5px 20px; padding:0; }
+  li { margin: 2px 0; }
+  blockquote {
+    background: var(--slate50); border-left: 4px solid var(--teal);
+    margin: 10px 0; padding: 8px 12px; color: var(--slate600); font-size: 9pt;
+  }
+  hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9pt; }
+  th, td { border: 1px solid var(--border); padding: 5px 7px; text-align: left; vertical-align: top; }
+  thead th { background: var(--teal); color: #fff; }
+  tbody tr:nth-child(even) { background: var(--slate50); }
+
+  .lang-en { direction: ltr; text-align: left; }
+  .lang-ar { direction: rtl; text-align: right; }
+  .lang-ar table th, .lang-ar table td { text-align: right; }
+  .lang-ar ul, .lang-ar ol { margin: 5px 20px 5px 0; }
+
+  .section-divider {
+    margin: 20px 0 10px; padding: 8px 12px; border-radius: 6px;
+    background: var(--slate900); color:#fff; font-weight:700; font-size: 11pt;
+  }
+  .section-divider.ar { direction: rtl; }
+
+  .doc-footer {
+    margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--border);
+    font-size: 8pt; color: var(--slate600);
+    display: flex; justify-content: space-between;
+  }
+  .page-break { page-break-before: always; }
+  .avoid-break { page-break-inside: avoid; }
+  </style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="brand">Antum People &middot; Compliance Pack</div>
+  <div class="sub">Data Protection Impact Assessment Questionnaire (UAE & KSA)</div>
+  <div class="meta">Version 1.1 &middot; 2026-09-17 &middot; Pilot-ready &middot; EN / AR</div>
+</div>
+
+<h1 class="">Data Protection Impact Assessment (DPIA) Questionnaire</h1>
+<h1 class="ar">استبيان تقييم أثر حماية البيانات (DPIA)</h1>
+
+<blockquote><strong>Jurisdictions / النطاق القانوني:</strong> UAE (Federal Decree-Law No. 45 of 2021) and KSA (Royal Decree M/148, as amended 2023)<br/><strong>Status / الحالة:</strong> Template v1.0 — pilot-ready<br/><strong>Version / الإصدار:</strong> v1.1 (2026-09-17) — brand aligned to Antum People<br/><strong>Usage / الاستخدام:</strong> Complete before deploying high-risk HR processing (e.g., predictive analytics, biometric data, cross-border transfer). Map responses to `dpia_assessments` + `dpia_responses` tables.</blockquote>
+
+<div class="lang-en" dir="ltr" lang="en">
+  <div class="section-divider">ENGLISH VERSION</div>
+  <h3>Instructions</h3>
+<p>Complete every section. Rate each risk as <strong>Likelihood (1–5)</strong> × <strong>Impact (1–5)</strong>. A DPIA is <strong>mandatory</strong> for: (1) any analytics/Intelligence-Tier deployment, (2) biometric or health data processing, and (3) cross-border transfer of employee data.</p>
+<h3>A. Screening &amp; Processing Overview</h3>
+<table><thead><tr><th>#</th><th>Question</th><th>Response</th></tr></thead><tbody><tr><td>A1</td><td>Project / processing activity name</td><td>[project_name]</td></tr><tr><td>A2</td><td>Purpose of processing</td><td>[purpose]</td></tr><tr><td>A3</td><td>Lawful basis (consent / contract necessity / legal obligation / legitimate interest)</td><td>[lawful_basis]</td></tr><tr><td>A4</td><td>Data subject categories (employees, applicants, dependants, ex-employees)</td><td>[data_subject_categories]</td></tr><tr><td>A5</td><td>Personal data categories collected</td><td>[data_categories]</td></tr><tr><td>A6</td><td>Is <strong>sensitive data</strong> involved (health, biometric, ethnicity, religion)?</td><td>☐ Yes ☐ No</td></tr><tr><td>A7</td><td>Controller / Processor</td><td>[controller_ref] / [processor_ref]</td></tr><tr><td>A8</td><td>Retention period &amp; deletion schedule</td><td>[retention_schedule]</td></tr><tr><td>A9</td><td>Is there a <strong>cross-border transfer</strong>? Destination &amp; mechanism</td><td>☐ No ☐ Yes: [destination] via [mechanism]</td></tr></tbody></table>
+<h3>B. Necessity &amp; Proportionality</h3>
+<table><thead><tr><th>#</th><th>Question</th><th>Yes / No</th><th>Notes</th></tr></thead><tbody><tr><td>B1</td><td>Is the processing <strong>necessary</strong> to achieve the purpose (no less-intrusive alternative)?</td><td>☐ / ☐</td><td></td></tr><tr><td>B2</td><td>Is data <strong>minimised</strong> (only what is required)?</td><td>☐ / ☐</td><td></td></tr><tr><td>B3</td><td>Are data subjects <strong>informed</strong> via a privacy notice at collection?</td><td>☐ / ☐</td><td></td></tr><tr><td>B4</td><td>Is a <strong>lawful basis</strong> recorded for every purpose?</td><td>☐ / ☐</td><td></td></tr><tr><td>B5</td><td><strong>Automated-processing disclosure (UAE PDPL Art. 14):</strong> are employees informed when AI / automated systems (e.g., AI agents) process their data or make decisions about them, and is human oversight available?</td><td>☐ / ☐</td><td></td></tr><tr><td>B6</td><td>Does any automated decision produce a legal or similarly significant effect on employees?</td><td>☐ / ☐</td><td></td></tr></tbody></table>
+<h3>C. Risk Identification &amp; Scoring</h3>
+<p>Score each risk <strong>Likelihood (1–5)</strong> × <strong>Impact (1–5)</strong> → <strong>Score (1–25)</strong>.</p>
+<table><thead><tr><th>#</th><th>Risk category</th><th>Likelihood</th><th>Impact</th><th>Score</th></tr></thead><tbody><tr><td>C1</td><td>Unauthorised access to personal data</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C2</td><td>Data loss, corruption, or alteration</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C3</td><td>Excessive retention (data kept beyond purpose)</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C4</td><td>Function creep / re-purposing</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C5</td><td>Cross-border exposure (inadequate destination protection)</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C6</td><td>Automated bias / unfair profiling</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C7</td><td>Third-party / vendor compromise</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C8</td><td>DSR non-fulfilment (access/erasure delays)</td><td>__ /5</td><td>__ /5</td><td>__</td></tr></tbody></table>
+<h3>D. Risk Assessment Summary</h3>
+<table><thead><tr><th>Total score (sum of C1–C8)</th><th>Band</th><th>Required action</th></tr></thead><tbody><tr><td>8–32</td><td>Low</td><td>Accept; document rationale</td></tr><tr><td>33–64</td><td>Medium</td><td>Mitigate; re-assess in 12 months</td></tr><tr><td>65–152</td><td>High</td><td>Mitigate before go-live; re-assess in 6 months</td></tr><tr><td>153–200</td><td>Critical</td><td>Do not proceed until residual ≤ Medium; escalate to DPO</td></tr></tbody></table>
+<p><strong>Regulator consultation trigger:</strong> if residual risk remains <strong>High/Critical</strong> after mitigation, consult the supervisory authority — <strong>UAE Data Office</strong> (UAE) or <strong>SDAIA/NDMO</strong> (KSA) — before processing.</p>
+<h3>E. Mitigation Measures</h3>
+<table><thead><tr><th>#</th><th>Control</th><th>Addressed?</th><th>Residual Likelihood</th><th>Residual Impact</th></tr></thead><tbody><tr><td>E1</td><td>Encryption (AES-256 at rest, TLS 1.2+ in transit)</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E2</td><td>Role-based access control (RBAC)</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E3</td><td>Retention auto-purge / anonymisation</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E4</td><td>Purpose tagging + lawful-basis enforcement</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E5</td><td>Geo-partitioning + SCCs / adequacy for transfers</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E6</td><td>Human-in-the-loop for automated decisions</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E7</td><td>Vendor DPA + security questionnaire + breach clause</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E8</td><td>DSR workflow with 30-day SLA + erasure engine</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr></tbody></table>
+<h3>F. Residual Risk &amp; Sign-off</h3>
+<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Residual risk score (after mitigation)</td><td>[residual_risk_score]</td></tr><tr><td>Residual risk band</td><td>☐ Low ☐ Medium ☐ High ☐ Critical</td></tr><tr><td>DPO review</td><td>[dpo_reviewer] — [dpo_review_date]</td></tr><tr><td>Controller sign-off</td><td>[controller_sign_off] — [sign_off_date]</td></tr><tr><td>Review due date</td><td>[review_due_date]</td></tr></tbody></table>
+<hr/>
+</div>
+
+<div class="lang-ar page-break" dir="rtl" lang="ar">
+  <div class="section-divider ar">النسخة العربية</div>
+  <h3>التعليمات</h3>
+<p>أكمل كل قسم. قيّم كل خطر كـ <strong>الاحتمالية (1–5)</strong> × <strong>الأثر (1–5)</strong>. يكون تقييم الأثر <strong>إلزامياً</strong> في الحالات التالية: (1) أي نشر لتحليلات/طبقة الذكاء، (2) معالجة البيانات البيومترية أو الصحية، و(3) نقل بيانات الموظفين عبر الحدود.</p>
+<h3>أ. الفحص ونظرة عامة على المعالجة</h3>
+<table><thead><tr><th>#</th><th>السؤال</th><th>الإجابة</th></tr></thead><tbody><tr><td>A1</td><td>اسم المشروع / نشاط المعالجة</td><td>[project_name]</td></tr><tr><td>A2</td><td>الغرض من المعالجة</td><td>[purpose]</td></tr><tr><td>A3</td><td>الأساس القانوني (موافقة / ضرورة تعاقدية / التزام قانوني / مصلحة مشروعة)</td><td>[lawful_basis]</td></tr><tr><td>A4</td><td>فئات أصحاب البيانات (موظفون، متقدمون، مُعالون، موظفون سابقون)</td><td>[data_subject_categories]</td></tr><tr><td>A5</td><td>فئات البيانات الشخصية المجمعة</td><td>[data_categories]</td></tr><tr><td>A6</td><td>هل توجد <strong>بيانات حساسة</strong> (صحية، بيومترية، عرقية، دينية)؟</td><td>☐ نعم ☐ لا</td></tr><tr><td>A7</td><td>جهة التحكم / المعالِج</td><td>[controller_ref] / [processor_ref]</td></tr><tr><td>A8</td><td>فترة الاحتفاظ وجدول الحذف</td><td>[retention_schedule]</td></tr><tr><td>A9</td><td>هل يوجد <strong>نقل عبر الحدود</strong>؟ الوجهة والآلية</td><td>☐ لا ☐ نعم: [destination] عبر [mechanism]</td></tr></tbody></table>
+<h3>ب. الضرورة والتناسب</h3>
+<table><thead><tr><th>#</th><th>السؤال</th><th>نعم / لا</th><th>ملاحظات</th></tr></thead><tbody><tr><td>B1</td><td>هل المعالجة <strong>ضرورية</strong> لتحقيق الغرض (لا يوجد بديل أقل تدخلاً)؟</td><td>☐ / ☐</td><td></td></tr><tr><td>B2</td><td>هل البيانات <strong>مُقلصة</strong> (فقط ما هو مطلوب)؟</td><td>☐ / ☐</td><td></td></tr><tr><td>B3</td><td>هل تم <strong>إعلام</strong> أصحاب البيانات عبر إشعار خصوصية عند الجمع؟</td><td>☐ / ☐</td><td></td></tr><tr><td>B4</td><td>هل تم تسجيل <strong>أساس قانوني</strong> لكل غرض؟</td><td>☐ / ☐</td><td></td></tr><tr><td>B5</td><td><strong>الإفصاح عن المعالجة الآلية (قانون الإمارات المادة 14):</strong> هل يتم إعلام الموظفين عند معالجة بياناتهم بواسطة أنظمة الذكاء الاصطناعي/الأنظمة الآلية (مثل وكلاء الذكاء الاصطناعي) أو عند اتخاذ قرارات بشأنهم، وهل تتوفر رقابة بشرية؟</td><td>☐ / ☐</td><td></td></tr><tr><td>B6</td><td>هل ينتج عن أي قرار آلي أثر قانوني أو مماثل في الأهمية على الموظفين؟</td><td>☐ / ☐</td><td></td></tr></tbody></table>
+<h3>ج. تحديد المخاطر وتقييمها</h3>
+<p>قيّم كل خطر: <strong>الاحتمالية (1–5)</strong> × <strong>الأثر (1–5)</strong> → <strong>النتيجة (1–25)</strong>.</p>
+<table><thead><tr><th>#</th><th>فئة الخطر</th><th>الاحتمالية</th><th>الأثر</th><th>النتيجة</th></tr></thead><tbody><tr><td>C1</td><td>الوصول غير المصرح به إلى البيانات الشخصية</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C2</td><td>فقدان البيانات أو تلفها أو تعديلها</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C3</td><td>الاحتفاظ المفرط (بيانات تتجاوز الغرض)</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C4</td><td>انحراف الغرض / إعادة الاستخدام</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C5</td><td>التعرض عبر الحدود (حماية غير كافية في الوجهة)</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C6</td><td>التحيز الآلي / التنميط غير العادل</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C7</td><td>اختراق طرف ثالث / مورّد</td><td>__ /5</td><td>__ /5</td><td>__</td></tr><tr><td>C8</td><td>عدم تلبية طلبات أصحاب البيانات (تأخير الاطلاع/المحو)</td><td>__ /5</td><td>__ /5</td><td>__</td></tr></tbody></table>
+<h3>د. ملخص تقييم المخاطر</h3>
+<table><thead><tr><th>إجمالي النتيجة (مجموع C1–C8)</th><th>النطاق</th><th>الإجراء المطلوب</th></tr></thead><tbody><tr><td>8–32</td><td>منخفض</td><td>قبول؛ توثيق المبرر</td></tr><tr><td>33–64</td><td>متوسط</td><td>معالجة؛ إعادة تقييم خلال 12 شهراً</td></tr><tr><td>65–152</td><td>مرتفع</td><td>معالجة قبل الإطلاق؛ إعادة تقييم خلال 6 أشهر</td></tr><tr><td>153–200</td><td>حرج</td><td>عدم المتابعة حتى يصبح الخطر المتبقي ≤ متوسط؛ التصعيد لمسؤول حماية البيانات</td></tr></tbody></table>
+<p><strong>شرط استشارة الجهة التنظيمية:</strong> إذا بقي الخطر المتبقي <strong>مرتفعاً/حرجاً</strong> بعد المعالجة، يجب استشارة الجهة الإشرافية — <strong>مكتب البيانات الإماراتي</strong> (الإمارات) أو <strong>سدايا/المكتب الوطني لإدارة البيانات</strong> (السعودية) — قبل المعالجة.</p>
+<h3>هـ. تدابير المعالجة</h3>
+<table><thead><tr><th>#</th><th>الضابط</th><th>تمت معالجته؟</th><th>الاحتمالية المتبقية</th><th>الأثر المتبقي</th></tr></thead><tbody><tr><td>E1</td><td>التشفير (AES-256 أثناء التخزين، TLS 1.2+ أثناء النقل)</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E2</td><td>ضوابط الوصول القائمة على الأدوار (RBAC)</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E3</td><td>الحذف التلقائي / إخفاء الهوية</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E4</td><td>تصنيف الغرض + إنفاذ الأساس القانوني</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E5</td><td>التقسيم الجغرافي + الشروط النموذجية/الكفاية للنقل</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E6</td><td>وجود عنصر بشري في القرارات الآلية</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E7</td><td>اتفاقية معالجة بيانات مع المورّد + استبيان أمني + بند الانتهاك</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr><tr><td>E8</td><td>سير عمل طلبات أصحاب البيانات بمهلة 30 يوماً + محرك المحو</td><td>☐</td><td>__ /5</td><td>__ /5</td></tr></tbody></table>
+<h3>و. الخطر المتبقي والاعتماد</h3>
+<table><thead><tr><th>الحقل</th><th>القيمة</th></tr></thead><tbody><tr><td>درجة الخطر المتبقي (بعد المعالجة)</td><td>[residual_risk_score]</td></tr><tr><td>نطاق الخطر المتبقي</td><td>☐ منخفض ☐ متوسط ☐ مرتفع ☐ حرج</td></tr><tr><td>مراجعة مسؤول حماية البيانات</td><td>[dpo_reviewer] — [dpo_review_date]</td></tr><tr><td>اعتماد جهة التحكم</td><td>[controller_sign_off] — [sign_off_date]</td></tr><tr><td>تاريخ المراجعة التالي</td><td>[review_due_date]</td></tr></tbody></table>
+</div>
+
+<div class="doc-footer">
+  <span>Antum People &middot; Compliance Pack &middot; v1.1</span>
+  <span>2026-09-17 &middot; UAE PDPL &amp; KSA PDPL</span>
+</div>
+
+</body>
+</html>
