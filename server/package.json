@@ -1,7 +1,7 @@
 {
-  "name": "vantagehr-server",
+  "name": "antum-people-server",
   "version": "1.0.0",
-  "description": "Express backend server for VantageHR",
+  "description": "Express backend server for Antum People",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
