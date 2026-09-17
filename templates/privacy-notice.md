@@ -3,9 +3,10 @@
 
 > **Jurisdictions / النطاق القانوني:** UAE (Federal Decree-Law No. 45 of 2021 — UAE PDPL) and KSA (Personal Data Protection Law — Royal Decree M/148, as amended 2023)
 > **Status / الحالة:** Template v2.0 — pilot-ready
-> **Version / الإصدار:** v2.1 (2026-09-17) — brand updated to Antum People
+> **Version / الإصدار:** v2.2 (2026-09-17) — owner legal details applied (DPO name, partial address, entity status)
 > **Usage / الاستخدام:** Display to employee during onboarding. Capture consent acknowledgment in `consent_records` table.
 > **Note / ملاحظة:** Article references follow the Antum People compliance reference set. Confirm against final official translations before client-facing certification.
+> **Arabic wordmark / العلامة العربية:** Latin "Antum" used in Arabic text — [TO CONFIRM — Arabic wordmark transliteration]
 
 ---
 
@@ -16,7 +17,7 @@
 **Controller / Data Controller:** [employer_name] ("we", "us", "the Company")
 **Registered Office:** [employer_address]
 **Data Protection Contact:** [dpo_name] — [dpo_email] — [dpo_phone]
-**Processor (service provider):** Antum People ([Antum legal entity — TO CONFIRM]), which hosts and processes your data on our documented instructions.
+**Processor (service provider):** Antum People — operated by Antum (legal entity registration in progress [TO CONFIRM — formal entity name/suffix]); registered at Dubai, United Arab Emirates [TO CONFIRM — full registered address pending]; DPO: Ahmad Aljairoudi, dpo@antum.ae (reserved), phone [TO CONFIRM — DPO phone]. It hosts and processes your data on our documented instructions.
 
 This Privacy Notice explains how we collect, use, disclose, retain, and protect your personal data in connection with your employment. We process your data under **UAE PDPL (Federal Decree-Law No. 45 of 2021)** and/or **KSA PDPL (Royal Decree M/148)** as applicable to your employment jurisdiction.
 
@@ -128,7 +129,7 @@ For any questions about this notice or your data: **[dpo_name]** — **[dpo_emai
 **جهة التحكم (المسؤول عن البيانات):** [employer_name] ("نحن" / "الشركة")
 **المقر المسجل:** [employer_address]
 **جهة الاتصال لحماية البيانات:** [dpo_name] — [dpo_email] — [dpo_phone]
-**المعالِج (مزود الخدمة):** Antum People ([Antum legal entity — TO CONFIRM])، الذي يستضيف بياناتك ويعالجها وفقاً لتعليماتنا الموثقة.
+**المعالِج (مزود الخدمة):** Antum People — تديرها Antum (تسجيل الكيان القانوني قيد الإجراء [TO CONFIRM — الاسم الرسمي للكيان واللاحقة القانونية])؛ المقر: دبي، الإمارات العربية المتحدة [TO CONFIRM — العنوان المسجل الكامل قيد الاستكمال]؛ مسؤول حماية البيانات: Ahmad Aljairoudi، dpo@antum.ae (محجوز)، الهاتف [TO CONFIRM — هاتف مسؤول حماية البيانات]. يستضيف بياناتك ويعالجها وفقاً لتعليماتنا الموثقة.
 
 يشرح هذا الإشعار كيفية جمع بياناتك الشخصية واستخدامها والإفصاح عنها والاحتفاظ بها وحمايتها فيما يتعلق بعلاقة العمل. نعالج بياناتك وفقاً **لقانون حماية البيانات الشخصية الإماراتي (المرسوم بقانون اتحادي رقم 45 لسنة 2021)** و/أو **نظام حماية البيانات الشخصية السعودي (المرسوم الملكي م/148 وتعديلاته لعام 2023)** حسبما ينطبق على جهة عملك.
 

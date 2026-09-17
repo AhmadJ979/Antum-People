@@ -18,7 +18,7 @@ This document is drafted bilingually (English primary, Arabic following). Clause
 
 1.1 **Controller** (`controller_ref`): [Employer Legal Name], [License/CR number], [Address]. The party that determines the purposes and means of processing Personal Data.
 
-1.2 **Processor** (`vendor_id` / `processor_ref`): [Processor legal entity — TO CONFIRM], [Licence / CR number — TO CONFIRM], [Registered address — TO CONFIRM]. The party that processes Personal Data on behalf of the Controller.
+1.2 **Processor** (`vendor_id` / `processor_ref`): Antum (legal entity registration in progress [TO CONFIRM — formal entity name/suffix]), trade licence / CR number [TO CONFIRM — trade licence / CR number], registered address: Dubai, United Arab Emirates [TO CONFIRM — full registered address pending]; DPO: Ahmad Aljairoudi, dpo@antum.ae (reserved), phone [TO CONFIRM — DPO phone]. The party that processes Personal Data on behalf of the Controller.
 
 1.3 This DPA forms part of the Master Services Agreement between the parties dated [date]. In the event of conflict, this DPA prevails on data-protection matters.
 
@@ -114,7 +114,7 @@ This DPA remains in force for the duration of the services and thereafter until 
 
 1.1 **جهة التحكم** (`controller_ref`): [الاسم القانوني لصاحب العمل]، [رقم الرخصة/السجل]، [العنوان]. الطرف الذي يحدد أغراض ووسائل معالجة البيانات الشخصية.
 
-1.2 **المعالِج** (`vendor_id` / `processor_ref`): [الاسم القانوني للمعالِج — TO CONFIRM]، [رقم الرخصة/السجل التجاري — TO CONFIRM]، [العنوان المسجل — TO CONFIRM]. الطرف الذي يعالج البيانات الشخصية نيابةً عن جهة التحكم.
+1.2 **المعالِج** (`vendor_id` / `processor_ref`): Antum (تسجيل الكيان القانوني قيد الإجراء [TO CONFIRM — الاسم الرسمي للكيان واللاحقة القانونية])، الرخصة التجارية / رقم السجل [TO CONFIRM — الرخصة التجارية / رقم السجل]، العنوان المسجل: دبي، الإمارات العربية المتحدة [TO CONFIRM — العنوان المسجل الكامل قيد الاستكمال]؛ مسؤول حماية البيانات: Ahmad Aljairoudi، dpo@antum.ae (محجوز)، الهاتف [TO CONFIRM — هاتف مسؤول حماية البيانات]. الطرف الذي يعالج البيانات الشخصية نيابةً عن جهة التحكم.
 
 1.3 تشكل هذه الاتفاقية جزءاً من اتفاقية الخدمات الرئيسية المبرمة بين الطرفين بتاريخ [التاريخ]. وفي حال التعارض، تسود هذه الاتفاقية في المسائل المتعلقة بحماية البيانات.
 
