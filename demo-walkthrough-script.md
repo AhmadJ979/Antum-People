@@ -9,8 +9,10 @@
 
 ## Before you start — 30-second prep checklist
 
-- [ ] App is running with **seeded demo data** (UAE + KSA employees, one active onboarding, one active offboarding).
-- [ ] Have two tabs ready to hot-switch: the **live app** (`client/src/App.tsx`) and the **bilingual prototype** (`design-concepts/intelligence-dashboard-prototype.html`).
+- [ ] **Confirm the live app loads** at https://b974147c03228029e277d1cbe6646fe6.ctonew.app — it's up now, but confirm it loads before the call rather than assuming: the public build was only just rebuilt from a stale pre-rebrand version.
+- [ ] **Log in** with the demo account — **username `admin`**. Get the password from the engineer (the `ADMIN_INITIAL_PASSWORD` deployment secret). Do a test login ahead of the call — never write a password into this file.
+- [ ] Confirm the app is showing **seeded demo data** (UAE + KSA employees, one active onboarding, one active offboarding).
+- [ ] Have two tabs ready to hot-switch: the **live app** (https://b974147c03228029e277d1cbe6646fe6.ctonew.app) and the **bilingual prototype** (`design-concepts/intelligence-dashboard-prototype.html`).
 - [ ] PDFs printed or open in a viewer: `templates/privacy-notice.pdf`, `templates/data-processing-agreement.pdf`, `templates/dpia-questionnaire.pdf`.
 - [ ] Know your honest caveats (see *Caveats & guardrails* at the end) — you will be asked.
 - [ ] Pre-select one **UAE example** and one **KSA example** employee for the EOSB side-by-side.
@@ -19,7 +21,7 @@
 
 | Surface | Status | File/screen |
 |---|---|---|
-| Executive Dashboard, Employee Directory, Transitions Hub, Strategic Intelligence | **Live build** | `client/src/App.tsx` |
+| Executive Dashboard, Employee Directory, Transitions Hub, Strategic Intelligence | **Live build** | https://b974147c03228029e277d1cbe6646fe6.ctonew.app (after login) |
 | Onboarding/offboarding checklists (UAE & KSA) | **Live logic** | `server/compliance_engine.js` (`checklistTemplates`) |
 | EOSB engine (UAE basic-salary vs KSA total-salary) | **Live logic** | `server/index.js` (`calculateEOSB`) |
 | Consent capture, compliance report, template render | **Live endpoints** | `/api/compliance/consent`, `/report`, `/templates/:name/:id` |
@@ -187,7 +189,7 @@ A: A named HR lead, access to your current onboarding/offboarding process for on
 
 | In the script | Real reference |
 |---|---|
-| Transitions Hub (onboarding/offboarding) | `client/src/App.tsx` → `activeTab === 'transitions'` |
+| Transitions Hub (onboarding/offboarding) | https://b974147c03228029e277d1cbe6646fe6.ctonew.app → sidebar **Transitions Hub** |
 | Onboarding/offboarding checklists | `server/compliance_engine.js` → `checklistTemplates` (UAE / KSA) |
 | EOSB engine | `server/index.js` → `calculateEOSB`; `POST /api/compliance/calculate-eosb` |
 | Consent capture | `POST /api/compliance/consent` → `consent_records` |
