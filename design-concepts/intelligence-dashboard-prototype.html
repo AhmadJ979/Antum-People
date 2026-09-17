@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>VantageHR — Intelligence Dashboard</title>
+<title>Antum People — Intelligence Dashboard</title>
 <style>
   :root{
     --teal:#0F766E; --teal-2:#14B8A6; --slate-900:#0F172A; --slate-600:#475569;
@@ -97,7 +97,7 @@
 <body id="body">
   <div class="shell">
     <aside class="sidebar">
-      <div class="logo"><span class="mark"></span><span data-i18n="brand">VantageHR</span></div>
+      <div class="logo"><span class="mark"></span><span data-i18n="brand">Antum People</span></div>
       <div class="nav-item active" data-i18n="nav.dashboard">Intelligence Dashboard</div>
       <div class="nav-item" data-i18n="nav.econ">Workforce Economics</div>
       <div class="nav-item" data-i18n="nav.retention">Retention</div>
@@ -134,13 +134,13 @@
       <div class="kpi-row">
         <div class="kpi">
           <div class="label" data-i18n="kpi.retention">Retention Lift (1-yr)</div>
-          <div class="value"><span data-num="retention">+4.2%</span></div>
+          <div class="value"><span data-num="+4.2%">+4.2%</span></div>
           <div class="delta up"><span data-i18n="kpi.retention_delta">▲ +1.1 pts vs 2025</span></div>
           <div class="note" data-i18n="kpi.retention_note">Cohort vs market benchmark</div>
         </div>
         <div class="kpi">
           <div class="label" data-i18n="kpi.ttv">Time-to-Value (days)</div>
-          <div class="value"><span data-num="ttv">12.4</span><span style="font-size:18px" data-i18n="unit.d"> d</span></div>
+          <div class="value"><span data-num="12.4">12.4</span><span style="font-size:18px" data-i18n="unit.d"> d</span></div>
           <div class="delta down"><span data-i18n="kpi.ttv_delta">▼ -2.6 d vs 15 d target</span></div>
           <div class="note" data-i18n="kpi.ttv_note">Start → full productivity</div>
         </div>
@@ -214,9 +214,9 @@
         <div class="card">
           <h3 data-i18n="chart.watch">Retention Risk Watchlist</h3>
           <ul class="watch">
-            <li>🔴 <span data-i18n="watch.1">Sales — 22% turnover (&gt;15% limit)</span></li>
-            <li>🟡 <span data-i18n="watch.2">3 preventable exits this quarter</span></li>
-            <li>🟡 <span data-i18n="watch.3">Engineering — 4 high-flight-risk (career-growth signal)</span></li>
+            <li>🔴 <span data-i18n="watch.1">Sales — 22% turnover (Ahmed R., &gt;15% limit)</span></li>
+            <li>🟡 <span data-i18n="watch.2">3 preventable exits this quarter (Sara L., James M.)</span></li>
+            <li>🟡 <span data-i18n="watch.3">Engineering — 4 flight-risk (career-growth, Fatima A.)</span></li>
           </ul>
         </div>
       </div>
@@ -226,7 +226,7 @@
 <script>
   const I18N = {
     en: {
-      brand:"VantageHR",
+      brand:"Antum People",
       "nav.dashboard":"Intelligence Dashboard","nav.econ":"Workforce Economics","nav.retention":"Retention",
       "nav.ttv":"Time-to-Value","nav.eosb":"EOSB Liability","nav.compliance":"Compliance",
       title:"Intelligence Dashboard","refreshed":"Last refreshed",
@@ -249,12 +249,12 @@
       "basis.ae":"UAE · basic salary only · tiered resignation",
       "basis.sa":"KSA · total salary · notice penalty applies",
       "chart.watch":"Retention Risk Watchlist",
-      "watch.1":"Sales — 22% turnover (>15% limit)",
-      "watch.2":"3 preventable exits this quarter",
-      "watch.3":"Engineering — 4 high-flight-risk (career-growth signal)"
+      "watch.1":"Sales — 22% turnover (Ahmed R., >15% limit)",
+      "watch.2":"3 preventable exits this quarter (Sara L., James M.)",
+      "watch.3":"Engineering — 4 flight-risk (career-growth, Fatima A.)"
     },
     ar: {
-      brand:"فانتاج إتش آر",
+      brand:"Antum People [TO CONFIRM]",
       "nav.dashboard":"لوحة المعلومات الذكية","nav.econ":"اقتصاديات القوى العاملة","nav.retention":"الاحتفاظ",
       "nav.ttv":"الوقت حتى الإنتاجية","nav.eosb":"التزامات نهاية الخدمة","nav.compliance":"الامتثال",
       title:"لوحة المعلومات الذكية","refreshed":"آخر تحديث",
@@ -277,9 +277,9 @@
       "basis.ae":"الإمارات · الراتب الأساسي فقط · استقالة متدرجة",
       "basis.sa":"السعودية · إجمالي الراتب · تُطبَّق غرامة الإشعار",
       "chart.watch":"قائمة مراقبة مخاطر الاحتفاظ",
-      "watch.1":"المبيعات — دوران ٢٢٪ (حد ١٥٪)",
-      "watch.2":"٣ حالات خروج يمكن تفاديها هذا الربع",
-      "watch.3":"الهندسة — ٤ موظفين بخطر مغادرة مرتفع (إشارة نمو مهني)"
+      "watch.1":"المبيعات — دوران ٢٢٪ (أحمد ر.، حد ١٥٪)",
+      "watch.2":"٣ حالات خروج يمكن تفاديها هذا الربع (سارة ل.، جيمس م.)",
+      "watch.3":"الهندسة — ٤ موظفين بخطر مغادرة (نمو مهني، فاطمة أ.)"
     }
   };
 
@@ -303,14 +303,14 @@
     document.querySelectorAll('[data-cur]').forEach(el=>{
       const v=parseInt(el.getAttribute('data-cur'),10);
       const cur=document.getElementById('currency').value;
-      const compact = v>=1000000 ? (v/1000000).toLocaleString(lang==='ar'?'ar-EG':'en-US',{maximumFractionDigits:1}) : v.toLocaleString();
+      const compact = v>=1000000 ? (v/1000000).toLocaleString(lang==='ar'?'ar-EG':'en-US',{maximumFractionDigits:1}) : v.toLocaleString(lang==='ar'?'ar-EG':'en-US');
       const unit = v>=1000000 ? (lang==='ar'?' مليون':'M') : '';
       if(lang==='ar'){ el.textContent = compact + unit + ' ' + (cur==='SAR'?'ر.س':'د.إ'); }
       else { el.textContent = cur + ' ' + compact + unit; }
     });
     document.querySelectorAll('[data-num]').forEach(el=>{
       const raw=el.getAttribute('data-num');
-      if(lang==='ar' && el.id!=='ttv') el.textContent = toArabic(raw);
+      el.textContent = (lang==='ar') ? toArabic(raw) : raw;
     });
   }
 

@@ -1,6 +1,6 @@
-# VantageHR — Design Concepts
+# Antum People — Design Concepts
 
-This directory contains the Product Designer's deliverables for the VantageHR Workforce Intelligence Platform.
+This directory contains the Product Designer's deliverables for the Antum People Workforce Intelligence Platform.
 
 ## Contents
 

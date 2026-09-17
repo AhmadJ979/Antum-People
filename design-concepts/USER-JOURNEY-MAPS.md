@@ -1,4 +1,4 @@
-# VantageHR — User Journey Maps
+# Antum People — User Journey Maps
 
 ## Overview
 These journey maps define the **onboarding** and **offboarding** workflows specifically identifying **strategic data capture points** where intelligence (cost-per-hire, retention drivers, sentiment) is gathered naturally — without creating administrative burden.
@@ -17,7 +17,7 @@ These journey maps define the **onboarding** and **offboarding** workflows speci
 
 | Step | User Action | System Touchpoint | Strategic Data Captured | UX Consideration |
 |------|-------------|-------------------|------------------------|------------------|
-| 1.1 | HR initiates onboarding from recruitment handoff | "New Hire" form in VantageHR | **Recruitment Cost** (agency fees, internal sourcing cost, referral bonus) | ✨ **Auto-populate from ATS integration** — HR fills one field not five |
+| 1.1 | HR initiates onboarding from recruitment handoff | "New Hire" form in Antum People | **Recruitment Cost** (agency fees, internal sourcing cost, referral bonus) | ✨ **Auto-populate from ATS integration** — HR fills one field not five |
 | 1.2 | HR enters salary, role, department | Employee profile creation | **Salary benchmark data** (for cost-per-hire + workforce economics) | ✨ **Market range tooltip** shows GCC percentile |
 | 1.3 | HR selects manager & team | Manager selection dropdown | **Manager assignment** (for retention analysis by manager) | ✨ **Type-ahead search** for large orgs |
 | 1.4 | System auto-generates onboarding task checklist | Onboarding tasks generated | **Task categories** (compliance, equipment, training, productivity) | ✨ **Milestone markers** ("Time-to-Value") appear automatically |
@@ -120,4 +120,4 @@ recruitment_cost   salary         ttv_date  departure_reason preventable   new_s
 
 ---
 
-*Version 1.0 — Product Designer, VantageHR*
+*Version 1.0 — Product Designer, Antum*

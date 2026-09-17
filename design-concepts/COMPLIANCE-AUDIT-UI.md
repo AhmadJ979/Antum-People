@@ -1,7 +1,7 @@
-# VantageHR — Compliance Audit & DSR Management UI Design
+# Antum People — Compliance Audit & DSR Management UI Design
 
 > **Based on:** GCC Compliance Requirements Report §§5-8 (UAE PDPL, KSA PDPL, Schema)
-> **Brand Alignment:** VantageHR Identity — Deep Teal `#0F766E`, Inter font, slate card system
+> **Brand Alignment:** Antum Identity — Deep Teal `#0F766E`, Inter font, slate card system
 > **Tables:** `consent_records`, `data_subject_requests`, `breach_register`
 
 ---
@@ -26,7 +26,7 @@ Provides HR admins and DPOs with a complete, searchable log of every consent int
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ [VantageHR Logo]  Compliance > Consent Audit              [Export CSV] [🔍]│
+│ [Antum People Logo]  Compliance > Consent Audit              [Export CSV] [🔍]│
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
@@ -122,7 +122,7 @@ A mandatory record (KSA PDPL Art. 6.4.6 requires breach register) for logging al
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ [VantageHR Logo]  Compliance > Breach Register          [+ New Breach Log] │
+│ [Antum People Logo]  Compliance > Breach Register          [+ New Breach Log] │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
@@ -220,7 +220,7 @@ Manages Data Subject Requests (right of access, rectification, erasure, portabil
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ [VantageHR Logo]  Compliance > DSR Requests              [+ New Request]   │
+│ [Antum People Logo]  Compliance > DSR Requests              [+ New Request]   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
@@ -320,7 +320,7 @@ Allows HR admins to configure which database fields map to which template placeh
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ [VantageHR Logo]  Settings > Template Mapping                              │
+│ [Antum People Logo]  Settings > Template Mapping                              │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
@@ -552,4 +552,4 @@ ComplianceAuditPage
 
 ---
 
-*Version 1.0 — Product Designer, VantageHR | June 2026*
+*Version 1.0 — Product Designer, Antum | June 2026*
