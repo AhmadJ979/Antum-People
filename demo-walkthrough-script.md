@@ -9,8 +9,8 @@
 
 ## Before you start — 30-second prep checklist
 
-- [ ] **Confirm the live app loads** at https://b974147c03228029e277d1cbe6646fe6.ctonew.app — the site is currently being restored by the engineer; if it doesn't load, flag it and do not start the call.
-- [ ] **Log in** with the demo account — **username `admin`**. Get the password from the engineer (it's the `ADMIN_INITIAL_PASSWORD` value; never write a password into this file).
+- [ ] **Confirm the live app loads** at https://b974147c03228029e277d1cbe6646fe6.ctonew.app — it's up now, but confirm it loads before the call rather than assuming: the public build was only just rebuilt from a stale pre-rebrand version.
+- [ ] **Log in** with the demo account — **username `admin`**. Get the password from the engineer (the `ADMIN_INITIAL_PASSWORD` deployment secret). Do a test login ahead of the call — never write a password into this file.
 - [ ] Confirm the app is showing **seeded demo data** (UAE + KSA employees, one active onboarding, one active offboarding).
 - [ ] Have two tabs ready to hot-switch: the **live app** (https://b974147c03228029e277d1cbe6646fe6.ctonew.app) and the **bilingual prototype** (`design-concepts/intelligence-dashboard-prototype.html`).
 - [ ] PDFs printed or open in a viewer: `templates/privacy-notice.pdf`, `templates/data-processing-agreement.pdf`, `templates/dpia-questionnaire.pdf`.
