@@ -2,7 +2,8 @@
 
 > **Reviewer:** Compliance Expert
 > **Date:** 2026-06-23
-> **Scope:** `calculateDetailedEOSB()` in `/home/team/shared/vantagehr/server/index.js` and audit trail schema
+> **Revision:** Brand updated to Antum People on 2026-09-17.
+> **Scope:** `calculateDetailedEOSB()` in `/home/team/shared/probable-octo-sniffle/server/index.js` and audit trail schema
 > **Reference:** `/home/team/shared/compliance-requirements.md` (Sections 3, 4, 7, 8)
 
 ---

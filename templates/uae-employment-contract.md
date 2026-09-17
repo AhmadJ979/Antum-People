@@ -2,7 +2,8 @@
 
 > **Jurisdiction:** UAE (Mainland) — Federal Decree-Law No. 33 of 2021
 > **Contract Type:** Fixed-Term (Limited)
-> **Status:** Template v1.0
+> **Status:** Template v1.1
+> **Revision:** Brand updated to Antum People on 2026-09-17.
 > **Note:** All contracts must be filed with MoHRE. This template complies with the standard MoHRE contract format. Final version should be bilingual (Arabic + English) per UAE law.
 
 ---
@@ -130,7 +131,7 @@ EOSB shall be calculated in accordance with Articles 51, 52, 53, and 132 of Fede
 - **Resignation reduction:** 1/3 (1–3 yrs), 2/3 (3–5 yrs), full (5+ yrs)
 - **Eligibility:** Minimum 1 year of continuous service
 
-Full calculation details are available in the VantageHR EOSB Engine.
+Full calculation details are available in the Antum People EOSB Engine.
 
 ---
 
@@ -199,11 +200,11 @@ This contract constitutes the entire agreement between the parties and supersede
 
 ---
 
-### ANNEX A: VANTAGEHR DATA IMPORT / الملحق أ: استيراد البيانات إلى VantageHR
+### ANNEX A: ANTUM PEOPLE DATA IMPORT / الملحق أ: استيراد البيانات إلى Antum People
 
-*The following fields from this contract shall be ingested into the VantageHR platform automatically for EOSB and compliance tracking:*
+*The following fields from this contract shall be ingested into the Antum People platform automatically for EOSB and compliance tracking:*
 
-| VantageHR Field | Contract Source |
+| Antum People Field | Contract Source |
 |---|---|
 | `first_name`, `last_name` | Employee name |
 | `email` | Employee email |

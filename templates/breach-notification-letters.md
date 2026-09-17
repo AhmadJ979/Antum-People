@@ -1,8 +1,9 @@
-# Breach Notification Templates — VantageHR
+# Breach Notification Templates — Antum People
 
 > **Jurisdictions:** UAE (Federal Decree-Law No. 45 of 2021) and KSA (Personal Data Protection Law M/148)
-> **Status:** Template v1.0 — Legal-use versions
-> **Usage:** Populated by VantageHR breach notification workflow, generated as PDF for regulatory submission and email for data subject notification.
+> **Status:** Template v1.1 — Legal-use versions
+> **Revision:** Brand updated to Antum People on 2026-09-17.
+> **Usage:** Populated by Antum People breach notification workflow, generated as PDF for regulatory submission and email for data subject notification.
 
 ---
 

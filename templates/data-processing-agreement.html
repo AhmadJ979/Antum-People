@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Data Processing Agreement</title>
+<style>
+  :root {
+    --teal:#0F766E; --teal2:#14B8A6; --slate900:#0F172A; --slate600:#475569;
+    --slate50:#F8FAFC; --amber:#F59E0B; --red:#EF4444; --border:#E2E8F0;
+  }
+  * { box-sizing: border-box; }
+  @page { size: A4; margin: 16mm 14mm 16mm 14mm; }
+  html, body { margin:0; padding:0; }
+  body {
+    font-family: 'Inter','Segoe UI','DejaVu Sans',sans-serif;
+    color: var(--slate900); font-size: 10.5pt; line-height: 1.5;
+    background: #fff;
+  }
+  .lang[dir="rtl"] body, .lang[dir="rtl"] { font-family: 'DejaVu Sans', 'Segoe UI', sans-serif; }
+
+  .doc-header {
+    background: var(--teal); color:#fff; border-radius: 8px;
+    padding: 14px 18px; margin-bottom: 14px;
+  }
+  .doc-header .brand { font-size: 15pt; font-weight:700; letter-spacing:.5px; }
+  .doc-header .brand span { color: #99F6E4; }
+  .doc-header .sub { font-size: 9.5pt; color:#E6FFFA; margin-top:3px; }
+  .doc-header .meta { font-size: 8.5pt; color:#CCFBF1; margin-top:6px; border-top:1px solid rgba(255,255,255,.25); padding-top:6px; }
+
+  h1 { font-size: 17pt; color: var(--teal); margin: 0 0 2px 0; line-height:1.25; }
+  h1.ar { direction: rtl; text-align: right; }
+  h2 { font-size: 12.5pt; color: var(--slate900); margin: 18px 0 8px; border-bottom: 2px solid var(--teal2); padding-bottom: 4px; }
+  h3 { font-size: 11pt; color: var(--teal); margin: 14px 0 6px; }
+  h4 { font-size: 10.5pt; color: var(--slate900); margin: 10px 0 4px; }
+  p { margin: 5px 0; }
+  ul, ol { margin: 5px 0 5px 20px; padding:0; }
+  li { margin: 2px 0; }
+  blockquote {
+    background: var(--slate50); border-left: 4px solid var(--teal);
+    margin: 10px 0; padding: 8px 12px; color: var(--slate600); font-size: 9pt;
+  }
+  hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9pt; }
+  th, td { border: 1px solid var(--border); padding: 5px 7px; text-align: left; vertical-align: top; }
+  thead th { background: var(--teal); color: #fff; }
+  tbody tr:nth-child(even) { background: var(--slate50); }
+
+  .lang-en { direction: ltr; text-align: left; }
+  .lang-ar { direction: rtl; text-align: right; }
+  .lang-ar table th, .lang-ar table td { text-align: right; }
+  .lang-ar ul, .lang-ar ol { margin: 5px 20px 5px 0; }
+
+  .section-divider {
+    margin: 20px 0 10px; padding: 8px 12px; border-radius: 6px;
+    background: var(--slate900); color:#fff; font-weight:700; font-size: 11pt;
+  }
+  .section-divider.ar { direction: rtl; }
+
+  .doc-footer {
+    margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--border);
+    font-size: 8pt; color: var(--slate600);
+    display: flex; justify-content: space-between;
+  }
+  .page-break { page-break-before: always; }
+  .avoid-break { page-break-inside: avoid; }
+  </style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="brand">Antum People &middot; Compliance Pack</div>
+  <div class="sub">Data Processing Agreement (UAE & KSA)</div>
+  <div class="meta">Version 1.0 &middot; 2026-09-17 &middot; Pilot-ready &middot; EN / AR</div>
+</div>
+
+<h1 class="">Data Processing Agreement (DPA) — Bilingual Template</h1>
+
+<blockquote><strong>Template ID:</strong> `antum-dpa-v1`<br/><strong>Author:</strong> Compliance Expert (Agent) — 2026-09-09<br/><strong>Revision:</strong> Brand updated to Antum People on 2026-09-17.<br/><strong>Use:</strong> Controller (Employer) ↔ Processor (Vendor / Antum sub-processor)<br/><strong>Jurisdictions:</strong> UAE PDPL (Federal Decree-Law No. 45/2021) &amp; KSA PDPL (Royal Decree M/148)<br/><strong>Status:</strong> Working template — obtain local counsel sign-off before use with live client data.<br/><strong>Schema mapping:</strong> Populates `vendor_contracts` + `cross_border_transfers` tables (see `compliance-dpia-vendor-risk.md` §3).</blockquote>
+
+<div class="lang-en" dir="ltr" lang="en">
+  <div class="section-divider">PART 1 — Data Processing Agreement (English)</div>
+  <h3>1. Parties and Roles</h3>
+<p>1.1 <strong>Controller</strong> (`controller_ref`): [Employer Legal Name], [License/CR number], [Address]. The party that determines the purposes and means of processing Personal Data.</p>
+<p>1.2 <strong>Processor</strong> (`vendor_id` / `processor_ref`): [Processor legal entity — TO CONFIRM], [Licence / CR number — TO CONFIRM], [Registered address — TO CONFIRM]. The party that processes Personal Data on behalf of the Controller.</p>
+<p>1.3 This DPA forms part of the Master Services Agreement between the parties dated [date]. In the event of conflict, this DPA prevails on data-protection matters.</p>
+<h3>2. Definitions</h3>
+<p>Capitalised terms have the meanings in the applicable law: UAE PDPL (Federal Decree-Law No. 45/2021) and/or KSA PDPL (Royal Decree M/148), as selected in §11. "Personal Data", "Processing", "Data Subject", "Controller", "Processor", "Breach", and "Supervisory Authority" take their statutory meanings.</p>
+<h3>3. Subject-matter, Duration, Nature and Purpose</h3>
+<table><thead><tr><th>Field</th><th>Detail</th><th>Schema</th></tr></thead><tbody><tr><td>Subject-matter</td><td>HR onboarding/offboarding data processing</td><td>`vendor_contracts.contract_type='dpa'`</td></tr><tr><td>Duration</td><td>From [start_date] until services end + deletion window</td><td>`vendor_contracts.start_date/end_date`</td></tr><tr><td>Nature</td><td>Hosting, storage, processing of employment records</td><td>`vendors.vendor_type`</td></tr><tr><td>Purpose</td><td>Provision of [Antum People SaaS / payroll / insurance / background-check] services</td><td>`dpia_assessments.purpose`</td></tr></tbody></table>
+<h3>4. Categories of Data Subjects and Personal Data</h3>
+<p>4.1 <strong>Data subjects</strong> (`dpia_assessments.data_subject_categories`): employees, applicants, dependants, former employees.</p>
+<p>4.2 <strong>Personal data categories</strong> (`dpia_assessments.data_categories`): identity, contact, employment, financial/salary, government IDs (Emirates ID / Iqama / passport), and — only where separately disclosed — health and biometric data (sensitive data).</p>
+<h3>5. Processor Obligations</h3>
+<p>The Processor shall:</p>
+<p>5.1 <strong>Act on documented instructions</strong> only, and inform the Controller if an instruction infringes applicable law (UAE PDPL Art. 8; KSA PDPL Art. 7).</p>
+<p>5.2 <strong>Confidentiality</strong> — ensure persons authorised to process are under confidentiality obligations.</p>
+<p>5.3 <strong>Security</strong> — implement appropriate technical and organisational measures (UAE PDPL Art. 11): encryption at rest (AES-256) and in transit (TLS 1.2+), access control, pseudonymisation where feasible, and regular testing.</p>
+<p>5.4 <strong>Sub-processors</strong> — not engage any sub-processor without the Controller's prior written authorisation, and flow down equivalent obligations. Record in `vendor_contracts.subprocessor_consent`.</p>
+<p>5.5 <strong>Assist the Controller</strong> in fulfilling Data Subject requests (UAE PDPL Art. 14; KSA PDPL Art. 12) within the Controller's 30-day SLA, including export, rectification, restriction, and erasure/destruction.</p>
+<p>5.6 <strong>Breach notification</strong> — notify the Controller without undue delay and in any event within <strong>72 hours</strong> of becoming aware (UAE PDPL Art. 16; KSA PDPL Art. 20), with sufficient detail for the Controller to meet its regulator notification obligations. Record in `breach_register`.</p>
+<p>5.7 <strong>Deletion/return</strong> — on termination, delete or return all Personal Data and delete copies, unless storage is required by law. Provide written certification of deletion.</p>
+<p>5.8 <strong>Audit</strong> — make available to the Controller (or its auditor) information necessary to demonstrate compliance, and permit/contribute to audits on reasonable notice.</p>
+<h3>6. Controller Obligations</h3>
+<p>The Controller warrants it has a lawful basis for processing (UAE PDPL Art. 4; KSA PDPL Art. 6) and has provided data subjects the required privacy notice. The Controller is responsible for responding to Data Subject requests, with the Processor assisting under §5.5.</p>
+<h3>7. International Data Transfers</h3>
+<p>See Schedule 1 (§9). The Processor shall not transfer Personal Data across borders except as set out in Schedule 1 and recorded in `cross_border_transfers`.</p>
+<h3>8. Liability and Indemnity</h3>
+<p>Each party is liable for its own breaches of applicable data protection law. Nothing limits liability that cannot be limited by law. The parties shall cooperate in good faith on any regulatory inquiry or claim.</p>
+<h3>9. Schedule 1 — Cross-Border Transfer Mechanism</h3>
+<p>Complete <strong>one</strong> mechanism per transfer (record each row in `cross_border_transfers`):</p>
+<table><thead><tr><th>Option</th><th>Condition</th><th>Legal reference</th></tr></thead><tbody><tr><td>☐ No transfer (data remains in-country)</td><td>Hosting in UAE/KSA</td><td>—</td></tr><tr><td>☐ Adequacy decision</td><td>Destination country/territory recognised as adequate</td><td>UAE PDPL Art. 22; KSA PDPL Art. 29</td></tr><tr><td>☐ Standard Contractual Clauses (SCCs)</td><td>Destination not adequate; SCCs executed</td><td>UAE Cabinet Decision 65/2022; KSA SCCs</td></tr><tr><td>☐ Derogation</td><td>Explicit consent / contract necessity</td><td>UAE PDPL Art. 23; KSA PDPL Art. 29</td></tr></tbody></table>
+<p>Destination country: [________]. Safeguard document reference: [________]. Transfer Impact Assessment completed: ☐ Yes ☐ No.</p>
+<h3>10. Term and Termination</h3>
+<p>This DPA remains in force for the duration of the services and thereafter until deletion/return under §5.7. Either party may terminate this DPA for a material breach that remains uncured 30 days after written notice.</p>
+<h3>11. Governing Law and Jurisdiction</h3>
+<p>☐ <strong>UAE</strong> — governed by the laws of the United Arab Emirates; disputes to [DIFC/ADGM/mainland] courts. <em>(select for UAE entities)</em></p>
+<p>☐ <strong>KSA</strong> — governed by the laws of the Kingdom of Saudi Arabia; disputes to [city] courts. <em>(select for KSA entities)</em></p>
+<p>11.1 <strong>DIFC / ADGM carve-out.</strong> Where the Controller is established in the Dubai International Financial Centre (DIFC) or the Abu Dhabi Global Market (ADGM), the applicable data protection law is <strong>DIFC Law No. 5 of 2020</strong> or the <strong>ADGM Data Protection Regulations 2021</strong> respectively, <strong>not</strong> the federal UAE PDPL. In such case, references to "UAE PDPL" in this DPA shall be read as references to the applicable free-zone law, and the competent authority is the DIFC Commissioner of Data Protection or the ADGM Office of Data Protection, as applicable. All processor obligations, cross-border safeguards, and breach-notification requirements in this DPA continue to apply.</p>
+<h3>12. Signatures</h3>
+<table><thead><tr><th>Controller</th><th>Processor</th></tr></thead><tbody><tr><td>Name: ______________</td><td>Name: ______________</td></tr><tr><td>Title: ______________</td><td>Title: ______________</td></tr><tr><td>Date: ______________</td><td>Date: ______________</td></tr></tbody></table>
+<hr/>
+</div>
+
+<div class="lang-ar page-break" dir="rtl" lang="ar">
+  <div class="section-divider ar">PART 2 — اتفاقية معالجة البيانات (العربية)</div>
+  <h3>1. الأطراف والأدوار</h3>
+<p>1.1 <strong>جهة التحكم</strong> (`controller_ref`): [الاسم القانوني لصاحب العمل]، [رقم الرخصة/السجل]، [العنوان]. الطرف الذي يحدد أغراض ووسائل معالجة البيانات الشخصية.</p>
+<p>1.2 <strong>المعالِج</strong> (`vendor_id` / `processor_ref`): [الاسم القانوني للمعالِج — TO CONFIRM]، [رقم الرخصة/السجل التجاري — TO CONFIRM]، [العنوان المسجل — TO CONFIRM]. الطرف الذي يعالج البيانات الشخصية نيابةً عن جهة التحكم.</p>
+<p>1.3 تشكل هذه الاتفاقية جزءاً من اتفاقية الخدمات الرئيسية المبرمة بين الطرفين بتاريخ [التاريخ]. وفي حال التعارض، تسود هذه الاتفاقية في المسائل المتعلقة بحماية البيانات.</p>
+<h3>2. التعريفات</h3>
+<p>تكون للمصطلحات الواردة بأحرف كبيرة المعاني الواردة في القانون المعمول به: قانون حماية البيانات الشخصية الإماراتي (المرسوم بقانون اتحادي رقم 45 لسنة 2021) و/أو نظام حماية البيانات الشخصية السعودي (المرسوم الملكي م/148)، حسب الاختيار في البند 11. وتأخذ مصطلحات "البيانات الشخصية" و"المعالجة" و"صاحب البيانات" و"جهة التحكم" و"المعالِج" و"الانتهاك" و"الجهة الإشرافية" معانيها القانونية.</p>
+<h3>3. الموضوع والمدة والطبيعة والغرض</h3>
+<table><thead><tr><th>الحقل</th><th>التفصيل</th><th>المخطط</th></tr></thead><tbody><tr><td>الموضوع</td><td>معالجة بيانات التوظيف (الالتحاق وإنهاء الخدمة)</td><td>`vendor_contracts.contract_type='dpa'`</td></tr><tr><td>المدة</td><td>من [تاريخ البدء] حتى انتهاء الخدمات + فترة الحذف</td><td>`vendor_contracts.start_date/end_date`</td></tr><tr><td>الطبيعة</td><td>استضافة وتخزين ومعالجة سجلات التوظيف</td><td>`vendors.vendor_type`</td></tr><tr><td>الغرض</td><td>تقديم خدمات [منصة Antum People / الرواتب / التأمين / التحقق من الخلفية]</td><td>`dpia_assessments.purpose`</td></tr></tbody></table>
+<h3>4. فئات أصحاب البيانات والبيانات الشخصية</h3>
+<p>4.1 <strong>أصحاب البيانات</strong> (`dpia_assessments.data_subject_categories`): الموظفون، المتقدمون، المُعالون، الموظفون السابقون.</p>
+<p>4.2 <strong>فئات البيانات الشخصية</strong> (`dpia_assessments.data_categories`): بيانات الهوية، الاتصال، التوظيف، المالية/الراتب، المعرفات الحكومية (الهوية الإماراتية / الإقامة / جواز السفر)، و—فقط عند الإفصاح عنها بشكل منفصل—البيانات الصحية والبيومترية (بيانات حساسة).</p>
+<h3>5. التزامات المعالِج</h3>
+<p>يتعهد المعالِج بما يلي:</p>
+<p>5.1 <strong>التصرف بناءً على تعليمات موثقة فقط</strong>، وإبلاغ جهة التحكم إذا كانت أي تعليمة تخالف القانون المعمول به (قانون الإمارات مادة 8؛ نظام السعودية مادة 7).</p>
+<p>5.2 <strong>السرية</strong> — ضمان خضوع الأشخاص المصرح لهم بالمعالجة لالتزامات سرية.</p>
+<p>5.3 <strong>الأمن</strong> — تنفيذ التدابير التقنية والتنظيمية المناسبة (قانون الإمارات مادة 11): التشفير أثناء التخزين (AES-256) وأثناء النقل (TLS 1.2+)، وضوابط الوصول، وإخفاء الهوية حيثما أمكن، والاختبار الدوري.</p>
+<p>5.4 <strong>المعالجون الفرعيون</strong> — عدم إشراك أي معالج فرعي دون موافقة كتابية مسبقة من جهة التحكم، وإلزامهم بالتزامات مكافئة. يُسجل في `vendor_contracts.subprocessor_consent`.</p>
+<p>5.5 <strong>مساعدة جهة التحكم</strong> في تلبية طلبات أصحاب البيانات (قانون الإمارات مادة 14؛ نظام السعودية مادة 12) ضمن مهلة 30 يوماً، بما في ذلك التصدير والتصحيح والتقييد والمحو/الإتلاف.</p>
+<p>5.6 <strong>الإخطار بالانتهاك</strong> — إخطار جهة التحكم دون تأخير غير مبرر وبحد أقصى <strong>72 ساعة</strong> من العلم (قانون الإمارات مادة 16؛ نظام السعودية مادة 20)، بتفاصيل كافية لتمكين جهة التحكم من الوفاء بالتزامات الإخطار للجهة التنظيمية. يُسجل في `breach_register`.</p>
+<p>5.7 <strong>الحذف/الإعادة</strong> — عند الإنهاء، حذف أو إعادة جميع البيانات الشخصية وحذف النسخ، ما لم يكن الاحتفاظ بها مطلوباً بموجب القانون. وتقديم شهادة خطية بالحذف.</p>
+<p>5.8 <strong>التدقيق</strong> — إتاحة المعلومات اللازمة لإثبات الامتثال لجهة التحكم (أو مدققها)، والسماح بالتدقيق أو المساهمة فيه بإشعار معقول.</p>
+<h3>6. التزامات جهة التحكم</h3>
+<p>تضمن جهة التحكم وجود أساس قانوني للمعالجة (قانون الإمارات مادة 4؛ نظام السعودية مادة 6) وتقديم إشعار الخصوصية المطلوب لأصحاب البيانات. وتكون جهة التحكم مسؤولة عن الرد على طلبات أصحاب البيانات، مع مساعدة المعالِج بموجب البند 5.5.</p>
+<h3>7. نقل البيانات عبر الحدود</h3>
+<p>راجع الجدول 1 (البند 9). لا يجوز للمعالِج نقل البيانات الشخصية عبر الحدود إلا وفقاً للجدول 1 والمسجل في `cross_border_transfers`.</p>
+<h3>8. المسؤولية والتعويض</h3>
+<p>يكون كل طرف مسؤولاً عن انتهاكاته لقانون حماية البيانات المعمول به. ولا يحد أي شيء من المسؤولية التي لا يجوز تحديدها قانوناً. ويتعاون الطرفان بحسن نية في أي تحقيق تنظيمي أو مطالبة.</p>
+<h3>9. الجدول 1 — آلية النقل عبر الحدود</h3>
+<p>أكمل <strong>آلية واحدة</strong> لكل عملية نقل (تُسجل كل صف في `cross_border_transfers`):</p>
+<table><thead><tr><th>الخيار</th><th>الشرط</th><th>المرجع القانوني</th></tr></thead><tbody><tr><td>☐ لا نقل (تبقى البيانات داخل الدولة)</td><td>الاستضافة داخل الإمارات/السعودية</td><td>—</td></tr><tr><td>☐ قرار كفاية</td><td>الوجهة معترف بها كمستوى حماية كافٍ</td><td>قانون الإمارات مادة 22؛ نظام السعودية مادة 29</td></tr><tr><td>☐ الشروط التعاقدية النموذجية (SCCs)</td><td>الوجهة غير كافية؛ تُنفذ الشروط النموذجية</td><td>قرار مجلس الوزراء الإماراتي 65/2022؛ الشروط السعودية</td></tr><tr><td>☐ استثناء</td><td>موافقة صريحة / ضرورة تعاقدية</td><td>قانون الإمارات مادة 23؛ نظام السعودية مادة 29</td></tr></tbody></table>
+<p>بلد الوجهة: [________]. مرجع وثيقة الضمانات: [________]. تم إجراء تقييم أثر النقل: ☐ نعم ☐ لا.</p>
+<h3>10. المدة والإنهاء</h3>
+<p>تبقى هذه الاتفاقية سارية طوال مدة الخدمات وبعدها حتى الحذف/الإعادة بموجب البند 5.7. ويجوز لأي طرف إنهاء هذه الاتفاقية عند مخالفة جوهرية لم تُعالج خلال 30 يوماً من الإشعار الكتابي.</p>
+<h3>11. القانون الحاكم والاختصاص</h3>
+<p>☐ <strong>الإمارات</strong> — تخضع لقوانين دولة الإمارات العربية المتحدة؛ وتختص محاكم [دبي/أبوظبي]. <em>(اختر للجهات الإماراتية)</em></p>
+<p>☐ <strong>السعودية</strong> — تخضع لأنظمة المملكة العربية السعودية؛ وتختص محاكم [المدينة]. <em>(اختر للجهات السعودية)</em></p>
+<p>11.1 <strong>استثناء المناطق الحرة (DIFC / ADGM).</strong> إذا كانت جهة التحكم مؤسسة في مركز دبي المالي العالمي (DIFC) أو سوق أبوظبي العالمي (ADGM)، فإن قانون حماية البيانات المعمول به هو <strong>قانون مركز دبي المالي العالمي رقم 5 لسنة 2020</strong> أو <strong>نظام حماية البيانات لسوق أبوظبي العالمي 2021</strong> على التوالي، <strong>وليس</strong> قانون حماية البيانات الاتحادي الإماراتي. وفي هذه الحالة، تُقرأ الإشارات إلى "قانون حماية البيانات الإماراتي" في هذه الاتفاقية على أنها إشارات إلى قانون المنطقة الحرة المعمول به، وتكون الجهة المختصة هي مفوض حماية البيانات في مركز دبي المالي العالمي أو مكتب حماية البيانات في سوق أبوظبي العالمي، حسب الحالة. وتظل جميع التزامات المعالِج وضمانات النقل عبر الحدود ومتطلبات الإخطار بالانتهاك الواردة في هذه الاتفاقية سارية.</p>
+<h3>12. التوقيعات</h3>
+<table><thead><tr><th>جهة التحكم</th><th>المعالِج</th></tr></thead><tbody><tr><td>الاسم: ______________</td><td>الاسم: ______________</td></tr><tr><td>المنصب: ______________</td><td>المنصب: ______________</td></tr><tr><td>التاريخ: ______________</td><td>التاريخ: ______________</td></tr></tbody></table>
+<hr/>
+<h2>Schema Field Mapping (for Antum People ingestion)</h2>
+<table><thead><tr><th>DPA clause</th><th>Table</th><th>Column(s)</th></tr></thead><tbody><tr><td>§1 Parties</td><td>`vendors` / `vendor_contracts`</td><td>`name`, `entity_id`, `vendor_id`</td></tr><tr><td>§3 Subject-matter/purpose</td><td>`dpia_assessments`</td><td>`purpose`, `lawful_basis`, `data_categories`</td></tr><tr><td>§4 Data subjects/categories</td><td>`dpia_assessments`</td><td>`data_subject_categories`, `data_categories`</td></tr><tr><td>§5.4 Sub-processors</td><td>`vendor_contracts`</td><td>`subprocessor_consent`</td></tr><tr><td>§5.6 Breach 72h</td><td>`vendor_contracts` / `breach_register`</td><td>`breach_notification_hours`, `notified_*`</td></tr><tr><td>§7/§9 Transfers</td><td>`cross_border_transfers`</td><td>`source_country`, `destination_country`, `transfer_mechanism`, `legal_basis_ref`, `safeguard_document_ref`</td></tr><tr><td>§11 Governing law</td><td>`vendor_contracts`</td><td>`governing_law`, `jurisdiction`</td></tr></tbody></table>
+<blockquote><strong>Checklist before use:</strong> (1) fill Controller/Processor legal names + license numbers; (2) select governing-law clause (§11) per entity; (3) complete Schedule 1 for every cross-border flow; (4) obtain DPO review for KSA entities (mandatory under KSA PDPL Art. 11); (5) store countersigned copy reference in `vendor_contracts.dpa_ref`.</blockquote>
+</div>
+
+<div class="doc-footer">
+  <span>Antum People &middot; Compliance Pack &middot; v1.0</span>
+  <span>2026-09-17 &middot; UAE PDPL &amp; KSA PDPL</span>
+</div>
+
+</body>
+</html>
