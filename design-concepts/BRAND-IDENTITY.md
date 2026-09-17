@@ -6,7 +6,7 @@ Antum bridges **human insight** with **workforce intelligence**. Our brand is pr
 - **Company / legal brand:** Antum
 - **Product name:** Antum People (the platform). Not "Antum HR", not "AntumPeople".
 - **Naming rule:** product/platform references → "Antum People"; company/brand references → "Antum".
-- **Domains (intended, pending registration):** `antum.ae` (UAE), `antum.me` (global).
+- **Domains (registered & owned by Antum):** `antum.ae` (UAE), `antum.me` (global). No DNS records published yet — so no website and no mailbox is served on them today.
 - **Contact emails:** `privacy@antum.ae`, `dpo@antum.ae`, `legal@antum.ae` (UAE); `privacy@antum.me` (global).
 - **Arabic wordmark:** [TO CONFIRM] — use the Latin "Antum" in Arabic strings until the Arabic wordmark is confirmed. Do not invent a transliteration.
 ---
