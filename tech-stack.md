@@ -1,12 +1,12 @@
-# VantageHR Tech Stack & Database Schema Documentation
+# Antum People Tech Stack & Database Schema Documentation
 
-This document outlines the technical architecture, data model, and compliance design of the VantageHR platform, emphasizing our specialized support for the GCC region (UAE, Saudi Arabia).
+This document outlines the technical architecture, data model, and compliance design of the Antum People platform, emphasizing our specialized support for the GCC region (UAE, Saudi Arabia).
 
 ---
 
 ## 1. Technical Architecture Overview
 
-VantageHR employs a single-origin, lightweight, and high-performance stack optimized for GCC enterprises.
+Antum People employs a single-origin, lightweight, and high-performance stack optimized for GCC enterprises.
 
 *   **Frontend**: React (v18), TypeScript, TailwindCSS (for high-fidelity localized HR UI/UX), Vite (fast build-tooling).
 *   **Backend**: Node.js, Express, REST APIs, and background processing for automated onboarding and offboarding tasks.

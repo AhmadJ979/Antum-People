@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 
 /**
- * Compliance Engine for VantageHR
+ * Compliance Engine for Antum People
  * Handles jurisdiction-aware tasks, audit logging, and document rendering.
  */
 
@@ -94,10 +94,10 @@ function renderTemplate(templateContent, data) {
   
   // Mapping of template placeholders to data keys
   const mapping = {
-    'employer_name': data.employer_name || 'VantageHR Regional Hub',
+    'employer_name': data.employer_name || 'Antum Regional Hub',
     'employer_address': data.employer_address || 'Dubai Internet City, UAE / Riyadh Business Gate, KSA',
     'trade_license': data.trade_license || 'TL-882733-G',
-    'dpo_email': data.dpo_email || 'privacy@vantagehr.gcc',
+    'dpo_email': data.dpo_email || 'privacy@antum.ae',
     'current_date': data.current_date || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
     'full_name': data.full_name,
     'full_name_arabic': data.full_name_arabic || data.full_name, // Fallback if no Arabic name

@@ -289,7 +289,7 @@ export default function App() {
             <svg className="w-8 h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            <span className="text-xl font-bold tracking-wider">VantageHR</span>
+            <span className="text-xl font-bold tracking-wider">Antum</span>
           </div>
           <nav className="p-4 space-y-2">
             {[
@@ -312,7 +312,7 @@ export default function App() {
           </nav>
         </div>
         <div className="p-4 border-t border-slate-800 bg-slate-950/40 text-slate-500 text-xs text-center font-mono">
-          VantageHR SaaS v1.0
+          Antum People v1.0
         </div>
       </aside>
 

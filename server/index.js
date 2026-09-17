@@ -490,5 +490,5 @@ app.get('*', (req, res) => {
 
 // Bind server
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`VantageHR server listening on port ${PORT}`);
+  console.log(`Antum server listening on port ${PORT}`);
 });
