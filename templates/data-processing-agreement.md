@@ -1,6 +1,7 @@
 # Data Processing Agreement (DPA) — Bilingual Template
 
 > **Template ID:** `antum-dpa-v1`
+> **Version / الإصدار:** v1.0 (2026-09-17)
 > **Author:** Compliance Expert (Agent) — 2026-09-09
 > **Revision:** Brand updated to Antum People on 2026-09-17.
 > **Use:** Controller (Employer) ↔ Processor (Vendor / Antum sub-processor)

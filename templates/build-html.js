@@ -144,10 +144,26 @@ function css(brand, version) {
   `;
 }
 
+// ---------------- Version extraction (single source of truth) ----------------
+// Each Markdown carries its version in a "Version" metadata line; the HTML
+// header/footer read that value so they can never drift from the source.
+function extractVersion(md) {
+  // The version is stated in a single "**Version ...**" metadata line (e.g.
+  // "> **Version / الإصدار:** v2.2 (2026-09-17)"). Pull the first "vX.Y"
+  // token from that line and normalise it to the bare number.
+  const line = md.split('\n').find(l => /\*\*Version\b/i.test(l));
+  if (!line) return null;
+  const m = line.match(/(v?\d+\.\d+(?:\.\d+)?)/);
+  if (!m) return null;
+  return m[1].replace(/^v/i, ''); // normalise "v2.2" -> "2.2"
+}
+
 // ---------------- Build one document ----------------
 function build(cfg) {
   const md = fs.readFileSync(path.join(DIR, cfg.md), 'utf8');
   const lines = md.split('\n');
+  const version = extractVersion(md);
+  if (!version) { throw new Error('No "Version" metadata line found in ' + cfg.md); }
 
   const enIdx = lines.findIndex(l => l.trim() === cfg.enMarker);
   const arIdx = lines.findIndex(l => l.trim() === cfg.arMarker);
@@ -171,14 +187,14 @@ function build(cfg) {
 <head>
 <meta charset="utf-8"/>
 <title>${cfg.title}</title>
-<style>${css(cfg.brand, cfg.version)}</style>
+<style>${css(cfg.brand, version)}</style>
 </head>
 <body>
 
 <div class="doc-header">
   <div class="brand">Antum People &middot; ${cfg.brand}</div>
   <div class="sub">${cfg.subtitle}</div>
-  <div class="meta">Version ${cfg.version} &middot; ${DATE} &middot; ${cfg.metaNote}</div>
+  <div class="meta">Version ${version} &middot; ${DATE} &middot; ${cfg.metaNote}</div>
 </div>
 
 ${titleLines.map(l => {
@@ -200,7 +216,7 @@ ${metaLines.length ? '<blockquote>' + metaLines.map(l => inline(l.replace(/^>\s?
 </div>
 
 <div class="doc-footer">
-  <span>Antum People &middot; ${cfg.brand} &middot; v${cfg.version}</span>
+  <span>Antum People &middot; ${cfg.brand} &middot; v${version}</span>
   <span>${DATE} &middot; UAE PDPL &amp; KSA PDPL</span>
 </div>
 
@@ -219,7 +235,6 @@ const docs = [
     title: 'Employee Privacy Notice',
     brand: 'Compliance Pack',
     subtitle: 'Employee Privacy Notice (UAE & KSA)',
-    version: '2.1',
     metaNote: 'Pilot-ready &middot; EN / AR',
     enMarker: '## ENGLISH VERSION',
     arMarker: '## النسخة العربية',
@@ -230,7 +245,6 @@ const docs = [
     title: 'Data Processing Agreement',
     brand: 'Compliance Pack',
     subtitle: 'Data Processing Agreement (UAE & KSA)',
-    version: '1.0',
     metaNote: 'Pilot-ready &middot; EN / AR',
     enMarker: '## PART 1 — Data Processing Agreement (English)',
     arMarker: '## PART 2 — اتفاقية معالجة البيانات (العربية)',
@@ -241,7 +255,6 @@ const docs = [
     title: 'DPIA Questionnaire',
     brand: 'Compliance Pack',
     subtitle: 'Data Protection Impact Assessment Questionnaire (UAE & KSA)',
-    version: '1.1',
     metaNote: 'Pilot-ready &middot; EN / AR',
     enMarker: '## ENGLISH VERSION',
     arMarker: '## النسخة العربية',
