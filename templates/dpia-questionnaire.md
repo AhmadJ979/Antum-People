@@ -2,7 +2,7 @@
 # استبيان تقييم أثر حماية البيانات (DPIA)
 
 > **Jurisdictions / النطاق القانوني:** UAE (Federal Decree-Law No. 45 of 2021) and KSA (Royal Decree M/148, as amended 2023)
-> **Status / الحالة:** Template v1.0 — pilot-ready
+> **Status / الحالة:** Template v1.1 — pilot-ready
 > **Version / الإصدار:** v1.1 (2026-09-17) — brand aligned to Antum People
 > **Usage / الاستخدام:** Complete before deploying high-risk HR processing (e.g., predictive analytics, biometric data, cross-border transfer). Map responses to `dpia_assessments` + `dpia_responses` tables.
 
