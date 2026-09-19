@@ -2,8 +2,15 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'vantagehr-dev-secret-keep-it-safe';
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'vantagehr-dev-enc-key-32chars-lo'; // Must be 32 bytes
+// Fail-fast: refuse to start without production keys
+if (!process.env.JWT_SECRET || !process.env.ENCRYPTION_KEY) {
+  console.error('FATAL: JWT_SECRET or ENCRYPTION_KEY environment variable is missing.');
+  console.error('The server must be started with production-grade credentials.');
+  process.exit(1);
+}
+
+const JWT_SECRET = process.env.JWT_SECRET || 'antum-people-dev-secret-keep-safe';
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'antum-people-enc-key-32chars-low'; // Must be 32 bytes
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12; // Standard for GCM
 const AUTH_TAG_LENGTH = 16;
