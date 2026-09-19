@@ -1,214 +1,234 @@
 # EOSB Calculation Engine — Compliance Review Report
 
 > **Reviewer:** Compliance Expert
-> **Date:** 2026-06-23
-> **Revision:** Brand updated to Antum People on 2026-09-17.
-> **Scope:** `calculateDetailedEOSB()` in `/home/team/shared/probable-octo-sniffle/server/index.js` and audit trail schema
+> **Date:** 2026-06-23 (original review) · **2026-09-18 (re-verification against remediated engine)**
+> **Revision:** Brand updated to Antum People on 2026-09-17; re-verified 2026-09-18 after remediation.
+> **Scope:** `calculateEOSB()` in `/home/team/shared/probable-octo-sniffle/server/index.js` and audit trail schema
 > **Reference:** `/home/team/shared/compliance-requirements.md` (Sections 3, 4, 7, 8)
+
+---
+
+## Re-verification note (2026-09-18)
+
+This report was originally issued 2026-06-23 against the engine as it then stood. Since then the engine was remediated. This revision re-verifies every finding against the **current `origin/main`** (`server/index.js`), quotes the actual current code (no stale line numbers), re-runs the test matrix against the live function, and restates the certification. **No calculation code was changed during this re-verification.**
+
+**Bottom line:** the two findings that previously blocked production (Finding 1, P0 termination-type conflation; Finding 2, P1 unpaid-leave over-deduction) are **fixed**, and the dead wrapper (Finding 3, P2) is **gone**. The core EOSB engine is now certified **unconditionally** for UAE and KSA.
 
 ---
 
 ## Executive Summary
 
-The EOSB calculation engine is **structurally sound** — the core formula logic for both UAE and KSA is correct. However, **3 issues require remediation** before production use. One is **critical** (wrong EOSB amount for employer-initiated terminations).
+The EOSB calculation engine is **structurally sound** — the core formula logic for both UAE and KSA is correct, and the three issues that required remediation have been resolved:
+
+- **Finding 1 (P0, `isResignation` conflation) — FIXED.** The engine now routes on an explicit `terminationType` string; `summary_dismissal` forfeits, `resignation` applies tiered reductions, all other types receive full EOSB.
+- **Finding 2 (P1, unpaid-leave over-deduction) — FIXED.** UAE now excludes only unpaid leave beyond 90 days per year of service; KSA subtracts all (no statutory exclusion), per the recommendation.
+- **Finding 3 (P2, dead wrapper) — RESOLVED.** The single `calculateEOSB()` with the full signature is the only entry point; the old short-signature wrapper and `calculateDetailedEOSB()` no longer exist.
+
+Two non-blocking notes are flagged for the lead at the end (Finding 6: the KSA notice-penalty deduction is no longer applied; Finding 7: the calculate-eosb endpoint no longer persists an audit row). Neither affects the correctness of the accrued EOSB amount.
 
 ---
 
-## Finding 1 (CRITICAL): `isResignation` Flag Conflates All Termination Types
+## Finding 1 (CRITICAL — was P0): `isResignation` Flag Conflates All Termination Types
 
-**Location:** `server/index.js`, line 370 and lines 107–117
+**Status (2026-09-18): FIXED.**
 
-```javascript
-// Line 370 — BUG: treats ALL offboardings as resignations
-const isResignation = mergedStatus === 'offboarding' || mergedStatus === 'terminated';
-```
+**Original problem (2026-06-23):** the engine passed `isResignation=true` for every employee in `offboarding`/`terminated` status, triggering the resignation reduction on all terminations, including employer-initiated ones.
 
-**Problem:** The code passes `isResignation=true` for every employee whose status is `offboarding` or `terminated`, regardless of whether they resigned, were terminated by the employer, left by mutual agreement, or were dismissed for cause. For UAE EOSB, this triggers the resignation reduction (1/3 or 2/3 multiplier) on ALL terminations.
-
-**Impact illustration (UAE, 4 years, basic salary 15,000):**
-
-| Scenario | Actual Status Flag | Current Code Gives | Correct Amount | Error |
-|---|---|---|---|---|
-| Employer terminates (valid reason) | `isResignation=false` | **28,000** (2/3) | 42,000 (full) | ⚠️ **33% underpaid** |
-| Resignation | `isResignation=true` | 28,000 (2/3) | 28,000 (2/3) | ✅ Correct |
-| Summary dismissal (gross misconduct) | `isResignation=false` | 42,000 (full) | 0 (forfeited) | ⚠️ Overpaid |
-
-**Root cause:** The `termination_type` field (recommended in my compliance report Section 7.2) was not implemented. The code uses the `status` field as a proxy, which is insufficient.
-
-**Fix Required:**
-1. Add a `termination_type` column to `employees` with enum: `resignation`, `employer_initiated`, `mutual_agreement`, `summary_dismissal`, `end_of_contract`, `redundancy`
-2. Replace line 370 with logic that reads this field:
+**Current code (`server/index.js`, `calculateEOSB`):** the boolean flag is gone. The function now takes a `terminationType` string and routes on it explicitly:
 
 ```javascript
-// CORRECTED LOGIC (proposed):
-let isResignation = false;
-if (mergedTerminationType === 'resignation') {
-  isResignation = true;
-} else if (mergedTerminationType === 'summary_dismissal') {
-  // Forfeit entire EOSB
-  return { accrued_amount: 0, ... };
-}
-// employer_initiated, mutual_agreement, redundancy, end_of_contract → isResignation = false (full EOSB)
+function calculateEOSB(startDateStr, endDateStr, basicSalary, totalSalary, country, terminationType = 'resignation', unpaidLeaveDays = 0) {
+  // ...
+  if (terminationType === 'summary_dismissal') {
+    return 0; // Forfeit entire EOSB for gross misconduct
+  }
+
+  let accrued = 0;
+  const isResignation = terminationType === 'resignation';
 ```
 
-3. Update the POST/PUT `/api/employees` endpoints to accept and store `termination_type`
+`termination_type` is plumbed end-to-end:
+- **POST `/api/employees`** inserts a `termination_type` column (`server/index.js`, the `INSERT INTO employees (… termination_type …)` statement), defaulting to `'resignation'` on create.
+- **PUT `/api/employees/:id`** accepts `termination_type` in its update whitelist and computes EOSB with `mergedTerminationType = data.termination_type || emp.termination_type || 'resignation'`.
+- **POST `/api/compliance/calculate-eosb`** reads `termination_type` from the request body and forwards it to `calculateEOSB`.
+- The `employees` table carries a `termination_type` (TEXT) column.
+
+**Verification (re-run):** summary dismissal now returns **0** and a mutual-agreement termination returns the **full** (unreduced) amount — see `TX1`/`TX2` in the test matrix below.
 
 ---
 
-## Finding 2 (MODERATE): Unpaid Leave Days Subtract ALL Days — UAE Law Only Excludes >90
+## Finding 2 (MODERATE — was P1): Unpaid Leave Days Subtract ALL Days — UAE Law Only Excludes >90
 
-**Location:** `server/index.js`, lines 34–36
+**Status (2026-09-18): FIXED.**
 
-```javascript
-const leaveDays = parseInt(unpaidLeaveDays) || 0;
-const netDays = Math.max(0, rawDays - leaveDays);  // Subtracts ALL unpaid leave
-const tenureYears = netDays / 365.25;
-```
+**Original problem (2026-06-23):** the engine subtracted *all* unpaid leave days from service for UAE, underpaying employees who took leave within the statutory allowance.
 
-**Problem:** Per UAE Federal Decree-Law No. 33 of 2021 (Article 52 para 3, confirmed in Section 3.3.5 of my compliance report), **only unpaid leave days exceeding 90 days per year should be excluded** from EOSB service calculation. The current code subtracts ALL unpaid leave days.
-
-**Test evidence:** Employee with 120 unpaid leave days over 2 years:
-- Current code: excludes all 120 days → tenure drops from 2.00 yrs to 1.67 yrs → EOSB = **17,565**
-- Correct calculation: exclude only 30 days (120−90) → tenure ≈ 1.92 yrs → EOSB ≈ **20,247**
-- Error: **~13% underpayment**
-
-**Fix Required (UAE only — KSA has no such provision):**
+**Current code (`server/index.js`, `calculateEOSB`):**
 
 ```javascript
-// CORRECTED LOGIC (proposed):
-if (country !== 'SA') {
-  // UAE: only exclude unpaid leave exceeding 90 days per year of service
-  const totalYears = rawDays / 365.25;
-  const allowedUnpaidPerYear = 90;
-  const maxAllowedUnpaid = allowedUnpaidPerYear * totalYears;
-  const excessUnpaid = Math.max(0, leaveDays - maxAllowedUnpaid);
-  const netDays = Math.max(0, rawDays - excessUnpaid);
+if (country === 'SA' || country === 'KSA') {
+    // KSA: No statutory exclusion for unpaid leave unless specified in contract.
+    // Following compliance recommendation Finding 2: subtract all.
+    netDays = Math.max(0, rawDays - leaveDays);
 } else {
-  // KSA: no statutory exclusion for unpaid leave (follow contract)
-  const netDays = rawDays - leaveDays;
+    // UAE: Only exclude unpaid leave exceeding 90 days per year of service (Decree-Law 33/2021)
+    const totalYears = rawDays / 365.25;
+    const allowedUnpaidTotal = 90 * totalYears;
+    const excessUnpaid = Math.max(0, leaveDays - allowedUnpaidTotal);
+    netDays = Math.max(0, rawDays - excessUnpaid);
 }
 ```
+
+**Verification (re-run):** T9 (UAE, 2 years, 120 unpaid days) now returns the **full 2-year amount** — see below. With 2 years of service the allowance is 90 × 2 ≈ 180 days, and 120 days is within that allowance, so no unpaid leave is excluded.
+
+> **Note on the old "expected" figure:** the original report's "correct ≈ 20,247" for T9 used a 90-day *total* threshold (excluding 120 − 90 = 30 days). That was a misreading of the rule. The correct interpretation — and the one now implemented — is **90 days per year of service**, so 120 days over 2 years sits entirely inside the allowance and the full EOSB applies. The corrected figure is therefore *higher* than the old "expected", not lower.
 
 ---
 
-## Finding 3 (LOW): Dead Code — `calculateEOSB` Wrapper (Line 146–148)
+## Finding 3 (LOW — was P2): Dead Code — `calculateEOSB` Wrapper
 
-**Location:** `server/index.js`, lines 146–148
+**Status (2026-09-18): RESOLVED (moot).**
+
+**Original problem (2026-06-23):** a short-signature `calculateEOSB(startDateStr, endDateStr, basicSalary, country, isResignation)` wrapper hardcoded `totalSalary=0` and wrapped a `calculateDetailedEOSB()`, and was never called.
+
+**Current state:** both are gone. A codebase-wide search for `calculateDetailedEOSB` and the short-signature `calculateEOSB` returns only the single definition at `server/index.js`:
 
 ```javascript
-function calculateEOSB(startDateStr, endDateStr, basicSalary, country, isResignation = false) {
-  const result = calculateDetailedEOSB(startDateStr, endDateStr, basicSalary, 0, 0, country, isResignation, true);
-  return result.accrued_amount;
-}
+function calculateEOSB(startDateStr, endDateStr, basicSalary, totalSalary, country, terminationType = 'resignation', unpaidLeaveDays = 0) {
 ```
 
-**Problem:** This function is **defined but never called** anywhere in the codebase. If someone calls it in the future, it hardcodes `totalSalary=0`, which would produce **wrong results for KSA EOSB** (where EOSB should be based on total salary).
-
-**Fix:** Remove this dead function, or update it to forward all parameters correctly.
+This is the only entry point, and every call site passes the full argument set. There is no dead wrapper and no `calculateDetailedEOSB()`.
 
 ---
 
 ## Finding 4 (INFO): Tenure Year Convention — 365.25 vs 360 Days
 
-**Location:** `server/index.js`, line 36
+**Status (2026-09-18): UNCHANGED — accepted as-is.**
+
+**Current code (`server/index.js`, `calculateEOSB`):**
 
 ```javascript
 const tenureYears = netDays / 365.25;
 ```
 
-**Observation:** The UAE daily rate is calculated as `basicSalary / 30` (30-day month convention). Using 365.25 days in the year for tenure creates a slight inconsistency — a year should be 360 days (12×30) for strict alignment with UAE EOSB conventions.
-
-**Impact:** Negligible (~1.4% difference). For a 5-year employee earning 15,000 AED:
-- Current (365.25): tenure = 1826.25/365.25 = 5.0 → EOSB = 21×5×500 = 52,500
-- Alternative (360): tenure = 1800/360 = 5.0 → EOSB = 21×5×500 = 52,500
-- Same result for whole years. Only fractional years differ slightly.
-
-**Recommendation:** Accept as-is. Both conventions are used in practice and the difference is immaterial. If precision is desired, standardise on 30-day months for tenure calculation.
+The engine still uses a 365.25-day year for tenure. As noted originally, the difference is immaterial (~1.4% on fractional years only) and both conventions are used in practice. No change required. (This is a documentation item, not a defect.)
 
 ---
 
 ## Finding 5 (INFO): Cap is Correct but Rarely Triggers
 
-**Location:** `server/index.js`, lines 101–103
+**Status (2026-09-18): CORRECT — no change.**
 
-The 730-day cap (2 years of basic salary) is correctly implemented. At 15,000 AED basic salary:
-- Cap = 730 × 500 = 365,000 AED
-- Reached at approximately: 730 / 30 = 24.33 years of service
-- For most employees with <15 years tenure, the cap never applies ✅
+**Current code (`server/index.js`, `calculateEOSB`, UAE branch):**
 
-**Verdict:** Correct. No change needed.
+```javascript
+// UAE Cap: 2 years of Basic Salary
+accrued = Math.min(accrued, bSalary * 24);
+```
 
----
-
-## Finding 6 (INFO): KSA Notice Penalty Correctly Implemented
-
-**Location:** `server/index.js`, lines 69–75
-
-The 50% deduction for failure to serve proper notice under KSA Labor Law (Art. 77) is correctly applied. The use of 50% as a default max penalty is legally sound.
-
-**Recommendation:** Consider making the penalty percentage configurable (0–50%) via a settings field, since employers may negotiate a lower penalty.
+The 24-month (2-year) cap on basic salary is correctly implemented and unchanged. No change required.
 
 ---
 
-## Finding 7 (INFO): Audit Trail Schema — Adequate but Minimal
+## Finding 6 (INFO): KSA Notice Penalty
 
-**Location:** POST `/api/compliance/calculate-eosb`, lines 760–779
+**Status (2026-09-18): NO LONGER APPLIED — flagged for the lead.**
 
-The `eosb_calculations` table has been created per the compliance report recommendations. The current schema stores: `id, employee_id, calculation_date, jurisdiction, start_date, end_date, basic_salary, total_salary, unpaid_leave_days, is_resignation, accrued_amount, formula_used`.
+**Original claim (2026-06-23):** "The 50% deduction for failure to serve proper notice under KSA Labor Law (Art. 77) is correctly applied."
 
-**Missing vs Recommended Schema (Section 7.2):**
+**Current state:** the current `calculateEOSB` has **no notice-penalty parameter and no 50% deduction**. The KSA branch computes base EOSB and the resignation tier only:
 
-| Missing Field | Importance | Reason |
-|---|---|---|
-| `years_of_service` (REAL) | Low | Can be derived from start/end dates |
-| `daily_rate` (REAL) | Low | Can be recalculated from salary |
-| `deductions` (REAL default 0) | Medium | Needed for net vs gross EOSB reporting |
-| `calculated_by` (TEXT) | Low | Audit trail for compliance |
-| `gross_eosb` / `net_eosb` | Medium | Separating pre/post deductions |
+```javascript
+if (isResignation) {
+  if (tenureYears >= 2 && tenureYears < 5) accrued *= (1/3);
+  else if (tenureYears >= 5 && tenureYears < 10) accrued *= (2/3);
+  // tenureYears >= 10 is full amount
+}
+```
 
-**Verdict:** Functional. The `formula_used` text field provides good context. Recommend adding `gross_eosb` and `net_eosb` as separate audit fields when the offboarding settlement statement (my template) is implemented.
+The `employees` table still carries a `gave_proper_notice` (INTEGER, default 1) column, but the engine no longer reads it.
+
+**Assessment:** this is not a defect in the *base* EOSB accrual (the number is correct for a given termination type). It means the optional KSA notice penalty (an employer's discretion on resignation-without-notice) is no longer modelled. Per the task brief, this is reported rather than fixed in this change — the lead should decide whether to re-introduce a configurable notice-penalty input.
+
+---
+
+## Finding 7 (INFO): Audit Trail Schema
+
+**Status (2026-09-18): PARTIALLY CHANGED — flagged for the lead.**
+
+**Original claim (2026-06-23):** the `eosb_calculations` table existed and the calculate-eosb endpoint wrote to it with `is_resignation`.
+
+**Current state:**
+
+- The `eosb_calculations` table exists and has been extended with `gross_amount`, `deductions`, and `net_amount` (from the PDPL hardening work). It still carries the legacy `is_resignation` column rather than a `termination_type`.
+- However, the current **POST `/api/compliance/calculate-eosb`** returns the amount without persisting an audit row:
+
+```javascript
+app.post('/api/compliance/calculate-eosb', (req, res) => {
+  const { start_date, end_date, basic_salary, total_salary, country, termination_type, unpaid_leave_days } = req.body;
+  const amount = calculateEOSB(start_date, end_date, basic_salary, total_salary, country, termination_type, unpaid_leave_days);
+  res.json({ amount });
+});
+```
+
+**Assessment:** the audit-trail write that the original report described is no longer wired into this endpoint. This does not affect the calculated amount, but for a compliance product the calculation history is a gap. Flagged for the lead as a separate, non-blocking follow-up.
 
 ---
 
 ## Correctness Verification: Test Results
 
-All 11 test cases executed — core logic verified:
+Re-run 2026-09-18 against the **live `calculateEOSB`** extracted from `server/index.js` (brace-matched, not hand-copied). Inputs are synthetic test fixtures: UAE basic salary 15,000 (daily rate 500); KSA total salary 18,000. Dates are calendar-exact (e.g. 2022-01-01 → 2026-01-01 = 4 years; 2024-01-01 → 2026-01-01 = 2 years, 731 days incl. the 2024 leap day).
 
-| Test | Scenario | Result | Expected | Status |
+| Test | Scenario | Old result (2026-06-23) | Re-run (2026-09-18) | Status |
 |---|---|---|---|---|
-| T1 | UAE 2yr, employer-initiated | 21,014.37 | ~21,000 | ✅ |
-| T2 | UAE 2yr, resignation (1/3) | 7,004.79 | ~7,000 | ✅ |
-| T3 | UAE 4yr, employer-initiated | 42,000.00 | 42,000 | ✅ |
-| T4 | UAE 4yr, resignation (2/3) | 28,000.00 | ~28,000 | ✅ |
-| T5 | KSA 3yr, notice given | 25,005.70 | ~25,000 | ✅ |
-| T6 | KSA 3yr, no notice (50%) | 12,502.85 | ~12,500 | ✅ |
+| T1 | UAE 2yr, employer-initiated | 21,014.37 | 21,014.37 | ✅ |
+| T2 | UAE 2yr, resignation (1/3) | 7,004.79 | 7,004.79 | ✅ |
+| T3 | UAE 4yr, employer-initiated | 42,000.00 | 42,000.00 | ✅ |
+| T4 | UAE 4yr, resignation (2/3) | 28,000.00 | 28,000.00 | ✅ |
+| T5 | KSA 3yr, employer-initiated | 25,005.70¹ | 27,006.16¹ | ✅ |
+| T6 | KSA 3yr, resignation (1/3) | 12,502.85¹² | 9,002.05¹ | ✅ (semantics changed — see note) |
 | T7 | UAE <1yr (no EOSB) | 0 | 0 | ✅ |
 | T8 | KSA <2yr (no EOSB) | 0 | 0 | ✅ |
-| T9 | UAE 120d unpaid (BUGGY) | 17,564.68 | ~20,247 | ⚠️ (see Finding 2) |
-| T10 | UAE 10yr, cap test | 127,520.53 | ~127,500 | ✅ |
-| T11 | UAE 7yr, employer | 82,510.27 | ~82,500 | ✅ |
+| T9 | UAE 2yr, 120d unpaid | 17,564.68 ⚠️ | **21,014.37** | ✅ **FIXED** |
+| T10 | UAE 10yr | 127,520.53 | 127,520.53 | ✅ |
+| T11 | UAE 7yr, employer | 82,510.27 | 82,510.27 | ✅ |
+| TX1 | UAE 4yr, summary dismissal | — | 0 | ✅ (new — Finding 1) |
+| TX2 | UAE 2yr, mutual agreement | — | 21,014.37 | ✅ (new — Finding 1) |
+
+¹ The KSA figures differ between the two runs because the re-run used a documented clean input (total salary 18,000); the original used a different, undocumented total-salary value. The *engine* behaviour is what is verified, and it is correct in both jurisdictions.
+
+² T6's meaning changed: the original "no notice (50%)" tested a notice penalty that no longer exists. The re-run `T6` is a plain KSA 3-year resignation, which correctly receives the 1/3 tier. See Finding 6.
+
+**T9 (the figure the re-verification was asked to confirm):** with 120 unpaid days over 2 years, the current engine returns **21,014.37 — the full, unreduced 2-year EOSB, identical to T1.** This is the corrected behaviour: the 90-day-per-year allowance (≈180 days for 2 years) is not exceeded, so no unpaid leave is excluded.
 
 ---
 
 ## Summary of Required Changes
 
-| Priority | Finding | File | Change |
+| Priority | Finding | File | Status (2026-09-18) |
 |---|---|---|---|
-| 🔴 **P0** | Finding 1 — `isResignation` flag | `server/index.js:370` | Add `termination_type` field; route EOSB logic by actual termination reason, not status |
-| 🟡 **P1** | Finding 2 — Unpaid leave exclusion | `server/index.js:34-36` | For UAE, only exclude unpaid leave >90 days per year, not all unpaid leave |
-| ⚪ **P2** | Finding 3 — Dead wrapper | `server/index.js:146-148` | Remove `calculateEOSB()` or fix signatures |
-| ⚪ **Info** | Finding 4 — 365.25 convention | `server/index.js:36` | Accept as-is (immaterial difference) |
-| ⚪ **Info** | Finding 6 — Notice penalty config | `server/index.js:69-75` | Optional: make KSA penalty % configurable |
-| ⚪ **Info** | Finding 7 — Audit schema | DB schema | Optional: add gross/net/deductions fields |
+| 🔴 P0 | Finding 1 — termination-type routing | `server/index.js` (`calculateEOSB`) | ✅ FIXED |
+| 🟡 P1 | Finding 2 — unpaid-leave exclusion (UAE >90/yr) | `server/index.js` (`calculateEOSB`) | ✅ FIXED |
+| ⚪ P2 | Finding 3 — dead wrapper | `server/index.js` | ✅ RESOLVED (removed) |
+| ⚪ Info | Finding 4 — 365.25 convention | `server/index.js` | Accepted as-is |
+| ⚪ Info | Finding 5 — 2-yr cap | `server/index.js` | Correct, no change |
+| ⚪ Info | Finding 6 — KSA notice penalty | `server/index.js` | ⚠️ No longer applied — lead to decide |
+| ⚪ Info | Finding 7 — audit schema | DB / endpoint | ⚠️ Audit write removed — lead to decide |
 
 ---
 
 ## Certification
 
-**Core EOSB calculation logic is CERTIFIED** for both UAE and KSA after the two P0/P1 issues are resolved. The mathematical formulas, daily rate derivation, service year bands, cap limits, resignation tiers, and notice penalty are all correctly implemented.
+**The core EOSB calculation engine is CERTIFIED for both UAE and KSA — unconditionally.**
 
-The engine can safely be used for production **once Finding 1 and Finding 2 are addressed**, as they impact EOSB amounts in real-world scenarios.
+The mathematical formulas, daily-rate derivation, service-year bands, 2-year cap, resignation tiers, termination-type routing (including summary-dismissal forfeiture), and the UAE 90-day-per-year unpaid-leave rule are all correctly implemented in the current `calculateEOSB` on `origin/main`, and the test matrix passes.
+
+The two findings that previously blocked production use — Finding 1 (P0) and Finding 2 (P1) — are fixed, and the dead wrapper (Finding 3, P2) is gone.
+
+Two **non-blocking** notes remain for the lead, neither of which makes the shipped EOSB amount unsafe:
+1. **Finding 6** — the KSA notice-penalty deduction is no longer modelled (schema field `gave_proper_notice` exists but is unused).
+2. **Finding 7** — the calculate-eosb endpoint no longer persists an audit-trail row to `eosb_calculations`.
 
 ---
 
-*Review prepared by Compliance Expert | 2026-06-23*
+*Review prepared by Compliance Expert | 2026-06-23 · re-verified 2026-09-18*
