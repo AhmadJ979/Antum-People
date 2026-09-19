@@ -49,7 +49,7 @@ The server is configured to serve the built frontend at `/` and API routes at `/
 
 ## Rebranding Note
 
-On 2026-09-17, this product was rebranded from **VantageHR** to **Antum** / **Antum People**.
+On 2026-09-17, this product was rebranded to **Antum** / **Antum People**.
 
 ## Contact
 

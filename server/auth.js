@@ -40,6 +40,7 @@ const authenticateToken = (req, res, next) => {
  */
 function encrypt(text) {
   if (!text) return text;
+  
   try {
     const iv = crypto.randomBytes(IV_LENGTH);
     const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
@@ -66,12 +67,12 @@ function decrypt(encryptedData) {
   try {
     const parts = encryptedData.split(':');
     if (parts.length !== 3) return encryptedData; // Not encrypted in our format
-
+    
     const [ivHex, authTagHex, encryptedText] = parts;
     const iv = Buffer.from(ivHex, 'hex');
     const authTag = Buffer.from(authTagHex, 'hex');
-    const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
     
+    const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
     decipher.setAuthTag(authTag);
     
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
