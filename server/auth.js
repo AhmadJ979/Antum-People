@@ -2,69 +2,73 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'vantagehr-dev-secret-keep-it-safe';
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'vantagehr-dev-enc-key-32chars-lo'; // Must be 32 bytes
+// Fail-fast: refuse to start without production keys
+if (!process.env.JWT_SECRET || !process.env.ENCRYPTION_KEY) {
+  console.error('FATAL: JWT_SECRET or ENCRYPTION_KEY environment variable is missing.');
+  console.error('The server must be started with production-grade credentials.');
+  process.exit(1);
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12; // Standard for GCM
 const AUTH_TAG_LENGTH = 16;
 
-/**
- * JWT Authentication Middleware
- */
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+function generateToken(user) {
+  return jwt.sign(
+    { id: user.id, username: user.username, role: user.role },
+    JWT_SECRET,
+    { expiresIn: '8h' }
+  );
+}
 
-  if (!token) {
-    return res.status(401).json({ error: 'Authentication token required' });
-  }
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid or expired token' });
-    }
-    req.user = user;
-    next();
-  });
-};
-
-/**
- * Encrypts text using AES-256-GCM
- */
-function encrypt(text) {
-  if (!text) return text;
+function verifyToken(token) {
   try {
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
-    
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    
-    const authTag = cipher.getAuthTag().toString('hex');
-    
-    // Format: iv:authTag:encryptedText
-    return `${iv.toString('hex')}:${authTag}:${encrypted}`;
+    return jwt.verify(token, JWT_SECRET);
   } catch (err) {
-    console.error('Encryption error:', err);
-    throw new Error('Encryption failed'); // Ensure we never silently persist plaintext
+    return null;
   }
 }
 
-/**
- * Decrypts text using AES-256-GCM
- */
+async function hashPassword(password) {
+  return await bcrypt.hash(password, 10);
+}
+
+async function comparePassword(password, hash) {
+  return await bcrypt.compare(password, hash);
+}
+
+function encrypt(text) {
+  if (!text) return null;
+  
+  const iv = crypto.randomBytes(IV_LENGTH);
+  const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
+  
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  
+  const authTag = cipher.getAuthTag().toString('hex');
+  
+  // Return IV + AuthTag + Encrypted Data
+  return iv.toString('hex') + ':' + authTag + ':' + encrypted;
+}
+
 function decrypt(encryptedData) {
-  if (!encryptedData || !encryptedData.includes(':')) return encryptedData;
+  if (!encryptedData) return null;
   
   try {
     const parts = encryptedData.split(':');
-    if (parts.length !== 3) return encryptedData; // Not encrypted in our format
-
-    const [ivHex, authTagHex, encryptedText] = parts;
-    const iv = Buffer.from(ivHex, 'hex');
-    const authTag = Buffer.from(authTagHex, 'hex');
-    const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
+    if (parts.length !== 3) {
+      // It might be unencrypted or old format
+      return encryptedData;
+    }
     
+    const iv = Buffer.from(parts[0], 'hex');
+    const authTag = Buffer.from(parts[1], 'hex');
+    const encryptedText = parts[2];
+    
+    const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
     decipher.setAuthTag(authTag);
     
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
@@ -72,22 +76,16 @@ function decrypt(encryptedData) {
     
     return decrypted;
   } catch (err) {
-    // If decryption fails, it might be plaintext or wrong key
-    // console.error('Decryption error:', err);
-    return encryptedData;
+    console.error('Decryption failed:', err.message);
+    return '[DECRYPTION ERROR]';
   }
 }
 
 module.exports = {
-  JWT_SECRET,
-  authenticateToken,
+  generateToken,
+  verifyToken,
+  hashPassword,
+  comparePassword,
   encrypt,
-  decrypt,
-  hashPassword: (password) => bcrypt.hash(password, 10),
-  comparePassword: (password, hash) => bcrypt.compare(password, hash),
-  generateToken: (user) => jwt.sign(
-    { id: user.id, username: user.username, role: user.role },
-    JWT_SECRET,
-    { expiresIn: '8h' }
-  )
+  decrypt
 };
