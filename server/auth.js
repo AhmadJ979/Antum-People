@@ -9,8 +9,8 @@ if (!process.env.JWT_SECRET || !process.env.ENCRYPTION_KEY) {
   process.exit(1);
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'antum-people-dev-secret-keep-safe';
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'antum-people-enc-key-32chars-low'; // Must be 32 bytes
+const JWT_SECRET = process.env.JWT_SECRET;
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12; // Standard for GCM
 const AUTH_TAG_LENGTH = 16;
@@ -40,16 +40,12 @@ const authenticateToken = (req, res, next) => {
  */
 function encrypt(text) {
   if (!text) return text;
-  
   try {
     const iv = crypto.randomBytes(IV_LENGTH);
     const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
-    
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    
     const authTag = cipher.getAuthTag().toString('hex');
-    
     // Format: iv:authTag:encryptedText
     return `${iv.toString('hex')}:${authTag}:${encrypted}`;
   } catch (err) {
@@ -63,21 +59,16 @@ function encrypt(text) {
  */
 function decrypt(encryptedData) {
   if (!encryptedData || !encryptedData.includes(':')) return encryptedData;
-  
   try {
     const parts = encryptedData.split(':');
     if (parts.length !== 3) return encryptedData; // Not encrypted in our format
-    
     const [ivHex, authTagHex, encryptedText] = parts;
     const iv = Buffer.from(ivHex, 'hex');
     const authTag = Buffer.from(authTagHex, 'hex');
-    
     const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
     decipher.setAuthTag(authTag);
-    
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    
     return decrypted;
   } catch (err) {
     // If decryption fails, it might be plaintext or wrong key
