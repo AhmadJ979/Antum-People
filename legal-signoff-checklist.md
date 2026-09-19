@@ -1,6 +1,6 @@
 # Antum — Legal Sign-off Checklist
 
-> Single source of truth for the owner before client sign-off. Every open field below matches a visible `[TO CONFIRM — …]` marker in the documents; every confirmed field is applied. Last updated 2026-09-17.
+> Single source of truth for the owner before client sign-off. Every open field below matches a visible `[TO CONFIRM — …]` marker in the documents; every confirmed field is applied. Last updated 2026-09-18.
 
 ## Confirmed (applied)
 
@@ -9,6 +9,12 @@
 | DPO name | **Ahmad Aljairoudi** | `templates/privacy-notice.md` §1 (EN + AR), `templates/data-processing-agreement.md` §1.2 (EN + AR) |
 | Registered address (city / country) | **Dubai, United Arab Emirates** | same documents |
 | DPO email (reserved — mailbox NOT yet provisioned) | **dpo@antum.ae** | same documents |
+
+## Controller vs processor DPO (by design — do not "fix")
+
+Antum is the **processor**; each client (employer) is the **controller**. **Ahmad Aljairoudi** is Antum's DPO in Antum's own capacity and appears **only in the processor identity block** (`templates/privacy-notice.md` §1 and `templates/data-processing-agreement.md` §1.2, EN + AR).
+
+The controller-side **data-protection contact** / `[dpo_name]` placeholder in the privacy notice belongs to **the client's own DPO**, and is deliberately left as a placeholder for each client to complete. It is **not an oversight** — do not populate it with Antum's DPO. If a document ever needs Antum's DPO on the controller side of a client contract, that is a question for the lead, not a field to fill.
 
 ## Open items — owner must supply before client sign-off
 
