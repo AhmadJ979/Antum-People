@@ -21,7 +21,7 @@
 **Goal:** get the connector to forward a blurb or make an intro. Two parts: the ask, and a forwardable blurb.
 
 ### 1a. The ask (~95 words)
-> Hi [Name] — quick ask. I'm opening three free pilot slots for Antum People, the GCC onboarding/offboarding platform I've been building. It turns EOSB and PDPL compliance into a dashboard leadership actually reads — retention, time-to-productivity, and EOSB liability in one place. If you know an HR or People leader running a 100–1,000 person team in the UAE or KSA who's tired of spreadsheets and compliance fire drills, would you be open to an intro? I can send you a two-line blurb you forward as-is. No pressure either way.
+> Hi [Name] — quick ask. I'm opening three free pilot slots for Antum People, the GCC onboarding/offboarding platform I've been building. It turns EOSB liability and workforce metrics into a dashboard leadership actually reads — retention, time-to-productivity, and EOSB liability in one place. If you know an HR or People leader running a 100–1,000 person team in the UAE or KSA who's tired of spreadsheets and compliance fire drills, would you be open to an intro? I can send you a two-line blurb you forward as-is. No pressure either way.
 
 ### 1b. Forwardable blurb (~70 words)
 > Antum People helps GCC HR teams (100–1,000 people) turn onboarding and offboarding into a leadership dashboard — correct EOSB (UAE basic-salary vs KSA total-salary), PDPL-compliant consent, and clear retention and time-to-value metrics. We're running three free pilot slots (full access, no cost) in exchange for feedback and a case study. Want a 30-minute look?
@@ -36,7 +36,7 @@
 >
 > Most GCC HR teams still run onboarding, offboarding, EOSB, and PDPL consent across spreadsheets and email — and leadership only learns about liability at termination time.
 >
-> Antum People is built for exactly that. It runs UAE and KSA onboarding/offboarding end-to-end (MoHRE/Qiwa steps, consent capture), calculates EOSB correctly by jurisdiction — basic salary in the UAE, total salary in KSA — and rolls it all into a dashboard with the three numbers leadership cares about: Retention Lift, Time-to-Value, and Compliance Accuracy.
+> Antum People is built for exactly that. It runs UAE and KSA onboarding/offboarding end-to-end (MoHRE/Qiwa steps, consent capture), calculates EOSB correctly by jurisdiction — basic salary in the UAE, total salary in KSA — and rolls it all into a dashboard with the numbers leadership cares about: Retention Lift, Time-to-Value, Cost-per-Hire, and EOSB liability.
 >
 > We're running three free pilot slots — full access, no cost — in exchange for your feedback, a testimonial, and case-study rights. No obligation to buy, and our templates are drafts your counsel would review.
 >
@@ -50,7 +50,7 @@
 
 ## 3. Short WhatsApp / LinkedIn nudge (under 500 chars)
 
-> Hi [Name] — Ahmad here. We built Antum People to take the pain out of GCC onboarding/offboarding: correct EOSB (UAE vs KSA) and PDPL consent, in one leadership dashboard. We're running three free pilot slots — full access, no cost — in exchange for feedback + a case study. Open to a quick 30-minute look?
+> Hi [Name] — Ahmad here. We built Antum People to take the pain out of GCC onboarding/offboarding: correct EOSB (UAE vs KSA) and PDPL consent tracking, plus a leadership dashboard for retention and time-to-value. We're running three free pilot slots — full access, no cost — in exchange for feedback + a case study. Open to a quick 30-minute look?
 
 *(≈330 characters — comfortably under 500.)*
 
