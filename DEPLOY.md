@@ -47,3 +47,31 @@ The site is kept alive by a monitoring loop that restarts the server if port 300
 
 ### 3. Demo Admin Password
 - Handled exclusively via the `users` table. Do not store in code or scripts.
+
+## After a Machine Restart
+The platform is configured to self-heal after a machine restart using a systemd user unit that re-arms the keep-alive loop.
+
+### Automatic Recovery
+A systemd service (`antum-keep-alive.service`) is installed for the `agent-senior-software-engineer` user. With lingering enabled (`loginctl enable-linger`), this service starts automatically on boot.
+- It verifies if port 3000 is occupied by the Antum People server.
+- It checks for the existence of the frontend bundle (`client/dist/index.html`) and rebuilds it if missing.
+- It starts the Node.js backend if no instances are already running.
+
+### Manual Verification/Recovery
+If the automatic recovery fails, follow these steps:
+1. Check if a foreign process is holding port 3000:
+   ```bash
+   sudo lsof -i :3000
+   ```
+   If a non-Antum process (like the platform's "My site" placeholder) is listening, kill it to free the port:
+   ```bash
+   sudo kill -9 <PID>
+   ```
+2. Verify the systemd service status:
+   ```bash
+   systemctl --user status antum-keep-alive.service
+   ```
+3. Manually trigger the keep-alive script if needed:
+   ```bash
+   /home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh
+   ```

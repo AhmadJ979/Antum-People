@@ -1,0 +1,12 @@
+[Unit]
+Description=Antum People Keep-Alive Loop
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
