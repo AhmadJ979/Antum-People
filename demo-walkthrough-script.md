@@ -6,16 +6,17 @@
 > **Presenter:** Founder-led (Ahmad's HR network) — technical detail available, but lead with outcomes.
 
 > ⚠️ **Verification status — internal (for the presenter, not read aloud):**
-> - **The sign-in screen is not live yet.** The public root currently renders a blank page until the client-auth fix ships, so every in-app click-through below is **PENDING** on that fix. The steps are written against the current client (`client/src/App.tsx`) and server (`server/index.js`) code — not against a live click-through.
-> - Verified today: the API endpoints answer correctly, the seeded demo data is present, and the screens/labels named below exist in the current client code.
-> - **Re-check once sign-in is live:** (1) the four dashboard cards, (2) the Transitions Hub onboarding/offboarding lists, (3) an employee's checklist + Compliance Center, (4) the document previews.
+> - **The sign-in screen is live and verified** (lead-confirmed 2026-09-22, re-checked today against the live build): the public root renders a working sign-in screen, a wrong password returns a clean inline **"Invalid username or password"**, and a correct login lands on the **Executive Dashboard** with the onboarding and offboarding pipelines populated.
+> - **Verified click-through sequence (presenter order):** sign in → **Executive Dashboard** (the four KPI cards + the onboarding/offboarding pipeline lists) → **Employee Directory** → **Transitions Hub** → a per-employee **Compliance Center** → the **document previews** (privacy notice, labor contract, settlement statement).
+
+> ⚠️ **KNOWN ISSUE — DELETE THIS LINE ONCE THE KPI FIX SHIPS:** measured today, all four headline cards read zero or empty — Cost-per-Hire **$0**, EOSB Liability **$0** ("AE 0 · SA 0"), Time-to-Value **0 d** — even though the pipelines below list real records. The engineer is fixing the records and the aggregate. Until that PR lands, open the demo on the **pipeline and per-employee views**, and describe the KPI cards as **sample data**, not the prospect's numbers.
 
 ---
 
 ## Before you start — 30-second prep checklist
 
 - [ ] **Confirm the live app loads** at https://b974147c03228029e277d1cbe6646fe6.ctonew.app before the call.
-- [ ] **Sign in (PENDING — the sign-in screen is being added and is not live yet).** The demo account is **`admin`**, password **supplied separately by Ahmad**. Do a test login ahead of the call once the screen lands; never write the password into this file.
+- [ ] **Sign in (verified live)** at https://b974147c03228029e277d1cbe6646fe6.ctonew.app — the demo account is **`admin`**, password **supplied separately by Ahmad**. Do a test login ahead of the call; never write the password into this file.
 - [ ] Confirm the app is showing **seeded demo data** (UAE + KSA employees, with active onboarding and offboarding cases).
 - [ ] Have two tabs ready to hot-switch: the **live app** (https://b974147c03228029e277d1cbe6646fe6.ctonew.app) and the **bilingual prototype** (`design-concepts/intelligence-dashboard-prototype.html`).
 - [ ] PDFs printed or open in a viewer: `templates/privacy-notice.pdf`, `templates/data-processing-agreement.pdf`, `templates/dpia-questionnaire.pdf`.
