@@ -132,14 +132,12 @@
 
 #### 2.7 End of Service Benefits / مكافأة نهاية الخدمة
 
-EOSB shall be calculated in accordance with Articles 74–86 of Saudi Labor Law (Royal Decree M/51), based on the employee's **total monthly salary**.
+EOSB shall be calculated in accordance with Article 84 of the Saudi Labor Law (Royal Decree M/51), based on the employee's **total monthly salary**.
 
 | Service Duration | EOSB Per Year of Service |
 |---|---|
-| Less than 2 years / أقل من سنتين | No entitlement |
-| 2 to 5 years / من 2 إلى 5 سنوات | 1/3 of one month's total salary per year |
-| 5 to 10 years / من 5 إلى 10 سنوات | 2/3 of one month's total salary per year |
-| 10+ years / أكثر من 10 سنوات | 1 full month's total salary per year |
+| First 5 years / أول 5 سنوات | Half a month's total salary per year / نصف شهر من إجمالي الراتب عن كل سنة |
+| Each subsequent year / كل سنة تالية | One full month's total salary per year / شهر كامل من إجمالي الراتب عن كل سنة |
 
 > **Penalty for Failure to Give Proper Notice:** Up to 50% of EOSB may be deducted if the employee fails to serve the full notice period.
 

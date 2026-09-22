@@ -90,7 +90,7 @@ function computeGrossEOSB(result, jurisdiction) {
         const monthlyRate = salaryBase;
         const years = result.tenure_years;
         
-        if (years < 2) return 0;
+        // no minimum service period — EOSB pro-rates from day one
         
         let gross = 0;
         if (years <= 5) {

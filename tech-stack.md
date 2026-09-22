@@ -138,11 +138,8 @@ The compliance engine inside the backend exposes high-fidelity calculation endpo
 1.  **Salary Base**: `total_salary`.
 2.  **Unpaid Leave Deduction**: `tenureYears = (Raw Days - unpaid_leave_days) / 365.25`.
 3.  **Accrual Rates**:
-    *   `< 2 Years`: 0 days gratuity (unless terminated by employer without cause).
+    *   `< 5 Years`: 15 days total salary per year (half-month), pro-rated from day one.
     *   `First 5 Years`: 15 days total salary per year (half-month).
     *   `Subsequent Years`: 30 days total salary per year (full-month).
-4.  **Resignation Multiplier (Article 85)**:
-    *   `2 to 5 Years`: 1/3 of calculated benefit.
-    *   `5 to 10 Years`: 2/3 of calculated benefit.
-    *   `>= 10 Years`: Full benefit.
+4.  **Resignation**: no reduction — full benefit regardless of resignation or termination (Art. 84).
 5.  **Notice Penalty**: If notice is unserved during a resignation, a penalty equal to 1 month of total salary is deducted from the gratuity total.
