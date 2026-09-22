@@ -57,14 +57,106 @@ interface Analytics {
   totalRecruitingSpend: number;
 }
 
+function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_BASE}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        onLogin(data.token, data.user);
+      } else {
+        setError(data.error || 'Login failed');
+      }
+    } catch (err) {
+      setError('Connection error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 font-sans">
+      <div className="max-w-md w-full p-8 bg-white rounded-2xl shadow-2xl">
+        <div className="flex justify-center mb-8">
+          <div className="bg-teal-600 p-3 rounded-xl shadow-lg">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+        </div>
+        <h2 className="text-2xl font-extrabold text-center text-slate-900 mb-2">Antum People</h2>
+        <p className="text-slate-500 text-center mb-8 text-sm">HR Onboarding/Offboarding Intelligence Platform</p>
+        
+        {error && (
+          <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 text-sm rounded-lg font-medium flex items-center">
+             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+             </svg>
+             {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Username</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition text-slate-900"
+              placeholder="Enter your username"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition text-slate-900"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold hover:bg-slate-800 focus:ring-4 focus:ring-slate-200 transition shadow-lg disabled:opacity-50"
+          >
+            {loading ? 'Authenticating...' : 'Sign In'}
+          </button>
+        </form>
+        <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+          <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">Enterprise HR Intelligence</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  const [token, setToken] = useState<string | null>(localStorage.getItem('antum_token'));
+  const [user, setUser] = useState<any | null>(JSON.parse(localStorage.getItem('antum_user') || 'null'));
   const [activeTab, setActiveTab] = useState<'dashboard' | 'employees' | 'transitions' | 'analytics'>('dashboard');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [onboardingTasks, setOnboardingTasks] = useState<Task[]>([]);
   const [offboardingTasks, setOffboardingTasks] = useState<Task[]>([]);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Compliance Documents
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -90,7 +182,7 @@ export default function App() {
     visa_expiry_date: '',
     basic_salary: ''
   });
-  
+
   const [exitForm, setExitForm] = useState({
     departure_reason: 'Compensation',
     detailed_feedback: '',
@@ -100,25 +192,61 @@ export default function App() {
     new_salary: ''
   });
 
+  const handleLogin = (newToken: string, userData: any) => {
+    setToken(newToken);
+    setUser(userData);
+    localStorage.setItem('antum_token', newToken);
+    localStorage.setItem('antum_user', JSON.stringify(userData));
+  };
+
+  const handleLogout = () => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('antum_token');
+    localStorage.removeItem('antum_user');
+  };
+
+  const authedFetch = (url: string, options: any = {}) => {
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  };
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (token) {
+      fetchData();
+    }
+  }, [token]);
 
   const fetchData = async () => {
+    if (!token) return;
     setLoading(true);
     try {
       const [empRes, anaRes] = await Promise.all([
-        fetch(`${API_BASE}/api/employees`),
-        fetch(`${API_BASE}/api/analytics/dashboard`)
+        authedFetch(`${API_BASE}/api/employees`),
+        authedFetch(`${API_BASE}/api/analytics/dashboard`)
       ]);
+      
+      if (empRes.status === 401 || anaRes.status === 401) {
+        handleLogout();
+        return;
+      }
+
       const empData = await empRes.json();
       const anaData = await anaRes.json();
-      setEmployees(empData);
-      setAnalytics(anaData);
+      
+      // Defensive checks to prevent .filter crashes
+      const safeEmpData = Array.isArray(empData) ? empData : [];
+      setEmployees(safeEmpData);
+      setAnalytics(anaData && !anaData.error ? anaData : null);
       
       // Keep selected employee state fresh
       if (selectedEmployee) {
-        const updated = empData.find((e: Employee) => e.id === selectedEmployee.id);
+        const updated = safeEmpData.find((e: Employee) => e.id === selectedEmployee.id);
         if (updated) {
           setSelectedEmployee(updated);
           fetchTasks(updated.id);
@@ -132,22 +260,36 @@ export default function App() {
   };
 
   const fetchTasks = async (employeeId: string) => {
+    if (!token) return;
     try {
       const [onRes, offRes] = await Promise.all([
-        fetch(`${API_BASE}/api/employees/${employeeId}/onboarding`),
-        fetch(`${API_BASE}/api/employees/${employeeId}/offboarding`)
+        authedFetch(`${API_BASE}/api/employees/${employeeId}/onboarding`),
+        authedFetch(`${API_BASE}/api/employees/${employeeId}/offboarding`)
       ]);
-      setOnboardingTasks(await onRes.json());
-      setOffboardingTasks(await offRes.json());
+      
+      if (onRes.status === 401 || offRes.status === 401) {
+        handleLogout();
+        return;
+      }
+
+      const onData = await onRes.json();
+      const offData = await offRes.json();
+      
+      setOnboardingTasks(Array.isArray(onData) ? onData : []);
+      setOffboardingTasks(Array.isArray(offData) ? offData : []);
     } catch (err) {
       console.error('Error fetching tasks:', err);
     }
   };
 
   const fetchTemplate = async (templateName: string, title: string) => {
-    if (!selectedEmployee) return;
+    if (!selectedEmployee || !token) return;
     try {
-      const res = await fetch(`${API_BASE}/api/compliance/templates/${templateName}/${selectedEmployee.id}`);
+      const res = await authedFetch(`${API_BASE}/api/compliance/templates/${templateName}/${selectedEmployee.id}`);
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
       const data = await res.json();
       if (res.ok) {
         setRenderedTemplate({ title, content: data.content });
@@ -165,12 +307,17 @@ export default function App() {
 
   const handleCreateEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) return;
     try {
-      const res = await fetch(`${API_BASE}/api/employees`, {
+      const res = await authedFetch(`${API_BASE}/api/employees`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newEmployee)
       });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
       if (res.ok) {
         setShowAddModal(false);
         setNewEmployee({
@@ -198,13 +345,18 @@ export default function App() {
   };
 
   const handleUpdateTask = async (taskId: string, type: 'onboarding' | 'offboarding', status: 'pending' | 'completed') => {
+    if (!token) return;
     try {
       const endpoint = type === 'onboarding' ? 'onboarding-tasks' : 'offboarding-tasks';
-      const res = await fetch(`${API_BASE}/api/${endpoint}/${taskId}`, {
+      const res = await authedFetch(`${API_BASE}/api/${endpoint}/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
       if (res.ok && selectedEmployee) {
         await fetchTasks(selectedEmployee.id);
         await fetchData();
@@ -215,14 +367,18 @@ export default function App() {
   };
 
   const handleMarkProductive = async () => {
-    if (!selectedEmployee) return;
+    if (!selectedEmployee || !token) return;
     const productiveDate = new Date().toISOString().split('T')[0];
     try {
-      const res = await fetch(`${API_BASE}/api/employees/${selectedEmployee.id}`, {
+      const res = await authedFetch(`${API_BASE}/api/employees/${selectedEmployee.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fully_productive_date: productiveDate, status: 'active' })
       });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
       if (res.ok) {
         await fetchData();
       }
@@ -232,13 +388,17 @@ export default function App() {
   };
 
   const handleTransitionToOffboarding = async () => {
-    if (!selectedEmployee) return;
+    if (!selectedEmployee || !token) return;
     try {
-      const res = await fetch(`${API_BASE}/api/employees/${selectedEmployee.id}`, {
+      const res = await authedFetch(`${API_BASE}/api/employees/${selectedEmployee.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'offboarding', end_date: new Date().toISOString().split('T')[0] })
       });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
       if (res.ok) {
         await fetchData();
       }
@@ -249,9 +409,9 @@ export default function App() {
 
   const handleExitSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEmployee) return;
+    if (!selectedEmployee || !token) return;
     try {
-      const res = await fetch(`${API_BASE}/api/exit-interviews`, {
+      const res = await authedFetch(`${API_BASE}/api/exit-interviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -263,6 +423,10 @@ export default function App() {
           new_salary: parseFloat(exitForm.new_salary) || 0
         })
       });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
       if (res.ok) {
         setShowExitModal(false);
         setExitForm({
@@ -280,16 +444,40 @@ export default function App() {
     }
   };
 
+  if (!token) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
     <div className="flex h-screen bg-slate-50 text-slate-800 font-sans">
       {/* Sidebar */}
       <aside className="w-64 bg-slate-900 text-white flex flex-col justify-between shadow-lg">
         <div>
-          <div className="p-6 border-b border-slate-800 flex items-center space-x-3">
-            <svg className="w-8 h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span className="text-xl font-bold tracking-wider">Antum</span>
+          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <svg className="w-8 h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span className="text-xl font-bold tracking-wider">Antum</span>
+            </div>
+            <button onClick={handleLogout} className="text-slate-500 hover:text-white transition-colors p-1 rounded-md hover:bg-slate-800" title="Sign Out">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
+          <div className="px-6 py-4 border-b border-slate-800/50">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="overflow-hidden">
+                <div className="text-xs font-bold text-white truncate">{user?.username || 'Admin User'}</div>
+                <div className="text-[10px] text-slate-500 font-medium uppercase tracking-tight">{user?.role || 'Administrator'}</div>
+              </div>
+            </div>
           </div>
           <nav className="p-4 space-y-2">
             {[
