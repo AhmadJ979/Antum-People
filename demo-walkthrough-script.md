@@ -5,12 +5,17 @@
 > **Total runtime:** 10 minutes (4 segments + close). Timings are targets, not walls.
 > **Presenter:** Founder-led (Ahmad's HR network) — technical detail available, but lead with outcomes.
 
+> ⚠️ **Verification status — internal (for the presenter, not read aloud):**
+> - **The sign-in screen is not live yet.** The public root currently renders a blank page until the client-auth fix ships, so every in-app click-through below is **PENDING** on that fix. The steps are written against the current client (`client/src/App.tsx`) and server (`server/index.js`) code — not against a live click-through.
+> - Verified today: the API endpoints answer correctly, the seeded demo data is present, and the screens/labels named below exist in the current client code.
+> - **Re-check once sign-in is live:** (1) the four dashboard cards, (2) the Transitions Hub onboarding/offboarding lists, (3) an employee's checklist + Compliance Center, (4) the document previews.
+
 ---
 
 ## Before you start — 30-second prep checklist
 
-- [ ] **Confirm the live app loads** at https://b974147c03228029e277d1cbe6646fe6.ctonew.app — it's up now, but confirm it loads before the call rather than assuming: the public build was only just rebuilt from a stale pre-rebrand version.
-- [ ] **Log in** with the demo account — **demo credentials supplied separately by Ahmad** (username + password; never write either value into this file). Do a test login ahead of the call.
+- [ ] **Confirm the live app loads** at https://b974147c03228029e277d1cbe6646fe6.ctonew.app before the call.
+- [ ] **Sign in (PENDING — the sign-in screen is being added and is not live yet).** The demo account is **`admin`**, password **supplied separately by Ahmad**. Do a test login ahead of the call once the screen lands; never write the password into this file.
 - [ ] Confirm the app is showing **seeded demo data** (UAE + KSA employees, with active onboarding and offboarding cases).
 - [ ] Have two tabs ready to hot-switch: the **live app** (https://b974147c03228029e277d1cbe6646fe6.ctonew.app) and the **bilingual prototype** (`design-concepts/intelligence-dashboard-prototype.html`).
 - [ ] PDFs printed or open in a viewer: `templates/privacy-notice.pdf`, `templates/data-processing-agreement.pdf`, `templates/dpia-questionnaire.pdf`.
