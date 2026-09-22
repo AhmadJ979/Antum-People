@@ -4,6 +4,7 @@ const path = require('path');
 const db = require('./db');
 const compliance = require('./compliance_engine');
 const auth = require('./auth');
+const eosb = require('./eosb');
 const fs = require('fs');
 
 const app = express();
@@ -50,83 +51,6 @@ const generateId = () => {
   return require('crypto').randomUUID ? require('crypto').randomUUID() : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 };
 
-/**
- * Calculates End-of-Service Benefits (EOSB) based on GCC rules.
- */
-function calculateEOSB(startDateStr, endDateStr, basicSalary, totalSalary, country, terminationType = 'resignation', unpaidLeaveDays = 0) {
-  const start = new Date(startDateStr);
-  const end = endDateStr ? new Date(endDateStr) : new Date();
-  
-  if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
-  
-  const rawDiffTime = Math.max(0, end.getTime() - start.getTime());
-  const rawDays = rawDiffTime / (1000 * 60 * 60 * 24);
-  const leaveDays = parseInt(unpaidLeaveDays) || 0;
-  
-  let netDays;
-  if (country === 'SA' || country === 'KSA') {
-    // KSA: No statutory exclusion for unpaid leave unless specified in contract. 
-    // Following compliance recommendation Finding 2: subtract all.
-    netDays = Math.max(0, rawDays - leaveDays);
-  } else {
-    // UAE: Only exclude unpaid leave exceeding 90 days per year of service (Decree-Law 33/2021)
-    const totalYears = rawDays / 365.25;
-    const allowedUnpaidTotal = 90 * totalYears;
-    const excessUnpaid = Math.max(0, leaveDays - allowedUnpaidTotal);
-    netDays = Math.max(0, rawDays - excessUnpaid);
-  }
-  
-  const tenureYears = netDays / 365.25;
-  
-  if (terminationType === 'summary_dismissal') {
-    return 0; // Forfeit entire EOSB for gross misconduct
-  }
-
-  let accrued = 0;
-  const isResignation = terminationType === 'resignation';
-  
-  if (country === 'SA' || country === 'KSA') {
-    // Saudi Arabia: Based on Total Salary (including allowances)
-    const monthlyRate = parseFloat(totalSalary) || parseFloat(basicSalary) || 0;
-    if (tenureYears < 2) return 0;
-
-    if (tenureYears <= 5) {
-      accrued = (monthlyRate / 2) * tenureYears;
-    } else {
-      accrued = (monthlyRate / 2) * 5 + (monthlyRate) * (tenureYears - 5);
-    }
-
-    if (isResignation) {
-      if (tenureYears >= 2 && tenureYears < 5) accrued *= (1/3);
-      else if (tenureYears >= 5 && tenureYears < 10) accrued *= (2/3);
-      // tenureYears >= 10 is full amount
-    }
-  } else {
-    // UAE: Based on Basic Salary
-    const bSalary = parseFloat(basicSalary) || 0;
-    const dailyBasic = bSalary / 30;
-    if (tenureYears < 1) return 0;
-
-    const firstPeriodYears = Math.min(5, tenureYears);
-    accrued += firstPeriodYears * 21 * dailyBasic;
-    
-    if (tenureYears > 5) {
-      const secondPeriodYears = tenureYears - 5;
-      accrued += secondPeriodYears * 30 * dailyBasic;
-    }
-
-    // UAE Cap: 2 years of Basic Salary
-    accrued = Math.min(accrued, bSalary * 24);
-
-    if (isResignation) {
-      if (tenureYears >= 1 && tenureYears < 3) accrued *= (1/3);
-      else if (tenureYears >= 3 && tenureYears < 5) accrued *= (2/3);
-    }
-  }
-  
-  return Math.round(accrued * 100) / 100;
-}
-
 // -------------------------------------------------------------
 // EMPLOYEE APIS
 // -------------------------------------------------------------
@@ -166,7 +90,7 @@ app.post('/api/employees', async (req, res) => {
     const bSalary = parseFloat(data.basic_salary) || 0;
     const tSalary = parseFloat(data.salary) || 0;
     
-    const eosbAccrued = calculateEOSB(data.start_date, null, bSalary, tSalary, country, 'resignation', parseFloat(data.unpaid_leave_days) || 0);
+    const eosbAccrued = eosb.calculateEOSB(data.start_date, null, bSalary, tSalary, country, 'resignation', parseFloat(data.unpaid_leave_days) || 0);
 
     const encryptedNationalId = auth.encrypt(data.national_id_value);
     const encryptedIqama = auth.encrypt(data.national_id_iqama);
@@ -235,7 +159,7 @@ app.put('/api/employees/:id', async (req, res) => {
       const mergedTerminationType = data.termination_type || emp.termination_type || 'resignation';
       const mergedUnpaidLeave = data.unpaid_leave_days !== undefined ? data.unpaid_leave_days : (emp.unpaid_leave_days || 0);
 
-      const newEosb = calculateEOSB(
+      const newEosb = eosb.calculateEOSB(
         data.start_date || emp.start_date, 
         mergedEndDate, 
         data.basic_salary || emp.basic_salary, 
@@ -304,7 +228,7 @@ app.put('/api/offboarding-tasks/:id', async (req, res) => {
 
 app.post('/api/compliance/calculate-eosb', (req, res) => {
   const { start_date, end_date, basic_salary, total_salary, country, termination_type, unpaid_leave_days } = req.body;
-  const amount = calculateEOSB(start_date, end_date, basic_salary, total_salary, country, termination_type, unpaid_leave_days);
+  const amount = eosb.calculateEOSB(start_date, end_date, basic_salary, total_salary, country, termination_type, unpaid_leave_days);
   res.json({ amount });
 });
 

@@ -108,7 +108,7 @@ Synthetic KSA worker: **total monthly salary 10,000 SAR**, notice period **60 da
 | NC-3 | Partial notice (20 of 60 days) | shortfall 40 | 13,333.33 SAR | EOSB unchanged |
 | NC-4 | Employer waiver | waived=true | 0 | EOSB unchanged |
 | NC-5 | Garden leave (60 days on garden leave) | served=60 | 0 | EOSB unchanged |
-| NC-6 | Probation | probation=true | 0 | EOSB already 0 (<1yr UAE / <2yr KSA if applicable) |
+| NC-6 | Probation | probation=true | 0 | EOSB already 0 (UAE <1yr; KSA pro-rata from day one) |
 | NC-7 | Summary dismissal | termination_type=summary_dismissal | n/a (moot) | EOSB = 0 |
 
 Synthetic UAE worker: **basic wage 15,000 AED**, notice period **30 days**, daily wage = 500 AED/day.

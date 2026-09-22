@@ -6,7 +6,7 @@
 > **Scope:** `calculateEOSB()` in `server/index.js` and the audit-trail schema
 > **Reference:** `/home/team/shared/compliance-requirements.md` (Sections 3, 4, 7, 8)
 
-> **Data-handling note:** per the team's no-employee-data rule (Workflow "Hard Rules" #4), this report **describes** verification outcomes instead of quoting salary amounts or EOSB figures. Statutory constants (e.g. 90 days, 21/30 days per year, 1/3–2/3 resignation tiers, the 2-year cap) are quoted because they are legal provisions, not employee data.
+> **Data-handling note:** per the team's no-employee-data rule (Workflow "Hard Rules" #4), this report **describes** verification outcomes instead of quoting salary amounts or EOSB figures. Statutory constants (e.g. 90 days, 21/30 days per year, the UAE 1/3–2/3 resignation tiers, the 2-year cap) are quoted because they are legal provisions, not employee data.
 
 ---
 
@@ -14,7 +14,7 @@
 
 This report was originally issued 2026-06-23 against the engine as it then stood. It has since been re-verified against **current `origin/main`** (`server/index.js`, function `calculateEOSB`). Each finding below states its current status with the actual current code quoted (no stale line numbers). The test matrix was re-run against the live function. **No calculation code was changed during re-verification.**
 
-**Bottom line:** the two findings that previously blocked production (Finding 1, P0 termination-type conflation; Finding 2, P1 unpaid-leave over-deduction) are **fixed**, and the dead wrapper (Finding 3, P2) is **gone**. The core EOSB engine is certified **unconditionally** for UAE and KSA.
+**Bottom line:** the two findings that previously blocked production (Finding 1, P0 termination-type conflation; Finding 2, P1 unpaid-leave over-deduction) are **fixed**, and the dead wrapper (Finding 3, P2) is **gone**. The engine is certified **unconditionally for UAE**; the KSA branch is being corrected to Art. 84 (full EOSB, no resignation tier, pro-rata from day one) and will be re-verified once that change lands.
 
 ---
 
@@ -188,9 +188,9 @@ Re-run against the **live `calculateEOSB`** extracted from `server/index.js` on 
 | T3 | UAE 4yr, employer-initiated | full 4-year EOSB | ✅ |
 | T4 | UAE 4yr, resignation | two-thirds of full (statutory tier) | ✅ |
 | T5 | KSA 3yr, employer-initiated | full 3-year EOSB (half-month rate) | ✅ |
-| T6 | KSA 3yr, resignation | one-third of full (statutory tier) | ✅ |
+| T6 | KSA 3yr, resignation | full EOSB (no resignation tier) | ⏳ pending code fix |
 | T7 | UAE <1yr | zero (below 1-year threshold) | ✅ |
-| T8 | KSA <2yr | zero (below 2-year threshold) | ✅ |
+| T8 | KSA <2yr | pro-rata EOSB from day one (no 2-year zero) | ⏳ pending code fix |
 | T9 | UAE 2yr, 120 unpaid days | **full 2-year amount (identical to T1)** | ✅ **FIXED** |
 | T10 | UAE 10yr | matches 10-year formula (cap not triggered) | ✅ |
 | T11 | UAE 7yr, employer | matches 7-year formula | ✅ |
@@ -217,9 +217,9 @@ Re-run against the **live `calculateEOSB`** extracted from `server/index.js` on 
 
 ## Certification
 
-**The core EOSB calculation engine is CERTIFIED for both UAE and KSA — unconditionally.**
+**The core EOSB calculation engine is CERTIFIED unconditionally for UAE.** The KSA branch is being corrected to Art. 84 (full EOSB on resignation, pro-rata from day one, no tier) and will be re-certified after the code change lands.
 
-The mathematical formulas, daily-rate derivation, service-year bands, 2-year cap, resignation tiers, termination-type routing (including summary-dismissal forfeiture), and the UAE 90-day-per-year unpaid-leave rule are all correctly implemented in the current `calculateEOSB` on `origin/main`, and the test matrix passes.
+The mathematical formulas, daily-rate derivation, service-year bands, 2-year cap, UAE resignation tiers, termination-type routing (including summary-dismissal forfeiture), and the UAE 90-day-per-year unpaid-leave rule are all correctly implemented in the current `calculateEOSB` on `origin/main`, and the UAE test cases pass. The KSA resignation tier and under-2-year zero are being removed per Art. 84.
 
 The two findings that previously blocked production use — Finding 1 (P0) and Finding 2 (P1) — are fixed, and the dead wrapper (Finding 3, P2) is gone.
 

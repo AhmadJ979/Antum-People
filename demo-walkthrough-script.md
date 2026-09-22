@@ -78,13 +78,13 @@ A: Every consent write creates a `consent_records` row (who, when, which version
 1. From **Employee Directory**, open a **UAE** employee → note **Gratuity Accrued** in the directory row and **EOSB Calculation Basis: Basic Salary (UAE Rule)** in the **Compliance Center**.
 2. Note the basis: **Basic Salary** — with tiered resignation discount.
 3. Open a **KSA** employee → note the same two fields.
-4. Note the basis: **Total Salary (incl. allowances)** — with tiered resignation reduction (as implemented in `calculateEOSB`).
+4. Note the basis: **Total Salary (incl. allowances)** — half a month per year for the first five years and a full month after, with no resignation reduction.
 5. Point at the **EOSB Liability** card on the **Executive Dashboard** — the roster-wide accrued total.
 6. Note the accrual is computed by `calculateEOSB` and updates as service time grows — not a black box.
 
 ### What the customer sees
 - UAE: 21 days/yr for first 5 years, 30 days/yr after; resignation discounts ⅓ (1–3 yr) and ⅔ (3–5 yr); capped at 2 years' basic salary.
-- KSA: half-month/yr for first 5 years, full month after; resignation discounts ⅓ (2–5 yr) and ⅔ (5–10 yr); min 2 years' service.
+- KSA: half-month/yr for first 5 years, full month after; no resignation reduction; pro-rated from day one.
 - Both: a per-employee accrued gratuity figure and the jurisdiction-specific basis, computed by the shared `calculateEOSB` engine.
 
 ### Speaker notes

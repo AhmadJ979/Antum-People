@@ -197,12 +197,14 @@ function fullEOSB(years, dailyRate):
 
 ## 4. EOSB — KSA
 
+> **Legal note (tracked):** KSA EOSB per Royal Decree M/51 Art. 84 — pin-cite confirmation by KSA-qualified counsel pending (owner to obtain before any paying KSA client uses the module).
+
 ### 4.1 Legal Basis
 - Articles 74-86 of the Saudi Labor Law (Royal Decree M/51).
 - Ministerial Resolution No. 1315 dated 18/6/1437 AH.
 
 ### 4.2 Eligibility
-- Employee must complete **2 continuous years of service** to be eligible for EOSB.
+- EOSB accrues **pro-rata from the first day of service**; there is no minimum service period.
 - Articles 80, 81 define summary dismissal grounds where EOSB is forfeited.
 - Resignation or termination both qualify — no tiered reduction like UAE.
 
@@ -214,10 +216,8 @@ EOSB is calculated on **final total salary** (includes all allowances: housing, 
 
 | Service Duration | Gratuity Per Year |
 |---|---|
-| < 2 years | No EOSB |
-| 2–5 years | 1/3 of one month's salary per year |
-| 5–10 years | 2/3 of one month's salary per year |
-| 10+ years | 1 full month's salary per year |
+| First 5 years | Half a month's salary per year |
+| Each subsequent year | One full month's salary per year |
 
 #### 4.3.2 Daily Rate Calculation
 
@@ -232,10 +232,8 @@ daily_rate = total_salary / 30  // or total_salary × 12 / 365 (some interpretat
 
 | Service Years | EOSB Entitlement |
 |---|---|
-| < 2 years | 0 (no gratuity) |
-| 2–5 years | (1/3) × monthly_rate × years_of_service |
-| 5–10 years | (2/3) × monthly_rate × years_of_service |
-| 10+ years | 1 × monthly_rate × years_of_service |
+| 0–5 years | 0.5 × monthly_rate × years_of_service |
+| 5+ years | (0.5 × 5 + 1.0 × (years_of_service − 5)) × monthly_rate |
 
 #### 4.3.4 Termination by Employee (Resignation)
 
@@ -248,25 +246,16 @@ Under KSA law, the employee is entitled to full EOSB even upon resignation (no t
 #### 4.3.5 Implementation Pseudocode
 
 ```
-function calculateEOSB_KSA(totalSalary, startDate, endDate, gaveProperNotice):
+function calculateEOSB_KSA(totalSalary, startDate, endDate):
     years = fractionalYears(startDate, endDate)
     monthlyRate = totalSalary
-    dailyRate = totalSalary / 30
-
-    if years < 2:
-        return 0
 
     if years <= 5:
-        fullEntitlement = (monthlyRate / 3) * years
-    elif years <= 10:
-        fullEntitlement = (monthlyRate * 2 / 3) * years
+        entitlement = (monthlyRate / 2) * years            // half-month per year
     else:
-        fullEntitlement = monthlyRate * years
+        entitlement = (monthlyRate / 2) * 5 + monthlyRate * (years - 5)  // half for 5 + full after
 
-    if not gaveProperNotice:
-        fullEntitlement *= 0.5  // max 50% penalty
-
-    return fullEntitlement
+    return entitlement  // full for both resignation and termination; notice compensation is separate
 ```
 
 ### 4.4 Data Fields Needed in Schema
@@ -285,7 +274,7 @@ function calculateEOSB_KSA(totalSalary, startDate, endDate, gaveProperNotice):
 | Aspect | UAE | KSA |
 |---|---|---|
 | **Salary basis** | Basic salary only | Total salary (all allowances) |
-| **Eligibility threshold** | 1 year | 2 years |
+| **Eligibility threshold** | 1 year | None (pro-rata from day one) |
 | **Notice period min** | 30 days | 30 days |
 | **Resignation reduction** | Yes (1/3, 2/3, full) | No (but notice penalty applies) |
 | **Cap** | 2 years' basic salary | No explicit cap |

@@ -173,7 +173,7 @@ Time-to-Value
 
 **Two calculation bases must be visible together** because GCC law differs:
 - **UAE (AE)** → accrues on **basic salary** only; tiered resignation discount (1–3y ⅓, 3–5y ⅔, 5y+ full); min 1 yr service.
-- **KSA (SA)** → accrues on **total salary** (incl. allowances); half-month per year first 5y, full month after; min 2 yrs service; notice penalty applies.
+- **KSA (SA)** → accrues on **total salary** (incl. allowances); half-month per year first 5y, full month after; pro-rated from day one; no resignation reduction.
 
 ```
 EOSB Liability Forecast — by Jurisdiction & Quarter

@@ -216,18 +216,15 @@ The EOSB Calculator can be opened from:
 │  │                                                                     │     │
 │  │  Monthly Rate        SAR 22,000 (total salary = basic + allowances)│     │
 │  │  Years of Service    11 years 5 months = 11.42 years              │     │
-│  │  Eligibility:        > 2 years ✅                                  │     │
+│  │  Eligibility:        From day one (pro-rata) ✅                  │     │
 │  │                                                                     │     │
-│  │  Tiers Applied:                                                     │     │
+│  │  Accrual (Art. 84):                                               │     │
 │  │  ┌──────────────────────────────────────────────────────────┐      │     │
-│  │  │ Tier 1 (2-5 yrs):  1/3 × SAR 22,000 × 3.0 yrs          │      │     │
-│  │  │                 =  SAR 22,000                            │      │     │
+│  │  │ First 5 yrs:  0.5 × SAR 22,000 × 5.0 yrs              │      │     │
+│  │  │           =  SAR 55,000                                 │      │     │
 │  │  │                                                          │      │     │
-│  │  │ Tier 2 (5-10 yrs): 2/3 × SAR 22,000 × 5.0 yrs          │      │     │
-│  │  │                 =  SAR 73,333                            │      │     │
-│  │  │                                                          │      │     │
-│  │  │ Tier 3 (10+ yrs):  1 × SAR 22,000 × 1.42 yrs            │      │     │
-│  │  │                 =  SAR 31,240                            │      │     │
+│  │  │ Years 6+:    1.0 × SAR 22,000 × 6.42 yrs              │      │     │
+│  │  │           =  SAR 141,240                                │      │     │
 │  │  └──────────────────────────────────────────────────────────┘      │     │
 │  │                                                                     │     │
 │  │  Proper notice given → Full entitlement (no 50% reduction) ✅       │     │
@@ -277,11 +274,11 @@ For employees who have worked across both UAE and KSA entities:
 │  ├────────────────────────────┤  ├────────────────────────────┤            │
 │  │                           │  │                            │            │
 │  │ Salary Basis:  Basic      │  │ Salary Basis:  Total       │            │
-│  │ Threshold:     1 year     │  │ Threshold:     2 years     │            │
+│  │ Threshold:     1 year     │  │ Threshold:     None       │            │
 │  │ Daily Rate:    AED 600    │  │ Monthly Rate:  SAR 22,000  │            │
 │  │                           │  │                            │            │
-│  │ Gross:         AED 37,800 │  │ Tier 1:        SAR 22,000  │            │
-│  │ Resign Adj:    -33.3%     │  │ Tier 2:        SAR 73,333  │            │
+│  │ Gross:         AED 37,800 │  │ Yrs 0-5:       SAR 55,000  │            │
+│  │ Resign Adj:    -33.3%     │  │ Yrs 5-8:       SAR 66,000  │            │
 │  │                           │  │ No notice pen  SAR 0       │            │
 │  │ **Net:**       **AED 25,200**│  │**Net:**       **SAR 95,333** │            │
 │  └────────────────────────────┘  └────────────────────────────┘            │
@@ -476,7 +473,7 @@ All three interfaces (Compliance Dashboard, EOSB Calculator, Privacy Consent) ar
 | **Loading** | Skeleton cards with pulse animation (Tailwind `animate-pulse`) |
 | **Empty** | "No offboarding employees yet" or "No visa expiries this month" with illustration |
 | **Error** | "Failed to load EOSB calculation. Please verify employee data." with retry button |
-| **Edge: <1yr service** | EOSB calculator shows: "Employee has not met the 1-year (UAE) / 2-year (KSA) eligibility threshold" |
+| **Edge: <1yr service** | EOSB calculator shows: "UAE requires 1 year of service; KSA pro-rates from day one" |
 | **Edge: Summary dismissal** | EOSB calculator shows: "EOSB forfeited — summary dismissal under Article 44/80" |
 
 ### Component Tree (React)
