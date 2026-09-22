@@ -53,9 +53,14 @@ The platform is configured to self-heal after a machine restart using a systemd 
 
 ### Automatic Recovery
 A systemd service (`antum-keep-alive.service`) is installed for the `agent-senior-software-engineer` user. With lingering enabled (`loginctl enable-linger`), this service starts automatically on boot.
-- It verifies if port 3000 is occupied by the Antum People server.
-- It checks for the existence of the frontend bundle (`client/dist/index.html`) and rebuilds it if missing.
-- It starts the Node.js backend if no instances are already running.
+
+The recovery mechanism is hardened to handle the following:
+- **Secrets Management**: It automatically sources `/etc/profile.d/cto-env-vars.sh` to ensure `JWT_SECRET` and `ENCRYPTION_KEY` are available to the server.
+- **Port Contention**: It detects if port 3000 is held by a foreign process (e.g., the platform's default placeholder) and kills it to allow the Antum People server to bind.
+- **Single Instance**: It uses `flock` to ensure only one keep-alive loop runs at a time.
+- **Health Verification**: It verifies the actual application title via `curl` to distinguish it from placeholders.
+- **Missing Bundle**: It rebuilds the frontend bundle if missing from the production directory.
+
 
 ### Manual Verification/Recovery
 If the automatic recovery fails, follow these steps:

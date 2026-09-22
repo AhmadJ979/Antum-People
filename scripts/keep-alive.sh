@@ -6,9 +6,26 @@
 DEPLOY_DIR="/home/team/shared/probable-octo-sniffle"
 LOG_FILE="$DEPLOY_DIR/server/keep-alive.log"
 SERVER_LOG="$DEPLOY_DIR/server/server.log"
+LOCK_FILE="/tmp/antum-keep-alive.lock"
 
 # Ensure log directory exists
 mkdir -p "$(dirname "$LOG_FILE")"
+
+# Source environment variables for secrets (JWT_SECRET, ENCRYPTION_KEY)
+if [ -f "/etc/profile.d/cto-env-vars.sh" ]; then
+    source /etc/profile.d/cto-env-vars.sh
+    echo "$(date -Iseconds) Environment variables sourced from /etc/profile.d/cto-env-vars.sh" >> "$LOG_FILE"
+else
+    echo "$(date -Iseconds) WARNING: /etc/profile.d/cto-env-vars.sh not found. Server may fail to start." >> "$LOG_FILE"
+fi
+
+# Single instance lock
+# Using a file descriptor for flock to ensure the lock is released if the script is killed
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+    echo "$(date -Iseconds) Another instance of keep-alive.sh is already running. Exiting." >> "$LOG_FILE"
+    exit 1
+fi
 
 check_health() {
     # Check if port 3000 is listening
@@ -42,6 +59,7 @@ start_server() {
         npm install
     fi
     # Start detached
+    # Environment variables from /etc/profile.d/cto-env-vars.sh are already in the shell
     setsid nohup node index.js >> "$SERVER_LOG" 2>&1 &
 }
 
@@ -57,7 +75,14 @@ while true; do
         :
     elif [ $HEALTH -eq 2 ]; then
         # Foreign process
-        echo "$(date -Iseconds) port 3000 held by foreign process - logging and waiting" >> "$LOG_FILE"
+        FOREIGN_PID=$(sudo lsof -t -i :3000)
+        if [ -n "$FOREIGN_PID" ]; then
+            FOREIGN_CMD=$(ps -p "$FOREIGN_PID" -o command=)
+            echo "$(date -Iseconds) port 3000 held by foreign process (PID: $FOREIGN_PID, CMD: $FOREIGN_CMD) - killing it" >> "$LOG_FILE"
+            sudo kill -9 "$FOREIGN_PID"
+            sleep 2
+            start_server
+        fi
     else
         # HEALTH=1 (Nothing listening)
         echo "$(date -Iseconds) port 3000 empty - starting recovery" >> "$LOG_FILE"
@@ -71,7 +96,12 @@ while true; do
         if ! pgrep -f "node index.js" | grep -v "$$" > /dev/null; then
             start_server
         else
-            echo "$(date -Iseconds) server process already exists but port 3000 is not responding - check server logs" >> "$LOG_FILE"
+            # Process exists but not responding on 3000
+            SERVER_PID=$(pgrep -f "node index.js" | head -n 1)
+            echo "$(date -Iseconds) server process ($SERVER_PID) exists but port 3000 is not responding - killing and restarting" >> "$LOG_FILE"
+            kill -9 "$SERVER_PID"
+            sleep 2
+            start_server
         fi
     fi
     
