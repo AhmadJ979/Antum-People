@@ -521,6 +521,7 @@ export default function App() {
             <span className="font-semibold text-slate-800 capitalize">{activeTab} Panel</span>
             <span>/</span>
             <span className="text-xs font-mono text-teal-500">GCC Intelligence Tier</span>
+            <span className="ml-4 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded uppercase border border-amber-200">Sample Demo Data</span>
           </div>
           <div className="flex items-center space-x-4">
             <button 
@@ -557,8 +558,14 @@ export default function App() {
                     </svg>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900">
-                    {(analytics?.retentionLiftSeries?.length ?? 0) > 0 && (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) > 0 ? '+' : ''}
-                    {(analytics?.retentionLiftSeries?.length ?? 0) > 0 ? (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) : 0}%
+                    {(analytics?.retentionLiftSeries?.length ?? 0) > 0 ? (
+                      <>
+                        {(analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) > 0 ? '+' : ''}
+                        {(analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0)}%
+                      </>
+                    ) : (
+                      <span className="text-sm font-medium text-slate-400 italic">No data yet</span>
+                    )}
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
                     <span className="mr-1">▲</span> +1.1 pts vs 2025
@@ -575,7 +582,7 @@ export default function App() {
                     </svg>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900">
-                    {analytics?.avgTtvDays || 0} d
+                    {analytics?.avgTtvDays ? `${analytics.avgTtvDays} d` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
                     <span className="mr-1">▼</span> -2.6 d vs target
@@ -592,7 +599,7 @@ export default function App() {
                     </svg>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900">
-                    ${(analytics?.avgCostPerHire || 0).toLocaleString()}
+                    {analytics?.avgCostPerHire ? `${analytics.avgCostPerHire.toLocaleString()}` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
                     <span className="mr-1">▼</span> -8% vs benchmark
@@ -609,7 +616,7 @@ export default function App() {
                     </svg>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900">
-                    ${(analytics?.eosbLiability || 0).toLocaleString()}
+                    {analytics?.eosbLiability ? `${analytics.eosbLiability.toLocaleString()}` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}
                   </div>
                   <div className="text-[10px] font-semibold text-rose-600 mt-2 flex items-center">
                     <span className="mr-1">▲</span> +12% QoQ
