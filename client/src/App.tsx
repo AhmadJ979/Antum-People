@@ -130,6 +130,15 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
               placeholder="••••••••"
               required
             />
+            <div className="flex justify-end mt-2">
+              <button 
+                type="button"
+                onClick={() => alert('Please contact IT support for password recovery.')}
+                className="text-xs text-teal-600 hover:text-teal-700 font-medium hover:underline"
+              >
+                Forgot Password?
+              </button>
+            </div>
           </div>
           <button
             type="submit"
