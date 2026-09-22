@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh
+ExecStart=/bin/bash /home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh
 Restart=always
 RestartSec=10
 
