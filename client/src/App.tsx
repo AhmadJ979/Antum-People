@@ -46,7 +46,8 @@ interface Analytics {
   monthlyPayroll: number;
   eosbLiability: number;
   attritionRate: number;
-  avgCostPerHire: number;
+  avgCostPerHireAE: number;
+  avgCostPerHireSA: number;
   avgTtvDays: number;
   ttvByDepartment: { department: string; avgDays: number; target: number }[];
   retentionLiftSeries: { cohort: string; retention: number; benchmark: number; lift: number }[];
@@ -598,8 +599,28 @@ export default function App() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <div className="text-3xl font-extrabold text-slate-900">
-                    {analytics?.avgCostPerHire ? `AED ${analytics.avgCostPerHire.toLocaleString()}` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}
+                  <div className="text-3xl font-extrabold text-slate-900 leading-tight">
+                    {analytics ? (
+                      <div className="space-y-1">
+                        {analytics.avgCostPerHireAE > 0 && (
+                          <div className="flex items-baseline space-x-2">
+                            <span className="text-xs text-slate-400 uppercase">AE</span>
+                            <span>{analytics.avgCostPerHireAE.toLocaleString()} <span className="text-sm font-bold text-slate-400">AED</span></span>
+                          </div>
+                        )}
+                        {analytics.avgCostPerHireSA > 0 && (
+                          <div className="flex items-baseline space-x-2">
+                            <span className="text-xs text-slate-400 uppercase">SA</span>
+                            <span>{analytics.avgCostPerHireSA.toLocaleString()} <span className="text-sm font-bold text-slate-400">SAR</span></span>
+                          </div>
+                        )}
+                        {!analytics.avgCostPerHireAE && !analytics.avgCostPerHireSA && (
+                          <span className="text-sm font-medium text-slate-400 italic">No data yet</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm font-medium text-slate-400 italic">No data yet</span>
+                    )}
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
                     <span className="mr-1">ℹ️</span> Illustrative Benchmark
@@ -615,14 +636,34 @@ export default function App() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
                   </div>
-                  <div className="text-3xl font-extrabold text-slate-900">
-                    {analytics?.eosbLiability ? `AED ${analytics.eosbLiability.toLocaleString()}` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}
+                  <div className="text-3xl font-extrabold text-slate-900 leading-tight">
+                    {analytics ? (
+                      <div className="space-y-1">
+                        {analytics.eosbByJurisdiction.AE > 0 && (
+                          <div className="flex items-baseline space-x-2">
+                            <span className="text-xs text-slate-400 uppercase">AE</span>
+                            <span>{analytics.eosbByJurisdiction.AE.toLocaleString()} <span className="text-sm font-bold text-slate-400">AED</span></span>
+                          </div>
+                        )}
+                        {analytics.eosbByJurisdiction.SA > 0 && (
+                          <div className="flex items-baseline space-x-2">
+                            <span className="text-xs text-slate-400 uppercase">SA</span>
+                            <span>{analytics.eosbByJurisdiction.SA.toLocaleString()} <span className="text-sm font-bold text-slate-400">SAR</span></span>
+                          </div>
+                        )}
+                        {!analytics.eosbByJurisdiction.AE && !analytics.eosbByJurisdiction.SA && (
+                          <span className="text-sm font-medium text-slate-400 italic">No data yet</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm font-medium text-slate-400 italic">No data yet</span>
+                    )}
                   </div>
                   <div className="text-[10px] font-semibold text-rose-600 mt-2 flex items-center">
-                    <span className="mr-1">ℹ️</span> Illustrative
+                    <span className="mr-1">ℹ️</span> Illustrative Total
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">
-                    AE {(analytics?.eosbByJurisdiction?.AE || 0).toLocaleString()} AED · SA {(analytics?.eosbByJurisdiction?.SA || 0).toLocaleString()} SAR
+                    Accrued to date across regions
                   </p>
                 </div>
               </div>
@@ -951,7 +992,7 @@ export default function App() {
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
                   <div className="flex justify-between items-center mb-8">
                     <div>
-                      <h4 className="font-bold text-slate-900 text-sm">EOSB Liability Forecast — by Jurisdiction & Quarter (AED eq.)</h4>
+                      <h4 className="font-bold text-slate-900 text-sm">EOSB Liability Forecast — by Jurisdiction & Quarter</h4>
                       <p className="text-[10px] text-slate-400">Illustrative forecast based on UAE basic and KSA total salary rules</p>
                     </div>
                     <div className="flex space-x-4">
@@ -976,8 +1017,9 @@ export default function App() {
                             <div className="bg-teal-600 w-full rounded-t-sm" style={{ height: `${uaeHeight}%` }}></div>
                             <div className="bg-emerald-500 w-full" style={{ height: `${ksaHeight}%` }}></div>
                             {/* Tooltip placeholder */}
-                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10 font-mono">
-                              AED eq. {(s.combined/1000).toFixed(0)}K
+                            <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-2 py-1.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10 font-mono shadow-xl border border-slate-700">
+                              <div className="flex justify-between space-x-2"><span>UAE:</span> <span>{s.uae.toLocaleString()} AED</span></div>
+                              <div className="flex justify-between space-x-2 border-t border-slate-700 mt-1 pt-1"><span>KSA:</span> <span>{s.ksa.toLocaleString()} SAR</span></div>
                             </div>
                           </div>
                           <div className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{s.quarter}</div>

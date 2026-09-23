@@ -294,9 +294,13 @@ app.get('/api/analytics/dashboard', async (req, res) => {
     const totalSalary = employees.filter(e => e.status !== 'terminated').reduce((s, e) => s + (e.salary || 0), 0);
     const totalEosb = employees.reduce((s, e) => s + (e.eosb_accrued || 0), 0);
 
-    const withRecruitment = employees.filter(emp => emp.recruitment_cost > 0);
-    const avgCostPerHire = withRecruitment.length > 0
-      ? Math.round(withRecruitment.reduce((sum, emp) => sum + emp.recruitment_cost, 0) / withRecruitment.length)
+    const withRecruitmentAE = employees.filter(emp => emp.data_residency_country === 'AE' && emp.recruitment_cost > 0);
+    const avgCostPerHireAE = withRecruitmentAE.length > 0
+      ? Math.round(withRecruitmentAE.reduce((sum, emp) => sum + emp.recruitment_cost, 0) / withRecruitmentAE.length)
+      : 0;
+    const withRecruitmentSA = employees.filter(emp => emp.data_residency_country === 'SA' && emp.recruitment_cost > 0);
+    const avgCostPerHireSA = withRecruitmentSA.length > 0
+      ? Math.round(withRecruitmentSA.reduce((sum, emp) => sum + emp.recruitment_cost, 0) / withRecruitmentSA.length)
       : 0;
 
     // 1. Time-to-Value (TTV)
@@ -376,7 +380,8 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       monthlyPayroll: Math.round(totalSalary / 12),
       eosbLiability: Math.round(totalEosb),
       attritionRate: exits.length > 0 ? Math.round((exits.length / employees.length) * 100) : 0,
-      avgCostPerHire,
+      avgCostPerHireAE,
+      avgCostPerHireSA,
       avgTtvDays,
       ttvByDepartment,
       retentionLiftSeries,
