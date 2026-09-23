@@ -1,15 +1,45 @@
 #!/bin/bash
 # Keep-alive loop for Antum People server
 # Restarts the server if port 3000 is not held by Antum People server
+#
+# ARMING PROCEDURE:
+# 1. Run this script from any team member's shell.
+# 2. Check logs: tail -f /home/team/shared/probable-octo-sniffle/server/keep-alive.log
+# 3. Verification: flock -n /home/team/shared/probable-octo-sniffle/server/keep-alive.lock -c "echo available"
+#    If it says "available", the loop is NOT running.
+#
+# RECLAIMING STALE LOCK:
+# The script uses 'flock' which is automatically released by the kernel when the 
+# process terminates. If a lock file exists but no process is holding the lock, 
+# a new instance will automatically take over.
 
 # Use absolute path to the deployed tree
 DEPLOY_DIR="/home/team/shared/probable-octo-sniffle"
 LOG_FILE="$DEPLOY_DIR/server/keep-alive.log"
 SERVER_LOG="$DEPLOY_DIR/server/server.log"
-LOCK_FILE="/tmp/antum-keep-alive.lock"
+LOCK_FILE="$DEPLOY_DIR/server/keep-alive.lock"
 
 # Ensure log directory exists
 mkdir -p "$(dirname "$LOG_FILE")"
+
+# Ensure lock file exists and is group-writable so any team user can acquire the lock
+touch "$LOCK_FILE" 2>/dev/null
+chmod 664 "$LOCK_FILE" 2>/dev/null || true
+
+# Single instance lock
+# Using a file descriptor for flock to ensure the lock is released if the script is killed.
+# Open for read/write to allow PID updates.
+exec 9<>"$LOCK_FILE"
+
+if ! flock -n 9; then
+    # Lock is held by another active process.
+    LOCK_PID=$(cat "$LOCK_FILE" | tr -d '[:space:]')
+    echo "$(date -Iseconds) Another instance (PID: ${LOCK_PID:-unknown}) is already running. Exiting." >> "$LOG_FILE"
+    exit 1
+fi
+
+# We have the lock. Write our PID to the file for visibility.
+echo $$ > "$LOCK_FILE"
 
 # Source environment variables for secrets (JWT_SECRET, ENCRYPTION_KEY)
 if [ -f "/etc/profile.d/cto-env-vars.sh" ]; then
@@ -17,14 +47,6 @@ if [ -f "/etc/profile.d/cto-env-vars.sh" ]; then
     echo "$(date -Iseconds) Environment variables sourced from /etc/profile.d/cto-env-vars.sh" >> "$LOG_FILE"
 else
     echo "$(date -Iseconds) WARNING: /etc/profile.d/cto-env-vars.sh not found. Server may fail to start." >> "$LOG_FILE"
-fi
-
-# Single instance lock
-# Using a file descriptor for flock to ensure the lock is released if the script is killed
-exec 9>"$LOCK_FILE"
-if ! flock -n 9; then
-    echo "$(date -Iseconds) Another instance of keep-alive.sh is already running. Exiting." >> "$LOG_FILE"
-    exit 1
 fi
 
 check_health() {
