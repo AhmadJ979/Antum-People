@@ -6,7 +6,7 @@
 DEPLOY_DIR="/home/team/shared/probable-octo-sniffle"
 LOG_FILE="$DEPLOY_DIR/server/keep-alive.log"
 SERVER_LOG="$DEPLOY_DIR/server/server.log"
-LOCK_FILE="/tmp/antum-keep-alive.lock"
+LOCK_FILE="$DEPLOY_DIR/server/keep-alive.lock"
 
 # Ensure log directory exists
 mkdir -p "$(dirname "$LOG_FILE")"
@@ -19,9 +19,13 @@ else
     echo "$(date -Iseconds) WARNING: /etc/profile.d/cto-env-vars.sh not found. Server may fail to start." >> "$LOG_FILE"
 fi
 
+# Ensure lock file exists and is group-writable
+touch "$LOCK_FILE"
+chmod 664 "$LOCK_FILE" 2>/dev/null || true
+
 # Single instance lock
 # Using a file descriptor for flock to ensure the lock is released if the script is killed
-exec 9>"$LOCK_FILE"
+exec 9>>"$LOCK_FILE"
 if ! flock -n 9; then
     echo "$(date -Iseconds) Another instance of keep-alive.sh is already running. Exiting." >> "$LOG_FILE"
     exit 1
