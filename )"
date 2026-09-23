@@ -1,0 +1,56 @@
+[1mdiff --git a/client/src/App.tsx b/client/src/App.tsx[m
+[1mindex 2c03a6b..52b5936 100644[m
+[1m--- a/client/src/App.tsx[m
+[1m+++ b/client/src/App.tsx[m
+[36m@@ -521,6 +521,7 @@[m [mexport default function App() {[m
+             <span className="font-semibold text-slate-800 capitalize">{activeTab} Panel</span>[m
+             <span>/</span>[m
+             <span className="text-xs font-mono text-teal-500">GCC Intelligence Tier</span>[m
+[32m+[m[32m            <span className="ml-4 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded uppercase border border-amber-200">Sample Demo Data</span>[m
+           </div>[m
+           <div className="flex items-center space-x-4">[m
+             <button [m
+[36m@@ -557,8 +558,14 @@[m [mexport default function App() {[m
+                     </svg>[m
+                   </div>[m
+                   <div className="text-3xl font-extrabold text-slate-900">[m
+[31m-                    {(analytics?.retentionLiftSeries?.length ?? 0) > 0 && (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) > 0 ? '+' : ''}[m
+[31m-                    {(analytics?.retentionLiftSeries?.length ?? 0) > 0 ? (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) : 0}%[m
+[32m+[m[32m                    {(analytics?.retentionLiftSeries?.length ?? 0) > 0 ? ([m
+[32m+[m[32m                      <>[m
+[32m+[m[32m                        {(analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) > 0 ? '+' : ''}[m
+[32m+[m[32m                        {(analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0)}%[m
+[32m+[m[32m                      </>[m
+[32m+[m[32m                    ) : ([m
+[32m+[m[32m                      <span className="text-sm font-medium text-slate-400 italic">No data yet</span>[m
+[32m+[m[32m                    )}[m
+                   </div>[m
+                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">[m
+                     <span className="mr-1">▲</span> +1.1 pts vs 2025[m
+[36m@@ -575,7 +582,7 @@[m [mexport default function App() {[m
+                     </svg>[m
+                   </div>[m
+                   <div className="text-3xl font-extrabold text-slate-900">[m
+[31m-                    {analytics?.avgTtvDays || 0} d[m
+[32m+[m[32m                    {analytics?.avgTtvDays ? `${analytics.avgTtvDays} d` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}[m
+                   </div>[m
+                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">[m
+                     <span className="mr-1">▼</span> -2.6 d vs target[m
+[36m@@ -592,7 +599,7 @@[m [mexport default function App() {[m
+                     </svg>[m
+                   </div>[m
+                   <div className="text-3xl font-extrabold text-slate-900">[m
+[31m-                    ${(analytics?.avgCostPerHire || 0).toLocaleString()}[m
+[32m+[m[32m                    {analytics?.avgCostPerHire ? `${analytics.avgCostPerHire.toLocaleString()}` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}[m
+                   </div>[m
+                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">[m
+                     <span className="mr-1">▼</span> -8% vs benchmark[m
+[36m@@ -609,7 +616,7 @@[m [mexport default function App() {[m
+                     </svg>[m
+                   </div>[m
+                   <div className="text-3xl font-extrabold text-slate-900">[m
+[31m-                    ${(analytics?.eosbLiability || 0).toLocaleString()}[m
+[32m+[m[32m                    {analytics?.eosbLiability ? `${analytics.eosbLiability.toLocaleString()}` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}[m
+                   </div>[m
+                   <div className="text-[10px] font-semibold text-rose-600 mt-2 flex items-center">[m
+                     <span className="mr-1">▲</span> +12% QoQ[m

@@ -568,9 +568,9 @@ export default function App() {
                     )}
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
-                    <span className="mr-1">▲</span> +1.1 pts vs 2025
+                    <span className="mr-1">ℹ️</span> Illustrative
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1">vs market benchmark</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Illustrative Benchmark</p>
                 </div>
 
                 {/* Time-to-Value */}
@@ -585,7 +585,7 @@ export default function App() {
                     {analytics?.avgTtvDays ? `${analytics.avgTtvDays} d` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
-                    <span className="mr-1">▼</span> -2.6 d vs target
+                    <span className="mr-1">ℹ️</span> Illustrative
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">target: 15 days</p>
                 </div>
@@ -599,10 +599,10 @@ export default function App() {
                     </svg>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900">
-                    {analytics?.avgCostPerHire ? `${analytics.avgCostPerHire.toLocaleString()}` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}
+                    {analytics?.avgCostPerHire ? `AED ${analytics.avgCostPerHire.toLocaleString()}` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
-                    <span className="mr-1">▼</span> -8% vs benchmark
+                    <span className="mr-1">ℹ️</span> Illustrative Benchmark
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">recruitment + onboarding</p>
                 </div>
@@ -616,13 +616,13 @@ export default function App() {
                     </svg>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900">
-                    {analytics?.eosbLiability ? `${analytics.eosbLiability.toLocaleString()}` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}
+                    {analytics?.eosbLiability ? `AED ${analytics.eosbLiability.toLocaleString()}` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}
                   </div>
                   <div className="text-[10px] font-semibold text-rose-600 mt-2 flex items-center">
-                    <span className="mr-1">▲</span> +12% QoQ
+                    <span className="mr-1">ℹ️</span> Illustrative
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">
-                    AE {(analytics?.eosbByJurisdiction?.AE || 0).toLocaleString()} · SA {(analytics?.eosbByJurisdiction?.SA || 0).toLocaleString()}
+                    AE {(analytics?.eosbByJurisdiction?.AE || 0).toLocaleString()} AED · SA {(analytics?.eosbByJurisdiction?.SA || 0).toLocaleString()} SAR
                   </p>
                 </div>
               </div>
@@ -727,7 +727,9 @@ export default function App() {
                           </span>
                         </td>
                         <td className="p-4">
-                          <div className="text-sm font-bold text-teal-600 font-mono">${(emp.eosb_accrued || 0).toLocaleString()}</div>
+                          <div className="text-sm font-bold text-teal-600 font-mono">
+                            {emp.data_residency_country === 'SA' ? 'SAR' : 'AED'} {(emp.eosb_accrued || 0).toLocaleString()}
+                          </div>
                           <div className="text-[10px] text-slate-400">Accrued to date</div>
                         </td>
                         <td className="p-4 text-right">
@@ -866,21 +868,19 @@ export default function App() {
                 <h3 className="text-xl font-bold mb-6">Strategic Workforce Intelligence</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    <div className="p-4 bg-white/10 rounded-xl border border-white/5">
-                      <div className="text-teal-300 text-[10px] font-bold uppercase mb-2">Retention Insight</div>
+                      <div className="text-teal-300 text-[10px] font-bold uppercase mb-2">Retention Insight (Illustrative)</div>
                       <p className="text-xs text-slate-200 leading-relaxed">
-                        Retention lift has {(analytics?.retentionLiftSeries?.length ?? 0) > 0 && (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) > 0 ? 'increased' : 'stabilized'} in recent cohorts. 
-                        Correlates with new 30-day onboarding checkpoints.
+                        Retention lift has {(analytics?.retentionLiftSeries?.length ?? 0) > 0 && (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) > 0 ? 'increased' : 'stabilized'} in recent cohorts.
                       </p>
                    </div>
                    <div className="p-4 bg-white/10 rounded-xl border border-white/5">
-                      <div className="text-emerald-300 text-[10px] font-bold uppercase mb-2">Productivity Gap</div>
+                      <div className="text-emerald-300 text-[10px] font-bold uppercase mb-2">Productivity Gap (Illustrative)</div>
                       <p className="text-xs text-slate-200 leading-relaxed">
-                        Average Time-to-Value is {analytics?.avgTtvDays || 0} days. 
-                        Engineering remains the primary bottleneck due to IT access latency.
+                        Average Time-to-Value is {analytics?.avgTtvDays || 0} days.
                       </p>
                    </div>
                    <div className="p-4 bg-white/10 rounded-xl border border-white/5">
-                      <div className="text-rose-300 text-[10px] font-bold uppercase mb-2">Liability Exposure</div>
+                      <div className="text-rose-300 text-[10px] font-bold uppercase mb-2">Liability Exposure (Illustrative)</div>
                       <p className="text-xs text-slate-200 leading-relaxed">
                         EOSB liability forecast shows a {(analytics?.eosbLiabilitySeries?.[2]?.combined ?? 0) > (analytics?.eosbLiabilitySeries?.[0]?.combined ?? 0) ? 'rise' : 'steady'} trend into 2027.
                       </p>
@@ -895,7 +895,7 @@ export default function App() {
                   <div className="flex justify-between items-center mb-6">
                     <div>
                       <h4 className="font-bold text-slate-900 text-sm">Retention Lift — 1-Yr Cohort</h4>
-                      <p className="text-[10px] text-slate-400">Comparing cohort retention vs market benchmark</p>
+                      <p className="text-[10px] text-slate-400">Comparing cohort retention (Illustrative Benchmark)</p>
                     </div>
                   </div>
                   <div className="space-y-6">
@@ -911,7 +911,7 @@ export default function App() {
                         </div>
                         <div className="flex justify-between text-[9px] text-slate-400">
                           <span>{s.retention}% (Cohort)</span>
-                          <span>{s.benchmark}% (Benchmark)</span>
+                          <span>{s.benchmark}% (Illustrative)</span>
                         </div>
                       </div>
                     ))}
@@ -923,7 +923,7 @@ export default function App() {
                   <div className="flex justify-between items-center mb-6">
                     <div>
                       <h4 className="font-bold text-slate-900 text-sm">Time-to-Value by Department</h4>
-                      <p className="text-[10px] text-slate-400">Avg days to full productivity vs target</p>
+                      <p className="text-[10px] text-slate-400">Avg days to full productivity (Illustrative Target)</p>
                     </div>
                   </div>
                   <div className="space-y-6">
@@ -951,8 +951,8 @@ export default function App() {
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
                   <div className="flex justify-between items-center mb-8">
                     <div>
-                      <h4 className="font-bold text-slate-900 text-sm">EOSB Liability Forecast — by Jurisdiction & Quarter (AED)</h4>
-                      <p className="text-[10px] text-slate-400">Consolidated forecast based on UAE basic and KSA total salary rules</p>
+                      <h4 className="font-bold text-slate-900 text-sm">EOSB Liability Forecast — by Jurisdiction & Quarter (AED eq.)</h4>
+                      <p className="text-[10px] text-slate-400">Illustrative forecast based on UAE basic and KSA total salary rules</p>
                     </div>
                     <div className="flex space-x-4">
                       <div className="flex items-center space-x-1.5">
@@ -977,7 +977,7 @@ export default function App() {
                             <div className="bg-emerald-500 w-full" style={{ height: `${ksaHeight}%` }}></div>
                             {/* Tooltip placeholder */}
                             <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10 font-mono">
-                              AED {(s.combined/1000000).toFixed(1)}M
+                              AED eq. {(s.combined/1000).toFixed(0)}K
                             </div>
                           </div>
                           <div className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{s.quarter}</div>
@@ -1088,7 +1088,7 @@ export default function App() {
                       </select>
                    </div>
                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">New Salary Offered ($)</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">New Salary Offered (AED/SAR)</label>
                       <input type="number" placeholder="Benchmarking data" value={exitForm.new_salary} onChange={e => setExitForm({...exitForm, new_salary: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium" />
                    </div>
                 </div>
