@@ -95,7 +95,7 @@ A: Every consent write creates a `consent_records` row (who, when, which version
 A: The rules live in one place — `calculateEOSB` and the compliance engine — and our compliance lead reviews them against current UAE/KSA law. In the pilot we'd sign off on your specific contract types and edge cases.
 
 **Q: "What about notice periods and unpaid leave?"**
-A: Both are tracked — notice periods feed the EOSB effective date, and UAE's >90-day unpaid-leave exclusion is modeled. (Note: per our compliance spec, KSA's notice-shortfall deduction of up to 50% is a documented rule — confirm with the engineer whether your build enforces it before promising it live.) We'll validate those against your actual cases during the pilot.
+A: Both are tracked — notice periods feed the EOSB effective date, and UAE's >90-day unpaid-leave exclusion is modeled. (Note: per our compliance spec, an unserved-notice period is compensated as a separate settlement line equal to the wage for the unserved period — confirm with the engineer whether your build enforces it before promising it live.) We'll validate those against your actual cases during the pilot.
 
 **Q: "Can we see the liability *before* someone leaves?"**
 A: Yes — the strategic view rolls up every employee's accrued EOSB into a single liability figure, which is the cash-flow conversation you should be having before terminations, not after. *(Bridge into Segment 4/close.)*

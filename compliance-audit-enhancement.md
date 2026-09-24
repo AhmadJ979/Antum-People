@@ -27,7 +27,7 @@ Add gross/net breakdown fields to enable settlement audit and financial reconcil
 -- Add gross_amount: EOSB before deductions (the full calculated amount)
 ALTER TABLE eosb_calculations ADD COLUMN gross_amount REAL;
 
--- Add deductions: total deductions applied (resignation reduction, notice penalty, etc.)
+-- Add deductions: total deductions applied (resignation reduction, etc. — notice compensation is a separate settlement line)
 ALTER TABLE eosb_calculations ADD COLUMN deductions REAL DEFAULT 0.0;
 
 -- Add net_amount: EOSB after all deductions (the actual payable amount)
@@ -47,7 +47,7 @@ const result = calculateDetailedEOSB(...);
 const grossAmount = computeGrossEOSB(result, calcJurisdiction);
 
 // Deductions = gross - net (or specified deductions)
-const deductions = result.notice_penalty + /* other deductions */;
+const deductions = /* other EOSB deductions (notice compensation is a separate settlement line) */;
 const netAmount = result.accrued_amount;
 
 const auditSql = `
@@ -86,7 +86,7 @@ function computeGrossEOSB(result, jurisdiction) {
     const salaryBase = result.salary_base;
     
     if (jurisdiction === 'SA' || jurisdiction === 'KSA') {
-        // KSA: gross = entitlement before notice penalty
+        // KSA: gross = full entitlement (notice compensation is a separate settlement line)
         const monthlyRate = salaryBase;
         const years = result.tenure_years;
         
