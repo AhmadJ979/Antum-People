@@ -142,4 +142,4 @@ The compliance engine inside the backend exposes high-fidelity calculation endpo
     *   `First 5 Years`: 15 days total salary per year (half-month).
     *   `Subsequent Years`: 30 days total salary per year (full-month).
 4.  **Resignation**: no reduction — full benefit regardless of resignation or termination (Art. 84).
-5.  **Notice Penalty**: If notice is unserved during a resignation, a penalty equal to 1 month of total salary is deducted from the gratuity total.
+5.  **Notice Compensation**: If notice is unserved during a resignation, compensation equal to the wage for the unserved notice period is owed — recorded as a **separate settlement line**, not deducted from the EOSB (gratuity) total.
