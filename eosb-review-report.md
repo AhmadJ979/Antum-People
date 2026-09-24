@@ -12,9 +12,9 @@
 
 ## Re-verification note
 
-This report was originally issued 2026-06-23 against the engine as it then stood. It has since been re-verified against **current `origin/main`** (`server/index.js`, function `calculateEOSB`). Each finding below states its current status with the actual current code quoted (no stale line numbers). The test matrix was re-run against the live function. **No calculation code was changed during re-verification.**
+This report was originally issued 2026-06-23 against the engine as it then stood. It has since been re-verified against **current `origin/main`** (`server/index.js`, function `calculateEOSB`). Each finding below states its current status with the actual current code quoted (no stale line numbers). The test matrix was re-run against the live function. **No calculation code was changed during the re-verification itself; the subsequent KSA Art. 84 correction (removing the resignation tier and under-2-year zero) is landing in this same change, and the affected passages below reflect that.**
 
-**Bottom line:** the two findings that previously blocked production (Finding 1, P0 termination-type conflation; Finding 2, P1 unpaid-leave over-deduction) are **fixed**, and the dead wrapper (Finding 3, P2) is **gone**. The engine is certified **unconditionally for UAE**; the KSA branch is being corrected to Art. 84 (full EOSB, no resignation tier, pro-rata from day one) and will be re-verified once that change lands.
+**Bottom line:** the two findings that previously blocked production (Finding 1, P0 termination-type conflation; Finding 2, P1 unpaid-leave over-deduction) are **fixed**, and the dead wrapper (Finding 3, P2) is **gone**. The engine is certified **unconditionally for UAE**; the KSA branch is **corrected in code to Art. 84** (full EOSB, no resignation tier, pro-rata from day one) and **verified against the merged engine**, with **re-certification pending KSA-qualified counsel confirmation of the Article 84 pin-cites**.
 
 ---
 
@@ -138,15 +138,7 @@ The 24-month (2-year) cap on basic salary is correctly implemented and unchanged
 
 **Original claim (2026-06-23):** a 50% deduction for failure to serve proper notice under KSA Labor Law (Art. 77) was applied.
 
-**Current state:** the current `calculateEOSB` has **no notice-penalty parameter and no 50% deduction**. The KSA branch computes base EOSB and the resignation tier only:
-
-```javascript
-if (isResignation) {
-  if (tenureYears >= 2 && tenureYears < 5) accrued *= (1/3);
-  else if (tenureYears >= 5 && tenureYears < 10) accrued *= (2/3);
-  // tenureYears >= 10 is full amount
-}
-```
+**Current state:** the current `calculateEOSB` has **no notice-penalty parameter and no 50% deduction**. The KSA branch computes base EOSB only — the resignation tier previously shown here has been **removed** under the Art. 84 correction (Option B: full EOSB on resignation, pro-rata from day one, no tier, no under-2-year zero). No notice penalty is applied anywhere in the engine.
 
 The `employees` table still carries a `gave_proper_notice` (INTEGER, default 1) column, but the engine no longer reads it.
 
@@ -188,9 +180,9 @@ Re-run against the **live `calculateEOSB`** extracted from `server/index.js` on 
 | T3 | UAE 4yr, employer-initiated | full 4-year EOSB | ✅ |
 | T4 | UAE 4yr, resignation | two-thirds of full (statutory tier) | ✅ |
 | T5 | KSA 3yr, employer-initiated | full 3-year EOSB (half-month rate) | ✅ |
-| T6 | KSA 3yr, resignation | full EOSB (no resignation tier) | ⏳ pending code fix |
+| T6 | KSA 3yr, resignation | full EOSB (no resignation tier) | ✅ fixed in code — counsel confirmation pending |
 | T7 | UAE <1yr | zero (below 1-year threshold) | ✅ |
-| T8 | KSA <2yr | pro-rata EOSB from day one (no 2-year zero) | ⏳ pending code fix |
+| T8 | KSA <2yr | pro-rata EOSB from day one (no 2-year zero) | ✅ fixed in code — counsel confirmation pending |
 | T9 | UAE 2yr, 120 unpaid days | **full 2-year amount (identical to T1)** | ✅ **FIXED** |
 | T10 | UAE 10yr | matches 10-year formula (cap not triggered) | ✅ |
 | T11 | UAE 7yr, employer | matches 7-year formula | ✅ |
@@ -217,9 +209,9 @@ Re-run against the **live `calculateEOSB`** extracted from `server/index.js` on 
 
 ## Certification
 
-**The core EOSB calculation engine is CERTIFIED unconditionally for UAE.** The KSA branch is being corrected to Art. 84 (full EOSB on resignation, pro-rata from day one, no tier) and will be re-certified after the code change lands.
+**The core EOSB calculation engine is CERTIFIED unconditionally for UAE.** The KSA branch is **corrected in code to Art. 84** (full EOSB on resignation, pro-rata from day one, no tier) and **verified against the merged engine on the running server**. Re-certification remains **pending KSA-qualified counsel confirmation of the Article 84 pin-cites**.
 
-The mathematical formulas, daily-rate derivation, service-year bands, 2-year cap, UAE resignation tiers, termination-type routing (including summary-dismissal forfeiture), and the UAE 90-day-per-year unpaid-leave rule are all correctly implemented in the current `calculateEOSB` on `origin/main`, and the UAE test cases pass. The KSA resignation tier and under-2-year zero are being removed per Art. 84.
+The mathematical formulas, daily-rate derivation, service-year bands, 2-year cap, UAE resignation tiers, termination-type routing (including summary-dismissal forfeiture), and the UAE 90-day-per-year unpaid-leave rule are all correctly implemented in the current `calculateEOSB` in `server/eosb.js` (reached from `server/index.js`), and the UAE test cases pass. The KSA resignation tier and under-2-year zero **have been removed** per Art. 84 and **verified on the running server**: an under-2-year resignation now returns full pro-rata EOSB where it previously returned zero; a 3-year resignation returns the full amount with no reduction; employer termination returns the identical amount; and summary dismissal still returns zero. Re-certification remains **pending KSA-qualified counsel confirmation of the Article 84 pin-cites**.
 
 The two findings that previously blocked production use — Finding 1 (P0) and Finding 2 (P1) — are fixed, and the dead wrapper (Finding 3, P2) is gone.
 
