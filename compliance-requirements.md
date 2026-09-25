@@ -237,10 +237,10 @@ daily_rate = total_salary / 30  // or total_salary × 12 / 365 (some interpretat
 
 #### 4.3.4 Termination by Employee (Resignation)
 
-Under KSA law, the employee is entitled to full EOSB even upon resignation (no tiered reduction based on who terminates, as in UAE). The only differentiator is whether the employee has **given proper notice**:
+Under KSA law, the employee is entitled to full EOSB even upon resignation (no tiered reduction based on who terminates, as in UAE). Unserved notice does not reduce EOSB:
 
-- If proper notice is given: full EOSB entitlement.
-- If notice is not given: employer may deduct up to 50% of EOSB as compensation for failure to give notice.
+- EOSB is paid in full regardless of whether proper notice was given.
+- If notice is not served, the employee owes compensation equal to the wage for the unserved notice period, recorded as a separate settlement line (never deducted from EOSB).
 - If the employee worked while in violation of Art. 80/81: forfeits EOSB.
 
 #### 4.3.5 Implementation Pseudocode
@@ -276,7 +276,7 @@ function calculateEOSB_KSA(totalSalary, startDate, endDate):
 | **Salary basis** | Basic salary only | Total salary (all allowances) |
 | **Eligibility threshold** | 1 year | None (pro-rata from day one) |
 | **Notice period min** | 30 days | 30 days |
-| **Resignation reduction** | Yes (1/3, 2/3, full) | No (but notice penalty applies) |
+| **Resignation reduction** | Yes (1/3, 2/3, full) | No (unserved-notice compensation is a separate line) |
 | **Cap** | 2 years' basic salary | No explicit cap |
 | **Excluded periods** | Unpaid leave > 90 days | Not specified in law |
 | **Probation EOSB** | No entitlement | No entitlement |
@@ -509,7 +509,7 @@ CREATE TABLE IF NOT EXISTS eosb_calculations (
 
 | Feature | Priority | Description |
 |---|---|---|
-| **Jurisdiction-Aware EOSB Engine** | **P0** | Dual calculation engine: UAE (basic salary, tiered resignation) and KSA (total salary, notice penalty). |
+| **Jurisdiction-Aware EOSB Engine** | **P0** | Dual calculation engine: UAE (basic salary, tiered resignation) and KSA (total salary, full EOSB; notice compensation separate). |
 | **Onboarding Compliance Checklist** | **P0** | Jurisdiction-specific tasks: visa, MoHRE/Qiwa registration, WPS setup, contract generation. |
 | **Offboarding Settlement Calculator** | **P0** | Auto-generates final settlement: salary, EOSB, leave encashment, notice pay. 14-day/UAE and 7-day/KSA settlement timelines. |
 | **Privacy Notice Generator** | **P0** | Generate jurisdiction-specific privacy notices in Arabic and English for onboarding consent. |

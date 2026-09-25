@@ -206,7 +206,7 @@ The EOSB Calculator can be opened from:
 │  │  Start Date:         10 Jan 2015     (11 years 5 months)           │     │
 │  │  End Date:           15 Jun 2026     (Notice: 60 days)             │     │
 │  │  Total Salary:       SAR 22,000 (basic + housing + transport)      │     │
-│  │  Proper Notice:      ✅ Yes (full entitlement)                     │     │
+│  │  Proper Notice:      ✅ Yes                     │     │
 │  │  Governing Law:      KSA Labour Law (Royal Decree M/51)            │     │
 │  └────────────────────────────────────────────────────────────────────┘     │
 │                                                                             │
@@ -227,11 +227,11 @@ The EOSB Calculator can be opened from:
 │  │  │           =  SAR 141,240                                │      │     │
 │  │  └──────────────────────────────────────────────────────────┘      │     │
 │  │                                                                     │     │
-│  │  Proper notice given → Full entitlement (no 50% reduction) ✅       │     │
+│  │  Proper notice given → No notice compensation owed ✅       │     │
 │  │                                                                     │     │
 │  │  ┌────────────────────────────────────────────────────┐            │     │
 │  │  │  GROSS EOSB                 SAR 126,573             │            │     │
-│  │  │  Notice Penalty             SAR 0 (deduction: 0%) │            │     │
+│  │  │  Notice Compensation         SAR 0 (separate line) │            │     │
 │  │  │  ─────────────────────────────────                 │            │     │
 │  │  │  **NET EOSB ENTITLEMENT**   **SAR 126,573**        │            │     │
 │  │  └────────────────────────────────────────────────────┘            │     │
@@ -295,7 +295,7 @@ For employees who have worked across both UAE and KSA entities:
 | Deduction line | Amber | `#F59E0B` | Resignation/penalty deductions |
 | Net EOSB value | Deep Teal | `#0F766E` | Final entitlement (highlighted) |
 | Legal info bar | Sky Blue | `#3B82F6` | Deadline reminders & disclaimers |
-| Missing notice warning | Coral Red | `#EF4444` | "No proper notice → 50% reduction" |
+| Missing notice warning | Coral Red | `#EF4444` | "Unserved notice → wage-for-unserved-period compensation" |
 
 ---
 

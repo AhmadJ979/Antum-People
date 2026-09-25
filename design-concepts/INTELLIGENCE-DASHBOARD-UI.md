@@ -89,7 +89,7 @@ Top-level route: `Dashboard > Intelligence` (default landing view for leadership
 │  │  0.0M ─  └───┘└───┘└───┘└───┘ │  └───┘                                    │  │
 │  │          Q3'26   Q4'26   Q1'27  Q2'27                                      │  │
 │  │                                                                          │  │
-│  │  ▸ KSA Q1'27 spike driven by 3 end-of-contract exits + notice-penalty     │  │
+│  │  ▸ KSA Q1'27 spike driven by 3 end-of-contract exits + notice compensation     │  │
 │  └──────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                │
 │  ┌───────────────────────────────┐ ┌────────────────────────────────────────┐  │

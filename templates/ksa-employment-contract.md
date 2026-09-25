@@ -139,7 +139,7 @@ EOSB shall be calculated in accordance with Article 84 of the Saudi Labor Law (R
 | First 5 years / أول 5 سنوات | Half a month's total salary per year / نصف شهر من إجمالي الراتب عن كل سنة |
 | Each subsequent year / كل سنة تالية | One full month's total salary per year / شهر كامل من إجمالي الراتب عن كل سنة |
 
-> **Penalty for Failure to Give Proper Notice:** Up to 50% of EOSB may be deducted if the employee fails to serve the full notice period.
+> **Compensation for Failure to Give Proper Notice:** If the employee fails to serve the full notice period, the employee owes compensation equal to the wage for the unserved notice period, recorded as a separate settlement item — never deducted from the EOSB.
 
 Full calculation details are available in the Antum People EOSB Engine.
 
