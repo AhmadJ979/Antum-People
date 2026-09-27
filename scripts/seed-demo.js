@@ -1,12 +1,21 @@
 const db = require('../server/db');
 const eosb = require('../server/eosb');
 
+/**
+ * Antum People Coherent Demo Seed v3
+ * 
+ * NOTE: This script targets the PRODUCT database (managed via server/db.js).
+ * It is NON-DESTRUCTIVE by default (uses upsert-by-key).
+ * Bulk deletion is only performed if the --force-clear flag is provided.
+ * 
+ * Deliverable 2 & 3: Deterministic demo dataset + Demo credential management.
+ */
+
 async function seed() {
   const forceClear = process.argv.includes('--force-clear');
   
-  console.log('--- Antum People Coherent Demo Seed v2 ---');
-  console.log('NOTE: The app database is the SHARED team database.');
-  console.log('This script is NON-DESTRUCTIVE by default (uses upsert).');
+  console.log('--- Antum People Coherent Demo Seed v3 ---');
+  console.log('Targeting: Product-owned SQLite database');
   
   if (process.env.DEMO_SEED !== 'true') {
     console.error('ERROR: DEMO_SEED=true environment variable must be set to run this script.');
@@ -154,9 +163,11 @@ async function seed() {
 
   if (forceClear) {
     console.log('FORCE CLEAR: Deleting existing demo data...');
+    // Sequence matters for foreign keys
     await db.query("DELETE FROM onboarding_tasks WHERE employee_id LIKE 'demo-emp-%'");
     await db.query("DELETE FROM offboarding_tasks WHERE employee_id LIKE 'demo-emp-%'");
     await db.query("DELETE FROM exit_interviews WHERE employee_id LIKE 'demo-emp-%'");
+    await db.query("DELETE FROM analytics_metrics WHERE employee_id LIKE 'demo-emp-%'");
     await db.query("DELETE FROM audit_logs WHERE entity_id LIKE 'demo-emp-%' OR entity_id LIKE 'demo-task-%' OR entity_id LIKE 'demo-exit-%'");
     await db.query("DELETE FROM consent_records WHERE employee_id LIKE 'demo-emp-%'");
     await db.query("DELETE FROM employees WHERE id LIKE 'demo-emp-%' OR email LIKE '%@example.com'");
@@ -250,6 +261,18 @@ async function seed() {
       INSERT OR REPLACE INTO consent_records (id, employee_id, consent_type, status, consent_date)
       VALUES (${db.escapeString('demo-consent-' + emp.id)}, ${db.escapeString(emp.id)}, 'PDPL_DATA_PROCESSING', 'granted', '2026-09-23 09:00:00')
     `);
+  }
+
+  // 6. Users (Deliverable 3: Demo credential stays the lead's)
+  const adminHash = process.env.DEMO_ADMIN_PASSWORD_HASH;
+  if (adminHash) {
+    console.log('Upserting demo admin user...');
+    await db.query(`
+      INSERT OR REPLACE INTO users (id, username, password_hash, role)
+      VALUES ('demo-admin-id', 'admin', ${db.escapeString(adminHash)}, 'admin')
+    `);
+  } else {
+    console.warn('WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.');
   }
 
   console.log('Seeding completed successfully.');
