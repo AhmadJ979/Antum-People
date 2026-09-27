@@ -8,6 +8,7 @@ The server requires these variables to be set in the environment:
 - `ENCRYPTION_KEY`: 32-character hex key for AES-256-GCM (PII encryption).
 - `JWT_SECRET`: Secret for signing JSON Web Tokens.
 - `PORT`: Default is 3000.
+- `PRODUCT_DB_PATH`: Absolute path to the product-owned SQLite database (e.g., `/home/team/.data/antum-product.db`).
 
 **Hardening**: The server is configured to fail-fast and refuse to start if `ENCRYPTION_KEY` or `JWT_SECRET` is missing.
 
@@ -21,18 +22,45 @@ The server requires these variables to be set in the environment:
 2. **Backend**:
    ```bash
    cd server && npm install
-   # Start detached
+   # Start detached (or via keep-alive loop)
    setsid nohup node index.js > server/server.log 2>&1 &
    ```
+
+## Database Management
+The product uses a private SQLite database, isolated from the team coordination store.
+- **Schema**: Defined in `server/schema.sql`.
+- **Migrations**: The server automatically executes `schema.sql` on startup (idempotent).
+- **Seeding**: 
+  ```bash
+  export DEMO_SEED=true
+  export DEMO_ADMIN_PASSWORD_HASH="<bcrypt-hash>"
+  export PRODUCT_DB_PATH="/home/team/.data/antum-product.db"
+  node scripts/seed-demo.js
+  ```
 
 ## Maintenance & Stability
 The site is kept alive by a monitoring loop that restarts the server if port 3000 is empty.
 - **Keep-Alive Script**: `scripts/keep-alive.sh`.
 - **Log**: `server/keep-alive.log`.
+- **Arming**: `nohup ./scripts/keep-alive.sh &`
+
+**NOTE**: This host does not support systemd or crontab for non-root users. The loop must be manually re-armed after a host restart.
 
 ## Verification
-1. **CLI**: `curl -s https://b974147c03228029e277d1cbe6646fe6.ctonew.app | grep "Antum People"`
+1. **CLI**: `curl -s --noproxy '*' http://127.0.0.1:3000 | grep "Antum People"`
 2. **Logs**: Check `server/server.log` for startup success.
+
+## Cutover Procedure (to isolated DB)
+1. Ensure the new code is deployed to the production directory.
+2. Stop any running server and existing keep-alive processes (`pkill -f keep-alive.sh`).
+3. Set the `PRODUCT_DB_PATH` in the environment.
+4. Run the seed: `DEMO_SEED=true node scripts/seed-demo.js`.
+5. Start the loop: `nohup ./scripts/keep-alive.sh &`.
+
+### Rollback
+1. Stop the loop and server.
+2. Check out the previous commit in the production directory.
+3. Restart server.
 
 ## Secrets Rotation Procedure
 ### 1. JWT Secret Rotation
@@ -41,42 +69,8 @@ The site is kept alive by a monitoring loop that restarts the server if port 300
 
 ### 2. PII Encryption Key Rotation
 - Set `ENCRYPTION_KEY` to the new value in the environment.
-- Use a migration script (not stored in the repository) to decrypt existing records with the old key and re-encrypt with the new key.
+- Use a migration script to decrypt existing records with the old key and re-encrypt with the new key.
 - Restart the server.
-- Verify data via the Employees dashboard.
 
 ### 3. Demo Admin Password
-- Handled exclusively via the `users` table. Do not store in code or scripts.
-
-## After a Machine Restart
-The platform is configured to self-heal after a machine restart using a systemd user unit that re-arms the keep-alive loop.
-
-### Automatic Recovery
-A systemd service (`antum-keep-alive.service`) is installed for the `agent-senior-software-engineer` user. With lingering enabled (`loginctl enable-linger`), this service starts automatically on boot.
-
-The recovery mechanism is hardened to handle the following:
-- **Secrets Management**: It automatically sources `/etc/profile.d/cto-env-vars.sh` to ensure `JWT_SECRET` and `ENCRYPTION_KEY` are available to the server.
-- **Port Contention**: It detects if port 3000 is held by a foreign process (e.g., the platform's default placeholder) and kills it to allow the Antum People server to bind.
-- **Single Instance**: It uses `flock` to ensure only one keep-alive loop runs at a time.
-- **Health Verification**: It verifies the actual application title via `curl` to distinguish it from placeholders.
-- **Missing Bundle**: It rebuilds the frontend bundle if missing from the production directory.
-
-
-### Manual Verification/Recovery
-If the automatic recovery fails, follow these steps:
-1. Check if a foreign process is holding port 3000:
-   ```bash
-   sudo lsof -i :3000
-   ```
-   If a non-Antum process (like the platform's "My site" placeholder) is listening, kill it to free the port:
-   ```bash
-   sudo kill -9 <PID>
-   ```
-2. Verify the systemd service status:
-   ```bash
-   systemctl --user status antum-keep-alive.service
-   ```
-3. Manually trigger the keep-alive script if needed:
-   ```bash
-   /home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh
-   ```
+- Set `DEMO_ADMIN_PASSWORD_HASH` and re-run `scripts/seed-demo.js`.
