@@ -2,19 +2,20 @@ const db = require('../server/db');
 const eosb = require('../server/eosb');
 
 /**
- * Antum People Coherent Demo Seed v3
+ * Antum People Coherent Demo Seed v3.1
  * 
  * NOTE: This script targets the PRODUCT database (managed via server/db.js).
  * It is NON-DESTRUCTIVE by default (uses upsert-by-key).
  * Bulk deletion is only performed if the --force-clear flag is provided.
  * 
  * Deliverable 2 & 3: Deterministic demo dataset + Demo credential management.
+ * Fix: Jurisdiction, total_salary, and offboarding pipeline population.
  */
 
 async function seed() {
   const forceClear = process.argv.includes('--force-clear');
   
-  console.log('--- Antum People Coherent Demo Seed v3 ---');
+  console.log('--- Antum People Coherent Demo Seed v3.1 ---');
   console.log('Targeting: Product-owned SQLite database');
   
   if (process.env.DEMO_SEED !== 'true') {
@@ -175,6 +176,10 @@ async function seed() {
 
   console.log('Upserting demo employees...');
   for (const emp of personas) {
+    // Lead feedback: Match jurisdiction to data_residency_country and set total_salary
+    const jurisdiction = emp.data_residency_country; // 'AE' or 'SA'
+    const totalSalary = emp.salary;
+
     const eosbAccrued = eosb.calculateEOSB(
       emp.start_date,
       null,
@@ -190,25 +195,30 @@ async function seed() {
       INSERT OR REPLACE INTO employees (
         id, first_name, last_name, email, department, role, start_date,
         status, salary, basic_salary, recruitment_cost, data_residency_country,
+        jurisdiction, total_salary,
         eosb_accrued, fully_productive_date, consent_granted, created_at, updated_at
       ) VALUES (
         ${db.escapeString(emp.id)}, ${db.escapeString(emp.first_name)}, ${db.escapeString(emp.last_name)},
         ${db.escapeString(emp.email)}, ${db.escapeString(emp.department)}, ${db.escapeString(emp.role)},
         ${db.escapeString(emp.start_date)}, ${db.escapeString(emp.status)}, ${emp.salary}, ${emp.basic_salary},
-        ${emp.recruitment_cost}, ${db.escapeString(emp.data_residency_country)}, ${eosbAccrued},
+        ${emp.recruitment_cost}, ${db.escapeString(emp.data_residency_country)},
+        ${db.escapeString(jurisdiction)}, ${totalSalary},
+        ${eosbAccrued},
         ${db.escapeString(emp.fully_productive_date)}, 1, '2026-09-23 09:00:00', '2026-09-23 09:00:00'
       )
     `;
     await db.query(sql);
-    console.log(`- Upserted ${emp.first_name} ${emp.last_name}`);
+    console.log(`- Upserted ${emp.first_name} ${emp.last_name} (${jurisdiction})`);
   }
 
-  // 2. Onboarding Tasks (for Omar)
+  // 2. Onboarding Tasks
   console.log('Upserting onboarding tasks...');
   const onboardingTasks = [
-    { id: 'demo-task-1', emp_id: 'demo-emp-omar', title: 'MoHRE Contract Signing', status: 'completed', due: '2026-03-22', done: '2026-03-21' },
-    { id: 'demo-task-2', emp_id: 'demo-emp-omar', title: 'Medical Insurance Application', status: 'pending', due: '2026-03-25', done: null },
-    { id: 'demo-task-3', emp_id: 'demo-emp-omar', title: 'Visa Stamping', status: 'pending', due: '2026-04-01', done: null }
+    { id: 'demo-task-on-1', emp_id: 'demo-emp-omar', title: 'MoHRE Contract Signing', status: 'completed', due: '2026-03-22', done: '2026-03-21' },
+    { id: 'demo-task-on-2', emp_id: 'demo-emp-omar', title: 'Medical Insurance Application', status: 'pending', due: '2026-03-25', done: null },
+    { id: 'demo-task-on-3', emp_id: 'demo-emp-omar', title: 'Visa Stamping', status: 'pending', due: '2026-04-01', done: null },
+    { id: 'demo-task-on-4', emp_id: 'demo-emp-ahmad', title: 'Initial IT Setup', status: 'completed', due: '2024-01-16', done: '2024-01-15' },
+    { id: 'demo-task-on-5', emp_id: 'demo-emp-ahmad', title: 'Compliance Training', status: 'completed', due: '2024-01-20', done: '2024-01-18' }
   ];
 
   for (const t of onboardingTasks) {
@@ -220,8 +230,26 @@ async function seed() {
     await db.query(sql);
   }
 
-  // 3. Offboarding / Exit Interview (for Sarah)
-  console.log('Upserting offboarding data...');
+  // 3. Offboarding Tasks (for Sarah)
+  console.log('Upserting offboarding tasks...');
+  const offboardingTasks = [
+    { id: 'demo-task-off-1', emp_id: 'demo-emp-sarah', title: 'Hardware Return', status: 'completed', due: '2026-09-25', done: '2026-09-24' },
+    { id: 'demo-task-off-2', emp_id: 'demo-emp-sarah', title: 'Access Revocation', status: 'pending', due: '2026-09-26', done: null },
+    { id: 'demo-task-off-3', emp_id: 'demo-emp-sarah', title: 'Final Settlement Calculation', status: 'pending', due: '2026-09-27', done: null },
+    { id: 'demo-task-off-4', emp_id: 'demo-emp-sarah', title: 'Visa Cancellation (KSA)', status: 'pending', due: '2026-09-30', done: null }
+  ];
+
+  for (const t of offboardingTasks) {
+    const sql = `
+      INSERT OR REPLACE INTO offboarding_tasks (id, employee_id, title, status, due_date, completed_at, created_at)
+      VALUES (${db.escapeString(t.id)}, ${db.escapeString(t.emp_id)}, ${db.escapeString(t.title)}, 
+      ${db.escapeString(t.status)}, ${db.escapeString(t.due)}, ${t.done ? db.escapeString(t.done) : 'NULL'}, '2026-09-23 11:00:00')
+    `;
+    await db.query(sql);
+  }
+
+  // 4. Exit Interview (for Sarah)
+  console.log('Upserting exit interview...');
   const exitInterview = {
     id: 'demo-exit-1',
     employee_id: 'demo-emp-sarah',
@@ -238,7 +266,7 @@ async function seed() {
     ${db.escapeString(exitInterview.detailed_feedback)}, ${exitInterview.satisfaction_score})
   `);
 
-  // 4. Audit Logs
+  // 5. Audit Logs
   console.log('Upserting audit logs...');
   const auditLogs = [
     { id: 'demo-log-1', entity: 'employee', entity_id: 'demo-emp-omar', action: 'CREATE', perf: 'admin', ts: '2026-03-20 09:00:00' },
@@ -254,7 +282,7 @@ async function seed() {
     `);
   }
 
-  // 5. Consent Records
+  // 6. Consent Records
   console.log('Upserting consent records...');
   for (const emp of personas) {
     await db.query(`
@@ -263,7 +291,7 @@ async function seed() {
     `);
   }
 
-  // 6. Users (Deliverable 3: Demo credential stays the lead's)
+  // 7. Users (Deliverable 3: Demo credential stays the lead's)
   const adminHash = process.env.DEMO_ADMIN_PASSWORD_HASH;
   if (adminHash) {
     console.log('Upserting demo admin user...');
