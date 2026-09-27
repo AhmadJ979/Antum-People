@@ -70,9 +70,8 @@ async function logMutation(db, actorId, entityType, entityId, action, oldValue, 
   const logId = uuidv4();
   const timestamp = new Date().toISOString();
   
-  // We use team-db via CLI in this environment, but this function 
-  // represents the logic that would be used in a real app.
-  // For the sandbox, we'll assume the caller handles the DB execution.
+  // The app now uses a product-owned SQLite database.
+  // This function represents the logic for logging actions.
   
   return {
     id: logId,

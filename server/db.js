@@ -1,37 +1,76 @@
-const { exec } = require('child_process');
+const { DatabaseSync } = require('node:sqlite');
+const path = require('path');
+const fs = require('fs');
 
 /**
- * Executes a SQL statement via the global `team-db` CLI.
- * Syncs automatically with Turso, executes, and returns parsed JSON.
+ * Antum People - Product Database Module
+ * 
+ * Deliverable 1: The product owns its database.
+ * This module implements a single query() seam against a product-owned SQLite file.
+ * It replaces the previous implementation that shared the team's coordination store.
+ */
+
+// Database path comes from an environment variable with a default outside the git tree
+const PRODUCT_DB_PATH = process.env.PRODUCT_DB_PATH || '/home/team/.data/antum-product.db';
+
+// Ensure the directory exists
+const dbDir = path.dirname(PRODUCT_DB_PATH);
+if (!fs.existsSync(dbDir)) {
+  try {
+    fs.mkdirSync(dbDir, { recursive: true });
+  } catch (err) {
+    console.error(`[FATAL] Could not create directory for product database: ${dbDir}`);
+    process.exit(1);
+  }
+}
+
+let db;
+try {
+  // Use node:sqlite (DatabaseSync) as instructed
+  db = new DatabaseSync(PRODUCT_DB_PATH);
+  
+  // Idempotent migration: execute the schema on every startup
+  const schemaPath = path.join(__dirname, 'schema.sql');
+  if (fs.existsSync(schemaPath)) {
+    const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+    db.exec(schemaSql);
+  } else {
+    console.warn(`[DB Warning] Schema file not found at ${schemaPath}`);
+  }
+} catch (error) {
+  // FAIL LOUDLY at startup if the database cannot be opened or initialized
+  console.error(`[FATAL] Failed to initialize product database at ${PRODUCT_DB_PATH}`);
+  console.error(error);
+  process.exit(1);
+}
+
+/**
+ * Executes a SQL statement against the product database.
+ * Matches the previous signature and return shape.
  * 
  * @param {string} sql - The raw SQL statement to execute.
  * @returns {Promise<any[]>} - Returns an array of objects for SELECT, or [] for DDL/DML.
  */
 function query(sql) {
   return new Promise((resolve, reject) => {
-    // Escape double quotes and dollar signs inside the SQL command since we wrap the command in double quotes
-    // and exec runs in a shell.
-    const escapedSql = sql.replace(/"/g, '\\"').replace(/\$/g, '\\$');
-    
-    exec(`team-db "${escapedSql}"`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`[DB Error] SQL: ${sql}`);
-        console.error(`[DB Error] Stderr: ${stderr}`);
-        return reject(error);
-      }
+    try {
+      const trimmedSql = sql.trim();
+      const isSelect = trimmedSql.toUpperCase().startsWith('SELECT') || 
+                       trimmedSql.toUpperCase().startsWith('WITH') ||
+                       trimmedSql.toUpperCase().startsWith('PRAGMA');
       
-      try {
-        const trimmed = stdout.trim();
-        if (!trimmed) {
-          return resolve([]);
-        }
-        const results = JSON.parse(trimmed);
+      if (isSelect) {
+        const results = db.prepare(sql).all();
         resolve(results);
-      } catch (parseError) {
-        console.warn(`[DB Warning] Failed to parse output as JSON, returning empty list. Output: ${stdout}`);
+      } else {
+        db.exec(sql);
         resolve([]);
       }
-    });
+    } catch (error) {
+      console.error(`[DB Error] SQL: ${sql}`);
+      console.error(error);
+      reject(error);
+    }
   });
 }
 
