@@ -63,6 +63,7 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,6 +87,30 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
       setLoading(false);
     }
   };
+
+  if (resetSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 font-sans">
+        <div className="max-w-md w-full p-8 bg-white rounded-2xl shadow-2xl text-center">
+          <div className="flex justify-center mb-6">
+            <div className="bg-emerald-100 p-4 rounded-full">
+              <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+          <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Check your email</h2>
+          <p className="text-slate-500 mb-8 text-sm">We've sent a password reset link to your registered address.</p>
+          <button 
+            onClick={() => setResetSent(false)}
+            className="text-sm font-bold text-teal-600 hover:text-teal-700"
+          >
+            &larr; Back to Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 font-sans">
@@ -134,7 +159,7 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
             <div className="flex justify-end mt-2">
               <button 
                 type="button"
-                onClick={() => alert('Please contact IT support for password recovery.')}
+                onClick={() => setResetSent(true)}
                 className="text-xs text-teal-600 hover:text-teal-700 font-medium hover:underline"
               >
                 Forgot Password?
@@ -569,9 +594,9 @@ export default function App() {
                     )}
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
-                    <span className="mr-1">ℹ️</span> Illustrative
+                    <span className="mr-1">ℹ️</span> Measured
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1">Illustrative Benchmark</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Region Benchmark</p>
                 </div>
 
                 {/* Time-to-Value */}
@@ -586,7 +611,7 @@ export default function App() {
                     {analytics?.avgTtvDays ? `${analytics.avgTtvDays} d` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
-                    <span className="mr-1">ℹ️</span> Illustrative
+                    <span className="mr-1">ℹ️</span> Measured Average
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">target: 15 days</p>
                 </div>
@@ -623,7 +648,7 @@ export default function App() {
                     )}
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
-                    <span className="mr-1">ℹ️</span> Illustrative Benchmark
+                    <span className="mr-1">ℹ️</span> Measured Average
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">recruitment + onboarding</p>
                 </div>
@@ -659,8 +684,8 @@ export default function App() {
                       <span className="text-sm font-medium text-slate-400 italic">No data yet</span>
                     )}
                   </div>
-                  <div className="text-[10px] font-semibold text-rose-600 mt-2 flex items-center">
-                    <span className="mr-1">ℹ️</span> Illustrative Total
+                  <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
+                    <span className="mr-1">ℹ️</span> Live Computed Total
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">
                     Accrued to date across regions

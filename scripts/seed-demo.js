@@ -39,8 +39,40 @@ async function seed() {
       basic_salary: 10000,
       recruitment_cost: 8000,
       data_residency_country: 'AE',
-      status: 'active',
+      status: 'onboarding',
       fully_productive_date: '2024-02-01'
+    },
+    {
+      id: 'demo-emp-term1',
+      first_name: 'Yusuf',
+      last_name: 'Hassan',
+      email: 'yusuf.hassan@example.com',
+      department: 'Operations',
+      role: 'Logistics Coordinator',
+      start_date: '2023-01-10',
+      end_date: '2023-06-15',
+      salary: 12000,
+      basic_salary: 8000,
+      recruitment_cost: 4000,
+      data_residency_country: 'AE',
+      status: 'terminated',
+      fully_productive_date: '2023-02-01'
+    },
+    {
+      id: 'demo-emp-term2',
+      first_name: 'Sultan',
+      last_name: 'Al-Harbi',
+      email: 'sultan.harbi@example.com',
+      department: 'Engineering',
+      role: 'Junior Developer',
+      start_date: '2024-02-01',
+      end_date: '2024-07-20',
+      salary: 14000,
+      basic_salary: 9500,
+      recruitment_cost: 6000,
+      data_residency_country: 'SA',
+      status: 'terminated',
+      fully_productive_date: '2024-03-15'
     },
     {
       id: 'demo-emp-fatima',
@@ -280,23 +312,43 @@ async function seed() {
     await db.query(sql);
   }
 
-  // 4. Exit Interview (for Sarah)
-  console.log('Upserting exit interview...');
-  const exitInterview = {
-    id: 'demo-exit-1',
-    employee_id: 'demo-emp-sarah',
-    interview_date: '2026-09-24',
-    departure_reason: 'Better Opportunity',
-    detailed_feedback: 'Loved the team, but found a role closer to home with higher allowance.',
-    satisfaction_score: 4
-  };
+  // 4. Exit Interviews
+  console.log('Upserting exit interviews...');
+  const exitInterviews = [
+    {
+      id: 'demo-exit-1',
+      employee_id: 'demo-emp-sarah',
+      interview_date: '2026-09-24',
+      departure_reason: 'Better Opportunity',
+      detailed_feedback: 'Loved the team, but found a role closer to home with higher allowance.',
+      satisfaction_score: 4
+    },
+    {
+      id: 'demo-exit-2',
+      employee_id: 'demo-emp-term1',
+      interview_date: '2023-06-15',
+      departure_reason: 'Career Change',
+      detailed_feedback: 'Moving to a different industry.',
+      satisfaction_score: 3
+    },
+    {
+      id: 'demo-exit-3',
+      employee_id: 'demo-emp-term2',
+      interview_date: '2024-07-20',
+      departure_reason: 'Relocation',
+      detailed_feedback: 'Moving out of the region.',
+      satisfaction_score: 5
+    }
+  ];
 
-  await db.query(`
-    INSERT OR REPLACE INTO exit_interviews (id, employee_id, interview_date, departure_reason, detailed_feedback, satisfaction_score)
-    VALUES (${db.escapeString(exitInterview.id)}, ${db.escapeString(exitInterview.employee_id)}, 
-    ${db.escapeString(exitInterview.interview_date)}, ${db.escapeString(exitInterview.departure_reason)}, 
-    ${db.escapeString(exitInterview.detailed_feedback)}, ${exitInterview.satisfaction_score})
-  `);
+  for (const ex of exitInterviews) {
+    await db.query(`
+      INSERT OR REPLACE INTO exit_interviews (id, employee_id, interview_date, departure_reason, detailed_feedback, satisfaction_score)
+      VALUES (${db.escapeString(ex.id)}, ${db.escapeString(ex.employee_id)}, 
+      ${db.escapeString(ex.interview_date)}, ${db.escapeString(ex.departure_reason)}, 
+      ${db.escapeString(ex.detailed_feedback)}, ${ex.satisfaction_score})
+    `);
+  }
 
   // 5. Audit Logs
   console.log('Upserting audit logs...');
