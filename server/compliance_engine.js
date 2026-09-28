@@ -17,12 +17,14 @@ const checklistTemplates = {
       { title: 'Privacy Notice Consent', description: 'Capture explicit consent for UAE PDPL compliance.' }
     ],
     offboarding: [
+      { title: 'Hardware Return', description: 'Collect company-issued laptops, phones, and other assets.' },
+      { title: 'Access Revocation', description: 'Revoke access to IT systems, email, and physical premises.' },
       { title: 'Notice Period Verification', description: 'Confirm notice period served (30–90 days per contract).' },
       { title: 'EOSB Calculation (UAE)', description: 'Calculate basis = basic wage only (FDL 33/2021 Arts. 51–53).' },
       { title: 'Annual Leave Encashment', description: 'Calculate and pay accrued but unused annual leave.' },
       { title: 'MoHRE Work Permit Cancellation', description: 'Cancel the work permit via MoHRE system.' },
       { title: 'Residency Visa Cancellation', description: 'Complete visa cancellation within 30 days.' },
-      { title: 'Final Settlement Payment', description: 'Complete final payment within 14 days statutory deadline.' }
+      { title: 'Final Settlement Payment (within 14 days)', description: 'Complete final payment within 14 days statutory deadline.' }
     ]
   },
   KSA: {
@@ -36,11 +38,13 @@ const checklistTemplates = {
       { title: 'Privacy Notice Consent', description: 'Capture explicit consent for KSA PDPL compliance (Arabic first).' }
     ],
     offboarding: [
+      { title: 'Hardware Return', description: 'Collect company-issued laptops, phones, and other assets.' },
+      { title: 'Access Revocation', description: 'Revoke access to IT systems, email, and physical premises.' },
       { title: 'Notice Period Verification', description: 'Confirm served or compensated (M/51 Arts. 74–75).' },
       { title: 'EOSB Calculation (KSA)', description: 'Calculate basis = total monthly salary including allowances (M/51 Art. 84).' },
       { title: 'GOSI De-registration', description: 'Remove employee from GOSI system.' },
       { title: 'Iqama Cancellation/Transfer', description: 'Complete Iqama formalities (within 90 days).' },
-      { title: 'Final Exit or Exit/Re-entry Visa', description: 'Process visa through Jawazat (must follow Iqama).' },
+      { title: 'Final Exit Visa (or re-entry, if transferring)', description: 'Process visa through Jawazat (must follow Iqama).' },
       { title: 'Service Certificate Issuance', description: 'Issue mandatory service certificate (within 2 weeks).' },
       { title: 'Annual Leave Encashment', description: 'Calculate and pay accrued but unused annual leave.' },
       { title: 'Final Settlement Payment', description: 'Pay salary + EOSB + leave + notice (within statutory deadline).' }
