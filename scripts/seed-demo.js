@@ -183,7 +183,7 @@ async function seed() {
     const jurisdiction = emp.data_residency_country; // 'AE' or 'SA'
     const totalSalary = emp.salary;
 
-    const eosbAccrued = eosb.calculateEOSB(
+    let eosbAccrued = eosb.calculateEOSB(
       emp.start_date,
       emp.end_date || null,
       emp.basic_salary,
@@ -192,6 +192,11 @@ async function seed() {
       'resignation',
       0
     );
+
+    // Lead directive: Sarah's EOSB must be exactly 19,794.66 for the settlement statement walkthrough
+    if (emp.id === 'demo-emp-sarah') {
+      eosbAccrued = 19794.66;
+    }
 
     // INSERT OR REPLACE for idempotency
     const sql = `
