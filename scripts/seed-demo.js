@@ -199,7 +199,7 @@ async function seed() {
         id, first_name, last_name, email, department, role, start_date, end_date,
         status, salary, basic_salary, recruitment_cost, data_residency_country,
         jurisdiction, total_salary, national_id_value,
-        eosb_accrued, fully_productive_date, consent_granted, created_at, updated_at
+        eosb_accrued, fully_productive_date, consent_granted, consent_date, created_at, updated_at
       ) VALUES (
         ${db.escapeString(emp.id)}, ${db.escapeString(emp.first_name)}, ${db.escapeString(emp.last_name)},
         ${db.escapeString(emp.email)}, ${db.escapeString(emp.department)}, ${db.escapeString(emp.role)},
@@ -208,7 +208,7 @@ async function seed() {
         ${emp.recruitment_cost}, ${db.escapeString(emp.data_residency_country)},
         ${db.escapeString(jurisdiction)}, ${totalSalary}, ${db.escapeString(auth.encrypt('ID-' + emp.id))},
         ${eosbAccrued},
-        ${db.escapeString(emp.fully_productive_date)}, 1, '2026-09-23 09:00:00', '2026-09-23 09:00:00'
+        ${db.escapeString(emp.fully_productive_date)}, 1, ${db.escapeString('2026-09-23')}, '2026-09-23 09:00:00', '2026-09-23 09:00:00'
       )
     `;
     await db.query(sql);

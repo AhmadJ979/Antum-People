@@ -605,13 +605,13 @@ export default function App() {
                         {analytics.avgCostPerHireAE > 0 && (
                           <div className="flex items-baseline space-x-2">
                             <span className="text-xs text-slate-400 uppercase">AE</span>
-                            <span>{analytics.avgCostPerHireAE.toLocaleString()} <span className="text-sm font-bold text-slate-400">AED</span></span>
+                            <span>{analytics.avgCostPerHireAE.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">AED</span></span>
                           </div>
                         )}
                         {analytics.avgCostPerHireSA > 0 && (
                           <div className="flex items-baseline space-x-2">
                             <span className="text-xs text-slate-400 uppercase">SA</span>
-                            <span>{analytics.avgCostPerHireSA.toLocaleString()} <span className="text-sm font-bold text-slate-400">SAR</span></span>
+                            <span>{analytics.avgCostPerHireSA.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">SAR</span></span>
                           </div>
                         )}
                         {!analytics.avgCostPerHireAE && !analytics.avgCostPerHireSA && (
@@ -642,13 +642,13 @@ export default function App() {
                         {analytics.eosbByJurisdiction.AE > 0 && (
                           <div className="flex items-baseline space-x-2">
                             <span className="text-xs text-slate-400 uppercase">AE</span>
-                            <span>{analytics.eosbByJurisdiction.AE.toLocaleString()} <span className="text-sm font-bold text-slate-400">AED</span></span>
+                            <span>{analytics.eosbByJurisdiction.AE.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className=\"text-sm font-bold text-slate-400\">AED</span></span>
                           </div>
                         )}
                         {analytics.eosbByJurisdiction.SA > 0 && (
-                          <div className="flex items-baseline space-x-2">
-                            <span className="text-xs text-slate-400 uppercase">SA</span>
-                            <span>{analytics.eosbByJurisdiction.SA.toLocaleString()} <span className="text-sm font-bold text-slate-400">SAR</span></span>
+                          <div className=\"flex items-baseline space-x-2\">
+                            <span className=\"text-xs text-slate-400 uppercase\">SA</span>
+                            <span>{analytics.eosbByJurisdiction.SA.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className=\"text-sm font-bold text-slate-400\">SAR</span></span>
                           </div>
                         )}
                         {!analytics.eosbByJurisdiction.AE && !analytics.eosbByJurisdiction.SA && (
@@ -768,8 +768,8 @@ export default function App() {
                           </span>
                         </td>
                         <td className="p-4">
-                          <div className="text-sm font-bold text-teal-600 font-mono">
-                            {emp.data_residency_country === 'SA' ? 'SAR' : 'AED'} {(emp.eosb_accrued || 0).toLocaleString()}
+                          <div className=\"text-sm font-bold text-teal-600 font-mono\">
+                            {emp.data_residency_country === 'SA' ? 'SAR' : 'AED'} {(emp.eosb_accrued || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
                           <div className="text-[10px] text-slate-400">Accrued to date</div>
                         </td>
@@ -1017,9 +1017,9 @@ export default function App() {
                             <div className="bg-teal-600 w-full rounded-t-sm" style={{ height: `${uaeHeight}%` }}></div>
                             <div className="bg-emerald-500 w-full" style={{ height: `${ksaHeight}%` }}></div>
                             {/* Tooltip placeholder */}
-                            <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-2 py-1.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10 font-mono shadow-xl border border-slate-700">
-                              <div className="flex justify-between space-x-2"><span>UAE:</span> <span>{s.uae.toLocaleString()} AED</span></div>
-                              <div className="flex justify-between space-x-2 border-t border-slate-700 mt-1 pt-1"><span>KSA:</span> <span>{s.ksa.toLocaleString()} SAR</span></div>
+                            <div className=\"absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-2 py-1.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10 font-mono shadow-xl border border-slate-700\">
+                              <div className=\"flex justify-between space-x-2\"><span>UAE:</span> <span>{s.uae.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED</span></div>
+                              <div className=\"flex justify-between space-x-2 border-t border-slate-700 mt-1 pt-1\"><span>KSA:</span> <span>{s.ksa.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span></div>
                             </div>
                           </div>
                           <div className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{s.quarter}</div>
