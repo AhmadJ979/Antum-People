@@ -10,19 +10,19 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Hardening: Trust proxy for correct IP detection behind the platform edge
+app.set('trust proxy', 1);
+
 // Hardening: Remove X-Powered-By header
 app.disable('x-powered-by');
 
 // Hardening: Restrict CORS
-// The app serves its own frontend, so we only need to allow the specific team domains if cross-origin is required.
-// For now, we restrict to known team domains and disable credentials (since we use localStorage/Auth header).
 const allowedOrigins = [
   'https://b974147c03228029e277d1cbe6646fe6.ctonew.app',
   'https://b974147c03228029e277d1cbe6646fe6-dev.ctonew.app'
 ];
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow same-origin (origin will be undefined) or allowed origins
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -34,27 +34,30 @@ app.use(cors({
 
 app.use(express.json());
 
-// Hardening: Simple in-memory rate limiting for login
-const loginAttempts = new Map();
+// Hardening: Login rate limiting (failures only)
+// 25 failures per minute per IP. Success resets the bucket.
+const loginFailures = new Map();
 const rateLimitLogin = (req, res, next) => {
   const ip = req.ip;
   const now = Date.now();
-  const limit = 5; // 5 attempts
-  const window = 60000; // 1 minute
-  
-  if (!loginAttempts.has(ip)) {
-    loginAttempts.set(ip, []);
+  const window = 60000;
+  const limit = 25;
+
+  if (!loginFailures.has(ip)) {
+    loginFailures.set(ip, []);
   }
-  
-  const attempts = loginAttempts.get(ip).filter(ts => now - ts < window);
-  attempts.push(now);
-  loginAttempts.set(ip, attempts);
-  
-  if (attempts.length > limit) {
-    return res.status(429).json({ error: 'Too many login attempts. Please try again later.' });
+
+  const failures = loginFailures.get(ip).filter(ts => now - ts < window);
+  loginFailures.set(ip, failures);
+
+  if (failures.length >= limit) {
+    return res.status(429).json({ error: 'Too many failed login attempts. Please try again later.' });
   }
   next();
 };
+
+// Generate a valid bcrypt dummy hash once at boot for the timing fix
+const dummyHash = auth.hashPasswordSync(require('crypto').randomBytes(32).toString('hex'), 12);
 
 // -------------------------------------------------------------
 // AUTHENTICATION
@@ -64,18 +67,23 @@ app.post('/api/login', rateLimitLogin, async (req, res) => {
   try {
     const { username, password } = req.body;
     
-    // Hardening: Prevent login timing side-channel by always doing a bcrypt compare
-    // We use a dummy hash for non-existent users.
-    const dummyHash = '$2a$10$K7X/6V4qH8wXWJ9Z1Y.uO.XvW5T1R0u3k8z9f6y5x4w3v2u1t0s2'; // BCRYPT hash for 'dummy'
-    
     const users = await db.query(`SELECT * FROM users WHERE username = ${db.escapeString(username)}`);
     const user = users[0];
     
+    // Hardening: Always bcrypt.compare to prevent timing side-channel
     const isValid = await auth.comparePassword(password, user ? user.password_hash : dummyHash);
     
     if (!user || !isValid) {
+      // Increment failure count
+      const ip = req.ip;
+      const failures = loginFailures.get(ip) || [];
+      failures.push(Date.now());
+      loginFailures.set(ip, failures);
       return res.status(401).json({ error: 'Invalid username or password' });
     }
+
+    // Success resets failure bucket
+    loginFailures.delete(req.ip);
 
     const token = auth.generateToken(user);
     res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
@@ -130,7 +138,6 @@ app.post('/api/employees', async (req, res) => {
   try {
     const data = req.body;
     
-    // Hardening: Prevent silent defaulting of data_residency_country
     if (!data.data_residency_country) {
       return res.status(400).json({ error: 'data_residency_country is required' });
     }
@@ -169,12 +176,10 @@ app.post('/api/employees', async (req, res) => {
     `;
     await db.query(insertSql);
 
-    // Audit Log (Match schema) - Encrypt sensitive data in audit logs too
     const auditData = { ...data, national_id_value: encryptedNationalId, national_id_iqama: encryptedIqama };
     await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, new_values, timestamp)
       VALUES (${db.escapeString(generateId())}, 'system', 'employee', ${db.escapeString(id)}, 'CREATE', ${db.escapeString(JSON.stringify(auditData))}, CURRENT_TIMESTAMP)`);
 
-    // Generate tasks (Match schema)
     const tasks = compliance.generateTasks(id, country === 'SA' || country === 'KSA' ? 'KSA' : 'UAE', 'onboarding');
     for (const task of tasks) {
       await db.query(`INSERT INTO onboarding_tasks (id, employee_id, title, description, status, due_date)
@@ -234,7 +239,6 @@ app.put('/api/employees/:id', async (req, res) => {
       
       await db.query(`UPDATE employees SET ${updates.join(', ')} WHERE id = ${db.escapeString(empId)}`);
       
-      // Audit Log - Encrypt sensitive data in audit logs
       const auditNewValues = { ...data };
       if (auditNewValues.national_id_value) auditNewValues.national_id_value = auth.encrypt(auditNewValues.national_id_value);
       if (auditNewValues.national_id_iqama) auditNewValues.national_id_iqama = auth.encrypt(auditNewValues.national_id_iqama);
@@ -242,7 +246,6 @@ app.put('/api/employees/:id', async (req, res) => {
       await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, old_values, new_values, timestamp)
         VALUES (${db.escapeString(generateId())}, 'system', 'employee', ${db.escapeString(empId)}, 'UPDATE', ${db.escapeString(JSON.stringify(emp))}, ${db.escapeString(JSON.stringify(auditNewValues))}, CURRENT_TIMESTAMP)`);
 
-      // Trigger offboarding tasks if status changed
       if (data.status === 'offboarding' && emp.status !== 'offboarding') {
         const tasks = compliance.generateTasks(empId, (data.data_residency_country || emp.data_residency_country) === 'SA' ? 'KSA' : 'UAE', 'offboarding');
         for (const task of tasks) {
@@ -258,10 +261,6 @@ app.put('/api/employees/:id', async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-// -------------------------------------------------------------
-// COMPLIANCE & TASK APIS
-// -------------------------------------------------------------
 
 app.get('/api/employees/:id/onboarding', async (req, res) => {
   const tasks = await db.query(`SELECT * FROM onboarding_tasks WHERE employee_id = ${db.escapeString(req.params.id)}`);
@@ -343,10 +342,6 @@ app.get('/api/compliance/report', async (req, res) => {
   res.json({ total, consentGranted: consent, visaAlerts: alerts.length, alerts });
 });
 
-// -------------------------------------------------------------
-// ANALYTICS & DASHBOARD
-// -------------------------------------------------------------
-
 app.get('/api/analytics/dashboard', async (req, res) => {
   try {
     const employees = await db.query(`SELECT * FROM employees`);
@@ -364,7 +359,6 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       ? Math.round(withRecruitmentSA.reduce((sum, emp) => sum + emp.recruitment_cost, 0) / withRecruitmentSA.length)
       : 0;
 
-    // 1. Time-to-Value (TTV)
     const withTtv = employees.filter(e => e.start_date && e.fully_productive_date);
     const avgTtvDays = withTtv.length > 0
       ? Math.round(withTtv.reduce((sum, e) => {
@@ -388,7 +382,6 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       }
     });
 
-    // 2. Retention Lift (1-yr cohort)
     const cohorts = {};
     employees.forEach(e => {
       const start = new Date(e.start_date);
@@ -418,7 +411,6 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       };
     }).sort((a, b) => a.cohort.localeCompare(b.cohort));
 
-    // 3. EOSB Liability by Jurisdiction & Quarter
     const eosbByJurisdiction = {
       AE: employees.filter(e => e.data_residency_country === 'AE').reduce((s, e) => s + (e.eosb_accrued || 0), 0),
       SA: employees.filter(e => e.data_residency_country === 'SA').reduce((s, e) => s + (e.eosb_accrued || 0), 0)
