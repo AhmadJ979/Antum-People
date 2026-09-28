@@ -17,12 +17,14 @@ const checklistTemplates = {
       { title: 'Privacy Notice Consent', description: 'Capture explicit consent for UAE PDPL compliance.' }
     ],
     offboarding: [
-      { title: 'Notice Period Verification', description: 'Confirm notice period served (min 30 days).' },
-      { title: 'EOSB Calculation', description: 'Calculate End of Service Benefit based on UAE Basic Salary.' },
+      { title: 'Hardware Return', description: 'Collect company-issued laptops, phones, and other assets.' },
+      { title: 'Access Revocation', description: 'Revoke access to IT systems, email, and physical premises.' },
+      { title: 'Notice Period Verification', description: 'Confirm notice period served (30–90 days per contract).' },
+      { title: 'EOSB Calculation (UAE)', description: 'Calculate basis = basic wage only (FDL 33/2021 Arts. 51–53).' },
       { title: 'Annual Leave Encashment', description: 'Calculate and pay accrued but unused annual leave.' },
       { title: 'MoHRE Work Permit Cancellation', description: 'Cancel the work permit via MoHRE system.' },
-      { title: 'Residency Visa Cancellation', description: 'Complete visa cancellation within 30 days of termination.' },
-      { title: 'Final Settlement Statement', description: 'Generate and sign the final settlement statement.' }
+      { title: 'Residency Visa Cancellation', description: 'Complete visa cancellation within 30 days.' },
+      { title: 'Final Settlement Payment (within 14 days)', description: 'Complete final payment within 14 days statutory deadline.' }
     ]
   },
   KSA: {
@@ -36,12 +38,16 @@ const checklistTemplates = {
       { title: 'Privacy Notice Consent', description: 'Capture explicit consent for KSA PDPL compliance (Arabic first).' }
     ],
     offboarding: [
-      { title: 'Notice Period Verification', description: 'Verify notice period (30 days fixed-term / 60 days indefinite).' },
-      { title: 'EOSB Calculation (KSA)', description: 'Calculate EOSB based on Total Monthly Salary (including allowances).' },
+      { title: 'Hardware Return', description: 'Collect company-issued laptops, phones, and other assets.' },
+      { title: 'Access Revocation', description: 'Revoke access to IT systems, email, and physical premises.' },
+      { title: 'Notice Period Verification', description: 'Confirm served or compensated (M/51 Arts. 74–75).' },
+      { title: 'EOSB Calculation (KSA)', description: 'Calculate basis = total monthly salary including allowances (M/51 Art. 84).' },
       { title: 'GOSI De-registration', description: 'Remove employee from GOSI system.' },
-      { title: 'Exit/Re-entry or Final Exit Visa', description: 'Process the final exit visa for the employee.' },
-      { title: 'Iqama Cancellation/Transfer', description: 'Complete Iqama formalities within 90 days.' },
-      { title: 'Service Certificate Issuance', description: 'Issue the mandatory service certificate within 2 weeks.' }
+      { title: 'Iqama Cancellation/Transfer', description: 'Complete Iqama formalities (within 90 days).' },
+      { title: 'Final Exit Visa (or re-entry, if transferring)', description: 'Process visa through Jawazat (must follow Iqama).' },
+      { title: 'Service Certificate Issuance', description: 'Issue mandatory service certificate (within 2 weeks).' },
+      { title: 'Annual Leave Encashment', description: 'Calculate and pay accrued but unused annual leave.' },
+      { title: 'Final Settlement Payment', description: 'Pay salary + EOSB + leave + notice (within statutory deadline).' }
     ]
   }
 };
@@ -101,20 +107,29 @@ function renderTemplate(templateContent, data) {
     'full_name': data.full_name,
     'full_name_arabic': data.full_name_arabic || data.full_name, // Fallback if no Arabic name
     'dob': data.dob,
-    'nationality': data.nationality,
-    'passport_no': data.passport_no,
-    'national_id': data.national_id,
-    'start_date': data.start_date,
-    'end_date': data.end_date || '[End Date]',
-    'basic_salary': data.basic_salary,
-    'total_salary': data.total_salary,
-    'employee_id': data.employee_id,
-    'role': data.role || '[Job Title]',
-    'department': data.department || '[Department]',
-    'contract_no': data.contract_no || `CTR-${Math.floor(100000 + Math.random() * 900000)}`,
-    'termination_reason': data.termination_reason || '[Termination Reason]',
+    'nationality': data.nationality || 'not calculated',
+    'passport_no': data.passport_no || 'not calculated',
+    'national_id': data.national_id || 'not calculated',
+    'start_date': data.start_date || 'not calculated',
+    'end_date': data.end_date || 'not calculated',
+    'basic_salary': data.basic_salary || '0.00',
+    'total_salary': data.total_salary || '0.00',
+    'employee_id': data.employee_id || 'not calculated',
+    'role': data.role || 'not calculated',
+    'department': data.department || 'not calculated',
+    'contract_no': data.contract_no || 'not calculated',
+    'termination_reason': data.termination_reason || 'not calculated',
+    'final_pro_rated_salary': data.final_pro_rated_salary || 'not calculated',
+    'unused_leave_amount': data.unused_leave_amount || 'not calculated',
     'eosb_amount': data.eosb_amount || '0.00',
+    'notice_pay': data.notice_pay || 'not calculated',
+    'ticket_allowance': data.ticket_allowance || 'not calculated',
+    'other_payments': data.other_payments || '0.00',
     'gross_settlement': data.gross_settlement || '0.00',
+    'loan_deduction': data.loan_deduction || '0.00',
+    'assets_deduction': data.assets_deduction || '0.00',
+    'fine_deduction': data.fine_deduction || '0.00',
+    'total_deductions': data.total_deductions || '0.00',
     'net_settlement': data.net_settlement || '0.00',
     'probation_period': data.probation_period || '6',
     'visa_status': data.visa_status || 'Employment Visa',
