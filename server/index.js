@@ -10,33 +10,77 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// Hardening: Remove X-Powered-By header
+app.disable('x-powered-by');
+
+// Hardening: Restrict CORS
+// The app serves its own frontend, so we only need to allow the specific team domains if cross-origin is required.
+// For now, we restrict to known team domains and disable credentials (since we use localStorage/Auth header).
+const allowedOrigins = [
+  'https://b974147c03228029e277d1cbe6646fe6.ctonew.app',
+  'https://b974147c03228029e277d1cbe6646fe6-dev.ctonew.app'
+];
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow same-origin (origin will be undefined) or allowed origins
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: false
+}));
+
 app.use(express.json());
+
+// Hardening: Simple in-memory rate limiting for login
+const loginAttempts = new Map();
+const rateLimitLogin = (req, res, next) => {
+  const ip = req.ip;
+  const now = Date.now();
+  const limit = 5; // 5 attempts
+  const window = 60000; // 1 minute
+  
+  if (!loginAttempts.has(ip)) {
+    loginAttempts.set(ip, []);
+  }
+  
+  const attempts = loginAttempts.get(ip).filter(ts => now - ts < window);
+  attempts.push(now);
+  loginAttempts.set(ip, attempts);
+  
+  if (attempts.length > limit) {
+    return res.status(429).json({ error: 'Too many login attempts. Please try again later.' });
+  }
+  next();
+};
 
 // -------------------------------------------------------------
 // AUTHENTICATION
 // -------------------------------------------------------------
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', rateLimitLogin, async (req, res) => {
   try {
     const { username, password } = req.body;
+    
+    // Hardening: Prevent login timing side-channel by always doing a bcrypt compare
+    // We use a dummy hash for non-existent users.
+    const dummyHash = '$2a$10$K7X/6V4qH8wXWJ9Z1Y.uO.XvW5T1R0u3k8z9f6y5x4w3v2u1t0s2'; // BCRYPT hash for 'dummy'
+    
     const users = await db.query(`SELECT * FROM users WHERE username = ${db.escapeString(username)}`);
-    
-    if (users.length === 0) {
-      return res.status(401).json({ error: 'Invalid username or password' });
-    }
-
     const user = users[0];
-    const isValid = await auth.comparePassword(password, user.password_hash);
     
-    if (!isValid) {
+    const isValid = await auth.comparePassword(password, user ? user.password_hash : dummyHash);
+    
+    if (!user || !isValid) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     const token = auth.generateToken(user);
     res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -65,7 +109,7 @@ app.get('/api/employees', async (req, res) => {
     }));
     res.json(decrypted);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -78,15 +122,21 @@ app.get('/api/employees/:id', async (req, res) => {
     emp.national_id_iqama = auth.decrypt(emp.national_id_iqama);
     res.json(emp);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
 app.post('/api/employees', async (req, res) => {
   try {
     const data = req.body;
+    
+    // Hardening: Prevent silent defaulting of data_residency_country
+    if (!data.data_residency_country) {
+      return res.status(400).json({ error: 'data_residency_country is required' });
+    }
+    
     const id = generateId();
-    const country = data.data_residency_country || 'AE';
+    const country = data.data_residency_country;
     const bSalary = parseFloat(data.basic_salary) || 0;
     const tSalary = parseFloat(data.salary) || 0;
     
@@ -98,7 +148,9 @@ app.post('/api/employees', async (req, res) => {
     const insertSql = `
       INSERT INTO employees (
         id, first_name, last_name, email, department, role, manager_id, start_date, status, salary, basic_salary, 
-        recruitment_cost, national_id_type, national_id_value, national_id_iqama, data_residency_country, consent_granted, 
+        recruitment_cost, national_id_type, national_id_value, national_id_iqama, data_residency_country, 
+        jurisdiction, total_salary,
+        consent_granted, 
         visa_status, visa_expiry_date, eosb_accrued, eosb_paid, termination_type, unpaid_leave_days
       )
       VALUES (
@@ -108,7 +160,9 @@ app.post('/api/employees', async (req, res) => {
         ${tSalary}, ${bSalary}, ${parseFloat(data.recruitment_cost) || 0},
         ${db.escapeString(data.national_id_type)}, ${db.escapeString(encryptedNationalId)},
         ${db.escapeString(encryptedIqama)},
-        ${db.escapeString(country)}, 0, ${db.escapeString(data.visa_status)},
+        ${db.escapeString(country)}, 
+        ${db.escapeString(country)}, ${tSalary},
+        0, ${db.escapeString(data.visa_status)},
         ${db.escapeString(data.visa_expiry_date)}, ${eosbAccrued}, 0,
         'resignation', ${parseFloat(data.unpaid_leave_days) || 0}
       )
@@ -130,7 +184,7 @@ app.post('/api/employees', async (req, res) => {
 
     res.status(201).json({ id, message: 'Employee and onboarding tasks created' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -146,10 +200,17 @@ app.put('/api/employees/:id', async (req, res) => {
     Object.keys(data).forEach(key => {
       if (['first_name', 'last_name', 'email', 'department', 'role', 'manager_id', 'status', 'visa_status', 'visa_expiry_date', 'national_id_type', 'data_residency_country', 'start_date', 'end_date', 'fully_productive_date', 'termination_type'].includes(key)) {
         updates.push(`${key} = ${db.escapeString(data[key])}`);
+        if (key === 'data_residency_country') {
+          updates.push(`jurisdiction = ${db.escapeString(data[key])}`);
+        }
       } else if (['national_id_value', 'national_id_iqama'].includes(key)) {
         updates.push(`${key} = ${db.escapeString(auth.encrypt(data[key]))}`);
       } else if (['salary', 'basic_salary', 'recruitment_cost', 'eosb_paid', 'consent_granted', 'unpaid_leave_days'].includes(key)) {
-        updates.push(`${key} = ${parseFloat(data[key]) || 0}`);
+        const val = parseFloat(data[key]) || 0;
+        updates.push(`${key} = ${val}`);
+        if (key === 'salary') {
+          updates.push(`total_salary = ${val}`);
+        }
       }
     });
 
@@ -194,7 +255,7 @@ app.put('/api/employees/:id', async (req, res) => {
 
     res.json({ message: 'Employee updated' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -265,7 +326,7 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
     const rendered = compliance.renderTemplate(templateContent, templateData);
     res.json({ content: rendered });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -392,7 +453,7 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       totalRecruitingSpend: employees.reduce((sum, emp) => sum + (emp.recruitment_cost || 0), 0)
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

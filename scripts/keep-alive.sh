@@ -61,13 +61,22 @@ check_health() {
         return 1 # Nothing listening
     fi
 
-    # Check if it's our server
-    # Use --noproxy '*' as instructed to avoid hanging
-    TITLE=$(curl -s --noproxy '*' --max-time 5 http://127.0.0.1:3000 | grep -o "<title>Antum People</title>")
-    if [ "$TITLE" == "<title>Antum People</title>" ]; then
-        return 0 # Healthy
+    # Hardening: Assert the login contract instead of just the page title.
+    # A healthy server returns 401 with a specific JSON error for a wrong password.
+    # We use --noproxy '*' and 127.0.0.1 to avoid proxy issues.
+    # We check for the specific error message to ensure it's NOT a spoofed stub serving 200/title.
+    LOGIN_RESPONSE=$(curl -s -i --noproxy '*' --max-time 5 \
+        -X POST http://127.0.0.1:3000/api/login \
+        -H "Content-Type: application/json" \
+        -d '{"username":"healthcheck-probe","password":"wrong-password"}' 2>/dev/null)
+
+    # Check for 401 status and the specific error JSON
+    if echo "$LOGIN_RESPONSE" | grep -q "HTTP/.* 401" && \
+       echo "$LOGIN_RESPONSE" | grep -q '{"error":"Invalid username or password"}'; then
+        return 0 # Healthy (Auth contract confirmed)
     else
-        return 2 # Foreign process
+        # If it returns 200 or doesn't match the contract, it might be a spoof or broken
+        return 2 # Foreign/Spoofed process
     fi
 }
 
