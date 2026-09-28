@@ -83,6 +83,7 @@ module.exports = {
   encrypt,
   decrypt,
   hashPassword: (password) => bcrypt.hash(password, 10),
+  hashPasswordSync: (password, cost = 10) => bcrypt.hashSync(password, cost),
   comparePassword: (password, hash) => bcrypt.compare(password, hash),
   generateToken: (user) => jwt.sign(
     { id: user.id, username: user.username, role: user.role },

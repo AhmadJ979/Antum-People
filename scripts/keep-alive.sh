@@ -1,138 +1,66 @@
 #!/bin/bash
 
-# Antum People Self-Healing Loop
-# 
-# ARMING THE LOOP:
-#   nohup ./scripts/keep-alive.sh &
-# 
-# CHECKING STATUS:
-#   tail -f /home/team/shared/probable-octo-sniffle/server/keep-alive.log
-#   Check for the lock file: ls -l /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
-# 
-# RECLAIMING / STOPPING:
-#   Kill the script PID (stored in the lock file) or use: pkill -f keep-alive.sh
-#   The lock is held via flock on a file descriptor and will be automatically released
-#   if the script process dies.
-# 
-# NOTE: This loop cannot survive a host restart on its own (no crontab/systemd hooks).
-# Re-arming after a host restart is a manual step.
-# For non-root users: Ensure you have read access to secrets or they are exported in your shell.
+# Antum People - Watchdog Script
+# Ensures the application stays up and running.
+# Usage: ./keep-alive.sh [port]
 
-DEPLOY_DIR="/home/team/shared/probable-octo-sniffle"
-LOG_FILE="$DEPLOY_DIR/server/keep-alive.log"
-SERVER_LOG="$DEPLOY_DIR/server/server.log"
-LOCK_FILE="$DEPLOY_DIR/server/keep-alive.lock"
+PORT=${1:-3000}
+PROJECT_ROOT="/home/team/shared/site"
+LOCK_FILE="/home/team/shared/keep-alive.lock"
 
-# Ensure log directory exists
-mkdir -p "$(dirname "$LOG_FILE")"
-
-# Ensure lock file exists and is group-writable so any team user can acquire the lock
-touch "$LOCK_FILE" 2>/dev/null
-chmod 664 "$LOCK_FILE" 2>/dev/null || true
-
-# Single instance lock
-# Using a file descriptor for flock to ensure the lock is released if the script is killed.
-exec 9<>"$LOCK_FILE"
-if ! flock -n 9; then
-    # Lock is held by another active process.
-    LOCK_PID=$(cat "$LOCK_FILE" | tr -d '[:space:]')
-    echo "$(date -Iseconds) Another instance (PID: ${LOCK_PID:-unknown}) is already running. Exiting." >> "$LOG_FILE"
+# Single instance lock using flock
+exec 200>$LOCK_FILE
+if ! flock -n 200; then
+    echo "Another watchdog is already running."
     exit 1
 fi
 
-# We have the lock. Write our PID to the file for visibility.
-echo $$ > "$LOCK_FILE"
-
-# Source environment variables for secrets (JWT_SECRET, ENCRYPTION_KEY)
-if [ -f "/etc/profile.d/cto-env-vars.sh" ]; then
-    source /etc/profile.d/cto-env-vars.sh
-    echo "$(date -Iseconds) Environment variables sourced from /etc/profile.d/cto-env-vars.sh" >> "$LOG_FILE"
-fi
-
-# Loud secret fail: do not start if core secrets are missing
-if [ -z "$JWT_SECRET" ] || [ -z "$ENCRYPTION_KEY" ]; then
-    echo "$(date -Iseconds) ERROR: JWT_SECRET or ENCRYPTION_KEY is missing. Loop refusing to start." >> "$LOG_FILE"
-    exit 1
-fi
+echo "Armed watchdog for port $PORT (PID $$)"
 
 check_health() {
-    # Check if port 3000 is listening using lsof (ss is missing on this host)
-    if ! lsof -i :3000 -sTCP:LISTEN -t > /dev/null; then
+    # Check if anything is listening on the port
+    if ! lsof -i :$PORT >/dev/null 2>&1; then
         return 1 # Nothing listening
     fi
 
     # Hardening: Assert the login contract instead of just the page title.
-    # A healthy server returns 401 with a specific JSON error for a wrong password.
-    # We use --noproxy '*' and 127.0.0.1 to avoid proxy issues.
-    # We check for the specific error message to ensure it's NOT a spoofed stub serving 200/title.
-    LOGIN_RESPONSE=$(curl -s -i --noproxy '*' --max-time 5 \
-        -X POST http://127.0.0.1:3000/api/login \
-        -H "Content-Type: application/json" \
-        -d '{"username":"healthcheck-probe","password":"wrong-password"}' 2>/dev/null)
+    # We probe /api/employees (protected route) which is NOT rate-limited by failure-only logic.
+    # A healthy server returns 401 with "Authentication token required".
+    # This proves the server is running our code and responding to authenticated routes.
+    HEALTH_RESPONSE=$(curl -s -i --noproxy '*' --max-time 5 http://127.0.0.1:$PORT/api/employees 2>/dev/null)
 
-    # Check for 401 status and the specific error JSON
-    if echo "$LOGIN_RESPONSE" | grep -q "HTTP/.* 401" && \
-       echo "$LOGIN_RESPONSE" | grep -q '{"error":"Invalid username or password"}'; then
-        return 0 # Healthy (Auth contract confirmed)
+    if echo "$HEALTH_RESPONSE" | grep -q "HTTP/.* 401" && \
+       echo "$HEALTH_RESPONSE" | grep -q '{"error":"Authentication token required"}'; then
+        return 0 # Healthy
     else
-        # If it returns 200 or doesn't match the contract, it might be a spoof or broken
-        return 2 # Foreign/Spoofed process
+        return 2 # Foreign or broken process
     fi
-}
-
-rebuild_client() {
-    echo "$(date -Iseconds) rebuilding client bundle..." >> "$LOG_FILE"
-    cd "$DEPLOY_DIR/client"
-    npm ci --no-fund --no-audit
-    NODE_OPTIONS=--max-old-space-size=560 npm run build
 }
 
 start_server() {
-    echo "$(date -Iseconds) starting server on port 3000" >> "$LOG_FILE"
-    cd "$DEPLOY_DIR/server"
-    if [ ! -d "node_modules" ]; then
-        npm install
-    fi
-    # Explicitly set PORT=3000 to avoid inheritance of PORT=80
-    PORT=3000 setsid nohup node index.js >> "$SERVER_LOG" 2>&1 &
+    echo "Starting server on port $PORT..."
+    cd $PROJECT_ROOT
+    # Ensure dependencies are installed
+    npm install >/dev/null 2>&1
+    # Start the server in the background
+    PORT=$PORT npm start > /home/team/shared/server.log 2>&1 &
+    # Give it a few seconds to boot
+    sleep 5
 }
-
-# Initial delay to let the system settle after boot
-sleep 10
 
 while true; do
     check_health
     HEALTH=$?
-    if [ $HEALTH -eq 0 ]; then
-        # Healthy, do nothing
-        :
-    elif [ $HEALTH -eq 2 ]; then
-        # Foreign process
-        FOREIGN_PID=$(lsof -t -i :3000)
-        if [ -n "$FOREIGN_PID" ]; then
-            FOREIGN_CMD=$(ps -p "$FOREIGN_PID" -o command=)
-            echo "$(date -Iseconds) port 3000 held by foreign process (PID: $FOREIGN_PID, CMD: $FOREIGN_CMD) - killing it" >> "$LOG_FILE"
-            kill -9 "$FOREIGN_PID"
-            sleep 2
-            start_server
-        fi
-    else
-        # HEALTH=1 (Nothing listening)
-        echo "$(date -Iseconds) port 3000 empty - starting recovery" >> "$LOG_FILE"
-        if [ ! -f "$DEPLOY_DIR/client/dist/index.html" ]; then
-            rebuild_client
-        fi
-        # Is a node index.js already running?
-        if ! pgrep -f "node index.js" | grep -v "$$" > /dev/null; then
-            start_server
+    if [ $HEALTH -ne 0 ]; then
+        if [ $HEALTH -eq 1 ]; then
+            echo "Server down. Restarting..."
         else
-            # Process exists but not responding on 3000
-            SERVER_PID=$(pgrep -f "node index.js" | head -n 1)
-            echo "$(date -Iseconds) server process ($SERVER_PID) exists but port 3000 is not responding - killing and restarting" >> "$LOG_FILE"
-            kill -9 "$SERVER_PID"
+            echo "Port $PORT occupied by foreign process or server unresponsive. Killing and restarting..."
+            # Kill process using the port
+            fuser -k $PORT/tcp >/dev/null 2>&1
             sleep 2
-            start_server
         fi
+        start_server
     fi
-    sleep 60
+    sleep 30
 done
