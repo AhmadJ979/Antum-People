@@ -5,165 +5,151 @@
 > **Total runtime:** 10 minutes (4 segments + close). Timings are targets, not walls.
 > **Presenter:** Founder-led (Ahmad's HR network) — technical detail available, but lead with outcomes.
 
-> ⚠️ **Verification status — internal (for the presenter, not read aloud):**
-> - **The sign-in screen is live and verified** (lead-confirmed 2026-09-22, re-checked today against the live build): the public root renders a working sign-in screen, a wrong password returns a clean inline **"Invalid username or password"**, and a correct login lands on the **Executive Dashboard** with the onboarding and offboarding pipelines populated.
-> - **Verified click-through sequence (presenter order):** sign in → **Executive Dashboard** (the four KPI cards + the onboarding/offboarding pipeline lists) → **Employee Directory** → **Transitions Hub** → a per-employee **Compliance Center** → the **document previews** (privacy notice, labor contract, settlement statement).
-
-> ⚠️ **KNOWN ISSUE — DELETE THIS LINE ONCE THE KPI FIX SHIPS:** measured today, all four headline cards read zero or empty — Cost-per-Hire **$0**, EOSB Liability **$0** ("AE 0 · SA 0"), Time-to-Value **0 d** — even though the pipelines below list real records. The engineer is fixing the records and the aggregate. Until that PR lands, open the demo on the **pipeline and per-employee views**, and describe the KPI cards as **sample data**, not the prospect's numbers.
+> ⚠️ **Verification status — internal (for the presenter, not read aloud).** Re-walked end-to-end by the Product Designer on 2026-09-27 against a local instance of current `main` (982f1e6), seeded with the standard demo dataset. Sign-in works (wrong password → clean "Invalid username or password"; correct login → Executive Dashboard). The four tabs are: **Executive Dashboard → Employee Directory → Transitions Hub → Strategic Intelligence**. The demo now shows **9 employees (5 UAE + 4 KSA)**, a populated **offboarding pipeline** for the departing employee, and **computed** (not zero) dashboard figures.
+>
+> **This script matches what the screen actually shows today.** Do not describe a screen you haven't just seen; if anything looks different on the call, follow the *Caveats & guardrails* section rather than improvising numbers.
 
 ---
 
 ## Before you start — 30-second prep checklist
 
-- [ ] **Confirm the live app loads** at https://b974147c03228029e277d1cbe6646fe6.ctonew.app before the call.
-- [ ] **Sign in (verified live)** at https://b974147c03228029e277d1cbe6646fe6.ctonew.app — the demo account is **`admin`**, password **supplied separately by Ahmad**. Do a test login ahead of the call; never write the password into this file.
-- [ ] Confirm the app is showing **seeded demo data** (UAE + KSA employees, with active onboarding and offboarding cases).
-- [ ] Have two tabs ready to hot-switch: the **live app** (https://b974147c03228029e277d1cbe6646fe6.ctonew.app) and the **bilingual prototype** (`design-concepts/intelligence-dashboard-prototype.html`).
+- [ ] **Confirm the live app loads** at https://b974147c03228029e277d1cbe6646fe6.ctonew.app before the call (200, renders the sign-in screen).
+- [ ] **Sign in** at https://b974147c03228029e277d1cbe6646fe6.ctonew.app — demo account **`admin`**, password **supplied separately by Ahmad**. Do a test login ahead of the call; **never write the password into this file.**
+- [ ] Confirm the app is showing **seeded sample data** (9 employees, UAE + KSA, one active onboarding and one active offboarding case). You'll see an amber **"Sample Demo Data"** badge in the header — that's expected, and you'll own it in Segment 1.
+- [ ] Have two tabs ready to hot-switch: the **live app** and the **bilingual prototype** (`design-concepts/intelligence-dashboard-prototype.html`).
 - [ ] PDFs printed or open in a viewer: `templates/privacy-notice.pdf`, `templates/data-processing-agreement.pdf`, `templates/dpia-questionnaire.pdf`.
 - [ ] Know your honest caveats (see *Caveats & guardrails* at the end) — you will be asked.
-- [ ] Pre-select one **UAE example** and one **KSA example** employee for the EOSB side-by-side.
+- [ ] Pre-select one **UAE example** (e.g. Leila Mansour, Engineering) and one **KSA example** (e.g. Sarah Al-Qasimi, offboarding) for the jurisdiction side-by-side.
+- [ ] **Memorize the "don't click" list:** do not open the **Settlement Statement** document preview in a live demo (see Caveat 6) — it is still an unfilled template. Use **Privacy Notice** and **Labor Contract** for document previews instead.
 
 ### What's live vs. what's a design prototype (know this cold)
 
-| Surface | Status | File/screen |
+| Surface | Status | Where |
 |---|---|---|
-| Executive Dashboard, Employee Directory, Transitions Hub, Strategic Intelligence | **Live build** | https://b974147c03228029e277d1cbe6646fe6.ctonew.app (after login) |
-| Dashboard KPIs (Retention Lift, Time-to-Value, Cost-per-Hire, EOSB Liability) | **Live, computed** | `GET /api/analytics/dashboard` |
-| Onboarding/offboarding checklists (UAE & KSA) | **Live logic** | `server/compliance_engine.js` (`checklistTemplates`) |
-| EOSB engine (UAE basic-salary vs KSA total-salary) | **Live logic** | `server/index.js` (`calculateEOSB`) |
+| Sign-in, Executive Dashboard, Employee Directory, Transitions Hub, Strategic Intelligence | **Live build** | public URL, after login |
+| Dashboard KPIs (Retention Lift, Time-to-Value, Cost-per-Hire, EOSB Liability) | **Live, computed from sample data** | Executive Dashboard |
+| Onboarding / offboarding checklists | **Live logic + seeded tasks** | Employee Directory → per-employee detail |
+| EOSB engine (UAE basic-salary vs KSA total-salary) | **Live logic** | `server/eosb.js`, `server/index.js` |
 | Per-employee Compliance Center (consent status, EOSB basis, document previews) | **Live build** | Employee Directory detail |
 | Consent capture, compliance report, template render | **Live endpoints** | `/api/compliance/consent`, `/report`, `/templates/:name/:id` |
-| Compliance dashboard (DSR, breach register, consent audit) | **Design spec** | `design-concepts/COMPLIANCE-AUDIT-UI.md` + `COMPLIANCE-UI.md` |
+| Exit-interview *intake* form | **Live form**, but captured data is not yet surfaced in any view | "Initiate Exit" → "Finalize Offboarding" modal |
+| Compliance dashboard (DSR, breach register, consent audit) | **Design spec** | `design-concepts/COMPLIANCE-AUDIT-UI.md`, `COMPLIANCE-UI.md` |
 | Bilingual EN/AR RTL dashboard | **Interactive prototype** | `design-concepts/intelligence-dashboard-prototype.html` |
 
 ---
 
-# Segment 1 — Onboarding, jurisdiction-aware (0:00 – 2:30)
+# Segment 1 — Executive Dashboard, "one number the CFO would act on" (0:00 – 2:30)
 
-**Goal:** Show that onboarding is *one flow* that adapts to UAE vs KSA law, and that consent is captured as data — not a PDF afterthought.
+**Goal:** Land the strategic value in the first 90 seconds — this is not a compliance checklist tool, it's a workforce-economics view for leadership.
 
 ### Click path
-1. Sidebar → **Transitions Hub** (`activeTab === 'transitions'`).
-2. Point at **"Ramping Employees (Onboarding)"** card.
-3. Click an employee in the **Ramping Employees (Onboarding)** list → lands in **Employee Directory** with that employee's checklist open.
-4. Open the **onboarding checklist** (`GET /api/employees/:id/onboarding`).
-5. Switch between a **UAE** and a **KSA** employee to show the checklist re-renders by jurisdiction (the list is driven by each employee's jurisdiction, not a manual toggle).
-6. Point at the **Compliance Center** panel: the **Privacy Consent (PDPL)** status and the last checklist task, **"Privacy Notice Consent"**.
+1. Sign in → lands on **Executive Dashboard** (default tab).
+2. Point at the four headline cards across the top: **Retention Lift**, **Time-to-Value**, **Cost-per-Hire**, **EOSB Liability**.
+3. Point at the two pipeline cards below: **Onboarding Pipeline** and **Offboarding Pipeline**.
+4. Call out the **"Sample Demo Data"** badge in the header *before* they ask.
 
-### What the customer sees
-- UAE checklist: *MoHRE Contract Signing → Entry Permit → Medical Fitness → Emirates ID Biometrics → Residence Visa Stamping → WPS Registration → Privacy Notice Consent.*
-- KSA checklist: *Qiwa Job Offer Acceptance → Qiwa Employment Contract → Medical Exam → Iqama Issuance → GOSI Registration → Mudad Enrollment → Privacy Notice Consent (Arabic first).*
-- Consent is tracked as a record with lawful basis + version (v2.0), shown in the Compliance Center as GRANTED / MISSING.
+### What the customer sees (as of 2026-09-27)
+- **Retention Lift (1-yr):** `+17%`, labelled `Illustrative Benchmark`.
+- **Time-to-Value:** `16.3 d`, labelled `Illustrative`, with `target: 15 days`.
+- **Cost-per-Hire:** `AE 9,000 AED` / `SA 4,750 SAR`, labelled `Illustrative Benchmark`.
+- **EOSB Liability:** `AE … AED` / `SA … SAR` (accrued to date, split by jurisdiction).
+- **Onboarding Pipeline:** one ramping employee (Omar Al-Farsi, Finance Analyst).
+- **Offboarding Pipeline:** one departing employee (Sarah Al-Qasimi, Recruitment Specialist), "Exit Pending".
+- The header carries an amber **"Sample Demo Data"** badge on every screen.
 
 ### Speaker notes
-> "Every market has a checklist. The difference is ours are wired to the *right* regulator — MoHRE and WPS here, Qiwa and Mudad there. A new hire in Riyadh should never see a Dubai visa step. And notice the last item on both lists: consent isn't a form you chase later, it's captured in-flow, tagged to the privacy-notice version. That's what makes an audit trivial instead of a fire drill."
+> "This is the screen your CFO would look at before a board meeting. Four numbers, but they're the four that move workforce cost: what it costs to hire, how long a hire takes to become productive, how much end-of-service we're carrying on the books, and whether people are staying. To be straight with you up front: **this is a seeded sample dataset**, not a live client's numbers — that's what the 'Sample Demo Data' badge is telling you. A few of the cards are marked 'Illustrative' because the benchmark line they're compared against is a placeholder, not a market index yet. What's real is the *calculation* underneath — the EOSB and cost-per-hire numbers are computed from the roster, per jurisdiction, not typed in."
 
 ### Anticipated questions
-**Q: "Does it actually connect to Qiwa/MoHRE, or do we tick boxes manually?"**
-A: Today the checklist is the system of record that your HR team drives; it encodes the *sequence and compliance rules* of each regulator. Direct Qiwa/MoHRE API integration is on the roadmap — during the pilot we'd map your current manual steps so nothing is double-keyed.
+**Q: "Why do some cards say 'Illustrative'?"**
+A: The figures themselves are computed from the sample data; the word "Illustrative" is on the *benchmark/forecast* comparison — we haven't connected a real external market benchmark yet. In the pilot we'd replace the illustrative benchmark with your own historical data, which is the honest upgrade path.
 
-**Q: "What if we hire someone on a different visa type?"**
-A: The engine branches on jurisdiction + transition type, so adding a visa category is a template change, not a code change — that's exactly the kind of customization the pilot is designed to capture.
-
-**Q: "How do we prove consent was captured if there's a dispute?"**
-A: Every consent write creates a `consent_records` row (who, when, which version, lawful basis), and the employee record shows consent status up front. A dedicated consent-audit screen is on the roadmap.
+**Q: "Is the EOSB number UAE and Saudi together?"**
+A: It's split — the card shows AE (on basic salary) and SA (on total salary) separately, because the two regimes accrue differently. That split is the point: you shouldn't lump them.
 
 ---
 
-# Segment 2 — EOSB calculator, UAE vs KSA (2:30 – 5:00)
+# Segment 2 — Employee Directory + the per-employee Compliance Center (2:30 – 5:00)
 
-**Goal:** Prove the two GCC EOSB regimes are handled *correctly* (not "close enough"), with the jurisdiction-specific basis shown per employee.
+**Goal:** Show the jurisdiction-aware checklists *and* that compliance lives inside the employee record — with the consent and EOSB basis visible up front.
 
 ### Click path
-1. From **Employee Directory**, open a **UAE** employee → note **Gratuity Accrued** in the directory row and **EOSB Calculation Basis: Basic Salary (UAE Rule)** in the **Compliance Center**.
-2. Note the basis: **Basic Salary** — with tiered resignation discount.
-3. Open a **KSA** employee → note the same two fields.
-4. Note the basis: **Total Salary (incl. allowances)** — half a month per year for the first five years and a full month after, with no resignation reduction.
-5. Point at the **EOSB Liability** card on the **Executive Dashboard** — the roster-wide accrued total.
-6. Note the accrual is computed by `calculateEOSB` and updates as service time grows — not a black box.
+1. Sidebar → **Employee Directory**.
+2. Point at the table (9 rows, with region flags 🇦🇪/🇸🇦 and a **Gratuity Accrued** column).
+3. Click **Omar Al-Farsi** (onboarding) → his **Onboarding Checklist** opens with 3 tasks.
+4. Click **Sarah Al-Qasimi** (offboarding) → her **Offboarding Checklist** opens with 4 tasks (Hardware Return is checked/completed; the other three are pending).
+5. Point at the right-hand **Compliance Center** panel: **Privacy Consent (PDPL)**, **EOSB Calculation Basis**, and the **Document Previews** (Privacy Notice, Labor Contract, and Settlement Statement for the departing employee).
 
 ### What the customer sees
-- UAE: 21 days/yr for first 5 years, 30 days/yr after; resignation discounts ⅓ (1–3 yr) and ⅔ (3–5 yr); capped at 2 years' basic salary.
-- KSA: half-month/yr for first 5 years, full month after; no resignation reduction; pro-rated from day one.
-- Both: a per-employee accrued gratuity figure and the jurisdiction-specific basis, computed by the shared `calculateEOSB` engine.
+- Onboarding checklist (Omar): *MoHRE Contract Signing (done) → Medical Insurance Application → Visa Stamping*.
+- Offboarding checklist (Sarah): *Hardware Return (done) → Access Revocation → Final Settlement Calculation → Visa Cancellation (KSA)*.
+- Compliance Center: consent status (`GRANTED`), EOSB basis **"Total Salary (KSA Rule)"** for Sarah vs **"Basic Salary (UAE Rule)"** for a UAE employee.
+- Document previews render the Privacy Notice and Labor Contract with the employee's name filled in.
 
 ### Speaker notes
-> "EOSB is where a wrong assumption costs real money. In the UAE you accrue on *basic* salary; in Saudi you accrue on *total* salary including allowances. Get that backwards and you're over- or under-provisioning across hundreds of employees. Watch what happens when I switch between a UAE and a KSA employee — same role, materially different number. And it's not a black box: the basis is shown per employee, and the accrued figure is the number finance should be reviewing before it's ever paid."
+> "Watch what happens when I switch between a UAE and a Saudi employee — the checklist itself changes, because it's driven by jurisdiction, not a manual toggle. A Riyadh hire never sees a Dubai visa step. And look at the right-hand panel: consent status, the EOSB calculation basis, and the actual documents, all inside the employee record instead of a separate binder."
+> *(If the consent line shows a blank date after "GRANTED ON" — a known cosmetic display bug — say:)* "Consent is tracked; the date field has a display glitch we're already fixing. The record itself is there."
 
 ### Anticipated questions
-**Q: "How often is the formula updated when labor law changes?"**
-A: The rules live in one place — `calculateEOSB` and the compliance engine — and our compliance lead reviews them against current UAE/KSA law. In the pilot we'd sign off on your specific contract types and edge cases.
+**Q: "Does it connect to Qiwa/MoHRE, or do we tick boxes manually?"**
+A: Today the checklist is the system of record your HR team drives, and it encodes the sequence and compliance rules of each regulator. Direct Qiwa/MoHRE API push is on the roadmap — during the pilot we'd map your current manual steps so nothing is double-keyed.
 
-**Q: "What about notice periods and unpaid leave?"**
-A: Both are tracked — notice periods feed the EOSB effective date, and UAE's >90-day unpaid-leave exclusion is modeled. (Note: per our compliance spec, an unserved-notice period is compensated as a separate settlement line equal to the wage for the unserved period — confirm with the engineer whether your build enforces it before promising it live.) We'll validate those against your actual cases during the pilot.
-
-**Q: "Can we see the liability *before* someone leaves?"**
-A: Yes — the strategic view rolls up every employee's accrued EOSB into a single liability figure, which is the cash-flow conversation you should be having before terminations, not after. *(Bridge into Segment 4/close.)*
-
-> ⚠️ **Caveat to hold:** the *quarterly forecast* is a projection using growth multipliers. Do not quote forecast numbers as committed figures — tell the customer "finance should review these assumptions before they're used in a budget." See *Caveats*.
+**Q: "Why does the KSA basis say 'Total Salary'?"**
+A: Because that's the rule — UAE accrues EOSB on basic salary, Saudi on total salary including allowances. Get that backwards and you're over- or under-provisioning across hundreds of people. The basis is shown per employee so finance can check it.
 
 ---
 
-# Segment 3 — Compliance in the product (5:00 – 7:30)
+# Segment 3 — Transitions Hub (5:00 – 6:30)
 
-**Goal:** Show compliance is built into the flow — PDPL consent status, jurisdiction-specific EOSB basis, and ready-to-render documents — and be honest that the full DSR/breach dashboard is on the roadmap.
+**Goal:** Show onboarding and offboarding as two managed pipelines, not two piles of paper.
 
 ### Click path
-1. From an open **employee record**, point at the **Compliance Center** panel (right-hand side of Employee Directory).
-2. **Privacy Consent (PDPL)** — show the status: **GRANTED** (with date) vs **MISSING / REQUIRED**.
-3. **EOSB Calculation Basis** — show **Basic Salary (UAE Rule)** vs **Total Salary (KSA Rule)**.
-4. **Document Previews** — open the **Privacy Notice**, the **Labor Contract** (UAE or KSA), and the **Settlement Statement** (for departing employees).
-5. If asked, be explicit that the fuller DSR-management, breach-register and consent-audit screens are specified in `design-concepts/COMPLIANCE-AUDIT-UI.md` but are **not yet built** in the live app.
+1. Sidebar → **Transitions Hub**.
+2. Point at **"Ramping Employees (Onboarding)"** (Omar Al-Farsi).
+3. Point at **"Departing Employees (Offboarding)"** (Sarah Al-Qasimi).
+4. Click either card to jump back into that employee's checklist in the Directory.
 
 ### What the customer sees
-- Per-employee consent status, tied to the privacy-notice version.
-- The EOSB basis matching the employee's jurisdiction.
-- Rendered document previews (privacy notice, labor contract, settlement statement) populated with the employee's data.
-- *(Roadmap, not live:)* DSR management, breach register, consent audit trail — design specs only.
+- Two lists side by side: who is ramping, who is departing.
+- Omar shows a day counter since start ("Day 193" in the current seed — note this is a data quirk, see below).
+- Sarah shows an "EXIT" label (her exit date is still pending in the sample data, so the date is blank).
 
 ### Speaker notes
-> "Compliance lives *inside* the employee record, not in a separate binder. The moment you open someone, you see whether their PDPL consent is on file, which EOSB basis applies to their jurisdiction, and you can pull up the actual privacy notice and contract with their data already filled in. The deeper tooling — DSR case management with its 30-day clock, the 72-hour breach timer — is specified and on the roadmap, and I'll be straight with you that those screens aren't live yet."
+> "This is the operational view your HR team lives in — everyone in motion in one place. The ramping list is who's onboarding, the departing list is who's offboarding. Click through and you're in that person's checklist with their compliance status."
+> *(Pre-empt the blank exit date:)* "Sarah's exit date is blank because in this sample her offboarding is still in flight — once it's finalized, the date and the settlement figures fill in."
 
 ### Anticipated questions
-**Q: "Which PDPL does this follow — UAE or KSA?"**
-A: Both, jurisdiction-aware — the consent step and documents follow UAE PDPL or KSA PDPL depending on the employee's jurisdiction (e.g. Arabic-first consent in KSA).
-
-**Q: "What about DSRs and the 30-day / 72-hour deadlines?"**
-A: Those obligations are captured in our compliance specs (`COMPLIANCE-AUDIT-UI.md`) and the DPA/DPIA templates, but the dedicated DSR/breach screens are on the roadmap, not live yet. The pilot's Compliance Accuracy KPI is measured against exactly these deadlines.
-
-**Q: "Is the DPA/DPIA included or is that separate?"**
-A: Included as part of the pilot pack — we'll hand you the DPA and DPIA templates in Segment 4. The templates need your counsel's sign-off before they're final.
+**Q: "Why is that person still ramping after that many days?"**
+A: That's a quirk of the sample dataset (the seed uses a start date several months back). In production the day counter reflects the real start date, and we'd flag anything that's been ramping past your target during the pilot.
 
 ---
 
-# Segment 4 — Bilingual output & the pilot pack (7:30 – 9:30)
+# Segment 4 — Strategic Intelligence + bilingual prototype (6:30 – 9:30)
 
-**Goal:** Show the EN/AR experience as a *design prototype* (RTL, Arabic-Indic numerals, localized documents) — clearly separated from the live build — and hand over the physical artifacts.
+**Goal:** Show the analytics layer, be honest about what's illustrative, and close with the bilingual experience.
 
 ### Click path
-1. Open the **bilingual prototype** (`design-concepts/intelligence-dashboard-prototype.html`) — say plainly it's a design prototype; the live app is English-only today.
-2. Click the **EN | العربية** toggle in the header.
-3. Watch the layout mirror to **RTL** — sidebar flips right, text right-aligns, charts reverse.
-4. Point at a KPI value: **"AED 6.3M"** becomes **"٦٫٣ مليون د.إ"** (Arabic-Indic numerals + currency reflow).
-5. Back in the live app, show the **document previews** (privacy notice, labor contract, settlement statement), then hand over the pilot-pack PDFs: **privacy notice v2.0**, **DPA**, **DPIA questionnaire**, plus the UAE/KSA contracts.
+1. Sidebar → **Strategic Intelligence**.
+2. Point at the three summary cards (Retention Insight, Productivity Gap, Liability Exposure).
+3. Point at **Retention Lift — 1-Yr Cohort**, then **Time-to-Value by Department**, then **EOSB Liability Forecast** (by jurisdiction & quarter).
+4. Switch to the **bilingual prototype** tab (`design-concepts/intelligence-dashboard-prototype.html`) and click the **EN | العربية** toggle to show RTL mirroring.
 
 ### What the customer sees
-- Full RTL mirroring: sidebar, text alignment, icon order, chart axis direction.
-- Arabic-Indic numerals + Arabic currency symbols (د.إ / ر.س).
-- Live document previews (privacy notice, labor contract, settlement statement); pilot-pack PDFs for the DPA, DPIA, and the UAE/KSA contracts.
+- **Time-to-Value by Department** — avg days per department against a 15-day target (Engineering 16.7, HR 15, Marketing 18, etc.).
+- **EOSB Liability Forecast** — the *current* quarter is the computed accrual (AE + SA split); later quarters are projected with growth multipliers (illustrative).
+- **Retention Lift** — a cohort chart comparing sample retention against an *illustrative* benchmark.
+- The bilingual prototype flips to RTL, with Arabic-Indic numerals and re-flowed currency.
 
 ### Speaker notes
-> "A lot of regional tools treat Arabic as a translation layer bolted on at the end. Ours is designed in from the start — this prototype flips to right-to-left, the numbers become Arabic-Indic, the currency moves to the right place. I want to be clear this is a working prototype, not the live build yet. And here's the pilot pack: bilingual privacy notice v2.0, the DPA, the DPIA questionnaire, and the UAE and KSA contract templates — ready for your counsel to review."
+> "This is the layer leadership pays for. Time-to-value by department shows you exactly where onboarding is slow. The EOSB forecast shows what you're carrying on the books today, and projects it forward — the current quarter is computed, the future quarters are a growth assumption your finance team should review. And the Arabic experience is designed in from the start, not bolted on — that's a working prototype, not the live build yet."
+> *(Pre-empt the retention chart, which shows 100% sample retention per cohort:)* "The retention chart uses sample data with no departures in it yet, so it reads 100% — that's why the benchmark is marked illustrative. With your real attrition data it becomes a genuine cohort view, which is exactly what the pilot measures."
 
 ### Anticipated questions
+**Q: "Are the forecast numbers committed?"**
+A: No — the future quarters are growth multipliers. Say: "finance should review these assumptions before they're used in any budget."
+
 **Q: "Is the Arabic actually correct, or machine-translated?"**
-A: The core compliance documents are professionally drafted bilingual templates (v2.0). UI strings are a maintained localization dictionary, not on-the-fly translation.
-
-**Q: "Can we default KSA users to Arabic and UAE users to English?"**
-A: That's the design — language default is per-tenant/per-user, and KSA can be Arabic-first (which is also the PDPL expectation). It's part of the bilingual roadmap, not the live build.
-
-**Q: "Are these documents legally binding as-is?"**
-A: They're pilot-ready drafts built from current UAE/KSA requirements — **your counsel must sign off** before they go into production. We're not substituting for legal review. *(This is a required honest caveat.)*
+A: The compliance documents are professionally drafted bilingual templates (v2.0). UI strings are a maintained localization dictionary, not on-the-fly translation.
 
 ---
 
@@ -185,11 +171,15 @@ A: A named HR lead, access to your current onboarding/offboarding process for on
 
 # Caveats & guardrails (read before every demo)
 
-1. **EOSB quarterly forecast uses growth multipliers.** The projected quarterly liability is an *estimate*, not a committed figure. Say: "finance should review these assumptions before they're used in any budget." Never present a forecast number as a guarantee.
-2. **Legal documents need counsel sign-off.** The privacy notice, DPA, DPIA, and contract templates are pilot-ready drafts. Do not imply they are "approved" or "binding" — explicitly tell the customer their counsel must review.
-3. **The dashboard KPIs are computed from live data, but the benchmarks are illustrative.** `GET /api/analytics/dashboard` computes Retention Lift, Time-to-Value, Cost-per-Hire, and EOSB Liability from the roster. However, the "vs market benchmark" / "vs target" comparison labels and the retention benchmark are illustrative (not a real external benchmark), and the quarterly EOSB liability forecast uses growth multipliers. Present the computed figures as "what the data shows today," and flag the comparison/forecast numbers as assumptions to review.
-4. **The DSR / breach-register / consent-audit dashboard is design-spec, not a live screen.** The live product shows a per-employee **Compliance Center** (PDPL consent status, EOSB basis, document previews). The fuller DSR-management, breach-register and consent-audit screens are specified in `COMPLIANCE-AUDIT-UI.md` but are not built in the live app — do not present them as working screens.
-5. **Regulator integrations are roadmap, not live.** MoHRE/Qiwa/WPS/Mudad are encoded as workflow *steps*; direct API push to those systems is roadmap. Don't overclaim integration.
+1. **This is sample data.** The demo is a seeded dataset, not a real client's production data — own the "Sample Demo Data" badge out loud rather than letting it hang there.
+2. **"Illustrative" = not a real benchmark or forecast.** The KPI cards are computed from sample data, but the benchmark/forecast comparisons are placeholders. Never present a forecast number as a guarantee; say finance should review assumptions before budgeting.
+3. **Retention Lift shows 100% per cohort.** The sample has no terminated employees, so retention is trivially 100% and the "lift" is 100% minus a made-up benchmark. Pre-empt this verbally; do not let a CHRO discover it.
+4. **Legal documents need counsel sign-off.** The privacy notice, DPA, DPIA, and contract templates are pilot-ready drafts — explicitly tell the customer their counsel must review. Do not imply they are "approved" or "binding."
+5. **Regulator integrations are roadmap, not live.** MoHRE/Qiwa/WPS/Mudad are workflow steps, not live API pushes.
+6. **DO NOT open the Settlement Statement document preview in a demo.** It currently renders as an unfilled template with literal placeholders and a zero EOSB figure that contradicts the roster's accrued EOSB on the same page. Show **Privacy Notice** and **Labor Contract** instead, until the settlement template is wired to real per-employee figures.
+7. **The document-preview header says "Legally Validated GCC Template"** — this overstates our position. If it comes up, say the templates are pilot-ready drafts, not validated. (It should be re-labelled; see the weak-screen audit.)
+8. **The consent line may show "GRANTED ON" with a blank date** (a display bug). Pre-empt it; the consent record itself is seeded.
+9. **DSR / breach-register / consent-audit dashboard is design-spec, not live.** The live product shows a per-employee Compliance Center only. Do not present the fuller dashboard as a working screen.
 
 ---
 
@@ -197,18 +187,22 @@ A: A named HR lead, access to your current onboarding/offboarding process for on
 
 | In the script | Real reference |
 |---|---|
-| Transitions Hub (onboarding/offboarding) | https://b974147c03228029e277d1cbe6646fe6.ctonew.app → sidebar **Transitions Hub** |
-| Onboarding/offboarding checklists | `server/compliance_engine.js` → `checklistTemplates` (UAE / KSA) |
-| EOSB engine | `server/index.js` → `calculateEOSB`; `POST /api/compliance/calculate-eosb` |
-| Dashboard KPIs / analytics | `GET /api/analytics/dashboard` (Retention Lift, Time-to-Value, Cost-per-Hire, EOSB Liability) |
+| Executive Dashboard (4 KPIs + pipelines) | `GET /api/analytics/dashboard`; public URL → sidebar **Executive Dashboard** |
+| Employee Directory + checklists + Compliance Center | public URL → sidebar **Employee Directory**; `GET /api/employees`, `/api/employees/:id/onboarding`, `/api/employees/:id/offboarding` |
+| Transitions Hub | public URL → sidebar **Transitions Hub** |
+| Strategic Intelligence (retention, TTV, EOSB forecast) | public URL → sidebar **Strategic Intelligence**; `GET /api/analytics/dashboard` |
+| EOSB engine | `server/eosb.js`; `POST /api/compliance/calculate-eosb` |
+| Onboarding/offboarding checklist templates | `server/compliance_engine.js` (`checklistTemplates`) |
+| Document previews | `GET /api/compliance/templates/:templateName/:employeeId` |
 | Consent capture | `POST /api/compliance/consent` → `consent_records` |
 | Compliance report / consent coverage | `GET /api/compliance/report` |
-| Compliance dashboard (DSR/breach/consent) | `design-concepts/COMPLIANCE-AUDIT-UI.md`, `COMPLIANCE-UI.md` |
-| Bilingual dashboard (EN/AR RTL) | `design-concepts/intelligence-dashboard-prototype.html`, `INTELLIGENCE-DASHBOARD-UI.md` |
-| Privacy notice v2.0 (bilingual) | `templates/privacy-notice.md` (v2.0, 2026-09) + `.pdf` |
+| Compliance dashboard (DSR/breach/consent) — design spec | `design-concepts/COMPLIANCE-AUDIT-UI.md`, `COMPLIANCE-UI.md` |
+| Bilingual EN/AR RTL dashboard — prototype | `design-concepts/intelligence-dashboard-prototype.html`, `INTELLIGENCE-DASHBOARD-UI.md` |
+| Privacy notice v2.0 (bilingual) | `templates/privacy-notice.md` (v2.0) + `.pdf` |
 | DPA / DPIA / contracts / settlement | `templates/data-processing-agreement.*`, `dpia-questionnaire.*`, `uae-employment-contract.md`, `ksa-employment-contract.md`, `final-settlement-statement.md` |
+| Weak-screen audit (read alongside this script) | `demo-weak-screens.md` |
 | Brand system | `design-concepts/BRAND-IDENTITY.md` (deep teal `#0F766E`) |
 
 ---
 
-*Prepared by Product Designer, Antum — pilot-ready demo script v1.0.*
+*Prepared by Product Designer, Antum — pilot-ready demo script v2.0 (re-walked 2026-09-27).*
