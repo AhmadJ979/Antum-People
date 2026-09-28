@@ -185,7 +185,7 @@ async function seed() {
 
     const eosbAccrued = eosb.calculateEOSB(
       emp.start_date,
-      null,
+      emp.end_date || null,
       emp.basic_salary,
       emp.salary,
       emp.data_residency_country,

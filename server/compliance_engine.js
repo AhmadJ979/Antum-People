@@ -17,8 +17,6 @@ const checklistTemplates = {
       { title: 'Privacy Notice Consent', description: 'Capture explicit consent for UAE PDPL compliance.' }
     ],
     offboarding: [
-      { title: 'Hardware Return', description: 'Collect company-issued laptops, phones, and other assets.' },
-      { title: 'Access Revocation', description: 'Revoke access to IT systems, email, and physical premises.' },
       { title: 'Notice Period Verification', description: 'Confirm notice period served (30–90 days per contract).' },
       { title: 'EOSB Calculation (UAE)', description: 'Calculate basis = basic wage only (FDL 33/2021 Arts. 51–53).' },
       { title: 'Annual Leave Encashment', description: 'Calculate and pay accrued but unused annual leave.' },
@@ -38,8 +36,6 @@ const checklistTemplates = {
       { title: 'Privacy Notice Consent', description: 'Capture explicit consent for KSA PDPL compliance (Arabic first).' }
     ],
     offboarding: [
-      { title: 'Hardware Return', description: 'Collect company-issued laptops, phones, and other assets.' },
-      { title: 'Access Revocation', description: 'Revoke access to IT systems, email, and physical premises.' },
       { title: 'Notice Period Verification', description: 'Confirm served or compensated (M/51 Arts. 74–75).' },
       { title: 'EOSB Calculation (KSA)', description: 'Calculate basis = total monthly salary including allowances (M/51 Art. 84).' },
       { title: 'GOSI De-registration', description: 'Remove employee from GOSI system.' },
