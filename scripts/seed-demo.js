@@ -1,5 +1,7 @@
 const db = require('../server/db');
 const eosb = require('../server/eosb');
+const compliance = require('../server/compliance_engine');
+const auth = require('../server/auth');
 
 /**
  * Antum People Coherent Demo Seed v3.1
@@ -128,6 +130,7 @@ async function seed() {
       recruitment_cost: 4000,
       data_residency_country: 'SA',
       status: 'offboarding',
+      end_date: '2026-09-30',
       fully_productive_date: '2023-09-30'
     },
     {
@@ -193,16 +196,17 @@ async function seed() {
     // INSERT OR REPLACE for idempotency
     const sql = `
       INSERT OR REPLACE INTO employees (
-        id, first_name, last_name, email, department, role, start_date,
+        id, first_name, last_name, email, department, role, start_date, end_date,
         status, salary, basic_salary, recruitment_cost, data_residency_country,
-        jurisdiction, total_salary,
+        jurisdiction, total_salary, national_id_value,
         eosb_accrued, fully_productive_date, consent_granted, created_at, updated_at
       ) VALUES (
         ${db.escapeString(emp.id)}, ${db.escapeString(emp.first_name)}, ${db.escapeString(emp.last_name)},
         ${db.escapeString(emp.email)}, ${db.escapeString(emp.department)}, ${db.escapeString(emp.role)},
-        ${db.escapeString(emp.start_date)}, ${db.escapeString(emp.status)}, ${emp.salary}, ${emp.basic_salary},
+        ${db.escapeString(emp.start_date)}, ${db.escapeString(emp.end_date || null)},
+        ${db.escapeString(emp.status)}, ${emp.salary}, ${emp.basic_salary},
         ${emp.recruitment_cost}, ${db.escapeString(emp.data_residency_country)},
-        ${db.escapeString(jurisdiction)}, ${totalSalary},
+        ${db.escapeString(jurisdiction)}, ${totalSalary}, ${db.escapeString(auth.encrypt('ID-' + emp.id))},
         ${eosbAccrued},
         ${db.escapeString(emp.fully_productive_date)}, 1, '2026-09-23 09:00:00', '2026-09-23 09:00:00'
       )
@@ -213,18 +217,36 @@ async function seed() {
 
   // 2. Onboarding Tasks
   console.log('Upserting onboarding tasks...');
-  const onboardingTasks = [
-    { id: 'demo-task-on-1', emp_id: 'demo-emp-omar', title: 'MoHRE Contract Signing', status: 'completed', due: '2026-03-22', done: '2026-03-21' },
-    { id: 'demo-task-on-2', emp_id: 'demo-emp-omar', title: 'Medical Insurance Application', status: 'pending', due: '2026-03-25', done: null },
-    { id: 'demo-task-on-3', emp_id: 'demo-emp-omar', title: 'Visa Stamping', status: 'pending', due: '2026-04-01', done: null },
-    { id: 'demo-task-on-4', emp_id: 'demo-emp-ahmad', title: 'Initial IT Setup', status: 'completed', due: '2024-01-16', done: '2024-01-15' },
-    { id: 'demo-task-on-5', emp_id: 'demo-emp-ahmad', title: 'Compliance Training', status: 'completed', due: '2024-01-20', done: '2024-01-18' }
-  ];
+  const onboardingTasks = [];
+
+  // Omar (UAE)
+  compliance.checklistTemplates.UAE.onboarding.forEach((t, idx) => {
+    onboardingTasks.push({
+      id: `demo-task-on-omar-${idx+1}`,
+      emp_id: 'demo-emp-omar',
+      title: t.title,
+      status: idx === 0 ? 'completed' : 'pending',
+      due: '2026-03-25',
+      done: idx === 0 ? '2026-03-21' : null
+    });
+  });
+
+  // Ahmad (UAE - all completed)
+  compliance.checklistTemplates.UAE.onboarding.forEach((t, idx) => {
+    onboardingTasks.push({
+      id: `demo-task-on-ahmad-${idx+1}`,
+      emp_id: 'demo-emp-ahmad',
+      title: t.title,
+      status: 'completed',
+      due: '2024-01-20',
+      done: '2024-01-18'
+    });
+  });
 
   for (const t of onboardingTasks) {
     const sql = `
       INSERT OR REPLACE INTO onboarding_tasks (id, employee_id, title, status, due_date, completed_at, created_at)
-      VALUES (${db.escapeString(t.id)}, ${db.escapeString(t.emp_id)}, ${db.escapeString(t.title)}, 
+      VALUES (${db.escapeString(t.id)}, ${db.escapeString(t.emp_id)}, ${db.escapeString(t.title)},
       ${db.escapeString(t.status)}, ${db.escapeString(t.due)}, ${t.done ? db.escapeString(t.done) : 'NULL'}, '2026-03-20 10:00:00')
     `;
     await db.query(sql);
@@ -232,17 +254,22 @@ async function seed() {
 
   // 3. Offboarding Tasks (for Sarah)
   console.log('Upserting offboarding tasks...');
-  const offboardingTasks = [
-    { id: 'demo-task-off-1', emp_id: 'demo-emp-sarah', title: 'Hardware Return', status: 'completed', due: '2026-09-25', done: '2026-09-24' },
-    { id: 'demo-task-off-2', emp_id: 'demo-emp-sarah', title: 'Access Revocation', status: 'pending', due: '2026-09-26', done: null },
-    { id: 'demo-task-off-3', emp_id: 'demo-emp-sarah', title: 'Final Settlement Calculation', status: 'pending', due: '2026-09-27', done: null },
-    { id: 'demo-task-off-4', emp_id: 'demo-emp-sarah', title: 'Visa Cancellation (KSA)', status: 'pending', due: '2026-09-30', done: null }
-  ];
+  const offboardingTasks = [];
+  compliance.checklistTemplates.KSA.offboarding.forEach((t, idx) => {
+    offboardingTasks.push({
+      id: `demo-task-off-ksa-${idx+1}`,
+      emp_id: 'demo-emp-sarah',
+      title: t.title,
+      status: idx < 2 ? 'completed' : 'pending',
+      due: '2026-09-30',
+      done: idx < 2 ? '2026-09-24' : null
+    });
+  });
 
   for (const t of offboardingTasks) {
     const sql = `
       INSERT OR REPLACE INTO offboarding_tasks (id, employee_id, title, status, due_date, completed_at, created_at)
-      VALUES (${db.escapeString(t.id)}, ${db.escapeString(t.emp_id)}, ${db.escapeString(t.title)}, 
+      VALUES (${db.escapeString(t.id)}, ${db.escapeString(t.emp_id)}, ${db.escapeString(t.title)},
       ${db.escapeString(t.status)}, ${db.escapeString(t.due)}, ${t.done ? db.escapeString(t.done) : 'NULL'}, '2026-09-23 11:00:00')
     `;
     await db.query(sql);

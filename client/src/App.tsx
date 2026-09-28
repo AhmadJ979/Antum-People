@@ -1151,7 +1151,7 @@ export default function App() {
               <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                  <div>
                     <h3 className="font-bold text-slate-900 text-xl">{renderedTemplate.title}</h3>
-                    <p className="text-xs text-slate-500 font-bold tracking-widest uppercase mt-1">Legally Validated GCC Template</p>
+                    <p className="text-xs text-slate-500 font-bold tracking-widest uppercase mt-1">Pilot-ready draft — subject to your counsel's review</p>
                  </div>
                  <button onClick={() => setShowTemplateModal(false)} className="bg-slate-900 text-white px-8 py-3 rounded-2xl text-xs font-bold hover:bg-slate-800 transition shadow-xl">Close Preview</button>
               </div>

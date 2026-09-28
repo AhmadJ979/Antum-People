@@ -311,11 +311,35 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
     emp.national_id_value = auth.decrypt(emp.national_id_value);
     emp.national_id_iqama = auth.decrypt(emp.national_id_iqama);
 
+    // FIX 1: Settlement Statement Calculations
+    let eosb_amount = (emp.eosb_accrued || 0).toFixed(2);
+    let final_pro_rated_salary = 'not calculated';
+    if (emp.end_date && emp.salary) {
+      const endDate = new Date(emp.end_date);
+      const day = endDate.getDate();
+      const month = endDate.getMonth();
+      const year = endDate.getFullYear();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      final_pro_rated_salary = (emp.salary * (day / daysInMonth)).toFixed(2);
+    }
+    
+    const gross_val = (parseFloat(final_pro_rated_salary) || 0) + parseFloat(eosb_amount);
+    const total_deductions = (0).toFixed(2);
+    const net_settlement = (gross_val - parseFloat(total_deductions)).toFixed(2);
+
     const templateData = {
       ...emp,
       full_name: `${emp.first_name} ${emp.last_name}`,
       national_id: emp.national_id_value,
-      total_salary: emp.salary,
+      employee_id: emp.id,
+      total_salary: (emp.salary || 0).toFixed(2),
+      basic_salary: (emp.basic_salary || 0).toFixed(2),
+      eosb_amount,
+      final_pro_rated_salary,
+      gross_settlement: gross_val.toFixed(2),
+      total_deductions,
+      net_settlement,
+      termination_reason: emp.termination_type || 'Resignation',
       current_date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
     };
 
