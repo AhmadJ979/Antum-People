@@ -109,7 +109,15 @@ const generateId = () => {
 
 app.get('/api/employees', async (req, res) => {
   try {
-    const employees = await db.query(`SELECT * FROM employees ORDER BY start_date DESC`);
+    // Jurisdiction filter: the active demo surface is UAE-first (owner direction,
+    // 2026-10-02). ?jurisdiction=AE|SA filters the roster by data_residency_country;
+    // omitting it (or any other value) returns everyone, unfiltered — nothing is
+    // deleted or hidden at the data layer, only at the query the UI happens to send.
+    const jurisdiction = (req.query.jurisdiction || '').toUpperCase();
+    const sql = (jurisdiction === 'AE' || jurisdiction === 'SA')
+      ? `SELECT * FROM employees WHERE data_residency_country = ${db.escapeString(jurisdiction)} ORDER BY start_date DESC`
+      : `SELECT * FROM employees ORDER BY start_date DESC`;
+    const employees = await db.query(sql);
     const decrypted = employees.map(emp => ({
       ...emp,
       national_id_value: auth.decrypt(emp.national_id_value),
@@ -368,9 +376,21 @@ app.get('/api/compliance/report', async (req, res) => {
 
 app.get('/api/analytics/dashboard', async (req, res) => {
   try {
-    const employees = await db.query(`SELECT * FROM employees`);
-    const exits = await db.query(`SELECT * FROM exit_interviews`);
-    const onboardingTaskRows = await db.query(`SELECT employee_id, status FROM onboarding_tasks`);
+    // Jurisdiction filter: the active demo surface is UAE-first (owner direction,
+    // 2026-10-02) — every card here is computed from UAE records by default. KSA data
+    // is not deleted or hidden from the engine; ?jurisdiction=SA (or an explicit
+    // switch in the UI) still computes a real figure from it for testing.
+    const jurisdiction = (req.query.jurisdiction || '').toUpperCase();
+    const allEmployees = await db.query(`SELECT * FROM employees`);
+    const employees = (jurisdiction === 'AE' || jurisdiction === 'SA')
+      ? allEmployees.filter(e => e.data_residency_country === jurisdiction)
+      : allEmployees;
+    const employeeIds = new Set(employees.map(e => e.id));
+
+    const allExits = await db.query(`SELECT * FROM exit_interviews`);
+    const exits = allExits.filter(ex => employeeIds.has(ex.employee_id));
+    const allOnboardingTaskRows = await db.query(`SELECT employee_id, status FROM onboarding_tasks`);
+    const onboardingTaskRows = allOnboardingTaskRows.filter(t => employeeIds.has(t.employee_id));
 
     // A terminated employee's liability is settled and they are no longer part of the
     // active workforce — every "active" card (headcount, payroll, EOSB liability,
