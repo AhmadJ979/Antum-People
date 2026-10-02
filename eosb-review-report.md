@@ -6,7 +6,7 @@
 > **Scope:** `calculateEOSB()` in `server/index.js` and the audit-trail schema
 > **Reference:** `/home/team/shared/compliance-requirements.md` (Sections 3, 4, 7, 8)
 
-> **Data-handling note:** per the team's no-employee-data rule (Workflow "Hard Rules" #4), this report **describes** verification outcomes instead of quoting salary amounts or EOSB figures. Statutory constants (e.g. 90 days, 21/30 days per year, the UAE 1/3–2/3 resignation tiers, the 2-year cap) are quoted because they are legal provisions, not employee data.
+> **Data-handling note:** per the team's no-employee-data rule (Workflow "Hard Rules" #4), this report **describes** verification outcomes instead of quoting salary amounts or EOSB figures. Statutory constants (e.g. 90 days, 21/30 days per year, the 2-year cap) are quoted because they are legal provisions, not employee data. The UAE resignation tier (1/3–2/3) is quoted as the engine's current value — **frozen and unconfirmed pending counsel** — not as a legal provision.
 
 ---
 
@@ -14,7 +14,7 @@
 
 This report was originally issued 2026-06-23 against the engine as it then stood. It has since been re-verified against **current `origin/main`** (`server/index.js`, function `calculateEOSB`). Each finding below states its current status with the actual current code quoted (no stale line numbers). The test matrix was re-run against the live function. **No calculation code was changed during the re-verification itself; the subsequent KSA Art. 84 correction (removing the resignation tier and under-2-year zero) is landing in this same change, and the affected passages below reflect that.**
 
-**Bottom line:** the two findings that previously blocked production (Finding 1, P0 termination-type conflation; Finding 2, P1 unpaid-leave over-deduction) are **fixed**, and the dead wrapper (Finding 3, P2) is **gone**. The engine is certified **unconditionally for UAE**; the KSA branch is **corrected in code to Art. 84** (full EOSB, no resignation tier, pro-rata from day one) and **verified against the merged engine**, with **re-certification pending KSA-qualified counsel confirmation of the Article 84 pin-cites**.
+**Bottom line:** the two findings that previously blocked production (Finding 1, P0 termination-type conflation; Finding 2, P1 unpaid-leave over-deduction) are **fixed**, and the dead wrapper (Finding 3, P2) is **gone**. The engine is **not certified for UAE**: termination-type routing and unpaid-leave handling are fixed and verified, but the **UAE resignation tier (1/3 for 1–3 years, 2/3 for 3–5 years) is frozen and unconfirmed pending counsel** (ships unchanged by owner decision; if the reduction did not survive Federal Decree-Law 33/2021, we underpay resigning UAE employees); the KSA branch is **corrected in code to Art. 84** (full EOSB, no resignation tier, pro-rata from day one) and **verified against the merged engine**, with **re-certification pending KSA-qualified counsel confirmation of the Article 84 pin-cites**.
 
 ---
 
@@ -171,14 +171,14 @@ app.post('/api/compliance/calculate-eosb', (req, res) => {
 
 ## Correctness Verification: Test Results
 
-Re-run against the **live `calculateEOSB`** extracted from `server/index.js` on `origin/main` (brace-matched, not hand-copied). Scenarios use synthetic fixtures; per Rule 4 the inputs and exact outputs are **not quoted** — outcomes are stated in terms of the statutory formula (full / statutory fraction / zero).
+Re-run against the **live `calculateEOSB`** extracted from `server/index.js` on `origin/main` (brace-matched, not hand-copied). Scenarios use synthetic fixtures; per Rule 4 the inputs and exact outputs are **not quoted** — outcomes are stated in terms of the formula the engine applies (full / resignation-reduction fraction / zero) — the resignation-reduction fraction being our **frozen, unconfirmed** tier.
 
 | Test | Scenario | Re-verified outcome | Status |
 |---|---|---|---|
 | T1 | UAE 2yr, employer-initiated | full 2-year EOSB (matches formula) | ✅ |
-| T2 | UAE 2yr, resignation | one-third of full (statutory tier) | ✅ |
+| T2 | UAE 2yr, resignation | one-third of full (resignation tier — unconfirmed, frozen pending counsel) | ✅ |
 | T3 | UAE 4yr, employer-initiated | full 4-year EOSB | ✅ |
-| T4 | UAE 4yr, resignation | two-thirds of full (statutory tier) | ✅ |
+| T4 | UAE 4yr, resignation | two-thirds of full (resignation tier — unconfirmed, frozen pending counsel) | ✅ |
 | T5 | KSA 3yr, employer-initiated | full 3-year EOSB (half-month rate) | ✅ |
 | T6 | KSA 3yr, resignation | full EOSB (no resignation tier) | ✅ fixed in code — counsel confirmation pending |
 | T7 | UAE <1yr | zero (below 1-year threshold) | ✅ |
@@ -209,9 +209,9 @@ Re-run against the **live `calculateEOSB`** extracted from `server/index.js` on 
 
 ## Certification
 
-**The core EOSB calculation engine is CERTIFIED unconditionally for UAE.** The KSA branch is **corrected in code to Art. 84** (full EOSB on resignation, pro-rata from day one, no tier) and **verified against the merged engine on the running server**. Re-certification remains **pending KSA-qualified counsel confirmation of the Article 84 pin-cites**.
+**The core EOSB calculation engine is NOT certified for UAE.** The termination-type routing and unpaid-leave handling are fixed and verified, but the **UAE resignation tier (1/3 for 1–3 years, 2/3 for 3–5 years) is frozen and unconfirmed pending counsel** — it ships unchanged by owner decision, and if the reduction did not survive Federal Decree-Law 33/2021, we would underpay resigning UAE employees. The KSA branch is **corrected in code to Art. 84** (full EOSB on resignation, pro-rata from day one, no tier) and **verified against the merged engine on the running server**. Re-certification remains **pending KSA-qualified counsel confirmation of the Article 84 pin-cites**.
 
-The mathematical formulas, daily-rate derivation, service-year bands, 2-year cap, UAE resignation tiers, termination-type routing (including summary-dismissal forfeiture), and the UAE 90-day-per-year unpaid-leave rule are all correctly implemented in the current `calculateEOSB` in `server/eosb.js` (reached from `server/index.js`), and the UAE test cases pass. The KSA resignation tier and under-2-year zero **have been removed** per Art. 84 and **verified on the running server**: an under-2-year resignation now returns full pro-rata EOSB where it previously returned zero; a 3-year resignation returns the full amount with no reduction; employer termination returns the identical amount; and summary dismissal still returns zero. Re-certification remains **pending KSA-qualified counsel confirmation of the Article 84 pin-cites**.
+The mathematical formulas, daily-rate derivation, service-year bands, 2-year cap, termination-type routing (including summary-dismissal forfeiture), and the UAE 90-day-per-year unpaid-leave rule are all correctly implemented in the current `calculateEOSB` in `server/eosb.js` (reached from `server/index.js`), and the UAE test cases pass. The UAE resignation tier (1/3 for 1–3 years, 2/3 for 3–5 years) is implemented as the engine's **current, frozen value — unconfirmed pending counsel**, not asserted here as the correct legal rule. The KSA resignation tier and under-2-year zero **have been removed** per Art. 84 and **verified on the running server**: an under-2-year resignation now returns full pro-rata EOSB where it previously returned zero; a 3-year resignation returns the full amount with no reduction; employer termination returns the identical amount; and summary dismissal still returns zero. Re-certification remains **pending KSA-qualified counsel confirmation of the Article 84 pin-cites**.
 
 The two findings that previously blocked production use — Finding 1 (P0) and Finding 2 (P1) — are fixed, and the dead wrapper (Finding 3, P2) is gone.
 
