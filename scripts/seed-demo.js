@@ -160,10 +160,13 @@ async function seed() {
       salary: 11000,
       basic_salary: 8000,
       recruitment_cost: 3000,
-      data_residency_country: 'SA',
+      data_residency_country: 'AE',
       status: 'onboarding',
       // Genuinely mid-onboarding: not yet fully productive. Pairs with Omar (UAE) as
-      // the demo's two coherent in-flight hires — UAE first, then KSA.
+      // the demo's two coherent in-flight hires. UAE-first (owner direction,
+      // 2026-10-02): both in-flight hires are UAE so the pipeline card still has two
+      // people once the active surface goes UAE-only. Dates/status unchanged from the
+      // earlier seed — only the jurisdiction moved.
       fully_productive_date: null
     }
   ];
@@ -174,7 +177,8 @@ async function seed() {
   // everywhere. Because their liability is settled, they are excluded from the active
   // EOSB liability and headcount cards (server/index.js filters them out explicitly) —
   // only the retention cohort calculation, which intentionally looks at history, counts
-  // them. UAE first, then KSA, consistent with the rest of this seed.
+  // them. UAE-first (owner direction, 2026-10-02): both leavers are UAE so the retention
+  // cohort dips they create still show once the active surface goes UAE-only.
   const historicalLeavers = [
     {
       id: 'demo-emp-yusuf',
@@ -200,11 +204,12 @@ async function seed() {
       department: 'Engineering',
       role: 'Junior Developer',
       start_date: '2024-03-05',
-      end_date: '2024-09-01', // ~180 days — same treatment in a second cohort.
+      end_date: '2024-09-01', // ~180 days — same treatment in a second cohort. Dates/
+      // status unchanged from the earlier seed — only the jurisdiction moved to AE.
       salary: 14000,
       basic_salary: 9500,
       recruitment_cost: 6000,
-      data_residency_country: 'SA',
+      data_residency_country: 'AE',
       status: 'terminated',
       fully_productive_date: null
     }
@@ -282,8 +287,11 @@ async function seed() {
     });
   });
 
-  // Reem (KSA) — started 2026-08-05, two tasks done so far, five still open.
-  compliance.checklistTemplates.KSA.onboarding.forEach((t, idx) => {
+  // Reem (UAE) — started 2026-08-05, two tasks done so far, five still open.
+  // UAE-first (owner direction, 2026-10-02): checklist source switched from KSA to
+  // UAE to match her jurisdiction move above; same 7-item length, same completion
+  // split, so her place in the onboarding pipeline is unaffected.
+  compliance.checklistTemplates.UAE.onboarding.forEach((t, idx) => {
     onboardingTasks.push({
       id: `demo-task-on-reem-${idx+1}`,
       emp_id: 'demo-emp-reem',
@@ -338,8 +346,8 @@ async function seed() {
     await db.query(sql);
   }
 
-  // 4. Exit Interviews (Sarah's pre-departure interview, plus one per historical leaver,
-  // UAE leaver first then KSA leaver)
+  // 4. Exit Interviews (Sarah's pre-departure interview, plus one per historical leaver
+  // — both UAE now, per the UAE-first jurisdiction move above)
   console.log('Upserting exit interviews...');
   const exitInterviews = [
     {
