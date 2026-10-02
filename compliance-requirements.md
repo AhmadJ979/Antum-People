@@ -97,13 +97,13 @@
 ## 3. EOSB — UAE
 
 ### 3.1 Legal Basis
-- Articles 51, 52, 53, and 132 of Federal Decree-Law No. 33 of 2021.
+- Articles 51, 52, and 53 of Federal Decree-Law No. 33 of 2021. *(Previously cited "Art. 132" here; that article belongs to the repealed Federal Law No. 8/1980 and is removed.)*
 - Cabinet Resolution No. 1 of 2022.
 
 ### 3.2 Eligibility
 - Employee must have completed **1 continuous year of service**.
 - EOSB is forfeited in cases of summary dismissal under Article 44 (gross misconduct).
-- Employee resignation forfeits partially depending on service length.
+- Employee resignation forfeits partially depending on service length — **UNCONFIRMED, frozen pending counsel (owner decision 2026-09-28);** see §3.3.4.
 
 ### 3.3 Calculation Logic
 
@@ -136,6 +136,7 @@ daily_rate = basic_salary / 30
 | Cap | Total ≤ 730 days' basic salary |
 
 #### 3.3.4 Reduced Entitlement (Resignation)
+> **UNCONFIRMED — FROZEN PENDING COUNSEL (owner decision 2026-09-28).** The 1/3 and 2/3 reductions below ship **unchanged by owner decision** while counsel confirmation is outstanding. We have not confirmed the reduction survived Federal Decree-Law 33/2021; it was the rule under the repealed Federal Law No. 8/1980. **If it did not survive, we underpay every resigning UAE employee.** Do not describe this tier to customers as settled.
 
 | Service Years | Resignation Entitlement (% of Full) |
 |---|---|
@@ -276,7 +277,7 @@ function calculateEOSB_KSA(totalSalary, startDate, endDate):
 | **Salary basis** | Basic salary only | Total salary (all allowances) |
 | **Eligibility threshold** | 1 year | None (pro-rata from day one) |
 | **Notice period min** | 30 days | 30 days |
-| **Resignation reduction** | Yes (1/3, 2/3, full) | No (unserved-notice compensation is a separate line) |
+| **Resignation reduction** | Yes (1/3, 2/3, full) — **unconfirmed, frozen pending counsel** | No (unserved-notice compensation is a separate line) |
 | **Cap** | 2 years' basic salary | No explicit cap |
 | **Excluded periods** | Unpaid leave > 90 days | Not specified in law |
 | **Probation EOSB** | No entitlement | No entitlement |
@@ -509,7 +510,7 @@ CREATE TABLE IF NOT EXISTS eosb_calculations (
 
 | Feature | Priority | Description |
 |---|---|---|
-| **Jurisdiction-Aware EOSB Engine** | **P0** | Dual calculation engine: UAE (basic salary, tiered resignation) and KSA (total salary, full EOSB; notice compensation separate). |
+| **Jurisdiction-Aware EOSB Engine** | **P0** | Dual calculation engine: UAE (basic salary, resignation tier **unconfirmed/frozen pending counsel**) and KSA (total salary, full EOSB; notice compensation separate). |
 | **Onboarding Compliance Checklist** | **P0** | Jurisdiction-specific tasks: visa, MoHRE/Qiwa registration, WPS setup, contract generation. |
 | **Offboarding Settlement Calculator** | **P0** | Auto-generates final settlement: salary, EOSB, leave encashment, notice pay. 14-day/UAE and 7-day/KSA settlement timelines. |
 | **Privacy Notice Generator** | **P0** | Generate jurisdiction-specific privacy notices in Arabic and English for onboarding consent. |
