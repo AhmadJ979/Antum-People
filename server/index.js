@@ -370,20 +370,28 @@ app.get('/api/analytics/dashboard', async (req, res) => {
   try {
     const employees = await db.query(`SELECT * FROM employees`);
     const exits = await db.query(`SELECT * FROM exit_interviews`);
-    
-    const totalSalary = employees.filter(e => e.status !== 'terminated').reduce((s, e) => s + (e.salary || 0), 0);
-    const totalEosb = employees.reduce((s, e) => s + (e.eosb_accrued || 0), 0);
+    const onboardingTaskRows = await db.query(`SELECT employee_id, status FROM onboarding_tasks`);
 
-    const withRecruitmentAE = employees.filter(emp => emp.data_residency_country === 'AE' && emp.recruitment_cost > 0);
+    // A terminated employee's liability is settled and they are no longer part of the
+    // active workforce — every "active" card (headcount, payroll, EOSB liability,
+    // cost-per-hire, time-to-value) must be computed off this list, not the raw table.
+    // Terminated employees still belong in the retention cohort math below, which is the
+    // one place their history should count.
+    const activeEmployees = employees.filter(e => e.status !== 'terminated');
+
+    const totalSalary = activeEmployees.reduce((s, e) => s + (e.salary || 0), 0);
+    const totalEosb = activeEmployees.reduce((s, e) => s + (e.eosb_accrued || 0), 0);
+
+    const withRecruitmentAE = activeEmployees.filter(emp => emp.data_residency_country === 'AE' && emp.recruitment_cost > 0);
     const avgCostPerHireAE = withRecruitmentAE.length > 0
       ? Math.round(withRecruitmentAE.reduce((sum, emp) => sum + emp.recruitment_cost, 0) / withRecruitmentAE.length)
       : 0;
-    const withRecruitmentSA = employees.filter(emp => emp.data_residency_country === 'SA' && emp.recruitment_cost > 0);
+    const withRecruitmentSA = activeEmployees.filter(emp => emp.data_residency_country === 'SA' && emp.recruitment_cost > 0);
     const avgCostPerHireSA = withRecruitmentSA.length > 0
       ? Math.round(withRecruitmentSA.reduce((sum, emp) => sum + emp.recruitment_cost, 0) / withRecruitmentSA.length)
       : 0;
 
-    const withTtv = employees.filter(e => e.start_date && e.fully_productive_date);
+    const withTtv = activeEmployees.filter(e => e.start_date && e.fully_productive_date);
     const avgTtvDays = withTtv.length > 0
       ? Math.round(withTtv.reduce((sum, e) => {
           const start = new Date(e.start_date);
@@ -436,9 +444,20 @@ app.get('/api/analytics/dashboard', async (req, res) => {
     }).sort((a, b) => a.cohort.localeCompare(b.cohort));
 
     const eosbByJurisdiction = {
-      AE: employees.filter(e => e.data_residency_country === 'AE').reduce((s, e) => s + (e.eosb_accrued || 0), 0),
-      SA: employees.filter(e => e.data_residency_country === 'SA').reduce((s, e) => s + (e.eosb_accrued || 0), 0)
+      AE: activeEmployees.filter(e => e.data_residency_country === 'AE').reduce((s, e) => s + (e.eosb_accrued || 0), 0),
+      SA: activeEmployees.filter(e => e.data_residency_country === 'SA').reduce((s, e) => s + (e.eosb_accrued || 0), 0)
     };
+
+    // Onboarding Pipeline is derived from the work, not a status label: an employee is
+    // "in the pipeline" if they have at least one onboarding task that isn't completed yet.
+    // This is the single source of truth the dashboard card and the transitions list both
+    // read from, so they can never disagree with each other or with the checklist itself.
+    const incompleteOnboardingIds = new Set(
+      onboardingTaskRows.filter(t => t.status !== 'completed').map(t => t.employee_id)
+    );
+    const onboardingPipeline = employees
+      .filter(e => incompleteOnboardingIds.has(e.id))
+      .map(e => ({ id: e.id, first_name: e.first_name, last_name: e.last_name, role: e.role, start_date: e.start_date }));
 
     const eosbLiabilitySeries = [
       { quarter: 'Q3 2026', uae: Math.round(eosbByJurisdiction.AE), ksa: Math.round(eosbByJurisdiction.SA), combined: Math.round(totalEosb) },
@@ -453,7 +472,7 @@ app.get('/api/analytics/dashboard', async (req, res) => {
     });
 
     res.json({
-      activeHeadcount: employees.filter(e => e.status !== 'terminated').length,
+      activeHeadcount: activeEmployees.length,
       monthlyPayroll: Math.round(totalSalary / 12),
       eosbLiability: Math.round(totalEosb),
       attritionRate: exits.length > 0 ? Math.round((exits.length / employees.length) * 100) : 0,
@@ -464,6 +483,7 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       retentionLiftSeries,
       eosbLiabilitySeries,
       eosbByJurisdiction,
+      onboardingPipeline,
       exitsByReason: Object.keys(reasonsMap).map(reason => ({ reason, count: reasonsMap[reason] })),
       activeSalarySpend: totalSalary,
       totalRecruitingSpend: employees.reduce((sum, emp) => sum + (emp.recruitment_cost || 0), 0)

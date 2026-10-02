@@ -64,13 +64,14 @@ async function seed() {
       email: 'omar.alfarsi@example.com',
       department: 'Finance',
       role: 'Finance Analyst',
-      start_date: '2026-03-20',
+      start_date: '2026-08-20',
       salary: 14000,
       basic_salary: 9500,
       recruitment_cost: 6000,
       data_residency_country: 'AE',
       status: 'onboarding',
-      fully_productive_date: '2026-04-05'
+      // Genuinely mid-onboarding: not yet fully productive.
+      fully_productive_date: null
     },
     {
       id: 'demo-emp-leila',
@@ -155,15 +156,61 @@ async function seed() {
       email: 'reem.hashemi@example.com',
       department: 'Customer Support',
       role: 'Support Specialist',
-      start_date: '2026-01-10',
+      start_date: '2026-08-05',
       salary: 11000,
       basic_salary: 8000,
       recruitment_cost: 3000,
       data_residency_country: 'SA',
-      status: 'active',
-      fully_productive_date: '2026-01-25'
+      status: 'onboarding',
+      // Genuinely mid-onboarding: not yet fully productive. Pairs with Omar (UAE) as
+      // the demo's two coherent in-flight hires — UAE first, then KSA.
+      fully_productive_date: null
     }
   ];
+
+  // Historical leavers: additional to the 9-person active roster above (which must stay
+  // at 9 — the walkthrough describes nine active employees). These exist so retention
+  // cohort math has real, varied data to compute instead of trivially reading 100%
+  // everywhere. Because their liability is settled, they are excluded from the active
+  // EOSB liability and headcount cards (server/index.js filters them out explicitly) —
+  // only the retention cohort calculation, which intentionally looks at history, counts
+  // them. UAE first, then KSA, consistent with the rest of this seed.
+  const historicalLeavers = [
+    {
+      id: 'demo-emp-yusuf',
+      first_name: 'Yusuf',
+      last_name: 'Hassan',
+      email: 'yusuf.hassan@example.com',
+      department: 'Operations',
+      role: 'Logistics Coordinator',
+      start_date: '2023-03-10',
+      end_date: '2023-08-25', // ~168 days — leaves this cohort genuinely below 100%.
+      salary: 12000,
+      basic_salary: 8000,
+      recruitment_cost: 4000,
+      data_residency_country: 'AE',
+      status: 'terminated',
+      fully_productive_date: null
+    },
+    {
+      id: 'demo-emp-sultan',
+      first_name: 'Sultan',
+      last_name: 'Al-Harbi',
+      email: 'sultan.harbi@example.com',
+      department: 'Engineering',
+      role: 'Junior Developer',
+      start_date: '2024-03-05',
+      end_date: '2024-09-01', // ~180 days — same treatment in a second cohort.
+      salary: 14000,
+      basic_salary: 9500,
+      recruitment_cost: 6000,
+      data_residency_country: 'SA',
+      status: 'terminated',
+      fully_productive_date: null
+    }
+  ];
+
+  const allEmployees = [...personas, ...historicalLeavers];
 
   if (forceClear) {
     console.log('FORCE CLEAR: Deleting existing demo data...');
@@ -178,14 +225,18 @@ async function seed() {
   }
 
   console.log('Upserting demo employees...');
-  for (const emp of personas) {
+  for (const emp of allEmployees) {
     // Lead feedback: Match jurisdiction to data_residency_country and set total_salary
     const jurisdiction = emp.data_residency_country; // 'AE' or 'SA'
     const totalSalary = emp.salary;
 
+    // Terminated leavers accrue as of their actual exit date, not "today" — the active
+    // EOSB liability cards exclude them anyway (server/index.js), but the stored figure
+    // should still reflect what was actually owed at departure, computed by the same
+    // engine as everyone else (no manual overrides).
     const eosbAccrued = eosb.calculateEOSB(
       emp.start_date,
-      null,
+      emp.end_date || null,
       emp.basic_salary,
       emp.salary,
       emp.data_residency_country,
@@ -219,15 +270,27 @@ async function seed() {
   console.log('Upserting onboarding tasks...');
   const onboardingTasks = [];
 
-  // Omar (UAE)
+  // Omar (UAE) — started 2026-08-20, two tasks done so far, five still open.
   compliance.checklistTemplates.UAE.onboarding.forEach((t, idx) => {
     onboardingTasks.push({
       id: `demo-task-on-omar-${idx+1}`,
       emp_id: 'demo-emp-omar',
       title: t.title,
-      status: idx === 0 ? 'completed' : 'pending',
-      due: '2026-03-25',
-      done: idx === 0 ? '2026-03-21' : null
+      status: idx < 2 ? 'completed' : 'pending',
+      due: '2026-09-10',
+      done: idx < 2 ? '2026-08-25' : null
+    });
+  });
+
+  // Reem (KSA) — started 2026-08-05, two tasks done so far, five still open.
+  compliance.checklistTemplates.KSA.onboarding.forEach((t, idx) => {
+    onboardingTasks.push({
+      id: `demo-task-on-reem-${idx+1}`,
+      emp_id: 'demo-emp-reem',
+      title: t.title,
+      status: idx < 2 ? 'completed' : 'pending',
+      due: '2026-09-05',
+      done: idx < 2 ? '2026-08-12' : null
     });
   });
 
@@ -275,28 +338,49 @@ async function seed() {
     await db.query(sql);
   }
 
-  // 4. Exit Interview (for Sarah)
-  console.log('Upserting exit interview...');
-  const exitInterview = {
-    id: 'demo-exit-1',
-    employee_id: 'demo-emp-sarah',
-    interview_date: '2026-09-24',
-    departure_reason: 'Better Opportunity',
-    detailed_feedback: 'Loved the team, but found a role closer to home with higher allowance.',
-    satisfaction_score: 4
-  };
+  // 4. Exit Interviews (Sarah's pre-departure interview, plus one per historical leaver,
+  // UAE leaver first then KSA leaver)
+  console.log('Upserting exit interviews...');
+  const exitInterviews = [
+    {
+      id: 'demo-exit-1',
+      employee_id: 'demo-emp-sarah',
+      interview_date: '2026-09-24',
+      departure_reason: 'Better Opportunity',
+      detailed_feedback: 'Loved the team, but found a role closer to home with higher allowance.',
+      satisfaction_score: 4
+    },
+    {
+      id: 'demo-exit-2',
+      employee_id: 'demo-emp-yusuf',
+      interview_date: '2023-08-25',
+      departure_reason: 'Career Change',
+      detailed_feedback: 'Moving to a different industry.',
+      satisfaction_score: 3
+    },
+    {
+      id: 'demo-exit-3',
+      employee_id: 'demo-emp-sultan',
+      interview_date: '2024-09-01',
+      departure_reason: 'Relocation',
+      detailed_feedback: 'Moving out of the region for family reasons.',
+      satisfaction_score: 4
+    }
+  ];
 
-  await db.query(`
-    INSERT OR REPLACE INTO exit_interviews (id, employee_id, interview_date, departure_reason, detailed_feedback, satisfaction_score)
-    VALUES (${db.escapeString(exitInterview.id)}, ${db.escapeString(exitInterview.employee_id)}, 
-    ${db.escapeString(exitInterview.interview_date)}, ${db.escapeString(exitInterview.departure_reason)}, 
-    ${db.escapeString(exitInterview.detailed_feedback)}, ${exitInterview.satisfaction_score})
-  `);
+  for (const ex of exitInterviews) {
+    await db.query(`
+      INSERT OR REPLACE INTO exit_interviews (id, employee_id, interview_date, departure_reason, detailed_feedback, satisfaction_score)
+      VALUES (${db.escapeString(ex.id)}, ${db.escapeString(ex.employee_id)},
+      ${db.escapeString(ex.interview_date)}, ${db.escapeString(ex.departure_reason)},
+      ${db.escapeString(ex.detailed_feedback)}, ${ex.satisfaction_score})
+    `);
+  }
 
   // 5. Audit Logs
   console.log('Upserting audit logs...');
   const auditLogs = [
-    { id: 'demo-log-1', entity: 'employee', entity_id: 'demo-emp-omar', action: 'CREATE', perf: 'admin', ts: '2026-03-20 09:00:00' },
+    { id: 'demo-log-1', entity: 'employee', entity_id: 'demo-emp-omar', action: 'CREATE', perf: 'admin', ts: '2026-08-20 09:00:00' },
     { id: 'demo-log-2', entity: 'exit_interview', entity_id: 'demo-exit-1', action: 'CREATE', perf: 'admin', ts: '2026-09-24 14:00:00' },
     { id: 'demo-log-3', entity: 'employee', entity_id: 'demo-emp-sarah', action: 'OFFBOARD_START', perf: 'admin', ts: '2026-09-23 11:00:00' }
   ];
@@ -311,7 +395,7 @@ async function seed() {
 
   // 6. Consent Records
   console.log('Upserting consent records...');
-  for (const emp of personas) {
+  for (const emp of allEmployees) {
     await db.query(`
       INSERT OR REPLACE INTO consent_records (id, employee_id, consent_type, status, consent_date)
       VALUES (${db.escapeString('demo-consent-' + emp.id)}, ${db.escapeString(emp.id)}, 'PDPL_DATA_PROCESSING', 'granted', '2026-09-23 09:00:00')
