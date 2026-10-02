@@ -53,6 +53,7 @@ interface Analytics {
   retentionLiftSeries: { cohort: string; retention: number; benchmark: number; lift: number }[];
   eosbLiabilitySeries: { quarter: string; uae: number; ksa: number; combined: number }[];
   eosbByJurisdiction: { AE: number; SA: number };
+  onboardingPipeline: { id: string; first_name: string; last_name: string; role: string; start_date: string }[];
   exitsByReason: { reason: string; count: number }[];
   activeSalarySpend: number;
   totalRecruitingSpend: number;
@@ -63,6 +64,7 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showRecoveryInfo, setShowRecoveryInfo] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,12 +136,28 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
             <div className="flex justify-end mt-2">
               <button 
                 type="button"
-                onClick={() => alert('Please contact IT support for password recovery.')}
+                onClick={() => setShowRecoveryInfo(true)}
                 className="text-xs text-teal-600 hover:text-teal-700 font-medium hover:underline"
               >
                 Forgot Password?
               </button>
             </div>
+            {showRecoveryInfo && (
+              <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 flex items-start justify-between">
+                {/* Honest, present-tense copy only — no self-service reset flow exists yet.
+                    A real reset flow needs email infrastructure we haven't connected —
+                    that's a post-pilot item, not something to fake here. */}
+                <span>To reset your password, contact your Antum administrator.</span>
+                <button
+                  type="button"
+                  onClick={() => setShowRecoveryInfo(false)}
+                  className="ml-3 text-slate-400 hover:text-slate-600 font-bold leading-none"
+                  aria-label="Dismiss"
+                >
+                  &times;
+                </button>
+              </div>
+            )}
           </div>
           <button
             type="submit"
@@ -167,6 +185,11 @@ export default function App() {
   const [offboardingTasks, setOffboardingTasks] = useState<Task[]>([]);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Single source of truth for "who is mid-onboarding": derived from incomplete
+  // onboarding tasks server-side, not from an employee status label, so the dashboard
+  // card, the transitions list, and the checklist itself can never disagree.
+  const onboardingPipelineIds = new Set((analytics?.onboardingPipeline || []).map(p => p.id));
 
   // Compliance Documents
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -676,7 +699,7 @@ export default function App() {
                     <button onClick={() => setActiveTab('transitions')} className="text-xs text-teal-600 hover:underline">View All &rarr;</button>
                   </h3>
                   <div className="space-y-3">
-                    {employees.filter(e => e.status === 'onboarding').slice(0, 3).map(emp => (
+                    {(analytics?.onboardingPipeline || []).slice(0, 3).map(emp => (
                       <div key={emp.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-xs">
@@ -692,7 +715,7 @@ export default function App() {
                         </span>
                       </div>
                     ))}
-                    {employees.filter(e => e.status === 'onboarding').length === 0 && (
+                    {(analytics?.onboardingPipeline || []).length === 0 && (
                       <div className="py-8 text-center text-slate-400 text-sm italic">No active onboardings.</div>
                     )}
                   </div>
@@ -880,7 +903,7 @@ export default function App() {
               <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h3 className="font-bold text-slate-900 mb-4 uppercase text-xs tracking-widest">Ramping Employees (Onboarding)</h3>
                 <div className="space-y-4">
-                  {employees.filter(e => e.status === 'onboarding').map(emp => (
+                  {employees.filter(e => onboardingPipelineIds.has(e.id)).map(emp => (
                     <div key={emp.id} onClick={() => { setSelectedEmployee(emp); setActiveTab('employees'); }} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-teal-50/50 cursor-pointer transition flex justify-between items-center">
                       <div className="font-bold text-sm text-slate-800">{emp.first_name} {emp.last_name}</div>
                       <div className="text-[10px] font-bold text-teal-600">Day {Math.ceil((Date.now() - new Date(emp.start_date).getTime()) / (1000*60*60*24))}</div>
