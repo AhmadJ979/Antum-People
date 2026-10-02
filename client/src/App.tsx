@@ -186,6 +186,12 @@ export default function App() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // UAE-first launch surface (owner direction, 2026-10-02): the active demo defaults
+  // to UAE-only figures. KSA is not deleted anywhere — this switch just decides which
+  // jurisdiction's records the dashboard, employee list and transitions screens query
+  // for, and it stays reachable so the KSA surface can still be served and tested.
+  const [jurisdiction, setJurisdiction] = useState<'AE' | 'SA'>('AE');
+
   // Single source of truth for "who is mid-onboarding": derived from incomplete
   // onboarding tasks server-side, not from an employee status label, so the dashboard
   // card, the transitions list, and the checklist itself can never disagree.
@@ -253,15 +259,15 @@ export default function App() {
     if (token) {
       fetchData();
     }
-  }, [token]);
+  }, [token, jurisdiction]);
 
   const fetchData = async () => {
     if (!token) return;
     setLoading(true);
     try {
       const [empRes, anaRes] = await Promise.all([
-        authedFetch(`${API_BASE}/api/employees`),
-        authedFetch(`${API_BASE}/api/analytics/dashboard`)
+        authedFetch(`${API_BASE}/api/employees?jurisdiction=${jurisdiction}`),
+        authedFetch(`${API_BASE}/api/analytics/dashboard?jurisdiction=${jurisdiction}`)
       ]);
       
       if (empRes.status === 401 || anaRes.status === 401) {
@@ -548,6 +554,20 @@ export default function App() {
             <span className="ml-4 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded uppercase border border-amber-200">Sample Demo Data</span>
           </div>
           <div className="flex items-center space-x-4">
+            <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 text-xs font-bold" title="Active demo surface is UAE-first; KSA stays reachable here for testing the Phase 2 surface.">
+              <button
+                onClick={() => setJurisdiction('AE')}
+                className={`px-3 py-1 rounded-md transition ${jurisdiction === 'AE' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                🇦🇪 UAE
+              </button>
+              <button
+                onClick={() => setJurisdiction('SA')}
+                className={`px-3 py-1 rounded-md transition ${jurisdiction === 'SA' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                🇸🇦 KSA
+              </button>
+            </div>
             <button 
               onClick={() => fetchData()} 
               className="flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-semibold text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition"
