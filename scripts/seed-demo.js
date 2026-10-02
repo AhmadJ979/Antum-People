@@ -160,21 +160,64 @@ async function seed() {
       salary: 11000,
       basic_salary: 8000,
       recruitment_cost: 3000,
-      data_residency_country: 'SA',
+      data_residency_country: 'AE',
       status: 'onboarding',
       // Genuinely mid-onboarding: not yet fully productive. Pairs with Omar (UAE) as
-      // the demo's two coherent in-flight hires — UAE first, then KSA.
+      // the demo's two coherent in-flight hires. UAE-first (owner direction,
+      // 2026-10-02): both in-flight hires are UAE so the pipeline card still has two
+      // people once the active surface goes UAE-only. Dates/status unchanged from the
+      // earlier seed — only the jurisdiction moved.
       fully_productive_date: null
+    },
+    {
+      // Reviewer follow-up (2026-10-02, PR #50): the UAE-only surface had no offboarding
+      // example — the walkthrough opens on offboarding, and the only in-progress case
+      // was Sarah (KSA). This gives UAE its own credible, in-flight offboarding case.
+      id: 'demo-emp-noura',
+      first_name: 'Noura',
+      last_name: 'Al-Suwaidi',
+      email: 'noura.alsuwaidi@example.com',
+      department: 'Sales',
+      role: 'Account Manager',
+      start_date: '2024-04-10',
+      salary: 16000,
+      basic_salary: 11000,
+      recruitment_cost: 7000,
+      data_residency_country: 'AE',
+      status: 'offboarding',
+      end_date: '2026-10-10',
+      fully_productive_date: '2024-05-01'
+    },
+    {
+      // Reviewer follow-up (2026-10-02, PR #50): a second UAE hire in the same H1 2023
+      // cohort as the Yusuf leaver, who stayed past a year. Without this, UAE-only
+      // showed a 1-person, 0%-retention cohort, which reads as broken data rather than
+      // a real (if small) attrition event.
+      id: 'demo-emp-salim',
+      first_name: 'Salim',
+      last_name: 'Al-Nuaimi',
+      email: 'salim.alnuaimi@example.com',
+      department: 'Finance',
+      role: 'Senior Accountant',
+      start_date: '2023-04-15',
+      salary: 19000,
+      basic_salary: 13000,
+      recruitment_cost: 6000,
+      data_residency_country: 'AE',
+      status: 'active',
+      fully_productive_date: '2023-05-10'
     }
   ];
 
-  // Historical leavers: additional to the 9-person active roster above (which must stay
-  // at 9 — the walkthrough describes nine active employees). These exist so retention
+  // Historical leavers: additional to the active roster above (11 people as of this
+  // reviewer follow-up, up from 9 — Noura and Salim were added above at the reviewer's
+  // explicit direction, not a unilateral roster-size decision). These exist so retention
   // cohort math has real, varied data to compute instead of trivially reading 100%
   // everywhere. Because their liability is settled, they are excluded from the active
   // EOSB liability and headcount cards (server/index.js filters them out explicitly) —
   // only the retention cohort calculation, which intentionally looks at history, counts
-  // them. UAE first, then KSA, consistent with the rest of this seed.
+  // them. UAE-first (owner direction, 2026-10-02): both leavers are UAE so the retention
+  // cohort dips they create still show once the active surface goes UAE-only.
   const historicalLeavers = [
     {
       id: 'demo-emp-yusuf',
@@ -200,11 +243,12 @@ async function seed() {
       department: 'Engineering',
       role: 'Junior Developer',
       start_date: '2024-03-05',
-      end_date: '2024-09-01', // ~180 days — same treatment in a second cohort.
+      end_date: '2024-09-01', // ~180 days — same treatment in a second cohort. Dates/
+      // status unchanged from the earlier seed — only the jurisdiction moved to AE.
       salary: 14000,
       basic_salary: 9500,
       recruitment_cost: 6000,
-      data_residency_country: 'SA',
+      data_residency_country: 'AE',
       status: 'terminated',
       fully_productive_date: null
     }
@@ -282,8 +326,11 @@ async function seed() {
     });
   });
 
-  // Reem (KSA) — started 2026-08-05, two tasks done so far, five still open.
-  compliance.checklistTemplates.KSA.onboarding.forEach((t, idx) => {
+  // Reem (UAE) — started 2026-08-05, two tasks done so far, five still open.
+  // UAE-first (owner direction, 2026-10-02): checklist source switched from KSA to
+  // UAE to match her jurisdiction move above; same 7-item length, same completion
+  // split, so her place in the onboarding pipeline is unaffected.
+  compliance.checklistTemplates.UAE.onboarding.forEach((t, idx) => {
     onboardingTasks.push({
       id: `demo-task-on-reem-${idx+1}`,
       emp_id: 'demo-emp-reem',
@@ -315,7 +362,8 @@ async function seed() {
     await db.query(sql);
   }
 
-  // 3. Offboarding Tasks (for Sarah)
+  // 3. Offboarding Tasks (for Sarah, KSA; Noura, UAE — added per reviewer follow-up so
+  // the UAE-only surface has its own in-progress offboarding example)
   console.log('Upserting offboarding tasks...');
   const offboardingTasks = [];
   compliance.checklistTemplates.KSA.offboarding.forEach((t, idx) => {
@@ -329,6 +377,17 @@ async function seed() {
     });
   });
 
+  compliance.checklistTemplates.UAE.offboarding.forEach((t, idx) => {
+    offboardingTasks.push({
+      id: `demo-task-off-uae-${idx+1}`,
+      emp_id: 'demo-emp-noura',
+      title: t.title,
+      status: idx < 2 ? 'completed' : 'pending',
+      due: '2026-10-10',
+      done: idx < 2 ? '2026-10-01' : null
+    });
+  });
+
   for (const t of offboardingTasks) {
     const sql = `
       INSERT OR REPLACE INTO offboarding_tasks (id, employee_id, title, status, due_date, completed_at, created_at)
@@ -338,8 +397,8 @@ async function seed() {
     await db.query(sql);
   }
 
-  // 4. Exit Interviews (Sarah's pre-departure interview, plus one per historical leaver,
-  // UAE leaver first then KSA leaver)
+  // 4. Exit Interviews (Sarah's and Noura's pre-departure interviews, plus one per
+  // historical leaver — all UAE now except Sarah, per the UAE-first jurisdiction move)
   console.log('Upserting exit interviews...');
   const exitInterviews = [
     {
@@ -364,6 +423,14 @@ async function seed() {
       interview_date: '2024-09-01',
       departure_reason: 'Relocation',
       detailed_feedback: 'Moving out of the region for family reasons.',
+      satisfaction_score: 4
+    },
+    {
+      id: 'demo-exit-4',
+      employee_id: 'demo-emp-noura',
+      interview_date: '2026-10-01',
+      departure_reason: 'Better Opportunity',
+      detailed_feedback: 'Moving to a larger account portfolio at another firm.',
       satisfaction_score: 4
     }
   ];
