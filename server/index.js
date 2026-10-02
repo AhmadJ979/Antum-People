@@ -479,12 +479,26 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       .filter(e => incompleteOnboardingIds.has(e.id))
       .map(e => ({ id: e.id, first_name: e.first_name, last_name: e.last_name, role: e.role, start_date: e.start_date }));
 
-    const eosbLiabilitySeries = [
-      { quarter: 'Q3 2026', uae: Math.round(eosbByJurisdiction.AE), ksa: Math.round(eosbByJurisdiction.SA), combined: Math.round(totalEosb) },
-      { quarter: 'Q4 2026', uae: Math.round(eosbByJurisdiction.AE * 1.05), ksa: Math.round(eosbByJurisdiction.SA * 1.08), combined: Math.round(totalEosb * 1.06) },
-      { quarter: 'Q1 2027', uae: Math.round(eosbByJurisdiction.AE * 1.15), ksa: Math.round(eosbByJurisdiction.SA * 1.25), combined: Math.round(totalEosb * 1.20) },
-      { quarter: 'Q2 2027', uae: Math.round(eosbByJurisdiction.AE * 1.10), ksa: Math.round(eosbByJurisdiction.SA * 1.15), combined: Math.round(totalEosb * 1.12) }
+    // Forecast: project each active employee's own EOSB forward to each quarter-end
+    // using the same engine calculateEOSB() call as everywhere else, instead of an
+    // arbitrary growth multiplier. Tenure only ever increases, so each quarter's total
+    // is >= the previous one for a stable workforce — no unexplained dip, and the
+    // trajectory is the engine's own output, not a guess (rule 16).
+    const forecastQuarterEnds = [
+      { quarter: 'Q3 2026', date: '2026-09-30' },
+      { quarter: 'Q4 2026', date: '2026-12-31' },
+      { quarter: 'Q1 2027', date: '2027-03-31' },
+      { quarter: 'Q2 2027', date: '2027-06-30' }
     ];
+    const eosbLiabilitySeries = forecastQuarterEnds.map(({ quarter, date }) => {
+      let uae = 0, ksa = 0;
+      activeEmployees.forEach(e => {
+        const projected = eosb.calculateEOSB(e.start_date, date, e.basic_salary, e.salary, e.data_residency_country, 'resignation', 0);
+        if (e.data_residency_country === 'AE') uae += projected;
+        else if (e.data_residency_country === 'SA') ksa += projected;
+      });
+      return { quarter, uae: Math.round(uae), ksa: Math.round(ksa), combined: Math.round(uae + ksa) };
+    });
 
     const reasonsMap = {};
     exits.forEach(ex => {
