@@ -105,12 +105,33 @@ live_loops() {
     local pid cmd first
     for pid in $(pgrep -f 'keep-alive\.sh' 2>/dev/null); do
         [ "$pid" = "$$" ] && continue
-        cmd="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)"
+        cmd="$(tr '\0' ' ' 2>/dev/null < "/proc/$pid/cmdline")"
         [ -n "$cmd" ] || continue
         first="${cmd%% *}"
         case "${first##*/}" in
             bash|sh|dash|ash|setsid|nohup|env) printf '%s %s\n' "$pid" "$cmd" ;;
         esac
+    done
+}
+
+# True when PID $1 is a keep-alive.sh loop guarding THIS deploy dir and port. A loop armed
+# for another directory or port (another checkout, a scratch instance) is not our guard and
+# must not block a re-arm of ours.
+loop_guards_us() {
+    local pid="$1" env_dir env_port
+    env_dir="$(tr '\0' '\n' 2>/dev/null < "/proc/$pid/environ" | sed -n 's/^ANTUM_DEPLOY_DIR=//p')"
+    env_port="$(tr '\0' '\n' 2>/dev/null < "/proc/$pid/environ" | sed -n 's/^ANTUM_PORT=//p')"
+    [ "${env_dir:-/home/team/shared/probable-octo-sniffle}" = "$DEPLOY_DIR" ] || return 1
+    [ "${env_port:-3000}" = "$PORT" ] || return 1
+    return 0
+}
+
+# The live loops that guard our own target.
+guarding_loops() {
+    local pid rest
+    live_loops | while read -r pid rest; do
+        [ -n "$pid" ] || continue
+        loop_guards_us "$pid" && echo "$pid $rest"
     done
 }
 
@@ -149,14 +170,14 @@ if [ "${ANTUM_KEEPALIVE_DETACHED:-0}" != "1" ]; then
         log "detaching: arming session ${my_sid:-unknown}, re-execing under setsid (handoff from pid $$)"
         ANTUM_KEEPALIVE_DETACHED=1 setsid nohup bash "$SCRIPT_PATH" "$@" >> "$OUT_FILE" 2>&1 &
         sleep 3
-        live_after="$(live_loops)"
+        live_after="$(guarding_loops)"
         if [ -n "$live_after" ]; then
-            log_exit "deliberate handoff: detached instance is up (keep-alive.sh processes now: $(echo "$live_after" | tr '\n' ';'))"
+            log_exit "deliberate handoff: detached instance is up (guards for port $PORT now: $(echo "$live_after" | tr '\n' ';'))"
             exit 0
         fi
         # Never leave the port unwatched on the way out: if the handoff produced no loop,
         # say so and fail loudly.
-        log_exit "detach produced no live keep-alive.sh within 3s - nothing is guarding port $PORT; re-arm this loop by hand"
+        log_exit "detach produced no live guard for port $PORT within 3s - nothing is watching it; re-arm this loop by hand"
         exit 1
     else
         log "WARN: setsid not found - running inside the arming session (${my_sid:-unknown}); a session teardown can kill this loop"
@@ -180,15 +201,20 @@ fi
 
 exec 9<>"$LOCK_FILE"
 if ! flock -n 9; then
-    live="$(live_loops)"
+    live="$(guarding_loops)"
     if [ -n "$live" ]; then
-        log_exit "another keep-alive.sh is alive and holds the lock - this arm is not needed: $(echo "$live" | tr '\n' ';')"
+        log_exit "another keep-alive.sh is alive and already guards $DEPLOY_DIR on port $PORT - this arm is not needed: $(echo "$live" | tr '\n' ';')"
         exit 1
     fi
-    # No live loop, but the lock is held: a stale lock. Typically a server process that
-    # inherited fd 9 from an earlier loop, or a loop that was SIGKILLed leaving its fd open.
+    others="$(live_loops)"
+    if [ -n "$others" ]; then
+        log "note: other keep-alive.sh loops exist for different targets - they are not this port's guard: $(echo "$others" | tr '\n' ';')"
+    fi
+    # No live loop for this target, but the lock is held: a stale lock. Typically a server
+    # process that inherited fd 9 from an earlier loop, or a loop that was SIGKILLed leaving
+    # its fd open.
     recorded="$(head -n 1 "$LOCK_FILE" 2>/dev/null | tr -d '[:space:]')"
-    log "stale lock: no live keep-alive.sh, but the lock is held (recorded PID '${recorded:-none}') - reclaiming"
+    log "stale lock: no live guard for this target, but the lock is held (recorded PID '${recorded:-none}') - reclaiming on a fresh lock file"
     mv -f "$LOCK_FILE" "$LOCK_FILE.stale" 2>/dev/null || rm -f "$LOCK_FILE" 2>/dev/null
     : > "$LOCK_FILE" 2>/dev/null
     exec 9<>"$LOCK_FILE"
