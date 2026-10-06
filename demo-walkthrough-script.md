@@ -7,9 +7,13 @@
 
 > ⚠️ **Verification status — internal (for the presenter, not read aloud).**
 > - Rewritten and re-walked by the Product Designer on **2026-10-06** against the deployed commit **`80c3fff`** (`main`, PRs #47–#51), the same commit the public URL serves (`/assets/index-CPYz_PZb.js`).
+> - **This script and the audit are merged to `main` in PR #55** (merge commit `4935c41`, 2026-10-06, approved). PR #55 changed documents only, so **the product build under the script is unchanged — still `80c3fff`** — and every figure below still describes what the public URL serves. No re-walk was needed for the merge.
 > - **What I checked on the public URL myself** (anonymous, no login): `https://b974147c03228029e277d1cbe6646fe6.ctonew.app/` returns **200**, title **"Antum People"**, the app renders and the **sign-in screen appears** (Username / Password / "Forgot Password?" / "Sign In").
 > - **What I could not check on the public URL:** every screen behind the login. WORKFLOW rule 10 says the demo credential is lead-managed and I must not use it, so those screens were verified on a **scratch instance of the same commit** (own port, own database, own throwaway credential) — not on the live tree. The rendered client bundle is the same file the public URL serves. **Ask the lead to run one logged-in pass on the public URL before the first call.**
-> - **Every figure below was read off that instance in this session — none is recalled.** The seeded EOSB on a record is computed by the engine **when the seed runs**, so a currency figure can differ after a re-seed; counts and ratios are stable. Prefer counts and ratios in the narrative, and **re-read the dashboard the morning of the call**. Never write a figure into this script to make a screen look fuller — that is the defect class this team keeps sending back.
+> - **Every figure below was read off that instance in this session — none is recalled.** There are two classes of figure here and they are treated differently:
+>   - **Stable — state these freely:** counts (10 UAE records, 8 active, 2 onboarding, 1 offboarding, 2 leavers), dates, the length and order of the checklist, and any figure the card labels `Illustrative` **where the number itself is computed and only its comparison is illustrative** (the card's own reading is a real computed number).
+>   - **Day-sensitive — never state these as the expected value:** anything derived from accrued service **to today** — the **EOSB Liability** card total, the settlement's **EOSB / Gross Total / Net Payable** lines, and the **EOSB forecast ladder** (its first quarter *is* the accrual). The engine recomputes the accrual when the page is read: the same commit served **85,126.34** on the designer's instance and **85,125.43** on the lead's live pass twenty minutes later. **Read these off the screen during the call and quote what the card says.** Where a dated reading appears below, it is labelled a *reading*, not the value to say out loud.
+>   - Never write a figure into this script to make a screen look fuller — that is the defect class this team keeps sending back.
 > - **Roster as served on this surface:** 10 records — 8 active (two of them mid-onboarding), one in offboarding, two historical leavers kept for the retention math.
 > - **UAE-only, end to end.** No other jurisdiction appears anywhere in the flow below — no screen, figure, claim or control. The demo reads as a UAE product, and nothing in this script depends on anything outside it.
 > - **The UAE resignation tier is unconfirmed.** Federal Decree-Law 33/2021 vs the repealed Law 8/1980 Art. 132 reduction is with counsel. Never present the UAE EOSB figure as legally validated.
@@ -59,7 +63,7 @@
 - A **populated offboarding checklist** with two steps already done and six pending — not an empty screen.
 - The UAE sequence itself: **MoHRE work-permit cancellation** and **residency visa cancellation** on the list, in the right order, ahead of final settlement.
 - **EOSB basis "Basic Salary (UAE Rule)"** — the UAE accrual basis, stated on the employee record.
-- If you open it: a settlement document whose **EOSB line is the engine's accrued figure for that employee** (6,415.79 AED when measured on 2026-10-06), Gross Total 11,577.08, Net Payable 11,577.08, and lines the engine cannot compute reading **"not calculated"** — not zeros, not placeholders.
+- If you open it: a settlement document whose **EOSB line is the engine's accrued figure for that employee**, and lines the engine cannot compute reading **"not calculated"** — not zeros, not placeholders. **The EOSB, Gross Total and Net Payable lines are all accrual-derived: read them off the document when you open it and say what it says.** *(Reading on 2026-10-06: EOSB 6,415.79, Gross 11,577.08, Net 11,577.08 — a reading, not the value to quote; expect it to differ.)*
 
 ### Speaker notes
 > "Let me start where it costs you the most if it's wrong: offboarding. This is a UAE departure already in flight. The checklist isn't a template someone typed — it comes out of the compliance engine, in order: equipment and access first, then notice, then the EOSB calculation, then MoHRE cancels the work permit and the residency visa follows, and only then the final payment. The EOSB basis here says **basic salary**, which is the UAE rule. And the settlement document is generated from the same engine — this figure is her accrued end-of-service, computed from her own start date and salary, not typed in."
@@ -113,11 +117,11 @@ A: Every consent write creates a record (who, when, which version, lawful basis)
 3. The two pipeline cards: **Onboarding** (Omar, Reem) and **Offboarding** (Noura).
 4. Call out the **"Sample Demo Data"** badge in the header *before* they ask.
 
-### What the customer sees (measured 2026-10-06 on `80c3fff`)
-- **Retention Lift (1-yr):** `+19%`, labelled `Illustrative` / `Illustrative Benchmark`.
-- **Time-to-Value:** `19.2 d`, labelled `Illustrative`, `target: 15 days`.
-- **Cost-per-Hire:** `AE 7,625.00 AED`, labelled `Illustrative Benchmark` (`recruitment + onboarding`).
-- **EOSB Liability:** `AE 85,126.34 AED`, labelled `Illustrative Total` (`Accrued to date across regions`).
+### What the customer sees — **read each card at demo time** (readings below taken 2026-10-06 on `80c3fff`)
+- **Retention Lift (1-yr):** quote the card's lift value (*read 2026-10-06: `+19%`*), labelled `Illustrative` / `Illustrative Benchmark`.
+- **Time-to-Value:** quote the card's day count (*read 2026-10-06: `19.2 d`*), labelled `Illustrative`, `target: 15 days`.
+- **Cost-per-Hire:** quote the card's figure (*read 2026-10-06: `AE 7,625.00 AED`*), labelled `Illustrative Benchmark` (`recruitment + onboarding`).
+- **EOSB Liability: do not script a number.** The card recomputes accrued service to today, so it is different on a different day — the same commit read `AE 85,126.34 AED` on the designer's instance and `AE 85,125.43 AED` on the lead's live pass twenty minutes later. **Read it off the card and quote what it says** (labelled `Illustrative Total`, `Accrued to date across regions`).
 - **Onboarding Pipeline:** two people (Omar Al-Farsi, started 2026-08-20; Reem Al-Hashemi, started 2026-08-05).
 - **Offboarding Pipeline:** one person (Noura Al-Suwaidi, `Exit 2026-10-10`).
 
@@ -142,8 +146,8 @@ A: "Every figure on this screen is UAE. The engine is built for the GCC and we a
 2. Point at **Retention Lift — 1-Yr Cohort**, then **Time-to-Value by Department**, then **EOSB Liability Forecast**.
 3. Switch to the **bilingual prototype** and click **EN | العربية** to show RTL mirroring.
 
-### What the customer sees (measured 2026-10-06 on `80c3fff`)
-- **Retention Lift — 1-Yr Cohort** (UAE cohorts: the card reads 100% / 50% / 80% / 100%, each against a separately-labelled `Illustrative` benchmark — the 50% is a real mixed outcome, a cohort with both a leaver and a stayer, not a one-person cohort):
+### What the customer sees — the forecast is read at demo time; the cohort ratios are stable in this dataset (readings taken 2026-10-06 on `80c3fff`)
+- **Retention Lift — 1-Yr Cohort** (UAE cohorts, stable: 100% / 50% / 80% / 100%, each against a separately-labelled `Illustrative` benchmark — the 50% is a real mixed outcome, a cohort with both a leaver and a stayer, not a one-person cohort):
 
   | Cohort | Retention | Benchmark | Lift |
   |---|---|---|---|
@@ -153,7 +157,7 @@ A: "Every figure on this screen is UAE. The engine is built for the GCC and we a
   | H2 2026 | 100% | 81% | +19% |
 
 - **Time-to-Value by Department:** Engineering 16.7 d, Finance 25 d, Product 19 d, Sales 21 d — each against a 15-day target, over-target shown in red.
-- **EOSB Liability Forecast (UAE, by quarter):** Q3 2026 **84,667** → Q4 2026 **90,926** → Q1 2027 **133,477** → Q2 2027 **161,494**. The first quarter is the computed accrual; later quarters come from a tenure-derived growth assumption, not a booked forecast.
+- **EOSB Liability Forecast (UAE, by quarter): do not script these numbers** — its first quarter *is* the accrual-to-today figure, so the whole ladder moves with it. **Read the four quarters off the card during the call.** *(Reading on 2026-10-06: Q3 2026 84,667 → Q4 2026 90,926 → Q1 2027 133,477 → Q2 2027 161,494. The first quarter is the computed accrual; later quarters a tenure-derived growth assumption, not a booked forecast.)*
 - The bilingual prototype flips to RTL with Arabic-Indic numerals and re-flowed currency.
 
 ### Speaker notes
