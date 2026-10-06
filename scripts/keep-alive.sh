@@ -43,6 +43,16 @@
 #   the server it had started kept running - the observed "site up, watchdog gone, nothing
 #   in the log" state. Detaching removes that class of death.
 #
+# TWO ARMING PATHS - TEST BOTH BEFORE SHIPPING A CHANGE TO THIS FILE:
+#   1) setsid nohup bash scripts/keep-alive.sh   (what deploy-main.sh does, and the documented
+#      manual recovery) -> the loop is already a session leader, so it does NOT re-exec itself.
+#   2) nohup bash scripts/keep-alive.sh &       -> the loop self-detaches and re-execs under setsid.
+#   Path 1 is the one that runs in production and the stricter of the two: only path 2 creates
+#   a re-exec, and only a re-exec can put a marker into the exec-time environment that
+#   /proc/<pid>/environ reports. Anything that recognises this loop's own processes through
+#   the environment must therefore be checked on path 1. Regression test for both:
+#   scripts/keep-alive-deploypath-test.sh
+#
 # KNOWN HARD LIMIT - do not invent a mechanism this host does not have:
 #   there is no cron and no systemd here, so nothing re-arms the loop after a host restart.
 #   The deploy script arms it; a boot does not. Re-arming after a restart stays manual.
@@ -113,8 +123,65 @@ with_timeout() {
     if command -v timeout >/dev/null 2>&1; then timeout "$seconds" "$@"; else "$@"; fi
 }
 
+# One field out of /proc/<pid>/status, read with the shell's own `read` - no fork. A fork of
+# THIS loop carries this script's argv, so `pgrep -f keep-alive.sh` lists it and it looks
+# exactly like a second guard; every fork we skip below is a false positive we would
+# otherwise create ourselves.
+proc_status_field() {
+    local pid="$1" name="$2" line value=""
+    [ -r "/proc/$pid/status" ] || return 1
+    while IFS= read -r line; do
+        case "$line" in
+            "$name:"*) value="${line#*:}"; printf '%s' "${value//[[:space:]]/}"; return 0 ;;
+        esac
+    done < "/proc/$pid/status"
+    return 1
+}
+
+# True when PID $1 is this process, a descendant of it, or another process in this process's
+# session that is not a session leader. All three are this loop's own machinery, not a guard.
+#
+# WHY THIS EXISTS - the defect that took the guard down on 2026-10-06 after #54 merged:
+#   deploy-main.sh arms the loop as `setsid nohup bash scripts/keep-alive.sh`, which already
+#   makes it a session leader, so the loop logs "no detach needed" and NEVER re-execs itself.
+#   The re-exec is the only moment anything like a marker enters the process's *exec-time*
+#   environment - and /proc/<pid>/environ reports the exec-time environment, not the shell's
+#   current one, so an `export` made inside this script (the ANTUM_KEEPALIVE_TOKEN lines at
+#   the top) is simply not visible there. The token exclusion therefore matched nothing, the
+#   loop counted three of its own command-substitution forks as "another keep-alive.sh", and
+#   it refused to arm at all - on the live host, three times in a row:
+#     keep-alive.log 10:07:31 / 10:07:37 / 10:07:43
+#     "EXIT: acquired the lock but another keep-alive.sh also guards ... - refusing to run a
+#      duplicate guard: 2381 bash scripts/keep-alive.sh;2382 ...;2383 ..."
+#   (those pids were the loop's own forks, 2381-2383, not a guard). Arming by hand without
+#   setsid hid the bug: the loop then detaches itself, re-execs, and the token IS in the
+#   exec-time environment, so the token check worked and the rig passed while the deploy path
+#   could never arm. Trust the process tree, not the environment.
+our_own_process() {
+    local pid="$1" walk="$1" ppid hop=0 sid oursid
+    [ "$pid" = "$$" ] && return 0
+    while [ -n "$walk" ] && [ "$walk" != "0" ] && [ "$hop" -lt 64 ]; do
+        ppid="$(proc_status_field "$walk" PPid)"
+        [ -n "$ppid" ] || break
+        [ "$ppid" = "$walk" ] && break
+        [ "$ppid" = "$$" ] && return 0
+        walk="$ppid"
+        hop=$((hop + 1))
+    done
+    # Same session and not a session leader: it cannot be an independently armed guard (a
+    # guard is always its own session leader - setsid at arm time, or its own self-detach).
+    sid="$(proc_status_field "$pid" NSsid)"
+    oursid="$(proc_status_field "$$" NSsid)"
+    if [ -n "$sid" ] && [ -n "$oursid" ] && [ "$sid" = "$oursid" ] && [ "$sid" != "$pid" ]; then
+        return 0
+    fi
+    return 1
+}
+
 # Live keep-alive.sh loops other than this process. Matched on the interpreter + script
 # pair, so an editor or a diff that merely mentions the filename is not mistaken for a loop.
+# Skipped, in this order: our ancestors, the shell that armed us, our own forks (see
+# our_own_process), and our own forks by environment token.
 # PIDs on this process's ancestor chain. The shell that armed us is itself a keep-alive.sh
 # for the same target while the detach handoff runs, and must not be counted as another
 # guard: without this an arm could refuse because of its own arming parent.
@@ -135,8 +202,13 @@ live_loops() {
     for pid in $(pgrep -f 'keep-alive\.sh' 2>/dev/null); do
         case " $ancestors " in *" $pid "*) continue ;; esac
         if [ -n "${ANTUM_KEEPALIVE_PARENT:-}" ] && [ "$pid" = "$ANTUM_KEEPALIVE_PARENT" ]; then continue; fi
-        [ "$pid" = "$$" ] && continue
-        # Our own forks carry our token; the shell that armed us carries the token we inherited.
+        # Our own forks: the commonest false positive, and the one that broke the deploy path
+        # on 2026-10-06 (see our_own_process). Position matters - this runs before the token
+        # check, which cannot see a token that was only exported inside this script.
+        our_own_process "$pid" && continue
+        # Belt and braces: our own forks carry our token; the shell that armed us carries the
+        # token we inherited. (Only visible in /proc/<pid>/environ if it was set before exec,
+        # i.e. on a re-exec - which is exactly why it cannot be the primary check.)
         other_token="$(tr '\0' '\n' 2>/dev/null < "/proc/$pid/environ" | sed -n 's/^ANTUM_KEEPALIVE_TOKEN=//p')"
         if [ -n "$other_token" ]; then
             if [ "$other_token" = "$KEEPALIVE_TOKEN" ]; then continue; fi
@@ -161,6 +233,22 @@ loop_guards_us() {
     [ "${env_dir:-/home/team/shared/probable-octo-sniffle}" = "$DEPLOY_DIR" ] || return 1
     [ "${env_port:-3000}" = "$PORT" ] || return 1
     return 0
+}
+
+# Loops that were started by the process whose pid is $1: they carry ANTUM_KEEPALIVE_PARENT
+# in their exec-time environment (that variable is set before exec, so unlike an export made
+# inside this script it does show up in /proc/<pid>/environ). Used to check that the detach
+# handoff actually produced a loop, instead of trusting any guard that happens to be live.
+handoff_loops() {
+    local pid parent want="$1" cmd first
+    for pid in $(pgrep -f 'keep-alive\.sh' 2>/dev/null); do
+        [ "$pid" = "$$" ] && continue
+        parent="$(tr '\0' '\n' 2>/dev/null < "/proc/$pid/environ" | sed -n 's/^ANTUM_KEEPALIVE_PARENT=//p')"
+        [ -n "$parent" ] && [ "$parent" = "$want" ] || continue
+        cmd="$(tr '\0' ' ' 2>/dev/null < "/proc/$pid/cmdline")"
+        first="${cmd%% *}"
+        case "${first##*/}" in bash|sh|dash|ash|setsid|nohup|env) echo "$pid" ;; esac
+    done
 }
 
 # The live loops that guard our own target.
@@ -212,10 +300,18 @@ if [ "${ANTUM_KEEPALIVE_DETACHED:-0}" != "1" ]; then
         detach_parent_pid="$BASHPID"
         ANTUM_KEEPALIVE_PARENT="$detach_parent_pid" ANTUM_KEEPALIVE_DETACHED=1 setsid nohup bash "$SCRIPT_PATH" "$@" >> "$OUT_FILE" 2>&1 &
         sleep 3
+        # Only the loop THIS shell started counts as a successful handoff. Any other live
+        # guard for the target is not evidence that the handoff worked - reporting it as one
+        # is how a refusal gets logged as a success.
+        handed="$(handoff_loops "$detach_parent_pid")"
+        if [ -n "$handed" ]; then
+            log_exit "deliberate handoff: detached instance $(echo "$handed" | tr '\n' ' ') is up and guards port $PORT"
+            exit 0
+        fi
         live_after="$(guarding_loops)"
         if [ -n "$live_after" ]; then
-            log_exit "deliberate handoff: detached instance is up (guards for port $PORT now: $(echo "$live_after" | tr '\n' ';'))"
-            exit 0
+            log_exit "the detached instance did not come up, but another guard for port $PORT is live ($(echo "$live_after" | tr '\n' ';')) - this shell is not that guard; read the log above for why it refused"
+            exit 1
         fi
         # Never leave the port unwatched on the way out: if the handoff produced no loop,
         # say so and fail loudly.
