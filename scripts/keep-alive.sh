@@ -280,10 +280,13 @@ if [ -z "$locked" ]; then
     fi
 fi
 
-# Guard against a reclaimer having replaced the lock file between our lock and now: if the
-# path no longer names the inode we locked, we are not the single instance we think we are.
-if [ "$(stat -c %i /proc/self/fd/9 2>/dev/null)" != "$(stat -c %i "$LOCK_FILE" 2>/dev/null)" ]; then
-    log_exit "lock file was replaced under us - refusing to run a second guard on port $PORT"
+# If we hold the lock but another loop is also guarding this target, we are the duplicate:
+# refuse. (This replaces an fd-inode comparison that was fatal on 2026-10-06: stat runs in a
+# child process, the lock fd is not visible to it, so the comparison failed at every start
+# and took the guard down instead of protecting it.)
+duplicate="$(guarding_loops)"
+if [ -n "$duplicate" ]; then
+    log_exit "acquired the lock but another keep-alive.sh also guards $DEPLOY_DIR on port $PORT - refusing to run a duplicate guard: $(echo "$duplicate" | tr '\n' ';')"
     exit 1
 fi
 echo $$ > "$LOCK_FILE" 2>/dev/null || log "WARN: could not record loop PID in $LOCK_FILE (lock still held)"
