@@ -6,7 +6,7 @@
 > **Scope:** `calculateEOSB()` in `server/index.js` and the audit-trail schema
 > **Reference:** `/home/team/shared/compliance-requirements.md` (Sections 3, 4, 7, 8)
 
-> **Data-handling note:** per the team's no-employee-data rule (Workflow "Hard Rules" #4), this report **describes** verification outcomes instead of quoting salary amounts or EOSB figures. Statutory constants (e.g. 90 days, 21/30 days per year, the 2-year cap) are quoted because they are legal provisions, not employee data. The UAE resignation tier (1/3–2/3) is quoted as the engine's current value — **frozen and unconfirmed pending counsel** — not as a legal provision.
+> **Data-handling note:** per the team's no-employee-data rule (Workflow "Hard Rules" #4), this report **describes** verification outcomes instead of quoting salary amounts or EOSB figures. Engine constants (e.g. 90 days, 21/30 days per year, the 2-year cap) are quoted because they are calculation parameters, not employee data. **Not all of them are sourced legal provisions** — where no article is behind a number it is labelled as the engine's rule, not as law. The UAE resignation tier (1/3–2/3) is quoted as the engine's current value — **frozen and unconfirmed pending counsel** — not as a legal provision.
 
 ---
 
@@ -23,7 +23,7 @@ This report was originally issued 2026-06-23 against the engine as it then stood
 The EOSB calculation engine is **structurally sound** — the core formula logic for both UAE and KSA is correct, and the three issues that required remediation are resolved:
 
 - **Finding 1 (P0, `isResignation` conflation) — FIXED.** The engine routes on an explicit `terminationType` string: `summary_dismissal` forfeits, `resignation` applies the tiered reductions, and every other type receives the full (unreduced) amount.
-- **Finding 2 (P1, unpaid-leave over-deduction) — FIXED.** UAE now excludes only unpaid leave beyond 90 days per year of service; KSA subtracts all (no statutory exclusion), per the recommendation.
+- **Finding 2 (P1, unpaid-leave over-deduction) — FIXED.** UAE now excludes only unpaid leave beyond 90 days per year of service; KSA subtracts all unpaid leave, per the recommendation. **The 90-day allowance is the engine's rule, not a sourced legal provision** — we hold no article for it, and the UAE counsel request asks for one (point 4).
 - **Finding 3 (P2, dead wrapper) — RESOLVED.** A single `calculateEOSB()` with the full signature is the only entry point; the old short-signature wrapper and `calculateDetailedEOSB()` no longer exist.
 
 Two non-blocking notes remain for the lead (Finding 6: the KSA notice-penalty deduction is no longer modelled; Finding 7: the calculate-eosb endpoint no longer persists an audit row). Neither affects the correctness of the accrued EOSB amount.
@@ -63,7 +63,7 @@ function calculateEOSB(startDateStr, endDateStr, basicSalary, totalSalary, count
 
 **Status (re-verified): FIXED.**
 
-**Original problem (2026-06-23):** the engine subtracted *all* unpaid leave days from service for UAE, under-paying employees who took leave within the statutory allowance.
+**Original problem (2026-06-23):** the engine subtracted *all* unpaid leave days from service for UAE, under-paying employees who took leave within the 90-day allowance the engine applies.
 
 **Current code (`server/index.js`, `calculateEOSB`):**
 
@@ -80,6 +80,8 @@ if (country === 'SA' || country === 'KSA') {
     netDays = Math.max(0, rawDays - excessUnpaid);
 }
 ```
+
+> **Unsourced qualifier in the quoted engine comment.** The block above quotes `server/eosb.js` verbatim, and its KSA comment reads "No statutory exclusion…". That word asserts a legal proposition (that KSA law provides no exclusion) with no article behind it. The quote is left verbatim so it still matches the engine; the **code comment itself is filed for a source-or-drop change** (not made here — `server/eosb.js` is outside this task).
 
 **Verification (re-run):** T9 (UAE, 2 years, 120 unpaid days) now returns the **full 2-year amount, identical to the T1 baseline** — see below. With 2 years of service the allowance is 90 × 2 ≈ 180 days, and 120 days sits inside that allowance, so no unpaid leave is excluded.
 

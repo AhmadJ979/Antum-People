@@ -25,9 +25,11 @@ The detailed requirements, statutory basis, arithmetic, boundary cases, and test
 
 - `employees` has `gave_proper_notice` (INTEGER, default `1`), but `calculateEOSB` never reads it.
 - `calculateEOSB` returns a single accrued EOSB figure with no notice deduction.
-- Consequence: an employee who resigns without serving notice is **not** charged the statutory notice compensation, and an employer who waives notice is not credited — in both directions the number is silent about a real statutory item.
+- Consequence: an employee who resigns without serving notice is **not** charged notice compensation, and an employer who waives notice is not credited — in both directions the number is silent about a real settlement line item.
 
 ### 2.2 Statutory basis
+
+> **Sourcing status — read before relying on this section.** The notice rules below are our working reading of the two statutes. **We hold no article number or verbatim text for the notice periods or for notice compensation in either jurisdiction**, and our own records contradict each other on the KSA period (`compliance-requirements.md` L87 states 60 days/indefinite and 30 days/fixed-term; this spec states "KSA 60/30"). The `statutory` qualifier has therefore been **removed from the three strings below** and the figures kept as the engine's working assumption. Both counsel requests already ask for the articles (UAE point 5, KSA point 6).
 
 **KSA — Labour Law, Royal Decree No. M/51 (as amended):**
 
@@ -63,7 +65,7 @@ For the **notice-compensation** step (new, separate from EOSB):
 |---|---|---|
 | `gave_proper_notice` | boolean | `true` = full notice served (or waived); `false` = notice not fully served |
 | `notice_waived_by_employer` | boolean | employer explicitly waives the remainder — equivalent to served |
-| `notice_period_days` | integer (days) | contract/statutory notice; KSA 60/30, UAE 30–90 per contract |
+| `notice_period_days` | integer (days) | notice period, **values not yet sourced** (KSA and UAE both set by contract/law — see the sourcing status at §2.2) |
 | `notice_days_served` | integer (days) | days actually served/garden-leave; default 0 |
 | `total_salary` | decimal (monthly) | basis for the daily wage (KSA uses total salary incl. allowances) |
 | `country` | 'AE' \| 'SA' | selects statutory defaults for the notice period |
@@ -93,9 +95,9 @@ notice_compensation = daily_wage × shortfall_days
 | Notice partially served | deduct only the unserved remainder |
 | Garden leave | days on garden leave count as **served** (the worker is standing by for the employer) → add to `notice_days_served` |
 | Employer waiver | `notice_waived_by_employer = true` → no deduction (and record the waiver in the audit row) |
-| Termination during probation | no statutory notice is owed during probation → no notice compensation |
+| Termination during probation | **unsourced** — no notice is modelled as owed during probation → no notice compensation (our own records say otherwise: `compliance-requirements.md` L41/L50/L87 give 14 days UAE / 30 days KSA employer notice in probation) |
 | Summary dismissal (Art. 44 / 80–81) | EOSB is already 0 (forfeited); notice compensation is moot — do not emit a negative settlement |
-| KSA vs UAE | **both** jurisdictions impose notice compensation for unserved notice; the only differences are the statutory notice length (KSA 60/30 vs UAE 30–90 contract) and the salary basis (KSA total incl. allowances; UAE basic wage is the EOSB basis, but notice compensation in UAE is also generally computed on the wage) |
+| KSA vs UAE | **both** jurisdictions impose notice compensation for unserved notice; the only differences are the notice length (KSA and UAE each set by contract/law — **values not yet sourced**)  and the salary basis (KSA total incl. allowances; UAE basic wage is the EOSB basis, but notice compensation in UAE is also generally computed on the wage) |
 
 ### 2.7 Test cases (synthetic fixtures)
 
