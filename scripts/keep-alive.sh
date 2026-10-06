@@ -207,8 +207,10 @@ if [ "${ANTUM_KEEPALIVE_DETACHED:-0}" != "1" ]; then
         log "detaching: arming session ${my_sid:-unknown}, re-execing under setsid (handoff from pid $$)"
         # Antum_keepalive_parent: setsid reparents the detached child to init, so the arming
         # parent is not on the child's ancestor chain - hand it over explicitly, or the child
-        # counts its own parent as "another guard" and refuses.
-        ANTUM_KEEPALIVE_PARENT="$BASHPID" ANTUM_KEEPALIVE_DETACHED=1 setsid nohup bash "$SCRIPT_PATH" "$@" >> "$OUT_FILE" 2>&1 &
+        # counts its own parent as "another guard" and refuses. BASHPID is expanded here, in
+        # this shell: inside a background job's inline assignment it would name the forked child.
+        detach_parent_pid="$BASHPID"
+        ANTUM_KEEPALIVE_PARENT="$detach_parent_pid" ANTUM_KEEPALIVE_DETACHED=1 setsid nohup bash "$SCRIPT_PATH" "$@" >> "$OUT_FILE" 2>&1 &
         sleep 3
         live_after="$(guarding_loops)"
         if [ -n "$live_after" ]; then
