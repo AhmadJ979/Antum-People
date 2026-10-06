@@ -126,6 +126,7 @@ live_loops() {
     ancestors="$(ancestor_pids)"
     for pid in $(pgrep -f 'keep-alive\.sh' 2>/dev/null); do
         case " $ancestors " in *" $pid "*) continue ;; esac
+        if [ -n "${ANTUM_KEEPALIVE_PARENT:-}" ] && [ "$pid" = "$ANTUM_KEEPALIVE_PARENT" ]; then continue; fi
         [ "$pid" = "$$" ] && continue
         cmd="$(tr '\0' ' ' 2>/dev/null < "/proc/$pid/cmdline")"
         [ -n "$cmd" ] || continue
@@ -190,7 +191,10 @@ if [ "${ANTUM_KEEPALIVE_DETACHED:-0}" != "1" ]; then
         log "armed as its own session leader (pid $$) - no detach needed"
     elif command -v setsid >/dev/null 2>&1; then
         log "detaching: arming session ${my_sid:-unknown}, re-execing under setsid (handoff from pid $$)"
-        ANTUM_KEEPALIVE_DETACHED=1 setsid nohup bash "$SCRIPT_PATH" "$@" >> "$OUT_FILE" 2>&1 &
+        # Antum_keepalive_parent: setsid reparents the detached child to init, so the arming
+        # parent is not on the child's ancestor chain - hand it over explicitly, or the child
+        # counts its own parent as "another guard" and refuses.
+        ANTUM_KEEPALIVE_PARENT="$BASHPID" ANTUM_KEEPALIVE_DETACHED=1 setsid nohup bash "$SCRIPT_PATH" "$@" >> "$OUT_FILE" 2>&1 &
         sleep 3
         live_after="$(guarding_loops)"
         if [ -n "$live_after" ]; then
