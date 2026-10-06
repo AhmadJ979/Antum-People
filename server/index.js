@@ -17,17 +17,49 @@ app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
 // Hardening: Restrict CORS
+//
+// This must never throw. A throw from middleware does not get an HTTP response from the
+// route table: it reaches express's default error handler, which answers 500 with an HTML
+// page carrying the stack trace and this deployment's absolute filesystem paths — reachable
+// by anyone who sets an Origin header. It also blanked the app on any host we do not own,
+// because the built index.html loads its bundle with `crossorigin`, i.e. as a CORS-mode
+// request, so an unlisted host got a 500 for /assets/*.js and rendered an empty page.
+//
+// Decision order:
+//   1. no Origin header      -> serve. curl, uptime probes and the /api 401 contract send none.
+//   2. Origin host == Host   -> serve. Same-origin is not a CORS question at all; this is what
+//                               lets the app run from antum.ae, a client domain or a forwarded
+//                               port without needing an allowlist entry per host.
+//   3. Origin in allowlist   -> serve, and the cors middleware grants the CORS headers.
+//   4. anything else         -> deliberate 403, short generic JSON body, detail to the log.
 const allowedOrigins = [
   'https://b974147c03228029e277d1cbe6646fe6.ctonew.app',
   'https://b974147c03228029e277d1cbe6646fe6-dev.ctonew.app'
-];
+].concat(
+  // Extra hosts for a deployment behind a proxy that rewrites Host, e.g.
+  // ALLOWED_ORIGINS=https://antum.ae,https://app.client.example
+  (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
+);
+const originHost = (origin) => {
+  try {
+    return new URL(origin).host.toLowerCase();
+  } catch (e) {
+    return null; // 'null', malformed, or non-http origin: not same-origin, not allowlisted
+  }
+};
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (!origin || allowedOrigins.includes(origin)) return next();
+  if (originHost(origin) !== null && originHost(origin) === String(req.headers.host || '').toLowerCase()) {
+    return next();
+  }
+  // Log the refusal (control characters stripped: the header is caller-supplied), answer generically.
+  console.warn(`[cors] refused Origin ${String(origin).replace(/[^\x20-\x7e]/g, '?').slice(0, 200)} for ${req.method} ${req.path}`);
+  return res.status(403).json({ error: 'Forbidden' });
+});
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    callback(null, !origin || allowedOrigins.includes(origin));
   },
   credentials: false
 }));
@@ -548,6 +580,32 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
+// -------------------------------------------------------------
+// CATCH-ALL ERROR HANDLER
+// -------------------------------------------------------------
+// Must stay last, after every route. Without it express answers any thrown error with its
+// default HTML page — HTTP 500, the stack trace and this deployment's absolute paths — so a
+// single throw in middleware or in an unguarded route handed internals to the caller. Here
+// every such error becomes the same short JSON error the rest of the API returns, and the
+// detail goes to the log instead. Express needs all four parameters to treat this as an
+// error handler.
+const GENERIC_ERROR_BY_STATUS = {
+  400: 'Bad Request',
+  401: 'Authentication token required',
+  403: 'Forbidden',
+  404: 'Not Found',
+  405: 'Method Not Allowed',
+  413: 'Payload Too Large',
+  415: 'Unsupported Media Type',
+  429: 'Too many requests. Please try again later.'
+};
+app.use((err, req, res, next) => {
+  const upstream = err && Number.isInteger(err.status) ? err.status : null;
+  const status = upstream >= 400 && upstream <= 499 ? upstream : 500;
+  console.error(`[error] ${req.method} ${req.originalUrl} -> ${status}\n${(err && err.stack) || String(err)}`);
+  if (res.headersSent) return next(err); // response already streaming: let express close it
+  res.status(status).json({ error: GENERIC_ERROR_BY_STATUS[status] || 'Internal Server Error' });
+});
 // Bind server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Antum server listening on port ${PORT}`);
