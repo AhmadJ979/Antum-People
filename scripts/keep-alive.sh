@@ -185,10 +185,13 @@ if [ "${ANTUM_KEEPALIVE_DETACHED:-0}" != "1" ]; then
 fi
 
 # --- single instance lock ------------------------------------------------------------
-# The lock is held on fd 9 of THIS process, and fd 9 is closed (9>&-) for everything the
-# loop starts. It used to be inherited by the server, which kept the flock alive after the
-# loop was gone: every later re-arm was then refused with the name of a PID that was long
-# dead, and the site ran with no guard at all.
+# The lock is held on fd 9 of THIS process, and fd 9 is closed (9>&-) for every child that
+# outlives a check: the server it starts, the npm runs, and the poll sleeps. It used to be
+# inherited by those children, and a child then kept the flock alive after the loop was
+# gone. Observed live on 2026-10-06: the running product server held fd 9 on
+# server/keep-alive.lock, so any later re-arm was refused for good, in the name of the
+# loop's dead PID, while the site ran with no guard at all. An orphaned poll `sleep`
+# inherited the same fd and held the lock for up to one poll interval.
 touch "$LOCK_FILE" 2>/dev/null
 chmod 664 "$LOCK_FILE" 2>/dev/null || true
 
@@ -283,7 +286,7 @@ start_server() {
 wait_for_health() {
     local i
     for i in $(seq 1 20); do
-        sleep 1
+        sleep 1 9>&-
         if check_health; then
             log "server answered the 401 contract on port $PORT after ${i}s"
             return 0
@@ -310,7 +313,7 @@ started_at="pid $$ since $(date -Iseconds)"
 log "guard starting: port $PORT, deploy dir $DEPLOY_DIR, poll ${POLL_INTERVAL}s, lock $LOCK_FILE"
 
 # Initial delay to let the system settle after boot.
-sleep "$START_DELAY"
+sleep "$START_DELAY" 9>&-
 
 while true; do
     check_health
@@ -323,7 +326,7 @@ while true; do
         if [ -n "$pids" ]; then
             log "port $PORT fails the 401 contract, held by $(describe_pids "$pids") - evicting (port-claim convention)"
             for p in $pids; do [ "$p" = "$$" ] || kill -9 "$p" 2>/dev/null; done
-            sleep 2
+            sleep 2 9>&-
             start_server
         fi
     else
@@ -336,10 +339,10 @@ while true; do
         else
             log "server process(es) $(echo "$pids" | tr '\n' ' ') exist in $DEPLOY_DIR/server but port $PORT does not answer - killing and restarting"
             for p in $pids; do [ "$p" = "$$" ] || kill -9 "$p" 2>/dev/null; done
-            sleep 2
+            sleep 2 9>&-
             start_server
         fi
     fi
 
-    sleep "$POLL_INTERVAL"
+    sleep "$POLL_INTERVAL" 9>&-
 done
