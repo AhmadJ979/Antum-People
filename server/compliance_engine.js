@@ -24,7 +24,7 @@ const checklistTemplates = {
       { title: 'Annual Leave Encashment', description: 'Calculate and pay accrued but unused annual leave.' },
       { title: 'MoHRE Work Permit Cancellation', description: 'Cancel the work permit via MoHRE system.' },
       { title: 'Residency Visa Cancellation', description: 'Complete visa cancellation within 30 days.' },
-      { title: 'Final Settlement Payment (within 14 days)', description: 'Complete final payment within 14 days statutory deadline.' }
+      { title: 'Final Settlement Payment (within 14 days)', description: 'Complete final payment within 14 days.' }
     ]
   },
   KSA: {
@@ -47,7 +47,7 @@ const checklistTemplates = {
       { title: 'Final Exit Visa (or re-entry, if transferring)', description: 'Process visa through Jawazat (must follow Iqama).' },
       { title: 'Service Certificate Issuance', description: 'Issue mandatory service certificate (within 2 weeks).' },
       { title: 'Annual Leave Encashment', description: 'Calculate and pay accrued but unused annual leave.' },
-      { title: 'Final Settlement Payment', description: 'Pay salary + EOSB + leave + notice (within statutory deadline).' }
+      { title: 'Final Settlement Payment', description: 'Pay salary + EOSB + leave + notice (within the settlement deadline).' }
     ]
   }
 };
