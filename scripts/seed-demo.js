@@ -160,13 +160,17 @@ async function seed() {
       salary: 11000,
       basic_salary: 8000,
       recruitment_cost: 3000,
-      data_residency_country: 'AE',
+      data_residency_country: 'SA',
       status: 'onboarding',
       // Genuinely mid-onboarding: not yet fully productive. Pairs with Omar (UAE) as
-      // the demo's two coherent in-flight hires. UAE-first (owner direction,
-      // 2026-10-02): both in-flight hires are UAE so the pipeline card still has two
-      // people once the active surface goes UAE-only. Dates/status unchanged from the
-      // earlier seed — only the jurisdiction moved.
+      // the demo's two coherent in-flight hires — UAE first, then KSA.
+      // Kept KSA (2026-10-02): the task this seed change comes from requires "Leave KSA
+      // alone … the KSA surface must keep computing as it does today". Moving an
+      // existing KSA record to AE to give the UAE pipeline card a second person is the
+      // same error class as pinning a figure so a card reads a certain way: it shrinks
+      // the KSA surface (headcount, liability) that Phase 2 still has to test against.
+      // The UAE pipeline really does show one person in flight; that is reported with
+      // its number rather than patched here.
       fully_productive_date: null
     },
     {
@@ -209,15 +213,15 @@ async function seed() {
     }
   ];
 
-  // Historical leavers: additional to the active roster above (11 people as of this
-  // reviewer follow-up, up from 9 — Noura and Salim were added above at the reviewer's
-  // explicit direction, not a unilateral roster-size decision). These exist so retention
-  // cohort math has real, varied data to compute instead of trivially reading 100%
-  // everywhere. Because their liability is settled, they are excluded from the active
-  // EOSB liability and headcount cards (server/index.js filters them out explicitly) —
-  // only the retention cohort calculation, which intentionally looks at history, counts
-  // them. UAE-first (owner direction, 2026-10-02): both leavers are UAE so the retention
-  // cohort dips they create still show once the active surface goes UAE-only.
+  // Historical leavers: additional to the active roster above. Noura and Salim were
+  // added to that roster above at the owner's direction (2026-10-02, task 0cf9c2fd);
+  // these two leavers are pre-existing. They exist so retention cohort math has real,
+  // varied data to compute instead of trivially reading 100% everywhere. Because their
+  // liability is settled, they are excluded from the active EOSB liability and headcount
+  // cards (server/index.js filters them out explicitly) — only the retention cohort
+  // calculation, which intentionally looks at history, counts them. Yusuf is UAE (the
+  // UAE cohort dip he creates still shows on the UAE-only surface); Sultan is KSA and
+  // stays KSA, so the KSA surface keeps computing exactly as it did before this change.
   const historicalLeavers = [
     {
       id: 'demo-emp-yusuf',
@@ -243,12 +247,11 @@ async function seed() {
       department: 'Engineering',
       role: 'Junior Developer',
       start_date: '2024-03-05',
-      end_date: '2024-09-01', // ~180 days — same treatment in a second cohort. Dates/
-      // status unchanged from the earlier seed — only the jurisdiction moved to AE.
+      end_date: '2024-09-01', // ~180 days — same treatment in a second cohort.
       salary: 14000,
       basic_salary: 9500,
       recruitment_cost: 6000,
-      data_residency_country: 'AE',
+      data_residency_country: 'SA', // kept KSA — see the note on demo-emp-reem above
       status: 'terminated',
       fully_productive_date: null
     }
@@ -326,11 +329,9 @@ async function seed() {
     });
   });
 
-  // Reem (UAE) — started 2026-08-05, two tasks done so far, five still open.
-  // UAE-first (owner direction, 2026-10-02): checklist source switched from KSA to
-  // UAE to match her jurisdiction move above; same 7-item length, same completion
-  // split, so her place in the onboarding pipeline is unaffected.
-  compliance.checklistTemplates.UAE.onboarding.forEach((t, idx) => {
+  // Reem (KSA) — started 2026-08-05, two tasks done so far, five still open. Checklist
+  // sourced from the KSA template because she stayed KSA (see the note on her persona).
+  compliance.checklistTemplates.KSA.onboarding.forEach((t, idx) => {
     onboardingTasks.push({
       id: `demo-task-on-reem-${idx+1}`,
       emp_id: 'demo-emp-reem',
@@ -398,7 +399,7 @@ async function seed() {
   }
 
   // 4. Exit Interviews (Sarah's and Noura's pre-departure interviews, plus one per
-  // historical leaver — all UAE now except Sarah, per the UAE-first jurisdiction move)
+  // historical leaver; jurisdiction follows each person's own record)
   console.log('Upserting exit interviews...');
   const exitInterviews = [
     {
