@@ -6,15 +6,14 @@
 > **Presenter:** Founder-led (Ahmad's HR network) — technical detail available, but lead with outcomes.
 
 > ⚠️ **Verification status — internal (for the presenter, not read aloud).**
-> - Rewritten and re-walked by the Product Designer on **2026-10-06** against the deployed commit **`80c3fff`** (`main`, PRs #47–#51), the same commit the public URL serves (`/assets/index-CPYz_PZb.js`).
-> - **This script and the audit are merged to `main` in PR #55** (merge commit `4935c41`, 2026-10-06, approved). PR #55 changed documents only, so **the product build under the script is unchanged — still `80c3fff`** — and every figure below still describes what the public URL serves. No re-walk was needed for the merge.
+> - Re-walked by the Product Designer on **2026-10-06** on a **scratch instance of the deployment that was live that day** — own port, own database, own throwaway credential (WORKFLOW rule 14; the live tree was neither tested nor modified). Every reading below was taken there.
 > - **What I checked on the public URL myself** (anonymous, no login): `https://b974147c03228029e277d1cbe6646fe6.ctonew.app/` returns **200**, title **"Antum People"**, the app renders and the **sign-in screen appears** (Username / Password / "Forgot Password?" / "Sign In").
-> - **What I could not check on the public URL:** every screen behind the login. WORKFLOW rule 10 says the demo credential is lead-managed and I must not use it, so those screens were verified on a **scratch instance of the same commit** (own port, own database, own throwaway credential) — not on the live tree. The rendered client bundle is the same file the public URL serves. **Ask the lead to run one logged-in pass on the public URL before the first call.**
+> - **What I could not check on the public URL:** every screen behind the login. WORKFLOW rule 10 says the demo credential is lead-managed and I must not use it, so those screens were verified on a **scratch instance of the deployed build** (own port, own database, own throwaway credential) and never against the live tree. **Ask the lead to run one logged-in pass on the public URL before the first call.**
 > - **Every figure below was read off that instance in this session — none is recalled.** There are two classes of figure here and they are treated differently:
->   - **Stable — state these freely:** counts (10 UAE records, 8 active, 2 onboarding, 1 offboarding, 2 leavers), dates, the length and order of the checklist, and any figure the card labels `Illustrative` **where the number itself is computed and only its comparison is illustrative** (the card's own reading is a real computed number).
->   - **Day-sensitive — never state these as the expected value:** anything derived from accrued service **to today** — the **EOSB Liability** card total, the settlement's **EOSB / Gross Total / Net Payable** lines, and the **EOSB forecast ladder** (its first quarter *is* the accrual). Three reads of the same commit on 2026-10-06 gave **85,126.34**, **85,125.43** and **85,129.04** — while cost-per-hire read `AE 7,625.00 AED` on all three, which is why this script separates the two classes rather than distrusting every number. **Read these off the screen during the call and quote what the card says.** Where a dated reading appears below, it is labelled a *reading*, not the value to say out loud.
+>   - **Stable — state these freely:** counts (**8 UAE records on the surface** — 5 active, 1 onboarding, 1 offboarding, 1 leaver), dates, the length and order of the checklist, and any figure the card labels `Illustrative` **where the number itself is computed and only its comparison is illustrative** (the card's own reading is a real computed number).
+>   - **Day-sensitive — never state these as the expected value:** anything derived from accrued service **to today** — the **EOSB Liability** card total, the settlement's **EOSB / Gross Total / Net Payable** lines, and the **EOSB forecast ladder** (its first quarter *is* the accrual). The engine recomputes the accrual when the page is read: **four reads of the builds deployed on 2026-10-06 gave four different UAE liability values — `AE 85,126.34` on the designer's first instance, `AE 85,125.43` on the lead's live pass twenty minutes later, and `AE 85,129.04` / `AE 85,129.27` on two further scratch instances that day.** **Read these off the screen during the call and quote what the card says.** Where a dated reading appears below, it is labelled a *reading*, not the value to say out loud.
 >   - Never write a figure into this script to make a screen look fuller — that is the defect class this team keeps sending back.
-> - **Roster as served on this surface:** 10 records — 8 active (two of them mid-onboarding), one in offboarding, two historical leavers kept for the retention math.
+> - **Roster as served on the UAE surface** (read 2026-10-06): **8 records** — 5 active, 1 mid-onboarding, 1 in offboarding, 1 historical leaver kept for the retention math. 13 records are held in total across both jurisdictions (8 UAE / 5 KSA); only the UAE rows appear on this surface.
 > - **UAE-only, end to end.** No other jurisdiction appears anywhere in the flow below — no screen, figure, claim or control. The demo reads as a UAE product, and nothing in this script depends on anything outside it.
 > - **The UAE resignation tier is unconfirmed.** Federal Decree-Law 33/2021 vs the repealed Law 8/1980 Art. 132 reduction is with counsel. Never present the UAE EOSB figure as legally validated.
 
@@ -37,7 +36,7 @@
 |---|---|---|
 | Sign-in, Executive Dashboard, Employee Directory, Transitions Hub, Strategic Intelligence | **Live build** | public URL, after login |
 | UAE offboarding case (8 engine-sourced steps) | **Live + populated** | Employee Directory → Noura Al-Suwaidi |
-| UAE onboarding checklists (7 steps each) | **Live logic + seeded tasks** | Employee Directory → Omar Al-Farsi / Reem Al-Hashemi |
+| UAE onboarding checklist (Omar) | **Live logic + seeded tasks** | Employee Directory → Omar Al-Farsi |
 | Dashboard KPIs (Retention Lift, Time-to-Value, Cost-per-Hire, EOSB Liability) | **Live, computed from sample data** | Executive Dashboard |
 | EOSB engine (UAE basic-salary basis) | **Live logic, tier unconfirmed pending counsel** | `server/eosb.js` |
 | Settlement Statement document | **Live render from the engine** (no placeholders) | Employee Directory → Noura → Compliance Center |
@@ -63,7 +62,7 @@
 - A **populated offboarding checklist** with two steps already done and six pending — not an empty screen.
 - The UAE sequence itself: **MoHRE work-permit cancellation** and **residency visa cancellation** on the list, in the right order, ahead of final settlement.
 - **EOSB basis "Basic Salary (UAE Rule)"** — the UAE accrual basis, stated on the employee record.
-- If you open it: a settlement document whose **EOSB line is the engine's accrued figure for that employee**, and lines the engine cannot compute reading **"not calculated"** — not zeros, not placeholders. **The EOSB, Gross Total and Net Payable lines are all accrual-derived: read them off the document when you open it and say what it says.** *(Reading on 2026-10-06: EOSB 6,415.79, Gross 11,577.08, Net 11,577.08 — a reading, not the value to quote; expect it to differ.)*
+- If you open it: a settlement document whose **EOSB line is the engine's accrued figure for that employee**, and lines the engine cannot compute reading **"not calculated"** — not zeros, not placeholders. **The EOSB, Gross Total and Net Payable lines are all accrual-derived: read them off the document when you open it and say what it says.** No number for these lines is written into this script — the stored accrual on this record alone moved between reads on 2026-10-06.
 
 ### Speaker notes
 > "Let me start where it costs you the most if it's wrong: offboarding. This is a UAE departure already in flight. The checklist isn't a template someone typed — it comes out of the compliance engine, in order: equipment and access first, then notice, then the EOSB calculation, then MoHRE cancels the work permit and the residency visa follows, and only then the final payment. The EOSB basis here says **basic salary**, which is the UAE rule. And the settlement document is generated from the same engine — this figure is her accrued end-of-service, computed from her own start date and salary, not typed in."
@@ -88,7 +87,7 @@ A: The accrued EOSB is computed per employee and shown in the roster and on the 
 1. Sidebar → **Employee Directory** → click **Omar Al-Farsi** (status *onboarding*) → his **Onboarding Checklist** (7 steps) opens.
 2. Note two steps already complete, the rest pending.
 3. Point at the **Compliance Center**: **Privacy Consent (PDPL)** shows a **granted date**, and the **Document Previews** (Privacy Notice, Labor Contract) render.
-4. Optional: back to the dashboard's **Onboarding Pipeline** card — it lists the same two people, from the same source.
+4. Optional: back to the dashboard's **Onboarding Pipeline** card — it lists the same person in flight you just saw the checklist for, from the same source.
 
 ### What the customer sees
 - A **UAE onboarding checklist** with real completion state, sourced from the engine.
@@ -114,15 +113,15 @@ A: Every consent write creates a record (who, when, which version, lawful basis)
 ### Click path
 1. Sidebar → **Executive Dashboard**.
 2. The four headline cards: **Retention Lift (1-yr)**, **Time-to-Value**, **Cost-per-Hire**, **EOSB Liability**.
-3. The two pipeline cards: **Onboarding** (Omar, Reem) and **Offboarding** (Noura).
+3. The two pipeline cards: **Onboarding** (one person in flight on this surface — Omar) and **Offboarding** (Noura).
 4. Call out the **"Sample Demo Data"** badge in the header *before* they ask.
 
-### What the customer sees — **read each card at demo time** (readings below taken 2026-10-06 on `80c3fff`)
+### What the customer sees — **read each card at demo time** (readings below taken 2026-10-06 on the deployment that was live that day)
 - **Retention Lift (1-yr):** quote the card's lift value (*read 2026-10-06: `+19%`*), labelled `Illustrative` / `Illustrative Benchmark`.
-- **Time-to-Value:** quote the card's day count (*read 2026-10-06: `19.2 d`*), labelled `Illustrative`, `target: 15 days`.
-- **Cost-per-Hire:** quote the card's figure (*read 2026-10-06: `AE 7,625.00 AED`*), labelled `Illustrative Benchmark` (`recruitment + onboarding`).
-- **EOSB Liability: do not script a number.** The card recomputes accrued service to today, so it is different on a different day — three reads of the same commit gave `AE 85,126.34`, `AE 85,125.43` and `AE 85,129.04` AED. **Read it off the card and quote what it says** (labelled `Illustrative Total`, `Accrued to date across regions`).
-- **Onboarding Pipeline:** two people (Omar Al-Farsi, started 2026-08-20; Reem Al-Hashemi, started 2026-08-05).
+- **Time-to-Value:** quote the card's day count (*read 2026-10-06: `18 d`*), labelled `Illustrative`, `target: 15 days`.
+- **Cost-per-Hire:** quote the card's figure (*read 2026-10-06: `AE 8,286.00 AED`*), labelled `Illustrative Benchmark` (`recruitment + onboarding`).
+- **EOSB Liability: do not script a number.** The card recomputes accrued service to today, so it is different on a different day — the same build read `AE 85,126.34 AED` on the designer's instance and `AE 85,125.43 AED` on the lead's live pass twenty minutes later, and two further scratch reads the same day gave `AE 85,129.04` and `AE 85,129.27`. **Read it off the card and quote what it says** (labelled `Illustrative Total`, `Accrued to date across regions`).
+- **Onboarding Pipeline:** **one person** on this surface (Omar Al-Farsi, started 2026-08-20). Reem's record is a KSA record and does not appear here.
 - **Offboarding Pipeline:** one person (Noura Al-Suwaidi, `Exit 2026-10-10`).
 
 ### Speaker notes
@@ -146,22 +145,22 @@ A: "Every figure on this screen is UAE. The engine is built for the GCC and we a
 2. Point at **Retention Lift — 1-Yr Cohort**, then **Time-to-Value by Department**, then **EOSB Liability Forecast**.
 3. Switch to the **bilingual prototype** and click **EN | العربية** to show RTL mirroring.
 
-### What the customer sees — the forecast is read at demo time; the cohort ratios are stable in this dataset (readings taken 2026-10-06 on `80c3fff`)
-- **Retention Lift — 1-Yr Cohort** (UAE cohorts, stable: 100% / 50% / 80% / 100%, each against a separately-labelled `Illustrative` benchmark — the 50% is a real mixed outcome, a cohort with both a leaver and a stayer, not a one-person cohort):
+### What the customer sees — the forecast is read at demo time; the cohort ratios and counts below were read on 2026-10-06 and move with the seed dataset
+- **Retention Lift — 1-Yr Cohort** (UAE cohorts, read 2026-10-06: **100% / 50% / 100% / 100%**, each against a separately-labelled `Illustrative` benchmark — the 50% is a real mixed outcome, a cohort with both a leaver and a stayer, not a one-person cohort):
 
   | Cohort | Retention | Benchmark | Lift |
   |---|---|---|---|
   | H1 2022 | 100% | 82% | +18% |
   | H1 2023 | 50% | 83% | −33% |
-  | H1 2024 | 80% | 84% | −4% |
+  | H1 2024 | 100% | 84% | +16% |
   | H2 2026 | 100% | 81% | +19% |
 
-- **Time-to-Value by Department:** Engineering 16.7 d, Finance 25 d, Product 19 d, Sales 21 d — each against a 15-day target, over-target shown in red.
+- **Time-to-Value by Department** (read 2026-10-06, seven departments): Engineering 16.7 d, HR 15 d, Finance 25 d, Operations 14 d, Marketing 18 d, Product 19 d, Sales 21 d — each against a 15-day target, over-target shown in red. Read the card and name the one or two worst rows rather than reciting all seven.
 - **EOSB Liability Forecast (UAE, by quarter): do not script these numbers** — its first quarter *is* the accrual-to-today figure, so the whole ladder moves with it. **Read the four quarters off the card during the call.** *(Reading on 2026-10-06: Q3 2026 84,667 → Q4 2026 90,926 → Q1 2027 133,477 → Q2 2027 161,494. The first quarter is the computed accrual; later quarters a tenure-derived growth assumption, not a booked forecast.)*
 - The bilingual prototype flips to RTL with Arabic-Indic numerals and re-flowed currency.
 
 ### Speaker notes
-> "This is the layer leadership pays for. Look at the retention chart first — and notice it is not flattering: the H1 2023 cohort is at 50%, and the cohort after it at 80%. That's the point: this is computed from leaver records, not smoothed. Time-to-value by department shows you exactly where onboarding is slow — Finance at 25 days against a 15-day target. The EOSB forecast shows what you're carrying today and projects it forward; the first quarter is computed, the later ones are a growth assumption your finance team should review. And the Arabic experience is designed in from the start — that's a working prototype, not the live build yet."
+> "This is the layer leadership pays for. Look at the retention chart first — and notice it is not flattering: the H1 2023 cohort is at 50%, a cohort with both a leaver and a stayer. That's the point: this is computed from leaver records, not smoothed. Time-to-value by department shows you exactly where onboarding is slow — Finance at 25 days against a 15-day target. The EOSB forecast shows what you're carrying today and projects it forward; the first quarter is computed, the later ones are a growth assumption your finance team should review. And the Arabic experience is designed in from the start — that's a working prototype, not the live build yet."
 
 ### Anticipated questions
 **Q: "Are the forecast numbers committed?"**
@@ -208,7 +207,7 @@ A: A named HR lead, access to your current onboarding/offboarding process for on
 | In the script | Real reference |
 |---|---|
 | Offboarding checklist (Noura) | public URL → Employee Directory → Noura Al-Suwaidi; `GET /api/employees/:id/offboarding` |
-| Onboarding checklist (Omar / Reem) | public URL → Employee Directory → Omar Al-Farsi; `GET /api/employees/:id/onboarding` |
+| Onboarding checklist (Omar) | Employee Directory → Omar Al-Farsi; `GET /api/employees/:id/onboarding` |
 | Executive Dashboard (4 KPIs + pipelines) | public URL → sidebar **Executive Dashboard**; `GET /api/analytics/dashboard?jurisdiction=AE` |
 | Transitions Hub | public URL → sidebar **Transitions Hub** |
 | Strategic Intelligence | public URL → sidebar **Strategic Intelligence** |
@@ -221,4 +220,4 @@ A: A named HR lead, access to your current onboarding/offboarding process for on
 
 ---
 
-*Prepared by Product Designer, Antum — pilot-ready demo script v3.0 (UAE-first, re-walked 2026-10-06 against `80c3fff`).*
+*Prepared by Product Designer, Antum — pilot-ready demo script v3.1 (UAE-first; re-walked 2026-10-06 against the deployment live that day).*
