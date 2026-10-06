@@ -60,6 +60,14 @@ START_DELAY="${ANTUM_START_DELAY:-10}"
 LOCK_ATTEMPTS="${ANTUM_LOCK_ATTEMPTS:-3}"
 LOCK_RETRY_WAIT="${ANTUM_LOCK_RETRY_WAIT:-10}"
 
+# Every process of this loop carries a token in its environment, so the loop can tell its own
+# forks (command-substitution subshells) and the shell that armed it (across the detach
+# handoff, which setsid reparents to init) apart from a genuinely separate guard. Without this
+# the guard scan sees itself and refuses to start.
+KEEPALIVE_INHERITED_TOKEN="${ANTUM_KEEPALIVE_TOKEN:-}"
+KEEPALIVE_TOKEN="${KEEPALIVE_INHERITED_TOKEN:+$KEEPALIVE_INHERITED_TOKEN.}$(date +%s%N).$RANDOM"
+export ANTUM_KEEPALIVE_TOKEN="$KEEPALIVE_TOKEN"
+
 LOG_FILE="$DEPLOY_DIR/server/keep-alive.log"
 SERVER_LOG="$DEPLOY_DIR/server/server.log"
 LOCK_FILE="$DEPLOY_DIR/server/keep-alive.lock"
@@ -122,12 +130,18 @@ ancestor_pids() {
 }
 
 live_loops() {
-    local pid cmd first ancestors
+    local pid cmd first ancestors other_token
     ancestors="$(ancestor_pids)"
     for pid in $(pgrep -f 'keep-alive\.sh' 2>/dev/null); do
         case " $ancestors " in *" $pid "*) continue ;; esac
         if [ -n "${ANTUM_KEEPALIVE_PARENT:-}" ] && [ "$pid" = "$ANTUM_KEEPALIVE_PARENT" ]; then continue; fi
         [ "$pid" = "$$" ] && continue
+        # Our own forks carry our token; the shell that armed us carries the token we inherited.
+        other_token="$(tr '\0' '\n' 2>/dev/null < "/proc/$pid/environ" | sed -n 's/^ANTUM_KEEPALIVE_TOKEN=//p')"
+        if [ -n "$other_token" ]; then
+            if [ "$other_token" = "$KEEPALIVE_TOKEN" ]; then continue; fi
+            if [ -n "$KEEPALIVE_INHERITED_TOKEN" ] && [ "$other_token" = "$KEEPALIVE_INHERITED_TOKEN" ]; then continue; fi
+        fi
         cmd="$(tr '\0' ' ' 2>/dev/null < "/proc/$pid/cmdline")"
         [ -n "$cmd" ] || continue
         first="${cmd%% *}"
