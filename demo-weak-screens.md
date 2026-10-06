@@ -38,15 +38,15 @@
 - **What the walkthrough lost:** the old flow leaned on a *side-by-side* contrast — "KSA accrues on total salary, UAE on basic salary" — which was the single clearest "we know your jurisdiction" moment. On a UAE-only surface there is no second jurisdiction on screen, so the basis is now stated on the record ("Basic Salary (UAE Rule)") rather than demonstrated by contrast.
 - **Does the flow lose force?** Less than I expected. The UAE list is stronger on specifics a UAE buyer recognises — **MoHRE work-permit cancellation** and **residency visa cancellation** in the correct order — and the opening act now belongs to the buyer's own jurisdiction instead of a Saudi employee. What it loses is length and the comparative beat. **Do not pad it with claims to get the length back.** If you want the contrast, get it verbally ("the engine carries a second jurisdiction's basis for Phase 2"), not by switching the toggle mid-demo.
 
-### 4. Two cohorts read negative lift
+### 4. The retention card carries two genuinely negative cohorts
 - **Screen:** Strategic Intelligence → Retention Lift — 1-Yr Cohort.
-- **What a prospect sees:** H1 2023 at 50% (lift −33%) and H1 2024 at 80% (lift −4%) against illustrative benchmarks.
-- **Verdict:** Not a defect — it is the honest, computed version, and it is the best available proof that cohorts come from real exit records. But it *will* be read as a negative story about the sample employer, so script the explanation (Caveat 4) rather than letting a CHRO discover it.
+- **What a prospect sees:** the card reads **100% / 50% / 80% / 100%** — H1 2023 at 50% (lift −33%) and H1 2024 at 80% (lift −4%) against separately-labelled illustrative benchmarks.
+- **Verdict:** Not a defect. The 50% is a **real mixed outcome** — a cohort holding both a leaver and a stayer — rather than a single-leaver cohort that reads as broken data. It is the best available proof that cohorts come from real exit records. It *will* still be read as a negative story about the sample employer, so script the explanation (Caveat 4) rather than letting a CHRO discover it.
 
 ### 5. The roster carries two terminated records
 - **Screen:** Employee Directory (UAE).
-- **What a prospect sees:** 10 UAE rows, two of them badged **terminated**, alongside the in-flight offboarding case.
-- **Verdict:** Honest and required for the retention math, but a UAE buyer counting heads will see "10 employees, 2 already gone". Know the number (8 active, 2 onboarding, 1 offboarding, 2 historical leavers) and say it before it is asked.
+- **What a prospect sees:** the UAE surface serves **10 rows**, two of them badged **terminated**, alongside the in-flight offboarding case. (13 records are held in total across both jurisdictions — 10 UAE / 3 KSA; only the UAE rows appear here.)
+- **Verdict:** Honest and required for the retention math, but a UAE buyer counting heads will see "10 employees, 2 already gone". Know the numbers and say them before they are asked: **UAE active headcount 8** (two of them mid-onboarding), one in offboarding, two historical leavers.
 
 ### 6. The KSA switch is visible in the header
 - **Screen:** every screen, header right.

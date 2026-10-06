@@ -9,8 +9,9 @@
 > - Rewritten and re-walked by the Product Designer on **2026-10-06** against the deployed commit **`80c3fff`** (`main`, PRs #47–#51), the same commit the public URL serves (`/assets/index-CPYz_PZb.js`).
 > - **What I checked on the public URL myself** (anonymous, no login): `https://b974147c03228029e277d1cbe6646fe6.ctonew.app/` returns **200**, title **"Antum People"**, the app renders and the **sign-in screen appears** (Username / Password / "Forgot Password?" / "Sign In").
 > - **What I could not check on the public URL:** every screen behind the login. WORKFLOW rule 10 says the demo credential is lead-managed and I must not use it, so those screens were verified on a **scratch instance of the same commit** (own port, own database, own throwaway credential) — not on the live tree. The rendered client bundle is the same file the public URL serves. **Ask the lead to run one logged-in pass on the public URL before the first call.**
-> - Every figure below was read off that instance in this session. Accruals are computed *to the day*, so EOSB and retention figures move daily — re-read the dashboard the morning of the call and adjust the two or three numbers you say out loud.
-> - **UAE-only.** No KSA screen, figure or claim is in the flow below. KSA still exists in the engine, one switch away, and stays there for Phase 2 — it is simply not part of this walkthrough.
+> - **Every figure below was read off that instance in this session — none is recalled.** The seeded EOSB on a record is computed by the engine **when the seed runs**, so a currency figure can differ after a re-seed; counts and ratios are stable. Prefer counts and ratios in the narrative, and **re-read the dashboard the morning of the call**. Never write a figure into this script to make a screen look fuller — that is the defect class this team keeps sending back.
+> - **Roster as served on this surface:** 10 records — 8 active (two of them mid-onboarding), one in offboarding, two historical leavers kept for the retention math.
+> - **UAE-only, end to end.** No other jurisdiction appears anywhere in the flow below — no screen, figure, claim or control. The demo reads as a UAE product, and nothing in this script depends on anything outside it.
 > - **The UAE resignation tier is unconfirmed.** Federal Decree-Law 33/2021 vs the repealed Law 8/1980 Art. 132 reduction is with counsel. Never present the UAE EOSB figure as legally validated.
 
 ---
@@ -23,7 +24,7 @@
 - [ ] Have two tabs ready: the **live app** and the **bilingual prototype** (`design-concepts/intelligence-dashboard-prototype.html`).
 - [ ] PDFs printed or open: `templates/privacy-notice.pdf`, `templates/data-processing-agreement.pdf`, `templates/dpia-questionnaire.pdf`.
 - [ ] Know your honest caveats (see *Caveats & guardrails*) — you will be asked.
-- [ ] **Do not switch the jurisdiction toggle during a prospect demo.** The KSA switch is still in the header (an open owner decision). If a prospect asks what it is, say it is the second jurisdiction the engine already carries and that the pilot is UAE-only.
+- [ ] **Leave the header controls alone — this is a UAE story from start to finish.** Do not change what region the dashboard is showing mid-demo; it breaks both the narrative and the arithmetic you have already said out loud.
 - [ ] **Do not present the settlement figure as a compliance claim.** Open the Settlement Statement only with the "draft, subject to your counsel's review" framing (Segment 1).
 
 ### What's live vs. what's a prototype (know this cold)
@@ -127,8 +128,8 @@ A: Every consent write creates a record (who, when, which version, lawful basis)
 **Q: "Why do some cards say 'Illustrative'?"**
 A: The figures are computed from sample data; "Illustrative" sits on the benchmark or target they're compared to. In the pilot we'd replace it with your own history.
 
-**Q: "Is the EOSB number one country or several?"**
-A: The product carries more than one jurisdiction; this demo surface is UAE, so you're seeing UAE accruals. The engine already computes a second jurisdiction's basis — that's the Phase 2 surface, not part of this walkthrough.
+**Q: "Is this UAE only, or does it cover the region?"**
+A: "Every figure on this screen is UAE. The engine is built for the GCC and we are launching UAE-first — so the pilot is a UAE pilot."
 
 ---
 
@@ -142,7 +143,7 @@ A: The product carries more than one jurisdiction; this demo surface is UAE, so 
 3. Switch to the **bilingual prototype** and click **EN | العربية** to show RTL mirroring.
 
 ### What the customer sees (measured 2026-10-06 on `80c3fff`)
-- **Retention Lift — 1-Yr Cohort** (UAE cohorts, each against an `Illustrative` benchmark):
+- **Retention Lift — 1-Yr Cohort** (UAE cohorts: the card reads 100% / 50% / 80% / 100%, each against a separately-labelled `Illustrative` benchmark — the 50% is a real mixed outcome, a cohort with both a leaver and a stayer, not a one-person cohort):
 
   | Cohort | Retention | Benchmark | Lift |
   |---|---|---|---|
@@ -194,7 +195,7 @@ A: A named HR lead, access to your current onboarding/offboarding process for on
 7. **Regulator integrations are roadmap, not live.** MoHRE/WPS are workflow steps, not live API pushes.
 8. **Exit-interview data is captured but never surfaced.** The "Exit Intelligence Intake" form collects departure reason, preventable-attrition flag and offered salary; no view renders it yet. If asked, say exit intelligence is a Phase 2 view, and the intake is already recording.
 9. **DSR / breach-register / consent-audit dashboard is design-spec, not live.** The live product shows a per-employee Compliance Center only.
-10. **The KSA switch in the header is a testing surface.** Leave it alone in a prospect call. (Its visibility during demos is an open owner decision.)
+10. **One region per demo.** Leave the header controls untouched — changing what the dashboard shows mid-call breaks the story and the figures you have already said out loud. If a prospect asks about other countries, answer verbally: UAE-first is the launch.
 
 ---
 
