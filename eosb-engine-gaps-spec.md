@@ -15,7 +15,7 @@
 | **Gap 1 — notice penalty** | **Do not fold it into `calculateEOSB`.** Model it as a separate final-settlement deduction, in its own calculation step, with its own inputs and audit fields. | End-of-service benefit and notice-period compensation are legally distinct obligations; conflating them destroys the audit trail and makes "EOSB" unreconstructable. |
 | **Gap 2 — audit trail** | **Persist an `eosb_calculations` row for every calculation**, written in the same transaction as the calculation, with PII held out of clear text. | A compliance product must be able to reproduce any figure a regulator or auditor asks about. |
 
-The detailed requirements, statutory basis, arithmetic, boundary cases, and test vectors follow.
+The detailed requirements, the legal basis as far as it is pinned, arithmetic, boundary cases, and test vectors follow (see the sourcing status at §2.2).
 
 ---
 
@@ -29,11 +29,11 @@ The detailed requirements, statutory basis, arithmetic, boundary cases, and test
 
 ### 2.2 Statutory basis
 
-> **Sourcing status — read before relying on this section.** The notice rules below are our working reading of the two statutes. **We hold no article number or verbatim text for the notice periods or for notice compensation in either jurisdiction**, and our own records contradict each other on the KSA period (`compliance-requirements.md` L87 states 60 days/indefinite and 30 days/fixed-term; this spec states "KSA 60/30"). The `statutory` qualifier has therefore been **removed from the three strings below** and the figures kept as the engine's working assumption. Both counsel requests already ask for the articles (UAE point 5, KSA point 6).
+> **Sourcing status — read before relying on this section.** The notice rules below are our working reading of the two statutes. **We hold no article number or verbatim text for the notice periods or for notice compensation in either jurisdiction**, and our own records contradict each other on the KSA period (`compliance-requirements.md` L87 states 60 days/indefinite and 30 days/fixed-term; this spec states "KSA 60/30"). The `statutory` qualifier has therefore been **removed wherever it qualified an unsourced claim** and the figures kept as the engine's working assumption. The UAE request asks for the articles (point 5); the KSA request is drafted and **held** pending Phase 2, so it has not been sent.
 
 **KSA — Labour Law, Royal Decree No. M/51 (as amended):**
 
-- **Notice period** — for an indefinite-term contract the notice period is **60 days** for a worker paid monthly and **30 days** for others; for a fixed-term contract it cannot exceed the unexpired term. (Statutory reference: the notice-period provision — cited in our own `compliance-requirements.md` within "Articles 74–86".)
+- **Notice period** — for an indefinite-term contract the notice period is **60 days** for a worker paid monthly and **30 days** for others; for a fixed-term contract it cannot exceed the unexpired term. (Reference in our own records: the notice-period provision, cited in `compliance-requirements.md` within "Articles 74–86" — **no article number held; not a pin-cite**.)
 - **Notice compensation** — if the terminating party does **not** serve the full notice period, the other party is entitled to compensation **equal to the worker's wage for the duration of the notice period, or the remaining part of it**. This is a *wage-for-unserved-notice* amount, **not** a flat percentage of EOSB.
 - **Summary dismissal** — grounds under Art. 80/81 forfeit EOSB; the notice question is then moot because there is no settlement to deduct from.
 
@@ -43,7 +43,7 @@ The detailed requirements, statutory basis, arithmetic, boundary cases, and test
 - **Notice compensation** — if a party fails to serve the full notice period, the other party is entitled to compensation equal to the worker's wage for the unserved period (the Decree-Law's notice provisions).
 - **Summary dismissal** — Article 44 grounds forfeit EOSB.
 
-> **Important correction to earlier artefacts:** the original EOSB review (Finding 6) and `compliance-requirements.md` described the KSA notice penalty as "a 50% deduction" / "up to 50% of EOSB". That was a simplification. The statutory measure is **wage for the unserved notice period** (a number of days × the daily wage), not a percentage of EOSB. This spec supersedes the "50%" wording. **Exact article numbers should be confirmed against the current consolidated text of each statute before code lands** — the treatment above is the rule; the pin-cite is the thing to verify.
+> **Important correction to earlier artefacts:** the original EOSB review (Finding 6) and `compliance-requirements.md` described the KSA notice penalty as "a 50% deduction" / "up to 50% of EOSB". That was a simplification. The measure we model is **wage for the unserved notice period** (a number of days × the daily wage), not a percentage of EOSB. This spec supersedes the "50%" wording. **Exact article numbers should be confirmed against the current consolidated text of each statute before code lands** — the treatment above is the rule; the pin-cite is the thing to verify.
 
 ### 2.3 Recommendation — keep it out of `calculateEOSB`
 
@@ -68,7 +68,7 @@ For the **notice-compensation** step (new, separate from EOSB):
 | `notice_period_days` | integer (days) | notice period, **values not yet sourced** (KSA and UAE both set by contract/law — see the sourcing status at §2.2) |
 | `notice_days_served` | integer (days) | days actually served/garden-leave; default 0 |
 | `total_salary` | decimal (monthly) | basis for the daily wage (KSA uses total salary incl. allowances) |
-| `country` | 'AE' \| 'SA' | selects statutory defaults for the notice period |
+| `country` | 'AE' \| 'SA' | selects which jurisdiction's default notice period applies (**values not yet sourced** — §2.2) |
 
 The engine must **derive** `notice_period_days` from `country` + contract when not supplied, rather than trusting a client-supplied figure silently.
 
@@ -163,7 +163,7 @@ Every calculation must produce one immutable audit row so a regulator or auditor
 
 ### 3.5 Retention and access (UAE/KSA PDPL)
 
-- Retain the audit row for **at least** the statutory limitation period for employment/wage claims (1 year in each jurisdiction) **plus a buffer**; recommend **5 years** as the documented retention baseline, after which records are **anonymised or deleted** per the retention schedule.
+- Retain the audit row for **at least** the limitation period our records state for employment/wage claims (1 year in each jurisdiction — **unsourced; unconfirmed, not a known statutory limit**) **plus a buffer**; recommend **5 years** as the documented retention baseline, after which records are **anonymised or deleted** per the retention schedule.
 - Data minimisation: store only the fields in §3.3; no free-text that could absorb unrelated personal data.
 
 ### 3.6 Transactionality and failure handling
@@ -176,7 +176,7 @@ Every calculation must produce one immutable audit row so a regulator or auditor
 ## 4. Decisions requested from the lead
 
 1. **Confirm the notice penalty stays a separate settlement component** (recommended) rather than being folded into `calculateEOSB`. If you want a single net settlement figure, I'll specify that as a display-time composition of the two stored components.
-2. **Confirm the statutory measure is wage-for-unserved-notice** (this spec supersedes the earlier "50%" wording). I'll pin the exact article numbers against the current consolidated texts before any code lands.
+2. **Confirm the measure is wage-for-unserved-notice** (this spec supersedes the earlier "50%" wording). I'll pin the exact article numbers against the current consolidated texts before any code lands.
 3. **Confirm salary-at-rest encryption** for the audit row (`auth.encrypt` on `basic_salary`/`total_salary`) — or approve clear-text-with-RBAC if you prefer queryability over encryption.
 
 *Specification prepared by Compliance Expert | 2026-09-19*
