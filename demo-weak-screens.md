@@ -2,6 +2,7 @@
 
 > **Prepared by:** Product Designer, 2026-10-06
 > **Build audited:** deployed commit **`80c3fff`** (`main`, PRs #47–#51) — the commit the public URL serves (`/assets/index-CPYz_PZb.js`).
+> **Status:** merged to `main` in **PR #55** (merge commit `4935c41`, 2026-10-06, approved). That PR touched documents only, so the product build is still `80c3fff` and no re-walk was required. The open items below are still open — two of them now carry a design spec (items 1 and 2) so engineering can pick them up without another round-trip.
 > **How verified:** the public URL was checked anonymously (200, title, sign-in screen renders — see the walkthrough script's verification note). Every screen behind the login was walked in a browser on a **scratch instance of the same commit** (own port, own database, own throwaway credential; the rendered bundle is the same file the public URL serves), plus raw API reads. WORKFLOW rule 10 keeps the live demo credential with the lead, so no logged-in pass was run against the public URL. All figures are the seeded *sample* dataset.
 > **Purpose:** the blunt list. If a prospect can click into a screen that is empty, placeholder-stuffed, or contradicts another screen, it is named here.
 
@@ -26,11 +27,23 @@
 - **Screen:** Employee Directory → Noura Al-Suwaidi → Compliance Center → **Settlement Statement**.
 - **What a prospect sees:** figures from the engine, above a header reading **"Jurisdiction: UAE / KSA"** and employer **"Antum Regional Hub"** (a placeholder), for a UAE employee.
 - **Verdict:** Much improved — it is no longer a zero-filled template, so it can be opened in a demo. But the header still does not resolve to the employee's own jurisdiction or the client's entity, which is exactly what a careful buyer's counsel will look at first. Frame it as a draft template with live figures.
+- **Design spec (mine to specify, engineering's to build) — what the header has to resolve:**
+  1. **Employer line** — the client's own legal name. If the platform has no organisation/entity record to read it from today, that is engineering's first check; what must not happen is a hard-coded string that reads like a real company (today's **"Antum Regional Hub"** does — replace the *name* before the *layout* if you only get one of the two).
+  2. **Jurisdiction line** — one jurisdiction, derived from the employee record, reading **"United Arab Emirates — Federal Decree-Law No. 33 of 2021"**. Never a two-jurisdiction string; this document is about one person under one law.
+  3. **Employee block** — full name, employee ID, designation, contract start and end dates, each from the record, none typed.
+  4. **A status chip on the document itself**, in the same wording already used in the Document Preview modal: **"Pilot-ready draft — subject to your counsel's review."** The artefact travels farther than the demo does; it must not arrive looking certified.
+  5. **The EOSB line names its basis** (basic salary, UAE rule) and keeps the unconfirmed marker while the resignation tier is with counsel.
+  - **Not verified:** which of these fields exist in the data model today. I specified the header, not the schema — that check is the first step on the engineering side.
 
 ### 2. Exit-interview data is still captured and never shown
 - **Screen:** nowhere in the UI.
 - **What a prospect sees:** nothing. The "Exit Intelligence Intake" form collects departure reason, preventable-attrition flag and offered salary; the API returns `exitsByReason` (UAE: Better Opportunity 1, Career Change 1, Relocation 1) and **no view renders it**.
 - **Verdict:** A headline retention story with no visible backing. Say "Phase 2 view" if asked; the intake is already recording.
+- **Design spec (Phase 2 view — direction, not available now):** surface `exitsByReason` as a small breakdown panel next to the Retention Lift card, on the same surface the cohorts already live on, labelled as sample data like everything else on the demo.
+  - **Two series, not one:** departure **reason** and the separate **preventable-attrition** flag — a CHRO's first question is "was it avoidable?", not "why did they say they left".
+  - **Empty state matters more than the chart here:** with no exit interviews recorded, the panel must read "No exit interviews recorded for this period" rather than render an empty axis. Nothing on this surface may look broken.
+  - **The offered-salary field is third-party compensation data captured about a leaver.** My recommendation is to show it to HR leadership only, and to have the compliance expert confirm the PDPL position before it is surfaced at all.
+  - **Phase 2 scope:** the preventability *trend* belongs to Layer 4 (Workforce Cost Intelligence); this demo needs only the breakdown, so build the small version.
 
 ### 3. The UAE offboarding showcase is shorter than the KSA one it replaces — and the contrast that carried the story is gone
 - **Screen:** Employee Directory → Noura Al-Suwaidi → Offboarding Checklist.
@@ -71,6 +84,6 @@
 
 ## If we only fix three things before the next demo
 
-1. **Resolve the Settlement Statement header** to the employee's jurisdiction and the real entity name (item 1) — the figures are now good; the header is what a lawyer reads.
+1. **Resolve the Settlement Statement header** to the employee's jurisdiction and the real entity name (item 1) — the figures are now good; the header is what a lawyer reads. **Spec attached above.**
 2. **Close the `Origin` / blank-page / stack-trace hole** (new item A) — before any non-platform host, or any custom domain, is pointed at the product.
 3. **Decide the KSA switch's visibility** (item 6) — a two-second answer that removes a recurring mid-pitch question.
