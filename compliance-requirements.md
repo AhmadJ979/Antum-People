@@ -51,9 +51,9 @@
 | **Termination Grounds** | Must be for a valid reason. Article 44 lists gross misconduct grounds for summary dismissal (no EOSB). | Categorise termination: resignation, redundancy, mutual_agreement, termination_with_cause, termination_without_cause. |
 | **End-of-Service Benefits** | See [Section 3](#3-eosb-uae) below. | Dedicated EOSB calculation engine. |
 | **Gratuity Eligibility** | Minimum 1 year of continuous service to qualify for EOSB. | Check service_years >= 1 before computing. |
-| **Unpaid Leave** | Unpaid leave periods > 90 days are excluded from EOSB calculation. | Track absence types and durations. |
+| **Unpaid Leave** | Unpaid leave periods > 90 days are excluded from EOSB calculation *(the engine's rule — no article held, and whether the threshold is "> 90 days per year" or a single 90-day total is unconfirmed; see UAE counsel request point 4)*. | Track absence types and durations. |
 | **Leave Encashment** | Accrued but unused annual leave must be paid on termination. | Calculate leave_encashment_amount. |
-| **Final Settlement** | Full settlement within 14 days of termination. Includes: salary, gratuity, leave encashment, any other dues. | Final settlement checklist. Auto-generate settlement statement. |
+| **Final Settlement** | Full settlement within 14 days of termination *(our operational standard — no article held; see UAE counsel request point 6)*. Includes: salary, gratuity, leave encashment, any other dues. | Final settlement checklist. Auto-generate settlement statement. |
 | **Visa Cancellation** | Employer must cancel visa within 30 days of termination. | Track visa cancellation status with automated reminders. |
 | **Grace Period** | Employee has 30-90 days grace period to stay in UAE after visa cancellation (depending on visa type). | Notify HR of grace period expiry. |
 
@@ -87,7 +87,7 @@
 | **Notice Period** | Min 30 days during probation (by employer). Post-probation: 60 days for indefinite contracts, 30 days for fixed-term. Employee side: 30 days (non-Saudi) / 60 days (Saudi). | notice_period_days, complex role-based rules. |
 | **Termination Grounds** | Must be for a valid reason. Art. 77 lists gross misconduct grounds. Art. 74 defines employer rights for summary dismissal. | Same categorisation as UAE but different qualifying criteria. |
 | **End-of-Service Benefits** | See [Section 4](#4-eosb-ksa) below. | Dedicated KSA EOSB engine. |
-| **Final Settlement** | Payable within 2 weeks of termination (or 7 days if employer-initiated). Includes: salary, EOSB, leave encashment, notice pay. | Final settlement timeline stricter than UAE. |
+| **Final Settlement** | Payable within 2 weeks of termination (or 7 days if employer-initiated) *(our operational standard — no article held; see KSA counsel request point 5)*. Includes: salary, EOSB, leave encashment, notice pay. | Final settlement timeline stricter than UAE. |
 | **Iqama Transfer/Cancellation** | Iqama must be cancelled/transferred within 90 days. Employee can transfer without employer consent after contract expiry (recent reform). | iqama_status field. Auto-reminders. |
 | **Exit/Re-entry Visa** | Must be cancelled as part of offboarding process. | Track exit visa status. |
 | **Service Certificate** | Employer must provide a service certificate within 2 weeks of termination. | Auto-generate service certificate. |
@@ -512,7 +512,7 @@ CREATE TABLE IF NOT EXISTS eosb_calculations (
 |---|---|---|
 | **Jurisdiction-Aware EOSB Engine** | **P0** | Dual calculation engine: UAE (basic salary, resignation tier **unconfirmed/frozen pending counsel**) and KSA (total salary, full EOSB; notice compensation separate). |
 | **Onboarding Compliance Checklist** | **P0** | Jurisdiction-specific tasks: visa, MoHRE/Qiwa registration, WPS setup, contract generation. |
-| **Offboarding Settlement Calculator** | **P0** | Auto-generates final settlement: salary, EOSB, leave encashment, notice pay. 14-day/UAE and 7-day/KSA settlement timelines. |
+| **Offboarding Settlement Calculator** | **P0** | Auto-generates final settlement: salary, EOSB, leave encashment, notice pay. 14-day/UAE and 7-day/KSA settlement timelines *(our operational standard, not yet sourced — see the determination)*. |
 | **Privacy Notice Generator** | **P0** | Generate jurisdiction-specific privacy notices in Arabic and English for onboarding consent. |
 | **Consent Management** | **P0** | Record lawful basis for each processing activity. Consent withdrawal mechanism. |
 | **Data Subject Request Workflow** | **P1** | Intake, verify, respond (30-day SLA), track. Auto-responders for access/erasure where possible. |
