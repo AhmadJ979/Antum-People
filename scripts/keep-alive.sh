@@ -25,6 +25,10 @@
 #   kill "$(head -n 1 /home/team/shared/probable-octo-sniffle/server/keep-alive.lock)"
 #   or: pkill -f keep-alive.sh
 #   The lock is flock()ed on fd 9, which is released automatically when the loop dies.
+#   On contention the loop says who really holds the lock (`lsof -t` on the lock file) and
+#   whether the PID recorded in the file is alive, retries ANTUM_LOCK_ATTEMPTS times
+#   (default 3, ANTUM_LOCK_RETRY_WAIT seconds apart, default 10), and only then either
+#   refuses in favour of a live guard or takes over a stale lock.
 #
 # WHY IT STOPPED (every exit is loud):
 #   grep 'EXIT:' /home/team/shared/probable-octo-sniffle/server/keep-alive.log
@@ -53,6 +57,8 @@ PORT="${ANTUM_PORT:-3000}"
 ENV_FILE="${ANTUM_ENV_FILE:-/etc/profile.d/cto-env-vars.sh}"
 POLL_INTERVAL="${ANTUM_POLL_INTERVAL:-60}"
 START_DELAY="${ANTUM_START_DELAY:-10}"
+LOCK_ATTEMPTS="${ANTUM_LOCK_ATTEMPTS:-3}"
+LOCK_RETRY_WAIT="${ANTUM_LOCK_RETRY_WAIT:-10}"
 
 LOG_FILE="$DEPLOY_DIR/server/keep-alive.log"
 SERVER_LOG="$DEPLOY_DIR/server/server.log"
@@ -101,9 +107,25 @@ with_timeout() {
 
 # Live keep-alive.sh loops other than this process. Matched on the interpreter + script
 # pair, so an editor or a diff that merely mentions the filename is not mistaken for a loop.
+# PIDs on this process's ancestor chain. The shell that armed us is itself a keep-alive.sh
+# for the same target while the detach handoff runs, and must not be counted as another
+# guard: without this an arm could refuse because of its own arming parent.
+ancestor_pids() {
+    local pid ppid
+    pid="$(sed -n 's/^PPid:[[:space:]]*//p' /proc/self/status 2>/dev/null)"
+    while [ -n "$pid" ] && [ "$pid" != "0" ]; do
+        echo "$pid"
+        ppid="$(sed -n 's/^PPid:[[:space:]]*//p' "/proc/$pid/status" 2>/dev/null)"
+        if [ -z "$ppid" ] || [ "$ppid" = "$pid" ]; then break; fi
+        pid="$ppid"
+    done
+}
+
 live_loops() {
-    local pid cmd first
+    local pid cmd first ancestors
+    ancestors="$(ancestor_pids)"
     for pid in $(pgrep -f 'keep-alive\.sh' 2>/dev/null); do
+        case " $ancestors " in *" $pid "*) continue ;; esac
         [ "$pid" = "$$" ] && continue
         cmd="$(tr '\0' ' ' 2>/dev/null < "/proc/$pid/cmdline")"
         [ -n "$cmd" ] || continue
@@ -192,6 +214,26 @@ fi
 # server/keep-alive.lock, so any later re-arm was refused for good, in the name of the
 # loop's dead PID, while the site ran with no guard at all. An orphaned poll `sleep`
 # inherited the same fd and held the lock for up to one poll interval.
+# Who actually holds the lock right now. The PID written in the file is a claim, not a fact:
+# on the deployment the file named the loop's dead PID while a child held the lock.
+lock_holder_pids() { with_timeout 5 lsof -t "$LOCK_FILE" 2>/dev/null | sort -u; }
+
+holder_report() {
+    local p out="" recorded
+    recorded="$(head -n 1 "$LOCK_FILE" 2>/dev/null | tr -d '[:space:]')"
+    for p in $(lock_holder_pids); do
+        out="$out$p($(ps -p "$p" -o comm= 2>/dev/null | tr -d '[:space:]')) "
+    done
+    [ -n "$out" ] || out="none"
+    if [ -z "$recorded" ]; then
+        echo "holders: $out; the file names no PID"
+    elif kill -0 "$recorded" 2>/dev/null; then
+        echo "holders: $out; the file names PID $recorded (alive)"
+    else
+        echo "holders: $out; the file names PID $recorded (DEAD - the file is stale)"
+    fi
+}
+
 touch "$LOCK_FILE" 2>/dev/null
 chmod 664 "$LOCK_FILE" 2>/dev/null || true
 
@@ -203,29 +245,39 @@ if ! ( : >> "$LOCK_FILE" ) 2>/dev/null; then
 fi
 
 exec 9<>"$LOCK_FILE"
-if ! flock -n 9; then
+locked=""
+for attempt in $(seq 1 "$LOCK_ATTEMPTS"); do
+    if flock -n 9; then
+        locked=1
+        break
+    fi
+    log "lock held (attempt $attempt of $LOCK_ATTEMPTS) - $(holder_report)"
+    [ "$attempt" = "$LOCK_ATTEMPTS" ] || sleep "$LOCK_RETRY_WAIT" 9>&-
+done
+
+if [ -z "$locked" ]; then
     live="$(guarding_loops)"
     if [ -n "$live" ]; then
-        log_exit "another keep-alive.sh is alive and already guards $DEPLOY_DIR on port $PORT - this arm is not needed: $(echo "$live" | tr '\n' ';')"
+        log_exit "refusing to start: a live keep-alive.sh already guards $DEPLOY_DIR on port $PORT - $(echo "$live" | tr '\n' ';'); $(holder_report)"
         exit 1
     fi
     others="$(live_loops)"
     if [ -n "$others" ]; then
         log "note: other keep-alive.sh loops exist for different targets - they are not this port's guard: $(echo "$others" | tr '\n' ';')"
     fi
-    # No live loop for this target, but the lock is held: a stale lock. Typically a server
-    # process that inherited fd 9 from an earlier loop, or a loop that was SIGKILLed leaving
-    # its fd open.
-    recorded="$(head -n 1 "$LOCK_FILE" 2>/dev/null | tr -d '[:space:]')"
-    log "stale lock: no live guard for this target, but the lock is held (recorded PID '${recorded:-none}') - reclaiming on a fresh lock file"
+    # Still held after retrying, and no live guard for this target: a stale lock, e.g. a
+    # process that inherited fd 9 from an earlier build of this loop. Take it over, loudly.
+    log "stale lock after $LOCK_ATTEMPTS attempts - $(holder_report); reclaiming on a fresh lock file"
     mv -f "$LOCK_FILE" "$LOCK_FILE.stale" 2>/dev/null || rm -f "$LOCK_FILE" 2>/dev/null
     : > "$LOCK_FILE" 2>/dev/null
     exec 9<>"$LOCK_FILE"
-    if ! flock -n 9; then
-        log_exit "reclaimed lock file is already held by another arming instance - refusing to run a duplicate guard on port $PORT"
+    if flock -n 9; then
+        locked=1
+        log "stale lock reclaimed on a fresh lock file (the previous holder keeps its orphaned one)"
+    else
+        log_exit "reclaimed lock file is also held - refusing to run a duplicate guard on port $PORT ($(holder_report))"
         exit 1
     fi
-    log "stale lock reclaimed on a fresh lock file (the old holder keeps its orphaned one; it is not a loop)"
 fi
 
 # Guard against a reclaimer having replaced the lock file between our lock and now: if the
