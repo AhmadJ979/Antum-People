@@ -16,13 +16,18 @@
 #
 # Own port (ANTUM_TEST_PORT, default 4831), own temp dir, aborts if the port is busy.
 # Nothing here touches the live deployment.
+#
+# `ss` is not installed on this host, so the busy-port check uses lsof, the same way
+# scripts/keep-alive-deploypath-test.sh does. (A check that quietly never fires is worse
+# than no check: it reads as protection in review.)
 set -u
 PORT=${ANTUM_TEST_PORT:-4831}
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 DEV_ORIGIN=https://b974147c03228029e277d1cbe6646fe6-dev.ctonew.app
 
-if ss -ltn "sport = :$PORT" 2>/dev/null | grep -q LISTEN; then
-  echo "ABORT: port $PORT is already in use (set ANTUM_TEST_PORT to another port)"
+holders="$(lsof -t -i ":$PORT" -sTCP:LISTEN 2>/dev/null | tr '\n' ' ')"
+if [ -n "$holders" ]; then
+  echo "ABORT: port $PORT is already in use by $holders (set ANTUM_TEST_PORT to another port)"
   exit 1
 fi
 
