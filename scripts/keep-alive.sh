@@ -1,135 +1,319 @@
 #!/bin/bash
 
 # Antum People Self-Healing Loop
-# 
+#
+# WHAT IT DOES
+#   Every POLL_INTERVAL seconds (default 60) it asserts that the product server answers the
+#   401 contract on PORT (default 3000). Nothing listening  -> start the server.
+#   Something else holding the port                        -> evict it (port-claim convention)
+#                                                            and start ours.
+#   client/dist/index.html missing                         -> rebuild the bundle first.
+#
 # ARMING THE LOOP:
-#   nohup ./scripts/keep-alive.sh &
-# 
+#   nohup bash scripts/keep-alive.sh &
+#   (the file is committed 644, so arm it through bash; that is also how the deploy arms it)
+#   The script re-execs itself under setsid on the way, so it does not die with the shell
+#   that armed it: after arming, the armed shell shows no loop and the detached instance
+#   carries on. (See "WHY IT DETACHES" below.)
+#
 # CHECKING STATUS:
 #   tail -f /home/team/shared/probable-octo-sniffle/server/keep-alive.log
-#   Check for the lock file: ls -l /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
-# 
-# RECLAIMING / STOPPING:
-#   Kill the script PID (stored in the lock file) or use: pkill -f keep-alive.sh
-#   The lock is held via flock on a file descriptor and will be automatically released
-#   if the script process dies.
-# 
-# NOTE: This loop cannot survive a host restart on its own (no crontab/systemd hooks).
-# Re-arming after a host restart is a manual step.
-# For non-root users: Ensure you have read access to secrets or they are exported in your shell.
+#   pgrep -af keep-alive.sh
+#   ls -l /home/team/shared/probable-octo-sniffle/server/keep-alive.lock   (first line = loop PID)
+#
+# STOPPING / RECLAIMING:
+#   kill "$(head -n 1 /home/team/shared/probable-octo-sniffle/server/keep-alive.lock)"
+#   or: pkill -f keep-alive.sh
+#   The lock is flock()ed on fd 9, which is released automatically when the loop dies.
+#
+# WHY IT STOPPED (every exit is loud):
+#   grep 'EXIT:' /home/team/shared/probable-octo-sniffle/server/keep-alive.log
+#   Every exit path writes one dated line naming the reason (lock held by PID X, killed by
+#   signal N, missing secret, ...) to the log file AND to stderr, which the deploy sends to
+#   server/keep-alive.out. An exit that is not one of the named paths is logged as
+#   "loop ended unexpectedly (status N)" by the EXIT trap.
+#
+# WHY IT DETACHES:
+#   The server this loop starts is already started with setsid; the loop itself used to be
+#   left inside the arming shell's session. A session teardown then removed the loop while
+#   the server it had started kept running - the observed "site up, watchdog gone, nothing
+#   in the log" state. Detaching removes that class of death.
+#
+# KNOWN HARD LIMIT - do not invent a mechanism this host does not have:
+#   there is no cron and no systemd here, so nothing re-arms the loop after a host restart.
+#   The deploy script arms it; a boot does not. Re-arming after a restart stays manual.
+#
+# TESTING OFF THE LIVE TREE (WORKFLOW rule 14):
+#   The paths and the two waits can be redirected for a scratch run without changing the
+#   live defaults: ANTUM_DEPLOY_DIR, ANTUM_PORT, ANTUM_ENV_FILE, ANTUM_POLL_INTERVAL,
+#   ANTUM_START_DELAY. Only set them in a test; the deployed tree uses the defaults.
 
-DEPLOY_DIR="/home/team/shared/probable-octo-sniffle"
+DEPLOY_DIR="${ANTUM_DEPLOY_DIR:-/home/team/shared/probable-octo-sniffle}"
+PORT="${ANTUM_PORT:-3000}"
+ENV_FILE="${ANTUM_ENV_FILE:-/etc/profile.d/cto-env-vars.sh}"
+POLL_INTERVAL="${ANTUM_POLL_INTERVAL:-60}"
+START_DELAY="${ANTUM_START_DELAY:-10}"
+
 LOG_FILE="$DEPLOY_DIR/server/keep-alive.log"
 SERVER_LOG="$DEPLOY_DIR/server/server.log"
 LOCK_FILE="$DEPLOY_DIR/server/keep-alive.lock"
+OUT_FILE="$DEPLOY_DIR/server/keep-alive.out"
+SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || echo "$0")"
 
-# Ensure log directory exists
-mkdir -p "$(dirname "$LOG_FILE")"
+mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null
 
-# Ensure lock file exists and is group-writable so any team user can acquire the lock
+# --- logging and loud exits ----------------------------------------------------------
+# One dated line per event, to the log file and to stderr (nohup sends stderr to
+# keep-alive.out), so the operator sees the same thing in either channel.
+log() {
+    local line
+    line="$(date -Iseconds) $*"
+    echo "$line" >> "$LOG_FILE" 2>/dev/null
+    echo "$line" >&2
+}
+
+exit_reason=""
+# exit_reason marks an exit we have already explained, so the EXIT trap does not add a
+# second, vaguer line for it.
+log_exit() { exit_reason="$1"; log "EXIT: $1"; }
+
+on_exit() {
+    local status=$?
+    if [ -z "$exit_reason" ]; then
+        log "EXIT: loop ended unexpectedly (status $status) - nothing re-arms this host, so the guard is now down"
+    fi
+}
+trap on_exit EXIT
+
+on_signal() { log_exit "killed by SIG$1 (loop pid $$)"; exit $((128 + $2)); }
+trap 'on_signal TERM 15' TERM
+trap 'on_signal INT 2' INT
+trap 'on_signal QUIT 3' QUIT
+# SIGHUP is not a reason to die: a closing arming session sends it, and outliving that
+# session is the whole point of arming this loop.
+trap 'log "SIGHUP received (arming session closing) - staying up"' HUP
+
+# --- small helpers -------------------------------------------------------------------
+with_timeout() {
+    local seconds="$1"; shift
+    if command -v timeout >/dev/null 2>&1; then timeout "$seconds" "$@"; else "$@"; fi
+}
+
+# Live keep-alive.sh loops other than this process. Matched on the interpreter + script
+# pair, so an editor or a diff that merely mentions the filename is not mistaken for a loop.
+live_loops() {
+    local pid cmd first
+    for pid in $(pgrep -f 'keep-alive\.sh' 2>/dev/null); do
+        [ "$pid" = "$$" ] && continue
+        cmd="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)"
+        [ -n "$cmd" ] || continue
+        first="${cmd%% *}"
+        case "${first##*/}" in
+            bash|sh|dash|ash|setsid|nohup|env) printf '%s %s\n' "$pid" "$cmd" ;;
+        esac
+    done
+}
+
+# PIDs LISTENING on our port (LISTEN only - a plain `lsof -i :PORT` also lists clients,
+# which would let this loop kill an unrelated process that merely connected to us).
+listener_pids() {
+    with_timeout 5 lsof -t -i ":$PORT" -sTCP:LISTEN 2>/dev/null | sort -u
+}
+
+# Our own server processes: cmdline `node index.js` AND cwd inside this deploy dir.
+# Cmdline alone is not enough - scratch instances and other checkouts run the same command.
+server_pids() {
+    local pid real
+    real="$(readlink -f "$DEPLOY_DIR/server" 2>/dev/null)"
+    for pid in $(pgrep -f 'node index\.js' 2>/dev/null); do
+        [ "$pid" = "$$" ] && continue
+        [ "$(readlink -f "/proc/$pid/cwd" 2>/dev/null)" = "$real" ] || continue
+        echo "$pid"
+    done | sort -u
+}
+
+describe_pids() {
+    local p out=""
+    for p in $1; do
+        out="$out$p($(ps -p "$p" -o comm= 2>/dev/null | tr -d '[:space:]')) "
+    done
+    echo "$out"
+}
+
+# --- detach into our own session -----------------------------------------------------
+if [ "${ANTUM_KEEPALIVE_DETACHED:-0}" != "1" ]; then
+    my_sid="$(ps -o sid= -p $$ 2>/dev/null | tr -d '[:space:]')"
+    if [ "$my_sid" = "$$" ]; then
+        log "armed as its own session leader (pid $$) - no detach needed"
+    elif command -v setsid >/dev/null 2>&1; then
+        log "detaching: arming session ${my_sid:-unknown}, re-execing under setsid (handoff from pid $$)"
+        ANTUM_KEEPALIVE_DETACHED=1 setsid nohup bash "$SCRIPT_PATH" "$@" >> "$OUT_FILE" 2>&1 &
+        sleep 3
+        live_after="$(live_loops)"
+        if [ -n "$live_after" ]; then
+            log_exit "deliberate handoff: detached instance is up (keep-alive.sh processes now: $(echo "$live_after" | tr '\n' ';'))"
+            exit 0
+        fi
+        # Never leave the port unwatched on the way out: if the handoff produced no loop,
+        # say so and fail loudly.
+        log_exit "detach produced no live keep-alive.sh within 3s - nothing is guarding port $PORT; re-arm this loop by hand"
+        exit 1
+    else
+        log "WARN: setsid not found - running inside the arming session (${my_sid:-unknown}); a session teardown can kill this loop"
+    fi
+fi
+
+# --- single instance lock ------------------------------------------------------------
+# The lock is held on fd 9 of THIS process, and fd 9 is closed (9>&-) for everything the
+# loop starts. It used to be inherited by the server, which kept the flock alive after the
+# loop was gone: every later re-arm was then refused with the name of a PID that was long
+# dead, and the site ran with no guard at all.
 touch "$LOCK_FILE" 2>/dev/null
 chmod 664 "$LOCK_FILE" 2>/dev/null || true
 
-# Single instance lock
-# Using a file descriptor for flock to ensure the lock is released if the script is killed.
+# Probe writability in a subshell first: a redirection error on `exec` below would end the
+# shell on the spot, with no line in any log.
+if ! ( : >> "$LOCK_FILE" ) 2>/dev/null; then
+    log_exit "cannot write $LOCK_FILE (owner/permissions) - refusing to start rather than leave the port unwatched once"
+    exit 1
+fi
+
 exec 9<>"$LOCK_FILE"
 if ! flock -n 9; then
-    # Lock is held by another active process.
-    LOCK_PID=$(cat "$LOCK_FILE" | tr -d '[:space:]')
-    echo "$(date -Iseconds) Another instance (PID: ${LOCK_PID:-unknown}) is already running. Exiting." >> "$LOG_FILE"
+    live="$(live_loops)"
+    if [ -n "$live" ]; then
+        log_exit "another keep-alive.sh is alive and holds the lock - this arm is not needed: $(echo "$live" | tr '\n' ';')"
+        exit 1
+    fi
+    # No live loop, but the lock is held: a stale lock. Typically a server process that
+    # inherited fd 9 from an earlier loop, or a loop that was SIGKILLed leaving its fd open.
+    recorded="$(head -n 1 "$LOCK_FILE" 2>/dev/null | tr -d '[:space:]')"
+    log "stale lock: no live keep-alive.sh, but the lock is held (recorded PID '${recorded:-none}') - reclaiming"
+    mv -f "$LOCK_FILE" "$LOCK_FILE.stale" 2>/dev/null || rm -f "$LOCK_FILE" 2>/dev/null
+    : > "$LOCK_FILE" 2>/dev/null
+    exec 9<>"$LOCK_FILE"
+    if ! flock -n 9; then
+        log_exit "reclaimed lock file is already held by another arming instance - refusing to run a duplicate guard on port $PORT"
+        exit 1
+    fi
+    log "stale lock reclaimed on a fresh lock file (the old holder keeps its orphaned one; it is not a loop)"
+fi
+
+# Guard against a reclaimer having replaced the lock file between our lock and now: if the
+# path no longer names the inode we locked, we are not the single instance we think we are.
+if [ "$(stat -c %i /proc/self/fd/9 2>/dev/null)" != "$(stat -c %i "$LOCK_FILE" 2>/dev/null)" ]; then
+    log_exit "lock file was replaced under us - refusing to run a second guard on port $PORT"
+    exit 1
+fi
+echo $$ > "$LOCK_FILE" 2>/dev/null || log "WARN: could not record loop PID in $LOCK_FILE (lock still held)"
+
+# --- secrets -------------------------------------------------------------------------
+if [ -f "$ENV_FILE" ]; then
+    # shellcheck disable=SC1090
+    source "$ENV_FILE"
+    log "environment sourced from $ENV_FILE"
+else
+    log "WARN: $ENV_FILE not found - relying on the environment this loop was armed with"
+fi
+
+if [ -z "${JWT_SECRET:-}" ] || [ -z "${ENCRYPTION_KEY:-}" ]; then
+    log_exit "JWT_SECRET or ENCRYPTION_KEY is missing - refusing to start a server that cannot boot"
     exit 1
 fi
 
-# We have the lock. Write our PID to the file for visibility.
-echo $$ > "$LOCK_FILE"
-
-# Source environment variables for secrets (JWT_SECRET, ENCRYPTION_KEY)
-if [ -f "/etc/profile.d/cto-env-vars.sh" ]; then
-    source /etc/profile.d/cto-env-vars.sh
-    echo "$(date -Iseconds) Environment variables sourced from /etc/profile.d/cto-env-vars.sh" >> "$LOG_FILE"
-fi
-
-# Loud secret fail: do not start if core secrets are missing
-if [ -z "$JWT_SECRET" ] || [ -z "$ENCRYPTION_KEY" ]; then
-    echo "$(date -Iseconds) ERROR: JWT_SECRET or ENCRYPTION_KEY is missing. Loop refusing to start." >> "$LOG_FILE"
-    exit 1
-fi
-
+# --- health --------------------------------------------------------------------------
 check_health() {
-    # Check if port 3000 is listening using lsof (ss is missing on this host)
-    if ! lsof -i :3000 -sTCP:LISTEN -t > /dev/null; then
-        return 1 # Nothing listening
+    # Nothing listening.
+    [ -n "$(listener_pids)" ] || return 1
+
+    # Hardening: assert the login contract instead of just the page title.
+    # /api/employees is a protected route and is NOT covered by the failure-only login
+    # limiter; a healthy server answers 401 with a specific body. Byte-for-byte the same
+    # contract the deploy asserts - do not weaken it.
+    # Every external call is bounded by timeout/--max-time, so a hung probe cannot wedge
+    # the loop; null bytes are stripped because they only produce shell warnings.
+    local response
+    response="$(with_timeout 8 curl -s -i --noproxy '*' --max-time 5 "http://127.0.0.1:$PORT/api/employees" 2>/dev/null | tr -d '\000')"
+
+    if printf '%s' "$response" | grep -q 'HTTP/.* 401' && \
+       printf '%s' "$response" | grep -q '{"error":"Authentication token required"}'; then
+        return 0 # healthy
     fi
-
-    # Hardening: Assert the login contract instead of just the page title.
-    # We probe /api/employees (protected route) which is NOT rate-limited by failure-only logic.
-    # A healthy server returns 401 with "Authentication token required".
-    # This proves the server is running our code and responding to authenticated routes.
-    HEALTH_RESPONSE=$(curl -s -i --noproxy '*' --max-time 5 http://127.0.0.1:3000/api/employees 2>/dev/null)
-
-    # Check for 401 status and the specific error JSON
-    if echo "$HEALTH_RESPONSE" | grep -q "HTTP/.* 401" && \
-       echo "$HEALTH_RESPONSE" | grep -q '{"error":"Authentication token required"}'; then
-        return 0 # Healthy
-    else
-        # If it returns 200 or doesn't match the contract, it might be a spoof or broken
-        return 2 # Foreign/Spoofed process
-    fi
-}
-
-rebuild_client() {
-    echo "$(date -Iseconds) rebuilding client bundle..." >> "$LOG_FILE"
-    cd "$DEPLOY_DIR/client"
-    npm ci --no-fund --no-audit
-    NODE_OPTIONS=--max-old-space-size=560 npm run build
+    return 2 # listening, but not our contract
 }
 
 start_server() {
-    echo "$(date -Iseconds) starting server on port 3000" >> "$LOG_FILE"
-    cd "$DEPLOY_DIR/server"
+    log "starting server: port $PORT, cwd $DEPLOY_DIR/server"
+    cd "$DEPLOY_DIR/server" || { log "ERROR: cannot cd to $DEPLOY_DIR/server - not starting"; return 1; }
     if [ ! -d "node_modules" ]; then
-        npm install
+        log "server/node_modules missing - installing"
+        with_timeout 600 npm install 9>&- >> "$LOG_FILE" 2>&1 || log "WARN: npm install failed; still attempting to start"
     fi
-    # Explicitly set PORT=3000 to avoid inheritance of PORT=80
-    PORT=3000 setsid nohup node index.js >> "$SERVER_LOG" 2>&1 &
+    # 9>&- : the server must NOT inherit the lock fd (that leak is the stale-lock bug).
+    PORT="$PORT" setsid nohup node index.js >> "$SERVER_LOG" 2>&1 9>&- &
+    wait_for_health
 }
 
-# Initial delay to let the system settle after boot
-sleep 10
+wait_for_health() {
+    local i
+    for i in $(seq 1 20); do
+        sleep 1
+        if check_health; then
+            log "server answered the 401 contract on port $PORT after ${i}s"
+            return 0
+        fi
+    done
+    log "WARN: nothing answered the 401 contract on port $PORT within 20s of starting - the next poll retries"
+    return 1
+}
+
+rebuild_client() {
+    log "client/dist/index.html missing - rebuilding bundle"
+    ( cd "$DEPLOY_DIR/client" && \
+      with_timeout 900 npm ci --no-fund --no-audit 9>&- && \
+      NODE_OPTIONS=--max-old-space-size=560 with_timeout 900 npm run build 9>&- ) >> "$LOG_FILE" 2>&1
+    if [ -f "$DEPLOY_DIR/client/dist/index.html" ]; then
+        log "client bundle rebuilt"
+    else
+        log "ERROR: rebuild finished without $DEPLOY_DIR/client/dist/index.html"
+    fi
+}
+
+# --- the loop ------------------------------------------------------------------------
+started_at="pid $$ since $(date -Iseconds)"
+log "guard starting: port $PORT, deploy dir $DEPLOY_DIR, poll ${POLL_INTERVAL}s, lock $LOCK_FILE"
+
+# Initial delay to let the system settle after boot.
+sleep "$START_DELAY"
 
 while true; do
     check_health
-    HEALTH=$?
-    if [ $HEALTH -eq 0 ]; then
-        # Healthy, do nothing
-        :
-    elif [ $HEALTH -eq 2 ]; then
-        # Foreign process
-        FOREIGN_PID=$(lsof -t -i :3000)
-        if [ -n "$FOREIGN_PID" ]; then
-            FOREIGN_CMD=$(ps -p "$FOREIGN_PID" -o command=)
-            echo "$(date -Iseconds) port 3000 held by foreign process (PID: $FOREIGN_PID, CMD: $FOREIGN_CMD) - killing it" >> "$LOG_FILE"
-            kill -9 "$FOREIGN_PID"
+    health=$?
+
+    if [ "$health" -eq 0 ]; then
+        : # healthy, do nothing
+    elif [ "$health" -eq 2 ]; then
+        pids="$(listener_pids)"
+        if [ -n "$pids" ]; then
+            log "port $PORT fails the 401 contract, held by $(describe_pids "$pids") - evicting (port-claim convention)"
+            for p in $pids; do [ "$p" = "$$" ] || kill -9 "$p" 2>/dev/null; done
             sleep 2
             start_server
         fi
     else
-        # HEALTH=1 (Nothing listening)
-        echo "$(date -Iseconds) port 3000 empty - starting recovery" >> "$LOG_FILE"
-        if [ ! -f "$DEPLOY_DIR/client/dist/index.html" ]; then
-            rebuild_client
-        fi
-        # Is a node index.js already running?
-        if ! pgrep -f "node index.js" | grep -v "$$" > /dev/null; then
+        log "port $PORT is empty - recovering"
+        [ -f "$DEPLOY_DIR/client/dist/index.html" ] || rebuild_client
+
+        pids="$(server_pids)"
+        if [ -z "$pids" ]; then
             start_server
         else
-            # Process exists but not responding on 3000
-            SERVER_PID=$(pgrep -f "node index.js" | head -n 1)
-            echo "$(date -Iseconds) server process ($SERVER_PID) exists but port 3000 is not responding - killing and restarting" >> "$LOG_FILE"
-            kill -9 "$SERVER_PID"
+            log "server process(es) $(echo "$pids" | tr '\n' ' ') exist in $DEPLOY_DIR/server but port $PORT does not answer - killing and restarting"
+            for p in $pids; do [ "$p" = "$$" ] || kill -9 "$p" 2>/dev/null; done
             sleep 2
             start_server
         fi
     fi
-    sleep 60
+
+    sleep "$POLL_INTERVAL"
 done
