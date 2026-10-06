@@ -3,8 +3,8 @@
 > **Prepared by:** Product Designer, 2026-10-06
 > **Build walked:** the deployment live on **2026-10-06** (`3cf625e` at the time of the walk), on a scratch instance — own port, own database, own throwaway credential (rule 14).
 > The open items below are still open — two of them carry a design spec (items 1 and 2) so engineering can pick them up without another round-trip.
-> **How verified:** the public URL was checked anonymously (200, title, sign-in screen renders — see the walkthrough script's verification note). Every screen behind the login was walked in a browser on a **scratch instance of the deployed build** (own port, own database, own throwaway credential), plus raw API reads. WORKFLOW rule 10 keeps the live demo credential with the lead, so no logged-in pass was run against the public URL. All figures are the seeded *sample* dataset.
-> **Figure discipline:** accrual-derived figures — the EOSB liability total, the settlement's EOSB / Gross / Net, the forecast ladder — are recorded here as **dated readings**, never as expected values, because they move. Four reads of the builds deployed on 2026-10-06 gave four different UAE liability values: **85,126.34** (designer's first instance), **85,125.43** (lead's live pass, twenty minutes later), **85,129.04** (designer's re-seeded instance), **85,129.27** (designer's scratch instance of the deployment live that day), and **85,141.22** (designer's scratch instance of the build live now, `1a36b45`). Counts and ratios did not wobble the same way, which is the split the walkthrough script now teaches.
+> **How verified:** the public URL was checked anonymously (200, title, sign-in screen renders — see the walkthrough script's verification note). Every screen behind the login was walked in a browser on a **scratch instance of the deployed build** (own port, own database, own throwaway credential), plus raw API reads. WORKFLOW rule 10 keeps the live demo credential with the lead, so **no logged-in pass was run against the public URL by the designer** — the **lead ran one on 2026-10-06** (credential authenticates, API serves, the deployed bundle renders the UAE surface by default; see the walkthrough script's verification note). All figures are the seeded *sample* dataset.
+> **Figure discipline:** accrual-derived figures — the EOSB liability total, the settlement's EOSB / Gross / Net, the forecast ladder — are recorded here as **dated readings**, never as expected values, because they move. Five reads of the builds deployed on 2026-10-06 gave five different UAE liability values: **85,126.34** (designer's first instance), **85,125.43** (lead's live pass, twenty minutes later), **85,129.04** (designer's re-seeded instance), **85,129.27** (designer's scratch instance of the deployment live that day), and **85,141.22** (designer's scratch instance, taken 2026-10-06 on `1a36b45` — then the live build). Counts and ratios did not wobble the same way, which is the split the walkthrough script now teaches.
 > **Purpose:** the blunt list. If a prospect can click into a screen that is empty, placeholder-stuffed, or contradicts another screen, it is named here.
 
 ---
@@ -84,23 +84,34 @@
 
 ---
 
-## New this session — not a screen, but it can take the demo down
+## New this session — not a screen, but it could take the demo down (**closed 2026-10-06**)
 
-### A. An unlisted `Origin` gets a **500 with a stack trace**, and the app renders **blank** on any host that is not on the two-item allowlist
+### A. An unlisted `Origin` got a **500 with a stack trace**, and the app rendered **blank** on any host that was not on the two-item allowlist — **closed 2026-10-06, after the fix**
+
+**Status: closed — seen on the screen, after the fix (2026-10-06).** Engineering task `08fa5d5c` is done and PR #62 landed the fix. The closing evidence below is the **lead's post-cutover verification, reported here — not the designer's own observation**: WORKFLOW rule 14 forbids testing against the live deployment, so the designer did not re-run these checks.
+
+**What it was — observed on a scratch instance, before the fix:**
 - **What I observed:** on a scratch instance of the deployed commit, a request carrying `Origin: http://127.0.0.1:4713` (any host other than the two platform preview origins) is answered **HTTP 500** with Express's default HTML error page — including a **full stack trace and internal file paths** — instead of a clean 403. Because the built `index.html` loads its bundle with a `crossorigin` attribute, a browser on any other origin gets the HTML (200) and then a **blank white page**, since the module request is the one that is rejected.
 - **This contradicts the "generic 500s" hardening claim, and the generic handler does not cover this class of throw.** The generic 500 handler is app-level error middleware; a throw from the **CORS middleware runs before the route** and never reaches it, so Express's own default HTML error page is what comes back. So it is not only a blank page on a foreign host — the response body **discloses the stack and absolute filesystem paths** to any caller who sets one header (`.../server/index.js:29:16`, and `/home/team/shared/probable-octo-sniffle/server/node_modules/cors/...`).
 - **Why it matters:** it is a hardening-claim contradiction, an internal-path disclosure, and a hard blocker the moment the product is served from **any other host** — `antum.ae`, a client's own domain, a forwarded port. The published demo works today only because its two hosts are allowlisted.
-- **Independently reproduced by the lead** on a scratch instance of `80c3fff`: bad `Origin` → **500 with Express's default HTML error page**; allowlisted origin → 401 (correct); no origin → 401 (correct). **Filed as engineering task `08fa5d5c`.**
+- **Independently reproduced by the lead** on a scratch instance of `80c3fff`: bad `Origin` → **500 with Express's default HTML error page**; allowlisted origin → 401 (correct); no origin → 401 (correct). **Filed as engineering task `08fa5d5c`** — now done; see the closure below.
 - **Hit again first-hand on 2026-10-06:** a browser pointed at a fresh scratch instance of the deployed build could not load the app at all — the shell arrived and the module request was rejected, leaving a **blank page** until the scratch copy's allowlist was patched by hand. Same symptom, no special conditions: this is what a custom domain gets on day one. Scratch only — the live allowlist was not touched.
 - **Reproduction (scratch only):** `curl -H 'Origin: http://127.0.0.1:4713' <scratch>/api/employees` → 500. Same request with the allowlisted origin → 401 (correct).
-- **Suggested direction (engineering call, not mine to make):** allow same-origin requests and any configured host, derive the allowlist from configuration rather than two hard-coded literals, and return a plain 403 instead of throwing into the error handler.
-- **Filed as engineering task `08fa5d5c`** — the fix and its acceptance criteria live there, not in this audit.
-- **Not verified against the live deployment** — I did not probe the live server with a bad origin, because that request class is what crashes or 500s it.
+- **Suggested direction (engineering call, not mine to make):** allow same-origin requests and any configured host, derive the allowlist from configuration rather than two hard-coded literals, and return a plain 403 instead of throwing into the error handler. *Kept for the record — this is the direction the shipped fix followed.*
+- **Was filed as engineering task `08fa5d5c`** — the fix and its acceptance criteria lived there, not in this audit. That task is now **done** and PR #62 landed the fix.
+- **Not verified by the designer against the live deployment** — I did not probe the live server with a bad origin, because that request class is what crashed or 500ed it. The **lead** verified the fixed behaviour after the cutover; that evidence is below.
+
+**Closure — lead-run, after the cutover (2026-10-06):**
+- **PR #62 was merged by the owner as `ac2b24a`**, and the lead cut the live deployment over to it on **2026-10-06 15:08**. The public URL now runs `ac2b24a`.
+- **Before merging**, the lead ran the branch head's regression battery: **15 passed, 0 failed**.
+- **After the cutover, verified on the public URL:** a request carrying a **non-allowlisted `Origin` gets a deliberate 403 JSON** with a generic body and **no stack and no filesystem paths**; a request with **no `Origin` keeps the unchanged 401 contract**; a **same-origin request serves the bundle 200 and the app renders** — the blank page on a host we do not own is gone.
+- **For the record:** an `access-control-allow-origin` value seen echoed at the public URL is **the platform proxy's, not ours** — our server grants none to a refused origin.
 
 ---
 
-## If we only fix three things before the next demo
+## If we only fix two things before the next demo
 
 1. **Resolve the Settlement Statement header** to the employee's jurisdiction and the real entity name (item 1) — the figures are now good; the header is what a lawyer reads. **Spec attached above.**
-2. **Close the `Origin` / blank-page / stack-trace hole** (new item A) — before any non-platform host, or any custom domain, is pointed at the product.
-3. **Decide the KSA switch's visibility** (item 6) — a two-second answer that removes a recurring mid-pitch question.
+2. **Decide the KSA switch's visibility** (item 6) — a two-second answer that removes a recurring mid-pitch question.
+
+**Item A — the `Origin` / blank-page / stack-trace hole — is closed (2026-10-06; see the closure above) and no longer belongs on this list.**
