@@ -2,6 +2,11 @@ const db = require('../server/db');
 const eosb = require('../server/eosb');
 const compliance = require('../server/compliance_engine');
 const auth = require('../server/auth');
+// Layer 2 (P2-2): the demo's pre-boarding cases are created through the product's own single
+// case-creation path and item model. The seed writes no pre-boarding case or item row by hand,
+// so the demo cannot drift from the behaviour a real caller gets.
+const preboarding = require('../server/preboarding');
+const preboardingItems = require('../server/preboarding-items');
 
 /**
  * Antum People Coherent Demo Seed v3.1
@@ -269,6 +274,12 @@ async function seed() {
     await db.query("DELETE FROM audit_logs WHERE entity_id LIKE 'demo-emp-%' OR entity_id LIKE 'demo-task-%' OR entity_id LIKE 'demo-exit-%'");
     await db.query("DELETE FROM consent_records WHERE employee_id LIKE 'demo-emp-%'");
     await db.query("DELETE FROM employees WHERE id LIKE 'demo-emp-%' OR email LIKE '%@example.com'");
+    // Layer 2 demo cases, keyed by their own offer references so the clear cannot reach a case
+    // the product created from a real intake submission.
+    await db.query("DELETE FROM preboarding_items WHERE case_id IN (SELECT id FROM preboarding_cases WHERE offer_reference LIKE 'OFR-2026-DEMO-%')");
+    await db.query("DELETE FROM preboarding_reminders WHERE case_id IN (SELECT id FROM preboarding_cases WHERE offer_reference LIKE 'OFR-2026-DEMO-%')");
+    await db.query("DELETE FROM preboarding_consents WHERE case_id IN (SELECT id FROM preboarding_cases WHERE offer_reference LIKE 'OFR-2026-DEMO-%')");
+    await db.query("DELETE FROM preboarding_cases WHERE offer_reference LIKE 'OFR-2026-DEMO-%'");
   }
 
   console.log('Upserting demo employees...');
@@ -470,7 +481,134 @@ async function seed() {
     `);
   }
 
-  // 7. Users (Deliverable 3: Demo credential stays the lead's)
+  // 7. Layer 2 — pre-boarding demo cases (owner decision, 2026-10-07)
+  //
+  // Three cases, one per state the Pre-boarding screen has to show. Nothing here stores a flag:
+  // Gate 2 (2026-10-07) decided the 48-hour flag is DERIVED from the start date and the item
+  // statuses, so these dates and statuses are the whole input and the states arise by
+  // construction when the surface reads them. P2-5 builds the flag and its notification; the
+  // seed does neither, and adds no column to hold a state.
+  //
+  // Every date is an offset from the seed's own reference date, so what is fixed here is the
+  // offset, not the date: the demo still reads "14 days out", "inside 48 hours" and "start date
+  // already passed" whenever the seed runs.
+  console.log('Upserting Layer 2 pre-boarding demo cases...');
+
+  const dayOffset = (days) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+  };
+
+  // Case 1 is the roster's own in-flight UAE hire, read back out of the row this seed just
+  // upserted — that row's real id, not a lookalike name and not a new hire standing in for
+  // them. preboarding_cases has no employee_id column and this change may not alter the
+  // schema, so the pointer is the roster id carried in `source` (a column the case-creation
+  // path already takes from its caller), together with the person's own name, email, role,
+  // department and jurisdiction copied from the row rather than retyped.
+  const rosterHireId = 'demo-emp-omar';
+  const rosterHire = (await db.query(
+    `SELECT * FROM employees WHERE id = ${db.escapeString(rosterHireId)}`
+  ))[0];
+  if (!rosterHire) {
+    throw new Error(`Seed is inconsistent: ${rosterHireId} is not in the roster this seed writes`);
+  }
+
+  const demoCases = [
+    {
+      offer_reference: 'OFR-2026-DEMO-01',
+      source: `roster:${rosterHireId}`,
+      candidate_name: `${rosterHire.first_name} ${rosterHire.last_name}`,
+      candidate_email: rosterHire.email,
+      role: rosterHire.role,
+      department: rosterHire.department,
+      // The roster row carries no reporting line; the case requires one, so the seed states a
+      // demo one derived from the department instead of inventing a named manager.
+      reporting_line: `Head of ${rosterHire.department}`,
+      jurisdiction: rosterHire.jurisdiction,
+      offset_days: 14,
+      request_items: ['passport', 'visa_or_entry_permit', 'emirates_id'],
+      state: 'on track — 14 days out, three items requested, none verified',
+    },
+    {
+      offer_reference: 'OFR-2026-DEMO-02',
+      source: 'demo_seed',
+      candidate_name: 'Mariam Al-Kaabi',
+      candidate_email: 'mariam.alkaabi@example.com',
+      role: 'Marketing Coordinator',
+      department: 'Marketing',
+      reporting_line: 'Head of Marketing',
+      jurisdiction: 'AE',
+      offset_days: 1,
+      request_items: [],
+      state: 'inside 48 hours with every item still open',
+    },
+    {
+      offer_reference: 'OFR-2026-DEMO-03',
+      source: 'demo_seed',
+      candidate_name: 'Yousef Al-Hammadi',
+      candidate_email: 'yousef.alhammadi@example.com',
+      role: 'Operations Analyst',
+      department: 'Operations',
+      reporting_line: 'Head of Operations',
+      jurisdiction: 'AE',
+      offset_days: -1,
+      request_items: [],
+      state: 'start date already passed, items still open',
+    },
+  ];
+
+  for (const demoCase of demoCases) {
+    const startDate = dayOffset(demoCase.offset_days);
+    const { case: caseRow, created } = await preboarding.recordOfferAcceptance({
+      offer_reference: demoCase.offer_reference,
+      candidate_name: demoCase.candidate_name,
+      candidate_email: demoCase.candidate_email,
+      role: demoCase.role,
+      department: demoCase.department,
+      reporting_line: demoCase.reporting_line,
+      jurisdiction: demoCase.jurisdiction,
+      start_date: startDate,
+    }, { source: demoCase.source, actor: 'demo-seed' });
+
+    // A replay must not leave a demo case showing a stale start date — the offset is what is
+    // fixed, so re-seeding later has to move the date with it. The case-creation path
+    // deliberately never rewrites a case that exists, so the seed refreshes the date on the
+    // three rows it owns, and says so in the log.
+    if (!created && caseRow.start_date !== startDate) {
+      await db.query(`
+        UPDATE preboarding_cases SET start_date = ${db.escapeString(startDate)},
+          updated_at = CURRENT_TIMESTAMP
+        WHERE offer_reference = ${db.escapeString(demoCase.offer_reference)}
+      `);
+      caseRow.start_date = startDate;
+      console.log(`- Refreshed ${caseRow.offer_reference} start date to ${startDate}`);
+    }
+
+    // Items move through the product's own transition function, never by direct write. Only
+    // not_started -> requested is used here: nothing in the demo holds a collected document,
+    // so no case needs a consent record, and the PDPL gate on received stays demonstrable.
+    for (const itemKey of demoCase.request_items) {
+      const item = await preboardingItems.getItem(caseRow.id, itemKey);
+      if (item && item.status === 'not_started') {
+        await preboardingItems.setItemStatus({
+          case_id: caseRow.id, item_key: itemKey, status: 'requested', actor: 'demo-seed',
+        });
+      }
+    }
+
+    const checklist = await preboardingItems.listItems(caseRow.id);
+    const byStatus = {};
+    for (const item of checklist) byStatus[item.status] = (byStatus[item.status] || 0) + 1;
+    console.log(
+      `- ${created ? 'Opened' : 'Replayed'} ${caseRow.offer_reference} `
+      + `(${caseRow.candidate_name}, ${caseRow.jurisdiction}, start ${caseRow.start_date}) — `
+      + `${demoCase.state}; items: `
+      + Object.keys(byStatus).map((s) => `${byStatus[s]} ${s}`).join(', ')
+    );
+  }
+
+  // 8. Users (Deliverable 3: Demo credential stays the lead's)
   const adminHash = process.env.DEMO_ADMIN_PASSWORD_HASH;
   if (adminHash) {
     console.log('Upserting demo admin user...');
