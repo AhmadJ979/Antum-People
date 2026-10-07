@@ -75,6 +75,13 @@ its source is not misattributed to the reviewer or to the lead. Because the chip
 the row is removed: S1's row anatomy now names it as a field (spec §2), and S2 shows the same value
 on the case itself (spec §3).
 
+**Status, 2026-10-07 — closed in PR #70 (`5ed731e`).** The owner's decision is implemented: the
+list call now carries `?jurisdiction=${jurisdiction}&status=open` (`client/src/App.tsx:439`, with
+the reasoning at `:437`), and both the row's jurisdiction chip and the detail header keep the case's
+own value. The engineer's committed run carries the endpoint's side of it — step 22 of
+`docs/evidence/p2-2/http-acceptance.txt`: `?jurisdiction=AE&status=open` → 1 case,
+`?jurisdiction=SA&status=open` → 1 case, from two cases held at once.
+
 ### F2 — "Cases open" counts rows, not open cases *(low today; wrong the day a case can close)*
 
 `status` exists and defaults to `'open'` (`schema.sql:187`), and no code writes any other value
@@ -91,8 +98,13 @@ lands — not worth a PR on its own.
 `preboardingCases.length` under the label at `:1201`, and `listCases` filters by nothing
 (`server/preboarding.js:97`–`:102`) — so the number and the label disagree the moment a case can
 close. It is latent rather than live-visible today, because nothing writes a status other than
-`'open'` yet, which is exactly why testing it with a closed row was worth doing. The fix is in the
-P2-2 PR.
+`'open'` yet, which is exactly why testing it with a closed row was worth doing.
+**Fixed in PR #70 (`5ed731e`).** The list is now requested with `status=open`
+(`client/src/App.tsx:439`, comment at `:437`), so the tile counts open cases, and the endpoint
+refuses a status it does not write with **400** instead of answering an empty list — the engineer's
+committed run, steps 20–21 of `docs/evidence/p2-2/http-acceptance.txt`. The tile still renders
+`preboardingCases.length`, which is honest exactly as long as the list it counts is the open one —
+which it now is.
 
 ### F3 — the breadcrumb spells the tab differently from the nav *(cosmetic)*
 
@@ -104,6 +116,9 @@ choosing one spelling; it should match the nav.
 **Status (lead, 2026-10-07):** confirmed on `main` and fixed. Root cause as above — the breadcrumb
 prints the tab's **id**, so a nav label that differs from its id spells differently in the header.
 Same defect class as the settlement header still reading "UAE / KSA".
+**Closed in PR #70 (`5ed731e`):** the nav is now one list, `NAV_ITEMS` (`client/src/App.tsx:115`),
+and the header reads the entry through `navLabel` (`:124`) — so the sidebar and the breadcrumb read
+the same label by construction, not by two strings agreeing by hand.
 
 ### F4 — the KSA switch's tooltip already answers half of owner decision #5 *(note, not a defect)*
 
