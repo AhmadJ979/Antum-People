@@ -41,6 +41,24 @@ interface Task {
   ttv_milestone?: number;
 }
 
+// Layer 2 (P2-1) — a pre-boarding case, opened when a job offer is accepted.
+// It carries the fields both pre-boarding workflows need, and it belongs to the
+// jurisdiction recorded on the accepted offer, not to the header's switch.
+interface PreboardingCase {
+  id: string;
+  offer_reference: string;
+  candidate_name: string;
+  candidate_email: string | null;
+  role: string;
+  department: string;
+  reporting_line: string;
+  jurisdiction: 'AE' | 'SA';
+  start_date: string;
+  status: string;
+  source: string;
+  created_at: string;
+}
+
 interface Analytics {
   activeHeadcount: number;
   monthlyPayroll: number;
@@ -178,7 +196,7 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('antum_token'));
   const [user, setUser] = useState<any | null>(JSON.parse(localStorage.getItem('antum_user') || 'null'));
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'employees' | 'transitions' | 'analytics'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'employees' | 'transitions' | 'analytics' | 'preboarding'>('dashboard');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [onboardingTasks, setOnboardingTasks] = useState<Task[]>([]);
@@ -231,6 +249,28 @@ export default function App() {
     new_salary: ''
   });
 
+  // ---------------------------------------------------------------------------
+  // Layer 2 — Pre-boarding (P2-1). The intake form below is where HR records that
+  // a job offer was ACCEPTED; recording it is what opens the case. The form holds
+  // no case rules: it POSTs the offer and the server's single writer decides
+  // whether that opens a case or finds the one the offer already has.
+  // ---------------------------------------------------------------------------
+  const [preboardingCases, setPreboardingCases] = useState<PreboardingCase[]>([]);
+  const [casesLoading, setCasesLoading] = useState(false);
+  const [offerNotice, setOfferNotice] = useState<{ kind: 'ok' | 'existing' | 'error'; text: string } | null>(null);
+  const [offerForm, setOfferForm] = useState({
+    offer_reference: '',
+    candidate_name: '',
+    candidate_email: '',
+    role: '',
+    department: '',
+    reporting_line: '',
+    // UAE-first launch, but a real field: the case is recorded in the jurisdiction
+    // on the accepted offer, whatever the header switch says.
+    jurisdiction: 'AE' as 'AE' | 'SA',
+    start_date: ''
+  });
+
   const handleLogin = (newToken: string, userData: any) => {
     setToken(newToken);
     setUser(userData);
@@ -260,6 +300,14 @@ export default function App() {
       fetchData();
     }
   }, [token, jurisdiction]);
+
+  // The pre-boarding cases are opened by the server, not by this screen, so they are
+  // read when the Layer 2 tab is opened rather than kept in a client-side list.
+  useEffect(() => {
+    if (token && activeTab === 'preboarding') {
+      fetchPreboardingCases();
+    }
+  }, [token, activeTab]);
 
   const fetchData = async () => {
     if (!token) return;
@@ -295,6 +343,63 @@ export default function App() {
       console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Layer 2 (P2-1): the pre-boarding cases, read straight from the server. No case is
+  // assembled client-side — the list shows what the single writer stored.
+  const fetchPreboardingCases = async () => {
+    if (!token) return;
+    setCasesLoading(true);
+    try {
+      const res = await authedFetch(`${API_BASE}/api/preboarding/cases`);
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      const data = await res.json();
+      setPreboardingCases(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error fetching pre-boarding cases:', err);
+    } finally {
+      setCasesLoading(false);
+    }
+  };
+
+  // Recording an accepted offer is the trigger: this call is what opens the case.
+  // The form sends the payload and reports what the writer did with it.
+  const handleRecordOfferAcceptance = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!offerForm.start_date) {
+      setOfferNotice({ kind: 'error', text: 'A start date is required — a pre-boarding case cannot exist without one.' });
+      return;
+    }
+    try {
+      const res = await authedFetch(`${API_BASE}/api/preboarding/cases`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(offerForm)
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      if (!res.ok) {
+        setOfferNotice({ kind: 'error', text: data.error || `The offer was not recorded (HTTP ${res.status}).` });
+        return;
+      }
+      if (data.created) {
+        setOfferNotice({ kind: 'ok', text: `Pre-boarding case opened for ${data.case.candidate_name} — starts ${data.case.start_date}.` });
+        setOfferForm({ ...offerForm, offer_reference: '', candidate_name: '', candidate_email: '', role: '', reporting_line: '', start_date: '' });
+      } else {
+        setOfferNotice({ kind: 'existing', text: `Offer ${data.case.offer_reference} already had a case — nothing was created twice (case ${data.case.id.slice(0, 8)}…).` });
+      }
+      await fetchPreboardingCases();
+    } catch (err) {
+      console.error('Error recording offer acceptance:', err);
+      setOfferNotice({ kind: 'error', text: 'The offer could not be recorded.' });
     }
   };
 
@@ -523,6 +628,7 @@ export default function App() {
               { id: 'dashboard', label: 'Executive Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
               { id: 'employees', label: 'Employee Directory', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
               { id: 'transitions', label: 'Transitions Hub', icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' },
+              { id: 'preboarding', label: 'Pre-boarding', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
               { id: 'analytics', label: 'Strategic Intelligence', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' }
             ].map(item => (
               <button
@@ -1070,6 +1176,145 @@ export default function App() {
                       )
                     })}
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'preboarding' && (
+            <div className="space-y-8">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h3 className="font-bold text-slate-900">Pre-boarding Intelligence</h3>
+                      <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded uppercase border border-teal-200">Layer 2</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2 max-w-2xl">
+                      A pre-boarding case opens the moment a job offer is accepted. It carries the start date, role,
+                      department, reporting line and jurisdiction, and it is opened through one case-creation path —
+                      recording the same accepted offer twice opens nothing new.
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0 ml-6">
+                    <div className="text-2xl font-extrabold text-slate-900">{preboardingCases.length}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cases open</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                  <h4 className="font-bold text-slate-900 text-sm">Record an accepted offer</h4>
+                  <p className="text-[10px] text-slate-400 mt-1 mb-5">
+                    The offer acceptance is the trigger: recording it here is what opens the case.
+                  </p>
+                  <form onSubmit={handleRecordOfferAcceptance} className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Offer Reference</label>
+                      <input type="text" required value={offerForm.offer_reference}
+                        onChange={e => setOfferForm({ ...offerForm, offer_reference: e.target.value })}
+                        placeholder="e.g. OFR-2026-014"
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Candidate Name</label>
+                      <input type="text" required value={offerForm.candidate_name}
+                        onChange={e => setOfferForm({ ...offerForm, candidate_name: e.target.value })}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Candidate Email</label>
+                      <input type="email" value={offerForm.candidate_email}
+                        onChange={e => setOfferForm({ ...offerForm, candidate_email: e.target.value })}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Role</label>
+                        <input type="text" required value={offerForm.role}
+                          onChange={e => setOfferForm({ ...offerForm, role: e.target.value })}
+                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Department</label>
+                        <input type="text" required value={offerForm.department}
+                          onChange={e => setOfferForm({ ...offerForm, department: e.target.value })}
+                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Reporting Line</label>
+                      <input type="text" required value={offerForm.reporting_line}
+                        onChange={e => setOfferForm({ ...offerForm, reporting_line: e.target.value })}
+                        placeholder="Who the hire reports to"
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Jurisdiction</label>
+                        <select value={offerForm.jurisdiction}
+                          onChange={e => setOfferForm({ ...offerForm, jurisdiction: e.target.value as 'AE' | 'SA' })}
+                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium">
+                          <option value="AE">UAE</option>
+                          <option value="SA">KSA</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start Date</label>
+                        <input type="date" required value={offerForm.start_date}
+                          onChange={e => setOfferForm({ ...offerForm, start_date: e.target.value })}
+                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                      </div>
+                    </div>
+                    <button type="submit"
+                      className="w-full bg-teal-600 text-white hover:bg-teal-700 text-xs font-bold px-4 py-3 rounded-xl shadow transition">
+                      Open pre-boarding case
+                    </button>
+                  </form>
+                  {offerNotice && (
+                    <div className={`mt-4 p-3 rounded-xl text-xs font-medium border ${offerNotice.kind === 'ok' ? 'bg-teal-50 border-teal-200 text-teal-800' : offerNotice.kind === 'existing' ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+                      {offerNotice.text}
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="font-bold text-slate-900 text-sm">Pre-boarding cases</h4>
+                    <button onClick={fetchPreboardingCases}
+                      className="text-[10px] font-bold uppercase tracking-wider text-teal-700 hover:text-teal-900">
+                      {casesLoading ? 'Syncing...' : 'Refresh'}
+                    </button>
+                  </div>
+                  {preboardingCases.length === 0 ? (
+                    <div className="p-8 text-center border border-dashed border-slate-200 rounded-xl">
+                      <p className="text-xs text-slate-400">No pre-boarding cases open. Record an accepted offer to open one.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {preboardingCases.map(c => (
+                        <div key={c.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="text-sm font-bold text-slate-900">{c.candidate_name}</div>
+                              <div className="text-[11px] text-slate-500">{c.role} · {c.department}</div>
+                            </div>
+                            <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase border ${c.jurisdiction === 'AE' ? 'bg-teal-50 text-teal-700 border-teal-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                              {c.jurisdiction === 'AE' ? 'UAE' : 'KSA'}
+                            </span>
+                          </div>
+                          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+                            <div><span className="text-slate-400">Start date:</span> {c.start_date}</div>
+                            <div><span className="text-slate-400">Reports to:</span> {c.reporting_line}</div>
+                          </div>
+                          <div className="mt-2 text-[10px] text-slate-400 font-mono">
+                            {c.offer_reference} · opened via {c.source.replace('_', ' ')}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

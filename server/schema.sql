@@ -169,3 +169,25 @@ CREATE TABLE IF NOT EXISTS users (
   role TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+-- Layer 2 — Pre-boarding Intelligence (P2-1).
+-- One row per ACCEPTED JOB OFFER. offer_reference is UNIQUE, and that constraint is what
+-- makes the case creation idempotent: re-processing the same acceptance finds the case that
+-- already exists instead of opening a second one. The only writer is
+-- server/preboarding.js#recordOfferAcceptance (see the note at the top of that file).
+CREATE TABLE IF NOT EXISTS preboarding_cases (
+  id TEXT PRIMARY KEY,
+  offer_reference TEXT NOT NULL UNIQUE,
+  candidate_name TEXT NOT NULL,
+  candidate_email TEXT,
+  role TEXT NOT NULL,
+  department TEXT NOT NULL,
+  reporting_line TEXT NOT NULL,
+  jurisdiction TEXT NOT NULL,
+  start_date TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open',
+  source TEXT NOT NULL,
+  offered_at TEXT,
+  created_by TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);

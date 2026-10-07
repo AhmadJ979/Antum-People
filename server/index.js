@@ -5,6 +5,7 @@ const db = require('./db');
 const compliance = require('./compliance_engine');
 const auth = require('./auth');
 const eosb = require('./eosb');
+const preboarding = require('./preboarding');
 const fs = require('fs');
 
 const app = express();
@@ -567,6 +568,50 @@ app.post('/api/exit-interviews', async (req, res) => {
     ${db.escapeString(data.departure_reason)}, ${db.escapeString(data.detailed_feedback)}, ${data.satisfaction_score})`);
   await db.query(`UPDATE employees SET status = 'terminated', end_date = ${db.escapeString(data.interview_date)} WHERE id = ${db.escapeString(data.employee_id)}`);
   res.status(201).json({ id });
+});
+
+// -------------------------------------------------------------
+// LAYER 2 — PRE-BOARDING (P2-1: an accepted offer opens a case)
+// -------------------------------------------------------------
+// These routes are transport only: they carry no case rules of their own. Validation, the
+// start-date invariant, the single-write and the per-offer idempotency all live in
+// preboarding.recordOfferAcceptance(), which is also what a future ATS adapter will call —
+// two callers of one function, not two implementations.
+app.post('/api/preboarding/cases', async (req, res) => {
+  try {
+    const { case: createdCase, created } = await preboarding.recordOfferAcceptance(req.body, {
+      actor: (req.user && req.user.username) || 'system',
+      source: 'intake_form',
+    });
+    // 201 when this acceptance opened the case, 200 when the offer already had one:
+    // re-processing the same accepted offer is not an error.
+    res.status(created ? 201 : 200).json({ created, case: createdCase });
+  } catch (err) {
+    if (err instanceof preboarding.OfferAcceptanceError) {
+      return res.status(err.status).json({ error: err.message });
+    }
+    console.error('[Preboarding] Failed to record offer acceptance:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+app.get('/api/preboarding/cases', async (req, res) => {
+  try {
+    const cases = await preboarding.listCases({ jurisdiction: req.query.jurisdiction });
+    res.json(cases);
+  } catch (err) {
+    console.error('[Preboarding] Failed to list cases:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+app.get('/api/preboarding/cases/:id', async (req, res) => {
+  try {
+    const preboardingCase = await preboarding.getCase(req.params.id);
+    if (!preboardingCase) return res.status(404).json({ error: 'Pre-boarding case not found' });
+    res.json(preboardingCase);
+  } catch (err) {
+    console.error('[Preboarding] Failed to read case:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 // -------------------------------------------------------------
