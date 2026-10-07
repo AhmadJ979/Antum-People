@@ -495,7 +495,13 @@ export default function App() {
     if (!token) return;
     setCasesLoading(true);
     try {
-      const res = await authedFetch(`${API_BASE}/api/preboarding/checklist/overview`);
+      // Owner decision 2026-10-07: the roll-up follows the header's active jurisdiction — the
+      // same state the case list and the roster pass. It sits directly under the "Cases open"
+      // tile, so an unscoped roll-up states a different total than the tile above it and, on
+      // the other tab, shows one jurisdiction's cases on the other jurisdiction's surface.
+      const res = await authedFetch(
+        `${API_BASE}/api/preboarding/checklist/overview?jurisdiction=${jurisdiction}`
+      );
       if (res.status === 401) {
         handleLogout();
         return;
@@ -1501,7 +1507,8 @@ export default function App() {
                     </button>
                   </div>
                   <p className="text-[10px] text-slate-400 mb-4">
-                    Every case with the items still missing, named here — HR reads what is outstanding
+                    Every {jurisdiction === 'AE' ? 'UAE' : 'KSA'} case with the items still missing,
+                    named here — HR reads what is outstanding
                     without opening a case. Open a row to work its employee track.
                   </p>
                   {checklistOverview && checklistOverview.cases.length > 0 && (
@@ -1522,7 +1529,9 @@ export default function App() {
                   )}
                   {!checklistOverview || checklistOverview.cases.length === 0 ? (
                     <div className="p-8 text-center border border-dashed border-slate-200 rounded-xl">
-                      <p className="text-xs text-slate-400">No pre-boarding cases open. Record an accepted offer to open one.</p>
+                      <p className="text-xs text-slate-400">No open {jurisdiction === 'AE' ? 'UAE' : 'KSA'} pre-boarding
+                        cases — nothing outstanding to show for this jurisdiction. Record an accepted
+                        offer to open one.</p>
                     </div>
                   ) : (
                     <div className="space-y-3">

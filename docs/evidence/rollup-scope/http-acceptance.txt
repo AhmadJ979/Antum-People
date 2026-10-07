@@ -1,0 +1,142 @@
+# Roll-up jurisdiction scoping (PR #74) — HTTP and browser acceptance
+# generated: 2026-10-07T14:08:09Z   tree under test: origin/main (e2f25a4) + the PR's one code change
+#                                 (client/src/App.tsx = blob 58364a5c…, the branch's own blob)
+# `git merge-tree --write-tree origin/main c6507c7` reports no conflicts, so this IS the post-merge tree.
+
+## RETRACTION of the previous file
+The first version of this file was a stub, and the reviewer was right to reject it: it contained a
+`connect ECONNREFUSED 127.0.0.1:4721` and ended "NOT YET DONE". No scratch server was ever reached by
+that run, so it proved nothing beyond the code compiling. It is withdrawn, not amended. What follows
+was produced after it, on a rig that was up and answering.
+
+## What was run, and where
+Two scratch instances of the post-merge tree, neither one the live deployment:
+  A — port 4722, its own throwaway database, seeded by the product's own demo seed → 3 AE cases, 0 KSA cases
+  B — port 4723, its own throwaway database, freshly created and never seeded → 0 cases of any jurisdiction
+Each database got its own throwaway admin credential (user `scratch`, password generated for this run).
+The live deployment on port 3000 was checked before, during and after, and never served any of this.
+The KSA case below was created by ME on instance A, through the product's own case-creation path
+(`POST /api/preboarding/cases`). It exists only in that scratch database — it was not added to the seed,
+not committed, and it is gone with the teardown.
+
+## Setup (instances up, boot probes)
+    == live deployment on 3000 BEFORE the pass: 200
+    Preparing worktree (detached HEAD e2f25a4)
+    == PR patch applied on origin/main
+    == App.tsx blob in the rig tree : 58364a5c96067fe0fb6c44934f2780dc9fa4d1e0
+    == App.tsx blob on the PR branch: 58364a5c96067fe0fb6c44934f2780dc9fa4d1e0
+    == building the client the rig will serve
+    vite build exit: 0
+    == seed A exit: 0
+    == listeners:
+       4722 -> 13272
+       4723 -> 13296
+    == boot probes (no token must be 401):
+       4722 /api/employees -> 401
+       4723 /api/employees -> 401
+    == rig pages:
+       4722 / -> 200
+       4723 / -> 200
+    == live deployment on 3000 DURING the pass: 200
+
+## HTTP acceptance (instance A) — the transcript as printed
+    # live 3000 before the HTTP pass: 200
+    == instance A on 4722 — scratch DB, throwaway credential (no token yet)
+       GET /api/employees without a token -> 401
+       POST /api/login -> 200, token length 205, user scratch
+    == the roll-up endpoint, asked the way the client now asks it
+       GET /api/preboarding/checklist/overview?jurisdiction=AE -> 200  cases=3 [OFR-2026-DEMO-03/AE, OFR-2026-DEMO-02/AE, OFR-2026-DEMO-01/AE] totals={"cases":3,"items":21,"items_outstanding":21,"items_received":0,"items_verified":0,"cases_without_consent":3,"cases_ready":0}
+       GET /api/preboarding/checklist/overview?jurisdiction=SA -> 200  cases=0 [] totals={"cases":0,"items":0,"items_outstanding":0,"items_received":0,"items_verified":0,"cases_without_consent":0,"cases_ready":0}
+    == the case list the tile counts
+       GET /api/preboarding/cases?jurisdiction=AE&status=open -> 200  3 case(s) [OFR-2026-DEMO-03/AE, OFR-2026-DEMO-02/AE, OFR-2026-DEMO-01/AE]
+       GET /api/preboarding/cases?jurisdiction=SA&status=open -> 200  0 case(s) []
+    == opening a KSA case through the product's own creation path (this scratch DB only)
+       POST /api/preboarding/cases {jurisdiction: "SA"} -> 201 created=true case=OFR-SCRATCH-KSA-01/SA
+    == the roll-up again, after the KSA case exists
+       GET .../overview?jurisdiction=AE -> 200  cases=3 [OFR-2026-DEMO-03/AE, OFR-2026-DEMO-02/AE, OFR-2026-DEMO-01/AE] totals={"cases":3,"items":21,"items_outstanding":21,"items_received":0,"items_verified":0,"cases_without_consent":3,"cases_ready":0}
+       GET .../overview?jurisdiction=SA -> 200  cases=1 [OFR-SCRATCH-KSA-01/SA] totals={"cases":1,"items":6,"items_outstanding":6,"items_received":0,"items_verified":0,"cases_without_consent":1,"cases_ready":0}
+    == what is in the scratch DB (rows, not rendered text)
+       preboarding_cases by jurisdiction: [{"jurisdiction":"AE","n":3},{"jurisdiction":"SA","n":1}]
+       preboarding_items by case jurisdiction: [{"jurisdiction":"AE","n":21},{"jurisdiction":"SA","n":6}]
+       the KSA case in this DB: [{"offer_reference":"OFR-SCRATCH-KSA-01","candidate_name":"Noura Al-Qahtani","jurisdiction":"SA","start_date":"2026-10-17","status":"open"}]
+    # live 3000 after the HTTP pass: 200
+
+(The POST response body carried the case; the seeded item count for it is the 6 rows above, read from
+the database rather than taken from a response field.)
+
+## Browser acceptance (real clicks, real render)
+Instance A, signed in as the scratch admin, Pre-boarding screen. Requests as the page actually made them
+(`agent-browser network requests`):
+
+    [13942.10] GET http://localhost:4722/api/preboarding/cases?jurisdiction=AE&status=open (Fetch) 200
+    [13942.11] GET http://localhost:4722/api/preboarding/checklist/overview?jurisdiction=AE (Fetch) 200
+    [13942.15] GET http://localhost:4722/api/preboarding/cases?jurisdiction=SA&status=open (Fetch) 200
+    [13942.16] GET http://localhost:4722/api/preboarding/checklist/overview?jurisdiction=SA (Fetch) 200
+    [13942.17] GET http://localhost:4722/api/preboarding/cases?jurisdiction=SA&status=open (Fetch) 200
+    [13942.18] GET http://localhost:4722/api/preboarding/checklist/overview?jurisdiction=SA (Fetch) 200
+    [13942.21] GET http://localhost:4722/api/preboarding/cases?jurisdiction=AE&status=open (Fetch) 200
+    [13942.22] GET http://localhost:4722/api/preboarding/checklist/overview?jurisdiction=AE (Fetch) 200
+
+Every call carries a jurisdiction. Before this change the second call of each pair was bare — that is the
+defect — and the KSA pair is the one the reviewer asked to see as 200.
+
+### A · UAE tab, with 3 AE cases and no KSA case (shots-A-AE-scoped.png)
+    CARD: HR roll-up — outstanding items / REFRESH / Every UAE case with the items still missing, named
+          here — HR reads what is outstanding without opening a case. Open a row to work its employee
+          track.
+    TILES: 21 | ITEMS OUTSTANDING | 0 | ITEMS VERIFIED | 3 | WITHOUT CONSENT
+    ROWS:  Yousef Al-Hammadi · Operations Analyst · Operations · UAE · Start: 2026-10-06 · -1 d · 0/7, 7 outstanding
+           Mariam Al-Kaabi · Marketing Coordinator · Marketing · UAE · Start: 2026-10-08 · 1 d · 0/7, 7 outstanding
+           Omar Al-Farsi · Finance Analyst · Finance · UAE · Start: 2026-10-21 · 14 d · 0/7, 7 outstanding
+           (refs OFR-2026-DEMO-03, -02, -01)
+    3 cases × 7 AE items = 21 outstanding, which is the tile. No KSA row is present.
+
+### A · KSA tab, zero KSA cases (shots-A-KSA-empty.png)
+    TILES: none rendered
+    CARD:  HR roll-up — outstanding items / REFRESH / Every KSA case with the items still missing, named
+           here — HR reads what is outstanding without opening a case. Open a row to work its employee
+           track. / No open KSA pre-boarding cases — nothing outstanding to show for this jurisdiction.
+           Record an accepted offer to open one.
+    The surface says what is true for KSA. It does not total the AE cases, and it renders no zero-filled
+    tiles.
+
+### A · KSA tab after the case was created through the product's own path (shots-A-KSA-scoped.png)
+    TILES: 6 | ITEMS OUTSTANDING | 0 | ITEMS VERIFIED | 1 | WITHOUT CONSENT
+    ROWS:  Noura Al-Qahtani · HR Officer · People Operations · KSA · Start: 2026-10-17 · 10 d · 0/6, 6 outstanding
+    The KSA document set is 6 items (no Emirates ID — the UAE set is 7), and the row is the only row.
+
+### A · UAE tab again, now with a KSA case in the database (shots-A-AE-after-KSA.png)
+    TILES: 21 | ITEMS OUTSTANDING | 0 | ITEMS VERIFIED | 3 | WITHOUT CONSENT
+    ROWS:  ["Yousef Al-Hammadi","Mariam Al-Kaabi","Omar Al-Farsi"]
+    The KSA case created above is not listed and not counted anywhere on the UAE surface — the tile stays
+    21, not 27. This is the exact contradiction the row was filed for, from the other side.
+    Checkable detail: this screenshot and shots-A-AE-scoped.png are the same file byte for byte
+    (md5 02110b9d6c8cdcd43a7337d939ad9022), i.e. the UAE surface rendered identically before and after
+    a KSA case was added to the database.
+
+### B · zero-case database, UAE tab (shots-B-AE-zero-case.png)
+    TILES: none rendered
+    CARD:  No open UAE pre-boarding cases — nothing outstanding to show for this jurisdiction. Record an
+           accepted offer to open one.
+    Requests: GET /api/preboarding/cases?jurisdiction=AE&status=open 200, GET
+    /api/preboarding/checklist/overview?jurisdiction=AE 200. A jurisdiction with nothing in it reads as
+    nothing, not as 0 next to an error.
+
+## The counts this run produced
+    AE cases: 3 (from the demo seed)   AE items: 21   AE roll-up tiles: 21 outstanding / 0 verified / 3 without consent
+    SA cases: 0 before → 1 after the KSA case I created (so the DB held 4 cases: 3 AE + 1 SA)
+    SA items: 6   SA roll-up tiles: none (0 cases) → 6 outstanding / 0 verified / 1 without consent
+    Unauthenticated /api/employees: 401.   Live deployment on port 3000: 200 before, during and after.
+
+## Teardown (so nothing of this is left running)
+    == listeners before teardown:  4722 -> 13272   4723 -> 13296
+       killing 13272 (cwd /home/agent-senior-software-engineer/scratch-rollup/server)
+       killing 13296 (cwd /home/agent-senior-software-engineer/scratch-rollup/server)
+    == listeners after teardown:   4722 ->   4723 ->
+    worktree removed; scratch DBs deleted: 0 left
+    == live deployment on 3000 AFTER the whole pass: 200
+
+## What this does NOT show
+No 48-hour flag and no chip: P2-5 owns the derivation and that is not this PR. The three states on the
+seeded cases (start passed / inside 48 hours / on track) are visible here only as start dates and item
+statuses — the seed stores facts, nothing derives a flag from them yet.
