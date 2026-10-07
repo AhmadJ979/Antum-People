@@ -1,34 +1,40 @@
 # Roll-up jurisdiction scoping — build proof
-# generated: 2026-10-07T13:51:29Z
-# repo tree under test: 72e9b6956dc9405c4c398699679d0af2fe054fbe (branch fix/rollup-jurisdiction-scope, off main 72e9b69)
-# changed: client/src/App.tsx only — the roll-up call takes the header's jurisdiction, and
-#          the panel copy and empty state now name that jurisdiction.
-# note: both commands run from client/ (the repo root has no package.json, so npx tsc there
-#       fetches an unrelated package instead of the compiler).
+# generated: 2026-10-07T13:59:28Z
+# tree under test: e7eb76c (branch fix/rollup-jurisdiction-scope, based on origin/main e2f25a4) — the
+# commit that carries the client/src/App.tsx change. This evidence file is committed after that run,
+# so the branch tip equals the tested tree plus this file and nothing else (`git diff e7eb76c <tip>`
+# shows one file: docs/evidence/rollup-scope/build-proof.txt). The tip itself is deliberately not
+# named here, because a file cannot honestly name the commit it is first written into.
+# changed by this branch, and nothing else: client/src/App.tsx (the roll-up call takes the
+# header's jurisdiction; the panel copy and empty state name that jurisdiction) plus this
+# evidence directory.
+# both commands run from client/ because the repo root has no package.json: `npx tsc` there
+# fetches an unrelated npm package instead of the compiler and exits 1.
 $ (cd client && npx tsc -b --force --verbose)
-1:51:30 PM - Projects in this build: 
+1:59:28 PM - Projects in this build: 
     * tsconfig.app.json
     * tsconfig.node.json
     * tsconfig.json
 
-1:51:30 PM - Project 'tsconfig.app.json' is being forcibly rebuilt
+1:59:28 PM - Project 'tsconfig.app.json' is being forcibly rebuilt
 
-1:51:30 PM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.app.json'...
+1:59:28 PM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.app.json'...
 
-1:51:31 PM - Project 'tsconfig.node.json' is being forcibly rebuilt
+1:59:30 PM - Project 'tsconfig.node.json' is being forcibly rebuilt
 
-1:51:31 PM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.node.json'...
+1:59:30 PM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.node.json'...
 
 tsc -b exit code: 0
 
 $ (cd client && npx vite build)
 [36mvite v8.0.16 [32mbuilding client environment for production...[36m[39m
-[2Ktransforming...✓ 16 modules transformed.
+[2K
+transforming...✓ 16 modules transformed.
 rendering chunks...
 computing gzip size...
 dist/index.html                   0.46 kB │ gzip:  0.29 kB
 dist/assets/index-x1-nE6It.css   34.72 kB │ gzip:  6.75 kB
 dist/assets/index-CYbhZfWe.js   258.77 kB │ gzip: 72.84 kB
 
-[32m✓ built in 263ms[39m
+[32m✓ built in 374ms[39m
 vite build exit code: 0
