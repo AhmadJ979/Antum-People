@@ -49,7 +49,7 @@ before quoting them (see the anchor recipe in the spec's header).
 
 ## 3. Where the shipped tab and the spec disagree
 
-### F1 — the case list is the one screen in the product that is not jurisdiction-scoped *(medium)*
+### F1 — the case list was the one screen in the product that is not jurisdiction-scoped *(decided by the owner 2026-10-07: scope it, keep the chip)*
 
 The client calls the list with no filter (`App.tsx:355`), and the API filters only when a
 `jurisdiction` parameter is present (`server/preboarding.js:97`–`:102`, route
@@ -68,16 +68,12 @@ So every other screen the demo shows is UAE-first, and the Layer 2 list — the 
 pitch opens on — is not. On the UAE-only demo flow the difference is invisible until an SA case
 exists, and then the tab shows a KSA row with a green chip while the rest of the page is UAE.
 
-**Recommendation (design call, reversible):** pass the header's jurisdiction
-(`jurisdiction` state, `App.tsx:211`) into the list call, so the tab follows the same UAE-first
-rule as the rest. Keep the per-row jurisdiction chip — it is honest and it is what tells a reader
-the row is the exception. If the team would rather the list always show everything, that is also
-defensible, but then it should be *chosen* and labelled ("all jurisdictions"), not inherited from
-an omitted query parameter.
-
-**Whose call:** this is the same open question as the KSA switch in the header (owner decision #5)
-and should be settled the same way. It is small — one query string — but it decides whether the
-demo's Layer 2 surface is UAE-first like everything around it.
+**Decided — the owner, 2026-10-07: the list call passes the header's active jurisdiction (AE by
+default), and the per-row chip stays.** The code change lands in the P2-2 PR, not in this review.
+This review's own suggestion was the same fix, but the decision is the owner's — recorded here so
+its source is not misattributed to the reviewer or to the lead. Because the chip stays, nothing on
+the row is removed: S1's row anatomy now names it as a field (spec §2), and S2 shows the same value
+on the case itself (spec §3).
 
 ### F2 — "Cases open" counts rows, not open cases *(low today; wrong the day a case can close)*
 
@@ -91,12 +87,23 @@ status filter at all (`server/preboarding.js:97`–`:102`). Measured: with one c
 label it `Cases` until a closed state exists. A one-line change, worth doing when case closing
 lands — not worth a PR on its own.
 
+**Status (confirmed by the lead on `main`, 2026-10-07):** `client/src/App.tsx:1200` renders
+`preboardingCases.length` under the label at `:1201`, and `listCases` filters by nothing
+(`server/preboarding.js:97`–`:102`) — so the number and the label disagree the moment a case can
+close. It is latent rather than live-visible today, because nothing writes a status other than
+`'open'` yet, which is exactly why testing it with a closed row was worth doing. The fix is in the
+P2-2 PR.
+
 ### F3 — the breadcrumb spells the tab differently from the nav *(cosmetic)*
 
 The header renders `{activeTab} Panel` (`App.tsx:657`), which prints "Preboarding Panel" for a nav
 entry labelled `Pre-boarding` (`App.tsx:631`). Every other tab's id happens to match its label, so
 this is the first one where it shows. Fix by mapping ids to labels for the breadcrumb, or by
 choosing one spelling; it should match the nav.
+
+**Status (lead, 2026-10-07):** confirmed on `main` and fixed. Root cause as above — the breadcrumb
+prints the tab's **id**, so a nav label that differs from its id spells differently in the header.
+Same defect class as the settlement header still reading "UAE / KSA".
 
 ### F4 — the KSA switch's tooltip already answers half of owner decision #5 *(note, not a defect)*
 

@@ -99,6 +99,17 @@ anatomy below stays identical.
 **Purpose (this is P2-2's acceptance criterion, not a nice-to-have):** HR sees **every live case
 without opening one**. If a fact needs a click to discover, it belongs on this row.
 
+**Scoping — decided by the owner, 2026-10-07:** the list call passes the header's **active
+jurisdiction (AE by default)**, so a UAE-header surface never shows a KSA case — the rule the roster
+and the dashboard already follow, and the same defect class as the settlement header still reading
+"UAE / KSA". **The row's jurisdiction chip stays**, also the owner's call: it is the case's own
+recorded value, and on a scoped list it will normally repeat the header's. The row anatomy below
+therefore lists it as a field, and S2 shows the same value on the case itself (§3) — the reader
+never has to infer a case's jurisdiction from the header's switch. The code change lands in the P2-2
+PR, not here. (The P2-1 build, shipped before this decision, already renders the chip; what is
+missing is the jurisdiction argument on the list call — see `LAYER2-P2-1-IMPLEMENTATION-REVIEW.md`
+F1.)
+
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
 │ [Antum People]  Dashboard │ Employees │ Transitions │ Pre-boarding │ Analytics   [👤]      │
@@ -143,6 +154,7 @@ without opening one**. If a fact needs a click to discover, it belongs on this r
 | **Flag chip** (🔴 / 🟠 / ⚪) | From the derived flag in §5. First thing scanned, always left-most. | **Nothing** — must be computed |
 | **Name** | Case subject. | `employees.first_name/last_name` |
 | **Job role · Department** | The role the offer was accepted for. | `employees.role`, `employees.department` |
+| **Jurisdiction** (UAE / KSA chip) | The case's **own** recorded value, right-aligned on the name line. **Kept by the owner's decision (2026-10-07)** even though the list is scoped to the header's jurisdiction, so on a scoped list it normally repeats the header's. | `preboarding_cases.jurisdiction` — rendered since P2-1 (`App.tsx:1303`–`:1305`) |
 | **Start date** | The anchor of the whole surface. A case cannot exist without one (P2-1). | `employees.start_date` |
 | **Relative time** ("in 2 days" / "started 2 days ago") | Derived from the start date **at read time**, never stored. Definition: whole days = `ceil((start_date 00:00 − now) / 24h)`; negative renders as "started *n* days ago". | **Nothing** — must be computed |
 | **Employee-track progress** | `n of m` items complete, plus a bar. Counts, not percentages-as-scores. | **Partly** — counts computable from `onboarding_tasks.status`; the *track split* has no column (§9 D2) |
@@ -176,9 +188,15 @@ without opening one**. If a fact needs a click to discover, it belongs on this r
 
 ## 3. Screen S2 — Case detail (the two tracks)
 
+**The case's own jurisdiction is read here**, in the detail header — name · role · department ·
+**jurisdiction** — because this is the one screen that is about a *single* case and §6's track
+derivation reads the recorded column. It is the same value the row carries on S1 (§2), so the two
+can never disagree; the difference is context, not content: the list is read in the header's
+jurisdiction, and the detail is read on its own.
+
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│ ← Pre-boarding            A. Haddad  ·  Marketing Manager  ·  Marketing                   │
+│ ← Pre-boarding            A. Haddad  ·  Marketing Manager  ·  Marketing  ·  UAE           │
 │                           Start 2026-10-16  ·  in 2 days                                  │
 ├──────────────────────────────────────────────────────────────────────────────────────────┤
 │  ┌────────────────────────────────────────────────────────────┐  ┌─────────────────────┐  │
@@ -419,6 +437,11 @@ gate the *first* thing on the employee track, not a checkbox buried in a setting
 
 ## 10. Open questions for the owner — asked, not answered
 
+**Status, 2026-10-07:** three of these are in front of the owner — **Q1** (whether the demo carries
+seeded pre-boarding cases), **Q4** (per-user accounts) and **Q5** (document storage, which is
+blocking P2-2's acceptance criteria). Nothing in §2–§8 changes for Q2, Q3, Q6 or Q7; the answers to
+Q1, Q4 and Q5 will be recorded here rather than left implicit.
+
 1. **Can the working list show enough cases to be credible?** With one live case the surface
    cannot demonstrate a list, the ordering rule, or the three flag states. This is the same
    roster-size decision already open on P4-2/P4-3; I am not assuming an expansion.
@@ -475,4 +498,6 @@ gate the *first* thing on the employee track, not a checkbox buried in a setting
 
 *Product Designer — 2026-10-06. Written against `origin/main` at `34fdd63`; **re-grounded
 2026-10-07 on `main` at `75e3ff2`** (the merge of PR #66), which is what the line numbers now
-name. Screens are design, not build.*
+name. Amended 2026-10-07 with the owner's scoping decision (§2 S1: scope the list, keep the row
+chip; §3 S2: the case's own jurisdiction in the detail header) and §10's status. Screens are design,
+not build.*
