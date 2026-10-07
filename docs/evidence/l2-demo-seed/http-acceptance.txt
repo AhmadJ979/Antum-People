@@ -1,0 +1,72 @@
+# L2 demo seed — HTTP acceptance
+# generated: 2026-10-07T13:49:06Z
+# repo tree under test: dfcf7a38f37eca4f3bb155dcfef3b30679da98a4 (branch feat/l2-demo-preboarding-seed, off main 5ed731e)
+# instance: scratch only (WORKFLOW rule 14) — port 4720, PRODUCT_DB_PATH=/home/agent-senior-software-engineer/l2rig/after.db,
+#           its own throwaway admin 'scratch'; the live deployment on port 3000 was not touched.
+# reader: node accept.js 4720 <scratch password> — unedited output below, no token printed.
+# baseline instance for the figures comparison: port 4719, seeded from origin/main 5ed731e
+#           (its own DB and credential), same session, seconds apart.
+
+GET /api/preboarding/cases (no token) -> 401
+POST /api/login -> 200, token length 204
+GET /api/analytics/dashboard?jurisdiction=AE -> 200
+{"activeHeadcount":7,"monthlyPayroll":10500,"eosbLiability":85199,"attritionRate":25,"avgCostPerHireAE":8286,"avgCostPerHireSA":0,"avgTtvDays":19.2,"ttvByDepartment":[{"department":"Engineering","avgDays":16.7,"target":15},{"department":"Finance","avgDays":25,"target":15},{"department":"Product","avgDays":19,"target":15},{"department":"Sales","avgDays":21,"target":15}],"retentionLiftSeries":[{"cohort":"H1 2022","retention":100,"benchmark":82,"lift":18},{"cohort":"H1 2023","retention":50,"benchmark":83,"lift":-33},{"cohort":"H1 2024","retention":100,"benchmark":84,"lift":16},{"cohort":"H2 2026","retention":100,"benchmark":81,"lift":19}],"eosbLiabilitySeries":[{"quarter":"Q3 2026","uae":84667,"ksa":0,"combined":84667},{"quarter":"Q4 2026","uae":90926,"ksa":0,"combined":90926},{"quarter":"Q1 2027","uae":133477,"ksa":0,"combined":133477},{"quarter":"Q2 2027","uae":161494,"ksa":0,"combined":161494}],"eosbByJurisdiction":{"AE":85199.2,"SA":0},"onboardingPipeline":[{"id":"demo-emp-omar","first_name":"Omar","last_name":"Al-Farsi","role":"Finance Analyst","start_date":"2026-08-20"}],"exitsByReason":[{"reason":"Career Change","count":1},{"reason":"Better Opportunity","count":1}],"activeSalarySpend":126000,"totalRecruitingSpend":62000}
+GET /api/analytics/dashboard?jurisdiction=SA -> 200
+{"activeHeadcount":4,"monthlyPayroll":4833,"eosbLiability":82963,"attritionRate":40,"avgCostPerHireAE":0,"avgCostPerHireSA":4750,"avgTtvDays":15.7,"ttvByDepartment":[{"department":"HR","avgDays":15,"target":15},{"department":"Operations","avgDays":14,"target":15},{"department":"Marketing","avgDays":18,"target":15}],"retentionLiftSeries":[{"cohort":"H1 2023","retention":100,"benchmark":83,"lift":17},{"cohort":"H1 2024","retention":0,"benchmark":84,"lift":-84},{"cohort":"H2 2022","retention":100,"benchmark":82,"lift":18},{"cohort":"H2 2023","retention":100,"benchmark":83,"lift":17},{"cohort":"H2 2026","retention":100,"benchmark":81,"lift":19}],"eosbLiabilitySeries":[{"quarter":"Q3 2026","uae":0,"ksa":82497,"combined":82497},{"quarter":"Q4 2026","uae":0,"ksa":89802,"combined":89802},{"quarter":"Q1 2027","uae":0,"ksa":96947,"combined":96947},{"quarter":"Q2 2027","uae":0,"ksa":104172,"combined":104172}],"eosbByJurisdiction":{"AE":0,"SA":82963.40999999999},"onboardingPipeline":[{"id":"demo-emp-reem","first_name":"Reem","last_name":"Al-Hashemi","role":"Support Specialist","start_date":"2026-08-05"}],"exitsByReason":[{"reason":"Better Opportunity","count":1},{"reason":"Relocation","count":1}],"activeSalarySpend":58000,"totalRecruitingSpend":25000}
+GET /api/preboarding/cases?jurisdiction=AE&status=open -> 200, 3 case(s)
+  case OFR-2026-DEMO-03 | Yousef Al-Hammadi | AE | start 2026-10-06 | source demo_seed
+  case OFR-2026-DEMO-02 | Mariam Al-Kaabi | AE | start 2026-10-08 | source demo_seed
+  case OFR-2026-DEMO-01 | Omar Al-Farsi | AE | start 2026-10-21 | source roster:demo-emp-omar
+GET /api/preboarding/cases?jurisdiction=SA&status=open -> 200, 0 case(s)
+GET /api/preboarding/cases/6699ea60-1eaa-4e75-aaa8-c2ef51e074aa/checklist -> OFR-2026-DEMO-03: {"not_started":7} | consent null
+    passport                 not_started
+    visa_or_entry_permit     not_started
+    emirates_id              not_started
+    education_certificate    not_started
+    experience_certificate   not_started
+    bank_details             not_started
+    emergency_contact        not_started
+GET /api/preboarding/cases/03e0b7e8-9541-408d-bb71-f63a5de8f69b/checklist -> OFR-2026-DEMO-02: {"not_started":7} | consent null
+    passport                 not_started
+    visa_or_entry_permit     not_started
+    emirates_id              not_started
+    education_certificate    not_started
+    experience_certificate   not_started
+    bank_details             not_started
+    emergency_contact        not_started
+GET /api/preboarding/cases/1bce1bae-ebe2-4403-8a23-3569e3448aa6/checklist -> OFR-2026-DEMO-01: {"requested":3,"not_started":4} | consent null
+    passport                 requested
+    visa_or_entry_permit     requested
+    emirates_id              requested
+    education_certificate    not_started
+    experience_certificate   not_started
+    bank_details             not_started
+    emergency_contact        not_started
+GET /api/preboarding/checklist/overview?jurisdiction=AE -> 200
+  totals: {"cases":3,"items":21,"items_outstanding":21,"items_received":0,"items_verified":0,"cases_without_consent":3,"cases_ready":0}
+  roll-up OFR-2026-DEMO-03 | Yousef Al-Hammadi | start 2026-10-06 | days_to_start -1 | outstanding undefined | consent undefined
+  roll-up OFR-2026-DEMO-02 | Mariam Al-Kaabi | start 2026-10-08 | days_to_start 1 | outstanding undefined | consent undefined
+  roll-up OFR-2026-DEMO-01 | Omar Al-Farsi | start 2026-10-21 | days_to_start 14 | outstanding undefined | consent undefined
+GET /api/preboarding/checklist/overview?jurisdiction=SA -> 200
+  totals: {"cases":0,"items":0,"items_outstanding":0,"items_received":0,"items_verified":0,"cases_without_consent":0,"cases_ready":0}
+
+# post-run checks
+live deployment (port 3000): 200
+listeners on 4719/4720 at capture time: 2867 /2870 
+
+# teardown
+before: pid 2866 cwd /home/agent-senior-software-engineer/l2-before/server
+  killed 2866
+after: pid 2869 cwd /home/agent-senior-software-engineer/antum-people/server
+  killed 2869
+listeners on 4719/4720 now: 1/1
+live deployment (port 3000): 200
+
+# teardown, corrected. The first pass recorded the *launching subshell* pids from the setup
+# script, so killing them left the node processes running and the check above printed
+# 'listeners now: 1/1'. Fixed by killing the processes that actually held the ports, each
+# identified by /proc/<pid>/cwd first:
+  killed: baseline node 2867 and branch node 2870 (both scratch trees; the branch tree's pid
+  was recorded, the baseline worktree had already been removed so its cwd read '(deleted)')
+listeners on 4719/4720: 0/0
+live deployment (port 3000): 200

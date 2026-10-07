@@ -1,0 +1,36 @@
+# L2 demo seed — build proof
+# generated: 2026-10-07T13:48:47Z
+# repo tree under test: dfcf7a38f37eca4f3bb155dcfef3b30679da98a4
+# covers: the whole working tree at that commit — the client type-check and the client bundle.
+#         This change is seed data plus a server-side test, so the build is proved unchanged,
+#         not assumed unchanged.
+# note: npx resolves the local typescript from client/ (the repo root has no package.json),
+#       so both commands run there — running tsc from the root fetches an unrelated npm package
+#       that is not the compiler and exits 1.
+$ (cd client && npx tsc -b --force --verbose)
+1:48:47 PM - Projects in this build: 
+    * tsconfig.app.json
+    * tsconfig.node.json
+    * tsconfig.json
+
+1:48:47 PM - Project 'tsconfig.app.json' is being forcibly rebuilt
+
+1:48:47 PM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.app.json'...
+
+1:48:49 PM - Project 'tsconfig.node.json' is being forcibly rebuilt
+
+1:48:49 PM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.node.json'...
+
+tsc -b exit code: 0
+
+$ (cd client && npx vite build)
+[36mvite v8.0.16 [32mbuilding client environment for production...[36m[39m
+[2Ktransforming...✓ 16 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-x1-nE6It.css   34.72 kB │ gzip:  6.75 kB
+dist/assets/index-Cwq9dzzZ.js   258.64 kB │ gzip: 72.81 kB
+
+[32m✓ built in 334ms[39m
+vite build exit code: 0

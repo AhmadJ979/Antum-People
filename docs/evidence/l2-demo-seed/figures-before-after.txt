@@ -1,0 +1,59 @@
+# L2 demo seed — the existing demo figures, before and after
+# generated: 2026-10-07T13:49:17Z
+# two scratch instances seeded in the same session, seconds apart, so the accrual-derived
+# figures are comparable (they are computed to 'today'):
+#   before = origin/main 5ed731e, port 4719      after = this branch, port 4720
+# both seeded fresh with the same seed script; the trees differ only by this change.
+
+$ diff before.txt after.txt   (full output)
+7c7,10
+< GET /api/preboarding/cases?jurisdiction=AE&status=open -> 200, 0 case(s)
+---
+> GET /api/preboarding/cases?jurisdiction=AE&status=open -> 200, 3 case(s)
+>   case OFR-2026-DEMO-03 | Yousef Al-Hammadi | AE | start 2026-10-06 | source demo_seed
+>   case OFR-2026-DEMO-02 | Mariam Al-Kaabi | AE | start 2026-10-08 | source demo_seed
+>   case OFR-2026-DEMO-01 | Omar Al-Farsi | AE | start 2026-10-21 | source roster:demo-emp-omar
+8a12,35
+> GET /api/preboarding/cases/6699ea60-1eaa-4e75-aaa8-c2ef51e074aa/checklist -> OFR-2026-DEMO-03: {"not_started":7} | consent null
+>     passport                 not_started
+>     visa_or_entry_permit     not_started
+>     emirates_id              not_started
+>     education_certificate    not_started
+>     experience_certificate   not_started
+>     bank_details             not_started
+>     emergency_contact        not_started
+> GET /api/preboarding/cases/03e0b7e8-9541-408d-bb71-f63a5de8f69b/checklist -> OFR-2026-DEMO-02: {"not_started":7} | consent null
+>     passport                 not_started
+>     visa_or_entry_permit     not_started
+>     emirates_id              not_started
+>     education_certificate    not_started
+>     experience_certificate   not_started
+>     bank_details             not_started
+>     emergency_contact        not_started
+> GET /api/preboarding/cases/1bce1bae-ebe2-4403-8a23-3569e3448aa6/checklist -> OFR-2026-DEMO-01: {"requested":3,"not_started":4} | consent null
+>     passport                 requested
+>     visa_or_entry_permit     requested
+>     emirates_id              requested
+>     education_certificate    not_started
+>     experience_certificate   not_started
+>     bank_details             not_started
+>     emergency_contact        not_started
+10c37,40
+<   totals: {"cases":0,"items":0,"items_outstanding":0,"items_received":0,"items_verified":0,"cases_without_consent":0,"cases_ready":0}
+---
+>   totals: {"cases":3,"items":21,"items_outstanding":21,"items_received":0,"items_verified":0,"cases_without_consent":3,"cases_ready":0}
+>   roll-up OFR-2026-DEMO-03 | Yousef Al-Hammadi | start 2026-10-06 | days_to_start -1 | outstanding undefined | consent undefined
+>   roll-up OFR-2026-DEMO-02 | Mariam Al-Kaabi | start 2026-10-08 | days_to_start 1 | outstanding undefined | consent undefined
+>   roll-up OFR-2026-DEMO-01 | Omar Al-Farsi | start 2026-10-21 | days_to_start 14 | outstanding undefined | consent undefined
+# every hunk above is a pre-boarding line. Nothing else differs, which is the check that the
+# analytics figures did not move.
+
+# the figures themselves, read off both instances with extract-figures.js:
+## before
+AE: headcount 7 | payroll 10500 | EOSB liability 85199 | cost-per-hire 8286 | time-to-value 19.2 d | cohorts H1 2022 100%, H1 2023 50%, H1 2024 100%, H2 2026 100%
+AE forecast: Q3 2026 84667 | Q4 2026 90926 | Q1 2027 133477 | Q2 2027 161494
+SA: headcount 4 | EOSB liability 82963 | cost-per-hire 4750 | time-to-value 15.7 d
+## after
+AE: headcount 7 | payroll 10500 | EOSB liability 85199 | cost-per-hire 8286 | time-to-value 19.2 d | cohorts H1 2022 100%, H1 2023 50%, H1 2024 100%, H2 2026 100%
+AE forecast: Q3 2026 84667 | Q4 2026 90926 | Q1 2027 133477 | Q2 2027 161494
+SA: headcount 4 | EOSB liability 82963 | cost-per-hire 4750 | time-to-value 15.7 d

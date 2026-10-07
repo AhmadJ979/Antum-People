@@ -1,0 +1,40 @@
+# L2 demo seed — the seed's own output
+# generated: 2026-10-07T13:49:06Z   tree: dfcf7a38f37eca4f3bb155dcfef3b30679da98a4
+# command: DEMO_SEED=true PRODUCT_DB_PATH=<scratch>/after.db node scripts/seed-demo.js
+#          (fresh database — server/db.js applies schema.sql on open)
+
+--- Antum People Coherent Demo Seed v3.1 ---
+Targeting: Product-owned SQLite database
+Upserting demo employees...
+(node:2839) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+- Upserted Ahmad Al-Rashid (AE)
+- Upserted Fatima Al-Zahrani (SA)
+- Upserted Omar Al-Farsi (AE)
+- Upserted Leila Mansour (AE)
+- Upserted Khalid Al-Dosari (SA)
+- Upserted Hassan Al-Mansoori (AE)
+- Upserted Sarah Al-Qasimi (SA)
+- Upserted Mohammed Al-Sayed (AE)
+- Upserted Reem Al-Hashemi (SA)
+- Upserted Noura Al-Suwaidi (AE)
+- Upserted Salim Al-Nuaimi (AE)
+- Upserted Yusuf Hassan (AE)
+- Upserted Sultan Al-Harbi (SA)
+Upserting onboarding tasks...
+Upserting offboarding tasks...
+Upserting exit interviews...
+Upserting audit logs...
+Upserting consent records...
+Upserting Layer 2 pre-boarding demo cases...
+- Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-10-21) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-08) — inside 48 hours with every item still open; items: 7 not_started
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-06) — start date already passed, items still open; items: 7 not_started
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+
+# and the same command at the baseline tree (origin/main 5ed731e, before this change):
+# the Layer 2 section below does not exist there and no case is created —
+# grep for it in the baseline seed output:
+$ grep -c 'pre-boarding demo cases' /home/agent-senior-software-engineer/l2rig/seed-before.txt
+0

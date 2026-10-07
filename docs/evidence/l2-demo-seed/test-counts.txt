@@ -1,0 +1,12 @@
+# per-file counts — run: cd server && node --test <file>.test.js
+eosb.test.js: # tests 12 # suites 1 # pass 12 # fail 0 
+preboarding.test.js: # tests 11 # suites 2 # pass 11 # fail 0 
+preboarding-items.test.js: # tests 31 # suites 9 # pass 31 # fail 0 
+schema-migration.test.js: # tests 3 # suites 1 # pass 3 # fail 0 
+demo-seed.test.js: # tests 7 # suites 1 # pass 7 # fail 0 
+
+# whole suite — run: cd server && npm test
+# tests 64
+# suites 14
+# pass 64
+# fail 0

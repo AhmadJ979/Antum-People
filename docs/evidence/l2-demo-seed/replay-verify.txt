@@ -1,0 +1,261 @@
+# L2 demo seed — replay: idempotent, and the offsets are what is fixed
+# generated: 2026-10-07T13:49:06Z   tree: dfcf7a38f37eca4f3bb155dcfef3b30679da98a4
+# command: node plant-stale.js (sets OFR-2026-DEMO-02 to a stale 2000-01-01), then
+#          DEMO_SEED=true PRODUCT_DB_PATH=<scratch>/after.db node scripts/seed-demo.js, then
+#          node read-state.js
+
+=== replay + stale-date check, second attempt (DB: /home/agent-senior-software-engineer/l2rig/after.db)
+--- plant stale start date on OFR-2026-DEMO-02
+(Use `node --trace-warnings ...` to show where the warning was created)
+rows now: [{"offer_reference":"OFR-2026-DEMO-01","start_date":"2026-10-21"},{"offer_reference":"OFR-2026-DEMO-02","start_date":"2000-01-01"},{"offer_reference":"OFR-2026-DEMO-03","start_date":"2026-10-06"}]
+--- re-run the seed on the same DB (no --force-clear)
+Upserting Layer 2 pre-boarding demo cases...
+- Replayed OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-10-21) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started
+- Refreshed OFR-2026-DEMO-02 start date to 2026-10-08
+- Replayed OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-08) — inside 48 hours with every item still open; items: 7 not_started
+- Replayed OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-06) — start date already passed, items still open; items: 7 not_started
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+--- state after the replay
+(Use `node --trace-warnings ...` to show where the warning was created)
+case rows: [
+ {
+  "offer_reference": "OFR-2026-DEMO-01",
+  "candidate_name": "Omar Al-Farsi",
+  "jurisdiction": "AE",
+  "start_date": "2026-10-21",
+  "source": "roster:demo-emp-omar",
+  "status": "open"
+ },
+ {
+  "offer_reference": "OFR-2026-DEMO-02",
+  "candidate_name": "Mariam Al-Kaabi",
+  "jurisdiction": "AE",
+  "start_date": "2026-10-08",
+  "source": "demo_seed",
+  "status": "open"
+ },
+ {
+  "offer_reference": "OFR-2026-DEMO-03",
+  "candidate_name": "Yousef Al-Hammadi",
+  "jurisdiction": "AE",
+  "start_date": "2026-10-06",
+  "source": "demo_seed",
+  "status": "open"
+ }
+]
+case count: 3
+item rows by case/status: [{"case_id":"03e0b7e8-9541-408d-bb71-f63a5de8f69b","status":"not_started","n":7},{"case_id":"1bce1bae-ebe2-4403-8a23-3569e3448aa6","status":"not_started","n":4},{"case_id":"1bce1bae-ebe2-4403-8a23-3569e3448aa6","status":"requested","n":3},{"case_id":"6699ea60-1eaa-4e75-aaa8-c2ef51e074aa","status":"not_started","n":7}]
+item count: 21
+roll-up totals: {"cases":3,"items":21,"items_outstanding":21,"items_received":0,"items_verified":0,"cases_without_consent":3,"cases_ready":0}
+roll-up case summary keys: ["case_id","offer_reference","candidate_name","candidate_email","role","department","jurisdiction","start_date","days_to_start","document_set_active","checklist_seeded","items_total","by_status","outstanding_count","outstanding","consent_recorded","consent_granted_at","last_reminder_at","last_reminder_count"]
+roll-up cases: [
+ {
+  "case_id": "6699ea60-1eaa-4e75-aaa8-c2ef51e074aa",
+  "offer_reference": "OFR-2026-DEMO-03",
+  "candidate_name": "Yousef Al-Hammadi",
+  "candidate_email": "yousef.alhammadi@example.com",
+  "role": "Operations Analyst",
+  "department": "Operations",
+  "jurisdiction": "AE",
+  "start_date": "2026-10-06",
+  "days_to_start": -1,
+  "document_set_active": true,
+  "checklist_seeded": true,
+  "items_total": 7,
+  "by_status": {
+   "not_started": 7,
+   "requested": 0,
+   "received": 0,
+   "verified": 0
+  },
+  "outstanding_count": 7,
+  "outstanding": [
+   {
+    "item_key": "passport",
+    "label": "Passport copy",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "visa_or_entry_permit",
+    "label": "Visa or entry permit",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "emirates_id",
+    "label": "Emirates ID",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "education_certificate",
+    "label": "Education certificate",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "experience_certificate",
+    "label": "Experience certificate",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "bank_details",
+    "label": "Bank details (IBAN letter)",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "emergency_contact",
+    "label": "Emergency contact",
+    "status": "not_started",
+    "required": true
+   }
+  ],
+  "consent_recorded": false,
+  "consent_granted_at": null,
+  "last_reminder_at": null,
+  "last_reminder_count": null
+ },
+ {
+  "case_id": "03e0b7e8-9541-408d-bb71-f63a5de8f69b",
+  "offer_reference": "OFR-2026-DEMO-02",
+  "candidate_name": "Mariam Al-Kaabi",
+  "candidate_email": "mariam.alkaabi@example.com",
+  "role": "Marketing Coordinator",
+  "department": "Marketing",
+  "jurisdiction": "AE",
+  "start_date": "2026-10-08",
+  "days_to_start": 1,
+  "document_set_active": true,
+  "checklist_seeded": true,
+  "items_total": 7,
+  "by_status": {
+   "not_started": 7,
+   "requested": 0,
+   "received": 0,
+   "verified": 0
+  },
+  "outstanding_count": 7,
+  "outstanding": [
+   {
+    "item_key": "passport",
+    "label": "Passport copy",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "visa_or_entry_permit",
+    "label": "Visa or entry permit",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "emirates_id",
+    "label": "Emirates ID",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "education_certificate",
+    "label": "Education certificate",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "experience_certificate",
+    "label": "Experience certificate",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "bank_details",
+    "label": "Bank details (IBAN letter)",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "emergency_contact",
+    "label": "Emergency contact",
+    "status": "not_started",
+    "required": true
+   }
+  ],
+  "consent_recorded": false,
+  "consent_granted_at": null,
+  "last_reminder_at": null,
+  "last_reminder_count": null
+ },
+ {
+  "case_id": "1bce1bae-ebe2-4403-8a23-3569e3448aa6",
+  "offer_reference": "OFR-2026-DEMO-01",
+  "candidate_name": "Omar Al-Farsi",
+  "candidate_email": "omar.alfarsi@example.com",
+  "role": "Finance Analyst",
+  "department": "Finance",
+  "jurisdiction": "AE",
+  "start_date": "2026-10-21",
+  "days_to_start": 14,
+  "document_set_active": true,
+  "checklist_seeded": true,
+  "items_total": 7,
+  "by_status": {
+   "not_started": 4,
+   "requested": 3,
+   "received": 0,
+   "verified": 0
+  },
+  "outstanding_count": 7,
+  "outstanding": [
+   {
+    "item_key": "passport",
+    "label": "Passport copy",
+    "status": "requested",
+    "required": true
+   },
+   {
+    "item_key": "visa_or_entry_permit",
+    "label": "Visa or entry permit",
+    "status": "requested",
+    "required": true
+   },
+   {
+    "item_key": "emirates_id",
+    "label": "Emirates ID",
+    "status": "requested",
+    "required": true
+   },
+   {
+    "item_key": "education_certificate",
+    "label": "Education certificate",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "experience_certificate",
+    "label": "Experience certificate",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "bank_details",
+    "label": "Bank details (IBAN letter)",
+    "status": "not_started",
+    "required": true
+   },
+   {
+    "item_key": "emergency_contact",
+    "label": "Emergency contact",
+    "status": "not_started",
+    "required": true
+   }
+  ],
+  "consent_recorded": false,
+  "consent_granted_at": null,
+  "last_reminder_at": null,
+  "last_reminder_count": null
+ }
+]
+=== end
