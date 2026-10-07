@@ -32,7 +32,7 @@ where it differs from the design, so a reader can tell a **design decision** fro
 | PDPL consent gate | `preboarding-items.js:195` (`recordConsent`); routes `server/index.js:690`, `:698` | Collection before consent exists is refused **428** with a plain-language reason; the refusal leaves the item untouched. One consent row per case (`UNIQUE`), carrying `consent_type`, `lawful_basis`, `consent_version`, `granted_at`, `recorded_by`. Re-recording is a no-op (`created:false`). |
 | Reminders | `preboarding-items.js:350` (`recordReminder`); route `index.js:676` | Recorded **in-product only** (`channel: 'in_product'`) with the outstanding keys and count at that moment, "not that we sent anything". Nothing is emailed or pushed — **the product still has no delivery channel**. |
 | The HR roll-up | `preboarding-items.js:418`–`:446`; route `index.js:644` | One call answers "what is outstanding, on which case, named": totals (`items_outstanding`, `items_verified`, `cases_without_consent`, `cases_ready`) plus per case `days_to_start`, `by_status`, `outstanding[]` (key + label + status + required), consent state, last reminder. `outstanding` is **derived on every read** — `:328` says plainly that nothing stores an outstanding flag that could go stale. |
-| The document byte boundary | `server/document-store.js` | **No store is chosen, deliberately.** `saveDocument`/`readDocument` (`:70`, `:79`) throw **501**; `ANTUM_DOCUMENT_STORE` (`:47`) is the single door. The item records a short `document_reference` — a file name or the reference HR quoted — and never the document's contents. Four candidate stores are named for the owner's decision, with the PDPL consequences of each. |
+| The document byte boundary | `server/document-store.js` | **No store was chosen when this module was built — deliberately — and the owner has since decided (2026-10-07): Option D ships now (a reference string, no bytes), and Option C (an S3-compatible object store) is built when the entity is registered. IFZA registration is the gate — an event, not a date.** `saveDocument`/`readDocument` (`:70`, `:79`) throw **501**; `ANTUM_DOCUMENT_STORE` (`:47`) is the single door. The item records a short `document_reference` — a file name or the reference HR quoted — and never the document's contents. Four candidate stores are named in the file with the PDPL consequences of each; the owner has since chosen **Option D for now and Option C at entity registration**, which is exactly the shape this boundary was left ready for. |
 | The list call | `client/src/App.tsx:439` | Now `?jurisdiction=${jurisdiction}&status=open` — the owner's 2026-10-07 jurisdiction decision, and the status filter the "Cases open" label needs. `:437` says why. |
 | The tab's own name | `App.tsx:115` (`NAV_ITEMS`), `:124` (`navLabel`) | The sidebar and the breadcrumb now read one list, so the breadcrumb can no longer spell a tab differently from the nav. |
 | The screen as it stands | `App.tsx:1413` (the tile), `:1497` (the roll-up panel), `:1525` (the empty state), `:1546`–`:1640` (a case row and its checklist) | The Layer 2 tab is: the accepted-offer intake form, then **"HR roll-up — outstanding items"**: three totals (items outstanding · items verified · without consent), an empty state reading *"No pre-boarding cases open. Record an accepted offer to open one."*, and one row per case (name · role · department, the jurisdiction chip, `Start: <date> · <n> d`, `Verified: n/m`, outstanding count in red when non-zero). Expanding a row fetches that case's checklist: consent state and a "Record PDPL consent" control (`:1596`), the amber note *"set not active in this release"* for an inactive set (`:1589`), and per item the label, category, status, reference and the actions `Request` → `Mark received` (disabled with no consent, and a tooltip saying why) → `Verify` / `Send back`, plus a `Remind` control disabled when nothing is outstanding. |
@@ -60,8 +60,12 @@ deltas are:
    description of this one.
 5. **Consent and documents are shaped as the spec assumed, but stricter.** The spec asked for the
    consent record to gate collection; the build refuses collection with 428 and records
-   `lawful_basis` and `consent_version` too. The spec's §9 D5 (document storage) is answered **to a
-   boundary, not to a store**: bytes are refused, one interface, four candidates, owner's call.
+   `lawful_basis` and `consent_version` too. The spec's §9 D5 (document storage) is **answered by
+   the owner (2026-10-07): Option D now — a reference string, no bytes — with Option C at entity
+   registration.** The boundary as shipped therefore stands, and the exposure under it is the
+   **pointer**: an item says which document, whose, when recorded, and where it lives, so the PDPL
+   position is about that reference and the consent that precedes it — which is why the consent gate
+   matters **more** under Option D, not less.
 6. **The roll-up is a screen the spec does not have.** It is good — it answers "what is outstanding,
    named, without opening a case", which is S1's stated purpose — but it is a panel inside the
    intake screen rather than the case list S1 specifies. Whether S1 replaces it or grows from it is
@@ -77,6 +81,11 @@ real-person PII, and with the "Sample Demo Data" badge intact. The owner's own w
 and the gate are on the board task `[L2 seed]` (`86749e1f`), and the states are to arise **by
 construction** from the seeded dates and item statuses: the 48-hour flag stays *derived*, and the
 seed must not store or pre-compute a state.
+
+**The same sitting answered the spec's other two questions** — per-user accounts land at Layer 3
+build time, with "My lines", gated by *no real client data until RBAC is live* (spec §10 Q4); and
+document storage is Option D now, Option C at entity registration (spec §10 Q5). Both are recorded in
+the spec's own §10 and §4/§8, not duplicated here.
 
 **One consequence the sequence has to face, measured in §3.1 above:** because no derivation exists
 yet, seeding three cases makes the *underlying facts* true but cannot make three **states** appear on
