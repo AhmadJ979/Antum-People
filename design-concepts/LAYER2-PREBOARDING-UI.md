@@ -3,14 +3,25 @@
 > **Status: design only — nothing in this document is built, shipped or live.** It is the spec
 > for **P2-2** (employee-track document collection) and **P2-4** (workspace-track provisioning
 > checklist), plus the surfaces of **P2-5** (the derived 48-hour flag) and **P2-6** (EN/AR and
-> PDPL consent). **P2-1** — the offer-acceptance trigger and the single case-creation path — is
-> in build and is **out of scope here**: this spec consumes the case model, it does not define it.
+> PDPL consent). **P2-1** — the offer-acceptance trigger and the single case-creation path —
+> **landed on `main` as PR #66 (2026-10-07)** and is **out of scope here**: this spec consumes the
+> case model, it does not define it. P2-1's own tab is reviewed against this spec in
+> `design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md`.
 >
-> **Grounded on (read 2026-10-06):** `client/src/App.tsx` (nav, task row, Compliance Center
-> card, empty state), `server/schema.sql` (lines 3–180: `employees`, `onboarding_tasks`,
-> `consent_records`, `users`), `design-concepts/BRAND-IDENTITY.md` (palette, type),
-> `design-concepts/USER-JOURNEY-MAPS.md` (Stage 1 — Pre-Arrival, Days −14 to −1),
-> `design-concepts/DASHBOARD-WIREFRAMES.md` (wireframe house style).
+> **Grounded on:** `client/src/App.tsx`, `server/schema.sql`, `server/preboarding.js` and
+> `server/index.js` on `main` at **`34fdd63`** (first read 2026-10-06) and **re-grounded on `main`
+> at `75e3ff2`** — the merge of PR #66 — on 2026-10-07. Also read:
+> `design-concepts/BRAND-IDENTITY.md` (palette, type), `design-concepts/USER-JOURNEY-MAPS.md`
+> (Stage 1 — Pre-Arrival, Days −14 to −1), `design-concepts/DASHBOARD-WIREFRAMES.md` (wireframe
+> house style).
+>
+> **Every line number below is that revision's, and code moves.** Before relying on one, re-derive
+> it from the anchors this file leans on —
+> `grep -n "id: 'dashboard'" client/src/App.tsx` (the nav) ·
+> `grep -n "^CREATE TABLE" server/schema.sql` (the tables) ·
+> `grep -n "api/preboarding" server/index.js` (the Layer 2 case routes). When PR #66 landed
+> `App.tsx` grew by 245 lines and every `App.tsx:` citation in this file had to be re-read, which
+> is why this note now names the revision it was read at.
 >
 > **P2 criteria** quoted below (P2-2, P2-3, P2-4, P2-5, P2-6) are from the team's roadmap,
 > `phase-roadmap-2-4.md`, which is held in the shared team directory rather than in this repo —
@@ -25,14 +36,20 @@
 
 ## 0. What the product actually has today
 
-This is the honest starting point. Every line below was read in the repo, not assumed.
+This is the honest starting point. Every line below was read in the repo, not assumed. The table
+was **re-read on `main` at `75e3ff2`** (2026-10-07), after P2-1 landed; where a line number moved
+since the first reading, the re-read number is the one shown.
 
 | Thing the Layer 2 surface needs | What exists today | Where |
 |---|---|---|
-| A place to live in the nav | Four tabs: **Executive Dashboard, Employee Directory, Transitions Hub, Strategic Intelligence** | `App.tsx:181`, `:523`–`:526` |
+| A place to live in the nav | **Five** tabs, since P2-1: **Executive Dashboard, Employee Directory, Transitions Hub, Pre-boarding, Strategic Intelligence** | `App.tsx:628`–`:632`; tab state `:199` |
+| A case to hang every item on | `preboarding_cases(id, offer_reference UNIQUE, candidate_name, candidate_email, role, department, reporting_line, jurisdiction, start_date, status, source, offered_at, created_by, created_at, updated_at)` — **exists since P2-1**; on `main`, **not deployed** | `schema.sql:177`–`:193` |
+| One case-creation path, not two | `recordOfferAcceptance` is the only writer (idempotent on `offer_reference`); `POST /api/preboarding/cases` reaches it, `GET` list and `GET :id` read it back | `server/preboarding.js:119`, `:97`, `:104`; `server/index.js:580`, `:597`, `:606` |
+| A Layer 2 tab to extend | The tab exists — an intake form and a case list, house-styled | `App.tsx:1184`–`:1321` |
 | A checklist item that can carry an **owner** | `interface Task` has `id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone` — **no owner, no track, no Arabic text** | `App.tsx:32`–`:41` |
-| The same, in storage | `onboarding_tasks(id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone, created_at)` — **no owner, no track, no function** | `schema.sql:43`–`:54` |
-| A consent record to gate documents on | `consent_records(id, employee_id, consent_type, status, consent_date, ip_address, lawful_basis, granted_at, revoked_at, consent_version)`, plus `employees.consent_granted` / `consent_date` | `schema.sql:93`–`:105`, `App.tsx:20`–`:21` |
+| The same, in storage | `onboarding_tasks(id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone, created_at)` — **no owner, no track, no function** | `schema.sql:43`–`:55` |
+| **Any item at all, attached to a case** | **Nothing.** P2-1 records the *case* — there is no item table and no per-item state yet, which is what §3, §5 and §6 are waiting on | — |
+| A consent record to gate documents on | `consent_records(id, employee_id, consent_type, status, consent_date, ip_address, lawful_basis, granted_at, revoked_at, consent_version)`, plus `employees.consent_granted` / `consent_date` | `schema.sql:93`–`:105`, `App.tsx:23` |
 | Per-function identity ("IT sees only its own lines") | `users(id, username, password_hash, role, created_at)` exists, but the product seeds **one shared account** — no per-user login to scope a view by | `schema.sql:165`–`:171` |
 | Somewhere to put a collected document | **Nothing.** No `documents` table, no file storage, no upload surface | — |
 | A record of an acknowledgement (JD, NDA) | **Nothing.** `consent_records` is a consent record, not an acknowledgement record | — |
@@ -40,14 +57,14 @@ This is the honest starting point. Every line below was read in the repo, not as
 | A way to notify anyone | **No delivery channel** — no mailer, webhook or SMS anywhere in the product | plan, Gate 2 decision (2026-10-06) |
 | An in-process timer / scheduled check | **Nothing.** No cron, no working systemd on this host | plan §6; Gate 2 decision |
 | Any derived "days remaining" or flag computation | **Nothing** | — |
-| The labels we must not lose | **"Sample Demo Data"** badge and the **"Illustrative …"** markers | `App.tsx:554`, `:615`, `:617`, `:669`, `:706` |
+| The labels we must not lose | **"Sample Demo Data"** badge — in the **app-level header**, so it also covers the new Pre-boarding tab — and the **"Illustrative …"** markers | `App.tsx:660`; `:721`, `:723`, `:738`, `:775`, `:812`, `:1061`, `:1067`, `:1073`, `:1088`, `:1104`, `:1116`, `:1145` |
 
 **Visual language to extend, not replace** (exact classes as served):
 
-- Checklist row — `flex items-start space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-teal-200 transition`; checkbox `mt-1 h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500`; done title `line-through text-slate-400`, open title `text-slate-800 text-sm font-bold`; description `text-xs text-slate-500` (`App.tsx:849`–`:859`).
-- Dark panel — `bg-slate-900 text-white p-6 rounded-xl shadow-lg`, section heading `font-bold text-teal-400 text-sm tracking-widest uppercase` (`App.tsx:866`–`:868`).
-- Small caps field label — `text-[10px] font-bold text-slate-400 uppercase tracking-widest` (`App.tsx:871`).
-- Empty state — `py-12 text-center text-slate-400 text-sm italic` (`App.tsx:863`).
+- Checklist row — `flex items-start space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-teal-200 transition`; checkbox `mt-1 h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500 cursor-pointer`; done title `line-through text-slate-400`, open title `text-slate-800 text-sm font-bold`; description `text-xs text-slate-500` (`App.tsx:955`–`:966`).
+- Dark panel — `bg-slate-900 text-white p-6 rounded-xl shadow-lg`, section heading `font-bold text-teal-400 text-sm tracking-widest uppercase` (`App.tsx:975`–`:976`).
+- Small caps field label — `text-[10px] font-bold text-slate-400 uppercase tracking-widest` (`App.tsx:980`, `:987`) — P2-1's intake form reuses this class throughout (`App.tsx:1214`–`:1264`).
+- Empty state — `py-12 text-center text-slate-400 text-sm italic` (`App.tsx:969`). P2-1's case list uses a dashed-border variant instead (`App.tsx:1291`–`:1293`).
 - Status colours from `BRAND-IDENTITY.md`: **Success Green** `#22C55E` complete · **Warm Amber** `#F59E0B` due-soon / at-risk · **Coral Red** `#EF4444` overdue / blocking · **Sky Blue** `#3B82F6` onboarding/info · **Deep Teal** `#0F766E` primary action.
 
 ---
@@ -56,6 +73,12 @@ This is the honest starting point. Every line below was read in the repo, not as
 
 **Recommendation (design call, reversible): a fifth top-level nav item — `Pre-boarding` — between
 Transitions Hub and Strategic Intelligence.**
+
+> **Built, exactly here.** P2-1 landed this placement: nav entry `App.tsx:631`, tab render
+> `App.tsx:1184`–`:1321` (PR #66, 2026-10-07). The paragraphs below were written before that tab
+> existed and are now a description of what shipped, not only a proposal. What the tab does *not*
+> yet have — because it is P2-2/P2-4/P2-5, not P2-1 — is everything §2–§6 specify; the review of
+> the shipped surface against this spec is `design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md`.
 
 - Layer 2 is the layer the business is selling next; hiding it under Transitions Hub makes the
   buyer ask where it is. The nav already names layers 1 and 4 ("Transitions Hub", "Strategic
@@ -333,7 +356,7 @@ names. **What is not translated:** the case subject's name, and any value read f
 - Arabic strings run ~20–30% longer than English at the same size: the row must be laid out for
   the longer string, and no label may be truncated to fit EN.
 - **Copy source:** the AR strings are **not in this document**. They need a translator or the
-  owner; inventing them (or an Arabic wordmark) is prohibited — `BRAND-IDENTITY.md:0` records the
+  owner; inventing them (or an Arabic wordmark) is prohibited — `BRAND-IDENTITY.md:11` records the
   Arabic wordmark as **`[TO CONFIRM]`**, and the rule is to use the Latin "Antum" in Arabic strings
   until it is confirmed.
 - **One source for item text:** item titles must come from the same generator that produces the
@@ -367,7 +390,7 @@ gate the *first* thing on the employee track, not a checkbox buried in a setting
   button: a direct API write of a document for a case with no consent record is a defect, and the
   acceptance test for P2-6 is exactly that request.
 - The consent line reads from the record, in the existing house style: `✓ Recorded <date>` in
-  Success Green, `✗ Missing / required` in Coral (`App.tsx:872`–`:874`). The screen shows **that**
+  Success Green, `✗ Missing / required` in Coral (`App.tsx:981`–`:982`). The screen shows **that**
   a record exists and **when** — never the record's contents.
 - Unlocking is automatic on the record's existence; there is no "unlock" button, so the state can
   never disagree with the record.
@@ -433,7 +456,10 @@ gate the *first* thing on the employee track, not a checkbox buried in a setting
 ## 12. What this document does not claim
 
 - **No screen here is built.** Every mock is a design artefact. Nothing in §2–§8 is a live
-  surface, and no surface may ship with copy that implies otherwise.
+  surface, and no surface may ship with copy that implies otherwise. (P2-1's intake form and case
+  list — `App.tsx:1184`–`:1321` — are built on `main`, but they are not these screens: §3's case
+  detail, §4's function view and §5's flag do not exist anywhere, and §2's list is a superset of
+  what P2-1 renders.)
 - **No figure here is a reading.** The mock rows are invented placeholders, deliberately not the
   seeded records, and are marked as such on the face of every screen.
 - **No checklist length is specified here.** The `n of m` counts in the mocks are placeholder
@@ -447,5 +473,6 @@ gate the *first* thing on the employee track, not a checkbox buried in a setting
 
 ---
 
-*Product Designer — 2026-10-06. Written against `origin/main` at the time of writing; screens are
-design, not build.*
+*Product Designer — 2026-10-06. Written against `origin/main` at `34fdd63`; **re-grounded
+2026-10-07 on `main` at `75e3ff2`** (the merge of PR #66), which is what the line numbers now
+name. Screens are design, not build.*
