@@ -712,17 +712,6 @@ app.post('/api/preboarding/cases/:id/consent', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// SERVE FRONTEND
-// -------------------------------------------------------------
-
-app.use(express.static(path.join(__dirname, '../client/dist')));
-
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api')) return res.status(404).json({ error: 'API route not found' });
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-});
-
-// -------------------------------------------------------------
 // LAYER 2 — P2-5: THE IN-PROCESS FLAG WATCHER (a record, not a notification)
 // -------------------------------------------------------------
 // This host has no cron and no working systemd, so a time-based check cannot be delegated to the
@@ -743,6 +732,20 @@ app.get('/api/preboarding/flag-watch', async (req, res) => {
   }
 });
 flagWatcher.start();
+
+
+// The watcher's route is registered BEFORE the static/SPA catch-all below: that catch-all
+// answers every unknown /api path with a JSON 404, so a route added after it is unreachable.
+// -------------------------------------------------------------
+// SERVE FRONTEND
+// -------------------------------------------------------------
+
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) return res.status(404).json({ error: 'API route not found' });
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
 
 // -------------------------------------------------------------
 // CATCH-ALL ERROR HANDLER
