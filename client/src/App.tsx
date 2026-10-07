@@ -145,6 +145,11 @@ const NAV_ITEMS = [
 /** A tab's own name, from the one list that defines the tabs. */
 const navLabel = (id: string) => (NAV_ITEMS.find(item => item.id === id) || { label: id }).label;
 
+// The relative-day copy, in one place (§ "Relative time" in LAYER2-PREBOARDING-UI.md): the whole
+// day count is derived at read time, and a negative is never printed bare — `-1 d` is an input,
+// not a message. A started case reads "started 1 d ago"; a future one is unchanged, "14 d".
+const relDays = (days: number) => (days < 0 ? `started ${Math.abs(days)} d ago` : `${days} d`);
+
 // One small button for the per-item actions; the status machine lives on the server, so the
 // client only offers the moves that are legal from where the item is.
 const ItemButton = ({ label, onClick, disabled, title }: { label: string; onClick: () => void; disabled?: boolean; title?: string }) => (
@@ -1593,7 +1598,7 @@ export default function App() {
                               <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
                                 <div>
                                   <span className="text-slate-400">Start:</span> {row.start_date}
-                                  {row.days_to_start !== null && <span className="text-slate-400"> · {row.days_to_start} d</span>}
+                                  {row.days_to_start !== null && <span className="text-slate-400"> · {relDays(row.days_to_start)}</span>}
                                 </div>
                                 <div>
                                   <span className="text-slate-400">Verified:</span> {row.by_status.verified}/{row.items_total} ·{' '}
