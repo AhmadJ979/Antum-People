@@ -1,0 +1,120 @@
+P2-5 — the derived 48-hour flag: HTTP and browser acceptance, on a scratch instance
+==================================================================================
+Run 2026-10-07, tree under test = this branch tip (two commits: the derivation, then the route
+moved above the SPA catch-all). Everything below was measured on the scratch instance; nothing is
+copied from the seed, the design spec or an earlier run.
+
+WHERE IT RAN
+------------
+- Scratch instance: port 4722, own throwaway database (~/p25-rig/A.db), own throwaway credential
+  ('scratch', password 16 random chars, never the live demo credential, never committed).
+- Own tree: a git worktree of the branch (~/scratch-p25), so the live deployment was not touched.
+- Live deployment on port 3000 checked BEFORE, DURING and AFTER the pass: 200, 200, 200.
+- The four Layer 2 tables were created by the product's own migration path on that throwaway DB.
+
+BUILD PROOF — both halves, from client/ in the rig tree (see build-proof.txt for the commands)
+----------------------------------------------------------------------------------------------
+   tsc -b exit: 0
+   vite build exit: 0   (dist/assets/index-C_VHsh7X.js 260.53 kB, built in ~0.25 s)
+
+BOOT CONTRACT (unchanged)
+-------------------------
+   GET /api/preboarding/cases without a token -> 401
+   POST /api/login (scratch user) -> 200, token length 201
+   GET / on the scratch instance -> 200
+
+THE THREE STATES, ON THE CASES THE SEED PUTS ON THE SCREEN
+----------------------------------------------------------
+GET /api/preboarding/checklist/overview?jurisdiction=AE -> 200, jurisdiction AE, 3 cases.
+Every value below is the server's own derivation for that read.
+
+  OFR-2026-DEMO-03  start 2026-10-06  days_to_start -1  open 7/7  hours_to_start -38.36
+    flag.state=started  raised=true  chip="Started 1 day ago · 7 items open"
+    headline="Started with 7 items still open"
+    body: "These were due before day one."
+    7 open items named worst-first, each with its status and "no owner on this item" — e.g.
+      "Bank details (IBAN letter) · not_started · owner null (said so)"
+
+  OFR-2026-DEMO-02  start 2026-10-08  days_to_start 1  open 7/7  hours_to_start 9.64
+    flag.state=inside_48_hours  raised=true  chip="Inside 48 hours · 7 items open"
+    headline="7 items open · start in 48 hours or less"
+
+  OFR-2026-DEMO-01  start 2026-10-21  days_to_start 14  open 7/7  hours_to_start 321.64
+    flag.state=clear  raised=false  chip="On track"
+
+   flags by state on that read: {"started":1,"inside_48_hours":1,"clear":1}
+
+DERIVED, NOT STORED — two reads with no write in between
+--------------------------------------------------------
+   identical case-by-case (state, raised, open_count): true
+
+A PASSED START DATE WITH EVERY ITEM IN HAND READS COMPLETE, NOT OVERDUE
+----------------------------------------------------------------------
+Created through the product's own case-creation path (POST /api/preboarding/cases, start_date
+2026-10-01 — in the past), consent recorded through POST .../consent (201), then all 7 items moved
+not_started -> requested -> received -> verified through the status machine. Not seeded, scratch
+database only.
+   POST /api/preboarding/cases -> 201
+   POST .../consent -> 201
+   OFR-P25-COMPLETE  start 2026-10-01  days_to_start -6  open 0/7  hours_to_start -158.35
+     flag.state=clear  raised=false  chip="On track"      <- complete, not overdue
+   flags by state after: {"clear":2,"started":1,"inside_48_hours":1}
+
+THE IN-PROCESS WATCHER: A RECORD, NOT A NOTIFICATION
+----------------------------------------------------
+   GET /api/preboarding/flag-watch -> 200  delivery="none"  boundaries_recorded=2
+     OFR-2026-DEMO-02  boundary 2026-10-06T00:00:00.000Z  detected 2026-10-07T14:21:43.893Z
+       late=true (38.36h)  channel=none
+       "This case reached the 48-hour mark while the app was not running (noticed 38.36h late).
+        The flag itself is derived and read correctly on the first read after restart; nothing is
+        marked missed."
+     OFR-2026-DEMO-03  boundary 2026-10-04T00:00:00.000Z  detected 2026-10-07T14:21:43.893Z
+       late=true (86.36h)  channel=none
+   Both records are late because the process started after those boundaries — this is the catch-up
+   rule doing what it says. The watcher's route returned 404 until it was moved above the SPA
+   catch-all (see the second commit): that was found by running it, not by reading it.
+
+BROWSER PASS (agent-browser, the scratch instance on 4722, logged in as its own scratch user)
+---------------------------------------------------------------------------------------------
+   Network the page made on the Pre-boarding screen:
+     GET /api/preboarding/cases?jurisdiction=AE&status=open (Fetch) 200
+     GET /api/preboarding/checklist/overview?jurisdiction=AE (Fetch) 200
+   The UAE roll-up card, read out of the DOM (not screenshotted-and-eyeballed):
+     - scope line rendered: "The 48-hour chip is derived from every item on a case, whatever track
+       created it. Today that is the employee-track documents only, because the workspace track
+       (P2-4) is not built yet — when it lands, its items join the same rule with no change here."
+     - chip text per row, in row order: "On track" (OFR-P25-COMPLETE) / "Started 1 day ago · 7
+       items open" (OFR-2026-DEMO-03) / "Inside 48 hours · 7 items open" (OFR-2026-DEMO-02) /
+       "On track" (OFR-2026-DEMO-01)
+     - the raised rows carry the headline, all seven open items with their status and the
+       "no owner on this item — the employee-track items carry no owner field" line, and the
+       distance to start ("1 d ago" / "9.6 h before 00:00 on the start date")
+     - the passed-and-complete case renders "On track · Verified: 7/7 · 0 outstanding"
+   Screenshot: screenshots/p25-A-uae-three-states.png (1280x577, the UAE tab with all four rows)
+
+WHAT WAS READ BUT NOT CHANGED (reported, as instructed)
+------------------------------------------------------
+- The "Cases open" tile read "4 | CASES OPEN" on that same UAE tab, with four open UAE cases
+  present (three seeded + the scratch complete case, which was created with status open). I did
+  not independently enumerate the list rows this time: my DOM probe for that pair returned no row
+  names, and I am not going to report a count as verified when I did not read both sides. The tile
+  number and the number of open AE cases in the database agree at 4.
+
+TWO PLACES WHERE THE SPEC'S OWN WORDS AND ITS OWN RULE DO NOT QUITE MEET (reported, not silently
+resolved) — see the PR body for the arithmetic
+-------------------------------------------------------------------------------------------------
+1. Section 1 counts whole days to the start date, section 5 measures the boundary in hours. With
+   A = days_to_start and t = hours elapsed since 00:00 today, the boundary distance is (A*24 - t)
+   hours, so a case with A = 2 sits between 24 and 48 hours out for the whole of that day: its day
+   column reads "2 d" while its chip reads "Inside 48 hours · 7 items open". Both numbers are true
+   under their own definitions, and they sit on the same row. Implemented as the spec defines both;
+   the copy decision is the owner's.
+2. Section 5 makes the boundary inclusive at exactly 48.00 h but words the inside-48 headline as
+   "start in under 48 hours". At exactly 48.000 hours that sentence is false. The chip label is the
+   spec's own text ("Inside 48 hours · N items open"); the headline reads "N items open · start in
+   48 hours or less", which is true on both sides of the boundary.
+
+TEARDOWN
+--------
+   scratch server killed; worktree removed; throwaway database deleted
+   port 4722 free again; live deployment on 3000 AFTER the teardown: 200
