@@ -34,6 +34,7 @@
 
 const { randomUUID } = require('crypto');
 const db = require('./db');
+const preboardingFlag = require('./preboarding-flag');
 
 /** The four statuses every item carries. Every item is in exactly one of them at all times. */
 const ITEM_STATUSES = ['not_started', 'requested', 'received', 'verified'];
@@ -434,6 +435,15 @@ function caseSummary(caseRow, items, consent, reminders) {
     jurisdiction: caseRow.jurisdiction,
     start_date: caseRow.start_date,
     days_to_start: daysUntil(caseRow.start_date),
+    // P2-5 — the derived 48-hour flag. Computed here on every read from this case's start date
+    // and every item it carries (whatever track created them); never stored, never seeded, and
+    // there is no field anywhere that a stale value could be read from. One definition, so the
+    // row chip, the case header and Layer 3's escalation all read this and nothing else.
+    flag: preboardingFlag.deriveFlag({
+      start_date: caseRow.start_date,
+      items,
+      collected_statuses: COLLECTED_STATUSES,
+    }),
     document_set_active: isDocumentSetActive(caseRow.jurisdiction),
     checklist_seeded: items.length > 0,
     items_total: items.length,
@@ -526,9 +536,36 @@ async function caseChecklist(caseId) {
   };
 }
 
+/**
+ * Everything the in-process flag watcher reads in one pass: every case with the items it carries.
+ * The watcher (preboarding-flag-scheduler.js) holds no DB rule of its own — it is handed a
+ * snapshot, and this is that snapshot. The collected-status list travels with it so the watcher
+ * cannot derive the flag by a different rule than the surface does.
+ */
+async function flagWatchSnapshot() {
+  const cases = await db.query('SELECT * FROM preboarding_cases');
+  if (cases.length === 0) return [];
+  const idList = cases.map((row) => db.escapeString(row.id)).join(', ');
+  const itemRows = await db.query(
+    `SELECT * FROM preboarding_items WHERE case_id IN (${idList}) ORDER BY rowid ASC`
+  );
+  const itemsByCase = itemRows.reduce((acc, item) => {
+    (acc[item.case_id] = acc[item.case_id] || []).push(item);
+    return acc;
+  }, {});
+  return cases.map((row) => ({
+    case_id: row.id,
+    offer_reference: row.offer_reference,
+    start_date: row.start_date,
+    items: itemsByCase[row.id] || [],
+    collected_statuses: COLLECTED_STATUSES,
+  }));
+}
+
 module.exports = {
   ITEM_STATUSES,
   COLLECTED_STATUSES,
+  flagWatchSnapshot,
   ALLOWED_TRANSITIONS,
   DOCUMENT_SETS,
   PreboardingItemError,
