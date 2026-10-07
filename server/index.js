@@ -6,6 +6,7 @@ const compliance = require('./compliance_engine');
 const auth = require('./auth');
 const eosb = require('./eosb');
 const preboarding = require('./preboarding');
+const preboardingItems = require('./preboarding-items');
 const fs = require('fs');
 
 const app = express();
@@ -611,6 +612,91 @@ app.get('/api/preboarding/cases/:id', async (req, res) => {
   } catch (err) {
     console.error('[Preboarding] Failed to read case:', err);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// -------------------------------------------------------------
+// LAYER 2 — PRE-BOARDING EMPLOYEE TRACK (P2-2: document collection)
+// -------------------------------------------------------------
+// Transport only, exactly as above: the status machine, the jurisdiction document set, the
+// reminder record and the PDPL consent gate all live in preboarding-items.js. A refusal comes
+// back with the status that module chose (400 / 404 / 409 / 428) and its reason, so the caller
+// can act on it rather than guess.
+const sendItemError = (res, err, context) => {
+  if (err instanceof preboardingItems.PreboardingItemError) {
+    return res.status(err.status).json({ error: err.message });
+  }
+  console.error(`[Preboarding] ${context}:`, err);
+  return res.status(500).json({ error: 'Internal Server Error' });
+};
+
+// The roll-up HR reads: every case with its outstanding items named, in one call.
+app.get('/api/preboarding/checklist/overview', async (req, res) => {
+  try {
+    res.json(await preboardingItems.checklistOverview({ jurisdiction: req.query.jurisdiction }));
+  } catch (err) {
+    sendItemError(res, err, 'Failed to build the checklist roll-up');
+  }
+});
+
+app.get('/api/preboarding/cases/:id/checklist', async (req, res) => {
+  try {
+    res.json(await preboardingItems.caseChecklist(req.params.id));
+  } catch (err) {
+    sendItemError(res, err, 'Failed to read the case checklist');
+  }
+});
+
+app.post('/api/preboarding/cases/:id/items/:itemKey/status', async (req, res) => {
+  try {
+    const item = await preboardingItems.setItemStatus({
+      case_id: req.params.id,
+      item_key: req.params.itemKey,
+      status: req.body && req.body.status,
+      document_reference: req.body && req.body.document_reference,
+      note: req.body && req.body.note,
+      actor: (req.user && req.user.username) || 'system',
+    });
+    res.json({ item });
+  } catch (err) {
+    sendItemError(res, err, 'Failed to move a checklist item');
+  }
+});
+
+app.post('/api/preboarding/cases/:id/reminders', async (req, res) => {
+  try {
+    const result = await preboardingItems.recordReminder({
+      case_id: req.params.id,
+      item_keys: (req.body && req.body.item_keys) || null,
+      note: req.body && req.body.note,
+      actor: (req.user && req.user.username) || 'system',
+    });
+    res.status(201).json(result);
+  } catch (err) {
+    sendItemError(res, err, 'Failed to record a reminder');
+  }
+});
+
+app.get('/api/preboarding/cases/:id/consent', async (req, res) => {
+  try {
+    res.json({ consent: await preboardingItems.getConsent(req.params.id) });
+  } catch (err) {
+    sendItemError(res, err, 'Failed to read the consent record');
+  }
+});
+
+app.post('/api/preboarding/cases/:id/consent', async (req, res) => {
+  try {
+    const result = await preboardingItems.recordConsent({
+      case_id: req.params.id,
+      consent_type: req.body && req.body.consent_type,
+      lawful_basis: req.body && req.body.lawful_basis,
+      consent_version: req.body && req.body.consent_version,
+      actor: (req.user && req.user.username) || 'system',
+    });
+    res.status(result.created ? 201 : 200).json(result);
+  } catch (err) {
+    sendItemError(res, err, 'Failed to record PDPL consent');
   }
 });
 

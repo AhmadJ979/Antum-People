@@ -191,3 +191,66 @@ CREATE TABLE IF NOT EXISTS preboarding_cases (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+-- -------------------------------------------------------------
+-- LAYER 2 — PRE-BOARDING EMPLOYEE TRACK (P2-2: document collection)
+-- -------------------------------------------------------------
+-- One row per checklist item on a case. Items are seeded from the case's jurisdiction set
+-- (server/preboarding-items.js), never typed per case, so the same role in the same
+-- jurisdiction always gets the same list. UNIQUE (case_id, item_key) is what makes seeding
+-- idempotent: a replayed offer acceptance cannot duplicate a checklist item.
+CREATE TABLE IF NOT EXISTS preboarding_items (
+  id TEXT PRIMARY KEY,
+  case_id TEXT NOT NULL,
+  item_key TEXT NOT NULL,
+  label TEXT NOT NULL,
+  category TEXT NOT NULL,
+  jurisdiction TEXT NOT NULL,
+  required INTEGER NOT NULL DEFAULT 1,
+  status TEXT NOT NULL DEFAULT 'not_started',
+  -- A reference to the document (a file name, the reference the hire quoted), never its
+  -- contents: this release has no file storage, and no personal data belongs in this column.
+  document_reference TEXT,
+  note TEXT,
+  requested_at TEXT,
+  received_at TEXT,
+  verified_at TEXT,
+  last_actor TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (case_id, item_key)
+);
+
+-- The record that HR asked for the outstanding items. The product has no delivery channel
+-- (no mailer, webhook or SMS), so this is the honest in-product record of the request — not
+-- proof that a message reached the hire. `outstanding_keys` is the snapshot the reminder
+-- covered; what is outstanding *now* is always derived from preboarding_items, never stored.
+CREATE TABLE IF NOT EXISTS preboarding_reminders (
+  id TEXT PRIMARY KEY,
+  case_id TEXT NOT NULL,
+  item_key TEXT,
+  outstanding_count INTEGER NOT NULL,
+  outstanding_keys TEXT NOT NULL,
+  channel TEXT NOT NULL DEFAULT 'in_product',
+  note TEXT,
+  created_by TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- The PDPL consent record the collection gate reads. P2-6 owns the consent lifecycle (notice
+-- versioning, withdrawal, the Arabic-first notice, the hire-facing capture); P2-2 ships only
+-- what the gate needs — does a consent record exist for this case, and on what basis. Case
+-- scoped, because a pre-boarding hire has no employee row yet.
+CREATE TABLE IF NOT EXISTS preboarding_consents (
+  id TEXT PRIMARY KEY,
+  case_id TEXT NOT NULL UNIQUE,
+  consent_type TEXT NOT NULL,
+  lawful_basis TEXT NOT NULL,
+  consent_version TEXT NOT NULL,
+  granted_at TEXT NOT NULL,
+  recorded_by TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_preboarding_items_case ON preboarding_items (case_id);
+CREATE INDEX IF NOT EXISTS idx_preboarding_reminders_case ON preboarding_reminders (case_id);

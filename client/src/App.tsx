@@ -59,6 +59,64 @@ interface PreboardingCase {
   created_at: string;
 }
 
+interface PreboardingItem {
+  id: string;
+  item_key: string;
+  label: string;
+  category: string;
+  status: 'not_started' | 'requested' | 'received' | 'verified';
+  document_reference: string | null;
+  requested_at: string | null;
+  received_at: string | null;
+  verified_at: string | null;
+}
+
+// The HR roll-up row: what is outstanding on a case, named, so HR never opens a case to find
+// out. Every figure here is computed by the server; the client renders what it is given.
+interface PreboardingChecklistRow {
+  case_id: string;
+  offer_reference: string;
+  candidate_name: string;
+  role: string;
+  department: string;
+  jurisdiction: 'AE' | 'SA';
+  start_date: string;
+  days_to_start: number | null;
+  document_set_active: boolean;
+  checklist_seeded: boolean;
+  items_total: number;
+  by_status: { not_started: number; requested: number; received: number; verified: number };
+  outstanding_count: number;
+  outstanding: { item_key: string; label: string; status: string; required: boolean }[];
+  consent_recorded: boolean;
+  consent_granted_at: string | null;
+  last_reminder_at: string | null;
+  last_reminder_count: number | null;
+}
+
+interface PreboardingOverview {
+  jurisdiction: string | null;
+  cases: PreboardingChecklistRow[];
+  totals: {
+    cases: number;
+    items: number;
+    items_outstanding: number;
+    items_received: number;
+    items_verified: number;
+    cases_without_consent: number;
+    cases_ready: number;
+  };
+}
+
+// One small button for the per-item actions; the status machine lives on the server, so the
+// client only offers the moves that are legal from where the item is.
+const ItemButton = ({ label, onClick, disabled, title }: { label: string; onClick: () => void; disabled?: boolean; title?: string }) => (
+  <button onClick={onClick} disabled={disabled} title={title}
+    className="text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">
+    {label}
+  </button>
+);
+
 interface Analytics {
   activeHeadcount: number;
   monthlyPayroll: number;
@@ -256,6 +314,12 @@ export default function App() {
   // whether that opens a case or finds the one the offer already has.
   // ---------------------------------------------------------------------------
   const [preboardingCases, setPreboardingCases] = useState<PreboardingCase[]>([]);
+  // P2-2: the employee track. The roll-up is one server call; a case's items are read only
+  // when that case is opened, so the list stays cheap however many cases there are.
+  const [checklistOverview, setChecklistOverview] = useState<PreboardingOverview | null>(null);
+  const [openCaseId, setOpenCaseId] = useState<string | null>(null);
+  const [caseChecklist, setCaseChecklist] = useState<Record<string, { items: PreboardingItem[]; consent: { granted_at: string } | null; document_set_active: boolean }>>({});
+  const [checklistNotice, setChecklistNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [casesLoading, setCasesLoading] = useState(false);
   const [offerNotice, setOfferNotice] = useState<{ kind: 'ok' | 'existing' | 'error'; text: string } | null>(null);
   const [offerForm, setOfferForm] = useState({
@@ -306,6 +370,7 @@ export default function App() {
   useEffect(() => {
     if (token && activeTab === 'preboarding') {
       fetchPreboardingCases();
+      fetchChecklistOverview();
     }
   }, [token, activeTab]);
 
@@ -397,9 +462,144 @@ export default function App() {
         setOfferNotice({ kind: 'existing', text: `Offer ${data.case.offer_reference} already had a case — nothing was created twice (case ${data.case.id.slice(0, 8)}…).` });
       }
       await fetchPreboardingCases();
+      await fetchChecklistOverview();
     } catch (err) {
       console.error('Error recording offer acceptance:', err);
       setOfferNotice({ kind: 'error', text: 'The offer could not be recorded.' });
+    }
+  };
+
+  // P2-2 — the employee track. Nothing about the checklist is decided here: the status
+  // machine, the jurisdiction document set and the PDPL consent gate all live on the server,
+  // and a refusal comes back with its own reason, which is what the notice shows.
+  const fetchChecklistOverview = async () => {
+    if (!token) return;
+    setCasesLoading(true);
+    try {
+      const res = await authedFetch(`${API_BASE}/api/preboarding/checklist/overview`);
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      const data = await res.json();
+      setChecklistOverview(data && Array.isArray(data.cases) ? data : null);
+    } catch (err) {
+      console.error('Error fetching the checklist roll-up:', err);
+    } finally {
+      setCasesLoading(false);
+    }
+  };
+
+  const fetchCaseChecklist = async (caseId: string) => {
+    if (!token) return;
+    try {
+      const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/checklist`);
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setChecklistNotice({ kind: 'error', text: data.error || `The checklist could not be read (HTTP ${res.status}).` });
+        return;
+      }
+      setCaseChecklist(prev => ({
+        ...prev,
+        [caseId]: { items: data.items, consent: data.consent, document_set_active: data.document_set_active }
+      }));
+    } catch (err) {
+      console.error('Error fetching the case checklist:', err);
+    }
+  };
+
+  const refreshPreboarding = async () => {
+    await fetchPreboardingCases();
+    await fetchChecklistOverview();
+    if (openCaseId) await fetchCaseChecklist(openCaseId);
+  };
+
+  const toggleCase = async (caseId: string) => {
+    if (openCaseId === caseId) {
+      setOpenCaseId(null);
+      return;
+    }
+    setChecklistNotice(null);
+    setOpenCaseId(caseId);
+    if (!caseChecklist[caseId]) await fetchCaseChecklist(caseId);
+  };
+
+  const handleItemStatus = async (caseId: string, itemKey: string, status: PreboardingItem['status']) => {
+    try {
+      const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/items/${itemKey}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      if (!res.ok) {
+        setChecklistNotice({ kind: 'error', text: data.error || `The item was not moved (HTTP ${res.status}).` });
+        return;
+      }
+      setChecklistNotice({ kind: 'ok', text: `${data.item.label} is now ${data.item.status.replace('_', ' ')}.` });
+      await fetchCaseChecklist(caseId);
+      await fetchChecklistOverview();
+    } catch (err) {
+      console.error('Error moving a checklist item:', err);
+      setChecklistNotice({ kind: 'error', text: 'The item could not be moved.' });
+    }
+  };
+
+  const handleRecordConsent = async (caseId: string) => {
+    try {
+      const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/consent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consent_type: 'pdpl_notice', lawful_basis: 'consent', consent_version: 'v1' })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      if (!res.ok) {
+        setChecklistNotice({ kind: 'error', text: data.error || `Consent was not recorded (HTTP ${res.status}).` });
+        return;
+      }
+      setChecklistNotice({ kind: 'ok', text: data.created ? 'PDPL consent recorded — documents can now be collected on this case.' : 'This case already had a PDPL consent record; nothing was recorded twice.' });
+      await fetchCaseChecklist(caseId);
+      await fetchChecklistOverview();
+    } catch (err) {
+      console.error('Error recording PDPL consent:', err);
+      setChecklistNotice({ kind: 'error', text: 'Consent could not be recorded.' });
+    }
+  };
+
+  const handleRemind = async (caseId: string) => {
+    try {
+      const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/reminders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      if (!res.ok) {
+        setChecklistNotice({ kind: 'error', text: data.error || `The reminder was not recorded (HTTP ${res.status}).` });
+        return;
+      }
+      setChecklistNotice({ kind: 'ok', text: `Reminder recorded against ${data.reminder.outstanding_count} outstanding item(s) — recorded in the product, not sent: there is no delivery channel yet.` });
+      await fetchCaseChecklist(caseId);
+      await fetchChecklistOverview();
+    } catch (err) {
+      console.error('Error recording a reminder:', err);
+      setChecklistNotice({ kind: 'error', text: 'The reminder could not be recorded.' });
     }
   };
 
@@ -1280,39 +1480,165 @@ export default function App() {
                 </div>
 
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="font-bold text-slate-900 text-sm">Pre-boarding cases</h4>
-                    <button onClick={fetchPreboardingCases}
+                  <div className="flex justify-between items-center mb-1">
+                    <h4 className="font-bold text-slate-900 text-sm">HR roll-up — outstanding items</h4>
+                    <button onClick={refreshPreboarding}
                       className="text-[10px] font-bold uppercase tracking-wider text-teal-700 hover:text-teal-900">
                       {casesLoading ? 'Syncing...' : 'Refresh'}
                     </button>
                   </div>
-                  {preboardingCases.length === 0 ? (
+                  <p className="text-[10px] text-slate-400 mb-4">
+                    Every case with the items still missing, named here — HR reads what is outstanding
+                    without opening a case. Open a row to work its employee track.
+                  </p>
+                  {checklistOverview && checklistOverview.cases.length > 0 && (
+                    <div className="mb-4 grid grid-cols-3 gap-2 text-center">
+                      <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                        <div className="text-lg font-extrabold text-slate-900">{checklistOverview.totals.items_outstanding}</div>
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Items outstanding</div>
+                      </div>
+                      <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                        <div className="text-lg font-extrabold text-slate-900">{checklistOverview.totals.items_verified}</div>
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Items verified</div>
+                      </div>
+                      <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                        <div className="text-lg font-extrabold text-slate-900">{checklistOverview.totals.cases_without_consent}</div>
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Without consent</div>
+                      </div>
+                    </div>
+                  )}
+                  {!checklistOverview || checklistOverview.cases.length === 0 ? (
                     <div className="p-8 text-center border border-dashed border-slate-200 rounded-xl">
                       <p className="text-xs text-slate-400">No pre-boarding cases open. Record an accepted offer to open one.</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {preboardingCases.map(c => (
-                        <div key={c.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="text-sm font-bold text-slate-900">{c.candidate_name}</div>
-                              <div className="text-[11px] text-slate-500">{c.role} · {c.department}</div>
-                            </div>
-                            <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase border ${c.jurisdiction === 'AE' ? 'bg-teal-50 text-teal-700 border-teal-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                              {c.jurisdiction === 'AE' ? 'UAE' : 'KSA'}
-                            </span>
+                      {checklistOverview.cases.map(row => {
+                        const open = openCaseId === row.case_id;
+                        const detail = caseChecklist[row.case_id];
+                        return (
+                          <div key={row.case_id} className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+                            <button onClick={() => toggleCase(row.case_id)} className="w-full text-left p-4">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <div className="text-sm font-bold text-slate-900">{row.candidate_name}</div>
+                                  <div className="text-[11px] text-slate-500">{row.role} · {row.department}</div>
+                                </div>
+                                <div className="flex items-center space-x-2 shrink-0">
+                                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase border ${row.jurisdiction === 'AE' ? 'bg-teal-50 text-teal-700 border-teal-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                                    {row.jurisdiction === 'AE' ? 'UAE' : 'KSA'}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-slate-400">{open ? 'Close' : 'Open'}</span>
+                                </div>
+                              </div>
+                              <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+                                <div>
+                                  <span className="text-slate-400">Start:</span> {row.start_date}
+                                  {row.days_to_start !== null && <span className="text-slate-400"> · {row.days_to_start} d</span>}
+                                </div>
+                                <div>
+                                  <span className="text-slate-400">Verified:</span> {row.by_status.verified}/{row.items_total} ·{' '}
+                                  <span className={row.outstanding_count > 0 ? 'text-rose-600 font-semibold' : 'text-teal-700 font-semibold'}>
+                                    {row.outstanding_count} outstanding
+                                  </span>
+                                </div>
+                              </div>
+                              {row.outstanding.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                  {row.outstanding.map(item => (
+                                    <span key={item.item_key} className="px-2 py-0.5 bg-white border border-slate-200 rounded-full text-[10px] text-slate-600">
+                                      {item.label} · {item.status.replace('_', ' ')}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              {!row.consent_recorded && (
+                                <div className="mt-2 text-[10px] text-amber-700 font-medium">
+                                  No PDPL consent record — no document can be collected on this case yet.
+                                </div>
+                              )}
+                              {row.last_reminder_at && (
+                                <div className="mt-1 text-[10px] text-slate-400 font-mono">
+                                  reminder recorded {row.last_reminder_at} · {row.last_reminder_count} item(s)
+                                </div>
+                              )}
+                              <div className="mt-2 text-[10px] text-slate-400 font-mono">{row.offer_reference}</div>
+                            </button>
+                            {open && (
+                              <div className="border-t border-slate-200 p-4 bg-white space-y-3">
+                                {!detail ? (
+                                  <p className="text-[11px] text-slate-400">Reading the checklist…</p>
+                                ) : (
+                                  <>
+                                    <div className="flex justify-between items-center">
+                                      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                        Employee track
+                                        {!detail.document_set_active && <span className="text-amber-700 normal-case tracking-normal"> · set not active in this release</span>}
+                                      </div>
+                                      {detail.consent ? (
+                                        <span className="text-[10px] text-teal-700 font-semibold">PDPL consent recorded</span>
+                                      ) : (
+                                        <button onClick={() => handleRecordConsent(row.case_id)}
+                                          className="text-[10px] font-bold px-2 py-1 bg-slate-900 text-white rounded-lg">
+                                          Record PDPL consent
+                                        </button>
+                                      )}
+                                    </div>
+                                    <div className="space-y-2">
+                                      {detail.items.map(item => (
+                                        <div key={item.item_key} className="flex justify-between items-center p-2 rounded-lg border border-slate-100">
+                                          <div>
+                                            <div className="text-[11px] font-semibold text-slate-800">{item.label}</div>
+                                            <div className="text-[10px] text-slate-400">
+                                              {item.category} · {item.status.replace('_', ' ')}
+                                              {item.document_reference ? ` · ${item.document_reference}` : ''}
+                                            </div>
+                                          </div>
+                                          <div className="flex space-x-1 shrink-0">
+                                            {item.status === 'not_started' && (
+                                              <ItemButton label="Request" onClick={() => handleItemStatus(row.case_id, item.item_key, 'requested')} />
+                                            )}
+                                            {item.status === 'requested' && (
+                                              <>
+                                                <ItemButton label="Mark received" disabled={!detail.consent}
+                                                  title={!detail.consent ? 'A document cannot be collected before the PDPL consent record exists' : undefined}
+                                                  onClick={() => handleItemStatus(row.case_id, item.item_key, 'received')} />
+                                                <ItemButton label="Cancel" onClick={() => handleItemStatus(row.case_id, item.item_key, 'not_started')} />
+                                              </>
+                                            )}
+                                            {item.status === 'received' && (
+                                              <>
+                                                <ItemButton label="Verify" onClick={() => handleItemStatus(row.case_id, item.item_key, 'verified')} />
+                                                <ItemButton label="Send back" onClick={() => handleItemStatus(row.case_id, item.item_key, 'requested')} />
+                                              </>
+                                            )}
+                                            {item.status === 'verified' && (
+                                              <span className="text-[10px] font-bold text-teal-700 px-2 py-1">verified</span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <button onClick={() => handleRemind(row.case_id)} disabled={row.outstanding_count === 0}
+                                      className="w-full text-[10px] font-bold px-3 py-2 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-40">
+                                      Record a reminder for {row.outstanding_count} outstanding item(s)
+                                    </button>
+                                    <p className="text-[9px] text-slate-400">
+                                      A reminder is recorded in the product. There is no mailer, webhook or SMS yet, so nothing
+                                      is sent to the hire — the delivery channel is a separate decision.
+                                    </p>
+                                  </>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
-                            <div><span className="text-slate-400">Start date:</span> {c.start_date}</div>
-                            <div><span className="text-slate-400">Reports to:</span> {c.reporting_line}</div>
-                          </div>
-                          <div className="mt-2 text-[10px] text-slate-400 font-mono">
-                            {c.offer_reference} · opened via {c.source.replace('_', ' ')}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
+                    </div>
+                  )}
+                  {checklistNotice && (
+                    <div className={`mt-4 p-3 rounded-xl text-xs font-medium border ${checklistNotice.kind === 'ok' ? 'bg-teal-50 border-teal-200 text-teal-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+                      {checklistNotice.text}
                     </div>
                   )}
                 </div>

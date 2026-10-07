@@ -26,6 +26,7 @@
 
 const { randomUUID } = require('crypto');
 const db = require('./db');
+const items = require('./preboarding-items');
 
 // A real field, not a UAE constant: launch is UAE-first, KSA stays in the engine.
 const SUPPORTED_JURISDICTIONS = ['AE', 'SA'];
@@ -156,6 +157,10 @@ async function recordOfferAcceptance(payload, options = {}) {
   }
 
   const created = await findByOfferReference(claim.offer_reference);
+  // The employee track (P2-2) arrives with the case: the checklist is seeded from the case's
+  // jurisdiction set here, on the same single creation path, so no case exists without one.
+  // Seeding is idempotent (UNIQUE case_id+item_key), so it cannot duplicate on a replay.
+  const checklist = await items.seedItemsForCase(created);
   await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, new_values, timestamp)
     VALUES (${db.escapeString(randomUUID())}, ${db.escapeString(actor)}, 'preboarding_case',
       ${db.escapeString(created.id)}, 'CREATE',
@@ -169,7 +174,7 @@ async function recordOfferAcceptance(payload, options = {}) {
         source: created.source,
       }))}, CURRENT_TIMESTAMP)`);
 
-  return { case: created, created: true };
+  return { case: created, created: true, checklist_items: checklist.length };
 }
 
 module.exports = {
