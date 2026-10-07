@@ -1,16 +1,23 @@
 # Antum People — Layer 2 Pre-boarding: the HR working surface
 
-> **Status: design only — nothing in this document is built, shipped or live.** It is the spec
-> for **P2-2** (employee-track document collection) and **P2-4** (workspace-track provisioning
-> checklist), plus the surfaces of **P2-5** (the derived 48-hour flag) and **P2-6** (EN/AR and
-> PDPL consent). **P2-1** — the offer-acceptance trigger and the single case-creation path —
+> **Status: every screen here is still design — and P2-2 has now built a first cut of it.**
+> **P2-2 landed on `main` as PR #70 (`5ed731e`, 2026-10-07):** the per-case checklist, the AE and SA
+> item sets, the status machine, the PDPL consent gate, an in-product reminder record, an HR
+> roll-up, and the document-byte boundary. **Before quoting §§2–3 as a description of the product,
+> read `design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md`** — it states, with citations, what is
+> built and where the build differs from this design. It is the spec for **P2-2** (employee-track
+> document collection) and **P2-4** (workspace-track provisioning checklist), plus the surfaces of
+> **P2-5** (the derived 48-hour flag) and **P2-6** (EN/AR and PDPL consent). **P2-1** — the
+> offer-acceptance trigger and the single case-creation path —
 > **landed on `main` as PR #66 (2026-10-07)** and is **out of scope here**: this spec consumes the
 > case model, it does not define it. P2-1's own tab is reviewed against this spec in
 > `design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md`.
 >
 > **Grounded on:** `client/src/App.tsx`, `server/schema.sql`, `server/preboarding.js` and
 > `server/index.js` on `main` at **`34fdd63`** (first read 2026-10-06) and **re-grounded on `main`
-> at `75e3ff2`** — the merge of PR #66 — on 2026-10-07. Also read:
+> at `75e3ff2`** — the merge of PR #66 — on 2026-10-07, and `server/preboarding-items.js` and
+> `server/document-store.js` were read on `main` at **`5ed731e`** — the merge of PR #70 — the same
+> day. Also read:
 > `design-concepts/BRAND-IDENTITY.md` (palette, type), `design-concepts/USER-JOURNEY-MAPS.md`
 > (Stage 1 — Pre-Arrival, Days −14 to −1), `design-concepts/DASHBOARD-WIREFRAMES.md` (wireframe
 > house style).
@@ -19,7 +26,8 @@
 > it from the anchors this file leans on —
 > `grep -n "id: 'dashboard'" client/src/App.tsx` (the nav) ·
 > `grep -n "^CREATE TABLE" server/schema.sql` (the tables) ·
-> `grep -n "api/preboarding" server/index.js` (the Layer 2 case routes). When PR #66 landed
+> `grep -n "api/preboarding" server/index.js` (the Layer 2 case routes) ·
+> `grep -n "documentSetFor" server/preboarding-items.js` (the item sets). When PR #66 landed
 > `App.tsx` grew by 245 lines and every `App.tsx:` citation in this file had to be re-read, which
 > is why this note now names the revision it was read at.
 >
@@ -38,20 +46,23 @@
 
 This is the honest starting point. Every line below was read in the repo, not assumed. The table
 was **re-read on `main` at `75e3ff2`** (2026-10-07), after P2-1 landed; where a line number moved
-since the first reading, the re-read number is the one shown.
+since the first reading, the re-read number is the one shown. **P2-2 then landed (`5ed731e`) and
+changed some of these answers** — each row it changed says so in place and points at
+`LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §2 for the current state, so this table is not read as if it
+were still today's.
 
 | Thing the Layer 2 surface needs | What exists today | Where |
 |---|---|---|
-| A place to live in the nav | **Five** tabs, since P2-1: **Executive Dashboard, Employee Directory, Transitions Hub, Pre-boarding, Strategic Intelligence** | `App.tsx:628`–`:632`; tab state `:199` |
+| A place to live in the nav | **Five** tabs: **Executive Dashboard, Employee Directory, Transitions Hub, Pre-boarding, Strategic Intelligence**. **Changed by P2-2:** the tabs are one list now, read by both the sidebar and the breadcrumb | `App.tsx:115`–`:125` (`NAV_ITEMS`, `navLabel`); tab state `:272` |
 | A case to hang every item on | `preboarding_cases(id, offer_reference UNIQUE, candidate_name, candidate_email, role, department, reporting_line, jurisdiction, start_date, status, source, offered_at, created_by, created_at, updated_at)` — **exists since P2-1**; on `main`, **not deployed** | `schema.sql:177`–`:193` |
 | One case-creation path, not two | `recordOfferAcceptance` is the only writer (idempotent on `offer_reference`); `POST /api/preboarding/cases` reaches it, `GET` list and `GET :id` read it back | `server/preboarding.js:119`, `:97`, `:104`; `server/index.js:580`, `:597`, `:606` |
-| A Layer 2 tab to extend | The tab exists — an intake form and a case list, house-styled | `App.tsx:1184`–`:1321` |
+| A Layer 2 tab to extend | The tab exists — an intake form and a case list, house-styled | `App.tsx:1184`–`:1321`. **Changed by P2-2:** the tab is now the intake form plus an "HR roll-up — outstanding items" panel, in `App.tsx:1397`–`:1650`; the old range is gone |
 | A checklist item that can carry an **owner** | `interface Task` has `id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone` — **no owner, no track, no Arabic text** | `App.tsx:32`–`:41` |
 | The same, in storage | `onboarding_tasks(id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone, created_at)` — **no owner, no track, no function** | `schema.sql:43`–`:55` |
-| **Any item at all, attached to a case** | **Nothing.** P2-1 records the *case* — there is no item table and no per-item state yet, which is what §3, §5 and §6 are waiting on | — |
-| A consent record to gate documents on | `consent_records(id, employee_id, consent_type, status, consent_date, ip_address, lawful_basis, granted_at, revoked_at, consent_version)`, plus `employees.consent_granted` / `consent_date` | `schema.sql:93`–`:105`, `App.tsx:23` |
+| **Any item at all, attached to a case** | **Built by P2-2:** `preboarding_items(id, case_id, item_key, label, category, jurisdiction, required, status, document_reference, note, requested_at, received_at, verified_at, last_actor, …)`, `UNIQUE (case_id, item_key)`. The AE set is 7 items, the SA set 6 and inactive this release. **Still absent: owner, due date, track** — so §3's per-item owner and due date, and §6's track split, are still waiting | `schema.sql:202`–`:227`; `server/preboarding-items.js:64`–`84` |
+| A consent record to gate documents on | `consent_records(id, employee_id, …)` for *employees*, plus `employees.consent_granted` / `consent_date` — and, **added by P2-2**, `preboarding_consents(case_id UNIQUE, consent_type, lawful_basis, consent_version, granted_at, recorded_by)` for the *case*, which is the one this surface gates collection on (refused **428** without it) | `schema.sql:93`–`:105`, `:244`–`:255`; `server/preboarding-items.js:195` |
 | Per-function identity ("IT sees only its own lines") | `users(id, username, password_hash, role, created_at)` exists, but the product seeds **one shared account** — no per-user login to scope a view by | `schema.sql:165`–`:171` |
-| Somewhere to put a collected document | **Nothing.** No `documents` table, no file storage, no upload surface | — |
+| Somewhere to put a collected document | **Nothing — and now deliberately so.** P2-2 records a short `document_reference` (a file name, or the reference HR quoted) and refuses the bytes: `server/document-store.js` throws **501** behind `saveDocument`/`readDocument`, names `ANTUM_DOCUMENT_STORE` as the one door, and lists four candidate stores for the owner's decision | `server/document-store.js` |
 | A record of an acknowledgement (JD, NDA) | **Nothing.** `consent_records` is a consent record, not an acknowledgement record | — |
 | Bilingual / RTL rendering | **No i18n layer in the client.** The bilingual reference is the AR prototype and the EN/AR mockups | `design-concepts/intelligence-dashboard-prototype.html`, `intelligence-dashboard-{ar,en}-mockup.png` |
 | A way to notify anyone | **No delivery channel** — no mailer, webhook or SMS anywhere in the product | plan, Gate 2 decision (2026-10-06) |
@@ -99,6 +110,13 @@ anatomy below stays identical.
 **Purpose (this is P2-2's acceptance criterion, not a nice-to-have):** HR sees **every live case
 without opening one**. If a fact needs a click to discover, it belongs on this row.
 
+**Demo data — decided by the owner, 2026-10-07:** the demo **will** carry **three seeded
+pre-boarding cases**, one per flag state, as seed data only, with the "Sample Demo Data" badge
+intact and no real-person PII. The states must arise **by construction** from the seeded dates and
+item statuses — the 48-hour flag stays *derived* and is never stored. The board task is `[L2 seed]`
+(`86749e1f`); the sequencing consequence (no derivation exists in code yet, so seed data alone
+cannot make three *states* appear) is stated in `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §4.
+
 **Scoping — decided by the owner, 2026-10-07:** the list call passes the header's **active
 jurisdiction (AE by default)**, so a UAE-header surface never shows a KSA case — the rule the roster
 and the dashboard already follow, and the same defect class as the settlement header still reading
@@ -142,7 +160,7 @@ F1.)
 │  └────────────────────────────────────────────────────────────────────────────────────┘    │
 │                                                                                            │
 │  Mock reference time: 2026-10-14 09:00 (GST). Row contents are invented placeholders for   │
-│  layout only — do not seed them. The counts shown ("6 of 9", "4 of 6") are placeholder     │
+│  layout only — not seeded. The counts shown ("6 of 9", "4 of 6") are placeholder           │
 │  magnitudes so the rows have a shape; they are not the specified checklist lengths.        │
 └──────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -437,10 +455,17 @@ gate the *first* thing on the employee track, not a checkbox buried in a setting
 
 ## 10. Open questions for the owner — asked, not answered
 
-**Status, 2026-10-07:** three of these are in front of the owner — **Q1** (whether the demo carries
-seeded pre-boarding cases), **Q4** (per-user accounts) and **Q5** (document storage, which is
-blocking P2-2's acceptance criteria). Nothing in §2–§8 changes for Q2, Q3, Q6 or Q7; the answers to
-Q1, Q4 and Q5 will be recorded here rather than left implicit.
+**Status, 2026-10-07 — updated after P2-2 landed and the owner answered:**
+**Q1 is answered:** the owner decided the demo **carries three seeded pre-boarding cases**, one per
+flag state (board task `[L2 seed]`, `86749e1f`). **Q2 is answered with it:** the three states come
+from the seeded dates and item statuses, and the flag stays *derived* — nothing stores a state.
+**Q5 is answered to a boundary:** no store was chosen; `server/document-store.js` refuses document
+bytes with **501** behind one interface and names four candidate stores for the owner.
+**Q4 (per-user accounts) is still in front of the owner.** Q3, Q6 and Q7 are unchanged and block
+nothing today.
+**One consequence of Q1 the sequence has to face:** no state is derived in code yet (§5 is not
+built), so seed data alone can make the underlying facts true but cannot make three *states* appear
+on the screen — see `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §4.
 
 1. **Can the working list show enough cases to be credible?** With one live case the surface
    cannot demonstrate a list, the ordering rule, or the three flag states. This is the same
@@ -499,5 +524,7 @@ Q1, Q4 and Q5 will be recorded here rather than left implicit.
 *Product Designer — 2026-10-06. Written against `origin/main` at `34fdd63`; **re-grounded
 2026-10-07 on `main` at `75e3ff2`** (the merge of PR #66), which is what the line numbers now
 name. Amended 2026-10-07 with the owner's scoping decision (§2 S1: scope the list, keep the row
-chip; §3 S2: the case's own jurisdiction in the detail header) and §10's status. Screens are design,
+chip; §3 S2: the case's own jurisdiction in the detail header) and §10's status. **Amended again
+2026-10-07 after P2-2 landed (PR #70, `5ed731e`)** — the §0 rows P2-2 changed are marked in place,
+and `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` carries the build-vs-design deltas. Screens are design,
 not build.*
