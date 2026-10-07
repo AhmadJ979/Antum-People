@@ -145,10 +145,19 @@ const NAV_ITEMS = [
 /** A tab's own name, from the one list that defines the tabs. */
 const navLabel = (id: string) => (NAV_ITEMS.find(item => item.id === id) || { label: id }).label;
 
-// The relative-day copy, in one place (§ "Relative time" in LAYER2-PREBOARDING-UI.md): the whole
-// day count is derived at read time, and a negative is never printed bare — `-1 d` is an input,
-// not a message. A started case reads "started 1 d ago"; a future one is unchanged, "14 d".
-const relDays = (days: number) => (days < 0 ? `started ${Math.abs(days)} d ago` : `${days} d`);
+// The row's distance-to-start reading — lead ruling, 2026-10-07: the row renders the SAME
+// derivation as the chip, never a second computation, so two numbers on one row can never
+// disagree. clear/not raised -> whole days ("14 d"); inside 48 hours -> hours to one decimal, the
+// wording the flag panel already uses; started -> "started 1 d ago" (absolute, never negative).
+// The abs() guard also covers a passed start date whose items are all complete: that case reads
+// `clear` (it is not overdue), and §5.1 item 2 still forbids a bare negative day count on any surface.
+const relDays = (flag: PreboardingFlag): string | null => {
+  if (flag.days_to_start === null) return null;
+  if (flag.state === 'inside_48_hours' && flag.hours_to_start !== null)
+    return `${Math.round(flag.hours_to_start * 10) / 10} h before 00:00 on the start date`;
+  if (flag.days_to_start < 0) return `started ${Math.abs(flag.days_to_start)} d ago`;
+  return `${flag.days_to_start} d`;
+};
 
 // One small button for the per-item actions; the status machine lives on the server, so the
 // client only offers the moves that are legal from where the item is.
@@ -1569,6 +1578,7 @@ export default function App() {
                   ) : (
                     <div className="space-y-3">
                       {checklistOverview.cases.map(row => {
+                        const rowDistance = relDays(row.flag);
                         const open = openCaseId === row.case_id;
                         const detail = caseChecklist[row.case_id];
                         return (
@@ -1598,7 +1608,7 @@ export default function App() {
                               <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
                                 <div>
                                   <span className="text-slate-400">Start:</span> {row.start_date}
-                                  {row.days_to_start !== null && <span className="text-slate-400"> · {relDays(row.days_to_start)}</span>}
+                                  {rowDistance !== null && <span className="text-slate-400"> · {rowDistance}</span>}
                                 </div>
                                 <div>
                                   <span className="text-slate-400">Verified:</span> {row.by_status.verified}/{row.items_total} ·{' '}
