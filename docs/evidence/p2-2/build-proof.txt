@@ -1,11 +1,32 @@
-# P2-2 build proof — 2026-10-07T12:56:24Z
-# tree: 52c909f456d7cf4b15ab399ba1ec9f20b78af233 ;
-$ npx tsc -b
-tsc -b exit 0
+# P2-2 build proof — 2026-10-07T12:58:48Z
+# repo tree under test: 2cbdc98b541d53103991d2c6dcce68f4a1dc48b1
+# covers: the whole working tree at that commit — the client type-check and the client bundle
+
+$ npx tsc -b --force --verbose
+12:58:48 PM - Projects in this build: 
+    * tsconfig.app.json
+    * tsconfig.node.json
+    * tsconfig.json
+
+12:58:48 PM - Project 'tsconfig.app.json' is being forcibly rebuilt
+
+12:58:48 PM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.app.json'...
+
+12:58:50 PM - Project 'tsconfig.node.json' is being forcibly rebuilt
+
+12:58:50 PM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.node.json'...
+
+tsc -b exit code: 0
+
 $ npx vite build
+[2Ktransforming...✓ 16 modules transformed.
+rendering chunks...
+computing gzip size...
 dist/index.html                   0.46 kB │ gzip:  0.29 kB
 dist/assets/index-x1-nE6It.css   34.72 kB │ gzip:  6.75 kB
 dist/assets/index-Cwq9dzzZ.js   258.64 kB │ gzip: 72.81 kB
 
-[32m✓ built in 284ms[39m
-vite build exit 0
+[32m✓ built in 283ms[39m
+vite build exit code: 0
+
+# live deployment left untouched — port 3000 now: 200
