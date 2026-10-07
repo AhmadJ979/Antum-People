@@ -95,10 +95,24 @@ async function findByOfferReference(offerReference) {
   return rows[0] || null;
 }
 
+// The statuses a case can carry. Only 'open' is written by the product today; 'closed' is what
+// a finished case will be. The filter names the values it accepts instead of passing anything
+// through, because a caller asking for a status nobody writes must not be told "no cases".
+const CASE_STATUSES = ['open', 'closed'];
+
 async function listCases(options = {}) {
-  const where = options.jurisdiction
-    ? ` WHERE jurisdiction = ${db.escapeString(String(options.jurisdiction).toUpperCase())}`
-    : '';
+  const conditions = [];
+  if (options.jurisdiction) {
+    conditions.push(`jurisdiction = ${db.escapeString(String(options.jurisdiction).toUpperCase())}`);
+  }
+  if (options.status !== undefined && options.status !== null && options.status !== '') {
+    const status = String(options.status).toLowerCase();
+    if (CASE_STATUSES.indexOf(status) === -1) {
+      throw new OfferAcceptanceError(`status must be one of ${CASE_STATUSES.join(', ')}`, 400);
+    }
+    conditions.push(`status = ${db.escapeString(status)}`);
+  }
+  const where = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : '';
   return db.query(`${SELECT_CASE}${where} ORDER BY start_date ASC, created_at ASC`);
 }
 
@@ -179,6 +193,7 @@ async function recordOfferAcceptance(payload, options = {}) {
 
 module.exports = {
   SUPPORTED_JURISDICTIONS,
+  CASE_STATUSES,
   OfferAcceptanceError,
   normaliseOfferAcceptance,
   recordOfferAcceptance,

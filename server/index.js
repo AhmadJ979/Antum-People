@@ -595,11 +595,21 @@ app.post('/api/preboarding/cases', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+// The endpoint's own contract: `?jurisdiction=` (the client sends the header's active
+// jurisdiction, UAE-first) and `?status=` (the screen's tile is labelled "Cases open", so the
+// client asks for the open ones — the number and the label cannot disagree). An unknown status
+// is a 400, never a filter that quietly matches nothing.
 app.get('/api/preboarding/cases', async (req, res) => {
   try {
-    const cases = await preboarding.listCases({ jurisdiction: req.query.jurisdiction });
+    const cases = await preboarding.listCases({
+      jurisdiction: req.query.jurisdiction,
+      status: req.query.status,
+    });
     res.json(cases);
   } catch (err) {
+    if (err instanceof preboarding.OfferAcceptanceError) {
+      return res.status(err.status).json({ error: err.message });
+    }
     console.error('[Preboarding] Failed to list cases:', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }

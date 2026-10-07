@@ -108,6 +108,21 @@ interface PreboardingOverview {
   };
 }
 
+// The navigation, hoisted out of the JSX so the sidebar and the breadcrumb read the SAME
+// label. The breadcrumb used to render `${activeTab} Panel`, which printed "Preboarding Panel"
+// for a nav entry labelled "Pre-boarding" — the same defect class as a header that names one
+// jurisdiction while showing another.
+const NAV_ITEMS = [
+  { id: 'dashboard', label: 'Executive Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
+  { id: 'employees', label: 'Employee Directory', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+  { id: 'transitions', label: 'Transitions Hub', icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' },
+  { id: 'preboarding', label: 'Pre-boarding', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+  { id: 'analytics', label: 'Strategic Intelligence', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' }
+];
+
+/** A tab's own name, from the one list that defines the tabs. */
+const navLabel = (id: string) => (NAV_ITEMS.find(item => item.id === id) || { label: id }).label;
+
 // One small button for the per-item actions; the status machine lives on the server, so the
 // client only offers the moves that are legal from where the item is.
 const ItemButton = ({ label, onClick, disabled, title }: { label: string; onClick: () => void; disabled?: boolean; title?: string }) => (
@@ -372,7 +387,7 @@ export default function App() {
       fetchPreboardingCases();
       fetchChecklistOverview();
     }
-  }, [token, activeTab]);
+  }, [token, activeTab, jurisdiction]);
 
   const fetchData = async () => {
     if (!token) return;
@@ -417,7 +432,11 @@ export default function App() {
     if (!token) return;
     setCasesLoading(true);
     try {
-      const res = await authedFetch(`${API_BASE}/api/preboarding/cases`);
+      // Owner decision 2026-10-07: the list follows the header's active jurisdiction — the
+      // same state the roster and the dashboard pass, not a second mechanism — and it asks
+      // for the cases its tile counts. The tile is labelled "Cases open", so the endpoint is
+      // asked for open cases; the count and the label can no longer disagree.
+      const res = await authedFetch(`${API_BASE}/api/preboarding/cases?jurisdiction=${jurisdiction}&status=open`);
       if (res.status === 401) {
         handleLogout();
         return;
@@ -824,13 +843,7 @@ export default function App() {
             </div>
           </div>
           <nav className="p-4 space-y-2">
-            {[
-              { id: 'dashboard', label: 'Executive Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
-              { id: 'employees', label: 'Employee Directory', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
-              { id: 'transitions', label: 'Transitions Hub', icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' },
-              { id: 'preboarding', label: 'Pre-boarding', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-              { id: 'analytics', label: 'Strategic Intelligence', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' }
-            ].map(item => (
+            {NAV_ITEMS.map(item => (
               <button
                 key={item.id}
                 onClick={() => { setActiveTab(item.id as any); }}
@@ -854,7 +867,7 @@ export default function App() {
         {/* Header */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm">
           <div className="flex items-center space-x-2 text-slate-500">
-            <span className="font-semibold text-slate-800 capitalize">{activeTab} Panel</span>
+            <span className="font-semibold text-slate-800">{navLabel(activeTab)}</span>
             <span>/</span>
             <span className="text-xs font-mono text-teal-500">GCC Intelligence Tier</span>
             <span className="ml-4 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded uppercase border border-amber-200">Sample Demo Data</span>
@@ -1576,7 +1589,7 @@ export default function App() {
                                         {!detail.document_set_active && <span className="text-amber-700 normal-case tracking-normal"> · set not active in this release</span>}
                                       </div>
                                       {detail.consent ? (
-                                        <span className="text-[10px] text-teal-700 font-semibold">PDPL consent recorded</span>
+                                        <span className="text-[10px] text-teal-700 font-semibold">PDPL consent recorded {detail.consent.granted_at}</span>
                                       ) : (
                                         <button onClick={() => handleRecordConsent(row.case_id)}
                                           className="text-[10px] font-bold px-2 py-1 bg-slate-900 text-white rounded-lg">

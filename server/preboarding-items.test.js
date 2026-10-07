@@ -405,3 +405,65 @@ describe('P2-2 · what the audit trail records, and what it never records', () =
     assert.strictEqual(otherCase.status, 'not_started');
   });
 });
+
+// ---------------------------------------------------------------------------
+// The tile and the list agree on what "open" means (lead's fix, 2026-10-07), and the
+// document-byte boundary refuses to store anything until a store is chosen (spec §9 D5).
+// ---------------------------------------------------------------------------
+const documentStore = require('./document-store');
+
+describe('P2-2 · the tile is labelled "Cases open", so the list is asked for open cases', () => {
+  test('a closed case is out of the open list and still in the unfiltered one', async () => {
+    const closedOne = await openCase({ offer_reference: 'OFR-2026-125' });
+    await db.query(
+      `UPDATE preboarding_cases SET status = 'closed' WHERE id = ${db.escapeString(closedOne.id)}`
+    );
+
+    const all = await preboarding.listCases();
+    const open = await preboarding.listCases({ status: 'open' });
+
+    assert.ok(all.some((row) => row.id === closedOne.id), 'the unfiltered list still carries it');
+    assert.ok(!open.some((row) => row.id === closedOne.id), 'the open list does not');
+    assert.ok(open.every((row) => row.status === 'open'));
+
+    await db.query(
+      `UPDATE preboarding_cases SET status = 'open' WHERE id = ${db.escapeString(closedOne.id)}`
+    );
+  });
+
+  test('an unknown status is a 400, not a filter that quietly matches nothing', async () => {
+    await assert.rejects(
+      () => preboarding.listCases({ status: 'archived' }),
+      (err) => err instanceof preboarding.OfferAcceptanceError
+        && err.status === 400
+        && /open, closed/.test(err.message)
+    );
+  });
+
+  test('jurisdiction and status combine in one query', async () => {
+    const rows = await preboarding.listCases({ jurisdiction: 'AE', status: 'open' });
+    assert.ok(rows.every((row) => row.jurisdiction === 'AE' && row.status === 'open'));
+  });
+});
+
+describe('P2-2 · no document bytes are stored, and the boundary says so', () => {
+  test('no store is configured, and it refuses rather than choosing a place for the bytes', async () => {
+    assert.strictEqual(documentStore.isConfigured(), false, 'no store has been chosen');
+    await assert.rejects(
+      () => documentStore.saveDocument({ case_id: 'any', item_key: 'passport', bytes: 'x' }),
+      (err) => err instanceof documentStore.DocumentStoreNotConfiguredError && err.status === 501
+    );
+    await assert.rejects(
+      () => documentStore.readDocument(),
+      (err) => err.status === 501 && /nothing has been stored/.test(err.message)
+    );
+  });
+
+  test('an item has a reference, and no column can hold a document body', async () => {
+    const columns = (await db.query('PRAGMA table_info(preboarding_items)')).map((c) => c.name);
+    assert.ok(columns.includes('document_reference'), 'the reference is where HR names the document');
+    for (const forbidden of ['document_bytes', 'document_body', 'file_data', 'content']) {
+      assert.ok(!columns.includes(forbidden), `${forbidden} would mean a store had been chosen`);
+    }
+  });
+});
