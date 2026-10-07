@@ -62,7 +62,7 @@ were still today's.
 | **Any item at all, attached to a case** | **Built by P2-2:** `preboarding_items(id, case_id, item_key, label, category, jurisdiction, required, status, document_reference, note, requested_at, received_at, verified_at, last_actor, …)`, `UNIQUE (case_id, item_key)`. The AE set is 7 items, the SA set 6 and inactive this release. **Still absent: owner, due date, track** — so §3's per-item owner and due date, and §6's track split, are still waiting | `schema.sql:202`–`:227`; `server/preboarding-items.js:64`–`84` |
 | A consent record to gate documents on | `consent_records(id, employee_id, …)` for *employees*, plus `employees.consent_granted` / `consent_date` — and, **added by P2-2**, `preboarding_consents(case_id UNIQUE, consent_type, lawful_basis, consent_version, granted_at, recorded_by)` for the *case*, which is the one this surface gates collection on (refused **428** without it) | `schema.sql:93`–`:105`, `:244`–`:255`; `server/preboarding-items.js:195` |
 | Per-function identity ("IT sees only its own lines") | `users(id, username, password_hash, role, created_at)` exists, but the product seeds **one shared account** — no per-user login to scope a view by | `schema.sql:165`–`:171` |
-| Somewhere to put a collected document | **Nothing — and now deliberately so.** P2-2 records a short `document_reference` (a file name, or the reference HR quoted) and refuses the bytes: `server/document-store.js` throws **501** behind `saveDocument`/`readDocument`, names `ANTUM_DOCUMENT_STORE` as the one door, and lists four candidate stores for the owner's decision | `server/document-store.js` |
+| Somewhere to put a collected document | **Nothing — deliberately, and now by the owner's decision.** P2-2 records a short `document_reference` (a file name, or the reference HR quoted) and refuses the bytes: `server/document-store.js` throws **501** behind `saveDocument`/`readDocument` and names `ANTUM_DOCUMENT_STORE` as the one door. **The owner decided the shape on 2026-10-07: Option D ships now — reference string only, no bytes — and Option C (an S3-compatible object store) is built when the entity is registered; IFZA registration is the gate, an event rather than a date. No real document bytes before it.** The pointer is therefore the personal data: the item says *which* document, whose, when recorded and where it lives, and the content stays where HR already keeps it | `server/document-store.js`; spec §10 Q5 |
 | A record of an acknowledgement (JD, NDA) | **Nothing.** `consent_records` is a consent record, not an acknowledgement record | — |
 | Bilingual / RTL rendering | **No i18n layer in the client.** The bilingual reference is the AR prototype and the EN/AR mockups | `design-concepts/intelligence-dashboard-prototype.html`, `intelligence-dashboard-{ar,en}-mockup.png` |
 | A way to notify anyone | **No delivery channel** — no mailer, webhook or SMS anywhere in the product | plan, Gate 2 decision (2026-10-06) |
@@ -121,10 +121,11 @@ cannot make three *states* appear) is stated in `LAYER2-P2-2-IMPLEMENTATION-NOTE
 jurisdiction (AE by default)**, so a UAE-header surface never shows a KSA case — the rule the roster
 and the dashboard already follow, and the same defect class as the settlement header still reading
 "UAE / KSA". **The row's jurisdiction chip stays**, also the owner's call: it is the case's own
-recorded value, and on a scoped list it will normally repeat the header's. The row anatomy below
+recorded value, and on a scoped list it will normally repeat the header's. **He decided this knowing
+it is redundant under scoping** — he was told in those words and kept it, so the repetition is his
+choice, not a defect for a reviewer to re-open, and revisiting it is his call. The row anatomy below
 therefore lists it as a field, and S2 shows the same value on the case itself (§3) — the reader
-never has to infer a case's jurisdiction from the header's switch. The code change lands in the P2-2
-PR, not here. (The P2-1 build, shipped before this decision, already renders the chip; what is
+never has to infer a case's jurisdiction from the header's switch. The code change **landed in the P2-2 PR (PR #70, `5ed731e`)**, not here. (The P2-1 build, shipped before this decision, already renders the chip; what is
 missing is the jurisdiction argument on the list call — see `LAYER2-P2-1-IMPLEMENTATION-REVIEW.md`
 F1.)
 
@@ -148,7 +149,7 @@ F1.)
 │  │ Start 2026-10-16  ·  in 2 days                                                      │    │
 │  │ Employee track  █████░░░░░  4 of 9   ·   Workspace track  ███░░░░░░░  2 of 6        │    │
 │  │ Open now:  IT · Laptop issued   IT · Email + SSO   Admin · Building card            │    │
-│  │            Manager · 30-day check-in set   HR · Emirates ID uploaded (3 more)       │    │
+│  │            Manager · 30-day check-in set   HR · Emirates ID verified (3 more)       │    │
 │  │ [ Open case ]                                                                        │    │
 │  ├────────────────────────────────────────────────────────────────────────────────────┤    │
 │  │ ⚪  ON TRACK                                              sample row, not a record   │    │
@@ -172,7 +173,7 @@ F1.)
 | **Flag chip** (🔴 / 🟠 / ⚪) | From the derived flag in §5. First thing scanned, always left-most. | **Nothing** — must be computed |
 | **Name** | Case subject. | `employees.first_name/last_name` |
 | **Job role · Department** | The role the offer was accepted for. | `employees.role`, `employees.department` |
-| **Jurisdiction** (UAE / KSA chip) | The case's **own** recorded value, right-aligned on the name line. **Kept by the owner's decision (2026-10-07)** even though the list is scoped to the header's jurisdiction, so on a scoped list it normally repeats the header's. | `preboarding_cases.jurisdiction` — rendered since P2-1 (`App.tsx:1303`–`:1305`) |
+| **Jurisdiction** (UAE / KSA chip) | The case's **own** recorded value, right-aligned on the name line. **Kept by the owner's decision (2026-10-07)**, decided **knowingly** — he was told it is redundant on a scoped list and kept it, so revisiting it is his call, not a reviewer's. | `preboarding_cases.jurisdiction` — rendered since P2-1 (`App.tsx:1303`–`:1305`) |
 | **Start date** | The anchor of the whole surface. A case cannot exist without one (P2-1). | `employees.start_date` |
 | **Relative time** ("in 2 days" / "started 2 days ago") | Derived from the start date **at read time**, never stored. Definition: whole days = `ceil((start_date 00:00 − now) / 24h)`; negative renders as "started *n* days ago". | **Nothing** — must be computed |
 | **Employee-track progress** | `n of m` items complete, plus a bar. Counts, not percentages-as-scores. | **Partly** — counts computable from `onboarding_tasks.status`; the *track split* has no column (§9 D2) |
@@ -211,6 +212,9 @@ F1.)
 derivation reads the recorded column. It is the same value the row carries on S1 (§2), so the two
 can never disagree; the difference is context, not content: the list is read in the header's
 jurisdiction, and the detail is read on its own.
+**This header is the reviewer's recommendation, not an owner ruling.** The owner ruled on the
+**row's** chip (2026-10-07); he was not asked about the detail header. If he would rather the detail
+header dropped it, the row still carries the case's jurisdiction and nothing else in §3 changes.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
@@ -230,8 +234,8 @@ jurisdiction, and the detail is read on its own.
 │  │                                      │  │                                          │   │
 │  │ ☑ Passport copy          done 10-08  │  │ ☑ IT · Laptop ordered        done 10-09  │   │
 │  │ ☑ Visa / entry permit    done 10-09  │  │ ☑ IT · Account created       done 10-11  │   │
-│  │ ☐ Emirates ID upload     pending     │  │ ☐ IT · Laptop issued         due 10-15   │   │
-│  │   └ needs the scan, not the number   │  │   └ owner: IT · due D-1                  │   │
+│  │ ☐ Emirates ID copy       pending     │  │ ☐ IT · Laptop issued         due 10-15   │   │
+│  │   └ records a ref, not the number   │  │   └ owner: IT · due D-1                  │    │
 │  │ ☐ Education certificate  pending     │  │ ☐ Admin · Building card      due 10-15   │   │
 │  │ ☐ Experience letters     pending     │  │ ☐ Manager · 30-day check-in  due 10-15   │   │
 │  │ ☐ Bank details (IBAN)    pending     │  │ ☐ HR · Offer letter filed    due 10-15   │   │
@@ -280,11 +284,15 @@ This is the surface P2-4 asks for in its acceptance line *"IT/Admin see only the
 | Phase | What ships | What it is called in the UI |
 |---|---|---|
 | Now (single shared account) | A **filter** on S1/S2: chips `All · IT · Admin · HR · Manager` that narrow the open-now list to one function. Visible to whoever is signed in. | "**View by function**" — a filter |
-| When per-user accounts exist | The same chips, plus the signed-in user's function pre-selected and forced, with other functions' lines read-only. | "**My lines**" — a scope |
+| When per-user accounts exist — **owner, 2026-10-07: at Layer 3 build time, and "My lines" ships with them** | The same chips, plus the signed-in user's function pre-selected and forced, with other functions' lines read-only. | "**My lines**" — a scope |
 
 The distinction is a **wording** requirement, not a nicety: shipping the filter and calling it
 "My lines" would tell a client that IT cannot see HR's lines when nothing stops it. That is the
 kind of claim this team has had to retract before.
+**The owner answered the timing on 2026-10-07:** per-user accounts land **at Layer 3 build time**,
+**"My lines" ships with them**, and **no real client data enters the product until per-user RBAC is
+live** — so until then the filter ships under the label "View by function", and the honest answer to
+a prospect who asks about access control is *"role-based access is on the Layer 3 roadmap"*.
 
 ---
 
@@ -413,7 +421,7 @@ gate the *first* thing on the employee track, not a checkbox buried in a setting
 │  ┌──────────────────────────────────────────────────────────────────────────────────┐   │
 │  │ 🔒 Documents are locked until consent is recorded                                 │   │
 │  │ The new hire's documents (passport, Emirates ID, certificates, bank details)      │   │
-│  │ cannot be uploaded or requested before a PDPL consent record exists for this case.│   │
+│  │ cannot be collected or verified before a PDPL consent record exists for this case.│   │
 │  │ [ Record consent ]      ← the only enabled action on this track                   │   │
 │  └──────────────────────────────────────────────────────────────────────────────────┘   │
 │  ☐ Passport copy        locked   ☐ Emirates ID     locked   ☐ Bank details   locked     │
@@ -439,9 +447,9 @@ gate the *first* thing on the employee track, not a checkbox buried in a setting
 |---|---|---|---|
 | **D1** | An **owner / responsible function** on every item | The row's "open now" list and P2-4's "each line has a responsible function" both read it; today `onboarding_tasks` has no such column and `Task` has no such field | P2-1's case model (engineering) |
 | **D2** | A **track** discriminator (employee vs workspace) on items | Two panels, two progress counts, two owners — one table today | P2-1's case model |
-| **D3** | A **due date derived from the start date** per line | P2-4 requires one; the *offset per line* is a product decision (§10 Q3) | Product (lead) + engineering |
+| **D3** | A **due date derived from the start date** per line | P2-4 requires one; the *offset per line* is a product decision (§10 Q3, still open) | Product — **the owner's call, §10 Q3** — + engineering |
 | **D4** | **Per-user accounts / function identity** | "IT/Admin see only their own lines" (P2-4) has no account model behind it | Product, then engineering (§4) |
-| **D5** | A **document store** | P2-2 collects passports, Emirates IDs, certificates, bank details; no table, no storage, no upload surface today | Engineering + PDPL (compliance expert) |
+| **D5** | A **document store** | P2-2 collects passports, Emirates IDs, certificates and bank details, and stores **no bytes**: an item carries a reference and a status. **Decided by the owner, 2026-10-07 — Option D is the product now, and Option C (an S3-compatible object store) is built when the entity is registered.** Building it is then a change behind one interface (`saveDocument`/`readDocument`), with the PDPL work the compliance expert owes on the chosen store | Engineering (built when IFZA registration completes) + PDPL (compliance expert) |
 | **D6** | An **acknowledgement record** for the JD and NDA | P2-3: "nothing is marked acknowledged without the acknowledgement existing" | Engineering + PDPL |
 | **D7** | **EN/AR strings and an i18n/RTL layer** | Bilingual is a standing quality standard; the client has no i18n layer today | Design (layout, done here) + a translator/owner for the AR copy |
 | **D8** | The **derived flag computation** | §5's definition, computed on read | Engineering (P2-5) |
@@ -455,14 +463,24 @@ gate the *first* thing on the employee track, not a checkbox buried in a setting
 
 ## 10. Open questions for the owner — asked, not answered
 
-**Status, 2026-10-07 — updated after P2-2 landed and the owner answered:**
-**Q1 is answered:** the owner decided the demo **carries three seeded pre-boarding cases**, one per
-flag state (board task `[L2 seed]`, `86749e1f`). **Q2 is answered with it:** the three states come
-from the seeded dates and item statuses, and the flag stays *derived* — nothing stores a state.
-**Q5 is answered to a boundary:** no store was chosen; `server/document-store.js` refuses document
-bytes with **501** behind one interface and names four candidate stores for the owner.
-**Q4 (per-user accounts) is still in front of the owner.** Q3, Q6 and Q7 are unchanged and block
-nothing today.
+**Status, 2026-10-07 — Q1, Q4 and Q5 are answered by the owner, and recorded here in his terms:**
+**Q1 — seeded demo cases.** The demo carries **three cases, one per flag state**, on his own brief,
+filed as the queued task `[L2 seed]` (`86749e1f`) and gated behind P2-2 reaching `main` — which it
+now has. So S1 is demonstrated **with data**, and the three states §5 specifies are the three that
+get seeded. **Q2 is answered with it:** the states come from the seeded dates and item statuses, and
+the flag stays *derived* — nothing stores a state.
+**Q4 — per-user accounts.** They land **at Layer 3 build time**, and **"My lines" ships with them**.
+The hard gate attached: **no real client data until per-user RBAC is live**, and the honest line in a
+pilot conversation is *"role-based access is on the Layer 3 roadmap"*. The filter-now / scope-later
+split in §4 (D4) is exactly right and stays.
+**Q5 — document storage.** His words: *"Option D ships now (reference string only, no bytes stored).
+Option C (S3-compatible external object store) is built when the entity is registered. No real
+document bytes stored before that. IFZA registration is the gate — not a date, an event."* So an item
+records a **reference and a status** and never accepts bytes, and under Option D the **pointer** is
+where the personal data sits — which is why the consent gate in §4 matters **more** under it, not
+less. Frames that imply the product holds the document itself are wrong: see §2's item rows and §5's
+copy, corrected on 2026-10-07.
+Q3, Q6 and Q7 remain open and block nothing today.
 **One consequence of Q1 the sequence has to face:** no state is derived in code yet (§5 is not
 built), so seed data alone can make the underlying facts true but cannot make three *states* appear
 on the screen — see `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §4.
@@ -493,7 +511,7 @@ on the screen — see `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §4.
 
 | Criterion | Where it is satisfied |
 |---|---|
-| **P2-2** — every item has a status; incomplete items visible to HR without opening each case; documents stored per employee | §2 row anatomy (open-now list on the row); §3 per-item status; storage is D5 |
+| **P2-2** — every item has a status; incomplete items visible to HR without opening each case; documents stored per employee | §2 row anatomy (open-now list on the row); §3 per-item status; storage is D5 — **met as a reference under the owner's Option D (2026-10-07): the item records where the document lives, never the bytes** |
 | **P2-3** — each item shows sent/read/acknowledged; JD and NDA have a recorded acknowledgement | §3 pre-reading strip; the record itself is D6; "sent" is blocked by D10 |
 | **P2-4** — assignment derived from the role, not typed; each line has a responsible function; IT/Admin see only their own lines | §6 derivation; §2 owner chips; the last clause is D4 (and is not claimable until then) |
 | **P2-5** — fires on the 48-hour boundary; names the incomplete items and their owners; clears when the items complete | §5 definition (inclusive boundary), copy rules, and three states |
