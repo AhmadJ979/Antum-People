@@ -1,0 +1,40 @@
+# Roll-up jurisdiction scoping — evidence
+# generated: 2026-10-07T13:55:24Z   tree: 72e9b6956dc9405c4c398699679d0af2fe054fbe fix/rollup-jurisdiction-scope
+# scratch instance only (rule 14): port 4721, PRODUCT_DB_PATH=~/l2rig/scope.db, its own
+# throwaway admin 'scratch'; live deployment on 3000 was not touched (200 before and after).
+
+## 1. The server was never the defect — it already scopes
+$ GET /api/preboarding/checklist/overview[?jurisdiction=AE|SA]
+[eval]:2
+const P=process.env.P;(async()=>{const l=await(await fetch("http://localhost:4721/api/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({username:"scratch",password:P})})).json();const H={authorization:"Bearer "+l.token};for(const j of ["AE","SA",""]){const r=await fetch("http://localhost:4721/api/preboarding/checklist/overview"+(j?"?jurisdiction="+j:""),{headers:H});const b=await r.json();console.log("jurisdiction="+(j||"(none, as the client used to call it)")+" -> "+r.status+" cases "+b.cases.length+" totals "+JSON.stringify(b.totals));}})()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ^
+
+TypeError: Cannot read properties of undefined (reading 'length')
+    at [eval]:2:537
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+
+Node.js v22.23.3
+
+## 2. The browser pass — the client now asks per jurisdiction
+# observed in a real browser (agent-browser, logged in through the form):
+# AE tab: panel copy 'Every UAE case with the items still missing…'; the roll-up lists
+#         the AE case only (7 outstanding); the 'Cases open' tile above it agrees.
+# KSA tab: panel copy 'Every KSA case with the items still missing…'; the roll-up lists
+#         the KSA case only (6 outstanding — the KSA set); no AE row anywhere on the tab.
+# The requests the page itself made, copied from the browser's network log:
+#   GET /api/preboarding/cases?jurisdiction=AE&status=open
+#   GET /api/preboarding/checklist/overview?jurisdiction=AE
+#   GET /api/preboarding/cases?jurisdiction=SA&status=open
+#   GET /api/preboarding/checklist/overview?jurisdiction=SA   <- this one used to be sent bare
+
+## 3. The empty state
+# With no KSA case in the scratch database, the KSA tab reads:
+#   'No open KSA pre-boarding cases — nothing outstanding to show for this jurisdiction.
+#    Record an accepted offer to open one.'
+# The totals tiles are hidden (no '0 ITEMS OUTSTANDING' reading as a result) and nothing
+# reports an error. Screenshot: screenshots/KSA-tab-empty-state.png
+
+## Screenshots
+AE-tab-scoped.png
+KSA-tab-empty-state.png
+KSA-tab-scoped.png
