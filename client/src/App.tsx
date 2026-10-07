@@ -92,6 +92,28 @@ interface PreboardingChecklistRow {
   consent_granted_at: string | null;
   last_reminder_at: string | null;
   last_reminder_count: number | null;
+  // P2-5 - the derived 48-hour flag, exactly as the server derived it on this read. The client
+  // holds no copy of the rule and no state of its own: it renders what it is given, and the next
+  // read is the only way it changes.
+  flag: PreboardingFlag;
+}
+
+// P2-5 - one definition, rendered in three places as they arrive (the row chip below, the case
+// header, and Layer 3's function view). Nothing here recomputes the state from the start date.
+interface PreboardingFlag {
+  state: 'clear' | 'inside_48_hours' | 'started' | 'no_start_date';
+  raised: boolean;
+  tone: 'slate' | 'amber' | 'rose';
+  chip: string | null;
+  headline: string;
+  body: string[];
+  open_count: number;
+  open_items: { item_key: string; label: string; status: string; owner: string | null; owner_known: boolean }[];
+  hours_to_start: number | null;
+  days_to_start: number | null;
+  boundary_hours: number;
+  boundary_inclusive: boolean;
+  scope_note: string;
 }
 
 interface PreboardingOverview {
@@ -1511,6 +1533,12 @@ export default function App() {
                     named here — HR reads what is outstanding
                     without opening a case. Open a row to work its employee track.
                   </p>
+                  <p className="text-[9px] text-slate-400 mb-4 -mt-2">
+                    The 48-hour chip is derived from every item on a case, whatever track created
+                    it. Today that is the employee-track documents only, because the workspace
+                    track (P2-4) is not built yet — when it lands, its items join the same rule
+                    with no change here.
+                  </p>
                   {checklistOverview && checklistOverview.cases.length > 0 && (
                     <div className="mb-4 grid grid-cols-3 gap-2 text-center">
                       <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
@@ -1546,10 +1574,19 @@ export default function App() {
                                   <div className="text-sm font-bold text-slate-900">{row.candidate_name}</div>
                                   <div className="text-[11px] text-slate-500">{row.role} · {row.department}</div>
                                 </div>
-                                <div className="flex items-center space-x-2 shrink-0">
+                                <div className="flex items-center flex-wrap justify-end gap-2 shrink-0">
                                   <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase border ${row.jurisdiction === 'AE' ? 'bg-teal-50 text-teal-700 border-teal-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
                                     {row.jurisdiction === 'AE' ? 'UAE' : 'KSA'}
                                   </span>
+{row.flag.chip && (
+                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded border whitespace-nowrap ${
+                                      row.flag.tone === 'amber' ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                        : row.flag.tone === 'rose' ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                          : 'bg-slate-100 text-slate-600 border-slate-200'
+                                    }`}>
+                                      {row.flag.chip}
+                                    </span>
+                                  )}
                                   <span className="text-[10px] font-bold text-slate-400">{open ? 'Close' : 'Open'}</span>
                                 </div>
                               </div>
@@ -1565,6 +1602,35 @@ export default function App() {
                                   </span>
                                 </div>
                               </div>
+{row.flag.raised && (
+                                <div className={`mt-3 rounded-lg border px-3 py-2 ${row.flag.tone === 'amber' ? 'bg-amber-50 border-amber-200' : 'bg-rose-50 border-rose-200'}`}>
+                                  <div className={`text-[11px] font-bold ${row.flag.tone === 'amber' ? 'text-amber-800' : 'text-rose-800'}`}>
+                                    {row.flag.headline}
+                                  </div>
+                                  <ul className="mt-1 space-y-0.5">
+                                    {row.flag.open_items.map(item => (
+                                      <li key={item.item_key} className="text-[10px] text-slate-700">
+                                        {item.label} · {item.status.replace('_', ' ')}
+                                        {' · '}
+                                        {item.owner_known && item.owner
+                                          ? `owner: ${item.owner}`
+                                          : 'no owner on this item — the employee-track items carry no owner field'}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                  <div className="mt-1 text-[10px] text-slate-600">
+                                    Start {row.start_date}
+                                    {row.flag.state === 'inside_48_hours' && row.flag.hours_to_start !== null
+                                      ? ` · ${Math.round(row.flag.hours_to_start * 10) / 10} h before 00:00 on the start date`
+                                      : row.flag.days_to_start !== null
+                                        ? ` · ${Math.abs(row.flag.days_to_start)} d ${row.flag.days_to_start < 0 ? 'ago' : 'to go'}`
+                                        : ''}
+                                  </div>
+                                  {row.flag.body.map(line => (
+                                    <div key={line} className="mt-1 text-[10px] text-slate-600 italic">{line}</div>
+                                  ))}
+                                </div>
+                              )}
                               {row.outstanding.length > 0 && (
                                 <div className="mt-2 flex flex-wrap gap-1">
                                   {row.outstanding.map(item => (

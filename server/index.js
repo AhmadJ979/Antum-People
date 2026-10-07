@@ -7,6 +7,7 @@ const auth = require('./auth');
 const eosb = require('./eosb');
 const preboarding = require('./preboarding');
 const preboardingItems = require('./preboarding-items');
+const { createFlagWatcher } = require('./preboarding-flag-scheduler');
 const fs = require('fs');
 
 const app = express();
@@ -710,6 +711,31 @@ app.post('/api/preboarding/cases/:id/consent', async (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
+// LAYER 2 — P2-5: THE IN-PROCESS FLAG WATCHER (a record, not a notification)
+// -------------------------------------------------------------
+// This host has no cron and no working systemd, so a time-based check cannot be delegated to the
+// OS: the watch runs inside this process, on a tick, and its first tick is the restart catch-up —
+// a boundary that fell while the process was down is recorded late and says so, and a boundary is
+// never silently skipped. It records; it does not store the flag (the flag is derived on every
+// read) and it does not send anything (the product has no delivery channel). The route below is
+// the read side of that record; nothing in the product renders the flag from it.
+const flagWatcher = createFlagWatcher({
+  snapshot: () => preboardingItems.flagWatchSnapshot(),
+  log: (line) => console.log(line),
+});
+app.get('/api/preboarding/flag-watch', async (req, res) => {
+  try {
+    res.json(flagWatcher.status());
+  } catch (err) {
+    sendItemError(res, err, 'Failed to read the flag watcher record');
+  }
+});
+flagWatcher.start();
+
+
+// The watcher's route is registered BEFORE the static/SPA catch-all below: that catch-all
+// answers every unknown /api path with a JSON 404, so a route added after it is unreachable.
 // -------------------------------------------------------------
 // SERVE FRONTEND
 // -------------------------------------------------------------
