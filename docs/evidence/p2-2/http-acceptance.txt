@@ -1,0 +1,62 @@
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch user ready
+instance pid 27386 on port 4717, db /home/agent-senior-software-engineer/p22-rig/p22.db
+boot probe /api/preboarding/cases (expect 401): 401
+=== P2-2 HTTP evidence — scratch instance, synthetic data only ===
+
+1. login with the scratch credential
+  -> HTTP 200  {"token":"<redacted>","user":{"id":"p22-runner","username":"p22runner","role":"admin"}}  (token length 203)
+2. record an accepted offer (AE)
+  -> HTTP 201  {"created":true,"case":{"id":"88806541-8baa-4972-beba-b3ee6a7bcbb7","offer_reference":"OFR-2026-901","candidate_name":"Layla Haddad","candidate_email":"layla.haddad@example.ae","role":"Financial Analyst","department":"Finance","reporting_line":"Head of Finance","jurisdiction":"AE","start_date":"2026-11-02","status":"open","source":"intake_form","offered_at":null,"created_by":"p22runner","created_at":"2026-10-07 12:56
+3. the same accepted offer again
+  -> HTTP 200  {"created":false,"case":{"id":"88806541-8baa-4972-beba-b3ee6a7bcbb7","offer_reference":"OFR-2026-901","candidate_name":"Layla Haddad","candidate_email":"layla.haddad@example.ae","role":"Financial Analyst","department":"Finance","reporting_line":"Head of Finance","jurisdiction":"AE","start_date":"2026-11-02","status":"open","source":"intake_form","offered_at":null,"created_by":"p22runner","created_at":"2026-10-07 12:5
+4. the case arrives with its checklist
+  -> HTTP 200  7 items, statuses: not_started, set active: true, consent: none
+5. request the passport (not started -> requested)
+  -> HTTP 200  {"item":{"id":"d70844ed-25f0-48fb-8e38-ee79bddae328","case_id":"88806541-8baa-4972-beba-b3ee6a7bcbb7","item_key":"passport","label":"Passport copy","category":"identity","jurisdiction":"AE","required":1,"status":"requested","document_reference":null,"note":null,"requested_at":"2026-10-07T12:56:31.657Z","received_at":null,"verified_at":null,"last_actor":"p22runner","created_at":"2026-10-07 12:56:31","updated_at":"2026
+6. try to collect it with no consent record
+  -> HTTP 428  {"error":"A document cannot be collected before the PDPL consent record exists for this case. Record PDPL consent first."}
+7. the refusal left the item where it was
+  -> status requested, received_at null
+8. record the PDPL consent
+  -> HTTP 201  {"consent":{"id":"9a41ecbd-4927-432b-8c38-bf1bf2ef2810","case_id":"88806541-8baa-4972-beba-b3ee6a7bcbb7","consent_type":"pdpl_notice","lawful_basis":"consent","consent_version":"v1","granted_at":"2026-10-07T12:56:31.682Z","recorded_by":"p22runner","created_at":"2026-10-07 12:56:31"},"created":true}
+9. record the same consent again
+  -> HTTP 200  {"consent":{"id":"9a41ecbd-4927-432b-8c38-bf1bf2ef2810","case_id":"88806541-8baa-4972-beba-b3ee6a7bcbb7","consent_type":"pdpl_notice","lawful_basis":"consent","consent_version":"v1","granted_at":"2026-10-07T12:56:31.682Z","recorded_by":"p22runner","created_at":"2026-10-07 12:56:31"},"created":false}
+10. collect it now that consent exists
+  -> HTTP 200  {"item":{"id":"d70844ed-25f0-48fb-8e38-ee79bddae328","case_id":"88806541-8baa-4972-beba-b3ee6a7bcbb7","item_key":"passport","label":"Passport copy","category":"identity","jurisdiction":"AE","required":1,"status":"received","document_reference":"passport-scan.pdf","note":null,"requested_at":"2026-10-07T12:56:31.657Z","received_at":"2026-10-07T12:56:31.707Z","verified_at":null,"last_actor":"p22runner","created_at":"202
+11. verify it
+  -> HTTP 200  {"item":{"id":"d70844ed-25f0-48fb-8e38-ee79bddae328","case_id":"88806541-8baa-4972-beba-b3ee6a7bcbb7","item_key":"passport","label":"Passport copy","category":"identity","jurisdiction":"AE","required":1,"status":"verified","document_reference":"passport-scan.pdf","note":null,"requested_at":"2026-10-07T12:56:31.657Z","received_at":"2026-10-07T12:56:31.707Z","verified_at":"2026-10-07T12:56:31.728Z","last_actor":"p22run
+12. skip straight from not started to verified
+  -> HTTP 409  {"error":"Item emirates_id is not_started; it cannot move to verified (allowed: requested)"}
+13. an invented status
+  -> HTTP 400  {"error":"status is required and must be one of not_started, requested, received, verified"}
+14. record a reminder for the outstanding items
+  -> HTTP 201  {"reminder":{"id":"1b3b5f91-7311-4d27-be33-a337b88f6d74","case_id":"88806541-8baa-4972-beba-b3ee6a7bcbb7","item_key":null,"outstanding_count":6,"outstanding_keys":"[\"visa_or_entry_permit\",\"emirates_id\",\"education_certificate\",\"experience_certificate\",\"bank_details\",\"emergency_contact\"]","channel":"in_product","note":"chase before day one","created_by":"p22runner","created_at":"2026-10-07 12:56:31"},"outst
+15. the HR roll-up, one call, no case opened
+  -> HTTP 200  cases 1, items 7, outstanding 6, verified 1, cases without consent 0
+  -> this case: Layla Haddad · AE · start 2026-11-02 (26 d) · verified 1/7 · outstanding 6
+  -> outstanding named in the list: Visa or entry permit [not_started] | Emirates ID [not_started] | Education certificate [not_started] | Experience certificate [not_started] | Bank details (IBAN letter) [not_started] | Emergency contact [not_started]
+  -> consent recorded: true; last reminder: 2026-10-07 12:56:31 (6 items)
+16. a KSA case keeps its own set
+  -> HTTP 201 (6 items), set active: false, consent: none
+17. work an item on the switched-off KSA set
+  -> HTTP 409  {"error":"The SA document set is kept but not active in this release (UAE-first), so its items cannot move off not started"}
+18. the roll-up without a token
+  -> HTTP 401  {"error":"Authentication token required"}
+19. a case that does not exist
+  -> HTTP 404  {"error":"Pre-boarding case not found"}
+20. the endpoint's own contract for the tile's label
+  -> GET /api/preboarding/cases          HTTP 200  2 cases (open, open)
+  -> GET ?status=open                     HTTP 200  2 cases (open, open)
+21. a status nobody writes is refused, not answered with an empty list
+  -> HTTP 400  {"error":"status must be one of open, closed"}
+22. jurisdiction and status together (what the client now sends)
+  -> ?jurisdiction=AE&status=open  HTTP 200  1 case(s): OFR-2026-901/AE
+  -> ?jurisdiction=SA&status=open  HTTP 200  1 case(s): OFR-2026-902/SA
+
+=== rows in the scratch product database (the checklist lives here, not in the team store)
+(Use `node --trace-warnings ...` to show where the warning was created)
+preboarding_cases 2 · preboarding_items 13 · preboarding_reminders 1 · preboarding_consents 1
+items by status: not_started=12 verified=1
+items moved off not_started: [{"item_key":"passport","status":"verified","document_reference":"passport-scan.pdf"}]
+instance stopped

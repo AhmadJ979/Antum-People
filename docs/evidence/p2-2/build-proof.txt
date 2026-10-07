@@ -1,0 +1,11 @@
+# P2-2 build proof — 2026-10-07T12:56:24Z
+# tree: 52c909f456d7cf4b15ab399ba1ec9f20b78af233 ;
+$ npx tsc -b
+tsc -b exit 0
+$ npx vite build
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-x1-nE6It.css   34.72 kB │ gzip:  6.75 kB
+dist/assets/index-Cwq9dzzZ.js   258.64 kB │ gzip: 72.81 kB
+
+[32m✓ built in 284ms[39m
+vite build exit 0
