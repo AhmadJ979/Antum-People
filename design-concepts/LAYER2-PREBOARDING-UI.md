@@ -67,7 +67,8 @@ were still today's.
 | Bilingual / RTL rendering | **No i18n layer in the client.** The bilingual reference is the AR prototype and the EN/AR mockups | `design-concepts/intelligence-dashboard-prototype.html`, `intelligence-dashboard-{ar,en}-mockup.png` |
 | A way to notify anyone | **No delivery channel** — no mailer, webhook or SMS anywhere in the product | plan, Gate 2 decision (2026-10-06) |
 | An in-process timer / scheduled check | **Nothing.** No cron, no working systemd on this host | plan §6; Gate 2 decision |
-| Any derived "days remaining" or flag computation | **Nothing** | — |
+| A demo dataset to look at | **Added by the L2 demo seed (PR #73, on `main`, not deployed):** three pre-boarding cases, one per flag state by construction — start = seed **+14** (`OFR-2026-DEMO-01`), seed **+1** (`-02`), seed **−1** (`-03`). Each carries the AE 7-item set with everything open, and **no consent record** (a seed test asserts that, deliberately: the presenter records consent on screen and watches the gate open). **Nothing stores a flag or a state** | `scripts/seed-demo.js`; evidence `docs/evidence/l2-demo-seed/`; states and their expected readings §5.1 |
+| Any derived "days remaining" or flag computation | **Nothing** — the seed stores no state, and the roll-up prints the raw `days_to_start` (`14` / `1` / `-1`) | §5.1 |
 | The labels we must not lose | **"Sample Demo Data"** badge — in the **app-level header**, so it also covers the new Pre-boarding tab — and the **"Illustrative …"** markers | `App.tsx:660`; `:721`, `:723`, `:738`, `:775`, `:812`, `:1061`, `:1067`, `:1073`, `:1088`, `:1104`, `:1116`, `:1145` |
 
 **Visual language to extend, not replace** (exact classes as served):
@@ -305,6 +306,9 @@ flag_is_raised  =  open_items_in_case > 0
                    AND  (start_date 00:00 − now) ≤ 48h
 ```
 
+- **Track-agnostic (lead ruling, 2026-10-07):** the flag reads **every item on the case, whichever
+  track created it**. Today that is the employee track, because it is the only one that exists; when
+  P2-4 lands, its workspace items join this same rule and the definition above does not change.
 - **Derived, not stored:** it is computed on every read from the start date and the items' current
   status, so it cannot drift from the data and cannot survive a restart as a stale value.
 - **Boundary is inclusive at exactly 48 hours.** P2-5 says the flag *"fires on the 48-hour
@@ -321,7 +325,7 @@ flag_is_raised  =  open_items_in_case > 0
 | State | Condition | Chip | Headline copy | Body copy | Colour |
 |---|---|---|---|---|---|
 | **Clear** | No open items, **or** more than 48h to start with everything open still fine | ⚪ **On track** | "On track" | "Started *n* days before day one." (only when items exist and are open) | Slate / Success Green |
-| **Inside 48 hours with open items** | `open > 0` and `≤ 48h` to start | 🟠 **Inside 48 hours · *n* terms open** | "*n* items open, start in under 48 hours" | Names each open item **and its owner's function**, worst-first | Warm Amber |
+| **Inside 48 hours with open items** | `open > 0` and `≤ 48h` to start | 🟠 **Inside 48 hours · *n* terms open** | "*n* items open, start in under 48 hours" | Names each open item, its status and the days to start, and its owner's function **only where one exists** (see the copy rules) | Warm Amber |
 | **Start date passed, items still open** | `open > 0` and start < now | 🔴 **Started *n* days ago · *n* items open** | "Started with *n* items still open" | Same list; adds the honest line "these were due before day one" | Coral Red |
 | *No start date* | — | — | Cannot render: a case without a start date cannot exist (P2-1). If one were ever read, the surface shows the error state, **not** a default date. | | Rose |
 
@@ -331,6 +335,14 @@ The flag is a **state, not an event**. On this product there is no mailer, webho
 
 - **Never:** "sent", "notified", "emailed", "reminder sent", "alerted IT", "IT has been informed".
 - **Never:** a timestamp that implies a message went out, or a bell/paper-plane/envelope icon.
+- **Never a bare negative day count.** `Start: 2026-10-06 · -1 d` is what the built roll-up prints
+  for the started case today (measured 2026-10-07 on `origin/main`, §5.1). `-1` is an input, not a
+  message: the Coral state says **"Started 1 day ago · 7 items open"**. **P2-5's acceptance includes:
+  no surface prints a negative `days_to_start`.**
+- **An owner is never invented.** Owners exist only on the workspace track (P2-4), which does not
+  exist yet, so on today's employee-track items the flag names the item, its status and the days to
+  start, and says plainly that **no owner is recorded** rather than implying one. If the owner later
+  wants owners on the employee track, that is his decision and its own row (lead ruling, 2026-10-07).
 - **Always:** present-tense state — "5 items open", "start in under 48 hours", "opens in this view".
 - When an unprompted in-app notice exists (Gate 2's in-process timer), it says what the app did:
   *"This case reached the 48-hour mark while the app was open"* — and, if the server was down
@@ -346,6 +358,37 @@ The flag is a **state, not an event**. On this product there is no mailer, webho
    their own exposure without reading every row.
 
 All three read the same derivation. No surface may compute its own version.
+
+### 5.1 The seeded cases — P2-5's acceptance against the demo's own data
+The demo dataset now carries the three cases the owner asked for (PR #73, on `main`; seeded through
+the product's own `recordOfferAcceptance` and `setItemStatus`, no stored state). **Their dates are
+offsets from the day the seed runs**, so what is fixed is the offset, never the date — read this
+table as *inputs*, and re-derive the states on the day you look. Every figure below was read off a
+scratch instance of `origin/main` on 2026-10-07 (own DB and port; the live deployment untouched):
+
+| Offer | Case | Offset / start that day | Items | `days_to_start` the surface prints | State §5 requires | What P2-5 must render there |
+|---|---|---|---|---|---|---|
+| `OFR-2026-DEMO-01` | Omar Al-Farsi (roster `demo-emp-omar`) | **+14** · 2026-10-21 | 7 open (3 `requested`, 4 `not_started`) | `· 14 d` | **Clear** | ⚪ **On track** · headline "On track" · body "Started 14 days before day one." · Slate/Green |
+| `OFR-2026-DEMO-02` | Mariam Al-Kaabi | **+1** · 2026-10-08 | 7 open (all `not_started`) | `· 1 d` | **Inside 48 hours** | 🟠 **Inside 48 hours · 7 items open** · "7 items open, start in under 48 hours" · names each open item, its status and the days to start, with an owner only where one exists (see the copy rules) · Warm Amber |
+| `OFR-2026-DEMO-03` | Yousef Al-Hammadi | **−1** · 2026-10-06 | 7 open (all `not_started`) | `· -1 d` | **Started, items open** | 🔴 **Started 1 day ago · 7 items open** · "Started with 7 items still open" · same list + "these were due before day one" · Coral Red |
+
+Three things this table settles for P2-5, each of which the surface gets wrong today:
+
+1. **The states are not on the screen.** No flag chip renders anywhere on the built surface (the
+   row's two chips are the jurisdiction and the case status `Open`). The seed deliberately faked
+   nothing — so *today* the demo shows the right facts and no alarm, and **P2-5 is what turns the
+   three cases into one visible red, one amber and one clear.**
+2. **`-1 d` must not survive.** See the copy rule above: the started case's message is a sentence,
+   not a negative number.
+3. **The three-state demo has a shelf life of one morning.** Case 2's start is seed day **+1**, so its
+   amber window closes at 00:00 UTC on that date (**04:00 GST**) — after that it is a Coral case
+   like case 3, and the demo shows two started and one on track, with no amber anywhere. Re-seed on
+   the morning of a demo, and say on the day that the demo was seeded that morning; the plan already
+   requires the same for the accrual figures.
+
+**What this table is not.** It is not a claim that any state is computed today, and it is not a
+reading of a built flag: the right-hand column is this spec's requirement, applied by hand to the
+measured inputs. Nothing here asks the seed to store a state.
 
 ---
 
@@ -514,7 +557,7 @@ on the screen — see `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §4.
 | **P2-2** — every item has a status; incomplete items visible to HR without opening each case; documents stored per employee | §2 row anatomy (open-now list on the row); §3 per-item status; storage is D5 — **met as a reference under the owner's Option D (2026-10-07): the item records where the document lives, never the bytes** |
 | **P2-3** — each item shows sent/read/acknowledged; JD and NDA have a recorded acknowledgement | §3 pre-reading strip; the record itself is D6; "sent" is blocked by D10 |
 | **P2-4** — assignment derived from the role, not typed; each line has a responsible function; IT/Admin see only their own lines | §6 derivation; §2 owner chips; the last clause is D4 (and is not claimable until then) |
-| **P2-5** — fires on the 48-hour boundary; names the incomplete items and their owners; clears when the items complete | §5 definition (inclusive boundary), copy rules, and three states |
+| **P2-5** — fires on the 48-hour boundary; names the incomplete items and their owners; clears when the items complete | §5 definition (inclusive boundary), copy rules, and three states; **§5.1 holds the three seeded cases' expected readings to build against; the derivation is **track-agnostic**, and no surface prints a negative `days_to_start` or invents an item owner** |
 | **P2-6** — EN/AR documents and portal; no document collected before a consent record exists | §7, §8 (the gate is on collection, not just on the button) |
 
 ---
@@ -546,3 +589,11 @@ chip; §3 S2: the case's own jurisdiction in the detail header) and §10's statu
 2026-10-07 after P2-2 landed (PR #70, `5ed731e`)** — the §0 rows P2-2 changed are marked in place,
 and `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` carries the build-vs-design deltas. Screens are design,
 not build.*
+*Amended again 2026-10-07 after the L2 demo seed landed (PR #73) — **§5.1 is new**: the three seeded
+cases read off a scratch instance of that merge, the readings P2-5 must produce for each, and the
+copy rule that no surface prints a negative `days_to_start`. The three-state demo's one-morning
+shelf life is stated there too. Independent design review of the same surface:
+`/home/team/shared/l2-surface-review/REVIEW.md`.*
+*Amended 2026-10-07 with the lead's P2-5 ruling: the flag is **track-agnostic** — workspace items
+join it unchanged when P2-4 lands — and an item's **owner is never invented** where none is recorded,
+which on today's employee-track items is always. See §5's definition, state table and copy rules.*
