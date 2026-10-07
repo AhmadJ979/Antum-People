@@ -12,6 +12,7 @@ This directory contains the Product Designer's deliverables for the Antum People
 | `dashboard-wireframe.html` | Live HTML/CSS wireframe of the Executive Dashboard — open in a browser to see the full layout with KPIs, charts, and activity panels |
 | `dashboard-mockup.png` | AI-generated visual mockup of the Workforce Intelligence Dashboard |
 | `user-journey-visual.png` | AI-generated infographic showing the Onboarding & Offboarding data-to-intelligence flow |
+| `LAYER2-PREBOARDING-UI.md` | **Layer 2 pre-boarding working surface** — the HR case list that shows every live case without opening one, the employee and workspace tracks, the derived 48-hour flag and its three states, the four provisioning functions, EN/AR layout, and the PDPL consent gate. Spec for P2-2/P2-4 plus the surfaces of P2-5/P2-6. **Design only — not built, not live**; every gap it depends on is listed, and the questions it does not answer are left open for the owner. |
 
 ## Strategic Data Capture Philosophy
 
