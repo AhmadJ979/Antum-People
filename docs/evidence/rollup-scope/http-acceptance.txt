@@ -1,41 +1,24 @@
-# Roll-up jurisdiction scoping — evidence
-# Scratch instance only (rule 14): port 4721, PRODUCT_DB_PATH=~/l2rig/scope.db, its own throwaway
-# admin 'scratch'. The live deployment on 3000 was not touched — 200 before and after the pass.
+# Roll-up jurisdiction scoping — HTTP acceptance (scratch instance, port 4721, own DB/credential)
+# generated: 2026-10-07T13:55:55Z   tree: 08d9523841c3e7d7f8f73267ab2ce6cc3aab908c
+$ GET /api/preboarding/checklist/overview?jurisdiction=AE|SA  (server already scoped; the defect was the client omitting it)
+node:internal/deps/undici/undici:15270
+      Error.captureStackTrace(err);
+            ^
 
-## 1. What the page itself asked for (copied from the browser's network log)
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:15270:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async [eval]:1:48 {
+  [cause]: Error: connect ECONNREFUSED 127.0.0.1:4721
+      at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16) {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '127.0.0.1',
+    port: 4721
+  }
+}
 
-    GET /api/preboarding/cases?jurisdiction=AE&status=open
-    GET /api/preboarding/checklist/overview?jurisdiction=AE
-    GET /api/preboarding/cases?jurisdiction=SA&status=open
-    GET /api/preboarding/checklist/overview?jurisdiction=SA   <- the call that used to be sent bare
+Node.js v22.23.3
 
-## 2. What each tab shows
-
-   AE tab: panel copy reads "Every UAE case with the items still missing, named here …"; the
-           roll-up lists the AE case only (7 outstanding); the "Cases open" tile above it agrees.
-   KSA tab: panel copy reads "Every KSA case with the items still missing, named here …"; the
-           roll-up lists the KSA case only (6 outstanding — the KSA document set, so the two tabs
-           are not showing each other's cases); no AE row appears anywhere on the tab.
-
-## 3. The empty state
-
-   With no KSA case in the scratch database, the KSA tab reads:
-
-     "No open KSA pre-boarding cases — nothing outstanding to show for this jurisdiction.
-      Record an accepted offer to open one."
-
-   The totals tiles are hidden rather than reading "0 ITEMS OUTSTANDING" as if it were a result,
-   and nothing reports an error.
-
-## 4. Corrections to earlier notes in this directory
-
-   An earlier revision of this file contained a half-written API section with a stack trace: the
-   check ran without its password set, so the login failed, the response was an error object and
-   the script threw reading `.cases`. That section has been removed rather than left in place —
-   it recorded a failure of the measurement, not a result.
-
-## Screenshots
-
-   screenshots/AE-tab-scoped.png         AE tab, roll-up scoped to the AE case
-   screenshots/KSA-tab-scoped.png        KSA tab, roll-up scoped to the KSA case
-   screenshots/KSA-tab-empty-state.png   KSA tab with no KSA cases — the empty state above
+# NOT YET DONE: the browser pass on THIS fix (AE tab shows the AE case, KSA tab the KSA case, no cross-jurisdiction row, empty state when a jurisdiction has none). The client change is type-checked and bundled, but nothing has clicked it yet.
