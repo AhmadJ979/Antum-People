@@ -1,0 +1,54 @@
+P2-5 follow-up — no surface prints a negative days_to_start
+Branch fix/p2-5-relative-day-copy @ cd725a6 — the code commit is 7572172, and cd725a6 only adds this
+file and the two screenshots. Base: origin/main f3f2bac (the #76 merge, i.e. P2-5 itself).
+Measured 2026-10-07 on two scratch rigs, each with its own database, own throwaway credential and own
+port. The live deployment on 3000 answered 200 before, during and after both passes.
+
+WHY THIS EXISTS
+#76 is merged: the flag derives on every read and the row chips render. Re-reading the running surface
+(rule 12) on the merged tree found one acceptance item still unmet. The design doc's copy rule says:
+
+  "Never a bare negative day count. `Start: 2026-10-06 · -1 d` is what the built roll-up prints for the
+   started case today ... P2-5's acceptance includes: no surface prints a negative `days_to_start`."
+  (design-concepts/LAYER2-PREBOARDING-UI.md, measured 2026-10-07 on origin/main, §5.1)
+
+P2-5's own flag block rendered its negative safely (Math.abs + ago/to go, App.tsx:1629-1631). The row
+renderer, App.tsx:1596, printed `{row.days_to_start} d` with no guard — so the two oldest surfaces (the
+case list and the HR roll-up, which share that row) still showed a negative number. One place, one fix:
+a single `relDays()` helper, so a third surface cannot drift from it later.
+
+BEFORE — the tree that ships today (origin/main = f3f2bac, the #76 merge), rig on port 4725
+  rendered row:  Start: 2026-10-06 · -1 d      (OFR-2026-DEMO-03, started, 7 items open)
+  rendered row:  Start: 2026-10-01 · -6 d      (the scratch case the HTTP pass completed in that rig's DB)
+  screenshot:    screenshots/before-main-f3f2bac.png — the roll-up and the started case's chip
+AFTER — the branch under review (code commit 7572172), rig on port 4726, fresh seed through the product's own path
+  rendered row:  Start: 2026-10-06 · started 1 d ago
+  rendered row:  Start: 2026-10-08 · 1 d
+  rendered row:  Start: 2026-10-21 · 14 d
+  rendered text, searched for the negative pattern `· -<n> d`: none
+  screenshot:    screenshots/after-fix-7572172.png — the roll-up and the same started case's chip
+Both screenshots show the top of the page; the row copy above is quoted from the rendered
+accessibility snapshot of that same page (the full row text is in the rig log, path below).
+
+PROVENANCE (rule 19 — evidence is about the tree that will merge)
+  origin/main                 f3f2baccf0e7717532e4ba259e22a2255f5acb31
+  branch, code commit         75721725ef77a29777ac485fbeeefa68ade40a9e
+  branch head (this evidence) cd725a6 — docs and screenshots only, no code
+  f3f2bac is an ancestor of the branch, so the merge result is the branch tree — no merge commit needed.
+  Files the branch changes: client/src/App.tsx  (e0833b56... -> the new blob)
+  Every other file in the branch tree is byte-identical to origin/main (checked file by file).
+  Both halves of the build on that tree: `tsc -b` exit 0, `vite build` exit 0 (269 ms).
+  The built bundle contains the guarded copy: `started ${Math.abs(e)} d ago` — the row cannot render a
+  bare negative even if the server's number is negative.
+
+WHAT DID *NOT* CHANGE
+  The server still returns the raw signed number in `days_to_start` — that is the input, and the API is
+  unchanged (this is a rendering rule, not a data change). No new column, no stored flag, no state.
+  The flag's three states, the inclusive 48-hour boundary and the watcher are untouched.
+  P2-5's own evidence (docs/evidence/p2-5/) is unchanged and still describes the merged tree.
+
+RIG (repeatable; scripts are the engineer's, not committed)
+  ~/p25-rig3-up.sh   builds the shipping tree (origin/main) on 4725, seeds, serves
+  ~/p25-rig4-up.sh   builds this branch on 4726, asserts the fast-forward, hashes every file,
+                     builds, seeds, serves
+  Logs from this run: ~/p25-rig4/ (A.log, build-tsc.log, build-vite.log, seed.log) — scratch, torn down.

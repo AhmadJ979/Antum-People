@@ -1,0 +1,40 @@
+P2-5 acceptance item 2 - no surface prints a negative days_to_start
+Re-submission after the lead's ruling of 2026-10-07 (the row reads the same derivation as the chip).
+Generated 2026-10-07 16:28:10Z on the branch tree, not on the live deployment.
+
+BASE (the tree that will merge): origin/main f3f2baccf0e7717532e4ba259e22a2255f5acb31
+HEAD (branch fix/p2-5-relative-day-copy): 3005c5e0f69bb088940e86289577cb9f653ac091
+  -> the merge result IS the branch tree (fast-forward; asserted)
+  -> files differing from origin/main: client/src/App.tsx docs/evidence/p2-5-followup/relative-day-copy.txt docs/evidence/p2-5-followup/screenshots/after-fix-7572172.png docs/evidence/p2-5-followup/screenshots/before-main-f3f2bac.png 
+  -> blob client/src/App.tsx: base e0833b56883b / head 3fd828e1d41a
+
+RIG: worktree at 3005c5e0f69bb088940e86289577cb9f653ac091, own database, own throwaway credential, port 4727; live 3000 answered 200 before and after.
+  4 UAE cases on that surface: the three seeded demo cases, plus one created through the product's own
+  intake path and then completed, which is the case that carries past-start + every item done.
+
+DOM READ-OUT of the case-list ROWS (not the chip) from the running page:
+  [e17] Reem Al-Suwaidi Analyst · Finance
+        chip: On track
+        row : Start: 2026-10-01 · started 6 d ago   (7/7 verified, 0 outstanding)
+  [e18] Yousef Al-Hammadi Operations Analyst · Operations
+        chip: Started 1 day ago · 7 items open
+        row : Start: 2026-10-06 · started 1 d ago   (0/7 verified, 7 outstanding)
+  [e19] Mariam Al-Kaabi Marketing Coordinator · Marketing
+        chip: Inside 48 hours · 7 items open
+        row : Start: 2026-10-08 · 7.5 h before 00:00 on the start date   (0/7 verified, 7 outstanding)
+  [e20] Omar Al-Farsi Finance Analyst · Finance
+        chip: On track
+        row : Start: 2026-10-21 · 14 d   (0/7 verified, 7 outstanding)
+
+  bare negative day count anywhere on the rendered page: none
+  the flag panel's own line for the started case: Start 2026-10-06 · 1 d ago
+
+  The four rows above cover every branch of the ruling:
+    clear, future            -> '· 14 d'                                  (as before)
+    inside 48 hours          -> '· 7.5 h before 00:00 on the start date'  (was '· 1 d', the clash)
+    started, items open      -> '· started 1 d ago'                       (was '· -1 d')
+    clear, start date passed -> '· started 6 d ago'                       (was '· -6 d')
+  The last one is the one case the ruling's three branches do not name: a passed start date whose
+  items are all complete derives 'clear' (it is not overdue), so the whole-days branch would print
+  -6 d. The absolute-value guard on that branch keeps the acceptance ('no surface prints a negative
+  days_to_start') true without changing the state the derivation reports.
