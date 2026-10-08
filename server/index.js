@@ -7,6 +7,7 @@ const auth = require('./auth');
 const eosb = require('./eosb');
 const preboarding = require('./preboarding');
 const preboardingItems = require('./preboarding-items');
+const preboardingWorkspace = require('./preboarding-workspace');
 const preboardingPackage = require('./preboarding-package');
 const { createFlagWatcher } = require('./preboarding-flag-scheduler');
 const fs = require('fs');
@@ -635,7 +636,8 @@ app.get('/api/preboarding/cases/:id', async (req, res) => {
 // back with the status that module chose (400 / 404 / 409 / 428) and its reason, so the caller
 // can act on it rather than guess.
 const sendItemError = (res, err, context) => {
-  if (err instanceof preboardingItems.PreboardingItemError) {
+  if (err instanceof preboardingItems.PreboardingItemError
+      || err instanceof preboardingWorkspace.PreboardingWorkspaceError) {
     return res.status(err.status).json({ error: err.message });
   }
   console.error(`[Preboarding] ${context}:`, err);
@@ -656,6 +658,22 @@ app.get('/api/preboarding/cases/:id/checklist', async (req, res) => {
     res.json(await preboardingItems.caseChecklist(req.params.id));
   } catch (err) {
     sendItemError(res, err, 'Failed to read the case checklist');
+  }
+});
+
+// P2-4 — the workspace track's board for one case. `?function=IT|Admin|HR|Manager` is the
+// "View by function" FILTER (the design review is explicit that it is not an access boundary
+// while the product has one shared account; the payload says so in `view`). Transport only: the
+// catalog, the derivation, the due dates and the refusals all live in preboarding-workspace.js.
+// A line's status is moved by the existing item route above — one item model, two tracks.
+app.get('/api/preboarding/cases/:id/workspace', async (req, res) => {
+  try {
+    res.json(await preboardingWorkspace.workspaceBoard(req.params.id, {
+      function: req.query.function,
+      collected_statuses: preboardingItems.COLLECTED_STATUSES,
+    }));
+  } catch (err) {
+    sendItemError(res, err, 'Failed to read the workspace track');
   }
 });
 

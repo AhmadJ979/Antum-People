@@ -35,6 +35,10 @@
 const { randomUUID } = require('crypto');
 const db = require('./db');
 const preboardingFlag = require('./preboarding-flag');
+// The workspace track (P2-4) owns its own catalog and its own switch. This module asks it two
+// questions — is the track active for a jurisdiction, and what are the per-track counts — rather
+// than holding a copy of either answer.
+const workspace = require('./preboarding-workspace');
 
 /** The four statuses every item carries. Every item is in exactly one of them at all times. */
 const ITEM_STATUSES = ['not_started', 'requested', 'received', 'verified'];
@@ -124,8 +128,24 @@ async function getCaseRow(caseId) {
   return rows[0] || null;
 }
 
-/** The checklist for one case, in the order the jurisdiction's set defines it. */
+/**
+ * The employee track's checklist for one case, in the order the jurisdiction's set defines it.
+ *
+ * The track is named here rather than assumed: since P2-4 both tracks share this table, and every
+ * caller of this function wants "the documents this case carries" — the seeded set, the reminder
+ * that is written about them, the panel that prints them. Anything that genuinely needs both
+ * tracks calls listAllItems() and splits them itself.
+ */
 async function listItems(caseId) {
+  return db.query(
+    `SELECT * FROM preboarding_items WHERE case_id = ${db.escapeString(caseId)}
+      AND track = 'employee' ORDER BY rowid ASC`
+  );
+}
+
+/** Every item on the case, both tracks — for the flag (defined over all of them) and for the
+ *  per-track counts in the roll-up. Nothing that renders a list should use this unsplit. */
+async function listAllItems(caseId) {
   return db.query(
     `SELECT * FROM preboarding_items WHERE case_id = ${db.escapeString(caseId)} ORDER BY rowid ASC`
   );
@@ -264,13 +284,28 @@ async function setItemStatus(input) {
     throw new PreboardingItemError('document_reference must be 120 characters or fewer', 400);
   }
 
-  const set = documentSetFor(caseRow.jurisdiction);
-  if ((!set || !set.active) && status !== 'not_started') {
-    throw new PreboardingItemError(
-      `The ${caseRow.jurisdiction} document set is kept but not active in this release (UAE-first), `
-      + 'so its items cannot move off not started',
-      409
-    );
+  // Which switch applies is decided by the line's own track, never by the caller: an
+  // employee-track item is frozen when its jurisdiction's document set is switched off, and a
+  // workspace line (P2-4) is frozen when the workspace track is switched off for the case's
+  // jurisdiction. Two switches, each read from its own module's configuration.
+  const track = item.track || 'employee';
+  if (track === 'workspace') {
+    if (!workspace.isWorkspaceActive(caseRow.jurisdiction) && status !== 'not_started') {
+      throw new PreboardingItemError(
+        `The ${caseRow.jurisdiction} workspace track is kept but not active in this release `
+        + '(UAE-first), so its lines cannot move off not started',
+        409
+      );
+    }
+  } else {
+    const set = documentSetFor(caseRow.jurisdiction);
+    if ((!set || !set.active) && status !== 'not_started') {
+      throw new PreboardingItemError(
+        `The ${caseRow.jurisdiction} document set is kept but not active in this release (UAE-first), `
+        + 'so its items cannot move off not started',
+        409
+      );
+    }
   }
 
   const allowed = ALLOWED_TRANSITIONS[item.status] || [];
@@ -282,9 +317,15 @@ async function setItemStatus(input) {
     );
   }
 
-  // The gate itself. Receiving a document means personal data is collected, so the consent
-  // record must already exist — checked here, on the transition, for every caller.
-  if (COLLECTED_STATUSES.indexOf(status) !== -1 && !(await hasConsent(caseId))) {
+  // The gate itself. Receiving a document means the hire's personal data is collected, so the
+  // consent record must already exist — checked here, on the transition, for every caller.
+  // Scoped to the employee track on purpose: a provisioning line (a laptop, a badge, a seat) is
+  // not the hire's personal document, and making IT's work wait on a PDPL consent the hire has
+  // not signed would invent a rule nobody stated. The `track` column is what keeps those apart —
+  // without it, putting both tracks in one table would have silently gated the laptop too.
+  if (track === 'employee'
+      && COLLECTED_STATUSES.indexOf(status) !== -1
+      && !(await hasConsent(caseId))) {
     throw new PreboardingItemError(
       'A document cannot be collected before the PDPL consent record exists for this case. '
       + 'Record PDPL consent first.',
@@ -325,17 +366,28 @@ async function setItemStatus(input) {
 }
 
 /**
- * Outstanding = every required item that has not been collected yet. Derived from the item
- * rows on every read; nothing stores an "outstanding" flag that could go stale.
+ * Outstanding = every required item **on the given track** that has not been collected yet.
+ * Derived from the item rows on every read; nothing stores an "outstanding" flag that could go
+ * stale.
+ *
+ * The track argument exists because the two tracks must never be counted as one (P2-4's lines
+ * live in the same table): the employee-track roll-up, and the reminder that is written from it,
+ * are about the hire's documents. A laptop is not something to remind the hire about, and a
+ * single blended count would hide which function is late — the defect the design review names.
  */
-function outstandingOf(items) {
+function outstandingOf(items, track = 'employee') {
   return items
+    .filter((item) => (item.track || 'employee') === track)
     .filter((item) => COLLECTED_STATUSES.indexOf(item.status) === -1)
     .map((item) => ({
       item_key: item.item_key,
       label: item.label,
       status: item.status,
       required: Boolean(item.required),
+      track: item.track || 'employee',
+      // Present on the workspace track, and null on the employee track — where no owner is
+      // recorded, and therefore none is invented.
+      owner: item.owner === undefined ? null : item.owner,
     }));
 }
 
@@ -416,14 +468,26 @@ function daysUntil(startDate) {
   return Math.round((target - startOfToday) / 86400000);
 }
 
-/** One case's roll-up: the counts, the outstanding items by name, the consent state. */
+/**
+ * One case's roll-up: the counts, the outstanding items by name, the consent state.
+ *
+ * **Every count here is the EMPLOYEE track's** unless it is inside `by_track`, and that is
+ * deliberate. Pre-P2-4 this table held one track, so "the counts" needed no qualifier; now that
+ * P2-4's provisioning lines live in the same table, an unqualified `items_total` would silently
+ * become a blended number — the merged-track defect the design review rules out. So the
+ * employee-track fields keep their old meaning and their old numbers, the workspace counts travel
+ * in `by_track`, and each surface prints the track it is talking about. The 48-hour flag is the
+ * one thing that reads BOTH, because it is defined over every item on the case (P2-5).
+ */
 function caseSummary(caseRow, items, consent, reminders) {
+  const employeeItems = items.filter((item) => (item.track || 'employee') === 'employee');
   const byStatus = { not_started: 0, requested: 0, received: 0, verified: 0 };
-  for (const item of items) {
+  for (const item of employeeItems) {
     if (byStatus[item.status] === undefined) byStatus[item.status] = 0;
     byStatus[item.status] += 1;
   }
   const outstanding = outstandingOf(items);
+  const byTrack = workspace.trackCountsFor(items, COLLECTED_STATUSES);
   const lastReminder = reminders.length ? reminders[reminders.length - 1] : null;
   return {
     case_id: caseRow.id,
@@ -445,11 +509,21 @@ function caseSummary(caseRow, items, consent, reminders) {
       collected_statuses: COLLECTED_STATUSES,
     }),
     document_set_active: isDocumentSetActive(caseRow.jurisdiction),
-    checklist_seeded: items.length > 0,
-    items_total: items.length,
+    checklist_seeded: employeeItems.length > 0,
+    items_total: employeeItems.length,
     by_status: byStatus,
     outstanding_count: outstanding.length,
     outstanding,
+    // P2-4 — the per-track roll-up. "7 of 7" and "4 of 14" are two facts about one case; a single
+    // blended count would hide which track and which function is late.
+    by_track: {
+      employee: { ...byTrack.employee, active: isDocumentSetActive(caseRow.jurisdiction) },
+      workspace: {
+        ...byTrack.workspace,
+        active: workspace.isWorkspaceActive(caseRow.jurisdiction),
+        functions: workspace.WORKSPACE_FUNCTIONS,
+      },
+    },
     consent_recorded: Boolean(consent),
     consent_granted_at: consent ? consent.granted_at : null,
     last_reminder_at: lastReminder ? lastReminder.created_at : null,
@@ -471,12 +545,18 @@ async function checklistOverview(options = {}) {
 
   const emptyTotals = {
     cases: 0,
+    // Employee-track totals: these keep the meaning they had before P2-4 existed, so a figure a
+    // surface already prints does not silently change what it counts.
     items: 0,
     items_outstanding: 0,
     items_received: 0,
     items_verified: 0,
     cases_without_consent: 0,
     cases_ready: 0,
+    // Workspace-track totals (P2-4), side by side and never summed with the above.
+    workspace_lines: 0,
+    workspace_lines_open: 0,
+    cases_provisioned: 0,
   };
   if (cases.length === 0) return { jurisdiction, cases: [], totals: emptyTotals };
 
@@ -510,6 +590,11 @@ async function checklistOverview(options = {}) {
     acc.items_verified += summary.by_status.verified;
     if (!summary.consent_recorded) acc.cases_without_consent += 1;
     if (summary.checklist_seeded && summary.outstanding_count === 0) acc.cases_ready += 1;
+    acc.workspace_lines += summary.by_track.workspace.lines;
+    acc.workspace_lines_open += summary.by_track.workspace.open;
+    if (summary.by_track.workspace.lines > 0 && summary.by_track.workspace.open === 0) {
+      acc.cases_provisioned += 1;
+    }
     return acc;
   }, { ...emptyTotals });
 
@@ -520,8 +605,8 @@ async function checklistOverview(options = {}) {
 async function caseChecklist(caseId) {
   const caseRow = await getCaseRow(caseId);
   if (!caseRow) throw new PreboardingItemError('Pre-boarding case not found', 404);
-  const [items, consent, reminders] = await Promise.all([
-    listItems(caseId),
+  const [allItems, consent, reminders] = await Promise.all([
+    listAllItems(caseId),
     getConsent(caseId),
     listReminders(caseId),
   ]);
@@ -531,8 +616,13 @@ async function caseChecklist(caseId) {
     document_set_active: isDocumentSetActive(caseRow.jurisdiction),
     consent: consent || null,
     reminders,
-    summary: caseSummary(caseRow, items, consent, reminders),
-    items,
+    // The summary counts both tracks (it carries by_track and the flag), so it is built from
+    // every item on the case…
+    summary: caseSummary(caseRow, allItems, consent, reminders),
+    // …while this list is the EMPLOYEE track's, because that is the panel it feeds: documents,
+    // the status machine's verbs and the PDPL consent gate. P2-4's provisioning lines have their
+    // own read (GET …/workspace) with its own shape and their own function grouping.
+    items: allItems.filter((item) => (item.track || 'employee') === 'employee'),
   };
 }
 
@@ -574,6 +664,7 @@ module.exports = {
   isDocumentSetActive,
   seedItemsForCase,
   listItems,
+  listAllItems,
   getItem,
   setItemStatus,
   getConsent,

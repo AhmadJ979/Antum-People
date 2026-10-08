@@ -115,6 +115,11 @@ interface PreboardingPackage {
 }
 interface PreboardingChecklistRow {
   case_id: string;
+  // P2-4 - the per-track counts: two facts about one case, never one blended number.
+  by_track?: {
+    employee: { lines: number; complete: number; open: number; active: boolean };
+    workspace: { lines: number; complete: number; open: number; active: boolean; functions: string[] };
+  };
   offer_reference: string;
   candidate_name: string;
   role: string;
@@ -154,6 +159,35 @@ interface PreboardingFlag {
   boundary_hours: number;
   boundary_inclusive: boolean;
   scope_note: string;
+}
+
+// P2-4 - the workspace track. Read per case (and re-read when the function filter moves) and
+// never computed here: the catalog, the function split and the due dates are the server's, and
+// the board says in `view` that the function filter is a filter, not access control.
+interface WorkspaceLine {
+  item_key: string;
+  label: string;
+  category: string;
+  owner: string;
+  status: string;
+  complete: boolean;
+  due_date: string | null;
+  due_rule: string | null;
+  days_to_due: number | null;
+  overdue: boolean;
+}
+interface WorkspaceFunctionCount { function: string; lines: number; complete: number; open: number }
+interface WorkspaceBoard {
+  case_id: string;
+  jurisdiction: string;
+  start_date: string;
+  track_active: boolean;
+  track_note: string | null;
+  derived_from: { role: string; department: string; profile_keys: string[] };
+  available_functions: WorkspaceFunctionCount[];
+  view: { mode: 'all' | 'function'; function: string | null; label: string; note: string; is_access_control: boolean };
+  groups: { function: string; lines: WorkspaceLine[] }[];
+  totals: { lines: number; complete: number; open: number; overdue: number };
 }
 
 interface PreboardingOverview {
@@ -413,6 +447,11 @@ export default function App() {
   // P2-3 - the pre-reading package per case, straight from the server's derivation. Nothing is
   // marked acknowledged here; the record is written by the endpoint and this re-renders from it.
   const [casePackages, setCasePackages] = useState<Record<string, PreboardingPackage>>({});
+  // P2-4 - the workspace track per case, and the function filter. The filter is a VIEW and the
+  // board says so in its own words: it narrows what is shown and is not an access boundary while
+  // the product has one shared account. No copy here may call it "My lines" or imply a scope.
+  const [caseWorkspaces, setCaseWorkspaces] = useState<Record<string, WorkspaceBoard>>({});
+  const [workspaceFunction, setWorkspaceFunction] = useState<string>('All');
   const [checklistNotice, setChecklistNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [casesLoading, setCasesLoading] = useState(false);
   const [offerNotice, setOfferNotice] = useState<{ kind: 'ok' | 'existing' | 'error'; text: string } | null>(null);
@@ -641,6 +680,44 @@ export default function App() {
     }
   };
   /**
+   * P2-4 - one read per case (and per filter), straight from the server. The function filter is
+   * passed as the query parameter the endpoint names, so the narrowing happens once, on the
+   * server, in the module that owns the catalog.
+   */
+  const fetchCaseWorkspace = async (caseId: string, fn: string = workspaceFunction) => {
+    if (!token) return;
+    try {
+      const query = fn && fn !== 'All' ? `?function=${encodeURIComponent(fn)}` : '';
+      const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/workspace${query}`);
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setChecklistNotice({ kind: 'error', text: data.error || `The workspace track could not be read (HTTP ${res.status}).` });
+        return;
+      }
+      setCaseWorkspaces(prev => ({ ...prev, [caseId]: data as WorkspaceBoard }));
+    } catch (err) {
+      console.error('Error fetching the workspace track:', err);
+    }
+  };
+
+  /** The filter chip: remembers the choice, then re-reads the board the server returns. */
+  const handleWorkspaceFunction = async (fn: string) => {
+    setWorkspaceFunction(fn);
+    if (openCaseId) await fetchCaseWorkspace(openCaseId, fn);
+  };
+
+  /** A workspace line moves through the same item route as a document, then the board is re-read. */
+  const handleWorkspaceStatus = async (caseId: string, itemKey: string,
+    status: 'not_started' | 'requested' | 'received' | 'verified') => {
+    await handleItemStatus(caseId, itemKey, status);
+    await fetchCaseWorkspace(caseId);
+  };
+
+  /**
    * Recording is a write, and the server alone decides whether an item reads acknowledged. This
    * sends the request and re-renders from the response: nothing is marked here first, there is no
    * default-checked box, and a refusal from the server is shown as the refusal it is.
@@ -680,6 +757,7 @@ export default function App() {
     setOpenCaseId(caseId);
     if (!caseChecklist[caseId]) await fetchCaseChecklist(caseId);
     if (!casePackages[caseId]) await fetchCasePackage(caseId);
+    if (!caseWorkspaces[caseId]) await fetchCaseWorkspace(caseId);
   };
 
   const handleItemStatus = async (caseId: string, itemKey: string, status: PreboardingItem['status']) => {
@@ -1675,6 +1753,7 @@ export default function App() {
                         const open = openCaseId === row.case_id;
                         const detail = caseChecklist[row.case_id];
                         const pkgData = casePackages[row.case_id];
+                        const wsData = caseWorkspaces[row.case_id];
                         return (
                           <div key={row.case_id} className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
                             <button onClick={() => toggleCase(row.case_id)} className="w-full text-left p-4">
@@ -1709,6 +1788,15 @@ export default function App() {
                                   <span className={row.outstanding_count > 0 ? 'text-rose-600 font-semibold' : 'text-teal-700 font-semibold'}>
                                     {row.outstanding_count} outstanding
                                   </span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-400">Workspace:</span>{' '}
+                                  {row.by_track
+                                    ? `${row.by_track.workspace.complete} of ${row.by_track.workspace.lines} done`
+                                    : 'not read yet'}
+                                  {row.by_track && row.by_track.workspace.open > 0 && (
+                                    <span className="text-amber-700"> · {row.by_track.workspace.open} open</span>
+                                  )}
                                 </div>
                               </div>
 {row.flag.raised && (
@@ -1824,6 +1912,97 @@ export default function App() {
                                       A reminder is recorded in the product. There is no mailer, webhook or SMS yet, so nothing
                                       is sent to the hire — the delivery channel is a separate decision.
                                     </p>
+                                    {/* P2-4 - the workspace track. One provisioning checklist, split across the
+                                        four functions the spec names, every line carrying its owner and a due date
+                                        derived from the start date. The board is the server's: this file renders
+                                        what it returns and holds no catalog of its own. */}
+                                    <div className="mt-4 border-t border-slate-100 pt-3">
+                                      <div className="flex justify-between items-center">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                          Workspace track
+                                          {wsData && <span className="text-slate-400 normal-case tracking-normal"> · {wsData.totals.complete} of {wsData.totals.lines} done</span>}
+                                          {wsData && wsData.totals.overdue > 0 && <span className="text-rose-600 normal-case tracking-normal font-semibold"> · {wsData.totals.overdue} past due</span>}
+                                          {wsData && !wsData.track_active && <span className="text-amber-700 normal-case tracking-normal"> · track not active in this release</span>}
+                                        </div>
+                                        {wsData && (
+                                          <span className="text-[10px] text-slate-400">
+                                            from {wsData.derived_from.role} · {wsData.derived_from.department}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="mt-2 flex flex-wrap items-center gap-1">
+                                        <span className="text-[10px] font-bold text-slate-500">
+                                          {wsData ? wsData.view.label : 'View by function'}:
+                                        </span>
+                                        {['All', 'IT', 'Admin', 'HR', 'Manager'].map(fn => {
+                                          const count = wsData
+                                            ? (fn === 'All'
+                                              ? wsData.totals.open
+                                              : (wsData.available_functions.find(f => f.function === fn)?.open ?? 0))
+                                            : null;
+                                          return (
+                                            <button key={fn} onClick={() => handleWorkspaceFunction(fn)}
+                                              className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${workspaceFunction === fn ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}>
+                                              {fn}{count !== null ? ` (${count})` : ''}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                      {wsData && (
+                                        <p className="mt-1 text-[9px] text-slate-400">{wsData.view.note}</p>
+                                      )}
+                                      {!wsData ? (
+                                        <p className="mt-2 text-[11px] text-slate-400">Reading the workspace track...</p>
+                                      ) : (
+                                        <div className="mt-2 space-y-3">
+                                          {wsData.groups.map(group => (
+                                            <div key={group.function}>
+                                              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                                {group.function} · {group.lines.filter(l => l.complete).length}/{group.lines.length}
+                                              </div>
+                                              <div className="mt-1 space-y-2">
+                                                {group.lines.map(line => (
+                                                  <div key={line.item_key} className="flex justify-between items-start gap-2 p-2 rounded-lg border border-slate-100">
+                                                    <div className="min-w-0">
+                                                      <div className="text-[11px] font-semibold text-slate-800">{line.label}</div>
+                                                      <div className="text-[10px] text-slate-400">
+                                                        {line.owner} · {line.category.replace('_', ' ')} · {line.status.replace('_', ' ')}
+                                                        {line.due_date ? ` · due ${line.due_date} (${line.due_rule})` : ''}
+                                                        {line.due_date && line.days_to_due !== null && (
+                                                          line.days_to_due < 0
+                                                            ? <span className="text-rose-600 font-semibold"> · {Math.abs(line.days_to_due)} d past due</span>
+                                                            : <span> · in {line.days_to_due} d</span>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                    <div className="flex space-x-1 shrink-0">
+                                                      {line.status === 'not_started' && (
+                                                        <ItemButton label="Requested" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'requested')} />
+                                                      )}
+                                                      {line.status === 'requested' && (
+                                                        <>
+                                                          <ItemButton label="Received" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'received')} />
+                                                          <ItemButton label="Cancel" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'not_started')} />
+                                                        </>
+                                                      )}
+                                                      {line.status === 'received' && (
+                                                        <>
+                                                          <ItemButton label="Verified" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'verified')} />
+                                                          <ItemButton label="Send back" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'requested')} />
+                                                        </>
+                                                      )}
+                                                      {line.status === 'verified' && (
+                                                        <span className="text-[10px] font-bold text-teal-700 px-2 py-1">verified</span>
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
                                     {/* P2-3 — the pre-reading package. Every row below comes from the server's own list for
                                         this case's jurisdiction: the nine items are never re-listed in this file, and a row
                                         reads acknowledged only because the server returned a record for it. Sent and read are

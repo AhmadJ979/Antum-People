@@ -1,0 +1,42 @@
+# P2-4 — the workspace track: the route over real HTTP
+#
+# Produced by: bash docs/evidence/p2-4/run-http-smoke.sh   (committed beside this file)
+# Against a throwaway database (PRODUCT_DB_PATH=/tmp/p24smoke.db, port 4789) — no live data,
+# and the live deployment is untouched.
+#
+# Evidence is about THE TREE THAT WILL MERGE (rule 19): this run was taken after rebasing onto
+# current origin/main, where the branch tip tree and the merge tree are the same object:
+#     git rev-parse HEAD^{tree}                 → 7c2a4415
+#     git merge-tree --write-tree origin/main HEAD → 7c2a4415   (identical, no conflicts)
+# Branch tip at run: 5ce2b4b   |   origin/main at run: a59890f
+# run (UTC): 2026-10-08T09:50:12Z
+migrate exit: 0
+(node:32201) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+CASE 44a1d715-bd0b-49b0-a1d4-7b4329d1e7e0 workspace_lines=15
+case: 44a1d715-bd0b-49b0-a1d4-7b4329d1e7e0 | token: 232 chars
+--- the board (unfiltered):
+view       : View by function | mode all | is_access_control False
+derived    : {'role': 'Marketing Manager', 'department': 'Marketing', 'profile_keys': ['people_manager']}
+counts     : [('IT', 6, 'of', 6), ('Admin', 3, 'of', 3), ('HR', 2, 'of', 2), ('Manager', 4, 'of', 4)]
+totals     : {'lines': 15, 'complete': 0, 'open': 15, 'overdue': 0}
+  IT [('ws_device', 'IT', '2026-12-02', 'D-5'), ('ws_email_sso', 'IT', '2026-12-02', 'D-5'), ('ws_licensed_software', 'IT', '2026-12-04', 'D-3'), ('ws_system_access', 'IT', '2026-12-04', 'D-3'), ('ws_vpn', 'IT', '2026-12-04', 'D-3'), ('ws_manager_system_access', 'IT', '2026-12-04', 'D-3')]
+  Admin [('ws_building_card', 'Admin', '2026-12-06', 'D-1'), ('ws_desk_seat', 'Admin', '2026-12-06', 'D-1'), ('ws_parking', 'Admin', '2026-12-06', 'D-1')]
+  HR [('ws_employee_file', 'HR', '2026-12-04', 'D-3'), ('ws_payroll_setup', 'HR', '2026-12-02', 'D-5')]
+  Manager [('ws_first_week_agenda', 'Manager', '2026-12-06', 'D-1'), ('ws_buddy_mentor', 'Manager', '2026-12-06', 'D-1'), ('ws_day_30_checkin', 'Manager', '2026-12-07', 'D-0'), ('ws_team_introduction', 'Manager', '2026-12-07', 'D-0')]
+--- the same board filtered to IT:
+mode  : function | function: IT | groups: ['IT']
+lines : ['ws_device', 'ws_email_sso', 'ws_licensed_software', 'ws_system_access', 'ws_vpn', 'ws_manager_system_access']
+counts still carried: ['IT', 'Admin', 'HR', 'Manager']
+--- refusal: a function that does not exist
+http 400 {"error":"Function Finance is not one of the four the workspace track assigns to (IT, Admin, HR, Manager)"}
+--- refusal: a case that does not exist
+http 404 {"error":"Pre-boarding case not found"}
+--- the employee-track read, to show the two are not merged
+employee items : ['passport', 'visa_or_entry_permit', 'emirates_id', 'education_certificate', 'experience_certificate', 'bank_details', 'emergency_contact']
+by_track       : {'employee': {'lines': 7, 'complete': 0, 'open': 7, 'active': True}, 'workspace': {'lines': 15, 'complete': 0, 'open': 15, 'active': True, 'functions': ['IT', 'Admin', 'HR', 'Manager']}}
+flag open_count: 22 | employee outstanding: 7
+--- no-delivery words anywhere in the board payload
+0
+0 (none)
+server stopped
