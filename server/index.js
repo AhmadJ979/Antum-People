@@ -7,6 +7,7 @@ const auth = require('./auth');
 const eosb = require('./eosb');
 const preboarding = require('./preboarding');
 const preboardingItems = require('./preboarding-items');
+const preboardingPackage = require('./preboarding-package');
 const { createFlagWatcher } = require('./preboarding-flag-scheduler');
 const fs = require('fs');
 
@@ -723,6 +724,44 @@ app.post('/api/preboarding/cases/:id/consent', async (req, res) => {
 const flagWatcher = createFlagWatcher({
   snapshot: () => preboardingItems.flagWatchSnapshot(),
   log: (line) => console.log(line),
+});
+// -------------------------------------------------------------
+// LAYER 2 — PRE-READING PACKAGE (P2-3: the acknowledgement record)
+// -------------------------------------------------------------
+// Transport only. Every rule that matters — there is no delivery channel, an item is
+// acknowledged only where its record exists, the actor must be named, a signature cannot be
+// recorded — lives in preboarding-package.js, so a caller that is not this route gets the same
+// refusals. `?as_of=` is the time-stamped view: what was outstanding on a given date.
+app.get('/api/preboarding/cases/:id/package', async (req, res) => {
+  try {
+    res.json(await preboardingPackage.casePackage(req.params.id, { as_of: req.query.as_of }));
+  } catch (err) {
+    if (err instanceof preboardingPackage.PreboardingPackageError) {
+      return res.status(err.status).json({ error: err.message });
+    }
+    console.error('[PreboardingPackage] Failed to read the pre-reading package:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+app.post('/api/preboarding/cases/:id/package/:itemKey/acknowledgement', async (req, res) => {
+  try {
+    const result = await preboardingPackage.recordAcknowledgement({
+      case_id: req.params.id,
+      item_key: req.params.itemKey,
+      // The actor is the signed-in user, and it is passed explicitly: the module refuses a
+      // record that does not name one.
+      recorded_by: (req.user && req.user.username) || null,
+      method: req.body && req.body.method,
+      note: req.body && req.body.note,
+    });
+    res.status(result.created ? 201 : 200).json(result);
+  } catch (err) {
+    if (err instanceof preboardingPackage.PreboardingPackageError) {
+      return res.status(err.status).json({ error: err.message });
+    }
+    console.error('[PreboardingPackage] Failed to record an acknowledgement:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 app.get('/api/preboarding/flag-watch', async (req, res) => {
   try {

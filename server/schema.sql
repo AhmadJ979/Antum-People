@@ -252,5 +252,35 @@ CREATE TABLE IF NOT EXISTS preboarding_consents (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+-- -------------------------------------------------------------
+-- LAYER 2 — PRE-READING PACKAGE (P2-3: the acknowledgement record)
+-- -------------------------------------------------------------
+-- The record P2-3 is built on: "nothing is marked acknowledged without the acknowledgement
+-- existing" (spec §9 D6). One row per item the hire's package has actually recorded, and the
+-- read derives its state from these rows alone — never from a case-level progress figure.
+--
+-- Two honest limits are encoded here rather than papered over:
+--   * `recorded_by` is NOT NULL. There is no hire-facing portal (P2-6) and no new-hire login
+--     (per-user accounts are Layer 3), so the only actor this release can name is the person
+--     recording on the hire's behalf, and the record names them.
+--   * `method` is an in-product record, never a signature. The product cannot obtain an
+--     e-signature, so a row claiming one must not be constructible.
+-- UNIQUE (case_id, item_key) makes recording idempotent: a replay returns the existing record
+-- instead of creating a second one, so the timestamp HR reads is the one that was first written.
+CREATE TABLE IF NOT EXISTS preboarding_acknowledgements (
+  id TEXT PRIMARY KEY,
+  case_id TEXT NOT NULL,
+  item_key TEXT NOT NULL,
+  item_label TEXT NOT NULL,
+  jurisdiction TEXT NOT NULL,
+  acknowledgement_required INTEGER NOT NULL DEFAULT 0,
+  recorded_by TEXT NOT NULL,
+  method TEXT NOT NULL DEFAULT 'in_product_record',
+  note TEXT,
+  acknowledged_at TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (case_id, item_key)
+);
+CREATE INDEX IF NOT EXISTS idx_preboarding_ack_case ON preboarding_acknowledgements (case_id);
 CREATE INDEX IF NOT EXISTS idx_preboarding_items_case ON preboarding_items (case_id);
 CREATE INDEX IF NOT EXISTS idx_preboarding_reminders_case ON preboarding_reminders (case_id);

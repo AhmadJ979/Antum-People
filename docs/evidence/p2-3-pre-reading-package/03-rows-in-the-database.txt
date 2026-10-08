@@ -1,0 +1,10 @@
+preboarding_acknowledgements rows: 1
+  signed_jd by scratch method=in_product_record at 2026-10-08T07:34:55.740Z
+audit_logs ACKNOWLEDGE rows: 1
+  new_values={"item_key":"signed_jd","from":"not_recorded","to":"acknowledged","method":"in_product_record","acknowledged_at":"2026-10-08T07:34:55.740Z"}  contains the note text? false
+preboarding_items per case (P2-3 writes none of these):
+  case 0771182f-d92b-4155-8f96-30bc6e07dd1b items=6 moved_off_not_started=0
+  case 32b2d084-b569-4ddf-ab06-a3165af8f98e items=7 moved_off_not_started=3
+  case 8b10770d-afdc-4bc3-9b58-96502d32ad2f items=7 moved_off_not_started=0
+  case b2de9e09-fc79-484b-a9c7-c8f89767fe45 items=7 moved_off_not_started=0
+  case e3dd9b6f-048f-40df-974d-efdc1b779835 items=7 moved_off_not_started=0

@@ -73,6 +73,46 @@ interface PreboardingItem {
 
 // The HR roll-up row: what is outstanding on a case, named, so HR never opens a case to find
 // out. Every figure here is computed by the server; the client renders what it is given.
+// P2-3 - the pre-reading package as the server derives it. The nine items are NOT listed here:
+// they arrive from one server-side list, jurisdiction-aware, so a second copy cannot drift.
+interface PreboardingPackageItem {
+  item_key: string;
+  label: string;
+  category: string;
+  acknowledgement_required: boolean;
+  // There is no delivery channel and no hire-facing portal in this release, so both of these are
+  // facts about the product rather than states the item moves through. The client renders the
+  // server's words and does not soften them.
+  delivery: { state: string; reason: string; label: string };
+  reading: { state: string; reason: string; label: string };
+  state: 'acknowledged' | 'not_recorded';
+  state_label: string;
+  acknowledged: boolean;
+  acknowledgement: {
+    recorded_by: string;
+    acknowledged_at: string;
+    method: string;
+    method_label: string;
+    note: string | null;
+  } | null;
+}
+interface PreboardingPackage {
+  case_id: string;
+  jurisdiction: string;
+  start_date: string;
+  package_label: string | null;
+  package_available: boolean;
+  package_unavailable_reason: string | null;
+  delivery_channel: string;
+  copy_note: string;
+  as_of: string | null;
+  item_count: number;
+  recorded_count: number;
+  required_total: number;
+  required_recorded: number;
+  missing_required: string[];
+  items: PreboardingPackageItem[];
+}
 interface PreboardingChecklistRow {
   case_id: string;
   offer_reference: string;
@@ -370,6 +410,9 @@ export default function App() {
   const [checklistOverview, setChecklistOverview] = useState<PreboardingOverview | null>(null);
   const [openCaseId, setOpenCaseId] = useState<string | null>(null);
   const [caseChecklist, setCaseChecklist] = useState<Record<string, { items: PreboardingItem[]; consent: { granted_at: string } | null; document_set_active: boolean }>>({});
+  // P2-3 - the pre-reading package per case, straight from the server's derivation. Nothing is
+  // marked acknowledged here; the record is written by the endpoint and this re-renders from it.
+  const [casePackages, setCasePackages] = useState<Record<string, PreboardingPackage>>({});
   const [checklistNotice, setChecklistNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [casesLoading, setCasesLoading] = useState(false);
   const [offerNotice, setOfferNotice] = useState<{ kind: 'ok' | 'existing' | 'error'; text: string } | null>(null);
@@ -579,6 +622,55 @@ export default function App() {
     if (openCaseId) await fetchCaseChecklist(openCaseId);
   };
 
+  const fetchCasePackage = async (caseId: string) => {
+    if (!token) return;
+    try {
+      const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/package`);
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setChecklistNotice({ kind: 'error', text: data.error || `The pre-reading package could not be read (HTTP ${res.status}).` });
+        return;
+      }
+      setCasePackages(prev => ({ ...prev, [caseId]: data as PreboardingPackage }));
+    } catch (err) {
+      console.error('Error fetching the pre-reading package:', err);
+    }
+  };
+  /**
+   * Recording is a write, and the server alone decides whether an item reads acknowledged. This
+   * sends the request and re-renders from the response: nothing is marked here first, there is no
+   * default-checked box, and a refusal from the server is shown as the refusal it is.
+   */
+  const handleRecordAcknowledgement = async (caseId: string, itemKey: string, label: string) => {
+    try {
+      const res = await authedFetch(
+        `${API_BASE}/api/preboarding/cases/${caseId}/package/${itemKey}/acknowledgement`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      if (!res.ok) {
+        setChecklistNotice({ kind: 'error', text: data.error || `The acknowledgement was not recorded (HTTP ${res.status}).` });
+        return;
+      }
+      if (data.package) setCasePackages(prev => ({ ...prev, [caseId]: data.package as PreboardingPackage }));
+      setChecklistNotice({
+        kind: 'ok',
+        text: data.created === false
+          ? `${label}: already recorded — the first record stands, and its timestamp was not rewritten.`
+          : `${label}: acknowledgement recorded in the product, by the signed-in user on the hire's behalf — an in-product record, not an electronic signature.`,
+      });
+    } catch (err) {
+      console.error('Error recording an acknowledgement:', err);
+    }
+  };
   const toggleCase = async (caseId: string) => {
     if (openCaseId === caseId) {
       setOpenCaseId(null);
@@ -587,6 +679,7 @@ export default function App() {
     setChecklistNotice(null);
     setOpenCaseId(caseId);
     if (!caseChecklist[caseId]) await fetchCaseChecklist(caseId);
+    if (!casePackages[caseId]) await fetchCasePackage(caseId);
   };
 
   const handleItemStatus = async (caseId: string, itemKey: string, status: PreboardingItem['status']) => {
@@ -1581,6 +1674,7 @@ export default function App() {
                         const rowDistance = relDays(row.flag);
                         const open = openCaseId === row.case_id;
                         const detail = caseChecklist[row.case_id];
+                        const pkgData = casePackages[row.case_id];
                         return (
                           <div key={row.case_id} className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
                             <button onClick={() => toggleCase(row.case_id)} className="w-full text-left p-4">
@@ -1730,6 +1824,77 @@ export default function App() {
                                       A reminder is recorded in the product. There is no mailer, webhook or SMS yet, so nothing
                                       is sent to the hire — the delivery channel is a separate decision.
                                     </p>
+                                    {/* P2-3 — the pre-reading package. Every row below comes from the server's own list for
+                                        this case's jurisdiction: the nine items are never re-listed in this file, and a row
+                                        reads acknowledged only because the server returned a record for it. Sent and read are
+                                        the product's honest non-states — there is no delivery channel and no hire portal. */}
+                                    <div className="mt-4 border-t border-slate-100 pt-3">
+                                      <div className="flex justify-between items-center">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                          Pre-reading package
+                                          {pkgData && <span className="text-slate-400 normal-case tracking-normal"> · {pkgData.recorded_count}/{pkgData.item_count} acknowledged · {pkgData.required_recorded}/{pkgData.required_total} required</span>}
+                                        </div>
+                                        {pkgData && pkgData.package_available && (
+                                          <span className="text-[10px] text-slate-400">JD and NDA carry a required acknowledgement</span>
+                                        )}
+                                      </div>
+                                      {!pkgData ? (
+                                        <p className="mt-2 text-[11px] text-slate-400">Reading the pre-reading package…</p>
+                                      ) : (
+                                        <>
+                                          <div className="mt-2 space-y-2">
+                                            {pkgData.items.map(item => (
+                                              <div key={item.item_key} className="flex justify-between items-start gap-2 p-2 rounded-lg border border-slate-100">
+                                                <div className="min-w-0">
+                                                  <div className="text-[11px] font-semibold text-slate-800">
+                                                    {item.label}
+                                                    {item.acknowledgement_required && (
+                                                      <span className="ml-2 text-[9px] font-bold uppercase tracking-widest text-rose-700">required acknowledgement</span>
+                                                    )}
+                                                  </div>
+                                                  <div className="text-[10px] text-slate-500">
+                                                    Sent: <span className="font-semibold text-slate-600">not available</span> — no delivery channel in this release
+                                                  </div>
+                                                  <div className="text-[10px] text-slate-500">
+                                                    Read: <span className="font-semibold text-slate-600">not tracked</span> — no hire-facing portal in this release
+                                                  </div>
+                                                  <div className="text-[10px] text-slate-500">
+                                                    Acknowledged:{' '}
+                                                    {item.acknowledgement ? (
+                                                      <span className="font-semibold text-teal-700">
+                                                        {item.acknowledgement.recorded_by} · {item.acknowledgement.acknowledged_at} · in-product record, not an e-signature
+                                                      </span>
+                                                    ) : (
+                                                      <span className="font-semibold text-slate-600">not recorded</span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                                {!item.acknowledgement && (
+                                                  <button
+                                                    onClick={() => handleRecordAcknowledgement(row.case_id, item.item_key, item.label)}
+                                                    disabled={!pkgData.package_available}
+                                                    title={!pkgData.package_available
+                                                      ? (pkgData.package_unavailable_reason || undefined)
+                                                      : "Records an in-product acknowledgement by the signed-in user, on the hire's behalf"}
+                                                    className="shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-40">
+                                                    Record acknowledgement
+                                                  </button>
+                                                )}
+                                              </div>
+                                            ))}
+                                          </div>
+                                          {!pkgData.package_available && (
+                                            <p className="mt-2 text-[10px] font-medium text-amber-700">{pkgData.package_unavailable_reason}</p>
+                                          )}
+                                          <p className="mt-2 text-[9px] text-slate-400">
+                                            The package is listed, not delivered: there is no mailer, webhook or SMS, so nothing has
+                                            been sent, and there is no hire-facing portal, so no read event exists to record. Each
+                                            acknowledgement is recorded in the product by the signed-in user on the hire's behalf — an
+                                            in-product record, not an electronic signature.
+                                          </p>
+                                        </>
+                                      )}
+                                    </div>
                                   </>
                                 )}
                               </div>
