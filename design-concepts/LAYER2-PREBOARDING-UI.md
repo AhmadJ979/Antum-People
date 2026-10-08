@@ -331,7 +331,7 @@ flag_is_raised  =  open_items_in_case > 0
 
 | State | Condition | Chip | Headline copy | Body copy | Colour |
 |---|---|---|---|---|---|
-| **Clear** | No open items, **or** more than 48h to start with everything open still fine | ⚪ **On track** | "On track" | "Started *n* days before day one." (only when items exist and are open) | Slate / Success Green |
+| **Clear** | No open items, **or** more than 48h to start with everything open still fine | ⚪ **On track** | "On track" | "*n* items still open, with *d* days to go — the flag starts 48 hours before the start date." (only when items exist and are open) | Slate / Success Green |
 | **Inside 48 hours with open items** | `open > 0` and `≤ 48h` to start | 🟠 **Inside 48 hours · *n* items open** | "*n* items open · start in 48 hours or less" | Names each open item, its status and the distance to start — **hours, one decimal**, the row's one rule (§2) — and its owner's function **only where one exists** (see the copy rules) | Warm Amber |
 | **Start date passed, items still open** | `open > 0` and start < now | 🔴 **Started *n* days ago · *n* items open** | "Started with *n* items still open" | Same list; adds the honest line "these were due before day one" | Coral Red |
 | *No start date* | — | — | Cannot render: a case without a start date cannot exist (P2-1). If one were ever read, the surface shows the error state, **not** a default date. | | Rose |
@@ -380,6 +380,14 @@ The flag is a **state, not an event**. On this product there is no mailer, webho
   across the boundary, the flag simply reads correctly on the next read with **no** "missed
   notification" state, because a derived flag has nothing to miss.
 
+**Anchor check — re-read off `origin/main` = `404b29d`, 2026-10-08.** The client anchors this section rests on, each with the grep that finds it, run against the merged file rather than a branch:
+
+- `{row.flag.chip}` — `git show origin/main:client/src/App.tsx | grep -n "row.flag.chip"` -> **`:1690`** (the guard) and **`:1696`** (the span); the `Open`/`Close` span sits at `:1699`.
+- the row's own distance — `... | grep -n "relDays(row.flag)"` -> **`:1674`**.
+- `h before 00:00 on the start date` — `... | grep -n "h before 00:00"` -> **two** hits, **`:197`** (the flag's own derivation in `relDays`) and **`:1733`** (the panel's own line). It is **not** a unique anchor: quote the hit you mean.
+
+An earlier submission cited `:1624` for the third of these and `:1605` for the first. Both were carried rather than re-read: `:1605` was this span when the review ran against `5087136`, `:1624` was never right, and **PR #79 (2026-10-08) added 165 lines to this file, none deleted** (`git diff --numstat 5087136 404b29d -- client/src/App.tsx` -> `165  0`; 1887 lines -> 2052), which is why no single offset describes the move: `:157` -> `:197` (+40) but `:1602` -> `:1696` (+94). That is why the anchors above are pinned to the commit they were read from and given with their greps.
+
 ### Where the flag surfaces (three places, one definition)
 
 1. **S1 row chip** — the scan target; drives ordering (§2).
@@ -399,7 +407,7 @@ scratch instance of `origin/main` on 2026-10-07 (own DB and port; the live deplo
 
 | Offer | Case | Offset / start that day | Items | Distance the row must print (§2's one rule) | State §5 requires | What P2-5 must render there |
 |---|---|---|---|---|---|---|
-| `OFR-2026-DEMO-01` | Omar Al-Farsi (roster `demo-emp-omar`) | **+14** · 2026-10-21 | 7 open (3 `requested`, 4 `not_started`) | `· 14 d` — whole days | **Clear** | ⚪ **On track** · headline "On track" · body "Started 14 days before day one." · Slate/Green |
+| `OFR-2026-DEMO-01` | Omar Al-Farsi (roster `demo-emp-omar`) | **+14** · 2026-10-21 | 7 open (3 `requested`, 4 `not_started`) | `· 14 d` — whole days | **Clear** | ⚪ **On track** · headline "On track" · body "7 items still open, with 14 days to go — the flag starts 48 hours before the start date." · Slate/Green |
 | `OFR-2026-DEMO-02` | Mariam Al-Kaabi | **+1** · 2026-10-08 | 7 open (all `not_started`) | `· n.n h before 00:00 on the start date` — **hours, one decimal**, not `· 1 d`. The implemented example is `· 7.5 h` (PR #77's evidence, read at the hour that scratch case ran); the value shrinks through the seed day, so a fixed offset cannot pin it and the reading is written as *n.n* | **Inside 48 hours** | 🟠 **Inside 48 hours · 7 items open** · "7 items open · start in 48 hours or less" · names each open item, its status and the distance to start, with an owner only where one exists (see the copy rules) · Warm Amber |
 | `OFR-2026-DEMO-03` | Yousef Al-Hammadi | **−1** · 2026-10-06 | 7 open (all `not_started`) | `started 1 d ago` — absolute value; **PR #77 (merged) replaced the bare `· -1 d` this row printed before it** | **Started, items open** | 🔴 **Started 1 day ago · 7 items open** · "Started with 7 items still open" · same list + "these were due before day one" · Coral Red |
 
@@ -413,7 +421,7 @@ where PR #76 has since moved it:
    clear.**
    **Changed by PR #76 (re-read 2026-10-07):** the flag has since merged on `main` at `f3f2bac` —
    `server/preboarding-flag.js`, and the chip, headline and open-item block it derives at
-   `App.tsx:1581` and `:1605`. It draws **inside the built HR roll-up**, not yet on §2's list row or
+   `App.tsx:1581` and `{row.flag.chip}` at `App.tsx:1696` (both re-read on `origin/main` = `404b29d`, 2026-10-08). It draws **inside the built HR roll-up**, not yet on §2's list row or
    §3's detail header, and the live deployment still runs `5ed731e`, which draws none. The three
    readings in the table above are therefore now the acceptance line for a **built** component rather
    than for one still to be built — **and none of the three changes.**
@@ -620,7 +628,7 @@ on the screen — see `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §4.
   list — `App.tsx:1184`–`:1321` — are built on `main`, but they are not these screens: §3's case
   detail and §4's function view do not exist anywhere, and §2's list is a superset of what P2-1
   renders. **§5's flag has since been built** — `server/preboarding-flag.js`, PR #76 — **and draws
-  inside the built HR roll-up** (`App.tsx:1581`, `:1605`), *not* on §2's list row or §3's detail
+  inside the built HR roll-up** (`App.tsx:1581`, `{row.flag.chip}` at `:1696` on `origin/main` = `404b29d`), *not* on §2's list row or §3's detail
   header, and not on the live deployment, which still runs `5ed731e`; §5.1 carries the re-read.)
 - **No figure here is a reading.** The mock rows are invented placeholders, deliberately not the
   seeded records, and are marked as such on the face of every screen.
