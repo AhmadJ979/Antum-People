@@ -73,7 +73,7 @@ Federal Decree-Law 33/2021 vs the repealed Law 8/1980 Art. 132 reduction is with
 ## Before you start — 60-second pre-flight
 
 - [ ] **Confirm the live app loads** at the public URL (200, title "Antum People", sign-in screen renders).
-- [ ] **Sign in** with the demo account (**`admin`**, password **supplied separately by Ahmad** — never written into this file). Do a test login ahead of the call.
+- [ ] **Sign in** with the demo account (**`admin`**, credentials **supplied separately by the owner** — never written into this file). Do a test login ahead of the call.
 - [ ] **Run the Segment 3 gate** (above): Pre-boarding → three cases? If not, cut the segment.
 - [ ] **Re-seed that morning** (above) and re-run this pass: accruals and the amber window both move.
 - [ ] Confirm the app shows **sample data**, UAE selected, and the **"SAMPLE DEMO DATA"** badge in the header.
@@ -181,6 +181,8 @@ The roster's Omar (`demo-emp-omar`, *onboarding*, started **2026-08-20**) is **a
    | 3 | **Omar Al-Farsi** · Finance Analyst · Finance | 2026-10-22 | ⚪ **On track** | `Start: 2026-10-22 · 14 d` | "On track" + "7 items still open, with 14 days to go — the flag starts 48 hours before the start date." |
 
    *(Chips and row lines read off the rendered page on 2026-10-08; the amber row's hours value is time-of-day-sensitive — read yours off the screen. The third row's panel only shows when the flag is raised; a clear case carries no red/orange panel at all.)*
+
+   *The fourth reading, which none of these three rows shows:* a **clear** case whose start date has passed with **every item complete** still reads `clear` — not overdue — and its row prints **`· started 6 d ago`**, from the same absolute guard as row 1, never a signed negative. It is written down because it is the case a reader does not think of.
 3. **Open row 1** (click the row; the label flips from `Open` to `Close`). Inside it, in order:
    - **`OFR-2026-DEMO-03`** and the **EMPLOYEE TRACK** heading,
    - **"Record PDPL consent"** with the line **"No PDPL consent record — no document can be collected on this case yet."** — the consent gate is in the module, not in a policy PDF,
@@ -300,7 +302,7 @@ A: A named HR lead, access to your current onboarding/offboarding process for on
 8. **Exit-interview data is captured but never surfaced.** The "Exit Intelligence Intake" form collects departure reason, preventable-attrition flag and offered salary. The dashboard API returns `exitsByReason` (read 2026-10-08: Career Change 1, Better Opportunity 1) and **no view renders it** — in the client source the field appears only as a type declaration (`App.tsx:224`), never as a render, and the string occurs in neither bundle (property names survive minification). If asked, say exit intelligence is a Phase 2 view and the intake is already recording.
 9. **DSR / breach-register / consent-audit dashboard is design-spec, not live.** The live product shows a per-employee Compliance Center only.
 10. **The UAE offboarding showcase is 8 steps where the KSA flow had 10.** Do not pad it with claims to get the length back; if they want the jurisdiction contrast, make it verbally — the engine carries a second jurisdiction's basis for Phase 2.
-11. **The roster carries a terminated record and a possibly-contradictory onboarding row.** 8 UAE records — 5 active, 1 onboarding, 1 offboarding, 1 leaver — and the onboarding row is also the third seeded pre-boarding case (see Segment 2's box). Say the numbers before they are counted for you.
+11. **The roster carries a terminated record and a possibly-contradictory onboarding row.** 8 UAE records — 5 active, 1 onboarding, 1 offboarding, 1 leaver — and the onboarding row is also the third seeded pre-boarding case (see Segment 2's box). Say the numbers before they are counted for you. **One more roster arithmetic to know:** the in-flight list prints each hire's day count as `Math.ceil((now − start_date) / 24h)` (`App.tsx:1383` on `origin/main` = `404b29d`, re-read 2026-10-08), so a **future-dated** hire prints a negative count (`Day -n`) — raw arithmetic, not a labelled state. **No row on this seed shows it** (the only in-flight UAE hire started 2026-08-20, in the past), but do not put a future-dated hire on screen in front of a prospect without knowing it is there.
 12. **One region per demo.** Leave the header controls untouched — changing what the dashboard shows mid-call breaks the story and the figures you have already said out loud. If a prospect asks about other countries, answer verbally: UAE-first is the launch.
 13. **No delivery channel exists.** Nothing in this product sends an email, SMS or webhook, and no screen implies one did. Never say a reminder, notice or package "was sent" or "was emailed" — say it is **recorded in the product**, which is what the screens say.
 14. **Two things in this script are not live yet — get this right.** The **workspace track** (IT / Admin / HR tasks per new hire) is not built, and the **hire-facing portal** does not exist, so no read event is tracked. Do not demo or promise either.
