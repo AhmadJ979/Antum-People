@@ -386,7 +386,7 @@ The flag is a **state, not an event**. On this product there is no mailer, webho
 - the row's own distance — `... | grep -n "relDays(row.flag)"` -> **`:1674`**.
 - `h before 00:00 on the start date` — `... | grep -n "h before 00:00"` -> **two** hits, **`:197`** (the flag's own derivation in `relDays`) and **`:1733`** (the panel's own line). It is **not** a unique anchor: quote the hit you mean.
 
-An earlier submission cited `:1624` for the third of these and `:1605` for the first. Both were carried rather than re-read: `:1605` was this span when the review ran against `5087136`, `:1624` was never right, and **PR #79 (2026-10-08) then moved every line in this file by 94** — which is why the anchors above are pinned to the commit they were read from and given with their greps.
+An earlier submission cited `:1624` for the third of these and `:1605` for the first. Both were carried rather than re-read: `:1605` was this span when the review ran against `5087136`, `:1624` was never right, and **PR #79 (2026-10-08) added 165 lines to this file, none deleted** (`git diff --numstat 5087136 404b29d -- client/src/App.tsx` -> `165  0`; 1887 lines -> 2052), which is why no single offset describes the move: `:157` -> `:197` (+40) but `:1602` -> `:1696` (+94). That is why the anchors above are pinned to the commit they were read from and given with their greps.
 
 ### Where the flag surfaces (three places, one definition)
 
