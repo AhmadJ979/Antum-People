@@ -1,0 +1,223 @@
+# 02 — HTTP pass against the rig (read-only)
+
+Run: `node http-pass.mjs` against `http://localhost:4716`, then `node readings.mjs`.
+Both are read-only apart from `POST /api/login` for the rig's own throwaway user.
+The rig's credential is NOT in this file; only the token's length is recorded.
+
+== provenance ==
+run at (UTC)       2026-10-08T08:36:30.548Z
+rig port           4716
+base URL           http://localhost:4716
+
+== 01 root + login ==
+GET /                         200 Antum People
+GET overview w/o token        401 {"error":"Authentication token required"}
+POST /api/login               200 token chars=204 user=scratch role=admin
+
+== 02 the HR roll-up, ?jurisdiction=AE — one row per case (this is the screen the new segment demos) ==
+GET /api/preboarding/checklist/overview?jurisdiction=AE -> 200
+jurisdiction echoed: "AE"  totals: {"cases":3,"items":21,"items_outstanding":21,"items_received":0,"items_verified":0,"cases_without_consent":3,"cases_ready":0}
+
+  case 7fc5e745-3ee7-4e23-ad87-4f9911bfc9bc
+    candidate       Yousef Al-Hammadi | role Operations Analyst | dept Operations | jurisdiction AE
+    start_date      2026-10-07 | items_total 7 | outstanding 7 | by_status {"not_started":7,"requested":0,"received":0,"verified":0}
+    consent         consent_recorded=false last_reminder_at=null
+    flag.state      started | raised true | tone rose
+    flag.chip       "Started 1 day ago · 7 items open"
+    flag.headline   "Started with 7 items still open"
+    flag.body       ["These were due before day one."]
+    flag.days_to_start -1 | hours_to_start -32.60860972222222 | boundary 48 h inclusive=true
+    flag.open_count 7
+    ROW DISTANCE the row line prints (relDays, App.tsx): started 1 d ago
+    open items     
+      - Bank details (IBAN letter) | not_started | owner_known=false | owner=null
+      - Education certificate | not_started | owner_known=false | owner=null
+      - Emergency contact | not_started | owner_known=false | owner=null
+      - Emirates ID | not_started | owner_known=false | owner=null
+      - Experience certificate | not_started | owner_known=false | owner=null
+      - Passport copy | not_started | owner_known=false | owner=null
+      - Visa or entry permit | not_started | owner_known=false | owner=null
+
+  case 138af31c-eab8-43e9-aabd-08789656d396
+    candidate       Mariam Al-Kaabi | role Marketing Coordinator | dept Marketing | jurisdiction AE
+    start_date      2026-10-09 | items_total 7 | outstanding 7 | by_status {"not_started":7,"requested":0,"received":0,"verified":0}
+    consent         consent_recorded=false last_reminder_at=null
+    flag.state      inside_48_hours | raised true | tone amber
+    flag.chip       "Inside 48 hours · 7 items open"
+    flag.headline   "7 items open · start in 48 hours or less"
+    flag.body       []
+    flag.days_to_start 1 | hours_to_start 15.391390277777777 | boundary 48 h inclusive=true
+    flag.open_count 7
+    ROW DISTANCE the row line prints (relDays, App.tsx): 15.4 h before 00:00 on the start date
+    open items     
+      - Bank details (IBAN letter) | not_started | owner_known=false | owner=null
+      - Education certificate | not_started | owner_known=false | owner=null
+      - Emergency contact | not_started | owner_known=false | owner=null
+      - Emirates ID | not_started | owner_known=false | owner=null
+      - Experience certificate | not_started | owner_known=false | owner=null
+      - Passport copy | not_started | owner_known=false | owner=null
+      - Visa or entry permit | not_started | owner_known=false | owner=null
+
+  case 940eb808-6e6a-4bd0-9676-638d93b12fe5
+    candidate       Omar Al-Farsi | role Finance Analyst | dept Finance | jurisdiction AE
+    start_date      2026-10-22 | items_total 7 | outstanding 7 | by_status {"not_started":4,"requested":3,"received":0,"verified":0}
+    consent         consent_recorded=false last_reminder_at=null
+    flag.state      clear | raised false | tone slate
+    flag.chip       "On track"
+    flag.headline   "On track"
+    flag.body       ["7 items still open, with 14 days to go — the flag starts 48 hours before the start date."]
+    flag.days_to_start 14 | hours_to_start 327.39139027777776 | boundary 48 h inclusive=true
+    flag.open_count 7
+    ROW DISTANCE the row line prints (relDays, App.tsx): 14 d
+    open items     
+      - Bank details (IBAN letter) | not_started | owner_known=false | owner=null
+      - Education certificate | not_started | owner_known=false | owner=null
+      - Emergency contact | not_started | owner_known=false | owner=null
+      - Experience certificate | not_started | owner_known=false | owner=null
+      - Emirates ID | requested | owner_known=false | owner=null
+      - Passport copy | requested | owner_known=false | owner=null
+      - Visa or entry permit | requested | owner_known=false | owner=null
+
+scope_note (row 1): "Derived from every item on this case, whatever track created it. Today that is the employee track only, because it is the only track that exists."
+
+== 03 the case list: filtered vs unfiltered (the known divergence) ==
+GET /api/preboarding/cases?jurisdiction=AE -> 200 n=3 ["OFR-2026-DEMO-03","OFR-2026-DEMO-02","OFR-2026-DEMO-01"]
+GET /api/preboarding/cases               -> 200 n=3 ["OFR-2026-DEMO-03","OFR-2026-DEMO-02","OFR-2026-DEMO-01"]
+
+== 04 item list on the amber case (what the flag names) ==
+GET /cases/138af31c-eab8-43e9-aabd-08789656d396/checklist -> 200 consent=null document_set_active=true
+    passport | not_started | Passport copy
+    visa_or_entry_permit | not_started | Visa or entry permit
+    emirates_id | not_started | Emirates ID
+    education_certificate | not_started | Education certificate
+    experience_certificate | not_started | Experience certificate
+    bank_details | not_started | Bank details (IBAN letter)
+    emergency_contact | not_started | Emergency contact
+
+== 05 the pre-reading package (P2-3, merged today) per case ==
+GET /cases/7fc5e745-3ee7-4e23-ad87-4f9911bfc9bc/package -> 200 | set= "AE" | items=9 | acknowledged=undefined | required=undefined/undefined | delivery_channel="none" | missing_required=undefined
+    item[0]: signed_jd |  | state=not_recorded | delivery="not_available"/"no_delivery_channel" | reading="not_tracked"/"no_hire_portal" | ack_required=true
+    delivery label: "Not sent — this release has no delivery channel (no mailer, webhook or SMS), so the product cannot deliver this item"
+    reading  label: "Not tracked — there is no hire-facing portal in this release, so no read event exists to record"
+GET /cases/138af31c-eab8-43e9-aabd-08789656d396/package -> 200 | set= "AE" | items=9 | acknowledged=undefined | required=undefined/undefined | delivery_channel="none" | missing_required=undefined
+    item[0]: signed_jd |  | state=not_recorded | delivery="not_available"/"no_delivery_channel" | reading="not_tracked"/"no_hire_portal" | ack_required=true
+    delivery label: "Not sent — this release has no delivery channel (no mailer, webhook or SMS), so the product cannot deliver this item"
+    reading  label: "Not tracked — there is no hire-facing portal in this release, so no read event exists to record"
+GET /cases/940eb808-6e6a-4bd0-9676-638d93b12fe5/package -> 200 | set= "AE" | items=9 | acknowledged=undefined | required=undefined/undefined | delivery_channel="none" | missing_required=undefined
+    item[0]: signed_jd |  | state=not_recorded | delivery="not_available"/"no_delivery_channel" | reading="not_tracked"/"no_hire_portal" | ack_required=true
+    delivery label: "Not sent — this release has no delivery channel (no mailer, webhook or SMS), so the product cannot deliver this item"
+    reading  label: "Not tracked — there is no hire-facing portal in this release, so no read event exists to record"
+
+== 06 executive dashboard, ?jurisdiction=AE ==
+GET /api/analytics/dashboard?jurisdiction=AE -> 200
+    activeHeadcount = 7
+    monthlyPayroll = 10500
+    eosbLiability = 85247
+    attritionRate = 25
+    avgCostPerHireAE = 8286
+    avgCostPerHireSA = 0
+    avgTtvDays = 19.2
+    activeSalarySpend = 126000
+    totalRecruitingSpend = 62000
+    keys: ["activeHeadcount","monthlyPayroll","eosbLiability","attritionRate","avgCostPerHireAE","avgCostPerHireSA","avgTtvDays","ttvByDepartment","retentionLiftSeries","eosbLiabilitySeries","eosbByJurisdiction","onboardingPipeline","exitsByReason","activeSalarySpend","totalRecruitingSpend"]
+
+== 07 roster on the AE surface ==
+GET /api/employees?jurisdiction=AE -> 200 n=8 {"onboarding":1,"active":5,"offboarding":1,"terminated":1}
+    demo-emp-omar | Omar Al-Farsi | onboarding | AE | start 2026-08-20 | accrued 0
+    demo-emp-hassan | Hassan Al-Mansoori | active | AE | start 2024-06-01 | accrued 7685.79
+    demo-emp-noura | Noura Al-Suwaidi | offboarding | AE | start 2024-04-10 | accrued 6415.79
+    demo-emp-mohammed | Mohammed Al-Sayed | active | AE | start 2024-02-15 | accrued 7099.41
+    demo-emp-ahmad | Ahmad Al-Rashid | active | AE | start 2024-01-15 | accrued 6371.44
+    demo-emp-salim | Salim Al-Nuaimi | active | AE | start 2023-04-15 | accrued 21133.39
+    demo-emp-yusuf | Yusuf Hassan | terminated | AE | start 2023-03-10 | accrued 0
+    demo-emp-leila | Leila Mansour | active | AE | start 2022-03-01 | accrued 36541.29
+
+== 08 settlement statement for the offboarding case (header + how uncomputable lines read) ==
+GET /api/compliance/templates/final-settlement-statement/demo-emp-noura -> 200 bytes=2465
+    | {"content":"# Final Settlement Statement / مخالصة نهائية\n\n> **Jurisdiction:** UAE / KSA\n> **Status:** Template v1.1\n> **Revision:** Brand updated to Antum People on 2026-09-17.\n> **Note:** This document must be signed by the employee upon receipt of final dues.\n\n---\n\n### 1. Employee & Employer Details / تفاصيل الموظف وصاحب العمل\n\n| Field | Details |\n|---|---|\n| Employer Name / اسم صاحب العمل | Antum Regional Hub |\n| Employee Name / اسم الموظف | Noura Al-Suwaidi |\n| Employee ID / رقم الموظف | demo-emp-noura |\n| Last Working Day / آخر يوم عمل | 2026-10-10 |\n| Reason for Termination / سبب انتهاء الخدمة | Resignation |\n\n---\n\n### 2. Settlement Calculation / احتساب المستحقات النهائية\n\n| Component / البند | Amount / المبلغ |\n|---|---|\n| Monthly Salary (Pro-rated) / الراتب الشهري (بشكل نسبي) | 5161.29 |\n| Accrued Annual Leave / بدل الإجازة السنوية المستحق | not calculated |\n| **End of Service Benefit (EOSB) / مكافأة نهاية الخدمة** | **6415.79** |\n| Notice Period Pay / بدل فترة الإخطار (if applicable) | not calculated |\n| Ticket Allowance / بدل تذاكر السفر (if applicable) | not calculated |\n| Other Payments / مدفوعات أخرى | 0.00 |\n| **Gross Total / إجمالي المستحقات** | **11577.08** |\n\n#### Deductions / الاستقطاعات\n\n| Deduction Type / نوع الاستقطاع | Amount / المبلغ |\n|---|---|\n| Outstanding Loans / قروض قائمة | 0.00 |\n| Assets Not Returned / عهد لم يتم إرجاعها | 0.00 |\n| Unpaid Traffic Fines / مخالفات مرورية | 0.00 |\n| **Total Deductions / إجمالي الاستقطاعات** | **0.00** |\n\n---\n\n### 3. Net Final Payment / صافي المستحق النهائي\n\n**NET PAYABLE AMOUNT: 11577.08**\n\n---\n\n### 4. Acknowledgment & Waiver / إقرار وتنازل\n\nI, **Noura Al-Suwaidi**, holder of **ID-demo-emp-noura**, hereby acknowledge receipt of the amount shown above as full and final settlement of all my dues from **Antum Regional Hub**. I confirm that I have no further claims against the Company and I waive any rights to future claims related to my employment or its termination.\n\nأقر أنا **Noura Al-Suwaidi**، حامل **ID-demo-emp-noura**، باستلام المبلغ المذكور أعلاه كمخالصة نهائية وشاملة لجميع مستحقاتي من شركة **Antum Regional Hub**. وأؤكد أنه ليس لدي أي مطالبات أخرى تجاه الشركة، وأتنازل عن أي حقوق في مطالبات مستقبلية تتعلق بعملي أو انتهائه.\n\n| Employee Signature / توقيع الموظف | Employer Signature / توقيع صاحب العمل |\n|---|---|\n| ________________ | ________________ |\n| Date: 8 October 2026 | Date: 8 October 2026 |\n"}
+
+== 09 flag watcher snapshot (delivery) ==
+GET /api/preboarding/flag-watch -> 200 {"process_started_at":"2026-10-08T08:35:32.823Z","last_scan_at":"2026-10-08T08:35:32.823Z","interval_ms":300000,"boundaries_recorded":2,"boundaries_seen":2,"last_error":null,"delivery":"none","catch_up_rule":"A case enters the flag at 48 hours before 00:00 of its start date. A boundary that falls while the process is up is recorded on the next tick (\"while the app was open\"). A boundary that fell before this process started is recorded on the first tick, marked late, with how late it was noticed (\"while the app was not running\"). A boundary is never silently skipped. A derived flag has nothing to miss, so no \"missed notification\" state exists. Nothing here is delivered anywhere, and nothing here is read to render the flag.","records":[{"case_id":"138af31c-eab8-43e9-aabd-08789656d396","offer_reference":"OFR-2026-DEMO-02","boundary_at":"2026-10-07T00:00:00.000Z","detected_at":"2026-10-08T08:35:32.823Z","late":true,"late_by_hours":32.59,"state_at_detection":"inside_48_hours","open_count_at_detection":7,"channel":"none","note":"This case reached the 48-hour mark while the app was not running (noticed 32.59h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed."},{"case_id":"7fc5e745-3ee7-4e23-ad87-4f9911bfc9bc","offer_reference":"OFR-2026-DEMO-03","boundary_at":"2026-10-05T00:00:00.000Z","detected_at":"2026-10-08T08:35:32.823Z","late":true,"late_by_hours":80.59,"state_at_detection":"started","open_count_at_detection":7,"channel":"none","note":"This case reached the 48-hour mark while the app was not running (noticed 80.59h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed."}]}
+
+== 10 refusal / health probes ==
+  no token /api/employees -> 401 {"error":"Authentication token required"}
+  no token /api/preboarding/cases -> 401 {"error":"Authentication token required"}
+  no token /api/preboarding/checklist/overview?jurisdiction=AE -> 401 {"error":"Authentication token required"}
+  no token /api/preboarding/cases/OFR-2026-DEMO-02/package -> 401 {"error":"Authentication token required"}
+
+== 11 scan: does any Layer 2 payload claim a message went out or a read happened? ==
+   contains "\"sent\"" -> false
+   contains "emailed" -> false
+   contains "notified" -> false
+   contains "\"delivered\":true" -> false
+   contains "\"read\":true" -> false
+   contains "reminder sent" -> false
+   contains "alerted" -> false
+   delivery_channel values seen: ["\"delivery_channel\":\"none\""]
+
+================================================================
+# 02b — the base-segment readings (dashboard objects, checklists, the package shape)
+================================================================
+
+== D1 retentionLiftSeries (Segment: Strategic Intelligence) ==
+[{"cohort":"H1 2022","retention":100,"benchmark":82,"lift":18},{"cohort":"H1 2023","retention":50,"benchmark":83,"lift":-33},{"cohort":"H1 2024","retention":100,"benchmark":84,"lift":16},{"cohort":"H2 2026","retention":100,"benchmark":81,"lift":19}]
+== D2 ttvByDepartment ==
+[{"department":"Engineering","avgDays":16.7,"target":15},{"department":"Finance","avgDays":25,"target":15},{"department":"Product","avgDays":19,"target":15},{"department":"Sales","avgDays":21,"target":15}]
+== D3 eosbLiabilitySeries (forecast ladder) ==
+[{"quarter":"Q3 2026","uae":84667,"ksa":0,"combined":84667},{"quarter":"Q4 2026","uae":90926,"ksa":0,"combined":90926},{"quarter":"Q1 2027","uae":133477,"ksa":0,"combined":133477},{"quarter":"Q2 2027","uae":161494,"ksa":0,"combined":161494}]
+== D4 eosbByJurisdiction ==
+{"AE":85247.11000000002,"SA":0}
+== D5 onboardingPipeline / exitsByReason ==
+onboardingPipeline [{"id":"demo-emp-omar","first_name":"Omar","last_name":"Al-Farsi","role":"Finance Analyst","start_date":"2026-08-20"}]
+exitsByReason [{"reason":"Career Change","count":1},{"reason":"Better Opportunity","count":1}]
+
+== D6 unfiltered dashboard (for the "filtered vs not" note) ==
+activeHeadcount 11 | avgTtvDays 18 | avgCostPerHireAE 8286 | avgCostPerHireSA 4750 | eosbLiability 168259
+ttvByDepartment (unfiltered) [{"department":"Engineering","avgDays":16.7,"target":15},{"department":"HR","avgDays":15,"target":15},{"department":"Finance","avgDays":25,"target":15},{"department":"Operations","avgDays":14,"target":15},{"department":"Marketing","avgDays":18,"target":15},{"department":"Product","avgDays":19,"target":15},{"department":"Sales","avgDays":21,"target":15}]
+
+== D7 P2-3 package: full shape, one case ==
+case Mariam Al-Kaabi
+top-level keys ["case_id","offer_reference","candidate_name","jurisdiction","start_date","package_label","package_available","package_unavailable_reason","delivery_channel","copy_note","as_of","item_count","recorded_count","required_total","required_recorded","missing_required","items"]
+jurisdiction/set "AE"  | delivery_channel "none"
+totals 
+items[0] keys ["item_key","label","category","acknowledgement_required","delivery","reading","state","state_label","acknowledged","acknowledgement"]
+items[0] {"item_key":"signed_jd","label":"Signed job description (JD)","category":"role","acknowledgement_required":true,"delivery":{"state":"not_available","reason":"no_delivery_channel","label":"Not sent — this release has no delivery channel (no mailer, webhook or SMS), so the product cannot deliver this item"},"reading":{"state":"not_tracked","reason":"no_hire_portal","label":"Not tracked — there is no hire-facing portal in this release, so no read event exists to record"},"state":"not_recorded","state_label":"Not recorded","acknowledged":false,"acknowledgement":null}
+all items: key | label/title | required | state
+    signed_jd | "Signed job description (JD)" | req=true | state=not_recorded
+    org_chart | "Organisation chart" | req=false | state=not_recorded
+    reporting_line | "Reporting line" | req=false | state=not_recorded
+    team_members | "Team members" | req=false | state=not_recorded
+    nda | "Non-disclosure agreement (NDA)" | req=true | state=not_recorded
+    handbook | "Employee handbook" | req=false | state=not_recorded
+    policies | "Company policies" | req=false | state=not_recorded
+    code_of_conduct | "Code of conduct" | req=false | state=not_recorded
+    dress_code | "Dress code" | req=false | state=not_recorded
+
+== D8 onboarding checklist: Omar (roster row demo-emp-omar) ==
+status 200 n=7
+completed 2/7
+    demo-task-on-omar-1 | completed | MoHRE Contract Signing
+    demo-task-on-omar-2 | completed | Entry Permit Issuance
+    demo-task-on-omar-3 | pending | Medical Fitness Test
+    demo-task-on-omar-4 | pending | Emirates ID Biometrics
+    demo-task-on-omar-5 | pending | Residence Visa Stamping
+    demo-task-on-omar-6 | pending | Wages Protection System (WPS) Registration
+    demo-task-on-omar-7 | pending | Privacy Notice Consent
+
+== D9 offboarding checklist: Noura ==
+status 200 n=8
+    completed | Hardware Return
+    completed | Access Revocation
+    pending | Notice Period Verification
+    pending | EOSB Calculation (UAE)
+    pending | Annual Leave Encashment
+    pending | MoHRE Work Permit Cancellation
+    pending | Residency Visa Cancellation
+    pending | Final Settlement Payment (within 14 days)
+
+== D10 consent on the employee record (Omar) ==
+GET /api/employees/demo-emp-omar/consent -> 404 {"error":"API route not found"}
+
+== D11 the pre-boarding case detail for the red case ==
+GET /api/preboarding/cases/<red> -> 200
+{"id":"7fc5e745-3ee7-4e23-ad87-4f9911bfc9bc","offer_reference":"OFR-2026-DEMO-03","candidate_name":"Yousef Al-Hammadi","candidate_email":"yousef.alhammadi@example.com","role":"Operations Analyst","department":"Operations","reporting_line":"Head of Operations","jurisdiction":"AE","start_date":"2026-10-07","status":"open","source":"demo_seed","offered_at":null,"created_by":"demo-seed","created_at":"2026-10-08 08:35:30","updated_at":"2026-10-08 08:35:30"}

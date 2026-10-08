@@ -1,0 +1,31 @@
+# 05 — the public URL, fetched anonymously (no credential, no login)
+
+At the time of the pass the published bundle was `/assets/index-Cwq9dzzZ.js`, 258,648 bytes,
+HTTP 200. The rig's bundle at `404b29d` is named below it for comparison. Counts are
+`grep -o -F <string> <bundle> | wc -l` — occurrences, not lines (a minified bundle is one line).
+
+```
+public URL root      : 200
+public URL title     : Antum People
+public bundle        : /assets/index-Cwq9dzzZ.js  (HTTP 200, 258648 bytes)
+rig bundle (404b29d) : client/dist/assets/index-_nim7xlP.js
+
+string                                          live    rig
+no delivery channel in this release                0      1
+Pre-reading package                                0      1
+Record acknowledgement                             0      1
+HR roll-up                                         1      1
+Record an accepted offer                           2      2
+/api/preboarding                                   7      9
+Sample Demo Data                                   1      1
+before 00:00 on the start date                     0      2
+no delivery channel (any wording)                  1      2
+
+NOT evidence, and deliberately left out of the table above: `Inside 48 hours` and
+`Started with` count 0 in BOTH bundles, because the chip and headline wording is served by the
+API (server/preboarding-flag.js), not compiled into the client. A bundle comparison shows what
+the published CLIENT can render; it cannot show what the published SERVER computes.
+
+The plan records the live deployment's own commit as 5ed731e (the 2026-10-07 cutover). I did
+not verify the live server's commit myself, and nothing in this file should be read as doing so.
+```
