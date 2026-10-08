@@ -1,8 +1,20 @@
+# P2-4 — the workspace track: the route over real HTTP
+#
+# Produced by: bash docs/evidence/p2-4/run-http-smoke.sh   (committed beside this file)
+# Against a throwaway database (PRODUCT_DB_PATH=/tmp/p24smoke.db, port 4789) — no live data,
+# and the live deployment is untouched.
+#
+# Evidence is about THE TREE THAT WILL MERGE (rule 19): this run was taken after rebasing onto
+# current origin/main, where the branch tip tree and the merge tree are the same object:
+#     git rev-parse HEAD^{tree}                 → 7c2a4415
+#     git merge-tree --write-tree origin/main HEAD → 7c2a4415   (identical, no conflicts)
+# Branch tip at run: 5ce2b4b   |   origin/main at run: a59890f
+# run (UTC): 2026-10-08T09:50:12Z
 migrate exit: 0
-(node:29530) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(node:32201) ExperimentalWarning: SQLite is an experimental feature and might change at any time
 (Use `node --trace-warnings ...` to show where the warning was created)
-CASE 323c7fdf-74b0-40c3-b36f-c9771258bac5 workspace_lines=15
-case: 323c7fdf-74b0-40c3-b36f-c9771258bac5 | token: 232 chars
+CASE 44a1d715-bd0b-49b0-a1d4-7b4329d1e7e0 workspace_lines=15
+case: 44a1d715-bd0b-49b0-a1d4-7b4329d1e7e0 | token: 232 chars
 --- the board (unfiltered):
 view       : View by function | mode all | is_access_control False
 derived    : {'role': 'Marketing Manager', 'department': 'Marketing', 'profile_keys': ['people_manager']}
