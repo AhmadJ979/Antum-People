@@ -70,7 +70,7 @@ answers one more row of this table, marked in place.**
 | A consent record to gate documents on | `consent_records(id, employee_id, …)` for *employees*, plus `employees.consent_granted` / `consent_date` — and, **added by P2-2**, `preboarding_consents(case_id UNIQUE, consent_type, lawful_basis, consent_version, granted_at, recorded_by)` for the *case*, which is the one this surface gates collection on (refused **428** without it) | `schema.sql:93`–`:105`, `:244`–`:255`; `server/preboarding-items.js:195` |
 | Per-function identity ("IT sees only its own lines") | `users(id, username, password_hash, role, created_at)` exists, but the product seeds **one shared account** — no per-user login to scope a view by | `schema.sql:165`–`:171` |
 | Somewhere to put a collected document | **Nothing — deliberately, and now by the owner's decision.** P2-2 records a short `document_reference` (a file name, or the reference HR quoted) and refuses the bytes: `server/document-store.js` throws **501** behind `saveDocument`/`readDocument` and names `ANTUM_DOCUMENT_STORE` as the one door. **The owner decided the shape on 2026-10-07: Option D ships now — reference string only, no bytes — and Option C (an S3-compatible object store) is built when the entity is registered; IFZA registration is the gate, an event rather than a date. No real document bytes before it.** The pointer is therefore the personal data: the item says *which* document, whose, when recorded and where it lives, and the content stays where HR already keeps it | `server/document-store.js`; spec §10 Q5 |
-| A record of an acknowledgement (JD, NDA) | **Nothing.** `consent_records` is a consent record, not an acknowledgement record | — |
+| A record of an acknowledgement (JD, NDA) | **Built by P2-3 (PR #79, `main` = `404b29d`):** `preboarding_acknowledgements`, written only by `recordAcknowledgement` — `recorded_by` required, method `in_product_record`, signature-implying methods refused by name, and nothing reads `acknowledged` without the row (lead ruling, 2026-10-08) | `server/preboarding-package.js` |
 | Bilingual / RTL rendering | **No i18n layer in the client.** The bilingual reference is the AR prototype and the EN/AR mockups | `design-concepts/intelligence-dashboard-prototype.html`, `intelligence-dashboard-{ar,en}-mockup.png` |
 | A way to notify anyone | **No delivery channel** — no mailer, webhook or SMS anywhere in the product | plan, Gate 2 decision (2026-10-06) |
 | An in-process timer / scheduled check | **Nothing.** No cron, no working systemd on this host | plan §6; Gate 2 decision |
@@ -275,6 +275,18 @@ side by side on desktop and stack on narrow screens, employee track first.
 "44% ready" is an invented metric.
 
 ---
+
+**Who records an acknowledgement (lead ruling, 2026-10-08 — the spec catching up to the build).** The
+pre-reading strip's acknowledgement is recorded **in the product, by the signed-in user, on the
+hire's behalf**. `recorded_by` is required — a caller that does not name the person recording gets a
+400 — the method is `in_product_record`, and the stored row is the **only** thing that can make an
+item read `acknowledged`: no surface infers it from anything else. Signature-implying methods
+(`e_signature`, `esign`, `signature`, `signed`, `electronic_signature`) are refused **by name**, so a
+caller cannot quietly obtain a record that reads like a signature, and the copy says what it is — an
+in-product record, **not** an electronic signature. There is **no hire-facing portal**, so no read
+event exists to record, and **no delivery channel**, so nothing is sent; the strip says both on every
+row. Building it was P2-3 (PR #79, `main` = `404b29d`); the shipped behaviour and copy stand, which is
+why this is a spec change and not a code change.
 
 ## 4. Screen S3 — Function view ("my lines")
 
@@ -544,7 +556,7 @@ gate the *first* thing on the employee track, not a checkbox buried in a setting
 | **D3** | A **due date derived from the start date** per line | P2-4 requires one; the *offset per line* is a product decision (§10 Q3, still open) | Product — **the owner's call, §10 Q3** — + engineering |
 | **D4** | **Per-user accounts / function identity** | "IT/Admin see only their own lines" (P2-4) has no account model behind it | Product, then engineering (§4) |
 | **D5** | A **document store** | P2-2 collects passports, Emirates IDs, certificates and bank details, and stores **no bytes**: an item carries a reference and a status. **Decided by the owner, 2026-10-07 — Option D is the product now, and Option C (an S3-compatible object store) is built when the entity is registered.** Building it is then a change behind one interface (`saveDocument`/`readDocument`), with the PDPL work the compliance expert owes on the chosen store | Engineering (built when IFZA registration completes) + PDPL (compliance expert) |
-| **D6** | An **acknowledgement record** for the JD and NDA | P2-3: "nothing is marked acknowledged without the acknowledgement existing" | Engineering + PDPL |
+| **D6** | An **acknowledgement record** for the JD and NDA | **Built (P2-3, PR #79).** The record is written by the signed-in user on the hire's behalf, `recorded_by` required, method `in_product_record`; an item reads `acknowledged` only when the row exists; signature-implying methods are refused by name (lead ruling, 2026-10-08). Remaining dependency is the **actor's identity**, not the record: today that is one shared admin account, so per-user accounts at Layer 3 are what make "who" trustworthy | Engineering + PDPL |
 | **D7** | **EN/AR strings and an i18n/RTL layer** | Bilingual is a standing quality standard; the client has no i18n layer today | Design (layout, done here) + a translator/owner for the AR copy |
 | **D8** | The **derived flag computation** | §5's definition, computed on read | Engineering (P2-5) |
 | **D9** | An **in-process timer + startup catch-up** for the unprompted notice | Gate 2, owner-decided 2026-10-06; only affects *whether the app speaks first*, never correctness | Engineering |
