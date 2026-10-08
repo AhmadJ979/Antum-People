@@ -17,7 +17,11 @@
 > `server/index.js` on `main` at **`34fdd63`** (first read 2026-10-06) and **re-grounded on `main`
 > at `75e3ff2`** — the merge of PR #66 — on 2026-10-07, and `server/preboarding-items.js` and
 > `server/document-store.js` were read on `main` at **`5ed731e`** — the merge of PR #70 — the same
-> day. Also read:
+> day. **§5's copy and the row's distance reading were re-read on `main` at `f3f2bac`** — the merge
+> of PR #76 — on 2026-10-07: `server/preboarding-flag.js` (the derivation, its three states and the
+> amber headline), and `client/src/App.tsx`, where the row's `relDays()` helper arrived with
+> **PR #77 — merged on 2026-10-07, `main` now at `56fd1fd`** — and is **not** in `f3f2bac` itself.
+> Also read:
 > `design-concepts/BRAND-IDENTITY.md` (palette, type), `design-concepts/USER-JOURNEY-MAPS.md`
 > (Stage 1 — Pre-Arrival, Days −14 to −1), `design-concepts/DASHBOARD-WIREFRAMES.md` (wireframe
 > house style).
@@ -27,7 +31,9 @@
 > `grep -n "id: 'dashboard'" client/src/App.tsx` (the nav) ·
 > `grep -n "^CREATE TABLE" server/schema.sql` (the tables) ·
 > `grep -n "api/preboarding" server/index.js` (the Layer 2 case routes) ·
-> `grep -n "documentSetFor" server/preboarding-items.js` (the item sets). When PR #66 landed
+> `grep -n "documentSetFor" server/preboarding-items.js` (the item sets) ·
+> `grep -n "h before 00:00" client/src/App.tsx` (the row's distance copy) ·
+> `grep -n "start in 48 hours or less" server/preboarding-flag.js` (the amber headline). When PR #66 landed
 > `App.tsx` grew by 245 lines and every `App.tsx:` citation in this file had to be re-read, which
 > is why this note now names the revision it was read at.
 >
@@ -49,7 +55,8 @@ was **re-read on `main` at `75e3ff2`** (2026-10-07), after P2-1 landed; where a 
 since the first reading, the re-read number is the one shown. **P2-2 then landed (`5ed731e`) and
 changed some of these answers** — each row it changed says so in place and points at
 `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §2 for the current state, so this table is not read as if it
-were still today's.
+were still today's. **P2-5 then landed too (`f3f2bac`, PR #76, on `main` and not deployed): it
+answers one more row of this table, marked in place.**
 
 | Thing the Layer 2 surface needs | What exists today | Where |
 |---|---|---|
@@ -68,7 +75,7 @@ were still today's.
 | A way to notify anyone | **No delivery channel** — no mailer, webhook or SMS anywhere in the product | plan, Gate 2 decision (2026-10-06) |
 | An in-process timer / scheduled check | **Nothing.** No cron, no working systemd on this host | plan §6; Gate 2 decision |
 | A demo dataset to look at | **Added by the L2 demo seed (PR #73, on `main`, not deployed):** three pre-boarding cases, one per flag state by construction — start = seed **+14** (`OFR-2026-DEMO-01`), seed **+1** (`-02`), seed **−1** (`-03`). Each carries the AE 7-item set with everything open, and **no consent record** (a seed test asserts that, deliberately: the presenter records consent on screen and watches the gate open). **Nothing stores a flag or a state** | `scripts/seed-demo.js`; evidence `docs/evidence/l2-demo-seed/`; states and their expected readings §5.1 |
-| Any derived "days remaining" or flag computation | **Nothing** — the seed stores no state, and the roll-up prints the raw `days_to_start` (`14` / `1` / `-1`) | §5.1 |
+| Any derived "days remaining" or flag computation | **Built by P2-5 (PR #76), on `main` at `f3f2bac` — not deployed:** `server/preboarding-flag.js` derives the flag on every read from the start date and the open items, and returns the three states with both `days_to_start` and `hours_to_start`. **Nothing stores a state**, and the seed's own test still asserts that. **The copy beside it was fixed the same day: PR #77, merged, makes the row take the flag's own reading** (`relDays()`) — `· 14 d`, `· 7.5 h before 00:00 on the start date` or `· started 1 d ago`, the last also covering a *clear* case whose start date has passed with its items complete — where `f3f2bac` still printed the raw `days_to_start` (`14` / `1` / `-1`). The server side is untouched | `server/preboarding-flag.js`; §5, §5.1 |
 | The labels we must not lose | **"Sample Demo Data"** badge — in the **app-level header**, so it also covers the new Pre-boarding tab — and the **"Illustrative …"** markers | `App.tsx:660`; `:721`, `:723`, `:738`, `:775`, `:812`, `:1061`, `:1067`, `:1073`, `:1088`, `:1104`, `:1116`, `:1145` |
 
 **Visual language to extend, not replace** (exact classes as served):
@@ -140,14 +147,14 @@ F1.)
 │  ┌────────────────────────────────────────────────────────────────────────────────────┐    │
 │  │ 🔴  STARTED 2 DAYS AGO · 2 ITEMS OPEN                    sample row, not a record    │    │
 │  │ S. Nasser (placeholder)   ·  Sales Executive  ·  Sales                              │    │
-│  │ Start 2026-10-12  ·  started 2 days ago                                             │    │
+│  │ Start 2026-10-12  ·  started 2 d ago                                                │    │
 │  │ Employee track  ████░░░░░░  6 of 9   ·   Workspace track  ████████░░  4 of 6        │    │
 │  │ Open now:  IT · Laptop issued   IT · Email + SSO   (2)                              │    │
 │  │ [ Open case ]                                                                        │    │
 │  ├────────────────────────────────────────────────────────────────────────────────────┤    │
 │  │ 🟠  INSIDE 48 HOURS · 5 ITEMS OPEN                        sample row, not a record   │    │
 │  │ A. Haddad (placeholder)   ·  Marketing Manager  ·  Marketing                        │    │
-│  │ Start 2026-10-16  ·  in 2 days                                                      │    │
+│  │ Start 2026-10-16  ·  43.0 h before 00:00 on the start date                          │    │
 │  │ Employee track  █████░░░░░  4 of 9   ·   Workspace track  ███░░░░░░░  2 of 6        │    │
 │  │ Open now:  IT · Laptop issued   IT · Email + SSO   Admin · Building card            │    │
 │  │            Manager · 30-day check-in set   HR · Emirates ID verified (3 more)       │    │
@@ -155,7 +162,7 @@ F1.)
 │  ├────────────────────────────────────────────────────────────────────────────────────┤    │
 │  │ ⚪  ON TRACK                                              sample row, not a record   │    │
 │  │ M. Farouk (placeholder)   ·  Product Designer  ·  Product                           │    │
-│  │ Start 2026-10-26  ·  in 12 days                                                     │    │
+│  │ Start 2026-10-26  ·  12 d                                                           │    │
 │  │ Employee track  ████████░░  8 of 9   ·   Workspace track  ████████░░  5 of 6        │    │
 │  │ Open now:  HR · Signed NDA (1)                                                       │    │
 │  │ [ Open case ]                                                                        │    │
@@ -176,7 +183,7 @@ F1.)
 | **Job role · Department** | The role the offer was accepted for. | `employees.role`, `employees.department` |
 | **Jurisdiction** (UAE / KSA chip) | The case's **own** recorded value, right-aligned on the name line. **Kept by the owner's decision (2026-10-07)**, decided **knowingly** — he was told it is redundant on a scoped list and kept it, so revisiting it is his call, not a reviewer's. | `preboarding_cases.jurisdiction` — rendered since P2-1 (`App.tsx:1303`–`:1305`) |
 | **Start date** | The anchor of the whole surface. A case cannot exist without one (P2-1). | `employees.start_date` |
-| **Relative time** ("in 2 days" / "started 2 days ago") | Derived from the start date **at read time**, never stored. Definition: whole days = `ceil((start_date 00:00 − now) / 24h)`; negative renders as "started *n* days ago". | **Nothing** — must be computed |
+| **Relative time** — one reading, from the flag | **The row renders the flag's own derivation, never a second computation** (lead ruling, 2026-10-07, §5) — so one row can never carry two distances that disagree. Derived from the start date **at read time**, never stored; whole days = `ceil((start_date 00:00 − now) / 24h)`. The three readings, exactly: **clear / not raised → whole days** (`· 14 d`) · **inside 48 hours → hours, one decimal** (`· 7.5 h before 00:00 on the start date`) · **start date passed → `started 1 d ago`**, absolute value, **never a bare negative** — and the same absolute branch catches the case a reader will not think of, a *clear* case whose start date has passed with every item complete (`· started 6 d ago`). §5's copy rules carry the arithmetic behind this. | **Nothing** — must be computed |
 | **Employee-track progress** | `n of m` items complete, plus a bar. Counts, not percentages-as-scores. | **Partly** — counts computable from `onboarding_tasks.status`; the *track split* has no column (§9 D2) |
 | **Workspace-track progress** | Same shape, separate bar, same row height. | Same |
 | **Open-now list** | **Owner + item title** for the incomplete items, worst-first, capped at 4 with a `(n more)` tail. This is the "who owns each open item" answer (P2-4) and it is on the *row*, not behind the click. | **Owner does not exist** (§9 D1) |
@@ -220,7 +227,7 @@ header dropped it, the row still carries the case's jurisdiction and nothing els
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
 │ ← Pre-boarding            A. Haddad  ·  Marketing Manager  ·  Marketing  ·  UAE           │
-│                           Start 2026-10-16  ·  in 2 days                                  │
+│                           Start 2026-10-16  ·  43.0 h before 00:00 on the start date      │
 ├──────────────────────────────────────────────────────────────────────────────────────────┤
 │  ┌────────────────────────────────────────────────────────────┐  ┌─────────────────────┐  │
 │  │ 🟠 INSIDE 48 HOURS — 5 items open                          │  │ Consent (PDPL)      │  │
@@ -325,9 +332,14 @@ flag_is_raised  =  open_items_in_case > 0
 | State | Condition | Chip | Headline copy | Body copy | Colour |
 |---|---|---|---|---|---|
 | **Clear** | No open items, **or** more than 48h to start with everything open still fine | ⚪ **On track** | "On track" | "Started *n* days before day one." (only when items exist and are open) | Slate / Success Green |
-| **Inside 48 hours with open items** | `open > 0` and `≤ 48h` to start | 🟠 **Inside 48 hours · *n* terms open** | "*n* items open, start in under 48 hours" | Names each open item, its status and the days to start, and its owner's function **only where one exists** (see the copy rules) | Warm Amber |
+| **Inside 48 hours with open items** | `open > 0` and `≤ 48h` to start | 🟠 **Inside 48 hours · *n* items open** | "*n* items open · start in 48 hours or less" | Names each open item, its status and the distance to start — **hours, one decimal**, the row's one rule (§2) — and its owner's function **only where one exists** (see the copy rules) | Warm Amber |
 | **Start date passed, items still open** | `open > 0` and start < now | 🔴 **Started *n* days ago · *n* items open** | "Started with *n* items still open" | Same list; adds the honest line "these were due before day one" | Coral Red |
 | *No start date* | — | — | Cannot render: a case without a start date cannot exist (P2-1). If one were ever read, the surface shows the error state, **not** a default date. | | Rose |
+
+**Why the amber headline reads "or less" (lead ruling, 2026-10-07).** The boundary above is
+**inclusive at exactly 48.00 h**, so "*n* items open, start in **under** 48 hours" is false at the one
+instant the flag must first be true. The headline is **"*n* items open · start in 48 hours or less"** —
+true at 48.00 h and at every instant after it, and true at all the hours before it too.
 
 ### Copy rules — what the flag may and may not say
 
@@ -335,15 +347,34 @@ The flag is a **state, not an event**. On this product there is no mailer, webho
 
 - **Never:** "sent", "notified", "emailed", "reminder sent", "alerted IT", "IT has been informed".
 - **Never:** a timestamp that implies a message went out, or a bell/paper-plane/envelope icon.
-- **Never a bare negative day count.** `Start: 2026-10-06 · -1 d` is what the built roll-up prints
-  for the started case today (measured 2026-10-07 on `origin/main`, §5.1). `-1` is an input, not a
-  message: the Coral state says **"Started 1 day ago · 7 items open"**. **P2-5's acceptance includes:
-  no surface prints a negative `days_to_start`.**
+- **Never a bare negative day count — on the row as well as on the chip.** `Start: 2026-10-06 · -1 d`
+  is what the built roll-up printed for the started case until **PR #77** — measured 2026-10-07 on
+  `main` at `f3f2bac` (§5.1) and fixed by #77, merged the same day. `-1` is an input, not a
+  message: the Coral state says **"Started 1 day ago · 7 items open"**, and the row's own reading is
+  **`· started 1 d ago`**. **The server is unchanged** — `days_to_start` stays the raw signed
+  number — and the guard that renders it absolutely is in the built client bundle (verified by the
+  lead, 2026-10-07), so no row can print a bare negative even while the API keeps returning one.
+  **P2-5's acceptance includes: no surface prints a negative `days_to_start`. A row is a surface**,
+  and this rule was first written against the chip alone.
+- **One distance per row — the row reads the flag's own derivation (lead ruling, 2026-10-07).** The
+  row's distance is taken from the flag's fields, never recomputed beside it, so a row can never
+  carry two numbers that disagree. **Why the rule exists — the arithmetic:** §2 counts **whole days**
+  while §5 measures **hours**, so a case with `days_to_start = 2` is between 24 and 48 hours out for
+  the whole of that day; the engineer reported one (2026-10-07) reading `2 d` beside its own chip's
+  *"Inside 48 hours · 7 items open"*. Both numbers were true under their own definitions and both sat
+  on the same row. The row therefore renders exactly three readings: **whole days** when the flag is
+  clear or not raised (`· 14 d`) · **hours, one decimal**, inside 48 hours (`· 7.5 h before 00:00 on
+  the start date`, measured from **UTC midnight** of the start date, as the derivation does) ·
+  **`started 1 d ago`** once the start date has passed, as an absolute value. The absolute form also
+    covers the *clear* case whose start date has passed with every item complete: it is not overdue,
+  and its row still may not print `· -6 d`. **As built (PR #77), that case renders `· started 6 d
+  ago`** — the absolute form is what keeps this rule true where it is least expected.
 - **An owner is never invented.** Owners exist only on the workspace track (P2-4), which does not
-  exist yet, so on today's employee-track items the flag names the item, its status and the days to
-  start, and says plainly that **no owner is recorded** rather than implying one. If the owner later
-  wants owners on the employee track, that is his decision and its own row (lead ruling, 2026-10-07).
-- **Always:** present-tense state — "5 items open", "start in under 48 hours", "opens in this view".
+  exist yet, so on today's employee-track items the flag names the item, its status and the distance
+  to start (§2's one reading), and says plainly that **no owner is recorded** rather than implying
+  one. If the owner later wants owners on the employee track, that is his decision and its own row
+  (lead ruling, 2026-10-07).
+- **Always:** present-tense state — "5 items open", "start in 48 hours or less", "opens in this view".
 - When an unprompted in-app notice exists (Gate 2's in-process timer), it says what the app did:
   *"This case reached the 48-hour mark while the app was open"* — and, if the server was down
   across the boundary, the flag simply reads correctly on the next read with **no** "missed
@@ -366,29 +397,49 @@ offsets from the day the seed runs**, so what is fixed is the offset, never the 
 table as *inputs*, and re-derive the states on the day you look. Every figure below was read off a
 scratch instance of `origin/main` on 2026-10-07 (own DB and port; the live deployment untouched):
 
-| Offer | Case | Offset / start that day | Items | `days_to_start` the surface prints | State §5 requires | What P2-5 must render there |
+| Offer | Case | Offset / start that day | Items | Distance the row must print (§2's one rule) | State §5 requires | What P2-5 must render there |
 |---|---|---|---|---|---|---|
-| `OFR-2026-DEMO-01` | Omar Al-Farsi (roster `demo-emp-omar`) | **+14** · 2026-10-21 | 7 open (3 `requested`, 4 `not_started`) | `· 14 d` | **Clear** | ⚪ **On track** · headline "On track" · body "Started 14 days before day one." · Slate/Green |
-| `OFR-2026-DEMO-02` | Mariam Al-Kaabi | **+1** · 2026-10-08 | 7 open (all `not_started`) | `· 1 d` | **Inside 48 hours** | 🟠 **Inside 48 hours · 7 items open** · "7 items open, start in under 48 hours" · names each open item, its status and the days to start, with an owner only where one exists (see the copy rules) · Warm Amber |
-| `OFR-2026-DEMO-03` | Yousef Al-Hammadi | **−1** · 2026-10-06 | 7 open (all `not_started`) | `· -1 d` | **Started, items open** | 🔴 **Started 1 day ago · 7 items open** · "Started with 7 items still open" · same list + "these were due before day one" · Coral Red |
+| `OFR-2026-DEMO-01` | Omar Al-Farsi (roster `demo-emp-omar`) | **+14** · 2026-10-21 | 7 open (3 `requested`, 4 `not_started`) | `· 14 d` — whole days | **Clear** | ⚪ **On track** · headline "On track" · body "Started 14 days before day one." · Slate/Green |
+| `OFR-2026-DEMO-02` | Mariam Al-Kaabi | **+1** · 2026-10-08 | 7 open (all `not_started`) | `· n.n h before 00:00 on the start date` — **hours, one decimal**, not `· 1 d`. The implemented example is `· 7.5 h` (PR #77's evidence, read at the hour that scratch case ran); the value shrinks through the seed day, so a fixed offset cannot pin it and the reading is written as *n.n* | **Inside 48 hours** | 🟠 **Inside 48 hours · 7 items open** · "7 items open · start in 48 hours or less" · names each open item, its status and the distance to start, with an owner only where one exists (see the copy rules) · Warm Amber |
+| `OFR-2026-DEMO-03` | Yousef Al-Hammadi | **−1** · 2026-10-06 | 7 open (all `not_started`) | `started 1 d ago` — absolute value; **PR #77 (merged) replaced the bare `· -1 d` this row printed before it** | **Started, items open** | 🔴 **Started 1 day ago · 7 items open** · "Started with 7 items still open" · same list + "these were due before day one" · Coral Red |
 
-Three things this table settles for P2-5, each of which the surface gets wrong today:
+Three things this table settles for P2-5 — the first as it was read on the deployed surface, marked
+where PR #76 has since moved it:
 
-1. **The states are not on the screen.** No flag chip renders anywhere on the built surface (the
-   row's two chips are the jurisdiction and the case status `Open`). The seed deliberately faked
-   nothing — so *today* the demo shows the right facts and no alarm, and **P2-5 is what turns the
-   three cases into one visible red, one amber and one clear.**
-2. **`-1 d` must not survive.** See the copy rule above: the started case's message is a sentence,
-   not a negative number.
+1. **The states are not on the screen** — as this table was first read. No flag chip rendered
+   anywhere on the surface of the day (the row's two chips are the jurisdiction and the case status
+   `Open`). The seed deliberately faked nothing — so at that reading the demo showed the right facts
+   and no alarm, and **P2-5 is what turns the three cases into one visible red, one amber and one
+   clear.**
+   **Changed by PR #76 (re-read 2026-10-07):** the flag has since merged on `main` at `f3f2bac` —
+   `server/preboarding-flag.js`, and the chip, headline and open-item block it derives at
+   `App.tsx:1581` and `:1605`. It draws **inside the built HR roll-up**, not yet on §2's list row or
+   §3's detail header, and the live deployment still runs `5ed731e`, which draws none. The three
+   readings in the table above are therefore now the acceptance line for a **built** component rather
+   than for one still to be built — **and none of the three changes.**
+2. **`-1 d` must not survive — and it was the row, not the chip, that printed it.** See the copy
+   rule above: the started case's message is a sentence, not a negative number, and the row beside
+   the chip reads `started 1 d ago`. The built roll-up's row is where the bare `· -1 d` was printed
+   (measured 2026-10-07 on `main` at `f3f2bac`); **PR #77, merged the same day, is the fix**, so this
+   reading is the row's, not only the flag's (§2) — and the row is where the surface could disagree
+   with the chip about the same case.
 3. **The three-state demo has a shelf life of one morning.** Case 2's start is seed day **+1**, so its
    amber window closes at 00:00 UTC on that date (**04:00 GST**) — after that it is a Coral case
    like case 3, and the demo shows two started and one on track, with no amber anywhere. Re-seed on
    the morning of a demo, and say on the day that the demo was seeded that morning; the plan already
    requires the same for the accrual figures.
 
+**The fourth case, which the three rows above do not show (as built, PR #77).** A case whose start
+date has passed **with every item complete** derives *clear*, not overdue — and its row must still
+not print a signed negative, so it renders **`· started 6 d ago`**. Same branch, same reason as row
+3; it is written down because it is the case a reader does not think of.
+
 **What this table is not.** It is not a claim that any state is computed today, and it is not a
 reading of a built flag: the right-hand column is this spec's requirement, applied by hand to the
-measured inputs. Nothing here asks the seed to store a state.
+measured inputs. **The distance column is the same kind of statement** — the reading §2's one rule
+*requires* of the row (whole days, hours, or `started n d ago`), not a reading of any built row: the
+`· 1 d` and `· -1 d` the roll-up printed when this table was written are kept out of it precisely
+because the ruling of 2026-10-07 forbids them. Nothing here asks the seed to store a state.
 
 ---
 
@@ -557,7 +608,7 @@ on the screen — see `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §4.
 | **P2-2** — every item has a status; incomplete items visible to HR without opening each case; documents stored per employee | §2 row anatomy (open-now list on the row); §3 per-item status; storage is D5 — **met as a reference under the owner's Option D (2026-10-07): the item records where the document lives, never the bytes** |
 | **P2-3** — each item shows sent/read/acknowledged; JD and NDA have a recorded acknowledgement | §3 pre-reading strip; the record itself is D6; "sent" is blocked by D10 |
 | **P2-4** — assignment derived from the role, not typed; each line has a responsible function; IT/Admin see only their own lines | §6 derivation; §2 owner chips; the last clause is D4 (and is not claimable until then) |
-| **P2-5** — fires on the 48-hour boundary; names the incomplete items and their owners; clears when the items complete | §5 definition (inclusive boundary), copy rules, and three states; **§5.1 holds the three seeded cases' expected readings to build against; the derivation is **track-agnostic**, and no surface prints a negative `days_to_start` or invents an item owner** |
+| **P2-5** — fires on the 48-hour boundary; names the incomplete items and their owners; clears when the items complete | §5 definition (inclusive boundary), copy rules, and three states; **§5.1 holds the three seeded cases' expected readings to build against; the derivation is **track-agnostic**, and no surface prints a negative `days_to_start` or invents an item owner**. **Two lead rulings of 2026-10-07 are folded in: the row and the chip share one derivation** (§2's relative-time row: whole days / hours to one decimal / `started n d ago`, so one row cannot carry two distances), **and the amber headline reads *"n items open · start in 48 hours or less"***, because the boundary is inclusive at exactly 48.00 h and "under 48 hours" is false there |
 | **P2-6** — EN/AR documents and portal; no document collected before a consent record exists | §7, §8 (the gate is on collection, not just on the button) |
 
 ---
@@ -567,8 +618,10 @@ on the screen — see `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §4.
 - **No screen here is built.** Every mock is a design artefact. Nothing in §2–§8 is a live
   surface, and no surface may ship with copy that implies otherwise. (P2-1's intake form and case
   list — `App.tsx:1184`–`:1321` — are built on `main`, but they are not these screens: §3's case
-  detail, §4's function view and §5's flag do not exist anywhere, and §2's list is a superset of
-  what P2-1 renders.)
+  detail and §4's function view do not exist anywhere, and §2's list is a superset of what P2-1
+  renders. **§5's flag has since been built** — `server/preboarding-flag.js`, PR #76 — **and draws
+  inside the built HR roll-up** (`App.tsx:1581`, `:1605`), *not* on §2's list row or §3's detail
+  header, and not on the live deployment, which still runs `5ed731e`; §5.1 carries the re-read.)
 - **No figure here is a reading.** The mock rows are invented placeholders, deliberately not the
   seeded records, and are marked as such on the face of every screen.
 - **No checklist length is specified here.** The `n of m` counts in the mocks are placeholder
@@ -597,3 +650,21 @@ shelf life is stated there too. Independent design review of the same surface:
 *Amended 2026-10-07 with the lead's P2-5 ruling: the flag is **track-agnostic** — workspace items
 join it unchanged when P2-4 lands — and an item's **owner is never invented** where none is recorded,
 which on today's employee-track items is always. See §5's definition, state table and copy rules.*
+*Amended 2026-10-07 with the lead's **one-distance ruling** (attributed to the lead, not the owner):
+**the row reads the flag's own derivation, never a second computation** — so its reading is whole
+days when clear (`· 14 d`), **hours to one decimal** inside 48 hours (`· 7.5 h before 00:00 on the
+start date`), and `started n d ago` once the start date has passed, never a bare negative. The
+arithmetic is in §5's copy rules: §2 counts whole days while §5 measures hours, so a case with
+`days_to_start = 2` is 24–48 h out all day and could read `2 d` beside an amber chip — both true,
+one row. **The same amendment corrects §5's amber headline to "*n* items open · start in 48 hours or
+less"**, because the boundary is inclusive at exactly 48.00 h and "under 48 hours" is false at the
+instant the flag first fires. §5.1's distance column now states the reading the rule *requires*; §2's
+S1 and §3's S2 mocks were re-padded to it. Three status statements the PR #76 merge had made false
+are marked in place, each with its citation: §0's "flag computation — **Nothing**" row, §5.1 item 1,
+and §12's "§5's flag [does] not exist anywhere".*
+*Corrected 2026-10-07 with **PR #77 merged** (`main` at `56fd1fd`), while this branch was open: the
+row rule is written in the past tense against the strings #77 implemented — `· 14 d` / `· 7.5 h
+before 00:00 on the start date` / `· started 1 d ago` / `· started 6 d ago` — and the sentence
+saying the built roll-up "prints `-1 d` today" now reads as what it printed before #77. The server is
+unchanged: `days_to_start` is still the raw signed input, and the absolute-value guard is in the
+built bundle.*
