@@ -1,0 +1,54 @@
+=== live deployment, before ===
+port 3000: 200
+date (UTC): 2026-10-08T09:19:38Z
+origin/main: 2584361f9e0c40b6d0159809b25ca0cba6afcbf3 — 2584361 Merge pull request #83 from AhmadJ979/docs/tracker-reground-round-23
+Preparing worktree (detached HEAD 2584361)
+HEAD is now at 2584361 Merge pull request #83 from AhmadJ979/docs/tracker-reground-round-23
+rig tree: 2584361f9e0c40b6d0159809b25ca0cba6afcbf3
+App.tsx blob in rig: b7a4cd819fd5db04b0b42a8c4d0a5d5f3f966800 — origin/main: b7a4cd819fd5db04b0b42a8c4d0a5d5f3f966800
+=== seed ===
+(Use `node --trace-warnings ...` to show where the warning was created)
+- Upserted Ahmad Al-Rashid (AE)
+- Upserted Fatima Al-Zahrani (SA)
+- Upserted Omar Al-Farsi (AE)
+- Upserted Leila Mansour (AE)
+- Upserted Khalid Al-Dosari (SA)
+- Upserted Hassan Al-Mansoori (AE)
+- Upserted Sarah Al-Qasimi (SA)
+- Upserted Mohammed Al-Sayed (AE)
+- Upserted Reem Al-Hashemi (SA)
+- Upserted Noura Al-Suwaidi (AE)
+- Upserted Salim Al-Nuaimi (AE)
+- Upserted Yusuf Hassan (AE)
+- Upserted Sultan Al-Harbi (SA)
+Upserting onboarding tasks...
+Upserting offboarding tasks...
+Upserting exit interviews...
+Upserting audit logs...
+Upserting consent records...
+Upserting Layer 2 pre-boarding demo cases...
+- Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-10-22) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-09) — inside 48 hours with every item still open; items: 7 not_started
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-07) — start date already passed, items still open; items: 7 not_started
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+seed exit: 0
+(node:21322) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch user ok
+=== client build ===
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-Dr2MqOGd.css   35.14 kB │ gzip:  6.80 kB
+dist/assets/index-_nim7xlP.js   264.94 kB │ gzip: 74.38 kB
+
+[32m✓ built in 261ms[39m
+vite build exit: 0
+=== boot ===
+=== boot checks ===
+listener 21368 cwd=/home/agent-product-designer/ws-rig/server
+rig root: 200
+rig /api/employees no token: 401
+=== live deployment, after ===
+port 3000: 200
+=== done ===

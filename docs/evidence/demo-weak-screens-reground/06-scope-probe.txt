@@ -1,0 +1,12 @@
+=== jurisdiction scope probe — scratch DB only (port 4771), 2026-10-08T09:25:52Z ===
+Purpose: the seeded demo has AE cases only, so a filtered and an unfiltered read agree by
+construction. This adds one SA case to the SCRATCH database (never the live tree) and
+then reads both ways, to show the filter doing its job.
+POST /api/preboarding/cases (jurisdiction SA) -> {"error":"candidate_name is required"}
+GET ?jurisdiction=AE -> 3 cases : ["OFR-2026-DEMO-03/AE","OFR-2026-DEMO-02/AE","OFR-2026-DEMO-01/AE"]
+GET unfiltered      -> 3 cases : ["OFR-2026-DEMO-03/AE","OFR-2026-DEMO-02/AE","OFR-2026-DEMO-01/AE"]
+
+--- retry, with the field the endpoint actually requires (candidate_name) ---
+POST /api/preboarding/cases (jurisdiction SA) -> {"created":true,"case":{"id":"292f830a-4b50-41a6-8332-d16001975be0","offer_reference":"AUDIT-KSA-CHECK-01","candidate_name":"KSA Scope Check","candidate_email":"probe@example.com","role":"Analyst","department":"Finance","reporting_line":"He
+GET ?jurisdiction=AE -> 3 cases : ["OFR-2026-DEMO-03/AE","OFR-2026-DEMO-02/AE","OFR-2026-DEMO-01/AE"]
+GET unfiltered      -> 4 cases : ["OFR-2026-DEMO-03/AE","OFR-2026-DEMO-02/AE","OFR-2026-DEMO-01/AE","AUDIT-KSA-CHECK-01/SA"]
