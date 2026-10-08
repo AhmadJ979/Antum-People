@@ -1,0 +1,173 @@
+HTTP pass — scratch rig port 4771, tree origin/main 2584361, 2026-10-08T09:20:38.975Z
+live tree untouched: port 3000 = 200
+
+===== health contract =====
+  GET /api/employees no token -> 401 {"error":"Authentication token required"}
+  GET /api/analytics/dashboard no token -> 401 {"error":"Authentication token required"}
+  GET /api/preboarding/cases no token -> 401 {"error":"Authentication token required"}
+  GET /api/employees foreign Origin (same-origin) -> 403
+  GET /api/employees non-allowlisted Origin -> 403 {"error":"Forbidden"}
+
+===== login =====
+  POST /api/login -> 200, token length 204
+
+===== roster =====
+  unfiltered response shape: array
+  unfiltered rows: 13
+    demo-emp-omar | undefined | AE | onboarding | start 2026-08-20 | end - | salary 9500
+    demo-emp-reem | undefined | SA | onboarding | start 2026-08-05 | end - | salary 8000
+    demo-emp-hassan | undefined | AE | active | start 2024-06-01 | end - | salary 14000
+    demo-emp-noura | undefined | AE | offboarding | start 2024-04-10 | end 2026-10-10 | salary 11000
+    demo-emp-sultan | undefined | SA | terminated | start 2024-03-05 | end 2024-09-01 | salary 9500
+    demo-emp-mohammed | undefined | AE | active | start 2024-02-15 | end - | salary 11500
+    demo-emp-ahmad | undefined | AE | active | start 2024-01-15 | end - | salary 10000
+    demo-emp-sarah | undefined | SA | offboarding | start 2023-09-12 | end 2026-09-30 | salary 9000
+    demo-emp-fatima | undefined | SA | active | start 2023-05-10 | end - | salary 12000
+    demo-emp-salim | undefined | AE | active | start 2023-04-15 | end - | salary 13000
+    demo-emp-yusuf | undefined | AE | terminated | start 2023-03-10 | end 2023-08-25 | salary 8000
+    demo-emp-khalid | undefined | SA | active | start 2022-11-01 | end - | salary 11000
+    demo-emp-leila | undefined | AE | active | start 2022-03-01 | end - | salary 17000
+  AE rows: 8 — {"onboarding":1,"active":5,"offboarding":1,"terminated":1}
+    Day-arithmetic (App.tsx:1383): undefined start 2026-08-20 -> Day 49 (in-flight)
+    Day-arithmetic (App.tsx:1383): undefined start 2024-06-01 -> Day 859
+    Day-arithmetic (App.tsx:1383): undefined start 2024-04-10 -> Day 911
+    Day-arithmetic (App.tsx:1383): undefined start 2024-02-15 -> Day 966
+    Day-arithmetic (App.tsx:1383): undefined start 2024-01-15 -> Day 997
+    Day-arithmetic (App.tsx:1383): undefined start 2023-04-15 -> Day 1272
+    Day-arithmetic (App.tsx:1383): undefined start 2023-03-10 -> Day 1308
+    Day-arithmetic (App.tsx:1383): undefined start 2022-03-01 -> Day 1682
+
+===== dashboard AE vs unfiltered =====
+  AE  activeHeadcount = 7
+  AE  monthlyPayroll = 10500
+  AE  eosbLiability = 85249
+  AE  attritionRate = 25
+  AE  avgCostPerHireAE = 8286
+  AE  avgCostPerHireSA = 0
+  AE  avgTtvDays = 19.2
+  AE  activeSalarySpend = 126000
+  AE  totalRecruitingSpend = 62000
+
+  ALL activeHeadcount = 11
+  ALL monthlyPayroll = 15333
+  ALL eosbLiability = 168263
+  ALL attritionRate = 31
+  ALL avgCostPerHireAE = 8286
+  ALL avgCostPerHireSA = 4750
+  ALL avgTtvDays = 18
+  ALL activeSalarySpend = 184000
+  ALL totalRecruitingSpend = 87000
+  AE retention cohorts:  undefined
+  ALL retention cohorts: undefined
+  AE keys: activeHeadcount,monthlyPayroll,eosbLiability,attritionRate,avgCostPerHireAE,avgCostPerHireSA,avgTtvDays,ttvByDepartment,retentionLiftSeries,eosbLiabilitySeries,eosbByJurisdiction,onboardingPipeline,exitsByReason,activeSalarySpend,totalRecruitingSpend
+  exitsByReason AE:  [{"reason":"Career Change","count":1},{"reason":"Better Opportunity","count":1}]
+  exitsByReason ALL: [{"reason":"Better Opportunity","count":2},{"reason":"Career Change","count":1},{"reason":"Relocation","count":1}]
+  onboarding AE: [{"id":"demo-emp-omar","first_name":"Omar","last_name":"Al-Farsi","role":"Finance Analyst","start_date":"2026-08-20"}]
+  offboarding AE: undefined
+
+===== compliance report =====
+  status 200
+  records: 0; with consent_date: 0; null: 0
+
+===== settlement statement (Noura, AE offboarding) =====
+  employee: undefined undefined undefined
+
+===== checklists per employee =====
+  AE undefined ONBOARDING 7 tasks, 2 done :: MoHRE Contract Signing > Entry Permit Issuance > Medical Fitness Test > Emirates ID Biometrics > Residence Visa Stamping > Wages Protection System (WPS) Registration > Privacy Notice Consent
+  SA undefined ONBOARDING 7 tasks, 2 done :: Qiwa Job Offer Acceptance > Qiwa Employment Contract > Medical Exam (KSA) > Iqama Issuance > GOSI Registration > Mudad (WPS) Enrollment > Privacy Notice Consent
+  AE undefined OFFBOARDING 8 steps :: Hardware Return > Access Revocation > Notice Period Verification > EOSB Calculation (UAE) > Annual Leave Encashment > MoHRE Work Permit Cancellation > Residency Visa Cancellation > Final Settlement Payment (within 14 days)
+  AE undefined ONBOARDING 7 tasks, 7 done :: MoHRE Contract Signing > Entry Permit Issuance > Medical Fitness Test > Emirates ID Biometrics > Residence Visa Stamping > Wages Protection System (WPS) Registration > Privacy Notice Consent
+  SA undefined OFFBOARDING 10 steps :: Hardware Return > Access Revocation > Notice Period Verification > EOSB Calculation (KSA) > GOSI De-registration > Iqama Cancellation/Transfer > Final Exit Visa (or re-entry, if transferring) > Service Certificate Issuance > Annual Leave Encashment > Final Settlement Payment
+
+===== pre-boarding cases =====
+  ?jurisdiction=AE -> 3 cases ; unfiltered -> 3 cases
+  case undefined | OFR-2026-DEMO-03 | undefined | start 2026-10-07 | status open
+    flag: undefined
+    row copy: headline=undefined chip=undefined body=undefined
+  case undefined | OFR-2026-DEMO-02 | undefined | start 2026-10-09 | status open
+    flag: undefined
+    row copy: headline=undefined chip=undefined body=undefined
+  case undefined | OFR-2026-DEMO-01 | undefined | start 2026-10-22 | status open
+    flag: undefined
+    row copy: headline=undefined chip=undefined body=undefined
+  detail keys: error
+  detail: {"error":"Pre-boarding case not found"}
+  package: {"error":"No pre-boarding case with id undefined"}
+
+===== pre-boarding overview + flag watch =====
+  checklist/overview: {"jurisdiction":null,"cases":[{"case_id":"5d8118d6-330a-49b4-8ca5-b7565912b185","offer_reference":"OFR-2026-DEMO-03","candidate_name":"Yousef Al-Hammadi","candidate_email":"yousef.alhammadi@example.com","role":"Operations Analyst","department":"Operations","jurisdiction":"AE","start_date":"2026-10-07","days_to_start":-1,"flag":{"open_count":7,"open_items":[{"item_key":"bank_details","label":"Bank details (IBAN letter)","status":"not_started","owner":null,"owner_known":false},{"item_key":"education_certificate","label":"Education certificate","status":"not_started","owner":null,"owner_known":false},{"item_key":"emergency_contact","label":"Emergency contact","status":"not_started","owner":null
+  flag-watch: {"process_started_at":"2026-10-08T09:19:41.789Z","last_scan_at":"2026-10-08T09:19:41.790Z","interval_ms":300000,"boundaries_recorded":2,"boundaries_seen":2,"last_error":null,"delivery":"none","catch_up_rule":"A case enters the flag at 48 hours before 00:00 of its start date. A boundary that falls while the process is up is recorded on the next tick (\"while the app was open\"). A boundary that fell before this process started is recorded on the first tick, marked late, with how late it was noticed (\"while the app was not running\"). A boundary is never silently skipped. A derived flag has nothing to miss, so no \"missed notification\" state exists. Nothing here is delivered anywhere, and no
+
+(each section above is a read taken in this session; no writes to the rig)
+
+===== dashboard: cohort + forecast series (AE and unfiltered) =====
+  AE  retentionLiftSeries: [{"cohort":"H1 2022","retention":100,"benchmark":82,"lift":18},{"cohort":"H1 2023","retention":50,"benchmark":83,"lift":-33},{"cohort":"H1 2024","retention":100,"benchmark":84,"lift":16},{"cohort":"H2 2026","retention":100,"benchmark":81,"lift":19}]
+  ALL retentionLiftSeries: [{"cohort":"H1 2022","retention":100,"benchmark":82,"lift":18},{"cohort":"H1 2023","retention":67,"benchmark":83,"lift":-16},{"cohort":"H1 2024","retention":80,"benchmark":84,"lift":-4},{"cohort":"H2 2022","retention":100,"benchmark":82,"lift":18},{"cohort":"H2 2023","retention":100,"benchmark":83,"lift":17},{"cohort":"H2 2026","retention":100,"benchmark":81,"lift":19}]
+  AE  eosbLiabilitySeries: [{"quarter":"Q3 2026","uae":84667,"ksa":0,"combined":84667},{"quarter":"Q4 2026","uae":90926,"ksa":0,"combined":90926},{"quarter":"Q1 2027","uae":133477,"ksa":0,"combined":133477},{"quarter":"Q2 2027","uae":161494,"ksa":0,"combined":161494}]
+  AE  eosbByJurisdiction: {"AE":85249,"SA":0}
+  AE  ttvByDepartment: [{"department":"Engineering","avgDays":16.7,"target":15},{"department":"Finance","avgDays":25,"target":15},{"department":"Product","avgDays":19,"target":15},{"department":"Sales","avgDays":21,"target":15}]
+  AE  attritionRate 25 ; ALL 31
+
+===== compliance report — raw shape =====
+  raw (first 900 chars): {"total":13,"consentGranted":13,"visaAlerts":0,"alerts":[]}
+  top-level keys: total,consentGranted,visaAlerts,alerts
+  !! section error: Cannot read properties of undefined (reading 'slice')
+
+===== settlement statement — Noura (AE, offboarding) =====
+  employee demo-emp-noura Noura Al-Suwaidi status=offboarding
+  status 200, doc length 2391
+  first 24 text lines:
+    | # Final Settlement Statement / مخالصة نهائية
+    | > **Jurisdiction:** UAE / KSA
+    | > **Status:** Template v1.1
+    | > **Revision:** Brand updated to Antum People on 2026-09-17.
+    | > **Note:** This document must be signed by the employee upon receipt of final dues.
+    | ---
+    | ### 1. Employee & Employer Details / تفاصيل الموظف وصاحب العمل
+    | | Field | Details |
+    | |---|---|
+    | | Employer Name / اسم صاحب العمل | Antum Regional Hub |
+    | | Employee Name / اسم الموظف | Noura Al-Suwaidi |
+    | | Employee ID / رقم الموظف | demo-emp-noura |
+    | | Last Working Day / آخر يوم عمل | 2026-10-10 |
+    | | Reason for Termination / سبب انتهاء الخدمة | Resignation |
+    | ---
+    | ### 2. Settlement Calculation / احتساب المستحقات النهائية
+    | | Component / البند | Amount / المبلغ |
+    | |---|---|
+    | | Monthly Salary (Pro-rated) / الراتب الشهري (بشكل نسبي) | 5161.29 |
+    | | Accrued Annual Leave / بدل الإجازة السنوية المستحق | not calculated |
+    | | **End of Service Benefit (EOSB) / مكافأة نهاية الخدمة** | **6415.79** |
+    | | Notice Period Pay / بدل فترة الإخطار (if applicable) | not calculated |
+    | | Ticket Allowance / بدل تذاكر السفر (if applicable) | not calculated |
+    | | Other Payments / مدفوعات أخرى | 0.00 |
+  [placeholder] tokens: NONE
+  "not calculated": 3
+  "UAE / KSA": 1 | "UAE/KSA": 0 | "KSA": 1
+  "Antum Regional Hub": 3
+  "Basic Salary (UAE Rule)": 0
+  "Pilot-ready draft": 0 | "Legally Validated": 0
+  "unconfirmed"/"pending counsel": 
+  money figures: 5161.29 | 6415.79 | 0.00 | 11577.08 | 0.00 | 0.00 | 0.00 | 0.00 | 11577.08
+  date rendered: 8 October 2026 | 8 October 2026
+
+===== pre-boarding case detail + package (all three cases) =====
+  list keys: id,offer_reference,candidate_name,candidate_email,role,department,reporting_line,jurisdiction,start_date,status,source,offered_at,created_by,created_at,updated_at
+  --- OFR-2026-DEMO-03 (5d8118d6-330a-49b4-8ca5-b7565912b185) ---
+    row: {"name":"Yousef Al-Hammadi","start":"2026-10-07"}
+    flag: undefined
+    detail keys: id,offer_reference,candidate_name,candidate_email,role,department,reporting_line,jurisdiction,start_date,status,source,offered_at,created_by,created_at,updated_at
+    detail: {"id":"5d8118d6-330a-49b4-8ca5-b7565912b185","offer_reference":"OFR-2026-DEMO-03","candidate_name":"Yousef Al-Hammadi","candidate_email":"yousef.alhammadi@example.com","role":"Operations Analyst","department":"Operations","reporting_line":"Head of Operations","jurisdiction":"AE","start_date":"2026-10-07","status":"open","source":"demo_seed","offered_at":null,"created_by":"demo-seed","created_at":"2026-10-08 09:19:39","updated_at":"2026-10-08 09:19:39"}
+    package: {"case_id":"5d8118d6-330a-49b4-8ca5-b7565912b185","offer_reference":"OFR-2026-DEMO-03","candidate_name":"Yousef Al-Hammadi","jurisdiction":"AE","start_date":"2026-10-07","package_label":"UAE pre-reading package","package_available":true,"package_unavailable_reason":null,"delivery_channel":"none","copy_note":"This release has no delivery channel and no hire-facing portal: nothing in this package has been sent, and no read event can exist. An acknowledgement is an in-product record by the person named, not an electronic signature.","as_of":null,"item_count":9,"recorded_count":0,"required_total":2,"required_recorded":0,"missing_required":["signed_jd","nda"],"items":[{"item_key":"signed_jd","label":"Signed job description (JD)","category":"role","acknowledgement_required":true,"delivery":{"state":"not_available","reason":"no_delivery_channel","label":"Not sent — this release has no delivery channel (no mailer, webhook or SMS), so the product cannot deliver this item"},"reading":{"state":"not_tracked","reason":"no_hire_portal","label":"Not tracked — there is no hire-facing portal in this release, so no read event exists to record"},"state":"not_recorded","state_label":"Not recorded","ac
+  --- OFR-2026-DEMO-02 (6ce098a0-8eca-494f-b38e-c9206404e0e2) ---
+    row: {"name":"Mariam Al-Kaabi","start":"2026-10-09"}
+    flag: undefined
+    detail keys: id,offer_reference,candidate_name,candidate_email,role,department,reporting_line,jurisdiction,start_date,status,source,offered_at,created_by,created_at,updated_at
+    detail: {"id":"6ce098a0-8eca-494f-b38e-c9206404e0e2","offer_reference":"OFR-2026-DEMO-02","candidate_name":"Mariam Al-Kaabi","candidate_email":"mariam.alkaabi@example.com","role":"Marketing Coordinator","department":"Marketing","reporting_line":"Head of Marketing","jurisdiction":"AE","start_date":"2026-10-09","status":"open","source":"demo_seed","offered_at":null,"created_by":"demo-seed","created_at":"2026-10-08 09:19:39","updated_at":"2026-10-08 09:19:39"}
+    package: {"case_id":"6ce098a0-8eca-494f-b38e-c9206404e0e2","offer_reference":"OFR-2026-DEMO-02","candidate_name":"Mariam Al-Kaabi","jurisdiction":"AE","start_date":"2026-10-09","package_label":"UAE pre-reading package","package_available":true,"package_unavailable_reason":null,"delivery_channel":"none","copy_note":"This release has no delivery channel and no hire-facing portal: nothing in this package has been sent, and no read event can exist. An acknowledgement is an in-product record by the person named, not an electronic signature.","as_of":null,"item_count":9,"recorded_count":0,"required_total":2,"required_recorded":0,"missing_required":["signed_jd","nda"],"items":[{"item_key":"signed_jd","label":"Signed job description (JD)","category":"role","acknowledgement_required":true,"delivery":{"state":"not_available","reason":"no_delivery_channel","label":"Not sent — this release has no delivery channel (no mailer, webhook or SMS), so the product cannot deliver this item"},"reading":{"state":"not_tracked","reason":"no_hire_portal","label":"Not tracked — there is no hire-facing portal in this release, so no read event exists to record"},"state":"not_recorded","state_label":"Not recorded","ackn
+  --- OFR-2026-DEMO-01 (8faa118f-4c7e-466e-95ff-d6c1989f780d) ---
+    row: {"name":"Omar Al-Farsi","start":"2026-10-22"}
+    flag: undefined
+    detail keys: id,offer_reference,candidate_name,candidate_email,role,department,reporting_line,jurisdiction,start_date,status,source,offered_at,created_by,created_at,updated_at
+    detail: {"id":"8faa118f-4c7e-466e-95ff-d6c1989f780d","offer_reference":"OFR-2026-DEMO-01","candidate_name":"Omar Al-Farsi","candidate_email":"omar.alfarsi@example.com","role":"Finance Analyst","department":"Finance","reporting_line":"Head of Finance","jurisdiction":"AE","start_date":"2026-10-22","status":"open","source":"roster:demo-emp-omar","offered_at":null,"created_by":"demo-seed","created_at":"2026-10-08 09:19:39","updated_at":"2026-10-08 09:19:39"}
+    package: {"case_id":"8faa118f-4c7e-466e-95ff-d6c1989f780d","offer_reference":"OFR-2026-DEMO-01","candidate_name":"Omar Al-Farsi","jurisdiction":"AE","start_date":"2026-10-22","package_label":"UAE pre-reading package","package_available":true,"package_unavailable_reason":null,"delivery_channel":"none","copy_note":"This release has no delivery channel and no hire-facing portal: nothing in this package has been sent, and no read event can exist. An acknowledgement is an in-product record by the person named, not an electronic signature.","as_of":null,"item_count":9,"recorded_count":0,"required_total":2,"required_recorded":0,"missing_required":["signed_jd","nda"],"items":[{"item_key":"signed_jd","label":"Signed job description (JD)","category":"role","acknowledgement_required":true,"delivery":{"state":"not_available","reason":"no_delivery_channel","label":"Not sent — this release has no delivery channel (no mailer, webhook or SMS), so the product cannot deliver this item"},"reading":{"state":"not_tracked","reason":"no_hire_portal","label":"Not tracked — there is no hire-facing portal in this release, so no read event exists to record"},"state":"not_recorded","state_label":"Not recorded","acknow

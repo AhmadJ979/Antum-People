@@ -1,0 +1,20 @@
+=== live public URL, anonymous, 2026-10-08T09:25:46Z ===
+GET / -> 200
+bundle: assets/index-Cwq9dzzZ.js
+GET bundle -> 200 (258648 bytes)
+--- string counts in the LIVE bundle ---
+  Pre-reading package                              0
+  Record acknowledgement                           0
+  no delivery channel                              1
+  before 00:00 on the start date                   0
+  Cases open                                       1
+  Pre-boarding                                     1
+  Pilot-ready draft                                1
+  Legally Validated                                0
+  Basic Salary (UAE Rule)                          1
+  UAE / KSA                                        0
+  Antum Regional Hub                               0
+  SAMPLE DEMO DATA                                 0
+  HR Onboarding/Offboarding Intelligence Platform  1
+no token /api/employees -> 401
+foreign Origin -> 403
