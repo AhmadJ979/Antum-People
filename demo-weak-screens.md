@@ -30,6 +30,26 @@
 
 **Say which surface you are showing.** If the cutover has not run when a call happens, cut the pre-boarding segment; the walkthrough script carries a 10-second check for exactly this (three cases vs an empty state).
 
+## This audit and the walkthrough script say the same thing — and here is the mapping
+
+Two documents describing the same weak screens differently is a credibility problem in front of a prospect who has both, so the mapping is stated rather than left to the reader. The walkthrough script (`demo-walkthrough-script.md`, v4.0) carries the same findings in its **Caveats & guardrails** list; this audit is the longer form and carries the measurement behind each one.
+
+| This audit | Walkthrough script | Agreement |
+| --- | --- | --- |
+| 1 — settlement header generic (`UAE / KSA`, `Antum Regional Hub`) | Caveat 5 | same fact, same reading date; the audit adds that the waiver clause names the placeholder twice more and that the document carries **no EOSB-basis line and no counsel marker** |
+| 2 — exit-interview data never surfaced | Caveat 8 | identical, including the client-only-as-a-type detail (`App.tsx:224`) and today's `exitsByReason` reading |
+| 3 — UAE offboarding 8 steps vs KSA 10 | Caveat 10 | identical |
+| 4 — H1 2023 at 50% (lift −33%) | Caveat 4 | identical |
+| 5 — roster 8 rows (5/1/1/1) and the pre-hire in the headcount | Caveat 11 | identical |
+| 6 — the KSA switch is visible | Caveat 12 | identical (leave the controls alone; answer verbally) |
+| 7 — "Illustrative" labels | Caveat 3 | identical |
+| 8 — the sign-in line undersells the platform | **added to the script's list this session (Caveat 15)** | new finding; the script now carries it |
+| 9 — roster day count unguarded (`Day -n`) | Caveat 11 (last paragraph) | same finding and same seed behaviour; the script's line now also names `2584361` as the revision it was re-read on |
+| 10 — the forecast's all-zero `KSA: 0.00 SAR` column | **added to the script's list this session (Caveat 16)** | new finding; the script now carries it |
+| F1–F4, the chip, the package | Caveats 13 and 14, and Segment 3 | same limits in the same words: no delivery channel, no hire-facing portal, nothing "sent", an acknowledgement **recorded in the product** |
+
+**One script line was corrected to match this audit's measurement.** The script's provenance table listed the Compliance Center's **"Basic Salary (UAE Rule)"** line as *carried from 2026-10-06 and not re-opened on this pass*. It **was** re-opened on the screen on 2026-10-08 — it renders on the offboarding record's Compliance Center (`App.tsx:1337`) — so the script now says so, and the audit carries the reading.
+
 ---
 
 ## Closed and re-checked this session (`main` = `2584361`, 2026-10-08)
