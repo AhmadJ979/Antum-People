@@ -1,0 +1,70 @@
+# 01 — the rig: what was stood up, where, and the first readings
+
+All of the below was produced on a **scratch instance of `origin/main`** — own port, own
+database, own throwaway credential. The live deployment was never touched: port 3000
+answered 200 before the pass and after every pass.
+
+## Setup transcript (rig-setup.sh)
+
+== date (UTC) ==
+2026-10-08 08:35:28 UTC
+== origin/main ==
+404b29d Merge pull request #79 from AhmadJ979/feat/p2-3-pre-reading-package
+Preparing worktree (detached HEAD 404b29d)
+HEAD is now at 404b29d Merge pull request #79 from AhmadJ979/feat/p2-3-pre-reading-package
+== seeding ==
+(Use `node --trace-warnings ...` to show where the warning was created)
+- Upserted Ahmad Al-Rashid (AE)
+- Upserted Fatima Al-Zahrani (SA)
+- Upserted Omar Al-Farsi (AE)
+- Upserted Leila Mansour (AE)
+- Upserted Khalid Al-Dosari (SA)
+- Upserted Hassan Al-Mansoori (AE)
+- Upserted Sarah Al-Qasimi (SA)
+- Upserted Mohammed Al-Sayed (AE)
+- Upserted Reem Al-Hashemi (SA)
+- Upserted Noura Al-Suwaidi (AE)
+- Upserted Salim Al-Nuaimi (AE)
+- Upserted Yusuf Hassan (AE)
+- Upserted Sultan Al-Harbi (SA)
+Upserting onboarding tasks...
+Upserting offboarding tasks...
+Upserting exit interviews...
+Upserting audit logs...
+Upserting consent records...
+Upserting Layer 2 pre-boarding demo cases...
+- Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-10-22) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-09) — inside 48 hours with every item still open; items: 7 not_started
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-07) — start date already passed, items still open; items: 7 not_started
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+== scratch credential ==
+(node:8335) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+user inserted
+== build client ==
+vite build exit: 0  ()
+== boot ==
+listener on 4716: 8406 
+  pid 8406 cwd /home/agent-product-designer/scratch-rig/server
+== live deployment untouched? ==
+  port3000: 200
+  scratch:  200
+DONE
+
+## The two findings the setup itself produced
+
+1. **`origin/main` was `404b29d`** — the merge of PR #79 (`feat/p2-3-pre-reading-package`),
+   which had landed in the hours before this pass. The task's own description predicted the
+   opposite ("the pre-reading package is not built yet (P2-3 in progress)"), so the script was
+   written against the built package rather than around its absence — see the evidence README.
+2. **The seed's own log states the three states it created**, dated as offsets from the run:
+   DEMO-01 start seed+14 (on track), DEMO-02 start seed+1 (inside 48 hours), DEMO-03 start seed-1
+   (start date passed, items open).
+
+## Build of the rig's client (the browser pass needs a served bundle)
+
+dist/assets/index-_nim7xlP.js   264.94 kB │ gzip: 74.38 kB
+
+[32m✓ built in 319ms[39m
+vite build exit code: 0 (recorded by rig-setup.sh)
