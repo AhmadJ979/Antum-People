@@ -1,0 +1,15 @@
+P2-3 - the pre-reading strip, read out of the running rig's DOM (not from the API).
+Rig: merge result of origin/main 50871365e1fad2147b4558469518f4aafa52daed + branch feat/p2-3-pre-reading-package
+     (5bf10eba8fc82ae25759a47e4abd6f646cda9714); instance on port 4731, own throwaway DB.
+Case opened through the product's own intake path: OFR-2026-P23-EVIDENCE (Noor Al-Mansoori).
+The JD's acknowledgement was written by the HTTP pass before this read; everything else is untouched.
+
+--- eval: the innermost div whose text is the strip header ---
+"PRE-READING PACKAGE · 1/9 acknowledged · 1/2 required"
+
+--- eval: the whole strip container, innerText, item by item ---
+"PRE-READING PACKAGE · 1/9 acknowledged · 1/2 required\nJD and NDA carry a required acknowledgement\nSigned job description (JD)REQUIRED ACKNOWLEDGEMENT\nSent: not available — no delivery channel in this release\nRead: not tracked — no hire-facing portal in this release\nAcknowledged: scratch · 2026-10-08T07:34:55.740Z · in-product record, not an e-signature\nOrganisation chart\nSent: not available — no delivery channel in this release\nRead: not tracked — no hire-facing portal in this release\nAcknowledged: not recorded\nRecord acknowledgement\nReporting line\nSent: not available — no delivery channel in this release\nRead: not tracked — no hire-facing portal in this release\nAcknowledged: not recorded\nRecord acknowledgement\nTeam members\nSent: not available — no delivery channel in this release\nRead: not tracked — no hire-facing portal in this release\nAcknowledged: not recorded\nRecord acknowledgement\nNon-disclosure agreement (NDA)REQUIRED ACKNOWLEDGEMENT\nSent: not available — no delivery channel in this release\nRead: not tracked — no hire-facing portal in this release\nAcknowledged: not recorded\nRecord acknowledgement\nEmployee handbook\nSent: not available — no delivery channel in this release\nRead: not tracked — no hire-facing portal in this release\nAcknowledged: not recorded\nRecord acknowledgement\nCompany policies\nSent: not available — no delivery channel in this release\nRead: not tracked — no hire-facing portal in this release\nAcknowledged: not recorded\nRecord acknowledgement\nCode of conduct\nSent: not available — no delivery channel in this release\nRead: not tracked — no hire-facing portal in this release\nAcknowledged: not recorded\nRecord acknowledgement\nDress code\nSent: not available — no delivery channel in this release\nRead: not tracked — no hire-facing portal in this release\nAcknowledged: not recorded\nRecord acknowledgement\n\nThe package is listed, not delivered: there is no mailer, webhook or SMS, so nothing has been sent, and there is no hire-facing portal, so no read event exists to record. Each acknowledgement is recorded in the product by the signed-in user on the hire's behalf — an in-product record, not an electronic signature."
+
+--- screenshots (both read back and confirmed to show the strip, not only a chip):
+    screenshots/p2-3-strip.png            (header, the JD row, and four unrecorded rows)
+    screenshots/p2-3-strip-scrolled.png   (rows six to nine, each with its Record acknowledgement button)

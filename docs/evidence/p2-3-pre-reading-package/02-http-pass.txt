@@ -1,0 +1,62 @@
+cases on the rig's AE surface: 3
+
+== 1. the three seeded demo cases: nothing is pre-acknowledged (the seed is untouched)
+  OFR-2026-DEMO-03 (Yousef Al-Hammadi) items=9 acknowledged=0 required=0/2 missing_required=[signed_jd,nda] delivery_channel=none delivery_states=[not_available] reading_states=[not_tracked] labels_say_not_sent=true
+  OFR-2026-DEMO-02 (Mariam Al-Kaabi) items=9 acknowledged=0 required=0/2 missing_required=[signed_jd,nda] delivery_channel=none delivery_states=[not_available] reading_states=[not_tracked] labels_say_not_sent=true
+  OFR-2026-DEMO-01 (Omar Al-Farsi) items=9 acknowledged=0 required=0/2 missing_required=[signed_jd,nda] delivery_channel=none delivery_states=[not_available] reading_states=[not_tracked] labels_say_not_sent=true
+
+== 2. every item of every seeded case, item by item
+  signed_jd        required_ack=true  state=not_recorded  delivery=not_available reading=not_tracked
+  org_chart        required_ack=false state=not_recorded  delivery=not_available reading=not_tracked
+  reporting_line   required_ack=false state=not_recorded  delivery=not_available reading=not_tracked
+  team_members     required_ack=false state=not_recorded  delivery=not_available reading=not_tracked
+  nda              required_ack=true  state=not_recorded  delivery=not_available reading=not_tracked
+  handbook         required_ack=false state=not_recorded  delivery=not_available reading=not_tracked
+  policies         required_ack=false state=not_recorded  delivery=not_available reading=not_tracked
+  code_of_conduct  required_ack=false state=not_recorded  delivery=not_available reading=not_tracked
+  dress_code       required_ack=false state=not_recorded  delivery=not_available reading=not_tracked
+
+== 3. a case opened through the product's own intake path, same honest start
+  POST /api/preboarding/cases -> 201 created=true id=8b10770d-afdc-4bc3-9b58-96502d32ad2f
+  items=9 acknowledged=0 required=0/2 missing_required=[signed_jd,nda] delivery_channel=none delivery_states=[not_available] reading_states=[not_tracked] labels_say_not_sent=true
+
+== 4. refusals (all four checked over HTTP, not only in the unit tests)
+  GET package without a token            -> 401 {"error":"Authentication token required"}
+  POST acknowledgement without a token   -> 401 {"error":"Authentication token required"}
+  POST an item outside the package       -> 400 {"error":"Item passport is not part of this case's pre-reading package (signed_jd, org_chart, reporting_line, team_members, nda, handbook, policies, code_of_conduct, dress_code)"}
+  POST method=e_signature                -> 400 {"error":"Method e_signature is not available: the product cannot obtain an e-signature. An acknowledgement can only be recorded as in_product_record, and reads as a record rather than a signature"}
+  GET ?as_of=not-a-timestamp             -> 400 {"error":"as_of must be an ISO 8601 timestamp"}
+
+== 5. recording an acknowledgement: the JD, then the replay
+  POST signed_jd                         -> 201 created=true recorded_by=scratch at=2026-10-08T07:34:55.740Z method=in_product_record
+  POST signed_jd again                   -> 200 created=false same id=true same timestamp=true
+
+== 6. what the case reads afterwards: one item acknowledged, the other eight not
+  items=9 acknowledged=1 required=1/2 missing_required=[nda] delivery_channel=none delivery_states=[not_available] reading_states=[not_tracked] labels_say_not_sent=true
+  signed_jd        state=acknowledged  by scratch at 2026-10-08T07:34:55.740Z (Recorded in the product by the person named — this is not an electronic signature)
+  org_chart        state=not_recorded  
+  reporting_line   state=not_recorded  
+  team_members     state=not_recorded  
+  nda              state=not_recorded  
+  handbook         state=not_recorded  
+  policies         state=not_recorded  
+  code_of_conduct  state=not_recorded  
+  dress_code       state=not_recorded  
+
+== 7. the time-stamped view: what was outstanding before the record was written
+  as_of 2026-10-08T07:32:55.739Z -> acknowledged=0 signed_jd=not_recorded missing_required=[signed_jd,nda]
+  now                    -> acknowledged=1 signed_jd=acknowledged
+
+== 8. a KSA case: the package is kept and switched off
+  GET package (SA)                       -> package_available=false items=9 reason="The SA pre-reading package is kept but not active in this release (UAE-first), so no acknowledgement can be recorded against it"
+  POST acknowledgement (SA)              -> 409 {"error":"The SA pre-reading package is kept but not active in this release (UAE-first), so no acknowledgement can be recorded against it"}
+
+== 9. no payload words a delivery or a read as a success
+  "sent":true        present=false
+  "sent"             present=false
+  "emailed"          present=false
+  "notified"         present=false
+  "delivered":true   present=false
+  "read":true        present=false
+
+EVIDENCE CASE ID 8b10770d-afdc-4bc3-9b58-96502d32ad2f
