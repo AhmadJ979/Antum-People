@@ -208,6 +208,20 @@ CREATE TABLE IF NOT EXISTS preboarding_items (
   jurisdiction TEXT NOT NULL,
   required INTEGER NOT NULL DEFAULT 1,
   status TEXT NOT NULL DEFAULT 'not_started',
+  -- Which track created this item: 'employee' (P2-2's document collection) or 'workspace'
+  -- (P2-4's provisioning checklist). One table, two tracks, and the column is what lets every
+  -- reader keep them apart — the row shows two counts, the PDPL consent gate applies to the
+  -- hire's documents only, and a reminder is about documents, not about a laptop. Existing rows
+  -- predate the column and are employee-track items, which is what the default records.
+  track TEXT NOT NULL DEFAULT 'employee',
+  -- The responsible function on a workspace line: one of IT · Admin · HR · Manager (P2-4). NULL
+  -- on the employee track, where no owner is recorded — and where none is therefore invented
+  -- (see preboarding-flag.js). Stored rather than derived from the catalog, because an
+  -- assignment is a record: changing the catalog must not silently reassign work that is
+  -- already in flight. The line's DUE DATE is not stored — it is derived on every read from the
+  -- case's start date and the catalog's offset, so it cannot go stale and a change to the
+  -- offsets moves every line at once.
+  owner TEXT,
   -- A reference to the document (a file name, the reference the hire quoted), never its
   -- contents: this release has no file storage, and no personal data belongs in this column.
   document_reference TEXT,

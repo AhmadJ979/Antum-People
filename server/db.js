@@ -24,6 +24,54 @@ if (!fs.existsSync(dbDir)) {
   }
 }
 
+/**
+ * Columns added to a table that a live database already has.
+ *
+ * `CREATE TABLE IF NOT EXISTS` adds a NEW table to an existing database, which is how every
+ * schema change up to P2-1 arrived. It does NOT add a column to a table that already exists —
+ * so a database that predates P2-4 would keep `preboarding_items` without `track`/`owner`, and
+ * the first query naming them would fail on the live deployment. This closes that gap
+ * declaratively: one entry per column, applied only when the column is missing, so a restart
+ * upgrades a live database and a second restart changes nothing.
+ *
+ * Deliberately NOT a general migration framework: no version numbers, no down-migrations, no
+ * rewriting of existing rows. Each entry is additive and carries a default, which is the only
+ * kind of change a table can absorb without touching the rows it already holds. A column that
+ * needs a value computed per row is a data migration and belongs in its own change, not here.
+ *
+ * Exported so this path is testable against a throwaway database
+ * (server/column-migration.test.js) rather than only being exercised at boot.
+ */
+const COLUMN_MIGRATIONS = [
+  // P2-4: the workspace track. `track` defaults to 'employee', so every row that predates the
+  // column is labelled correctly by the default rather than by a backfill that could be wrong.
+  { table: 'preboarding_items', column: 'track', ddl: "TEXT NOT NULL DEFAULT 'employee'" },
+  { table: 'preboarding_items', column: 'owner', ddl: 'TEXT' },
+];
+
+function columnsOf(handle, table) {
+  try {
+    return handle.prepare(`PRAGMA table_info(${table})`).all().map((row) => row.name);
+  } catch {
+    return null; // no such table — schema.sql runs before this, so only a bad name reaches here
+  }
+}
+
+/**
+ * Apply every missing column to an open database handle and return the ones it added, so a boot
+ * can log an upgrade and a test can assert that a second run adds nothing.
+ */
+function applyColumnMigrations(handle, migrations = COLUMN_MIGRATIONS) {
+  const added = [];
+  for (const migration of migrations) {
+    const columns = columnsOf(handle, migration.table);
+    if (columns === null || columns.indexOf(migration.column) !== -1) continue;
+    handle.exec(`ALTER TABLE ${migration.table} ADD COLUMN ${migration.column} ${migration.ddl}`);
+    added.push(`${migration.table}.${migration.column}`);
+  }
+  return added;
+}
+
 let db;
 try {
   // Use node:sqlite (DatabaseSync) as instructed
@@ -36,6 +84,11 @@ try {
     db.exec(schemaSql);
   } else {
     console.warn(`[DB Warning] Schema file not found at ${schemaPath}`);
+  }
+  // …then the columns an existing table cannot gain from a CREATE TABLE IF NOT EXISTS.
+  const addedColumns = applyColumnMigrations(db);
+  if (addedColumns.length) {
+    console.log(`[DB] Upgraded: added column(s) ${addedColumns.join(', ')}`);
   }
 } catch (error) {
   // FAIL LOUDLY at startup if the database cannot be opened or initialized
@@ -87,5 +140,7 @@ function escapeString(value) {
 
 module.exports = {
   query,
-  escapeString
+  escapeString,
+  applyColumnMigrations,
+  COLUMN_MIGRATIONS,
 };

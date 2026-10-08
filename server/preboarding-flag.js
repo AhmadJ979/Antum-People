@@ -37,6 +37,18 @@ const DAY_MS = 86400000;
 
 const DEFAULT_COLLECTED_STATUSES = ['received', 'verified'];
 
+/**
+ * What the derivation reads, stated once so no surface can imply a narrower or wider scope.
+ *
+ * Corrected when P2-4 landed: the sentence used to read "today that is the employee track only,
+ * because it is the only track that exists". That was true when it was written and is false now —
+ * the workspace track's provisioning lines are items on the case too, and they count. The rule
+ * below never changed; only the description of what it sees did.
+ */
+const SCOPE_NOTE = 'Derived from every item on this case, whatever track created it: the employee '
+  + "track's documents and the workspace track's provisioning lines both count, because both are "
+  + 'items on the case.';
+
 /** Worst-first: how far an item still is from being in hand. Lower is worse. */
 const STATUS_SEVERITY = { not_started: 0, requested: 1, received: 2, verified: 3 };
 
@@ -135,8 +147,7 @@ function deriveFlag(input = {}, now = new Date()) {
       days_to_start: null,
       boundary_hours: BOUNDARY_HOURS,
       boundary_inclusive: true,
-      scope_note: 'Derived from every item on this case, whatever track created it. Today that is '
-        + 'the employee track only, because it is the only track that exists.',
+      scope_note: SCOPE_NOTE,
     };
   }
 
@@ -150,8 +161,7 @@ function deriveFlag(input = {}, now = new Date()) {
     days_to_start: days,
     boundary_hours: BOUNDARY_HOURS,
     boundary_inclusive: true,
-    scope_note: 'Derived from every item on this case, whatever track created it. Today that is '
-      + 'the employee track only, because it is the only track that exists.',
+    scope_note: SCOPE_NOTE,
   };
 
   // Nothing outstanding: the flag clears itself, on the next read, with nothing to dismiss.
@@ -214,6 +224,7 @@ function deriveFlag(input = {}, now = new Date()) {
 
 module.exports = {
   BOUNDARY_HOURS,
+  SCOPE_NOTE,
   TONES,
   STATUS_SEVERITY,
   DEFAULT_COLLECTED_STATUSES,

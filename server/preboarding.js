@@ -27,6 +27,7 @@
 const { randomUUID } = require('crypto');
 const db = require('./db');
 const items = require('./preboarding-items');
+const workspace = require('./preboarding-workspace');
 
 // A real field, not a UAE constant: launch is UAE-first, KSA stays in the engine.
 const SUPPORTED_JURISDICTIONS = ['AE', 'SA'];
@@ -175,6 +176,10 @@ async function recordOfferAcceptance(payload, options = {}) {
   // jurisdiction set here, on the same single creation path, so no case exists without one.
   // Seeding is idempotent (UNIQUE case_id+item_key), so it cannot duplicate on a replay.
   const checklist = await items.seedItemsForCase(created);
+  // The workspace track (P2-4) arrives on the same path and from the same case row: its lines are
+  // a consequence of the role and department recorded above, so there is no second way to create
+  // a case, and none that could carry a hand-typed list. Also idempotent.
+  const workspaceLines = await workspace.seedWorkspaceItemsForCase(created);
   await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, new_values, timestamp)
     VALUES (${db.escapeString(randomUUID())}, ${db.escapeString(actor)}, 'preboarding_case',
       ${db.escapeString(created.id)}, 'CREATE',
@@ -188,7 +193,12 @@ async function recordOfferAcceptance(payload, options = {}) {
         source: created.source,
       }))}, CURRENT_TIMESTAMP)`);
 
-  return { case: created, created: true, checklist_items: checklist.length };
+  return {
+    case: created,
+    created: true,
+    checklist_items: checklist.length,
+    workspace_lines: workspaceLines.length,
+  };
 }
 
 module.exports = {

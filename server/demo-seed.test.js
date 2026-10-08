@@ -15,8 +15,11 @@
  *      department and jurisdiction copied from the roster row;
  *   4. the item statuses are what the states need: case 1 has items requested and none verified,
  *      cases 2 and 3 have every item still open;
- *   5. no consent record is seeded, so the PDPL gate on `received` stays demonstrable;
- *   6. `preboarding_cases` carries no flag-like column, and the seed writes none — the state is
+ *   5. each case also arrives with its P2-4 workspace lines — all open, every line owned by one
+ *      of the four functions, all four functions represented — because the case-creation path
+ *      seeds both tracks and the demo has to show the provisioning half too;
+ *   6. no consent record is seeded, so the PDPL gate on `received` stays demonstrable;
+ *   7. `preboarding_cases` carries no flag-like column, and the seed writes none — the state is
  *      derived, not stored.
  *
  * Runs against its own throwaway database: `cd server && npm test`.
@@ -106,9 +109,15 @@ describe('Layer 2 demo seed — the three pre-boarding cases', () => {
   });
 
   test('item statuses are what the three states need: none verified, none collected', () => {
+    // Scoped to the employee track, which is what this test has always been about: the documents
+    // whose statuses make the three flag states true. Since P2-4 every case also carries
+    // workspace-track provisioning lines, and that track is asserted separately below — a count
+    // over both tracks at once would be a blended number, which is exactly what the design
+    // review rules out.
     const byCase = rows(`
       SELECT c.offer_reference, i.status, COUNT(*) AS n
       FROM preboarding_items i JOIN preboarding_cases c ON c.id = i.case_id
+      WHERE i.track = 'employee'
       GROUP BY c.offer_reference, i.status ORDER BY c.offer_reference, i.status
     `);
     const counts = (ref) => Object.fromEntries(byCase.filter((r) => r.offer_reference === ref).map((r) => [r.status, r.n]));
@@ -117,6 +126,34 @@ describe('Layer 2 demo seed — the three pre-boarding cases', () => {
     assert.deepStrictEqual(counts('OFR-2026-DEMO-02'), { not_started: 7 });
     assert.deepStrictEqual(counts('OFR-2026-DEMO-03'), { not_started: 7 });
     assert.strictEqual(one("SELECT COUNT(*) AS n FROM preboarding_items WHERE status IN ('received','verified')").n, 0);
+  });
+
+  test('the workspace track arrives with each case, owned and all open', () => {
+    // P2-4: the demo must show the provisioning half, and it must show it honestly — every line
+    // attributable to one of the four functions, nothing pre-completed, and all four functions
+    // represented so the "View by function" filter has something to filter.
+    const perCase = rows(`
+      SELECT c.offer_reference, i.owner, i.status, COUNT(*) AS n
+      FROM preboarding_items i JOIN preboarding_cases c ON c.id = i.case_id
+      WHERE i.track = 'workspace'
+      GROUP BY c.offer_reference, i.owner, i.status ORDER BY c.offer_reference, i.owner
+    `);
+    const refs = ['OFR-2026-DEMO-01', 'OFR-2026-DEMO-02', 'OFR-2026-DEMO-03'];
+    for (const ref of refs) {
+      const mine = perCase.filter((r) => r.offer_reference === ref);
+      assert.ok(mine.length > 0, `${ref} must carry workspace lines`);
+      assert.ok(mine.every((r) => r.status === 'not_started'), `${ref}: no workspace line is pre-completed`);
+      assert.ok(mine.every((r) => ['IT', 'Admin', 'HR', 'Manager'].includes(r.owner)),
+        `${ref}: every line names one of the four functions`);
+      const functions = [...new Set(mine.map((r) => r.owner))].sort();
+      assert.deepStrictEqual(functions, ['Admin', 'HR', 'IT', 'Manager'],
+        `${ref}: all four functions own at least one line, so the filter is demonstrable`);
+    }
+    // No workspace line can be collected either, so the three-state demo is unchanged by P2-4.
+    assert.strictEqual(one(`SELECT COUNT(*) AS n FROM preboarding_items
+      WHERE track = 'workspace' AND status IN ('received','verified')`).n, 0);
+    // And no employee-track row lost its track label to the new column's default.
+    assert.strictEqual(one(`SELECT COUNT(*) AS n FROM preboarding_items WHERE track NOT IN ('employee','workspace')`).n, 0);
   });
 
   test('no consent record is seeded, so the PDPL gate on received stays demonstrable', () => {
@@ -133,6 +170,7 @@ describe('Layer 2 demo seed — the three pre-boarding cases', () => {
 
   test('re-running the seed changes nothing it owns (idempotent on offer_reference)', () => {
     const before = rows('SELECT id, offer_reference, start_date FROM preboarding_cases ORDER BY offer_reference');
+    const workspaceItemsBefore = one("SELECT COUNT(*) AS n FROM preboarding_items WHERE track = 'workspace'").n;
     execFileSync(process.execPath, [path.join(repoRoot, 'scripts', 'seed-demo.js')], {
       cwd: repoRoot,
       env: {
@@ -146,6 +184,15 @@ describe('Layer 2 demo seed — the three pre-boarding cases', () => {
     });
     const after = rows('SELECT id, offer_reference, start_date FROM preboarding_cases ORDER BY offer_reference');
     assert.deepStrictEqual(after, before, 'a replay must not duplicate a case or move a date');
-    assert.strictEqual(one('SELECT COUNT(*) AS n FROM preboarding_items').n, 21, '21 items, not 42');
+    // 21 employee-track items (3 cases × 7 documents), and each case's derived workspace lines —
+    // counted per track, because a replay must not add a second copy of either, and the two
+    // tracks are never summed into one figure. The employee count is the number this test has
+    // always asserted; the workspace count is measured before the replay and must not move.
+    assert.strictEqual(one("SELECT COUNT(*) AS n FROM preboarding_items WHERE track = 'employee'").n, 21,
+      '21 employee-track items, not 42');
+    assert.strictEqual(one("SELECT COUNT(*) AS n FROM preboarding_items WHERE track = 'workspace'").n,
+      workspaceItemsBefore, 'a replay must not duplicate a workspace line either');
+    assert.strictEqual(one('SELECT COUNT(*) AS n FROM preboarding_items').n,
+      21 + workspaceItemsBefore, 'both tracks, seeded exactly once');
   });
 });
