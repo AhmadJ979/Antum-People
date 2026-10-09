@@ -1,8 +1,12 @@
 # The envelope on the Layer 2 case list — evidence for row `62d7142b`, task `5fd76616`
 
-**Base:** `origin/main` at **`1371d9a`** when this branch was cut. (The task text named `204b50b`; `main` had
-moved twice more, so the branch is cut from and measured against `1371d9a` — and since then against nothing
-newer, re-fetched before submitting.)
+**Base:** `origin/main` at **`042b979`** (the merge of PR #124, the cutover record) when this branch was cut.
+The task text named `204b50b`; `main` had moved three times by then, so the hash is measured and re-fetched
+immediately before submitting, never remembered. **The code delta `1371d9a → 042b979` is empty under `client/`
+and `server/`** (6 changed paths, all documents), so the build, the suite and the scratch passes recorded below
+— taken minutes earlier, while the working tree carried these same edits — describe the same code this branch
+carries. Blob hashes of the changed files as committed: `server/preboarding.js` `32dc0d6e…`,
+`server/index.js` `e40275b3…`, `client/src/App.tsx` `1d5a4bd7…`.
 
 **Scope of the change — 5 files, none of them the engine, the seed or the item model:**
 
