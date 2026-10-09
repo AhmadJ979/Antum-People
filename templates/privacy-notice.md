@@ -59,7 +59,7 @@ We retain personal data only as long as necessary for the purpose, then securely
 |---|---|---|
 | Employment & payroll records | Minimum **2 years** post-termination (Labour Law) | Minimum **2 years** post-termination (Labour Law) |
 | End-of-Service (EOSB) and financial/settlement records | **5 years** (commercial/audit) | **6 years** (ZATCA tax retention) |
-| Consent records | Duration of employment + statutory retention | Duration of employment + statutory retention |
+| Consent records | Duration of employment + retention period | Duration of employment + retention period |
 | Audit logs (compliance) | Per controller retention policy | Per controller retention policy |
 | Visa/Iqama records | Per immigration requirements | Per immigration requirements |
 
@@ -171,7 +171,7 @@ For any questions about this notice or your data: **[dpo_name]** — **[dpo_emai
 |---|---|---|
 | سجلات التوظيف والرواتب | حد أدنى **سنتان** بعد انتهاء الخدمة (قانون العمل) | حد أدنى **سنتان** بعد انتهاء الخدمة (نظام العمل) |
 | سجلات مكافأة نهاية الخدمة والسجلات المالية/المخالصة | **5 سنوات** (تجاري/تدقيق) | **6 سنوات** (متطلبات الزكاة والضريبة ZATCA) |
-| سجلات الموافقة | مدة التوظيف + مدة الاحتفاظ القانونية | مدة التوظيف + مدة الاحتفاظ القانونية |
+| سجلات الموافقة | مدة التوظيف + مدة الاحتفاظ | مدة التوظيف + مدة الاحتفاظ |
 | سجلات التدقيق (الامتثال) | وفق سياسة الاحتفاظ لجهة التحكم | وفق سياسة الاحتفاظ لجهة التحكم |
 | سجلات التأشيرة/الإقامة | وفق متطلبات الهجرة | وفق متطلبات الهجرة |
 
