@@ -46,6 +46,8 @@ REMOVED = {
     "86c3927d-b6c3-4da2-9ecf-df2b9e4ee20b",  # L2-F1, removed 2026-10-07 (duplicate of bc89d0bd)
     "e09c6873-dac3-4573-b3c5-b69328a2f829",  # L2-F2, removed 2026-10-07 (resolved by owner decision)
     "91f44175-4204-4a20-976a-b1318578da7b",  # demo case-1 decision row, removed 2026-10-09 (owner ruled: leave case 1)
+    "2c37f2da-1fa1-4b1c-8117-c639c5880658",  # All-chip race parent, removed 2026-10-09 (superseded by db4e7b1c)
+    "62d7142b-955a-433e-8f42-1c07a5d67ee3",  # read-endpoint response-shape parent, removed 2026-10-09 (superseded by aa6c9bd7)
 }
 
 # 8-hex tokens the index quotes that are neither board ids nor git objects: rule 19
