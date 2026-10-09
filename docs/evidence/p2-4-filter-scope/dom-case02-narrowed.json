@@ -1,0 +1,25 @@
+{
+  "chips": [
+    "All (14)",
+    "IT (5) [SELECTED]",
+    "Admin (3)",
+    "HR (2)",
+    "Manager (4)"
+  ],
+  "line_meta_blocks": 0,
+  "panel_header": "Workspace track · 0 of 5 done · 5 past duefrom Operations Analyst · Operations",
+  "payload_stashed": false,
+  "refs_on_page": [
+    "OFR-2026-DEMO-03",
+    "OFR-2026-DEMO-02",
+    "OFR-2026-DEMO-01"
+  ],
+  "workspace_row": [
+    "Workspace: 0 of 14 done · 14 open",
+    "Workspace:",
+    "Workspace: 0 of 14 done · 14 open",
+    "Workspace:",
+    "Workspace: 0 of 15 done · 15 open",
+    "Workspace:"
+  ]
+}

@@ -754,10 +754,17 @@ export default function App() {
       return;
     }
     setChecklistNotice(null);
+    // P2-4 defect fix: the function filter belongs to the view of one case, not to the row that was
+    // opened last - it used to follow the user here. Opening a case starts it on `All`, and the read
+    // is issued with `All` explicitly rather than with the state variable, which on this tick still
+    // holds the previous case's choice. A board cached under a filter is not reused for the
+    // unfiltered view either, or the chips would claim `All` over a narrowed board.
+    setWorkspaceFunction('All');
     setOpenCaseId(caseId);
     if (!caseChecklist[caseId]) await fetchCaseChecklist(caseId);
     if (!casePackages[caseId]) await fetchCasePackage(caseId);
-    if (!caseWorkspaces[caseId]) await fetchCaseWorkspace(caseId);
+    const cachedBoard = caseWorkspaces[caseId];
+    if (!cachedBoard || cachedBoard.view.mode !== 'all') await fetchCaseWorkspace(caseId, 'All');
   };
 
   const handleItemStatus = async (caseId: string, itemKey: string, status: PreboardingItem['status']) => {
@@ -1944,9 +1951,15 @@ export default function App() {
                                           {wsData ? wsData.view.label : 'View by function'}:
                                         </span>
                                         {['All', 'IT', 'Admin', 'HR', 'Manager'].map(fn => {
+                                          // P2-4 defect fix: `All` states the CASE's own figure, so it is
+                                          // summed from `available_functions` - the per-function counts the
+                                          // server returns whatever the view is. `wsData.totals.open` belonged
+                                          // to the current view, and read 6 rather than 15 the moment a
+                                          // function was selected, so `All` reported the narrowed total as if
+                                          // it were the case's own. In `all` mode the sum equals `totals.open`.
                                           const count = wsData
                                             ? (fn === 'All'
-                                              ? wsData.totals.open
+                                              ? wsData.available_functions.reduce((sum, f) => sum + f.open, 0)
                                               : (wsData.available_functions.find(f => f.function === fn)?.open ?? 0))
                                             : null;
                                           return (

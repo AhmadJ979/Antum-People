@@ -1,0 +1,29 @@
+# Build proof - P2-4 filter scope fix
+# tree: a829176bca7bd5c3d113c2f6ddc596211630ef9a  (a829176 fix(preboarding): scope the workspace function filter to the case on screen)
+# base: origin/main 35cbaa1
+# worktree tree hash: 9153e784f7171c99f60fe47ca3a8445247d51b25 == merge-tree(origin/main, branch) 8e430c9e296db12fbd52d00248fecff571160ef1
+# UTC: 2026-10-09T08:22:57Z
+
+$ cd server && npm test   (tail)
+# tests 134
+# suites 31
+# pass 134
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1516.319154
+server test exit code: 0
+
+$ cd client && npx tsc -b --force --verbose
+
+8:23:01 AM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.node.json'...
+
+tsc -b exit code: 0
+
+$ cd client && npx vite build
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-B3KoM02v.js   269.18 kB │ gzip: 75.07 kB
+
+[32m✓ built in 325ms[39m
+vite build exit code: 0

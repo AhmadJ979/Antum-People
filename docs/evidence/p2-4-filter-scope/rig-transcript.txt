@@ -1,0 +1,38 @@
+HEAD is now at 35cbaa1 Merge pull request #98 from AhmadJ979/docs/restore-count-loci
+=== branch tip 35cbaa1 | merge-tree(origin/main, branch): 8e430c9e296db12fbd52d00248fecff571160ef1
+=== rig tree hash: 8e430c9e296db12fbd52d00248fecff571160ef1
+=== the two changed loci:
+  const fetchCaseWorkspace = async (caseId: string, fn: string = workspaceFunction) => {
+    await handleItemStatus(caseId, itemKey, status);
+    await fetchCaseWorkspace(caseId);
+  };
+1948:                                            ? (fn === 'All'
+1949-                                              ? wsData.totals.open
+=== build client:
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-CG8sEoa6.js   269.10 kB │ gzip: 75.02 kB
+
+[32m✓ built in 322ms[39m
+=== seed:
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+(node:23689) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch user ok
+live port3000: 200
+  pid 23699 cwd /home/agent-senior-software-engineer/rig-filter/server
+token: 204 chars | no-token probe: 401
+=== payload sums straight from the API (case, all-mode sum vs all-mode total vs IT-mode total):
+--- OFR-2026-DEMO-01
+   all : mode all | totals {'lines': 15, 'complete': 0, 'open': 15, 'overdue': 0} | sum(fn.open) 15 | fns ['IT:6', 'Admin:3', 'HR:2', 'Manager:4']
+   IT  : mode function | totals {'lines': 6, 'complete': 0, 'open': 6, 'overdue': 0} | sum(fn.open) 15 | fns ['IT:6', 'Admin:3', 'HR:2', 'Manager:4']
+   is_access_control: False False
+--- OFR-2026-DEMO-02
+   all : mode all | totals {'lines': 14, 'complete': 0, 'open': 14, 'overdue': 7} | sum(fn.open) 14 | fns ['IT:5', 'Admin:3', 'HR:2', 'Manager:4']
+   IT  : mode function | totals {'lines': 5, 'complete': 0, 'open': 5, 'overdue': 5} | sum(fn.open) 14 | fns ['IT:5', 'Admin:3', 'HR:2', 'Manager:4']
+   is_access_control: False False
+--- OFR-2026-DEMO-03
+   all : mode all | totals {'lines': 14, 'complete': 0, 'open': 14, 'overdue': 14} | sum(fn.open) 14 | fns ['IT:5', 'Admin:3', 'HR:2', 'Manager:4']
+   IT  : mode function | totals {'lines': 5, 'complete': 0, 'open': 5, 'overdue': 5} | sum(fn.open) 14 | fns ['IT:5', 'Admin:3', 'HR:2', 'Manager:4']
+   is_access_control: False False
+=== rig ready
