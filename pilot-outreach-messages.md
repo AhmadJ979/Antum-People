@@ -6,6 +6,8 @@
 >
 > **Placeholders:** `[Name]`, `[Company]`, `[mutual contact]`, `[day/time]`, `[quarter]`.
 >
+> **Status: NOTHING SENT YET (2026-10-09).** No message here has gone to anyone — the UAE contact list is still outstanding. Do not imply outreach, replies or a pipeline that has not happened.
+>
 > **Tone guardrails (non-negotiable):**
 > - Outcome-led and specific, never hype. No invented metrics or guarantees.
 > - No pressure tactics. "Three free slots" is stated as a fact, not "act now / only 2 left."
@@ -80,11 +82,14 @@
 1. **Pilot is an exchange, not a giveaway.** Always name the ask: feedback + testimonial + case-study rights. Never imply "free forever."
 2. **EOSB is not validated.** The UAE EOSB resignation tier is frozen and unconfirmed pending counsel. Never say gratuity is "correct", "accurate", "validated", "certified" or "legally confirmed", and never quote an EOSB figure as settled. If it comes up, say: "the end-of-service numbers are still being confirmed with counsel — we'd validate them against your cases during the pilot."
 3. **Templates need counsel sign-off.** If privacy notice / DPA / DPIA come up, say "drafts for your counsel to review" — never "approved."
-4. **Say what is built, and say what is not — never "shipping".** **Pre-boarding is built and merged** (offer intake, the document checklist with its PDPL consent gate, the derived 48-hour flag, the pre-reading package, the workspace provisioning board) — but it is **not cut over**: it is not on the surface a prospect can see, and no client has used it. So describe pre-boarding as what the pilot would stand up *with them*, never as "available", "in beta" or "shipping". **Probation intelligence and workforce-cost intelligence are not built at all** — those are "where we're headed". And never claim a client has used any of it, because none has.
+4. **Say what is built, and say what is not — never "shipping".** **Pre-boarding is built, merged, cut over and serving** (offer intake, the document checklist with its PDPL consent gate, the derived 48-hour flag, the pre-reading package, the workspace provisioning board). Since **2026-10-09** it is on the served surface, so you may demo it live. Three things stay true and are said with it: it runs on **seeded sample data**, not on any client's cases; **no client has used it** — there is no client yet; and it is a **working demo surface, not general availability**. So do not say "GA", "in production", "live with customers", "in beta" or "shipping". **Probation intelligence and workforce-cost intelligence are not built at all** — those are "where we're headed".
 5. **No performance guarantees.** We measure outcomes during the pilot; we do **not** promise a specific improvement before we've run it.
 6. **Regulator integrations are roadmap.** MoHRE is a workflow step today, not a live API push. Don't overclaim.
 7. **Three slots is real, not urgency.** Say "three free slots" as fact; never "only 3 left — act fast."
+8. **No registration yet, so no contract and no DPA.** IFZA registration is not done. A pilot can be run and the product demoed freely; a contract, DPA or data-processing undertaking cannot be signed until it is registered. If a prospect asks to sign, say the paperwork follows registration and you will bring it then — never imply one is ready.
+9. **Nothing can be invoiced or paid yet.** Payment onboarding is not connected, so there is no invoice, payment link or billing. The pilot is free by design, so this only bites if a prospect offers to pay early: say plainly that billing is not switched on yet.
+10. **The demo is seeded sample data with a shelf life.** Re-seed and re-read the figures before any demo: the three demo cases are dated off the seed day, and **case 2's amber state closes at 04:00 GST on 2026-10-10** — after that it reads as already started, like case 3. Never quote a demo figure from memory; read it off the screen.
 
 ---
 
-*Prepared by Product Designer, Antum — outreach messages v2.0 (UAE-only, owner-directed 2026-10-02).*
+*Prepared by Product Designer, Antum — outreach messages **v2.1** (UAE-only, owner-directed 2026-10-02; **re-grounded 2026-10-09** after the Layer 2 cutover: caveat 4 said pre-boarding was "not cut over", which the cutover made false).*
