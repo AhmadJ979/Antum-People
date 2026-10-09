@@ -1,0 +1,24 @@
+# Build proof — P2-4 scope_note single-source fix
+# tree: cd5f896b0c4131c2b485cf57006467ef80e74d84  (cd5f896 fix(preboarding): render the payload's scope_note instead of a local copy)
+# worktree tree hash: ead2fb6e93b81b6823f0854dd46c81270f3dd19f
+# base: origin/main 2ca2c19
+
+$ cd client && npx tsc -b --force --verbose
+8:08:35 AM - Project 'tsconfig.app.json' is being forcibly rebuilt
+
+8:08:35 AM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.app.json'...
+
+8:08:37 AM - Project 'tsconfig.node.json' is being forcibly rebuilt
+
+8:08:37 AM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.node.json'...
+
+tsc -b exit code: 0
+
+$ cd client && npx vite build
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-CG8sEoa6.js   269.10 kB │ gzip: 75.02 kB
+
+[32m✓ built in 399ms[39m
+vite build exit code: 0

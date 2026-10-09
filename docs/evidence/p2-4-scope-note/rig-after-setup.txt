@@ -1,0 +1,53 @@
+Preparing worktree (detached HEAD cd5f896)
+HEAD is now at cd5f896 fix(preboarding): render the payload's scope_note instead of a local copy
+=== is the rig tree the merge result?
+rig App.tsx blob : 7d38700573d86c2193661baa1dc24bb4fe7b9a8f
+branch blob      : 7d38700573d86c2193661baa1dc24bb4fe7b9a8f
+merge-tree       : ead2fb6e93b81b6823f0854dd46c81270f3dd19f  (git merge-tree origin/main fix/p2-4-scope-note-single-source)
+rig tree hash    : ead2fb6e93b81b6823f0854dd46c81270f3dd19f
+=== fix present in the rig tree?
+                      `scope_note`, carried on the flag payload this panel already reads and
+                      identical in every flag state (server/preboarding-flag.js SCOPE_NOTE, set on
+                      both the no-start-date branch and the shared object). What stood here was a
+                      locally hard-coded second version of that claim, and it still said the
+                      workspace track "is not built yet" — false once P2-4 merged, on a screen that
+                      renders the provisioning board further down. Deleted rather than reworded:
+                      a client-side copy is the structure that produced the drift. Nothing is
+                      composed here, and with no cases there is no sentence to state rather than a
+                      page-level claim about a list that is not on screen. */}
+                  {checklistOverview && checklistOverview.cases.length > 0 && (
+                    <p className="text-[9px] text-slate-400 mb-4 -mt-2">
+                      {checklistOverview.cases[0]?.flag.scope_note}
+                    </p>
+                  )}
+=== build client (fresh worktree has no dist/):
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-CG8sEoa6.js   269.10 kB │ gzip: 75.02 kB
+
+[32m✓ built in 306ms[39m
+=== seed demo data:
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-10) — inside 48 hours with every item still open; items: 7 not_started
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-08) — start date already passed, items still open; items: 7 not_started
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+=== scratch user:
+(node:15421) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch user ok
+=== live deployment before (must stay 200):
+port3000=200
+=== start scratch instance on 4717:
+listeners on 4717: 1
+  pid 15431 cwd: /home/agent-senior-software-engineer/rig-scope-note/server
+=== health contract:
+no-token /api/employees = 401
+root = 200
+token length: 204
+authed /api/employees = 200
+=== the payload's scope_note, from the instance the browser will read:
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+KeyError: 'cases'
+=== rig setup done
