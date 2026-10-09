@@ -4,6 +4,16 @@
 named `f24a91c`, which was already stale). Client-only change: `client/src/App.tsx`.
 PR: https://github.com/AhmadJ979/Antum-People/pull/119
 
+> **Update, 2026-10-09 13:46 UTC — the after bundle in this pack is now the served bundle.** Cutover #3
+> deployed tree `0dd1a97` → **`da3330d`**, and the bundle this pack measured its "after" pass on —
+> **`assets/index-B8Hoaanh.js`, 270,982 bytes, md5 `abfe49feb21dc90b77743922f76a7399`** — is byte-for-byte
+> what `:3000` and the public URL now serve. So every "after" figure here is a figure about the live
+> surface, and the `before` numbers are about the bundle the public had before that cutover. The pack also
+> carries one **withdrawn** artifact: `withdrawn-after-2-race-window-DEPICTS-DEFECT-STATE.png`, which sits at
+> the root of this directory (it moved up a level out of `shots/`) and depicts the *defect*, not the fix —
+> see the correction section below for what it really shows and why the race window with the fix is not
+> photographed. Run record: `cutover-20261009-1346/README.md`.
+
 ## What was wrong, in the shipped code
 
 `caseWorkspaces` held **one board per case**. `handleWorkspaceFunction` moved the chip on the click
