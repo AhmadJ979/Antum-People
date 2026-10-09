@@ -7,7 +7,9 @@
 > read `design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md`** — it states, with citations, what is
 > built and where the build differs from this design. It is the spec for **P2-2** (employee-track
 > document collection) and **P2-4** (workspace-track provisioning checklist), plus the surfaces of
-> **P2-5** (the derived 48-hour flag) and **P2-6** (EN/AR and PDPL consent). **P2-1** — the
+> **P2-5** (the derived 48-hour flag) and **P2-6** (EN/AR and PDPL consent — whose portal
+> specification is **§§8A–8C**, added 2026-10-09, with its consent copy pending the compliance
+> expert's memo at the portal boundary, task `5c0a9ceb`). **P2-1** — the
 > offer-acceptance trigger and the single case-creation path —
 > **landed on `main` as PR #66 (2026-10-07)** and is **out of scope here**: this spec consumes the
 > case model, it does not define it. P2-1's own tab is reviewed against this spec in
@@ -495,6 +497,10 @@ the role" means the first. The case model should not overload one column name fo
 
 ## 7. EN/AR (P2-6, and the standing quality standard)
 
+> **§7 is the standing standard, written for the HR surface. The portal's own EN/AR and RTL
+> consequences are §8B (added 2026-10-09), which is where the layout work is enumerated and
+> measured — read the two together.**
+
 Bilingual is a **requirement**, not a translation pass at the end: `WORKFLOW.md`'s quality
 standards say *"maintain bilingual support (EN/AR) for all user-facing interfaces."*
 
@@ -547,11 +553,354 @@ gate the *first* thing on the employee track, not a checkbox buried in a setting
 - **Nothing collected may be stored while locked** — the lock is on collection, not just on the
   button: a direct API write of a document for a case with no consent record is a defect, and the
   acceptance test for P2-6 is exactly that request.
-- The consent line reads from the record, in the existing house style: `✓ Recorded <date>` in
-  Success Green, `✗ Missing / required` in Coral (`App.tsx:981`–`:982`). The screen shows **that**
-  a record exists and **when** — never the record's contents.
+- The consent line reads from the record, and what it actually says is: `PDPL consent recorded
+  <granted_at>` in teal when the record exists (`client/src/App.tsx:1863`–`:1864`), and
+  `No PDPL consent record — no document can be collected on this case yet.` in amber when it does
+  not (`:1840`–`:1843`). The screen shows **that** a record exists and **when** — never the
+  record's contents.
+  *(Corrected 2026-10-09: this bullet previously cited `App.tsx:981`–`:982` for `✓ Recorded <date>`
+  / `✗ Missing / required`. Those lines are offboarding code, and the strings cited belong to a
+  different object — the **employee** record's `consent_granted` flag, shown as `✓ GRANTED ON
+  <consent_date>` / `✗ MISSING / REQUIRED` at `:1407`–`:1408`. The case's own consent line is the
+  pair above.)*
+**Two consent stores exist, and P2-6 must bind the portal to exactly one of them.** The case path
+is `POST /api/preboarding/cases/:id/consent` → `preboarding_consents` (`server/index.js:718`–`:729`,
+`actor` from the authenticated user) — this is the record the document gate reads
+(`server/preboarding-items.js:321`–`:332`) and the only one a pre-boarding case has. Layer 1 has a
+separate, **employee**-level path: `POST /api/compliance/consent` writes `consent_records` and sets
+`employees.consent_granted` (`server/index.js:340`–`:346`). A pre-hire has no employee row yet, so
+the portal writes the **case** record and nothing else; nothing today mirrors a case consent into
+the employee flag, and nothing should — one act, one record. If an accepted offer later needs the
+employee record updated, that is an explicit integration step to be designed, not a second consent.
+**And the version string is a promise the product cannot yet keep.** The HR-side button posts
+`{ consent_type: 'pdpl_notice', lawful_basis: 'consent', consent_version: 'v1' }` hard-coded in the
+client (`client/src/App.tsx:790`–`:793`), and **no notice is displayed to anyone before it is
+recorded** — so `v1` names a text the product has never shown. `server/preboarding-items.js:23`–`:25`
+already assigns the consent lifecycle (notice versioning) to P2-6; this is what that means in
+practice: the portal must put the notice in front of the person **before** the button, and the
+version it records must be the version of the text that was on screen.
 - Unlocking is automatic on the record's existence; there is no "unlock" button, so the state can
   never disagree with the record.
+
+---
+
+## 8A. Screen S4 — the hire-facing portal (P2-6)
+
+> **Inserted 2026-10-09 without renumbering.** §§8A–8C are P2-6's portal specification, placed
+> between §8 and §9 so that every existing citation — §5.1, §9 D3, §10 Q3 — keeps its number.
+> **Nothing in this section appears on the demo surface**, and nothing here is built: §7 and §8
+> state the standard and the gate for the **HR** surface, and §§8A–8C are the portal itself.
+> Everything below was read on `main` at **`b7630cb`** — the merge of PR #86 (P2-4) — on 2026-10-09.
+
+**The portal in one sentence:** the hire sees *their own* pre-boarding case — what is needed from
+them, by when, in the language they choose — and records their own consent; nothing HR does is
+visible in it, and nothing in it implies the product holds a document or that anything was signed.
+
+### 8A.1 The case header — and what it deliberately leaves out
+
+The hire sees: their own name, role, department, reporting line, start date, and the **employer's
+name as the controller** (the notice's controller identity is the employer's, per the compliance
+document's own list — `compliance-requirements.md:312`–`:318`).
+
+**Not shown, by rule:** other cases or other hires; any company-wide count; the **48-hour flag
+chip** (its copy names outstanding *items* as an operational state HR acts on, and the hire cannot
+act on a workspace line); the workspace track's provisioning lines (a laptop is not the hire's
+document to track, and the board names internal owners); and any figure without its
+"Illustrative" label (§12).
+
+### 8A.2 The document list — the hire's own rows
+
+One row per item of the case's jurisdiction set, from the server's own list — `DOCUMENT_SETS` in
+`server/preboarding-items.js:66`–`:100` (`AE` active with 7 items; `SA` intact and inactive). The
+row is never re-listed in the portal's own code, so EN and AR cannot drift item by item (§7).
+
+Each row carries: the item's name, what is needed, **the item's own status in the hire's words**
+(8A.3), the due date and its distance, and the single action available. The document list is
+readable **before** consent — it is the hire's own list of what they will be asked for — and its
+items cannot be collected until the consent record exists (§8, and the shipped refusal at
+`server/preboarding-items.js:321`–`:332`).
+
+### 8A.3 The hire's vocabulary for the four statuses
+
+The state machine is the server's and stays the server's: `ITEM_STATUSES` at
+`server/preboarding-items.js:44`, the transitions at `:53`–`:58`, `verified` terminal. The hire
+must not read the HR keys, and must not see HR's verbs — today's HR surface shows `Request`,
+`Mark received`, `Cancel`, `Verify`, `Send back` (`client/src/App.tsx:1884`–`:1897`) and
+`Requested` / `Received` / `Verified` on the workspace rows (`:1980`–`:1991`).
+
+The mapping is **derived from the key**, never a second state machine:
+
+| server key | HR surface today | the hire reads | what the hire can do |
+|---|---|---|---|
+| `not_started` | `Request` | **Still needed from you** | supply it (8A.4) |
+| `requested` | `Cancel` / `Mark received` | **You've told us it's ready** | change or replace the reference, or withdraw it |
+| `received` | `Verify` / `Send back` | **HR has it** | nothing — waiting on HR |
+| `verified` | a plain `verified` label | **Checked — nothing needed** | nothing |
+
+Two rules that follow, and both are server-side rules rather than hidden buttons:
+
+1. The hire's word for `received` must not promise verification, and the hire's word for
+   `verified` must not promise more than a human check.
+2. **The hire must never be able to move an item to `verified`.** The status machine allows it to
+   any caller that reaches the endpoint (`ALLOWED_TRANSITIONS`, `:53`–`:58`); with no role model
+   in the product, that has to become an explicit rule on the portal's path rather than a button
+   that isn't rendered — see §8C and D14.
+
+All seven strings in that table are **copy, not code**, and all seven need human Arabic
+(§8B.4–§8B.5).
+
+### 8A.4 How a document is supplied when storage is reference-string-only
+
+The shipped constraint: an item carries a short `document_reference` — a file name, or the
+reference the hire gave — capped at 120 characters (`server/preboarding-items.js:283`–`:284`), and
+`server/document-store.js:66`–`:78` **refuses to store bytes by design** (owner's Option D,
+2026-10-07: reference string only, no bytes, until IFZA registration). A portal upload control
+would therefore be a lie, and building one is out of scope (D5).
+
+| | Option | What the hire does | Consequence |
+|---|---|---|---|
+| **A** | **Read-only list** | nothing — HR records what arrives off-product | weakest portal: the hire's status never moves without HR, and the portal collects nothing at all |
+| **B** | **"I've given this to HR" + a reference** *(recommended for the first release)* | types where the document is — a file name, or "handed to HR at reception, 12 Oct" | the product records the hire's **claim**, not the document. The row moves `not_started → requested` and `document_reference` is set. The copy must say this in both languages, and no surface may show a paperclip or a drop zone |
+| **C** | **Upload** | picks a file | **out of scope**: no storage exists (D5); it would make the product a holder of passports and bank letters before registration and before the PDPL work on a chosen store |
+
+Two consequences of Option B that the build must respect: the reference is **untrusted user text**
+— never rendered as markup, length enforced server-side (it already is), and it can be typed in
+Arabic, so it must be bidi-isolated wherever it is shown (§8B.3); and it currently renders on the
+HR row as a suffix (`client/src/App.tsx:1879`), which is the surface that will show a hire's
+typed text to an HR user.
+
+### 8A.5 The pre-reading package and the acknowledgement — the three honesty traps
+
+Shipped: the nine package items with `acknowledgement_required` on the JD and the NDA
+(`server/preboarding-package.js:39`–`:57`), the record written by the signed-in user on the
+hire's behalf with `recorded_by` required and method `in_product_record`
+(`:91`–`:99`), and signature-implying methods refused **by name** (lead ruling, 2026-10-08).
+
+1. **"Sent" cannot be shown.** `DELIVERY.state = 'not_available'`, reason `no_delivery_channel`
+   (`server/preboarding-package.js:75`–`:81`): there is no mailer, webhook or SMS, so the product
+   cannot deliver the package, and the portal does not change that. The portal may show the item's
+   text — reading it there is the hire's own act — but it **must not print a "sent on" or
+   "delivered" state**.
+2. **"Read" cannot be claimed, and this is the sharpest trap in P2-6.** `READING.state =
+   'not_tracked'`, reason `no_hire_portal`, label *"Not tracked — there is no hire-facing portal
+   in this release, so no read event exists to record"* (`:83`–`:90`). **The day the portal ships,
+   that reason becomes false while the conclusion may still be true** — a portal is not evidence
+   that anything was read unless a read event is recorded. So either a read event is recorded
+   (a new record, and a data-minimisation question the compliance memo owns — my recommendation is
+   **not to record it**), or the label is re-worded to *"not tracked by design — the portal does
+   not record reading."* Either way the label is a copy change tied to the portal's release, not a
+   silent side-effect of it.
+3. **The acknowledgement is still not a signature, and its actor is the real problem.** In the
+   portal the natural reading is "the hire acknowledged". That changes `recorded_by` from *the HR
+   user on the hire's behalf* to *the hire* — true only if the hire's identity is established
+   (§8C). Until then the actor must say what it is (a link-holder is recorded as a link-holder,
+   never as the hire's name), and the strip keeps the shipped sentence — *"Recorded in the product
+   by the person named — this is not an electronic signature"* — with its Arabic marked for
+   review (§8B.5).
+
+### 8A.6 The portal's screens and their states
+
+**S4a — consent.** One screen, shown first, gated on nothing. Its content comes from the
+compliance memo at this boundary (row `5c0a9ceb`) — see §8, §8C and Q8–Q10.
+
+**S4b — the document list.** States: *no consent record* (rows visible, actions disabled, the only
+enabled action is the consent screen — the shipped message is
+`server/preboarding-items.js:328`–`:332`); *consent recorded, items outstanding*; *everything
+collected*; *start date passed with items open* (the hire reads "these were due before day one",
+never a negative count — §5's rule); and *the jurisdiction's set is not active* (a case outside
+the active set seeds and can be read, but its items cannot move off `not_started` —
+`server/preboarding-items.js:293` and `:302` — so the portal must not offer an action the server
+will refuse).
+
+**S4c — the pre-reading package.** Item text, and the acknowledgement control where
+`acknowledgement_required` is true, with the state read from the record and never inferred
+(`server/preboarding-package.js:18`–`:20`).
+
+### 8A.7 What the portal must never show
+
+Each of these is a rule, not a preference: a count that blends the two tracks (the roll-up keeps
+them apart in `by_track`); anything implying the product holds the document; "sent", "delivered"
+or "notified"; "signed" or "e-signed"; HR-only verbs; another hire; a company-wide figure; the
+workspace track with its owner names; and any illustrative figure without its label.
+
+---
+
+## 8B. EN/AR and RTL for the portal — the layout consequences, named
+
+### 8B.1 What exists today, measured on `main` at `b7630cb` (`client/src/App.tsx`)
+
+- **No i18n layer and no direction handling.** `dir=` appears **0** times, there is no `lang`
+  attribute and no language state, and every UI string is an English literal. The header switches
+  **jurisdiction**, not language — there is no language switch in the product at all.
+- **Numbers already follow the browser, dates do not.** Money and counts use
+  `toLocaleString(undefined, …)` — **7 sites** (e.g. `App.tsx:1183`) — where `undefined` means
+  *the runtime locale*: on a machine set to `ar-AE` the digits change while the words around them
+  stay English. Dates are ISO strings printed raw: the workspace row prints
+  `due 2026-10-09 (D-3) · in 2 d` (`App.tsx:1970`, with its distance at `:1972`–`:1974`), and the
+  roster prints `Day 49` from
+  `Math.ceil((Date.now() − start_date) / 24h)` (`App.tsx:1461`).
+- **The layout is written with physical utilities.** `space-x-*` **28** with
+  `space-x-reverse` **0**; `border-r-*` **2**; `ml-*` **4** and `mr-*` **5**; `text-left` **6**
+  and `text-right` **3** — against `text-start`/`text-end` **0**, `border-s-*`/`border-e-*` **0**
+  and `rounded-s-*`/`rounded-e-*` **0**. (`gap-*` is already used **21** times — the
+  direction-agnostic spacing that should replace `space-x-*` where a gap is what is meant.
+  **I publish no count for logical margins**: a naive `grep 'ms-\|me-'` also matches inside
+  `items-` and `name-`, so that is measured per component during the pass, not quoted here.)
+- **The only AR precedent in the repository is a prototype, not the product.**
+  `design-concepts/intelligence-dashboard-prototype.html` sets
+  `document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr'` (`:290`), swaps the font stack
+  (`body.ar{font-family: … 'Noto Naskh Arabic' …}`, `:16`) and converts numerals with a
+  `toArabic()` helper (`:313`, `:317`). **Follow that convention; do not invent a second one.**
+
+**Why this is not a strings file:** the components were written with physical spacing and with the
+*browser* deciding how numbers look. "Adding Arabic" here is a direction-aware layout pass plus a
+numeral/date decision the product has not yet made.
+
+### 8B.2 The language switch
+
+- **Anatomy carries forward** from `design-concepts/INTERACTIVE-CONSENT-SPECS.md` §1.1–§1.3: a
+  two-option pill, `English | العربية`. Its KSA rule (Arabic leads) applies if the KSA set is ever
+  switched on; **UAE-first shows English first, with Arabic one tap away**.
+- **Placement: the portal header, before the case content** — a hire must be able to change
+  language *before* reading the consent notice. A received link should open in a readable
+  language, and the choice should persist for the visit at least (the mechanism is engineering's;
+  the rule is that the choice is not lost).
+- **The language the hire chose must be recordable with the consent**, because what a person
+  agreed to includes the language they read it in. The shipped record cannot store it: the row is
+  `consent_type, lawful_basis, consent_version, granted_at, recorded_by`
+  (`server/preboarding-items.js:233`–`:252`) — no language column. **Recommendation: one additive
+  column (`notice_language`) on the same record, never a second store** (D15; whether it is
+  required is the compliance memo's call).
+- **A missing AR string must be visible, never silent.** If a string falls back to English, the
+  interface marks it (an `EN` tag beside it, or one line at the top of the page). No machine
+  translation of any legal or consent string, in either direction (§8B.5).
+
+### 8B.3 RTL consequences, component by component
+
+1. **Direction is set on the document element, not per component** — `dir="rtl"` at the root, the
+   way the prototype does it (`:290`), so browser bidi, scrollbars and form controls follow.
+   Mirroring individual `div`s produces two half-RTL layouts.
+2. **The checklist row is the canary**, because it carries every hard case at once: an item label
+   (AR), a status word (AR), a date (LTR digits and hyphens), the rule token `D-3` (Latin), a
+   distance ("in 2 d"), and one or two action buttons. In RTL the row reads right → left, so the
+   label sits at the start edge and the actions at the end edge — and **the row's parts must be
+   written as logical blocks (start/end), not as "swap the CSS"**, or the LTR build regresses the
+   next time someone edits it.
+3. **Latin runs inside Arabic text need bidi isolation.** `due 2026-10-09 (D-3) · in 2 d` is three
+   directionalities in one line, and the browser will reorder the punctuation and can move the
+   `·`. Rule: wrap each LTR run — the ISO date, the `D-n` token, `AED`/`SAR`, an email address, an
+   IBAN, an Emirates ID — in `<bdi>` (or a `dir="auto"` span). The separators are the most common
+   visible breakage: `·` is text, and it must be isolated with its neighbour.
+4. **Numerals: decide once, in the strings file.** The prototype renders Arabic-Indic numerals in
+   AR (`toArabic()`, `:313`). If the portal follows it: (a) the same value reads differently in the
+   two languages, which is the house convention; and (b) **a numeral inside an ISO date must not be
+   half-converted**. Recommendation: **Arabic-Indic for counts and distances; Latin for ISO dates,
+   identifiers and currency codes** (IBAN, Emirates ID, `2026-10-09`, `AED`) — those are
+   identifiers, not quantities.
+5. **The due-date column** moves; its contents do not. The dates stay LTR runs, the column moves to
+   the start edge in RTL, and the "past due" emphasis carries the **word**, never an arrow glyph —
+   a chevron points the wrong way in one of the two directions and reads as "next".
+6. **Dates.** Today the product prints ISO (`App.tsx:1970`). ISO is unambiguous and
+   direction-safe, but it is not how a hire reads a date in Arabic. Options: keep ISO; a numeric
+   `09/10/2026` (ambiguous between day-first and month-first, which is unacceptable on a deadline);
+   or a written form ("9 October 2026" / "٩ أكتوبر ٢٠٢٦"). **Recommendation: keep ISO in both
+   languages for the hire's due dates** — an ambiguous date against a document deadline is worse
+   than a formal one, and ISO needs no translation.
+7. **Font and metrics**: the AR stack from the prototype (`:16`), with 20–30% longer strings (§7)
+   and more leading than Latin at the same size. Row height must be allowed to grow: a row sized to
+   "Passport copy" will not hold "نسخة جواز السفر". No truncation to preserve the English rhythm.
+8. **What must not mirror**: document identifiers (Emirates ID, IBAN, passport number, email), ISO
+   dates, code-like tokens (`D-3`), and **the order of the document list itself** — it is the
+   jurisdiction's set order, a semantic order, not a visual one. §7 already rules the same way
+   about the employee track leading in both directions.
+9. **The link's own page** (if §8C's option 1 is chosen): the page's chrome and its explanatory
+   text need Arabic for the same reason the notice does; the URL itself stays Latin.
+
+### 8B.4 Which strings must be Arabic at launch, and which may follow
+
+- **Blocking at launch:** the consent notice and its lawful-basis explanation, whose required
+  elements our own compliance document lists for the UAE set — controller identity, purposes,
+  categories of data, rights, retention, cross-border transfer — at
+  `compliance-requirements.md:312`–`:318`; the portal chrome (title, the list's column words, the
+  four hire-side status words, the due-date wording, "past due"); the acknowledgement strip and its
+  "not an electronic signature" sentence; the refusal messages a hire can actually reach
+  ("consent not recorded yet", "this item cannot be changed", "verified is final"); and the
+  withdrawal path if the notice offers one — our compliance document requires withdrawal to be as
+  easy as giving consent (`compliance-requirements.md:323`).
+- **May follow later:** HR-only comfort copy; the workspace track (not shown to the hire); the
+  demo's own labels; and any KSA-specific string while the KSA set is switched off
+  (`server/preboarding-items.js:66`–`:99`; the KSA consent item is already recorded as
+  "Arabic first" in `server/compliance_engine.js:38`).
+- **Never:** a machine-translated legal or consent string.
+
+### 8B.5 Arabic provenance markers — the mechanism, not a promise
+
+Every user-facing string lives in a keyed strings file with its provenance, e.g.
+`{ en: 'Checked — nothing needed', ar: null, ar_review: 'pending' }`, with `ar_review` one of
+`pending` / `reviewed_by: <role> on <date>`. Rules: a `pending` legal or consent string is **not
+rendered as authoritative** — the interface shows the English with the visible marker from §8B.2;
+and the Arabic wordmark stays **`[TO CONFIRM]`** (`design-concepts/BRAND-IDENTITY.md:11`), so
+Arabic strings use the Latin "Antum" until the owner confirms it. Who supplies and reviews the
+Arabic is not mine to decide (§10 Q9).
+
+### 8B.6 How the build gets checked
+
+Three screens × two directions, with the checklist row as the canary; plus two hand tests that
+catch what visual review misses: (a) a case whose `document_reference` was typed in Arabic
+(untrusted user text crossing direction), and (b) an item at `verified`, where the hire's action
+set must be empty in both directions.
+
+---
+
+## 8C. The hire's identity — options, consequences, and the one I am not choosing
+
+The portal needs an identity for the hire, and the product does not have one. **There is exactly one
+shared admin account** (`server/auth.js`; the JWT lives in `localStorage`), per-user accounts land
+at Layer 3 (owner, 2026-10-07 — §10 Q4), and the standing rule is **no real client data before
+RBAC**. Both records that would carry the hire's own act take their actor from the authenticated
+user: the consent's `recorded_by` (`server/preboarding-items.js:252`, `input.actor || 'system'`)
+and the acknowledgement's (`server/preboarding-package.js:170`+). So the question is not what the
+button looks like — it is **who the product can truthfully say acted**.
+
+| # | Option | What becomes true | Consequences and costs |
+|---|---|---|---|
+| **1** | **Tokenised link per case** — one opaque, single-case, expiring, revocable token; no account | whoever holds the link can read that case, and (if allowed) record consent and an acknowledgement | **+** no account model, nothing to phish with a password, nothing to recover, scope of one case by construction. **−** the token is a **bearer credential**: anyone the link is forwarded to *is* the hire as far as the product knows, so `recorded_by` can only honestly say a link was used — never the hire's name. It must expire, be revocable by HR, be kept out of logs, and be useless if leaked. **−** it does not solve delivery: there is **no delivery channel** (D10), so the product cannot send the link; HR sends it out-of-band, and what HR sends is a credential — which moves the "keep the demo credential out of shared documents" discipline to a client-facing one. **−** whether an unverified holder's consent is valid consent is a PDPL question (the memo at row `5c0a9ceb`), not a UI one |
+| **2** | **Pull per-user accounts forward** (Layer 3's model, early) | `recorded_by` can name a person | **+** the only option where "the hire consented" and "the hire acknowledged" are literally true; makes read events, "my items" and Layer 3's own work possible; one identity model. **−** it pays Layer 3's cost now, and it creates a **system account for someone who is not yet an employee** — who creates it, who disables it if the offer is withdrawn, and credentials for a person with no corporate device. **−** the standing gate ("no real client data before RBAC") collides with a pre-boarding portal whose entire content *is* personal data, so the owner would have to re-word the gate, not ignore it |
+| **3** | **No authentication** — a guessable or plain URL per case | anyone with the URL sees one named person's checklist | **−** the option the product must not drift into: the list names a person, their role, their start date and the documents they are missing. It is listed here so that "a portal that is not actually authenticated" is a decision somebody makes, rather than an accident that happens |
+| **4** | **No portal in this release** | nothing changes, and the honest labels stay true | **+** `READING`'s *"there is no hire-facing portal"* (`server/preboarding-package.js:83`–`:90`) stays exactly true; no identity question; no bearer credential in the world. **−** Layer 2's completeness claim stays "not end-to-end", the hire's consent stays recorded by HR on their behalf, and the EN/AR work has nowhere to land |
+| **5** | **Assisted consent (today's behaviour) with a read-only portal** | HR records consent in person; the portal only shows state | **+** honest, no new identity, no bearer credential, and it removes the "who consented" problem entirely. **−** it is not a portal in P2-6's sense (the hire never acts in it), and a read-only view of one person's list still needs *some* access control — so it collapses back into option 1 or 2 unless the list is not personal, and it is |
+
+**What every option shares** — these do not move with the decision: one consent record per case and
+never a second store, with the shipped replay-safety (`recordConsent` returns the existing record,
+`server/preboarding-items.js:211`–`:228`); `recorded_by` describing the actor truthfully, which
+means a link-holder is recorded as a link-holder; the portal showing one case and never another
+hire; and the EN/AR work being identical in every option (build it once).
+
+**The test I would apply to whichever option is chosen:** *does it make `recorded_by` true?* If the
+record would read as though a named person acted while the product cannot tell who did, the option
+fails the same evidence standard the acknowledgement already keeps (`UNAVAILABLE_METHODS`,
+`server/preboarding-package.js:99`).
+
+### What this specification cannot answer
+
+1. **Whether an unverified link-holder's consent is valid consent.** The compliance memo at this
+   boundary (row `5c0a9ceb`), not this document.
+2. **The notice's text**, its required elements' wording, its version string, and the lawful basis
+   to record on the portal path.
+3. **Whether the consent record gains `notice_language`** (D15) — and whether it needs per-item
+   granularity, which the shipped row does not carry. My recommendation is additive on the one
+   record; the requirement is the memo's.
+4. **Whether a read event may be recorded at all** — a data-minimisation question (8A.5.2). The
+   honest default is not to record it, which means the package's label keeps saying "not tracked".
+5. **Who supplies and reviews the Arabic**, and when (§10 Q9) — including the consent notice, which
+   is blocking.
+6. **Which identity option is chosen** (§10 Q8) — with the consequence that a tokenised link cannot
+   be *sent* by the product (D10).
+7. **Whether the portal is ever demonstrated.** My assumption is **no**: nothing in §§8A–8C touches
+   the demo surface, and the demo rule against rendering a fake case stands.
+8. **What "withdrawal as easy as giving consent" means** for a hire who consented through a link
+   they no longer hold (`compliance-requirements.md:323`) — a product and legal call, and the
+   notice must not promise a path the product cannot provide.
 
 ---
 
@@ -565,13 +914,16 @@ gate the *first* thing on the employee track, not a checkbox buried in a setting
 | **D4** | **Per-user accounts / function identity** | "IT/Admin see only their own lines" (P2-4) has no account model behind it | Product, then engineering (§4) |
 | **D5** | A **document store** | P2-2 collects passports, Emirates IDs, certificates and bank details, and stores **no bytes**: an item carries a reference and a status. **Decided by the owner, 2026-10-07 — Option D is the product now, and Option C (an S3-compatible object store) is built when the entity is registered.** Building it is then a change behind one interface (`saveDocument`/`readDocument`), with the PDPL work the compliance expert owes on the chosen store | Engineering (built when IFZA registration completes) + PDPL (compliance expert) |
 | **D6** | An **acknowledgement record** for the JD and NDA | **Built (P2-3, PR #79).** The record is written by the signed-in user on the hire's behalf, `recorded_by` required, method `in_product_record`; an item reads `acknowledged` only when the row exists; signature-implying methods are refused by name (lead ruling, 2026-10-08). Remaining dependency is the **actor's identity**, not the record: today that is one shared admin account, so per-user accounts at Layer 3 are what make "who" trustworthy | Engineering + PDPL |
-| **D7** | **EN/AR strings and an i18n/RTL layer** | Bilingual is a standing quality standard; the client has no i18n layer today | Design (layout, done here) + a translator/owner for the AR copy |
+| **D7** | **EN/AR strings and an i18n/RTL layer** | Bilingual is a standing quality standard; the client has no i18n layer today, and §8B.1 measures how far that reaches (`dir=` 0, no language state, 28 physical `space-x-*` against 0 `space-x-reverse`, no logical-direction utilities) | Design (the layout consequences are specified in §8B and the pointer language carries forward from `INTERACTIVE-CONSENT-SPECS.md` §1.1–§1.3) + a translator/owner for the AR copy, tracked by §8B.5's provenance markers |
 | **D8** | The **derived flag computation** | §5's definition, computed on read | Engineering (P2-5) |
 | **D9** | An **in-process timer + startup catch-up** for the unprompted notice | Gate 2, owner-decided 2026-10-06; only affects *whether the app speaks first*, never correctness | Engineering |
 | **D10** | **A delivery channel** — mailer, webhook or SMS | Without it, the flag can never say "notified", and the pre-reading package's "sent" state has no mechanism | Product; the spec is worded so nothing breaks if it never arrives |
 | **D11** | **Enough live cases to read as a company** | A working list with one row does not demonstrate the surface; the demo surface currently carries one in-flight case | Owner (roster-size decision, already open) |
 | **D12** | A decision on **how the three flag states are shown in a demo** | Three states need three cases at different distances from their start dates | Owner (§10 Q3) |
 | **D13** | **How a Manager owner is identified** | `employees.manager_id` exists, but the case must name the manager **for the accepted offer**, which may differ from the current record | P2-1's case model |
+| **D14** | **An identity for the hire** | The portal (§8A) and both records that would carry the hire's own act (§8C) need one; today there is a single shared admin account and no role model — which is also why "the hire can never move an item to `verified`" has to be a server-side rule rather than a hidden button | **Product — the lead/owner decision on §8C's options, §10 Q8** — then engineering |
+| **D15** | **The notice language on the consent record** | The shipped row carries `consent_type`, `lawful_basis`, `consent_version`, `granted_at`, `recorded_by` and **no language** (`server/preboarding-items.js:233`–`:252`); what a person agreed to includes the language they read it in, and the older bilingual design already recorded `language` (`INTERACTIVE-CONSENT-SPECS.md` §5.3) | Compliance memo (row `5c0a9ceb`) decides the requirement; engineering adds it **to the one record**, never as a second store |
+| **D16** | **A read event for the pre-reading package** | §8A.5.2: the package's label says "not tracked — no hire portal" (`server/preboarding-package.js:83`–`:90`). A portal makes that reason false while the conclusion stays true unless reading is recorded — and recording it is a data-minimisation question | Product/PDPL — and the honest default is **not to record it** and re-word the label instead |
 
 ---
 
@@ -619,6 +971,35 @@ on the screen — see `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §4.
    package cannot be sent. If it cannot be sent, its per-item state must read as *not yet
    delivered* rather than implying a send — see D10.
 
+**Added 2026-10-09 with the portal specification (§§8A–8C). Q8 is the decision the lead asked to
+be surfaced rather than solved; Q9–Q12 are consequences I will not settle by designing.**
+
+8. **The hire's identity (§8C).** Five options, each with a security or evidence consequence, and
+   I recommend none of them: a **tokenised per-case link** (honest only if `recorded_by` says a link
+   was used, never the hire's name, and the product cannot send it — D10), **per-user accounts
+   pulled forward** (the only option where "the hire consented" is literally true, paid for with a
+   system account for a pre-buyer and a re-wording of the "no real client data before RBAC" gate),
+   **no authentication** (which I would refuse to build: it puts a named person's start date and
+   missing documents behind a URL), **no portal in this release** (the honest labels stay true),
+   and **assisted consent with a read-only portal** (today's behaviour, no new identity). My only
+   strong view: the choice must make `recorded_by` true.
+9. **Who supplies and reviews the Arabic, and when?** The consent notice, the portal chrome, the
+   hire's four status words and the refusal messages are **blocking** for launch (§8B.4). No
+   machine translation of a legal or consent string, in either direction (§8B.5), and the Arabic
+   wordmark is still `[TO CONFIRM]` — Arabic strings use the Latin "Antum" until you confirm it.
+10. **Does the consent record gain `notice_language` (and per-item granularity)?** The shipped row
+    has neither (`server/preboarding-items.js:233`–`:252`), so today the product cannot say *which
+    language the hire agreed in* — and the older bilingual design did record a language. My
+    recommendation is one additive column on the same record; the requirement is the compliance
+    memo's (row `5c0a9ceb`).
+11. **Is the portal ever demonstrated?** My assumption is **no** — nothing in §§8A–8C touches the
+    demo surface, and the demo rule against rendering a fake case stands. If it is demonstrated, it
+    needs its own surface decision, not a quiet inclusion.
+12. **What does "withdrawal as easy as giving consent" mean for a hire who consented through a link
+    they no longer hold?** Our compliance document requires withdrawal to be as easy as giving
+    consent (`compliance-requirements.md:323`); the notice must not promise a route the product
+    cannot provide.
+
 ---
 
 ## 11. Acceptance traceability
@@ -629,7 +1010,7 @@ on the screen — see `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §4.
 | **P2-3** — each item shows sent/read/acknowledged; JD and NDA have a recorded acknowledgement | §3 pre-reading strip; the record itself is D6; "sent" is blocked by D10 |
 | **P2-4** — assignment derived from the role, not typed; each line has a responsible function; IT/Admin see only their own lines | §6 derivation; §2 owner chips; the last clause is D4 (and is not claimable until then) |
 | **P2-5** — fires on the 48-hour boundary; names the incomplete items and their owners; clears when the items complete | §5 definition (inclusive boundary), copy rules, and three states; **§5.1 holds the three seeded cases' expected readings to build against; the derivation is **track-agnostic**, and no surface prints a negative `days_to_start` or invents an item owner**. **Two lead rulings of 2026-10-07 are folded in: the row and the chip share one derivation** (§2's relative-time row: whole days / hours to one decimal / `started n d ago`, so one row cannot carry two distances), **and the amber headline reads *"n items open · start in 48 hours or less"***, because the boundary is inclusive at exactly 48.00 h and "under 48 hours" is false there |
-| **P2-6** — EN/AR documents and portal; no document collected before a consent record exists | §7, §8 (the gate is on collection, not just on the button) |
+| **P2-6** — EN/AR documents and portal; no document collected before a consent record exists | §7 (the standing standard) and §8 (the gate is on collection, not only on the button) for the **HR** surface; **§8A the portal's three screens and the hire's own vocabulary, §8B the EN/AR and RTL consequences, §8C the identity options** for the portal itself. **Acceptance tests this specification adds:** a direct API write of a document for a case with no consent record must be refused (shipped — `server/preboarding-items.js:321`–`:332`); the portal must not create a **second** consent record (`recordConsent` is replay-safe, `:211`–`:228`); the hire must never move an item to `verified` (D14); no portal string may say "sent", "delivered", "signed" or "e-signed" (§8A.5); and every AR string renders with its provenance marker (§8B.5) |
 
 ---
 
@@ -652,6 +1033,25 @@ on the screen — see `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §4.
   label and relabels nothing.
 - **No statutory claim is made in this document.** Layer 2's deadlines (the 48-hour flag, the
   per-line due dates) are product rules, not legal rules, and are described as such.
+- **No hire-facing portal exists.** §§8A–8C are a specification. There is no hire-facing surface in
+  this release, and `server/preboarding-package.js:83`–`:90` states that as a fact about the product
+  — so no copy anywhere may imply a hire has been sent something, has read something, or has signed
+  anything.
+- **The hire's identity is undecided** (§8C, §10 Q8). Until it is ruled, nothing may claim that a
+  named hire consented or acknowledged *in the portal*.
+- **No Arabic string exists, and none is invented here.** §8B.4 lists what must exist before launch;
+  §8B.5 is the marker mechanism; the Arabic wordmark stays `[TO CONFIRM]` (`BRAND-IDENTITY.md:11`).
+- **The consent copy has no source yet.** Its text comes from the compliance expert's memo at the
+  portal boundary (task `5c0a9ceb`), not from this document, and not from my own reading of the law.
+- **An older design is not relied on where it disagrees.** `design-concepts/INTERACTIVE-CONSENT-SPECS.md`
+  (2026-09-21) specifies an **e-signature component** (§3) and a consent record keyed to `employee_id`
+  carrying an `ip_address` and a `signature_method` (§5.3). That is **not** the shipped record
+  (`preboarding_consents`, keyed by `case_id`, no IP, no signature method), and the e-signature method
+  is refused by name in the shipped module (`server/preboarding-package.js:99`; lead ruling,
+  2026-10-08). **Where the two documents disagree, the shipped shape and the ruling win** — only its
+  language-toggle anatomy (§1.1–§1.3) carries forward.
+- **The RTL work is specified, not done.** §8B.1's counts measure the *current* English-only, LTR
+  client: they are the size of the pass, not evidence that any of it is built.
 
 ---
 
@@ -688,3 +1088,22 @@ before 00:00 on the start date` / `· started 1 d ago` / `· started 6 d ago` �
 saying the built roll-up "prints `-1 d` today" now reads as what it printed before #77. The server is
 unchanged: `days_to_start` is still the raw signed input, and the absolute-value guard is in the
 built bundle.*
+*Amended 2026-10-09 with **P2-6's portal specification** — §§8A–8C, inserted between §8 and §9 so
+that no existing section number, and therefore no citation in another document, moves. Read against
+`main` at **`b7630cb`** (the merge of PR #86, P2-4) on 2026-10-09: §8A states the hire's three
+screens, the four status words the hire reads, and what the product can honestly show while storage
+is a reference string and nothing has a delivery channel; §8B names the EN/AR and RTL consequences and
+measures the client as it stands (`dir=` 0, no language state, `space-x-*` 28 against
+`space-x-reverse` 0, no logical-direction utilities, `toLocaleString(undefined, …)` in 7 places, ISO
+dates printed raw); §8C lays out five identity options with their consequences and **decides none of
+them** — that is Q8. §9 gains D14–D16, §10 gains Q8–Q12, §11's P2-6 row carries the acceptance tests
+this pass adds, and §12 records what still does not exist. The consent notice's text is **not** in
+this document: it comes from the compliance expert's memo at the portal boundary (task `5c0a9ceb`),
+and nothing here may be used to invent it.*
+*The same pass re-read every citation it touched and **corrected two**: §8's consent-line citation
+(`App.tsx:981`–`:982`) pointed at offboarding code and at the wrong object — the case's own line is
+`App.tsx:1863`–`:1864`, while `:1407`–`:1408` is the **employee** flag — and the workspace due-date
+row is `App.tsx:1970` with its distance at `:1972`–`:1974`, not the range this document carried. §8
+also now names the two consent stores (`preboarding_consents` for the case; `consent_records` +
+`employees.consent_granted` at Layer 1) and the gap that `consent_version: 'v1'` is hard-coded in the
+client with no notice behind it (`App.tsx:790`–`:793`).*
