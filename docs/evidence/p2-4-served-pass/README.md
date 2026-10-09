@@ -8,6 +8,13 @@ commit **`2028894`** (re-seeded 10:46). The deployed tree also carries two untra
 Served-surface spot-check at the same time: `GET /` → 200 `Antum People`; `GET /api/employees`
 without a token → **401**; the same with `Origin: https://evil.example` → **403**. Posture holds.
 
+**Second pass, same served tree** (2026-10-09 ~11:00–11:05 UTC, still read-only, same deployed
+`2028894`): the surface was re-read to close the three gaps this file disclosed — the D-0 pair, the
+other direction of the filter leak path, and the named race. New captures:
+`dom-01-full-panel.json`, `dom-01-narrowed-it.json`, `dom-02-opened-after-01-filter.json`,
+`dom-race-after-all-t0.json`, `dom-race-after-all-t1.json`, `race-samples.json` (the first pass's own
+samples), `probes/read2.js`, `screenshots/05-rollup-scope-note-and-without-consent.png`.
+
 ## The API baseline, measured first (and it matches the given figures)
 
 | case | start | state | tone | chip string (API) | open_count | hours_to_start | employee track | workspace lines | overdue | functions |
@@ -49,9 +56,13 @@ Owner/function appears on every line as the leading tag, e.g.
 badge issued Admin · building card · not started · due 2026-10-22 (D-1)`. In the **collapsed** row the
 same lines render with an explicit `owner:` prefix (`owner: IT`, `owner: Admin`, `owner: HR`,
 `owner: Manager`). Due-date pairs confirmed in the captured panel text: **D-5 = 2026-10-18**,
-**D-3 = 2026-10-20**, **D-1 = 2026-10-22**. The **D-0** pair (`2026-10-23`) sits in the MANAGER group's
-last two lines and the panel text was truncated at 3000 chars before them, so D-0 is **not
-individually confirmed here** — stated rather than assumed.
+**D-3 = 2026-10-20**, **D-1 = 2026-10-22**. The **D-0** pair could not be read here: it sits in the MANAGER group's last
+two lines and this pass's panel text was truncated at 3000 chars before them. **Closed in the second
+pass** — `probes/read2.js` reads the panel untruncated (1906 chars) and the MANAGER tail renders
+`30-day check-in scheduled Manager · manager setup · not started · due 2026-10-23 (D-0) · in 14 d`
+and `Team introduction arranged Manager · manager setup · not started · due 2026-10-23 (D-0) · in 14 d`.
+All four offsets are confirmed **as rendered** and match the cutover baseline (D-5 2026-10-18 ·
+D-3 2026-10-20 · D-1 2026-10-22 · D-0 2026-10-23). Raw: `dom-01-full-panel.json`.
 Screenshot: `screenshots/02-board-demo01-15-lines.png`.
 
 ## 4. The owed read — the closed loop (the acceptance this row was written for)
@@ -70,12 +81,50 @@ Sequence: open DEMO-02 → apply the function filter → open DEMO-01. DOM reads
 DEMO-02. The second half of the same fix is visible in row 2: while the view narrows to IT, `All` keeps
 the case's own 14 rather than reporting the narrowed 5 — the reading the old code produced as `All (5)`.
 
-## 5. The named one-tick race
+**The other direction, closed in the second pass.** The filter was applied to DEMO-01, then DEMO-02
+was opened (`dom-01-narrowed-it.json` → `dom-02-opened-after-01-filter.json`), reporting the fields
+that reader captures:
 
-**Not observed, and not claimed.** See the closing note in this file's git history: the attempt was
-scripted (`probes/racepatch.js` delays every `/workspace` response by 2500 ms; `probes/sample.js`
-samples chips + rendered groups immediately after clicking `All`), but the driver did not reach that
-step in this pass, so no samples were recorded. It stays a named behaviour for the next pass.
+| step | chips as rendered | due pairs in panel | panel | consent |
+|---|---|---|---|---|
+| DEMO-01 after clicking `IT` | `All (15)` · **`IT (6) [SELECTED]`** | D-5, D-3 only | 957 chars | 1 |
+| **DEMO-02 opened next** | **`All (14) [SELECTED]`** · IT (5) · Admin (3) · HR (2) · Manager (4) | D-5, D-3, D-1, D-0 | 1860 chars | 1 |
+
+**No leak in this direction either:** DEMO-02 opened on its own full board with `All` highlighted, its
+chip 14 its own sum (5+3+2+4), all four groups rendered. The offsets are DEMO-02's own — D-5
+`2026-10-05`, D-3 `2026-10-07`, D-1 `2026-10-09`, **D-0 `2026-10-10`, its start date** — the read-time
+derivation visible on a second case, not DEMO-01's numbers repeated.
+## 5. The one-tick race — **observed in the first pass; this section was wrong and is corrected here**
+
+It previously read "Not observed, and not claimed … no samples were recorded". **That was false, and
+the raw samples had been appended to the end of this file as a stray line — which is how the error
+surfaced in the second pass.** The samples exist: `race-samples.json`, seven of them, `t` = ms.
+
+| t (ms) | chips as rendered | groups rendered | panel header |
+|---|---|---|---|
+| 57061, 57419, 57976, 58933 | **`All (14)[SEL]`** · IT (5) · Admin (3) · HR (2) · Manager (4) | **`IT · 0/5` only** | **`0 of 5 done · 5 past due`** |
+| 60592, 62950, 66108 | same | `IT · 0/5`, `ADMIN · 0/3`, `HR · 0/2`, `MANAGER · 0/4` | `0 of 14 done · 7 past due` |
+
+Read exactly: after `All` was clicked on DEMO-02, whose board had been narrowed to `IT`, the panel kept
+rendering **the narrowed board and its narrowed header** (`0 of 5 done · 5 past due`) while the `All`
+chip was already the highlighted one, and resolved to the case's full 14-line board at t=60592. The
+chip's own label never moved off the case's true sum (`All (14)` throughout) — it is the **rendered
+lines and the panel header** that lag. Self-correcting, as the plan records; real, not hypothetical.
+
+Two limits, stated rather than glossed:
+1. **The window was artificially widened.** `probes/racepatch.js` patches `window.fetch` **in the
+   page** (client-side only — server code untouched, nothing written to the product) to delay every
+   `/workspace` response by 2500 ms. This measures *that* the stale render happens; it does **not**
+   measure how long a user sees it at natural latency, which on a local server is probably
+   milliseconds.
+2. **Not a selector artifact.** The same highlight test (`bg-slate-900` on the chip button) read
+   `IT (6) [SELECTED]` when `IT` was clicked and `All (14) [SELECTED]` on a full board in the same
+   pass, so `[SEL]` tracks the real chip.
+
+**Second pass, no delay injected:** two consecutive untruncated reads taken immediately after clicking
+`All` (`dom-race-after-all-t0.json`, `dom-race-after-all-t1.json`) both returned
+`All (14) [SELECTED]` with the full 1860-char board and all four groups — the stale render did not
+appear at ~1 s read resolution without injected latency.
 
 ## One environment lesson (not a product finding)
 
@@ -84,4 +133,3 @@ the page stays on the Executive Dashboard — while a real click by accessible r
 whole explanation of the "no case rows" failure in my earlier rig pass, which I reported as an
 unresolved rig failure: it was the click mechanism, not the product. Future passes should drive the
 nav with `snapshot -i` → `click @ref`, as `probes/drive3.sh` does.
-RACE FILE EXISTS: "[{\"t\":57061,\"chips\":[\"All (14)[SEL]\",\"IT (5)\",\"Admin (3)\",\"HR (2)\",\"Manager (4)\"],\"groups\":[\"IT · 0/5\"],\"head\":\"WORKSPACE TRACK · 0 of 5 done · 5 past due from Marketing Co\"},{\"t\":57419,\"chips\":[\"All (14)[SEL]\",\"IT (5)\",\"Admin (3)\",\"HR (2)\",\"Manager (4)\"],\"groups\":[\"IT · 0/5\"],\"head\":\"WORKSPACE TRACK · 0 of 5 done · 5 past due from Marketing Co\"},

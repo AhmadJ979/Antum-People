@@ -1,0 +1,23 @@
+{
+  "chips": [
+    "All (15)[SEL]",
+    "IT (6)",
+    "Admin (3)",
+    "HR (2)",
+    "Manager (4)"
+  ],
+  "consent_texts": 1,
+  "dates": [
+    "due 2026-10-18 (D-5)",
+    "due 2026-10-20 (D-3)",
+    "due 2026-10-22 (D-1)",
+    "due 2026-10-23 (D-0)"
+  ],
+  "flag_bodies": [
+    "These were due before day one.",
+    "21 items open · start in 48 hours or less"
+  ],
+  "manager_tail": "MANAGER · 0/4 First-week agenda prepared Manager · manager setup · not started · due 2026-10-22 (D-1) · in 13 d Requested Buddy or mentor assigned Manager · manager setup · not started · due 2026-10-22 (D-1) · in 13 d Requested 30-day check-in scheduled Manager · manager setup · not started · due 2026-10-23 (D-0) · in 14 d Requested Team introduction arranged Manager · manager setup · not started · due 2026-10-23 (D-0) · in 14 d Requested",
+  "panel_full": "WORKSPACE TRACK · 0 of 15 done from Finance Analyst · Finance View by function: All (15) IT (6) Admin (3) HR (2) Manager (4) This narrows the board to one function. It is a filter, not access control: everyone signed in can still open any case and see every line. Per-user scoping — \"My lines\" — ships with per-user accounts at Layer 3. IT · 0/6 Laptop or device issued IT · hardware · not started · due 2026-10-18 (D-5) · in 9 d Requested Email and SSO account created IT · email · not started · due 2026-10-18 (D-5) · in 9 d Requested Licensed software installed IT · software · not started · due 2026-10-20 (D-3) · in 11 d Requested System access granted with the role's permissions IT · system access · not started · due 2026-10-20 (D-3) · in 11 d Requested VPN access provisioned IT · system access · not started · due 2026-10-20 (D-3) · in 11 d Requested Finance system access IT · system access · not started · due 2026-10-20 (D-3) · in 11 d Requested ADMIN · 0/3 Building card or access badge issued Admin · building card · not started · due 2026-10-22 (D-1) · in 13 d Requested Desk and seat allocated Admin · workplace · not started · due 2026-10-22 (D-1) · in 13 d Requested Parking pass issued Admin · workplace · not started · due 2026-10-22 (D-1) · in 13 d Requested HR · 0/2 Employee file opened HR · hr file · not started · due 2026-10-20 (D-3) · in 11 d Requested Payroll setup HR · payroll · not started · due 2026-10-18 (D-5) · in 9 d Requested MANAGER · 0/4 First-week agenda prepared Manager · manager setup · not started · due 2026-10-22 (D-1) · in 13 d Requested Buddy or mentor assigned Manager · manager setup · not started · due 2026-10-22 (D-1) · in 13 d Requested 30-day check-in scheduled Manager · manager setup · not started · due 2026-10-23 (D-0) · in 14 d Requested Team introduction arranged Manager · manager setup · not started · due 2026-10-23 (D-0) · in 14 d Requested",
+  "panel_len": 1906
+}

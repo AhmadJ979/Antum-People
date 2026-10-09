@@ -1,0 +1,21 @@
+{
+  "chips": [
+    "All (15)",
+    "IT (6)[SEL]",
+    "Admin (3)",
+    "HR (2)",
+    "Manager (4)"
+  ],
+  "consent_texts": 1,
+  "dates": [
+    "due 2026-10-18 (D-5)",
+    "due 2026-10-20 (D-3)"
+  ],
+  "flag_bodies": [
+    "These were due before day one.",
+    "21 items open · start in 48 hours or less"
+  ],
+  "manager_tail": "d",
+  "panel_full": "WORKSPACE TRACK · 0 of 6 done from Finance Analyst · Finance View by function: All (15) IT (6) Admin (3) HR (2) Manager (4) This narrows the board to one function. It is a filter, not access control: everyone signed in can still open any case and see every line. Per-user scoping — \"My lines\" — ships with per-user accounts at Layer 3. IT · 0/6 Laptop or device issued IT · hardware · not started · due 2026-10-18 (D-5) · in 9 d Requested Email and SSO account created IT · email · not started · due 2026-10-18 (D-5) · in 9 d Requested Licensed software installed IT · software · not started · due 2026-10-20 (D-3) · in 11 d Requested System access granted with the role's permissions IT · system access · not started · due 2026-10-20 (D-3) · in 11 d Requested VPN access provisioned IT · system access · not started · due 2026-10-20 (D-3) · in 11 d Requested Finance system access IT · system access · not started · due 2026-10-20 (D-3) · in 11 d Requested",
+  "panel_len": 957
+}
