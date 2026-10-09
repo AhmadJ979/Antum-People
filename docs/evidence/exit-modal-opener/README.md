@@ -82,8 +82,9 @@ product on 3000 answered 200 before and after. The pass clicks real elements and
    | employees `offboarding` | 2 | **1** |
    | employees `terminated` | 2 | **3** |
 6. **And the opener is self-consistent with the state it moves into:**
-   `{"openerStillThere":0}` — once the employee is `terminated`, the button is gone (screenshot
-   `screenshots/03-after-submit.png`).
+   `{"openerStillThere":0}` — once the employee is `terminated`, the button is gone. This one is a DOM read
+   (`after-submit.json`), **not a screenshot**: the pass wrote screenshots of the two rendered states above and I
+   am not citing a third file it never produced.
 
 ## Limits and things this does not claim
 
