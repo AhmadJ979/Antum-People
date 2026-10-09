@@ -190,6 +190,18 @@ interface WorkspaceBoard {
   totals: { lines: number; complete: number; open: number; overdue: number };
 }
 
+// P2-4 - the workspace track is read once per case AND per view, and the board is filed under
+// the view it was read for. The key is the `All` sentinel or the function name the endpoint
+// names, so the chip (which names a view) and the board (which says which view it came from) are
+// compared as the same thing. One board per case cannot hold two views: the moment the chip moved,
+// the chip was the new view while the board in hand was still the old one, and for the whole length
+// of the read the panel showed `All` selected over a narrowed group set (row 2c37f2da).
+const WORKSPACE_VIEW_ALL = 'all';
+const workspaceViewKey = (fn: string | null | undefined): string =>
+  (!fn || fn === 'All' ? WORKSPACE_VIEW_ALL : String(fn));
+/** One case's view, so a read's in-flight state is filed under exactly what the board will be. */
+const workspaceReadKey = (caseId: string, fn: string) => `${caseId}:${workspaceViewKey(fn)}`;
+
 interface PreboardingOverview {
   jurisdiction: string | null;
   cases: PreboardingChecklistRow[];
@@ -447,10 +459,18 @@ export default function App() {
   // P2-3 - the pre-reading package per case, straight from the server's derivation. Nothing is
   // marked acknowledged here; the record is written by the endpoint and this re-renders from it.
   const [casePackages, setCasePackages] = useState<Record<string, PreboardingPackage>>({});
-  // P2-4 - the workspace track per case, and the function filter. The filter is a VIEW and the
-  // board says so in its own words: it narrows what is shown and is not an access boundary while
-  // the product has one shared account. No copy here may call it "My lines" or imply a scope.
-  const [caseWorkspaces, setCaseWorkspaces] = useState<Record<string, WorkspaceBoard>>({});
+  // P2-4 - the workspace track per case AND per view, and the function filter. The filter is a
+  // VIEW and the board says so in its own words: it narrows what is shown and is not an access
+  // boundary while the product has one shared account. No copy here may call it "My lines" or
+  // imply a scope.
+  //
+  // Keyed by view because one board per case cannot serve two views at once (row 2c37f2da): the
+  // chip moved on the click while the board in hand was still the previous view's, so an
+  // `All`-selected chip could sit over a narrowed group set for the whole length of the read. The
+  // read's own state is held too, so a view with no board in hand says it is being read rather
+  // than showing a board that belongs to a different view.
+  const [caseWorkspaces, setCaseWorkspaces] = useState<Record<string, Record<string, WorkspaceBoard>>>({});
+  const [workspaceReads, setWorkspaceReads] = useState<Record<string, 'reading' | 'failed'>>({});
   const [workspaceFunction, setWorkspaceFunction] = useState<string>('All');
   const [checklistNotice, setChecklistNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [casesLoading, setCasesLoading] = useState(false);
@@ -686,8 +706,11 @@ export default function App() {
    */
   const fetchCaseWorkspace = async (caseId: string, fn: string = workspaceFunction) => {
     if (!token) return;
+    const view = workspaceViewKey(fn);
+    const readKey = workspaceReadKey(caseId, fn);
+    setWorkspaceReads(prev => ({ ...prev, [readKey]: 'reading' }));
     try {
-      const query = fn && fn !== 'All' ? `?function=${encodeURIComponent(fn)}` : '';
+      const query = view === WORKSPACE_VIEW_ALL ? '' : `?function=${encodeURIComponent(view)}`;
       const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/workspace${query}`);
       if (res.status === 401) {
         handleLogout();
@@ -695,16 +718,26 @@ export default function App() {
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        setWorkspaceReads(prev => ({ ...prev, [readKey]: 'failed' }));
         setChecklistNotice({ kind: 'error', text: data.error || `The workspace track could not be read (HTTP ${res.status}).` });
         return;
       }
-      setCaseWorkspaces(prev => ({ ...prev, [caseId]: data as WorkspaceBoard }));
+      // Filed under the view it was read for, never under whichever chip is selected by the time
+      // the response lands.
+      setCaseWorkspaces(prev => ({ ...prev, [caseId]: { ...(prev[caseId] || {}), [view]: data as WorkspaceBoard } }));
+      setWorkspaceReads(prev => { const next = { ...prev }; delete next[readKey]; return next; });
     } catch (err) {
       console.error('Error fetching the workspace track:', err);
+      setWorkspaceReads(prev => ({ ...prev, [readKey]: 'failed' }));
     }
   };
 
-  /** The filter chip: remembers the choice, then re-reads the board the server returns. */
+  /**
+   * The filter chip: remembers the choice, then re-reads the board the server returns. The chip
+   * moves on the click and the board moves when its own view's read lands - the two are never
+   * cross-wired, because the render below draws only the board whose view the chip names (row
+   * 2c37f2da). A view already in hand is drawn at once and refreshed by this same read.
+   */
   const handleWorkspaceFunction = async (fn: string) => {
     setWorkspaceFunction(fn);
     if (openCaseId) await fetchCaseWorkspace(openCaseId, fn);
@@ -714,6 +747,15 @@ export default function App() {
   const handleWorkspaceStatus = async (caseId: string, itemKey: string,
     status: 'not_started' | 'requested' | 'received' | 'verified') => {
     await handleItemStatus(caseId, itemKey, status);
+    // A move changes the lines every view of this case holds, so the other views' boards are
+    // dropped rather than left to be drawn as if the move had not happened. The view in hand stays
+    // up while it is re-read, which is how this panel has always behaved on a move.
+    setCaseWorkspaces(prev => {
+      const boards = prev[caseId];
+      if (!boards) return prev;
+      const inHand = workspaceViewKey(workspaceFunction);
+      return { ...prev, [caseId]: boards[inHand] ? { [inHand]: boards[inHand] } : {} };
+    });
     await fetchCaseWorkspace(caseId);
   };
 
@@ -758,13 +800,14 @@ export default function App() {
     // opened last - it used to follow the user here. Opening a case starts it on `All`, and the read
     // is issued with `All` explicitly rather than with the state variable, which on this tick still
     // holds the previous case's choice. A board cached under a filter is not reused for the
-    // unfiltered view either, or the chips would claim `All` over a narrowed board.
+    // unfiltered view either, or the chips would claim `All` over a narrowed board. Since row
+    // 2c37f2da the cache is keyed by view, so this is the same rule stated once: the `all` board
+    // is read when this case has none.
     setWorkspaceFunction('All');
     setOpenCaseId(caseId);
     if (!caseChecklist[caseId]) await fetchCaseChecklist(caseId);
     if (!casePackages[caseId]) await fetchCasePackage(caseId);
-    const cachedBoard = caseWorkspaces[caseId];
-    if (!cachedBoard || cachedBoard.view.mode !== 'all') await fetchCaseWorkspace(caseId, 'All');
+    if (!caseWorkspaces[caseId]?.[WORKSPACE_VIEW_ALL]) await fetchCaseWorkspace(caseId, 'All');
   };
 
   const handleItemStatus = async (caseId: string, itemKey: string, status: PreboardingItem['status']) => {
@@ -1769,7 +1812,16 @@ export default function App() {
                         const open = openCaseId === row.case_id;
                         const detail = caseChecklist[row.case_id];
                         const pkgData = casePackages[row.case_id];
-                        const wsData = caseWorkspaces[row.case_id];
+                        // P2-4 fix for row 2c37f2da - two lookups, and the difference between them is the fix.
+                        // `wsData` is the board for the view the chip names and nothing else, so a narrowed board
+                        // can never be drawn under an `All` chip. `wsFacts` is any board of this case, for the facts
+                        // that belong to the case rather than to a view: the per-function counts, the derivation, and
+                        // the view's own label and note. View-scoped facts - the groups and the totals - come from
+                        // `wsData` alone.
+                        const wsBoards = caseWorkspaces[row.case_id];
+                        const wsData = wsBoards ? wsBoards[workspaceViewKey(workspaceFunction)] : undefined;
+                        const wsFacts = wsData || (wsBoards ? Object.values(wsBoards)[0] : undefined);
+                        const wsRead = workspaceReads[workspaceReadKey(row.case_id, workspaceFunction)];
                         return (
                           <div key={row.case_id} className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
                             <button onClick={() => toggleCase(row.case_id)} className="w-full text-left p-4">
@@ -1938,17 +1990,17 @@ export default function App() {
                                           Workspace track
                                           {wsData && <span className="text-slate-400 normal-case tracking-normal"> · {wsData.totals.complete} of {wsData.totals.lines} done</span>}
                                           {wsData && wsData.totals.overdue > 0 && <span className="text-rose-600 normal-case tracking-normal font-semibold"> · {wsData.totals.overdue} past due</span>}
-                                          {wsData && !wsData.track_active && <span className="text-amber-700 normal-case tracking-normal"> · track not active in this release</span>}
+                                          {wsFacts && !wsFacts.track_active && <span className="text-amber-700 normal-case tracking-normal"> · track not active in this release</span>}
                                         </div>
-                                        {wsData && (
+                                        {wsFacts && (
                                           <span className="text-[10px] text-slate-400">
-                                            from {wsData.derived_from.role} · {wsData.derived_from.department}
+                                            from {wsFacts.derived_from.role} · {wsFacts.derived_from.department}
                                           </span>
                                         )}
                                       </div>
                                       <div className="mt-2 flex flex-wrap items-center gap-1">
                                         <span className="text-[10px] font-bold text-slate-500">
-                                          {wsData ? wsData.view.label : 'View by function'}:
+                                          {wsFacts ? wsFacts.view.label : 'View by function'}:
                                         </span>
                                         {['All', 'IT', 'Admin', 'HR', 'Manager'].map(fn => {
                                           // P2-4 defect fix: `All` states the CASE's own figure, so it is
@@ -1957,10 +2009,12 @@ export default function App() {
                                           // to the current view, and read 6 rather than 15 the moment a
                                           // function was selected, so `All` reported the narrowed total as if
                                           // it were the case's own. In `all` mode the sum equals `totals.open`.
-                                          const count = wsData
+                                          // The counts belong to the case rather than to a view, so they come from any board of this
+                                          // case (`wsFacts`) and do not blink out while a new view is being read (row 2c37f2da).
+                                          const count = wsFacts
                                             ? (fn === 'All'
-                                              ? wsData.available_functions.reduce((sum, f) => sum + f.open, 0)
-                                              : (wsData.available_functions.find(f => f.function === fn)?.open ?? 0))
+                                              ? wsFacts.available_functions.reduce((sum, f) => sum + f.open, 0)
+                                              : (wsFacts.available_functions.find(f => f.function === fn)?.open ?? 0))
                                             : null;
                                           return (
                                             <button key={fn} onClick={() => handleWorkspaceFunction(fn)}
@@ -1970,11 +2024,15 @@ export default function App() {
                                           );
                                         })}
                                       </div>
-                                      {wsData && (
-                                        <p className="mt-1 text-[9px] text-slate-400">{wsData.view.note}</p>
+                                      {wsFacts && (
+                                        <p className="mt-1 text-[9px] text-slate-400">{wsFacts.view.note}</p>
                                       )}
                                       {!wsData ? (
-                                        <p className="mt-2 text-[11px] text-slate-400">Reading the workspace track...</p>
+                                        <p className="mt-2 text-[11px] text-slate-400">
+                                          {wsRead === 'failed'
+                                            ? 'The workspace track could not be read.'
+                                            : 'Reading the workspace track...'}
+                                        </p>
                                       ) : (
                                         <div className="mt-2 space-y-3">
                                           {wsData.groups.map(group => (

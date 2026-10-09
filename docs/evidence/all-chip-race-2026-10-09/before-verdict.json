@@ -1,0 +1,435 @@
+{
+  "samples": 31,
+  "all_view_group_count": 4,
+  "narrowed_group_counts_seen": [
+    1
+  ],
+  "runs": {
+    "1": {
+      "ticks": 9,
+      "defect_ticks": 7,
+      "first_defect_t": 484,
+      "last_defect_t": 5738,
+      "trace": [
+        {
+          "t": 484,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 6 done from Finance Analyst \u00b7 Finance View by function: All (15) IT"
+        },
+        {
+          "t": 1042,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 6 done from Finance Analyst \u00b7 Finance View by function: All (15) IT"
+        },
+        {
+          "t": 1800,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 6 done from Finance Analyst \u00b7 Finance View by function: All (15) IT"
+        },
+        {
+          "t": 2759,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 6 done from Finance Analyst \u00b7 Finance View by function: All (15) IT"
+        },
+        {
+          "t": 3120,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 6 done from Finance Analyst \u00b7 Finance View by function: All (15) IT"
+        },
+        {
+          "t": 4080,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 6 done from Finance Analyst \u00b7 Finance View by function: All (15) IT"
+        },
+        {
+          "t": 5738,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 6 done from Finance Analyst \u00b7 Finance View by function: All (15) IT"
+        },
+        {
+          "t": 8400,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 12058,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        }
+      ]
+    },
+    "2": {
+      "ticks": 11,
+      "defect_ticks": 2,
+      "first_defect_t": 4025,
+      "last_defect_t": 5684,
+      "trace": [
+        {
+          "t": 15693,
+          "selected": [
+            "IT (6) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 478,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 1036,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 1794,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 2753,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 2910,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 3068,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 4025,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 6 done from Finance Analyst \u00b7 Finance View by function: All (15) IT"
+        },
+        {
+          "t": 5684,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 6 done from Finance Analyst \u00b7 Finance View by function: All (15) IT"
+        },
+        {
+          "t": 8343,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 12002,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        }
+      ]
+    },
+    "3": {
+      "ticks": 11,
+      "defect_ticks": 2,
+      "first_defect_t": 4032,
+      "last_defect_t": 5691,
+      "trace": [
+        {
+          "t": 15640,
+          "selected": [
+            "IT (6) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 474,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 1031,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 1793,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 2753,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 2911,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 3071,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 4032,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 6 done from Finance Analyst \u00b7 Finance View by function: All (15) IT"
+        },
+        {
+          "t": 5691,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 6 done from Finance Analyst \u00b7 Finance View by function: All (15) IT"
+        },
+        {
+          "t": 8349,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        },
+        {
+          "t": 12009,
+          "selected": [
+            "All (15) [SELECTED]"
+          ],
+          "groups": [
+            "IT \u00b7 0/6",
+            "ADMIN \u00b7 0/3",
+            "HR \u00b7 0/2",
+            "MANAGER \u00b7 0/4"
+          ],
+          "reading": false,
+          "head": "WORKSPACE TRACK \u00b7 0 of 15 done from Finance Analyst \u00b7 Finance View by function: All (15) I"
+        }
+      ]
+    }
+  },
+  "defect_ticks_total": 11
+}

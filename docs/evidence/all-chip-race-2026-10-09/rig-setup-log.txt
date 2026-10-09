@@ -1,0 +1,32 @@
+== rig setup (HOME=/home/agent-senior-software-engineer) ==
+Preparing worktree (detached HEAD 1557d72)
+HEAD is now at 1557d72 Merge pull request #117 from AhmadJ979/docs/tracker-round-35
+tree HEAD: 1557d72f6fcec7aea04613aa6acadef2cc1d3ba7
+App.tsx blob in rig:  6b95c897277a40c3c362eae7e46b752f7a286e6f
+App.tsx blob on main: 6b95c897277a40c3c362eae7e46b752f7a286e6f
+App.tsx blob in my working tree: 7fb5678d0861d977efac3b1521bcaaebdb7e0337
+Upserting Layer 2 pre-boarding demo cases...
+- Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-10-23) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-10) — inside 48 hours with every item still open; items: 7 not_started
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-08) — start date already passed, items still open; items: 7 not_started
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+(node:10701) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch user inserted
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-gt1pFhU5.js   270.52 kB │ gzip: 75.36 kB
+
+[32m✓ built in 353ms[39m
+before bundle: fb6e0df5493fc67a9d9cd9fba5dfa9e2  dist/assets/index-gt1pFhU5.js
+== boot probe ==
+unauth /api/preboarding/cases -> 401
+page / -> 200
+login token length: 204
+688133ac-ad4c-4c2e-9c58-a302f1846e74 OFR-2026-DEMO-03 workspace lines 14 open 14 start 2026-10-08
+05e2f712-b14c-462a-8cbb-66fa55881415 OFR-2026-DEMO-02 workspace lines 14 open 14 start 2026-10-10
+870c6402-8e16-448b-9386-aef0462dc8fe OFR-2026-DEMO-01 workspace lines 15 open 15 start 2026-10-23
+listeners on 4718: 10765 
+live 3000 still: 200
+== rig setup done ==
