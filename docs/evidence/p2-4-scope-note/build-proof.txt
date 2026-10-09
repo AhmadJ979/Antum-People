@@ -1,24 +1,21 @@
-# Build proof — P2-4 scope_note single-source fix
-# tree: cd5f896b0c4131c2b485cf57006467ef80e74d84  (cd5f896 fix(preboarding): render the payload's scope_note instead of a local copy)
-# worktree tree hash: ead2fb6e93b81b6823f0854dd46c81270f3dd19f
-# base: origin/main 2ca2c19
+# Build proof - P2-4 scope_note single-source fix
+# tree: 7e6abfbd1fd7a0e6a993a28e0a13215de6679284  (7e6abfb docs(evidence): rendered before/after for the scope_note fix, plus build proof)
+# worktree tree hash: 46f2192df242b82c232059a5122027951ecfbcc7
+# base: origin/main 501d5fa  (rebased after #93/#94 landed; both docs-only, no client/ or server/ file changed)
+# client/ files identical to the tree the rendered evidence was taken on (b6ddd2d): 0 lines of diff
+# UTC: 2026-10-09T08:11:12Z
 
 $ cd client && npx tsc -b --force --verbose
-8:08:35 AM - Project 'tsconfig.app.json' is being forcibly rebuilt
+8:11:14 AM - Project 'tsconfig.node.json' is being forcibly rebuilt
 
-8:08:35 AM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.app.json'...
-
-8:08:37 AM - Project 'tsconfig.node.json' is being forcibly rebuilt
-
-8:08:37 AM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.node.json'...
+8:11:14 AM - Building project '/home/agent-senior-software-engineer/antum-people/client/tsconfig.node.json'...
 
 tsc -b exit code: 0
 
 $ cd client && npx vite build
-computing gzip size...
 dist/index.html                   0.46 kB │ gzip:  0.29 kB
 dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
 dist/assets/index-CG8sEoa6.js   269.10 kB │ gzip: 75.02 kB
 
-[32m✓ built in 399ms[39m
+[32m✓ built in 366ms[39m
 vite build exit code: 0

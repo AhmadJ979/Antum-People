@@ -1,9 +1,17 @@
 # P2-4 defect — the HR roll-up's second copy of the flag's scope claim
 
-**Row:** `83c22f60` · **Fix branch:** `fix/p2-4-scope-note-single-source`, tip `cd5f896`, base `origin/main` `2ca2c19`
-**Verified tree:** `ead2fb6e93b81b6823f0854dd46c81270f3dd19f` — the branch tip's tree hash, and identical to
+**Row:** `83c22f60` · **Fix branch:** `fix/p2-4-scope-note-single-source`, tip `7e6abfb`, base `origin/main` `501d5fa`
+**Verified tree:** `46f2192df242b82c232059a5122027951ecfbcc7` — the branch tip's tree hash, and identical to
 `git merge-tree --write-tree origin/main fix/p2-4-scope-note-single-source`, which printed that same hash
-with no conflict report. The branch was rebased onto `2ca2c19` before this evidence was taken.
+with no conflict report.
+
+**The evidence was taken at tip `cd5f896`** (tree `ead2fb6e93b81b6823f0854dd46c81270f3dd19f`, base `2ca2c19`).
+`main` then moved twice under the open PR (#93 tracker Round 27, #94 docs — **neither touched a `client/` or
+`server/` file**), so the branch was rebased and the tree hash changed with it. The rebase changed no client
+byte: `git diff --stat cd5f896 7e6abfb -- client server` is **empty**, and the `client/src/App.tsx` blob is
+`7d387005…` on both — so the rendered reads below still describe the client that will merge. The rig
+transcripts in this directory name `cd5f896` / `ead2fb6e` because that is the state they were captured on,
+and were not rewritten.
 
 ## The defect
 
