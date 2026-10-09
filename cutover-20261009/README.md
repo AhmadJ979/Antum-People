@@ -1,5 +1,23 @@
 # Cutover 2026-10-09 10:45–10:46 — measured state
 
+> **Withdrawal, same day (2026-10-09) — the raw output this record's first line cites is gone, and an earlier rescue of it filed the wrong run's bytes here.**
+>
+> This run wrote its output to **fixed** paths — `/tmp/cutover-evidence.txt`, `/tmp/cutover-seed.log`, `/tmp/cutover-build.log` — as its own last line records (`=== cutover finished 2026-10-09T10:46:22+00:00 — evidence also at /tmp/cutover-evidence.txt ===`). The **13:46 cutover overwrote all three**, so those paths do not and cannot hold this run's bytes. **The three paths cited above were destroyed by the next run.**
+>
+> A commit on 2026-10-09 briefly carried three files in this directory *under this record's own names* as if they were this run's output. They were the **later** run's, byte for byte. They are **withdrawn and removed** — the bytes remain in the repository under their true names in `cutover-20261009-1346/`:
+>
+> | file withdrawn from here | its md5 | identical to |
+> |---|---|---|
+> | `cutover-evidence.txt` | `841f7b7d5badbe7f25b30c3f626dde2a` | `cutover-20261009-1346/raw-evidence.txt` |
+> | `cutover-build.log` | `614589f4b6be2e4e589607caf40aac1f` | `cutover-20261009-1346/build.log` |
+> | `cutover-seed.log` | `6abc88f2f5752fb5d10d7303e4c6edfa` | `cutover-20261009-1346/seed.log` |
+>
+> The first of them opens `=== cutover 2026-10-09T13:46:11+00:00 ===` — the 13:46 run's own header, sitting in the file a filename said was the 10:46 run's. That header was readable before the filename was ever trusted; it is quoted here so the next reader does not have to take this note's word for it.
+>
+> **The genuine survivor of this run** was found under a name nobody expected: `/tmp/cutover-run.log`, 2535 bytes. Its line 1 is `nohup: ignoring input` (the capture's own artifact — this file is the nohup stdout of the run, not the evidence file the run also wrote), line 2 is the run's header `=== cutover 2026-10-09T10:45:59+00:00 ===`, and it carries `HEAD is now at 2028894 …#102`, `index-B3KoM02v.js  269.18 kB`, `seed OK`, `watchdog pid: 1593` and the 10:46:22 finish stamp. It is committed beside this record under a name that says which run wrote it: **`cutover-run-20261009T104559Z.log`** (md5 `91070fd6240979f685500de67da8f581`). This record's own text above is unchanged.
+>
+> The lesson is not "check `/tmp` sooner". It is that **an evidence path that does not name its run is overwritten by the next run**, and that the run's own closing line advertised exactly such a path. The lead has since patched `deploy-main.sh` to write run-stamped paths (`/tmp/cutover-<UTC stamp>-{evidence.txt,build.log,seed.log}`), so this collision cannot recur.
+
 Lead-owned. Raw run output: `/tmp/cutover-evidence.txt` (host) · `/tmp/cutover-seed.log` · `/tmp/cutover-build.log`.
 
 ## What landed

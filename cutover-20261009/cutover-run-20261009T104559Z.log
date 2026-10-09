@@ -1,17 +1,18 @@
-=== cutover 2026-10-09T13:46:11+00:00 ===
+nohup: ignoring input
+=== cutover 2026-10-09T10:45:59+00:00 ===
 --- 1. fetch and move the tree to origin/main ---
 From https://github.com/AhmadJ979/Antum-People
  * branch            main       -> FETCH_HEAD
-HEAD is now at da3330d Merge pull request #119 from AhmadJ979/fix/all-chip-race-2c37f2da
-tree now: da3330d Merge pull request #119 from AhmadJ979/fix/all-chip-race-2c37f2da
+HEAD is now at 2028894 Merge pull request #102 from AhmadJ979/docs/tracker-round-31
+tree now: 2028894 Merge pull request #102 from AhmadJ979/docs/tracker-round-31
 tree content check OK
 --- 2. build the client (must succeed before anything is restarted) ---
 computing gzip size...
 dist/index.html                   0.46 kB │ gzip:  0.29 kB
 dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
-dist/assets/index-B8Hoaanh.js   270.98 kB │ gzip: 75.59 kB
+dist/assets/index-B3KoM02v.js   269.18 kB │ gzip: 75.07 kB
 
-[32m✓ built in 252ms[39m
+[32m✓ built in 390ms[39m
 client build OK
 --- 3. re-seed the demo dataset against the product database ---
 - Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-08) — start date already passed, items still open; items: 7 not_started
@@ -19,9 +20,9 @@ Upserting demo admin user...
 Seeding completed successfully.
 seed OK
 --- 4. restart the server on port 3000 (pinned; host exports PORT=80) ---
-stopping pid 22780
-port 3000 held by the product server (pid 16561)
-[preboarding-flag] 2688b889-e950-4030-9dc7-cd574d848ccf — This case reached the 48-hour mark while the app was not running (noticed 85.77h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed.
+stopping pid 633
+port 3000 held by the product server (pid 1498)
+[preboarding-flag] c3d406c5-85a3-4658-a661-723a1b036177 — This case reached the 48-hour mark while the app was not running (noticed 82.77h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed.
 --- 5. verify the live demo end to end ---
 public status/title: 200 <title>Antum People</title>
 demo login token chars: 201 (expect >100)
@@ -47,6 +48,6 @@ settlement statement: rendered EOSB vs the employee record (must match):
   unfilled [brackets]: NONE
   net payable: 32824.78
 --- 6. re-arm the watchdog from the tree we just deployed ---
-watchdog pid: 17156
-deployed commit: da3330d Merge pull request #119 from AhmadJ979/fix/all-chip-race-2c37f2da
-=== cutover finished 2026-10-09T13:46:43+00:00 — evidence also at /tmp/cutover-evidence.txt ===
+watchdog pid: 1593
+deployed commit: 2028894 Merge pull request #102 from AhmadJ979/docs/tracker-round-31
+=== cutover finished 2026-10-09T10:46:22+00:00 — evidence also at /tmp/cutover-evidence.txt ===
