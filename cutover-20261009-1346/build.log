@@ -1,0 +1,13 @@
+
+> antum-people-client@0.0.0 build
+> tsc -b && vite build
+
+[36mvite v8.0.16 [32mbuilding client environment for production...[36m[39m
+[2Ktransforming...✓ 16 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-B8Hoaanh.js   270.98 kB │ gzip: 75.59 kB
+
+[32m✓ built in 252ms[39m
