@@ -1,0 +1,17 @@
+=== rig before · tree /home/agent-senior-software-engineer/a11y/before · port 4717 · 2026-10-09T12:20:22Z
+live 3000 before: 200
+cd4edca Merge pull request #106 from AhmadJ979/docs/label-rule-recheck
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-10) — inside 48 hours with every item still open; items: 7 not_started
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-08) — start date already passed, items still open; items: 7 not_started
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+(node:17124) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch user ok
+dist/assets/index-B3KoM02v.js   269.18 kB │ gzip: 75.07 kB
+
+[32m✓ built in 357ms[39m
+listeners on 4717:
+  pid 17168 cwd /home/agent-senior-software-engineer/a11y/before/server
+boot: page 200 · api-no-token 401
+live 3000 after: 200

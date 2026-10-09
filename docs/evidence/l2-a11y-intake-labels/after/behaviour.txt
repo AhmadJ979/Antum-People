@@ -1,0 +1,12 @@
+=== behaviour checks on the AFTER rig (port 4718, tree 06f206f) ===
+"modal closed"
+"on Pre-boarding"
+cases before: 3
+--- 1. submit with the start date empty:
+"{\n \"formFound\": true,\n \"startDateValue\": \"\",\n \"validBefore\": false,\n \"messageBefore\": \"Please fill out this field.\",\n \"formName\": \"offer-intake-heading\",\n \"validAfterClick\": false,\n \"messageAfterClick\": \"Please fill out this field.\",\n \"activeElementId\": \"intake-offer-reference\",\n \"stillOnIntakeForm\": true\n}"
+cases after empty submit: 3
+--- 2. fill every field, then submit:
+"{\n \"typed\": {\n  \"offer_reference\": \"OFR-A11Y-001\",\n  \"candidate_name\": \"Accessibility Check\",\n  \"candidate_email\": \"a11y-check@example.com\",\n  \"role\": \"Finance Analyst\",\n  \"department\": \"Finance\",\n  \"reporting_line\": \"Finance Manager\",\n  \"jurisdiction\": \"AE\",\n  \"start_date\": \"2026-11-02\"\n },\n \"readback\": {\n  \"intake-offer-reference\": \"undefined\",\n  \"intake-candidate-name\": \"undefined\",\n  \"intake-candidate-email\": \"undefined\",\n  \"intake-role\": \"Finance Analyst\",\n  \"intake-department\": \"Finance\",\n  \"intake-reporting-line\": \"undefined\",\n  \"intake-jurisdiction\": \"AE\",\n  \"intake-start-date\": \"\"\n }\n}"
+cases after submit: 3
+--- 3. the notice the app showed:
+"none"

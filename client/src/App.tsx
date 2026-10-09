@@ -314,8 +314,8 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Username</label>
-            <input
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2" htmlFor="login-username">Username</label>
+            <input id="login-username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -325,8 +325,8 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Password</label>
-            <input
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2" htmlFor="login-password">Password</label>
+            <input id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -1386,14 +1386,14 @@ export default function App() {
                     <div className="space-y-2">
                       {(selectedEmployee.status === 'onboarding' || selectedEmployee.status === 'active' ? onboardingTasks : offboardingTasks).map(task => (
                         <div key={task.id} className="flex items-start space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-teal-200 transition">
-                          <input 
+                          <input aria-labelledby={`task-title-${task.id}`} 
                             type="checkbox" 
                             checked={task.status === 'completed'} 
                             onChange={(e) => handleUpdateTask(task.id, selectedEmployee.status === 'offboarding' ? 'offboarding' : 'onboarding', e.target.checked ? 'completed' : 'pending')}
                             className="mt-1 h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500 cursor-pointer"
                           />
                           <div>
-                            <div className={`text-sm font-bold ${task.status === 'completed' ? 'line-through text-slate-400' : 'text-slate-800'}`}>{task.title}</div>
+                            <div id={`task-title-${task.id}`} className={`text-sm font-bold ${task.status === 'completed' ? 'line-through text-slate-400' : 'text-slate-800'}`}>{task.title}</div>
                             <p className="text-xs text-slate-500 leading-relaxed">{task.description}</p>
                           </div>
                         </div>
@@ -1638,55 +1638,55 @@ export default function App() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                  <h4 className="font-bold text-slate-900 text-sm">Record an accepted offer</h4>
+                  <h4 id="offer-intake-heading" className="font-bold text-slate-900 text-sm">Record an accepted offer</h4>
                   <p className="text-[10px] text-slate-400 mt-1 mb-5">
                     The offer acceptance is the trigger: recording it here is what opens the case.
                   </p>
-                  <form onSubmit={handleRecordOfferAcceptance} className="space-y-4">
+                  <form onSubmit={handleRecordOfferAcceptance} aria-labelledby="offer-intake-heading" className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Offer Reference</label>
-                      <input type="text" required value={offerForm.offer_reference}
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-offer-reference">Offer Reference</label>
+                      <input id="intake-offer-reference" type="text" required value={offerForm.offer_reference}
                         onChange={e => setOfferForm({ ...offerForm, offer_reference: e.target.value })}
                         placeholder="e.g. OFR-2026-014"
                         className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Candidate Name</label>
-                      <input type="text" required value={offerForm.candidate_name}
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-candidate-name">Candidate Name</label>
+                      <input id="intake-candidate-name" type="text" required value={offerForm.candidate_name}
                         onChange={e => setOfferForm({ ...offerForm, candidate_name: e.target.value })}
                         className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Candidate Email</label>
-                      <input type="email" value={offerForm.candidate_email}
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-candidate-email">Candidate Email</label>
+                      <input id="intake-candidate-email" type="email" value={offerForm.candidate_email}
                         onChange={e => setOfferForm({ ...offerForm, candidate_email: e.target.value })}
                         className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Role</label>
-                        <input type="text" required value={offerForm.role}
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-role">Role</label>
+                        <input id="intake-role" type="text" required value={offerForm.role}
                           onChange={e => setOfferForm({ ...offerForm, role: e.target.value })}
                           className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Department</label>
-                        <input type="text" required value={offerForm.department}
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-department">Department</label>
+                        <input id="intake-department" type="text" required value={offerForm.department}
                           onChange={e => setOfferForm({ ...offerForm, department: e.target.value })}
                           className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Reporting Line</label>
-                      <input type="text" required value={offerForm.reporting_line}
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-reporting-line">Reporting Line</label>
+                      <input id="intake-reporting-line" type="text" required value={offerForm.reporting_line}
                         onChange={e => setOfferForm({ ...offerForm, reporting_line: e.target.value })}
                         placeholder="Who the hire reports to"
                         className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Jurisdiction</label>
-                        <select value={offerForm.jurisdiction}
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-jurisdiction">Jurisdiction</label>
+                        <select id="intake-jurisdiction" value={offerForm.jurisdiction}
                           onChange={e => setOfferForm({ ...offerForm, jurisdiction: e.target.value as 'AE' | 'SA' })}
                           className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium">
                           <option value="AE">UAE</option>
@@ -1694,8 +1694,8 @@ export default function App() {
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start Date</label>
-                        <input type="date" required value={offerForm.start_date}
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-start-date">Start Date</label>
+                        <input id="intake-start-date" type="date" required value={offerForm.start_date}
                           onChange={e => setOfferForm({ ...offerForm, start_date: e.target.value })}
                           className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                       </div>
@@ -2128,28 +2128,28 @@ export default function App() {
             <form onSubmit={handleCreateEmployee} className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">First Name</label>
-                  <input type="text" required value={newEmployee.first_name} onChange={e => setNewEmployee({...newEmployee, first_name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="employee-first-name">First Name</label>
+                  <input id="employee-first-name" type="text" required value={newEmployee.first_name} onChange={e => setNewEmployee({...newEmployee, first_name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Last Name</label>
-                  <input type="text" required value={newEmployee.last_name} onChange={e => setNewEmployee({...newEmployee, last_name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="employee-last-name">Last Name</label>
+                  <input id="employee-last-name" type="text" required value={newEmployee.last_name} onChange={e => setNewEmployee({...newEmployee, last_name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Email Address</label>
-                <input type="email" required value={newEmployee.email} onChange={e => setNewEmployee({...newEmployee, email: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="employee-email">Email Address</label>
+                <input id="employee-email" type="email" required value={newEmployee.email} onChange={e => setNewEmployee({...newEmployee, email: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Department</label>
-                  <select value={newEmployee.department} onChange={e => setNewEmployee({...newEmployee, department: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="employee-department">Department</label>
+                  <select id="employee-department" value={newEmployee.department} onChange={e => setNewEmployee({...newEmployee, department: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium">
                     <option>Engineering</option><option>Product</option><option>Sales</option><option>Marketing</option>
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Role</label>
-                  <input type="text" required value={newEmployee.role} onChange={e => setNewEmployee({...newEmployee, role: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="employee-role">Role</label>
+                  <input id="employee-role" type="text" required value={newEmployee.role} onChange={e => setNewEmployee({...newEmployee, role: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
                 </div>
               </div>
               
@@ -2157,25 +2157,25 @@ export default function App() {
                 <h5 className="text-[10px] font-black text-teal-700 uppercase tracking-widest">GCC Localized Compliance</h5>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">Jurisdiction</label>
-                    <select value={newEmployee.data_residency_country} onChange={e => setNewEmployee({...newEmployee, data_residency_country: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900">
+                    <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest" htmlFor="employee-jurisdiction">Jurisdiction</label>
+                    <select id="employee-jurisdiction" value={newEmployee.data_residency_country} onChange={e => setNewEmployee({...newEmployee, data_residency_country: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900">
                       <option value="AE">🇦🇪 United Arab Emirates</option>
                       <option value="SA">🇸🇦 Saudi Arabia</option>
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">Basic Salary (Monthly)</label>
-                    <input type="number" required value={newEmployee.basic_salary} onChange={e => setNewEmployee({...newEmployee, basic_salary: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-bold text-teal-900" />
+                    <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest" htmlFor="employee-basic-salary">Basic Salary (Monthly)</label>
+                    <input id="employee-basic-salary" type="number" required value={newEmployee.basic_salary} onChange={e => setNewEmployee({...newEmployee, basic_salary: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-bold text-teal-900" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">National ID Value</label>
-                      <input type="text" required placeholder="784-XXXX-XXXXXXX-X" value={newEmployee.national_id_value} onChange={e => setNewEmployee({...newEmployee, national_id_value: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900" />
+                      <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest" htmlFor="employee-national-id">National ID Value</label>
+                      <input id="employee-national-id" type="text" required placeholder="784-XXXX-XXXXXXX-X" value={newEmployee.national_id_value} onChange={e => setNewEmployee({...newEmployee, national_id_value: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900" />
                    </div>
                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">Start Date</label>
-                      <input type="date" required value={newEmployee.start_date} onChange={e => setNewEmployee({...newEmployee, start_date: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900" />
+                      <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest" htmlFor="employee-start-date">Start Date</label>
+                      <input id="employee-start-date" type="date" required value={newEmployee.start_date} onChange={e => setNewEmployee({...newEmployee, start_date: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900" />
                    </div>
                 </div>
               </div>
@@ -2199,27 +2199,27 @@ export default function App() {
              </div>
              <form onSubmit={handleExitSubmit} className="p-6 space-y-6">
                 <div className="space-y-1">
-                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Primary Departure Driver</label>
-                   <select value={exitForm.departure_reason} onChange={e => setExitForm({...exitForm, departure_reason: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium">
+                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="exit-departure-reason">Primary Departure Driver</label>
+                   <select id="exit-departure-reason" value={exitForm.departure_reason} onChange={e => setExitForm({...exitForm, departure_reason: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium">
                       <option>Compensation</option><option>Career Growth</option><option>Managerial Friction</option><option>Personal/Family</option><option>Involuntary</option>
                    </select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Preventable Attrition?</label>
-                      <select value={exitForm.preventable} onChange={e => setExitForm({...exitForm, preventable: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="exit-preventable">Preventable Attrition?</label>
+                      <select id="exit-preventable" value={exitForm.preventable} onChange={e => setExitForm({...exitForm, preventable: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium">
                         <option value="0">No (Structural/Personal)</option>
                         <option value="1">Yes (Policy/Mgmt Adjustment)</option>
                       </select>
                    </div>
                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">New Salary Offered (AED/SAR)</label>
-                      <input type="number" placeholder="Benchmarking data" value={exitForm.new_salary} onChange={e => setExitForm({...exitForm, new_salary: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium" />
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="exit-new-salary">New Salary Offered (AED/SAR)</label>
+                      <input id="exit-new-salary" type="number" placeholder="Benchmarking data" value={exitForm.new_salary} onChange={e => setExitForm({...exitForm, new_salary: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium" />
                    </div>
                 </div>
                 <div className="space-y-1">
-                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Qualitative Feedback Context</label>
-                   <textarea rows={3} value={exitForm.detailed_feedback} onChange={e => setExitForm({...exitForm, detailed_feedback: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium" />
+                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="exit-feedback">Qualitative Feedback Context</label>
+                   <textarea id="exit-feedback" rows={3} value={exitForm.detailed_feedback} onChange={e => setExitForm({...exitForm, detailed_feedback: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium" />
                 </div>
                 <button type="submit" className="w-full py-3 bg-rose-600 text-white rounded-xl font-bold text-xs hover:bg-rose-700 shadow-lg transition">Finalize Offboarding & Process EOSB</button>
              </form>
