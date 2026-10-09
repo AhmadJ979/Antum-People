@@ -1,3 +1,18 @@
+> ### Dated record — not the live register
+>
+> **For what the labels are *now*, read `docs/evidence/label-per-surface-2026-10-09/`** — named authoritative
+> 2026-10-09 (task `b3c38841`): an isolated rig, no demo credential, proven md5-identical to the served bundle.
+>
+> Everything below this banner is kept exactly as taken — every pass with its date, tree, bundle identity,
+> md5, method and counts. This register's method signs in as the demo admin on the served product; the
+> register that supersedes it does not have to, and that is why it supersedes it.
+>
+> **Why two registers exist at all: two passes, by two methods, at two times** — *not* because a path was
+> thought missing. `docs/evidence/label-per-surface-2026-10-09/` existed throughout (29 tracked files, added
+> `c95fd31` 2026-10-09 12:57:51Z, an ancestor of PR #122's tip `11e3cac`). The false reason, the rule it
+> produced, and — added at landing — a correction of *that section's own premise* are recorded in the
+> **Correction, 2026-10-09** section below.
+
 # Label-rule re-check on the served bundle — per-surface counts against the `32a8f4e` baseline
 
 **Read-only.** Signed in as the demo admin on the served product at `127.0.0.1:3000`, deployed tree
@@ -130,6 +145,16 @@ An earlier section says the task's named path `docs/evidence/label-per-surface-2
 the repo". **That sentence is false.** It is corrected here rather than quietly deleted, because the reason is
 the useful part. Measured on 2026-10-09 after the lead raised it:
 
+> **Correction to this section's own premise — added 2026-10-09 at landing (task `b3c38841`).** No earlier
+> section of this file ever contained the sentence quoted above, and the quotation is not of a section of this
+> register at all: measured on the merged tip, `git show aa44ffe:docs/evidence/label-rule-recheck/README.md |
+> grep -c -i 'does not exist'` → **0**, the same check at `1371d9a` → **0**, and the only occurrences in the
+> repository are in this correction section itself (repo-wide `git grep -i 'does not exist in the repo'` →
+> **0** matches). The false claim was made in prose *outside* the register. The defect class and the rule
+> below are unchanged and still bind; what changes is that the sentence was **asserted**, not that it stood in
+> a section of this file. A correction that misplaces its own evidence is the same defect one level up, which
+> is why it is recorded here rather than quietly reworded.
+>
 - `git ls-files docs/evidence/label-per-surface-2026-10-09/ | wc -l` → **29 files** (README, `probes/count.js`,
   `probes/labels.js`, `probes/probe.js`, `raw-pass1/*`, `raw-pass2/*`).
 - They were added by **`c95fd31`, 2026-10-09 12:57:51Z** — *"docs(evidence): per-surface label pass on the

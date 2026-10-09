@@ -1,3 +1,31 @@
+> ### Authoritative label register — read this one for the current numbers
+>
+> **Named authoritative 2026-10-09** (task `b3c38841`): this is the only register for *what the labels are
+> now*. Why this one — its method is an **isolated rig** (port 4721, its own database, its own throwaway
+> credential) proven **byte-identical to the served bundle by md5**, the only method here that satisfies
+> **rule 10** (no member reads the demo credential) *and* **rule 14** (no testing against the live
+> deployment) while still tying the counts to the asset that is serving.
+>
+> `docs/evidence/label-rule-recheck/` stands beside it as a **dated record** of earlier passes taken by
+> another method. Nothing is deleted from either: every pass keeps its date, tree, bundle, md5, method and
+> counts.
+>
+> **The stability result the two registers support together** — the counts have been read on three different
+> trees, by two different methods, and never moved:
+>
+> | tree | recorded (UTC) | bundle | md5 | method | result |
+> |---|---|---|---|---|---|
+> | `2028894` | committed `aa44ffe` 2026-10-09 12:10:32Z; tree seeded 10:46 | *not recorded in that register* | *not recorded* | signed in as demo admin on the served product | badge ×1 per surface · "Illustrative" **15** |
+> | `0dd1a97` | 2026-10-09 12:57 (`c95fd31`) | `index-gt1pFhU5.js` | `fb6e0df5493fc67a9d9cd9fba5dfa9e2` | isolated rig (port 4721), md5-identical to the served bundle | badge ×1 per surface · "Illustrative" **15** |
+> | `da3330d` | after the 13:46:11–13:46:43 cutover, 2026-10-09 | `index-B8Hoaanh.js`, 270,982 bytes | `abfe49feb21dc90b77743922f76a7399` | signed in as demo admin; readings appended to the older register | badge ×1 per surface · "Illustrative" **15** |
+>
+> The **15** is per surface: Executive Dashboard **5** · Strategic Intelligence **10** · Employee Directory,
+> Transitions Hub, Pre-boarding **0**; the badge is **×1 on each of the five surfaces**. Two measures on one
+> asset, never interchangeable: **×12** "Illustrative" in the bundle (source) and **15** rendered (this table).
+>
+> `2028894`'s bundle name and md5 were never recorded. That is an empty cell, not a lost fact — the check that
+> prints it empty: `sed -n '1,54p' docs/evidence/label-rule-recheck/README.md | grep -cE 'index-[A-Za-z0-9]+\.js'` → **0**.
+
 # Per-surface label pass on the served tree — nothing moved
 
 **Read-only.** Measured on an **isolated rig** (port 4721, its own database, its own throwaway credential) running
