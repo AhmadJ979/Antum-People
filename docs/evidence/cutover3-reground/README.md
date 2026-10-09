@@ -6,6 +6,15 @@ prospect; nothing in this pass could change what a prospect sees.
 
 Cutover #3 ran **2026-10-09 13:46:11–13:46:43 UTC, exit 0**, moving the served tree **`0dd1a97` → `da3330d`**
 (the All-chip rendering-race fix, #119) and re-seeding the demo at **13:46:16**.
+**Evidence basis for the All-chip fix (#119), stated so no reader assumes a photograph exists.** The
+fix's evidence is the **machine-scored samples** in the engineer's pack
+(`docs/evidence/all-chip-race-2026-10-09/`, e.g. `after-samples.json` — the per-tick chip row and group
+headers). The **race-window shot taken with the fix is not captured**, and the frame once published as the
+fixed state was the **defect** state: it is withdrawn, renamed and kept as
+`withdrawn-after-2-race-window-DEPICTS-DEFECT-STATE.png` (no longer under `shots/`). So what stands for
+#119 is the samples, not an image — read `after-samples.json`, and treat any screenshot in this repository
+as evidence for the *fix* only if it carries its own script src per the pack's own rule.
+
 
 ## 1. What is serving, by measurement
 | what | reading |

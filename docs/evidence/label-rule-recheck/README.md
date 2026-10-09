@@ -123,3 +123,35 @@ The count probe reproduced identically in all four (Sample Demo Data ×1 per sur
 Honest limits: this is repeatability on **one** seed, not a change-of-seed check; counts are
 case-insensitive over rendered text; `innerText` on a detached clone inserts no line breaks, so
 exclusivity above is a whole-region property.
+
+## Correction, 2026-10-09 — the "path does not exist" claim was wrong, and why
+
+An earlier section says the task's named path `docs/evidence/label-per-surface-2026-10-09/` "does not exist in
+the repo". **That sentence is false.** It is corrected here rather than quietly deleted, because the reason is
+the useful part. Measured on 2026-10-09 after the lead raised it:
+
+- `git ls-files docs/evidence/label-per-surface-2026-10-09/ | wc -l` → **29 files** (README, `probes/count.js`,
+  `probes/labels.js`, `probes/probe.js`, `raw-pass1/*`, `raw-pass2/*`).
+- They were added by **`c95fd31`, 2026-10-09 12:57:51Z** — *"docs(evidence): per-surface label pass on the
+  served tree 0dd1a97 — nothing moved"* — and that commit is an **ancestor of this work's own PR tip
+  `11e3cac`**, so the files were in the working copy for the whole task.
+- **No stale tree explains it.** Every form of the check returns 29 here: `git ls-files <path>`, the same
+  without the trailing slash, and a grep over `git ls-files`. The shared live tree
+  (`/home/team/shared/probable-octo-sniffle`, HEAD `da3330d`) tracks all 29 as well.
+- So the defect is not a stale read but an **unverified negative**: "does not exist" was asserted without a
+  command that could have printed zero. `git ls-files <path> | wc -l` returning 0 is what that claim requires,
+  and it was never run. The exact historical invocation cannot be reproduced — this host has no shell history
+  file (`~/.bash_history` does not exist), which is itself an argument for the rule rather than an excuse
+  for the claim.
+- **Rule adopted here:** a negative claim ships with the command that prints zero, run at the commit it
+  describes. This is the day's third stale-or-unchecked read (the engineer carried a deployed-tree reading he
+  had not re-taken; a byte size was quoted from a rounded build line instead of measured; this one was false
+  outright), and it is named here for the same reason the others are.
+
+**The method error behind it, which is the avoidable half.** The named pack's own README documents an
+**isolated rig** — its own port, its own database, a throwaway credential, built to the served tree and proven
+byte-identical to the served bundle by md5. That is how these counts are obtainable with nobody signing in to
+the live product, and it was named in the task text. This register's method instead signs in as the demo admin,
+which is why a rule 10 / rule 14 tension was raised at the time rather than resolved. The lesson is **read the
+method the task names before adopting another register's**, not "the rule is ambiguous": the compliant route
+existed, it was written down, and it was not read.

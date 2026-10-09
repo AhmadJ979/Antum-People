@@ -32,7 +32,16 @@
 
 ## The counts on the served surface (read 2026-10-09, post-cutover)
 
-Three seeded cases, one per flag state, **as seeded 2026-10-09** — twice that day: **10:46 UTC** (the morning cutover, tree `2028894`) and again at **12:34:14** after the **second cutover** (tree `0dd1a97`, the accessibility fix #109), and a **third at 13:46:16** after the **third cutover** (tree `da3330d`, the All-chip race fix #119) — all three seeds agreeing figure-for-figure. Every figure below belongs to that day's seed and to no other. Read off the served surface by the **engineer's rendered pass at 10:52–10:56 UTC on 2026-10-09** (raw payloads committed under `docs/evidence/p2-4-served-pass/`, merged in #103 as `693325d`; **I did not re-run that pass**; the bundle and endpoint readings in the note at the top of this file are mine, taken at 11:55–11:58 UTC the same morning).
+Three seeded cases, one per flag state, **as seeded 2026-10-09** — twice that day: **10:46 UTC** (the morning cutover, tree `2028894`) and again at **12:34:14** after the **second cutover** (tree `0dd1a97`, the accessibility fix #109), and a **third at 13:46:16** after the **third cutover** (tree `da3330d`, the All-chip race fix #119) — all three seeds agreeing figure-for-figure.
+**Evidence basis for the All-chip fix (#119), stated so no reader assumes a photograph exists.** The
+fix's evidence is the **machine-scored samples** in the engineer's pack
+(`docs/evidence/all-chip-race-2026-10-09/`, e.g. `after-samples.json` — the per-tick chip row and group
+headers). The **race-window shot taken with the fix is not captured**, and the frame once published as the
+fixed state was the **defect** state: it is withdrawn, renamed and kept as
+`withdrawn-after-2-race-window-DEPICTS-DEFECT-STATE.png` (no longer under `shots/`). So what stands for
+#119 is the samples, not an image — read `after-samples.json`, and treat any screenshot in this repository
+as evidence for the *fix* only if it carries its own script src per the pack's own rule.
+ Every figure below belongs to that day's seed and to no other. Read off the served surface by the **engineer's rendered pass at 10:52–10:56 UTC on 2026-10-09** (raw payloads committed under `docs/evidence/p2-4-served-pass/`, merged in #103 as `693325d`; **I did not re-run that pass**; the bundle and endpoint readings in the note at the top of this file are mine, taken at 11:55–11:58 UTC the same morning).
 
 | Case | Hire · role | Start | Flag chip | The flag's own count | Employee track | Workspace track (derived from role + department) |
 |---|---|---|---|---|---|---|
