@@ -129,3 +129,35 @@ miss it), killed, listeners on 4721 back to 0, scratch DB deleted, live `:3000` 
 - **`listCases` has exactly one shipped consumer** — the route at `server/index.js:605` — plus the tests.
   Nothing else in `server/`, `client/` or `scripts/` calls it, which is what makes "no compatibility shim"
   safe rather than optimistic.
+
+---
+
+## Amendment, same day, before merge — the envelope moved to the route
+
+The lead's second brief for this row changed one thing, on the strength of the measurements above:
+**the envelope is composed at the HTTP route (`server/index.js`), not inside `preboarding.listCases`.**
+The reason is in this file: the module's array return has module-level callers and three tests that pin it,
+and the module is an internal API while the contract that matters is the one over HTTP. So the amended
+change is:
+
+- `server/preboarding.js` — `listCases` **keeps returning the array** (nothing of it was changed after the
+  amendment: this file restores its array return and adds one pure helper, `caseTotals(rows)`, which does
+  the arithmetic the route needs — one place, no query of its own).
+- `server/index.js` — the route composes and serves the contract:
+  `res.json({ cases, totals: preboarding.caseTotals(cases) })`.
+- `client/src/App.tsx` — reads `data.cases`, and the **"Cases open" tile's semantics are now decided in the
+  same PR**: it counts the rows this screen holds, not the server's `totals.open`. The two agree today (the
+  request asks for `status=open`; measured equal below), and a tile counting rows the screen does not show
+  would be the worse of the two. The trigger for revisiting is written at the render site: **if this list is
+  ever paginated, the tile must move to `totals.open` or it will under-count.**
+- Tests: the three module-level `listCases` assertions are **untouched** (they still read an array), and
+  three tests are added — `caseTotals`' split on a fabricated mixed set plus the invariant on real rows; the
+  route's envelope pinned by reading `index.js` (no HTTP harness exists in this suite); the roll-up's keys.
+
+**What this amendment invalidates, stated plainly:** the two scratch passes above were taken against the
+**first** version, which built the envelope in the module. The **wire shape they measured is unchanged** —
+`{cases, totals}` with the same arithmetic, now computed by `caseTotals` and composed by the route — but the
+code moved after the measurement, so by this repo's own rule the passes are **not** evidence about the
+amended tree. The amended tree is verified by the suite (137 tests / 31 suites / 0 fail, the 134 pre-existing
+ones untouched) and by the build; **a scratch re-run against the amended code is owed** and is the next thing
+this row needs before it is called verified.
