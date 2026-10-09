@@ -1,0 +1,33 @@
+== pass2 start 2026-10-09T12:55:08Z
+== Executive Dashboard (dashboard)
+"clicked Executive Dashboard"
+  counts: "{\"sidebar_clicked\":\"Executive Dashboard\",\"len_T\":695,\"sample_demo_data\":1,\"illustrative\":5,\"labels\":[\"Sample Demo Data\",\"Illustrative Benchmark\"],\"headings\":[\"Onboarding PipelineVi
+  labels: "{\"tab\":\"Executive Dashboard\",\"label_text_nodes\":[\"Sample Demo Data\",\"Illustrative\",\"Illustrative Benchmark\",\"Illustrative\",\"Illustrative Benchmark\",\"Illustrative Total\"],\"n\":6,\"headings\":[\"Onboarding PipelineView All →\",\"Offboarding PipelineView All →\"]}"
+  shot -> dashboard.png
+== Employee Directory (employees)
+"clicked Employee Directory"
+  counts: "{\"sidebar_clicked\":\"Employee Directory\",\"len_T\":1122,\"sample_demo_data\":1,\"illustrative\":0,\"labels\":[\"Sample Demo Data\"],\"headings\":[],\"text_head\":\"Antum scratch ADMIN Executive Da
+  labels: "{\"tab\":\"Employee Directory\",\"label_text_nodes\":[\"Sample Demo Data\"],\"n\":1,\"headings\":[]}"
+  shot -> employees.png
+== Transitions Hub (transitions)
+"clicked Transitions Hub"
+  counts: "{\"sidebar_clicked\":\"Transitions Hub\",\"len_T\":350,\"sample_demo_data\":1,\"illustrative\":0,\"labels\":[\"Sample Demo Data\"],\"headings\":[\"Ramping Employees (Onboarding)\",\"Departing Employe
+  labels: "{\"tab\":\"Transitions Hub\",\"label_text_nodes\":[\"Sample Demo Data\"],\"n\":1,\"headings\":[\"Ramping Employees (Onboarding)\",\"Departing Employees (Offboarding)\"]}"
+  shot -> transitions.png
+== Pre-boarding (preboarding)
+"clicked Pre-boarding"
+  counts: "{\"sidebar_clicked\":\"Pre-boarding\",\"len_T\":5927,\"sample_demo_data\":1,\"illustrative\":0,\"labels\":[\"Sample Demo Data\"],\"headings\":[\"Pre-boarding Intelligence\"],\"text_head\":\"Antum scr
+  labels: "{\"tab\":\"Pre-boarding\",\"label_text_nodes\":[\"Sample Demo Data\"],\"n\":1,\"headings\":[\"Pre-boarding Intelligence\",\"Record an accepted offer\",\"HR roll-up — outstanding items\"]}"
+  shot -> preboarding.png
+== Strategic Intelligence (analytics)
+"clicked Strategic Intelligence"
+  counts: "{\"sidebar_clicked\":\"Strategic Intelligence\",\"len_T\":1266,\"sample_demo_data\":1,\"illustrative\":10,\"labels\":[\"Sample Demo Data\",\"Retention Insight (Illustrative)\",\"Productivity Gap (Ill
+  labels: "{\"tab\":\"Strategic Intelligence\",\"label_text_nodes\":[\"Sample Demo Data\",\"Retention Insight (Illustrative)\",\"Productivity Gap (Illustrative)\",\"Liability Exposure (Illustrative)\",\"Comparing cohort retention (Illustrative Benchmark)\",\"% (Illustrative)\",\"% (Illustrative)\",\"% (Illust
+  shot -> analytics.png
+-- inventory
+  analytics.png 94273 bytes
+  dashboard.png 90128 bytes
+  employees.png 114571 bytes
+  preboarding.png 109315 bytes
+  transitions.png 53190 bytes
+== pass2 end 2026-10-09T12:55:32Z

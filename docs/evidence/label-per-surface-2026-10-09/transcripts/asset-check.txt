@@ -1,0 +1,13 @@
+=== live index.html asset refs (anonymous) ===
+assets/index-BLszozVg.css
+assets/index-gt1pFhU5.js
+=== live bundle ===
+http 200 bytes 270523
+=== rig bundle bytes ===
+270523
+=== md5 live vs rig ===
+fb6e0df5493fc67a9d9cd9fba5dfa9e2  /home/agent-senior-software-engineer/lbl/run-20261009/live-bundle.js
+fb6e0df5493fc67a9d9cd9fba5dfa9e2  /home/agent-senior-software-engineer/label-rig/client/dist/assets/index-gt1pFhU5.js
+=== trees of the two listeners ===
+3000 22780 /home/team/shared/probable-octo-sniffle/server
+4721 31215 /home/agent-senior-software-engineer/label-rig/server

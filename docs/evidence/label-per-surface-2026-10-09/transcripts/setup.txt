@@ -1,0 +1,56 @@
+== rig start 2026-10-09T12:52:13Z | tree 0dd1a97 | port 4721
+Preparing worktree (detached HEAD 0dd1a97)
+HEAD is now at 0dd1a97 Merge pull request #109 from AhmadJ979/fix/a11y-intake-labels
+rig tree HEAD: 0dd1a97a9d133adf974834cbac6e669383d569b2
+== seed
+--- Antum People Coherent Demo Seed v3.1 ---
+Targeting: Product-owned SQLite database
+Upserting demo employees...
+(node:31098) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+- Upserted Ahmad Al-Rashid (AE)
+- Upserted Fatima Al-Zahrani (SA)
+- Upserted Omar Al-Farsi (AE)
+- Upserted Leila Mansour (AE)
+- Upserted Khalid Al-Dosari (SA)
+- Upserted Hassan Al-Mansoori (AE)
+- Upserted Sarah Al-Qasimi (SA)
+- Upserted Mohammed Al-Sayed (AE)
+- Upserted Reem Al-Hashemi (SA)
+- Upserted Noura Al-Suwaidi (AE)
+- Upserted Salim Al-Nuaimi (AE)
+- Upserted Yusuf Hassan (AE)
+- Upserted Sultan Al-Harbi (SA)
+Upserting onboarding tasks...
+Upserting offboarding tasks...
+Upserting exit interviews...
+Upserting audit logs...
+Upserting consent records...
+Upserting Layer 2 pre-boarding demo cases...
+- Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-10-23) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-10) — inside 48 hours with every item still open; items: 7 not_started
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-08) — start date already passed, items still open; items: 7 not_started
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+seed exit: 0
+== scratch user
+(node:31132) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch user ok
+== build client
+[36mvite v8.0.16 [32mbuilding client environment for production...[36m[39m
+[2Ktransforming...✓ 16 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-gt1pFhU5.js   270.52 kB │ gzip: 75.36 kB
+
+[32m✓ built in 810ms[39m
+vite build exit: 0
+== boot server
+boot: GET / -> 200
+api login ok; token chars 204 | user {'id': 'scratch-admin', 'username': 'scratch', 'role': 'admin'}
+listener on 4721: 31215 
+live 3000 untouched: 200
+== setup done 2026-10-09T12:52:23Z
