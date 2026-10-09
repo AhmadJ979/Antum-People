@@ -1,0 +1,19 @@
+== board pass start 2026-10-09T15:29:39Z
+"set"
+"clicked nav:Pre-boarding (scope 0)"
+"set"
+"clicked row:Omar Al-Farsi"
+   boardA-all: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"region_found\":false,\"groups\":[],\"group_count\":0,\"ownerless_lines\":0,\"region_len\":0,\"region_fnv\":5381,\"region\":\"\"}"
+"set"
+"NOT_FOUND chip:IT"
+   boardB-it: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"region_found\":false,\"groups\":[],\"group_count\":0,\"ownerless_lines\":0,\"region_len\":0,\"region_fnv\":5381,\"region\":\"\"}"
+"set"
+"NOT_FOUND chip:All"
+   boardC-all-again: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"region_found\":false,\"groups\":[],\"group_count\":0,\"ownerless_lines\":0,\"region_len\":0,\"region_fnv\":5381,\"region\":\"\"}"
+"set"
+"clicked nav:Pre-boarding (scope 0)"
+"set"
+"clicked row:Mariam Al-Kaabi"
+   boardD-case2-all: "{\"case\":\"Mariam Al-Kaabi\",\"row_found\":true,\"region_found\":true,\"groups\":[\"IT · 0/5\",\"ADMIN · 0/3\",\"HR · 0/2\",\"MANAGER · 0/4\"],\"group_count\":4,\"ownerless_lines\":0,\"region_len\":3983,\"region_fn
+== board pass end 2026-10-09T15:29:53Z
+   live :3000 after board pass: 200

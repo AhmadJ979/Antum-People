@@ -1,0 +1,42 @@
+== port 4741 free?
+  yes, free
+== ENCRYPTION_KEY length: 32 (must be 32)
+== seed log tail:
+- Upserted Yusuf Hassan (AE)
+- Upserted Sultan Al-Harbi (SA)
+Upserting onboarding tasks...
+Upserting offboarding tasks...
+Upserting exit interviews...
+Upserting audit logs...
+Upserting consent records...
+Upserting Layer 2 pre-boarding demo cases...
+- Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-10-23) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-10) — inside 48 hours with every item still open; items: 7 not_started
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-08) — start date already passed, items still open; items: 7 not_started
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+### seed exit code: 0
+== user insert: (node:18706) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch-admin inserted
+== launcher pid (subshell, not the server): 18714
+== listeners on 4741:
+COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+node    18714 root   24u  IPv4 328228      0t0  TCP *:4741 (LISTEN)
+  pid 18714 cwd /home/agent-product-designer/rig-cutover/server
+== http contract:
+  rig GET /                : 200
+  rig /api/employees (401) : 401
+  LIVE :3000 (must be 200) : 200
+== login with the throwaway credential:
+{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InNjcmF0Y2gtYWRtaW4iLCJ1c2VybmFtZSI6InNjcmF0Y2gtYWRtaW4iLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3OTE1NTk0NjksImV4c
+== entry script served by the rig:
+assets/index-Dt2oLspq.js
+== served bundle identity from the rig:
+  assets/index-Dt2oLspq.js  270962 bytes  5720cd6fbeca1966cb642f9cf6338a9c
+== server log tail:
+(node:18714) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Antum server listening on port 4741
+[preboarding-flag] 9d1fe34d-937b-451e-9604-dbedc8d4a31a — This case reached the 48-hour mark while the app was not running (noticed 39.41h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed.
+[preboarding-flag] bfd28ddf-25ff-47bc-b8b3-fadaeaa1e527 — This case reached the 48-hour mark while the app was not running (noticed 87.41h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed.

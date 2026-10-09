@@ -1,0 +1,74 @@
+== pass start 2026-10-09T15:27:38Z
+== token acquired, length 0
+✓ Antum People
+  http://localhost:4741/
+"session injected"
+   probe surface-00-shell: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Antum People\"],\"nav_items\":[],\"len_innerText\":133,\"len_textContent\":134,\"sample_demo_data_innerText\":0,\"illust
+-- surface dashboard <- nav 'Executive Dashboard'
+"set"
+"NOT_FOUND nav:Executive Dashboard"
+   probe surface-dashboard: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Antum People\"],\"nav_items\":[],\"len_innerText\":133,\"len_textContent\":134,\"sample_demo_data_innerText\":0,\"illust
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/dashboard.png
+-- surface employees <- nav 'Employee Directory'
+"set"
+"NOT_FOUND nav:Employee Directory"
+   probe surface-employees: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Antum People\"],\"nav_items\":[],\"len_innerText\":133,\"len_textContent\":134,\"sample_demo_data_innerText\":0,\"illust
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/employees.png
+-- surface transitions <- nav 'Transitions Hub'
+"set"
+"NOT_FOUND nav:Transitions Hub"
+   probe surface-transitions: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Antum People\"],\"nav_items\":[],\"len_innerText\":133,\"len_textContent\":134,\"sample_demo_data_innerText\":0,\"illust
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/transitions.png
+-- surface preboarding <- nav 'Pre-boarding'
+"set"
+"NOT_FOUND nav:Pre-boarding"
+   probe surface-preboarding: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Antum People\"],\"nav_items\":[],\"len_innerText\":133,\"len_textContent\":134,\"sample_demo_data_innerText\":0,\"illust
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/preboarding.png
+-- surface analytics <- nav 'Strategic Intelligence'
+"set"
+"NOT_FOUND nav:Strategic Intelligence"
+   probe surface-analytics: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Antum People\"],\"nav_items\":[],\"len_innerText\":133,\"len_textContent\":134,\"sample_demo_data_innerText\":0,\"illust
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/analytics.png
+-- back to Pre-boarding for the detail pass
+"set"
+"NOT_FOUND nav:Pre-boarding"
+   probe pb-surface: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Antum People\"],\"nav_items\":[],\"len_innerText\":133,\"len_textContent\":134,\"sample_demo_data_innerText\":0,\"illust
+   pb-rows: "{\"row_count\":0,\"rows\":[]}"
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/pb-rows.png
+-- expand case 1 row
+"set"
+"NOT_FOUND row:Omar Al-Farsi"
+   board board-1-initial: "{\"case\":\"Omar Al-Farsi\",\"row_found\":false,\"chips\":[],\"chip_selected_dark\":[],\"panel_head\":null,\"function_groups\":[],\"board_region_len\":0,\"board_region_fnv\":5381,\"board_region\":\"\"}"
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/pb-row1-all.png
+-- chip -> IT
+"set"
+"NOT_FOUND chip:IT"
+   board board-2-it: "{\"case\":\"Omar Al-Farsi\",\"row_found\":false,\"chips\":[],\"chip_selected_dark\":[],\"panel_head\":null,\"function_groups\":[],\"board_region_len\":0,\"board_region_fnv\":5381,\"board_region\":\"\"}"
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/pb-row1-it.png
+-- chip -> All again (the #119 gesture)
+"set"
+"NOT_FOUND chip:All"
+   board board-3-all-again: "{\"case\":\"Omar Al-Farsi\",\"row_found\":false,\"chips\":[],\"chip_selected_dark\":[],\"panel_head\":null,\"function_groups\":[],\"board_region_len\":0,\"board_region_fnv\":5381,\"board_region\":\"\"}"
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/pb-row1-all-again.png
+-- jurisdiction chip -> KSA
+"set"
+"NOT_FOUND jur:KSA"
+   probe jur-ksa: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Antum People\"],\"nav_items\":[],\"len_innerText\":133,\"len_textContent\":134,\"sample_demo_data_innerText\":0,\"illust
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/pb-jur-ksa.png
+-- jurisdiction chip -> UAE
+"set"
+"NOT_FOUND jur:UAE"
+   probe jur-uae: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Antum People\"],\"nav_items\":[],\"len_innerText\":133,\"len_textContent\":134,\"sample_demo_data_innerText\":0,\"illust
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/pb-jur-uae.png
+-- network and errors
+[06A262C1639CCC999ED9CD67C678EEA8] GET http://localhost:4741/ (Document) 200
+[19793.2] GET http://localhost:4741/assets/index-Dt2oLspq.js (Script) 200
+[19793.3] GET http://localhost:4741/assets/index-BLszozVg.css (Stylesheet) 200
+[19793.6] GET http://localhost:4741/favicon.svg (Other) 200
+[37DBB1B603AAA60B70EB2FC6FECFC985] GET http://localhost:4741/ (Document) 200
+[19793.8] GET http://localhost:4741/assets/index-Dt2oLspq.js (Script) 304
+[19793.9] GET http://localhost:4741/assets/index-BLszozVg.css (Stylesheet) 304
+[19793.12] GET http://localhost:4741/favicon.svg (Other) 200
+   page errors: 
+   live :3000 after pass: 200
+== pass end 2026-10-09T15:28:14Z

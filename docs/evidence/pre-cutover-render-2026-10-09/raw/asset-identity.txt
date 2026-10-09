@@ -1,0 +1,9 @@
+tree:           7d95fbb360358fc7abe7b75e73369698bc3c08da  (origin/main, fetched fresh at pass time)
+built by:       (cd client) npx tsc -b --force --verbose ; npx vite build   -- both exit 0, see raw/build.txt
+built asset:    index-Dt2oLspq.js
+asset bytes:    270962
+asset md5:      5720cd6fbeca1966cb642f9cf6338a9c
+css asset:      index-BLszozVg.css 35199 bytes md5 e493ab996d7bb81b4568b2183e9204f9
+served by rig:  270962 bytes md5 5720cd6fbeca1966cb642f9cf6338a9c   (fetched over HTTP from http://localhost:4741/assets/index-Dt2oLspq.js)
+expected by the task brief: 270962 bytes / 5720cd6fbeca1966cb642f9cf6338a9c
+verdict: MATCH - the built bytes and the bytes the rig served are the quoted artifact.
