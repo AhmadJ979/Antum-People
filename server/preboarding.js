@@ -101,6 +101,13 @@ async function findByOfferReference(offerReference) {
 // through, because a caller asking for a status nobody writes must not be told "no cases".
 const CASE_STATUSES = ['open', 'closed'];
 
+/**
+ * The cases matching the filters, as an envelope.
+ *
+ * @returns {Promise<{cases: object[], totals: {cases: number, open: number, closed: number}}>}
+ *          `totals` describes the set this call returned, not the jurisdiction's roll-up — the
+ *          note inside says why the two are kept apart.
+ */
 async function listCases(options = {}) {
   const conditions = [];
   if (options.jurisdiction) {
@@ -114,7 +121,27 @@ async function listCases(options = {}) {
     conditions.push(`status = ${db.escapeString(status)}`);
   }
   const where = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : '';
-  return db.query(`${SELECT_CASE}${where} ORDER BY start_date ASC, created_at ASC`);
+  const cases = await db.query(`${SELECT_CASE}${where} ORDER BY start_date ASC, created_at ASC`);
+
+  // THE COLLECTION CONTRACT: `{ cases, totals }`, built here rather than wrapped at the route, so
+  // that every caller of this function gets one shape — the route in index.js today, the ATS
+  // adapter when a signed pilot brings one, and the tests. A caller that only wants rows reads
+  // `.cases`; a caller that wants the size of what it asked for reads `.totals`.
+  //
+  // `totals` counts THE SET THIS CALL RETURNED, under this call's own filters. It is deliberately
+  // NOT the checklist roll-up (`preboardingItems.checklistOverview`), which counts items, consents
+  // and workspace lines across a whole jurisdiction: the two answer different questions about
+  // different sets, and printing them as one number is the defect this separation exists to keep
+  // out. `open + closed === cases` because `CASE_STATUSES` is exactly those two and the filter
+  // above accepts nothing else.
+  return {
+    cases,
+    totals: {
+      cases: cases.length,
+      open: cases.filter((row) => row.status === 'open').length,
+      closed: cases.filter((row) => row.status === 'closed').length,
+    },
+  };
 }
 
 async function getCase(id) {

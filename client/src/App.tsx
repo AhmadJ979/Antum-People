@@ -580,7 +580,13 @@ export default function App() {
         return;
       }
       const data = await res.json();
-      setPreboardingCases(Array.isArray(data) ? data : []);
+      // The list endpoint answers with the envelope `{ cases, totals }` — `preboarding.listCases`
+      // builds it and the route serves it unchanged. This screen reads `cases`; the tile below
+      // counts this array, which is the set this request asked for (`status=open` above), so the
+      // count and its "Cases open" label still agree. There is no fallback to a bare array on
+      // purpose: the client and the server ship from one tree and one bundle, which is why the
+      // cutover for this change is owed rather than optional.
+      setPreboardingCases(data.cases);
     } catch (err) {
       console.error('Error fetching pre-boarding cases:', err);
     } finally {
