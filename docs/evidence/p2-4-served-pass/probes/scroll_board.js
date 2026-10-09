@@ -1,0 +1,1 @@
+(function(){var e=Array.prototype.slice.call(document.querySelectorAll('div,span,li')).filter(function(x){return /D-\d/.test(String(x.textContent));})[0]; if(!e) return 'no board rows'; e.scrollIntoView({block:'center'}); return 'scrolled to board';})()
