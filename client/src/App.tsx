@@ -1380,6 +1380,9 @@ export default function App() {
                         {(selectedEmployee.status === 'active' || selectedEmployee.status === 'onboarding') && (
                           <button onClick={handleTransitionToOffboarding} className="bg-amber-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-amber-700 shadow-sm transition">Initiate Exit</button>
                         )}
+                        {selectedEmployee.status === 'offboarding' && (
+                          <button onClick={() => setShowExitModal(true)} className="bg-rose-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-rose-700 shadow-sm transition">Record Exit Interview</button>
+                        )}
                       </div>
                     </div>
                     
