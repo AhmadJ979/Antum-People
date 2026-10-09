@@ -824,7 +824,7 @@ numeral/date decision the product has not yet made.
   "not an electronic signature" sentence; the refusal messages a hire can actually reach
   ("consent not recorded yet", "this item cannot be changed", "verified is final"); and the
   withdrawal path if the notice offers one — our compliance document requires withdrawal to be as
-  easy as giving consent (`compliance-requirements.md:323`).
+  easy as giving consent (`compliance-requirements.md:325`).
 - **May follow later:** HR-only comfort copy; the workspace track (not shown to the hire); the
   demo's own labels; and any KSA-specific string while the KSA set is switched off
   (`server/preboarding-items.js:66`–`:99`; the KSA consent item is already recorded as
@@ -856,9 +856,13 @@ The portal needs an identity for the hire, and the product does not have one. **
 shared admin account** (`server/auth.js`; the JWT lives in `localStorage`), per-user accounts land
 at Layer 3 (owner, 2026-10-07 — §10 Q4), and the standing rule is **no real client data before
 RBAC**. Both records that would carry the hire's own act take their actor from the authenticated
-user: the consent's `recorded_by` (`server/preboarding-items.js:252`, `input.actor || 'system'`)
-and the acknowledgement's (`server/preboarding-package.js:170`+). So the question is not what the
-button looks like — it is **who the product can truthfully say acted**.
+user: the consent's `recorded_by` (`server/preboarding-items.js:242`, `input.actor || 'system'`,
+supplied by the route at `server/index.js:725`) and the acknowledgement's (`server/index.js:771`,
+`recorded_by: (req.user && req.user.username) || null` — route `:718`; written at
+`server/preboarding-package.js:170`). The difference is worth naming, because §10 Q8 has to answer
+it: the consent route fills its actor with a `'system'` fallback, while the package module **refuses
+an empty actor rather than inventing one** (`preboarding-package.js:198`–`:201`). So the question is
+not what the button looks like — it is **who the product can truthfully say acted**.
 
 | # | Option | What becomes true | Consequences and costs |
 |---|---|---|---|
@@ -897,7 +901,7 @@ fails the same evidence standard the acknowledgement already keeps (`UNAVAILABLE
 7. **Whether the portal is ever demonstrated.** My assumption is **no**: nothing in §§8A–8C touches
    the demo surface, and the demo rule against rendering a fake case stands.
 8. **What "withdrawal as easy as giving consent" means** for a hire who consented through a link
-   they no longer hold (`compliance-requirements.md:323`) — a product and legal call, and the
+   they no longer hold (`compliance-requirements.md:325`) — a product and legal call, and the
    notice must not promise a path the product cannot provide.
 
 ---
@@ -972,6 +976,17 @@ on the screen — see `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` §4.
 **Added 2026-10-09 with the portal specification (§§8A–8C). Q8 is the decision the lead asked to
 be surfaced rather than solved; Q9–Q12 are consequences I will not settle by designing.**
 
+**Cite-resolution pass, 2026-10-09 — three wrong cites corrected; no reading re-dated.** The review of
+this specification resolved every `file:line` cite it added against running code and found three that
+pointed at the wrong line. All are corrected in place: the consent's actor fill is
+`server/preboarding-items.js:242` (not `:252`, which is `consent_version` inside the same INSERT); the
+acknowledgement's actor is supplied by the route at `server/index.js:771` and refused when empty at
+`preboarding-package.js:198`–`:201` (the write site is `:170`); and the withdrawal line is
+`compliance-requirements.md:325` (not `:323`, which is the marketing-consent line) at the three places
+this section cites it. **The measurements and every other cite below still stand, and the read above is
+not re-dated:** the pass was resolved on `main` = `501d5fa`, and no code has merged since the read
+(`git diff b7630cb 501d5fa -- client server package.json` is empty — documentation only).
+
 8. **The hire's identity (§8C).** Five options, each with a security or evidence consequence, and
    I recommend none of them: a **tokenised per-case link** (honest only if `recorded_by` says a link
    was used, never the hire's name, and the product cannot send it — D10), **per-user accounts
@@ -995,7 +1010,7 @@ be surfaced rather than solved; Q9–Q12 are consequences I will not settle by d
     needs its own surface decision, not a quiet inclusion.
 12. **What does "withdrawal as easy as giving consent" mean for a hire who consented through a link
     they no longer hold?** Our compliance document requires withdrawal to be as easy as giving
-    consent (`compliance-requirements.md:323`); the notice must not promise a route the product
+    consent (`compliance-requirements.md:325`); the notice must not promise a route the product
     cannot provide.
 
 ---
