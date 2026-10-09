@@ -116,11 +116,37 @@ describe('P2-1 · an accepted offer opens a pre-boarding case', () => {
     );
     assert.strictEqual(ksaCase.jurisdiction, 'SA');
 
-    const filtered = await preboarding.listCases({ jurisdiction: 'AE' });
+    const { cases: filtered } = await preboarding.listCases({ jurisdiction: 'AE' });
     assert.ok(
       filtered.every((c) => c.jurisdiction === 'AE'),
       'filtering by jurisdiction returns only that jurisdiction'
     );
+  });
+
+  test('the collection read is the envelope, and totals describes the set it returned', async () => {
+    const envelope = await preboarding.listCases({ jurisdiction: 'AE', status: 'open' });
+    assert.ok(!Array.isArray(envelope), 'the collection read is no longer a bare array');
+    assert.deepStrictEqual(Object.keys(envelope).sort(), ['cases', 'totals']);
+    assert.ok(Array.isArray(envelope.cases), 'cases carries the rows');
+    assert.strictEqual(envelope.totals.cases, envelope.cases.length);
+    assert.strictEqual(
+      envelope.totals.open + envelope.totals.closed,
+      envelope.totals.cases,
+      'the two statuses the filter accepts are exhaustive, so the split accounts for every case'
+    );
+    assert.ok(envelope.cases.every((row) => row.jurisdiction === 'AE' && row.status === 'open'));
+  });
+
+  test('the route serves that envelope, and the bare-array response is gone', () => {
+    // This suite has no HTTP harness — index.js binds a port when it is required — so the route is
+    // pinned the way this file already pins the single case writer: by reading index.js as text.
+    const index = fs.readFileSync(path.join(__dirname, 'index.js'), 'utf8');
+    assert.ok(!index.includes('res.json(cases)'), 'the bare-array response is gone');
+    assert.ok(
+      /const envelope = await preboarding\.listCases\(/.test(index),
+      'the route takes the envelope from the module'
+    );
+    assert.ok(index.includes('res.json(envelope)'), 'and serves it unchanged');
   });
 
   test('an unsupported jurisdiction is refused rather than silently defaulted', async () => {
