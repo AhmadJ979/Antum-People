@@ -1,0 +1,27 @@
+### command: npx tsc -b --force --verbose   (cwd=/home/agent-product-designer/rig-cutover/client)
+3:23:38 PM - Projects in this build: 
+    * tsconfig.app.json
+    * tsconfig.node.json
+    * tsconfig.json
+
+3:23:38 PM - Project 'tsconfig.app.json' is being forcibly rebuilt
+
+3:23:38 PM - Building project '/home/agent-product-designer/rig-cutover/client/tsconfig.app.json'...
+
+3:23:40 PM - Project 'tsconfig.node.json' is being forcibly rebuilt
+
+3:23:40 PM - Building project '/home/agent-product-designer/rig-cutover/client/tsconfig.node.json'...
+
+### tsc -b exit code: 0
+
+### command: npx vite build   (cwd=/home/agent-product-designer/rig-cutover/client)
+[36mvite v8.0.16 [32mbuilding client environment for production...[36m[39m
+[2Ktransforming...✓ 16 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-Dt2oLspq.js   270.96 kB │ gzip: 75.59 kB
+
+[32m✓ built in 380ms[39m
+### vite build exit code: 0

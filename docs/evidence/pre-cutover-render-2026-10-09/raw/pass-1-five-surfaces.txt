@@ -1,0 +1,91 @@
+== pass start 2026-10-09T15:28:40Z
+== token acquired, length 212
+✓ Antum People
+  http://localhost:4741/
+"session injected"
+   probe surface-00-shell: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Onboarding PipelineView All →\",\"Offboarding PipelineView All →\"],\"nav_items\":[\"Executive Dashboard\",\"Employe
+-- surface dashboard <- nav 'Executive Dashboard'
+"set"
+"clicked nav:Executive Dashboard (scope 0)"
+   probe surface-dashboard: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Onboarding PipelineView All →\",\"Offboarding PipelineView All →\"],\"nav_items\":[\"Executive Dashboard\",\"Employe
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/dashboard.png
+-- surface employees <- nav 'Employee Directory'
+"set"
+"clicked nav:Employee Directory (scope 0)"
+   probe surface-employees: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[],\"nav_items\":[\"Executive Dashboard\",\"Employee Directory\",\"Transitions Hub\",\"Pre-boarding\",\"Strategic Intellige
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/employees.png
+-- surface transitions <- nav 'Transitions Hub'
+"set"
+"clicked nav:Transitions Hub (scope 0)"
+   probe surface-transitions: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Ramping Employees (Onboarding)\",\"Departing Employees (Offboarding)\"],\"nav_items\":[\"Executive Dashboard\",\"Employe
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/transitions.png
+-- surface preboarding <- nav 'Pre-boarding'
+"set"
+"clicked nav:Pre-boarding (scope 0)"
+   probe surface-preboarding: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Pre-boarding Intelligence\",\"Record an accepted offer\",\"HR roll-up — outstanding items\"],\"nav_items\":[\"Executiv
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/preboarding.png
+-- surface analytics <- nav 'Strategic Intelligence'
+"set"
+"clicked nav:Strategic Intelligence (scope 0)"
+   probe surface-analytics: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Strategic Workforce Intelligence\",\"Retention Lift — 1-Yr Cohort\",\"Time-to-Value by Department\",\"EOSB Liability F
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/analytics.png
+-- back to Pre-boarding for the detail pass
+"set"
+"clicked nav:Pre-boarding (scope 0)"
+   probe pb-surface: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Pre-boarding Intelligence\",\"Record an accepted offer\",\"HR roll-up — outstanding items\"],\"nav_items\":[\"Executiv
+   pb-rows: "{\"row_count\":3,\"rows\":[{\"candidate\":\"Yousef Al-Hammadi\",\"row_chips\":[\"UAE\",\"Started 1 day ago · 21 items open\",\"Open\",\"Start:\",\"· started 1 d ago\",\"Verified:\"],\"toggle\":\"Yousef Al-HammadiOpe\",\"raised_flag\":\"Started with 21 items still open Bank details (IBAN letter) · not started · no owner on this item — the employee-track items carry no owner field Education certificate · not started · no owner on this item — the employee-track items carry no owner field Emergency contact · not started · no owner on this item — the employee-track items carry no owner field Emirates ID · not started · no owner on this item — the employee-track items carry no o
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/pb-rows.png
+-- expand case 1 row
+"set"
+"clicked row:Omar Al-Farsi"
+   board board-1-initial: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"chips\":[\"All (15)\",\"IT (6)\",\"Admin (3)\",\"HR (2)\",\"Manager (4)\"],\"chip_selected_dark\":[\"Record PDPL consent\",\"All (15)\"],\"panel_head\":null,\"function_groups\":[],\"board_region_len\":0,\"board
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/pb-row1-all.png
+-- chip -> IT
+"set"
+"clicked chip:IT"
+   board board-2-it: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"chips\":[\"All (15)\",\"IT (6)\",\"Admin (3)\",\"HR (2)\",\"Manager (4)\"],\"chip_selected_dark\":[\"Record PDPL consent\",\"IT (6)\"],\"panel_head\":null,\"function_groups\":[],\"board_region_len\":0,\"board_r
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/pb-row1-it.png
+-- chip -> All again (the #119 gesture)
+"set"
+"clicked chip:All"
+   board board-3-all-again: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"chips\":[\"All (15)\",\"IT (6)\",\"Admin (3)\",\"HR (2)\",\"Manager (4)\"],\"chip_selected_dark\":[\"Record PDPL consent\",\"All (15)\"],\"panel_head\":null,\"function_groups\":[],\"board_region_len\":0,\"board
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/pb-row1-all-again.png
+-- jurisdiction chip -> KSA
+"set"
+"clicked jur:KSA"
+   probe jur-ksa: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Pre-boarding Intelligence\",\"Record an accepted offer\",\"HR roll-up — outstanding items\"],\"nav_items\":[\"Executiv
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/pb-jur-ksa.png
+-- jurisdiction chip -> UAE
+"set"
+"clicked jur:UAE"
+   probe jur-uae: "{\"page_url\":\"http://localhost:4741/\",\"page_title\":\"Antum People\",\"page_script_src\":\"/assets/index-Dt2oLspq.js\",\"headings\":[\"Pre-boarding Intelligence\",\"Record an accepted offer\",\"HR roll-up — outstanding items\"],\"nav_items\":[\"Executiv
+✓ Screenshot saved to /home/agent-product-designer/rig-cutover-out/pass/shots/pb-jur-uae.png
+-- network and errors
+[06A262C1639CCC999ED9CD67C678EEA8] GET http://localhost:4741/ (Document) 200
+[19793.2] GET http://localhost:4741/assets/index-Dt2oLspq.js (Script) 200
+[19793.3] GET http://localhost:4741/assets/index-BLszozVg.css (Stylesheet) 200
+[19793.6] GET http://localhost:4741/favicon.svg (Other) 200
+[37DBB1B603AAA60B70EB2FC6FECFC985] GET http://localhost:4741/ (Document) 200
+[19793.8] GET http://localhost:4741/assets/index-Dt2oLspq.js (Script) 304
+[19793.9] GET http://localhost:4741/assets/index-BLszozVg.css (Stylesheet) 304
+[19793.12] GET http://localhost:4741/favicon.svg (Other) 200
+[47CCDE0D166D0F3117FA5B74143FDD0A] GET http://localhost:4741/ (Document) 200
+[19793.14] GET http://localhost:4741/assets/index-Dt2oLspq.js (Script) 304
+[19793.15] GET http://localhost:4741/assets/index-BLszozVg.css (Stylesheet) 304
+[F9D8FD0D5C2286B9744AE80B266F673D] GET http://localhost:4741/ (Document) 200
+[19793.19] GET http://localhost:4741/assets/index-Dt2oLspq.js (Script) 304
+[19793.20] GET http://localhost:4741/assets/index-BLszozVg.css (Stylesheet) 304
+[19793.23] GET http://localhost:4741/api/employees?jurisdiction=AE (Fetch) 200
+[19793.24] GET http://localhost:4741/api/analytics/dashboard?jurisdiction=AE (Fetch) 200
+[19793.25] GET http://localhost:4741/favicon.svg (Other) 200
+[19793.26] GET http://localhost:4741/api/preboarding/cases?jurisdiction=AE&status=open (Fetch) 200
+[19793.27] GET http://localhost:4741/api/preboarding/checklist/overview?jurisdiction=AE (Fetch) 200
+[19793.28] GET data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNSIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJXaW5kb3dUZXh0IiBkPSJNMjAgM2gtMVYxaC0ydjJIN1YxSDV2Mkg0Yy0xLjEgMC0yIC45LTIgMnYxNmMwIDEuMS45IDIgMiAyaDE2YzEuMSAwIDItLjkgMi0yVjVjMC0xLjEtLjktMi0yLTJ6bTAgMThINFY4aDE2djEzeiIvPjxwYXRoIGZpbGw9Im5vbmUiIGQ9Ik0wIDBoMjR2MjRIMHoiLz48L3N2Zz4= (Image) 200
+[19793.29] GET http://localhost:4741/api/preboarding/cases?jurisdiction=AE&status=open (Fetch) 200
+[19793.30] GET http://localhost:4741/api/preboarding/checklist/overview?jurisdiction=AE (Fetch) 200
+[19793.31] GET http://localhost:4741/api/preboarding/cases/3a4ab06a-25e6-4257-bc4e-8725a9380c49/checklist (Fetch) 200
+[19793.32] GET http://localhost:4741/api/preboarding/cases/3a4ab06a-25e6-4257-bc4e-8725a9380c49/package (Fetch) 200
+[19793.33] GET http://localhost:4741/api/preboarding/cases/3a4ab06a-25e6-4257-bc4e-8725a9380c49/workspace (Fetch) 200
+   page errors: 
+   live :3000 after pass: 200
+== pass end 2026-10-09T15:29:17Z

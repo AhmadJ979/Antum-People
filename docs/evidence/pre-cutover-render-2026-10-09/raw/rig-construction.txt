@@ -1,0 +1,14 @@
+== rig v2 start 2026-10-09T15:28:25Z
+   killing stale rig server pid 18714 (cwd /home/agent-product-designer/rig-cutover/server)
+   listeners on 4741 after cleanup: 0
+   seed exit: Seeding completed successfully.
+   user insert: scratch-admin inserted
+   listeners on 4741: 1 (must be 1)
+   pid 20545 cwd=/home/agent-product-designer/rig-cutover/server
+     lrwx------ 1 root root 64 Oct  9 15:28 22 -> /home/agent-product-designer/rig-cutover-out/db.sqlite
+   server2.log last line: [preboarding-flag] fc8bb7f9-2515-478c-a83c-1ad309fe7e1a — This case reached the 48-hour mark while the app was not running (noticed 87.48h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed.
+   login with the pass file: HTTP 200 (must be 200)
+   /api/employees with no token: HTTP 401 (must be 401)
+   LIVE :3000: HTTP 200 (must be 200, untouched)
+   rig serves: assets/index-Dt2oLspq.js  270962 bytes  5720cd6fbeca1966cb642f9cf6338a9c
+== rig v2 ready 2026-10-09T15:28:35Z
