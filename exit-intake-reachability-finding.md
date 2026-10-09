@@ -85,10 +85,12 @@ opener. The measurement and the recording are both gated on the placement decisi
 
 ## Evidence index
 
-- `docs/evidence/exit-modal-opener/` — the rendered-pass captures from the withdrawn branch
-  (`opener-present.json`, `exit-modal-probe.json`, `fill-submit.json`, `counts-before.json`,
-  `counts-after.json`, `rig-setup.txt`, `build-proof.txt`, two screenshots). Kept as measurements of the
-  capability, not as a proposal.
+- `docs/evidence/exit-modal-opener/` — the rendered-pass captures, copied unaltered from the withdrawn branch
+  (its proposal-framed `README.md` is deliberately not carried over). The complete set: `opener-present.json`,
+  `exit-modal-probe.json`, `step-opener-click.txt`, `step-select-departing.txt`, `fill-submit.json`,
+  `after-submit.json`, `counts-before.json`, `counts-after.json`, `rig-setup.txt`, `build-proof.txt`, and two
+  screenshots (`screenshots/01-offboarding-action-row.png`, `screenshots/02-exit-modal-open.png`). Kept as
+  measurements of the capability, not as a proposal.
 - Row `bc89d0bd` (merged): the four exit controls could **not** be read live because the modal cannot be opened,
   which is the same fact seen from the accessibility side.
 - PR #112: closed, with the reason recorded on it.
