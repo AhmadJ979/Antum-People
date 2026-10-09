@@ -169,7 +169,7 @@ A: **Say this plainly:** "The calculation is live and it's the engine's own numb
 ### Speaker notes
 > "Onboarding is the same product, same engine — the sequence is the UAE one: contract and MoHRE steps, insurance, visa stamping. And notice consent is in-flow and dated, tracked against a version, not chased as a PDF later. The dashboard card and this checklist read from the same source, so they can't disagree."
 
-### ⚠️ Before you say "Omar" twice — the demo-case-1 contradiction (owner decision, still open)
+### ⚠️ Before you say "Omar" twice — the demo-case-1 contradiction (decided 2026-10-09: option (a), leave case 1 as seeded)
 
 The roster's Omar (`demo-emp-omar`, *onboarding*, started **2026-08-20**) is **also** the person the seeded pre-boarding case `OFR-2026-DEMO-01` says starts **2026-10-23**. *(The 2026-10-09 cutover ran with this unresolved — case 01 still starts at seed day +14 while the roster row still says 2026-08-20 — so the contradiction below is **live on the served surface**, not a thing of the old build.)* So:
 
@@ -179,9 +179,9 @@ The roster's Omar (`demo-emp-omar`, *onboarding*, started **2026-08-20**) is **a
 **Two honest ways to handle it, on the day:**
 
 1. **Do not stitch the two together.** Keep Omar's Employee Directory row in Segment 2 and use **case 3's red row and case 2's amber row** as the pre-boarding story, saying Omar's case as *"the third one is a hire who is still three weeks out — nothing to see yet, which is the point: no false alarm."* If asked directly, say: *"that's one seeded record doing double duty in the sample data — it is a demo-data artefact, not product behaviour."*
-2. **If the owner picks option (b) and case 1 is pointed at a fourth hire**, this whole box goes away, and the three pre-boarding names no longer touch the roster's onboarding row. Nothing else in this script changes.
+2. **Option (b) — giving case 1 a fourth hire — is closed.** *(The owner ruled on 2026-10-09: case 1 stays as seeded, so the contradiction stays in the sample data and this box stays with it.)* If a future seed ever does point case 1 at a fourth hire, this whole box goes away and the three pre-boarding names no longer touch the roster's onboarding row; nothing else in this script changes.
 
-*(The decision — leave it (a), or give case 1 a fourth hire (b) — is on the owner's desk. This script works either way; only this box changes.)*
+*(Decided by the owner on **2026-10-09: option (a) — leave case 1 as seeded.** Option (b), a fourth hire for case 1, is closed rather than pending. The contradiction stays live in the sample data; nothing here changes how the segment is run. This script works either way.)*
 
 ---
 
