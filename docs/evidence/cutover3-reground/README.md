@@ -30,10 +30,20 @@ as evidence for the *fix* only if it carries its own script src per the pack's o
 build log rounds them, are **270,982**. Recorded rather than silently adopted.*
 
 ## 2. The label counts, per surface — two passes
-In `docs/evidence/label-rule-recheck/README.md`, appended as **"Third cutover, 2026-10-09 13:46 UTC"**. In
+Recorded on 2026-10-09 in `docs/evidence/label-rule-recheck/README.md`, appended as **"Third cutover, 2026-10-09 13:46 UTC"** — that register is now a **dated record**, not the live one. The **authoritative** register for these counts is `docs/evidence/label-per-surface-2026-10-09/` (named 2026-10-09, task `b3c38841`): the same counts, taken by a method that keeps the demo credential out of a member's hands and testing off the live product, and proven identical to the served bundle by md5. In
 short: **"Sample Demo Data" ×1 on each of the five surfaces, "Illustrative" 15** (Executive Dashboard 5 ·
 Strategic Intelligence 10 · the other three 0) — identical to the `2028894` reading and to the `32a8f4e`
-baseline's per-surface shape, on both passes. Raw captures: `docs/evidence/label-rule-recheck/raw/da3330d-pass{1,2}-*`.
+baseline's per-surface shape, on both passes. Raw captures: `docs/evidence/label-rule-recheck/raw/da3330d-pass{1,2}-*`. Those captures belong to that pass and stay in the dated record.
+
+**Checkable, not asserted — every reading the "never moved" claim rests on, with its tree and its method:**
+
+| tree | read (UTC) | bundle · md5 | method | counts |
+|---|---|---|---|---|
+| `2028894` | 2026-10-09 12:10 | *not recorded in that register* | signed in as demo admin on the served product | badge ×1 per surface · "Illustrative" 15 |
+| `0dd1a97` | 2026-10-09 12:57 | `index-gt1pFhU5.js` · `fb6e0df5493fc67a9d9cd9fba5dfa9e2` | isolated rig (own port, own database, own throwaway credential), md5-identical to the served bundle | badge ×1 per surface · "Illustrative" 15 |
+| `da3330d` | after the 13:46 cutover | `index-B8Hoaanh.js` · 270,982 bytes · `abfe49feb21dc90b77743922f76a7399` | signed in as demo admin on the served product | badge ×1 per surface · "Illustrative" 15 |
+
+Per surface the 15 is Executive Dashboard 5 · Strategic Intelligence 10 · the other three 0. `2028894`'s bundle and md5 were never recorded — an empty cell, not a guessed one.
 
 ## 3. The demo figures, re-read off the served API on the 13:46:16 seed
 `GET /api/preboarding/checklist/overview?jurisdiction=AE` (raw: `raw/overview-AE.json`):
@@ -115,7 +125,7 @@ Nothing moved, and the reason is in the seed's own code rather than in an assump
 Prompted by the same note (a shot that proves the rig ran is not evidence of the thing it claims), the
 label pass was re-backed: two probe fields were **disqualified** for matching the sidebar rather than a
 screen, and the identity claim now rests on content-region captures whose cross-comparison is computed
-and committed — `docs/evidence/label-rule-recheck/raw/da3330d-identity2-cross-comparison.txt`. All four
+and committed — `docs/evidence/label-rule-recheck/raw/da3330d-identity2-cross-comparison.txt` (the dated record's own captures). All four
 readings (pass 1, pass 2, identity, identity2) ran against **270,982 bytes / md5
 `abfe49feb21dc90b77743922f76a7399`**, read off `assets/index-B8Hoaanh.js` on the served product once per
-surface. Details and limits: `docs/evidence/label-rule-recheck/README.md`.
+surface. Details and limits: the pass's own record in `docs/evidence/label-rule-recheck/README.md`; for the counts themselves, the **authoritative** register — with the tree, bundle, md5 and method for each reading — is `docs/evidence/label-per-surface-2026-10-09/README.md`.
