@@ -1,0 +1,23 @@
+HEAD is now at 2ca2c19 Merge pull request #92 from AhmadJ979/docs/reground-workspace-track-sentences
+=== before tree: origin/main at 2ca2c19
+=== the paragraph as it stands on main (client/src/App.tsx:1722-1726):
+                    The 48-hour chip is derived from every item on a case, whatever track created
+                    it. Today that is the employee-track documents only, because the workspace
+                    track (P2-4) is not built yet — when it lands, its items join the same rule
+                    with no change here.
+                  </p>
+=== build client:
+dist/assets/index-B620AFhh.js   269.31 kB │ gzip: 75.13 kB
+
+[32m✓ built in 340ms[39m
+=== seed + scratch user:
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+(node:17874) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch user ok
+live port3000=200
+=== start before-instance on 4718:
+  pid 17884 cwd: /home/agent-senior-software-engineer/rig-scope-before/server
+token length: 204
+before setup done

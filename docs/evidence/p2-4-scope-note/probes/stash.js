@@ -1,0 +1,1 @@
+(function(){var t=localStorage.getItem('antum_token');window.__p24=null;fetch('/api/preboarding/checklist/overview?jurisdiction=AE',{headers:{Authorization:'Bearer '+t}}).then(function(r){return r.json();}).then(function(d){window.__p24=d;});return 'fetch started';})()

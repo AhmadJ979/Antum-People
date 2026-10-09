@@ -1718,12 +1718,21 @@ export default function App() {
                     named here — HR reads what is outstanding
                     without opening a case. Open a row to work its employee track.
                   </p>
-                  <p className="text-[9px] text-slate-400 mb-4 -mt-2">
-                    The 48-hour chip is derived from every item on a case, whatever track created
-                    it. Today that is the employee-track documents only, because the workspace
-                    track (P2-4) is not built yet — when it lands, its items join the same rule
-                    with no change here.
-                  </p>
+                  {/* One source for this sentence, and it is not the client: the server's own
+                      `scope_note`, carried on the flag payload this panel already reads and
+                      identical in every flag state (server/preboarding-flag.js SCOPE_NOTE, set on
+                      both the no-start-date branch and the shared object). What stood here was a
+                      locally hard-coded second version of that claim, and it still said the
+                      workspace track "is not built yet" — false once P2-4 merged, on a screen that
+                      renders the provisioning board further down. Deleted rather than reworded:
+                      a client-side copy is the structure that produced the drift. Nothing is
+                      composed here, and with no cases there is no sentence to state rather than a
+                      page-level claim about a list that is not on screen. */}
+                  {checklistOverview && checklistOverview.cases.length > 0 && (
+                    <p className="text-[9px] text-slate-400 mb-4 -mt-2">
+                      {checklistOverview.cases[0]?.flag.scope_note}
+                    </p>
+                  )}
                   {checklistOverview && checklistOverview.cases.length > 0 && (
                     <div className="mb-4 grid grid-cols-3 gap-2 text-center">
                       <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">

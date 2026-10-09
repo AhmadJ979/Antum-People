@@ -1,0 +1,12 @@
+{
+  "derived_para_present": false,
+  "derived_para_text": null,
+  "distinct_scope_notes": 1,
+  "p_elements_on_screen": 4,
+  "payload": "Derived from every item on this case, whatever track created it: the employee track's documents and the workspace track's provisioning lines both count, because both are items on the case.",
+  "payload_case": "OFR-2026-DEMO-03",
+  "payload_loaded": true,
+  "rendered_equals_payload": false,
+  "stale_para_present": true,
+  "stale_para_text": "The 48-hour chip is derived from every item on a case, whatever track created it. Today that is the employee-track documents only, because the workspace track (P2-4) is not built yet — when it lands, its items join the same rule with no change here."
+}
