@@ -1,0 +1,30 @@
+--- Antum People Coherent Demo Seed v3.1 ---
+Targeting: Product-owned SQLite database
+FORCE CLEAR: Deleting existing demo data...
+(node:16517) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Upserting demo employees...
+- Upserted Ahmad Al-Rashid (AE)
+- Upserted Fatima Al-Zahrani (SA)
+- Upserted Omar Al-Farsi (AE)
+- Upserted Leila Mansour (AE)
+- Upserted Khalid Al-Dosari (SA)
+- Upserted Hassan Al-Mansoori (AE)
+- Upserted Sarah Al-Qasimi (SA)
+- Upserted Mohammed Al-Sayed (AE)
+- Upserted Reem Al-Hashemi (SA)
+- Upserted Noura Al-Suwaidi (AE)
+- Upserted Salim Al-Nuaimi (AE)
+- Upserted Yusuf Hassan (AE)
+- Upserted Sultan Al-Harbi (SA)
+Upserting onboarding tasks...
+Upserting offboarding tasks...
+Upserting exit interviews...
+Upserting audit logs...
+Upserting consent records...
+Upserting Layer 2 pre-boarding demo cases...
+- Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-10-23) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-10) — inside 48 hours with every item still open; items: 7 not_started
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-08) — start date already passed, items still open; items: 7 not_started
+Upserting demo admin user...
+Seeding completed successfully.
