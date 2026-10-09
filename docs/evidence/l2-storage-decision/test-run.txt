@@ -1,0 +1,13 @@
+# node v22.23.3 · npm test · tree 33072d3 · 2026-10-09T12:17:39Z
+  duration_ms: 9.336053
+  type: 'suite'
+  ...
+1..31
+# tests 134
+# suites 31
+# pass 134
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1595.16405

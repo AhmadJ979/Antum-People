@@ -1,0 +1,17 @@
+# Sweep, BEFORE the fix — tree cd4edca, read-only worktree at /tmp/pre-fix (paths rewritten to ./)
+# pattern: NO STORE HAS BEEN CHOSEN|no store has been chosen|no store is configured|undecided|not yet decided|pending decision|candidate stores|for the owner's decision|storage (decision )?(is|remains) (open|undecided|unresolved)|where collected documents live is undecided
+# command: grep -rniE '<pattern>' --include=*.js --include=*.jsx --include=*.ts --include=*.tsx --include=*.md --include=*.txt --include=*.html --include=*.json <tree> | grep -v node_modules | grep -v '^./dist'
+
+./server/preboarding-items.test.js:450:  test('no store is configured, and it refuses rather than choosing a place for the bytes', async () => {
+./server/preboarding-items.test.js:451:    assert.strictEqual(documentStore.isConfigured(), false, 'no store has been chosen');
+./server/document-store.js:5: * NO STORE HAS BEEN CHOSEN, AND CHOOSING ONE IS NOT A BUILDER'S CALL
+./server/document-store.js:25: * The candidate stores, for the owner's decision (cost, operations and PDPL notes are for the
+./server/document-store.js:72:    'No document store is configured: where collected documents live is undecided, so the '
+./roadmap-board-index.md:36:- **Round 16 (2026-10-07 — the lead's verified facts, with my own read at 13:41):** the big one. **P2-2 was sent back twice.** First on the owner's own request-changes �
+./roadmap-board-index.md:37:  > **STALE AS WRITTEN — 2026-10-09, Round 31 (my own check, this session).** The narrative above implies that second send-back item closed before the merge. **The header
+./roadmap-board-index.md:149:  - **The 14 backlog rows were verified against the tree rather than assumed accurate (my own check this session).** I took the three most likely to have been finished in 
+./roadmap-board-index.md:165:  - **`198a2562` is still open work, and the index already describes the storage *decision* as made — checked rather than assumed.** The row's premise is live on the dep
+./pdpl-portal-boundary-memo.md:29:- **A second, older consent store exists** and is still writable: `consent_records(id, employee_id, consent_type, status, consent_date, ip_address, lawful_basis, gran
+./docs/evidence/p2-6-portal-spec/measurements.txt:87:    'No document store is configured: where collected documents live is undecided, so the '
+./design-concepts/LAYER2-PREBOARDING-UI.md:1053:- **The hire's identity is undecided** (§8C, §10 Q8). Until it is ruled, nothing may claim that a
+./design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md:37:| The document byte boundary | `server/document-store.js` | **No store was chosen when this module was built — deliberately — and the owner

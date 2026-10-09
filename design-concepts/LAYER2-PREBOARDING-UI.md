@@ -651,7 +651,7 @@ All seven strings in that table are **copy, not code**, and all seven need human
 
 The shipped constraint: an item carries a short `document_reference` — a file name, or the
 reference the hire gave — capped at 120 characters (`server/preboarding-items.js:283`–`:284`), and
-`server/document-store.js:66`–`:78` **refuses to store bytes by design** (owner's Option D,
+`server/document-store.js:89`–`:109` **refuses to store bytes by design** (owner's Option D,
 2026-10-07: reference string only, no bytes, until IFZA registration). A portal upload control
 would therefore be a lie, and building one is out of scope (D5).
 
