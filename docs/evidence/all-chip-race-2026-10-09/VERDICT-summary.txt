@@ -1,0 +1,47 @@
+waited 30s; after pass marker: 1
+== BEFORE (unmodified origin/main 1557d72, bundle index-gt1pFhU5.js md5 fb6e0df5493fc67a9d9cd9fba5dfa9e2) ==
+ samples 31 all-view groups 4 narrowed sets seen [1]
+  run 1 ticks 9 defect ticks 7 window t 484 - 5738
+  run 2 ticks 11 defect ticks 2 window t 4025 - 5684
+  run 3 ticks 11 defect ticks 2 window t 4032 - 5691
+ total defect ticks 11
+== AFTER (same tree + fix, bundle index-B8Hoaanh.js md5 abfe49feb21dc90b77743922f76a7399) ==
+ samples 31 all-view groups 4 narrowed sets seen [1]
+  run 1 ticks 9 defect ticks 0
+  run 2 ticks 11 defect ticks 0
+  run 3 ticks 11 defect ticks 0
+ total defect ticks 0
+listeners on 4718 after teardown: 0
+live 3000: 200
+evidence dir:
+/home/agent-senior-software-engineer/antum-people/docs/evidence/all-chip-race-2026-10-09:
+total 136
+drwxr-xr-x  3 root root  4096 Oct  9 13:38 .
+drwxr-xr-x 24 root root  4096 Oct  9 13:37 ..
+-rw-r--r--  1 root root   703 Oct  9 13:38 VERDICT-summary.txt
+-rw-r--r--  1 root root   828 Oct  9 13:38 after-fetches.json
+-rw-r--r--  1 root root   282 Oct  9 13:38 after-narrowed-it.json
+-rw-r--r--  1 root root  2042 Oct  9 13:38 after-panel-settled.txt
+-rw-r--r--  1 root root 10229 Oct  9 13:38 after-samples.json
+-rw-r--r--  1 root root   332 Oct  9 13:38 after-settled-all.json
+-rw-r--r--  1 root root     0 Oct  9 13:38 after-verdict.err
+-rw-r--r--  1 root root 13399 Oct  9 13:38 after-verdict.json
+-rw-r--r--  1 root root   282 Oct  9 13:37 before-narrowed-it.json
+-rw-r--r--  1 root root  9779 Oct  9 13:37 before-samples.json
+-rw-r--r--  1 root root   332 Oct  9 13:37 before-settled-all.json
+-rw-r--r--  1 root root     0 Oct  9 13:37 before-verdict.err
+-rw-r--r--  1 root root 12544 Oct  9 13:37 before-verdict.json
+-rw-r--r--  1 root root   442 Oct  9 13:37 build-fixed-log.txt
+-rw-r--r--  1 root root  8216 Oct  9 13:37 preflight-main-build.txt
+-rw-r--r--  1 root root  1967 Oct  9 13:37 rig-setup-log.txt
+drwxr-xr-x  2 root root   110 Oct  9 13:38 shots
+-rw-r--r--  1 root root 10556 Oct  9 13:38 transcript-after.txt
+-rw-r--r--  1 root root 10012 Oct  9 13:37 transcript-before.txt
+
+/home/agent-senior-software-engineer/antum-people/docs/evidence/all-chip-race-2026-10-09/shots:
+total 296
+drwxr-xr-x 2 root root    110 Oct  9 13:38 .
+drwxr-xr-x 3 root root   4096 Oct  9 13:38 ..
+-rw-r--r-- 1 root root 101116 Oct  9 13:38 after-2-race-window.png
+-rw-r--r-- 1 root root  92529 Oct  9 13:38 after-3-settled.png
+-rw-r--r-- 1 root root 101120 Oct  9 13:37 before-race-window.png

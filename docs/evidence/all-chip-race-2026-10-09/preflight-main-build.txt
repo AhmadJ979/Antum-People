@@ -1,0 +1,137 @@
+== HEAD/branch ==
+1557d72
+fix/all-chip-race-2c37f2da
+== client/ + server/ delta, served tree 0dd1a97 vs origin/main ==
+  (end delta)
+== full delta 0dd1a97..origin/main (paths only, count) ==
+48
+demo-walkthrough-script.md
+demo-weak-screens.md
+design-concepts/LAYER2-PREBOARDING-UI.md
+docs/evidence/exit-modal-opener/after-submit.json
+docs/evidence/exit-modal-opener/build-proof.txt
+docs/evidence/exit-modal-opener/counts-after.json
+docs/evidence/exit-modal-opener/counts-before.json
+docs/evidence/exit-modal-opener/exit-modal-probe.json
+docs/evidence/exit-modal-opener/fill-submit.json
+docs/evidence/exit-modal-opener/opener-present.json
+docs/evidence/exit-modal-opener/rig-setup.txt
+docs/evidence/exit-modal-opener/screenshots/01-offboarding-action-row.png
+docs/evidence/exit-modal-opener/screenshots/02-exit-modal-open.png
+docs/evidence/exit-modal-opener/step-opener-click.txt
+docs/evidence/exit-modal-opener/step-select-departing.txt
+docs/evidence/label-per-surface-2026-10-09/README.md
+docs/evidence/label-per-surface-2026-10-09/probes/count.js
+docs/evidence/label-per-surface-2026-10-09/probes/labels.js
+docs/evidence/label-per-surface-2026-10-09/probes/probe.js
+docs/evidence/label-per-surface-2026-10-09/raw-pass1/surface-analytics.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass1/surface-dashboard.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass1/surface-employees.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass1/surface-preboarding.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass1/surface-transitions.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass2/counts-analytics.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass2/counts-dashboard.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass2/counts-employees.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass2/counts-preboarding.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass2/counts-transitions.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass2/labels-analytics.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass2/labels-dashboard.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass2/labels-employees.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass2/labels-preboarding.json
+docs/evidence/label-per-surface-2026-10-09/raw-pass2/labels-transitions.json
+docs/evidence/label-per-surface-2026-10-09/shots/analytics.png
+docs/evidence/label-per-surface-2026-10-09/shots/dashboard.png
+docs/evidence/label-per-surface-2026-10-09/shots/employees.png
+docs/evidence/label-per-surface-2026-10-09/shots/preboarding.png
+docs/evidence/label-per-surface-2026-10-09/shots/transitions.png
+docs/evidence/label-per-surface-2026-10-09/transcripts/asset-check.txt
+docs/evidence/label-per-surface-2026-10-09/transcripts/pass.txt
+docs/evidence/label-per-surface-2026-10-09/transcripts/pass2.txt
+docs/evidence/label-per-surface-2026-10-09/transcripts/setup.txt
+docs/evidence/label-per-surface-2026-10-09/transcripts/tree-compare.txt
+docs/evidence/post-cutover-reground/README.md
+exit-intake-reachability-finding.md
+roadmap-board-index.md
+scripts/check-index-ids.py
+== clientWorkspaces / wsData usages ==
+453:  const [caseWorkspaces, setCaseWorkspaces] = useState<Record<string, WorkspaceBoard>>({});
+454:  const [workspaceFunction, setWorkspaceFunction] = useState<string>('All');
+687:  const fetchCaseWorkspace = async (caseId: string, fn: string = workspaceFunction) => {
+710:    if (openCaseId) await fetchCaseWorkspace(openCaseId, fn);
+717:    await fetchCaseWorkspace(caseId);
+766:    const cachedBoard = caseWorkspaces[caseId];
+767:    if (!cachedBoard || cachedBoard.view.mode !== 'all') await fetchCaseWorkspace(caseId, 'All');
+1772:                        const wsData = caseWorkspaces[row.case_id];
+1939:                                          {wsData && <span className="text-slate-400 normal-case tracking-normal"> · {wsData.totals.complete} of {wsData.totals.lines} done</span>}
+1940:                                          {wsData && wsData.totals.overdue > 0 && <span className="text-rose-600 normal-case tracking-normal font-semibold"> · {wsData.totals.overdue} past due</span>}
+1941:                                          {wsData && !wsData.track_active && <span className="text-amber-700 normal-case tracking-normal"> · track not active in this release</span>}
+1943:                                        {wsData && (
+1945:                                            from {wsData.derived_from.role} · {wsData.derived_from.department}
+1951:                                          {wsData ? wsData.view.label : 'View by function'}:
+1956:                                          // server returns whatever the view is. `wsData.totals.open` belonged
+1960:                                          const count = wsData
+1962:                                              ? wsData.available_functions.reduce((sum, f) => sum + f.open, 0)
+1963:                                              : (wsData.available_functions.find(f => f.function === fn)?.open ?? 0))
+1967:                                              className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${workspaceFunction === fn ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}>
+1973:                                      {wsData && (
+1974:                                        <p className="mt-1 text-[9px] text-slate-400">{wsData.view.note}</p>
+1976:                                      {!wsData ? (
+1980:                                          {wsData.groups.map(group => (
+== server workspace module ==
+total 376
+drwxr-xr-x  3 root root  4096 Oct  9 12:43 .
+drwxr-xr-x  9 root root  4096 Oct  9 13:27 ..
+-rw-r--r--  1 root root  2908 Oct  2 11:06 auth.js
+-rw-r--r--  1 root root  8082 Oct  9 09:32 column-migration.test.js
+-rw-r--r--  1 root root  8060 Oct  6 14:51 compliance_engine.js
+-rw-r--r--  1 root root  5416 Oct  9 09:32 db.js
+-rw-r--r--  1 root root 10911 Oct  9 09:32 demo-seed.test.js
+-rw-r--r--  1 root root  6070 Oct  9 12:43 document-store.js
+-rw-r--r--  1 root root  2693 Oct  2 11:06 eosb.js
+-rw-r--r--  1 root root  4179 Oct  2 11:06 eosb.test.js
+-rw-r--r--  1 root root 39491 Oct  9 09:32 index.js
+-rw-r--r--  1 root root  2369 Oct  2 11:06 migrate.js
+drwxr-xr-x 98 root root  4096 Oct  2 11:09 node_modules
+-rw-r--r--  1 root root 42716 Oct  2 11:09 package-lock.json
+-rw-r--r--  1 root root   413 Oct  2 11:06 package.json
+-rw-r--r--  1 root root  7562 Oct  9 09:32 preboarding-flag-scheduler.js
+-rw-r--r--  1 root root  9917 Oct  9 09:32 preboarding-flag.js
+-rw-r--r--  1 root root 12882 Oct  9 09:32 preboarding-flag.test.js
+-rw-r--r--  1 root root 28770 Oct  9 09:32 preboarding-items.js
+-rw-r--r--  1 root root 22253 Oct  9 12:43 preboarding-items.test.js
+-rw-r--r--  1 root root 15119 Oct  9 09:32 preboarding-package.js
+-rw-r--r--  1 root root 12350 Oct  9 09:32 preboarding-package.test.js
+-rw-r--r--  1 root root 20719 Oct  9 09:32 preboarding-workspace.js
+-rw-r--r--  1 root root 21458 Oct  9 09:32 preboarding-workspace.test.js
+-rw-r--r--  1 root root  9163 Oct  9 09:32 preboarding.js
+-rw-r--r--  1 root root  7717 Oct  7 12:21 preboarding.test.js
+-rw-r--r--  1 root root  7024 Oct  7 12:33 schema-migration.test.js
+-rw-r--r--  1 root root 10730 Oct  9 09:32 schema.sql
+== node_modules ==
+client/node_modules present (135M)
+server/node_modules present (7.9M)
+== pre-flight build (unmodified origin/main) ==
+
+> antum-people-client@0.0.0 build
+> tsc -b && vite build
+
+[36mvite v8.0.16 [32mbuilding client environment for production...[36m[39m
+[2Ktransforming...✓ 16 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-gt1pFhU5.js   270.52 kB │ gzip: 75.36 kB
+
+[32m✓ built in 423ms[39m
+
+real	0m4.780s
+user	0m4.554s
+sys	0m1.111s
+== built assets ==
+total 304
+drwxr-xr-x 2 root root     69 Oct  9 13:30 .
+drwxr-xr-x 3 root root     94 Oct  9 13:30 ..
+-rw-r--r-- 1 root root  35199 Oct  9 13:30 index-BLszozVg.css
+-rw-r--r-- 1 root root 270523 Oct  9 13:30 index-gt1pFhU5.js
+fb6e0df5493fc67a9d9cd9fba5dfa9e2  dist/assets/index-gt1pFhU5.js
