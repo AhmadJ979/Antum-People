@@ -1,0 +1,41 @@
+{
+  "body_len": 9564,
+  "chips": [
+    "All (14)",
+    "IT (5) [SELECTED]",
+    "Admin (3)",
+    "HR (2)",
+    "Manager (4)"
+  ],
+  "due_blocks": [
+    "Laptop or device issuedIT · hardware · not started · due 2026-10-05 (D-5) · 4 d past dueRequested",
+    "Laptop or device issuedIT · hardware · not started · due 2026-10-05 (D-5) · 4 d past due",
+    "IT · hardware · not started · due 2026-10-05 (D-5) · 4 d past due",
+    "Email and SSO account createdIT · email · not started · due 2026-10-05 (D-5) · 4 d past dueRequested",
+    "Email and SSO account createdIT · email · not started · due 2026-10-05 (D-5) · 4 d past due",
+    "IT · email · not started · due 2026-10-05 (D-5) · 4 d past due",
+    "Licensed software installedIT · software · not started · due 2026-10-07 (D-3) · 2 d past dueRequested",
+    "Licensed software installedIT · software · not started · due 2026-10-07 (D-3) · 2 d past due",
+    "IT · software · not started · due 2026-10-07 (D-3) · 2 d past due",
+    "System access granted with the role's permissionsIT · system access · not started · due 2026-10-07 (D-3) · 2 d past dueRequested",
+    "System access granted with the role's permissionsIT · system access · not started · due 2026-10-07 (D-3) · 2 d past due",
+    "IT · system access · not started · due 2026-10-07 (D-3) · 2 d past due",
+    "VPN access provisionedIT · system access · not started · due 2026-10-07 (D-3) · 2 d past dueRequested",
+    "VPN access provisionedIT · system access · not started · due 2026-10-07 (D-3) · 2 d past due"
+  ],
+  "items_texts": [
+    "21 items"
+  ],
+  "panel_found": true,
+  "panel_text": "WORKSPACE TRACK · 0 of 5 done · 5 past due from Marketing Coordinator · Marketing View by function: All (14) IT (5) Admin (3) HR (2) Manager (4) This narrows the board to one function. It is a filter, not access control: everyone signed in can still open any case and see every line. Per-user scoping — \"My lines\" — ships with per-user accounts at Layer 3. IT · 0/5 Laptop or device issued IT · hardware · not started · due 2026-10-05 (D-5) · 4 d past due Requested Email and SSO account created IT · email · not started · due 2026-10-05 (D-5) · 4 d past due Requested Licensed software installed IT · software · not started · due 2026-10-07 (D-3) · 2 d past due Requested System access granted with the role's permissions IT · system access · not started · due 2026-10-07 (D-3) · 2 d past due Requested VPN access provisioned IT · system access · not started · due 2026-10-07 (D-3) · 2 d past due Requested",
+  "rollup_rows": [
+    "Yousef Al-HammadiOperations Analyst · OperationsUAEStarted 1 day ago · 21 items openOpenStart: 2026-10-08 · started 1 d agoVerified: 0/7 · 7 outstandingWorkspace: 0 of 14 done · 14 openStarted with 21 items still openBank details (IBAN letter) · not started · no owner on this item — the employee-track items carry no owner fieldEducation certificate · not started · no owner on this item — the employee-track items carry no owner fieldEmergency contact · not started · no owner on this item — the employee-track items carry no owner fieldEmirates ID · not started · no owner on this item — the employee-track items carry no owner fieldExperience certificate · not started · no owner on this item — the employee-track items carry no owner fieldPassport copy · not started · no owner on this item — the employee-track items carry no owner fieldVisa or entry permit · not started · no owner on this item — the employee-track items carry no owner fieldBuddy or mentor assigned · not started · owner: ManagerBuilding card or access badge issued · not started · owner: Admin30-day check-in scheduled · not started · owner: ManagerDesk and seat allocated · not started · owner: AdminLaptop or device issued · not started · owner: ITEmail and SSO account created · not started · owner: ITEmployee file opened · not started · owner: HRFirst-week agenda prepared · not started · owner: ManagerLicensed software installed · not started · owner: ITParking pass issued · not started · owner: AdminPayroll setup · not started · owner: HRSystem access granted with the role's permissions · not started · owner: ITTeam introduction arranged · not started · owner: ManagerVPN access provisioned · not started · owner: ITStart 2026-10-08 · 1 d agoThese were due before day one.Passport copy · not startedVisa or entry permit · not startedEmirates ID · not startedEducation certificate · not startedExperience certificate · not startedBank details (IBAN letter) · not startedEmergency contact · not startedNo PDPL consent record — no document can be collected on this case yet.OFR-2026-DEMO-03",
+    "Mariam Al-KaabiMarketing Coordinator · MarketingUAEInside 48 hours · 21 items openCloseStart: 2026-10-10 · 13.1 h before 00:00 on the start dateVerified: 0/7 · 7 outstandingWorkspace: 0 of 14 done · 14 open21 items open · start in 48 hours or lessBank details (IBAN letter) · not started · no owner on this item — the employee-track items carry no owner fieldEducation certificate · not started · no owner on this item — the employee-track items carry no owner fieldEmergency contact · not started · no owner on this item — the employee-track items carry no owner fieldEmirates ID · not started · no owner on this item — the employee-track items carry no owner fieldExperience certificate · not started · no owner on this item — the employee-track items carry no owner fieldPassport copy · not started · no owner on this item — the employee-track items carry no owner fieldVisa or entry permit · not started · no owner on this item — the employee-track items carry no owner fieldBuddy or mentor assigned · not started · owner: ManagerBuilding card or access badge issued · not started · owner: Admin30-day check-in scheduled · not started · owner: ManagerDesk and seat allocated · not started · owner: AdminLaptop or device issued · not started · owner: ITEmail and SSO account created · not started · owner: ITEmployee file opened · not started · owner: HRFirst-week agenda prepared · not started · owner: ManagerLicensed software installed · not started · owner: ITParking pass issued · not started · owner: AdminPayroll setup · not started · owner: HRSystem access granted with the role's permissions · not started · owner: ITTeam introduction arranged · not started · owner: ManagerVPN access provisioned · not started · owner: ITStart 2026-10-10 · 13.1 h before 00:00 on the start datePassport copy · not startedVisa or entry permit · not startedEmirates ID · not startedEducation certificate · not startedExperience certificate · not startedBank details (IBAN letter) · not startedEmergency contact · not startedNo PDPL consent record — no document can be collected on this case yet.OFR-2026-DEMO-02",
+    "Omar Al-FarsiFinance Analyst · FinanceUAEOn trackOpenStart: 2026-10-23 · 14 dVerified: 0/7 · 7 outstandingWorkspace: 0 of 15 done · 15 openPassport copy · requestedVisa or entry permit · requestedEmirates ID · requestedEducation certificate · not startedExperience certificate · not startedBank details (IBAN letter) · not startedEmergency contact · not startedNo PDPL consent record — no document can be collected on this case yet.OFR-2026-DEMO-01"
+  ],
+  "track_count_texts": [
+    "0 of 14 done",
+    "0 of 5 done",
+    "0 of 15 done"
+  ]
+}

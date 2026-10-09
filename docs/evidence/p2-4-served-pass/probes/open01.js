@@ -1,0 +1,1 @@
+(function(){var b=Array.prototype.slice.call(document.querySelectorAll('button')).filter(function(x){return String(x.textContent).indexOf('OFR-2026-DEMO-01')>=0;})[0]; if(!b) return 'no row 01'; b.click(); return 'clicked row 01';})()

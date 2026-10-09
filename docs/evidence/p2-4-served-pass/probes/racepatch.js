@@ -1,0 +1,1 @@
+(function(){var o=window.fetch; window.__samples=[]; window.fetch=function(u,x){var p=o.apply(this,arguments); if(String(u).indexOf('/workspace')>=0){return new Promise(function(res){setTimeout(function(){res(p);},2500);});} return p;}; return 'workspace reads delayed 2500ms';})()

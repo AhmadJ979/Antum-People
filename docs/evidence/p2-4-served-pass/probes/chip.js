@@ -1,0 +1,1 @@
+(function(){var want=(window.__chip||'IT'); var b=Array.prototype.slice.call(document.querySelectorAll('button')).filter(function(x){return new RegExp('^'+want+' \\([0-9]+\\)$').test(String(x.textContent).replace(/\s+/g,' ').trim());})[0]; if(!b) return 'no chip '+want; b.click(); return 'clicked chip '+want;})()
