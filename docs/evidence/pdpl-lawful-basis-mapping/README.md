@@ -167,3 +167,105 @@ $ git show origin/main:server/eosb.js | md5sum
 - **The record** is one row per case with no withdrawal column (`schema.sql:258-267`).
 - **No code was changed by this row**: the gate, the literals and the copy are exactly as the transcripts show
   them, and `server/eosb.js` is byte-identical at `36b5dcdc0ee64e0cad5505dd757a5742`.
+
+# Addendum — the audit of the six counsel questions (2026-10-09T14:56:46Z UTC)
+
+Added after the lead's instruction: *"If, doing this, you find that one of the six questions is not actually
+a question (because the repository already answers it), say so and drop it; a shorter letter is a better letter."*
+
+Each of the six was checked against our own materials at `origin/main` = **`631bdd5`**. The verdicts are in the
+document's §4; these are the outputs behind them. **The decisive check was the section heading** — an Arabic
+obligation and an Arabic-mandatory contract row both exist in this repository, and both sit under **KSA**,
+which is the jurisdiction we have held. Read on the heading, not on the phrase.
+
+## Which jurisdiction each contract row belongs to (this is what decides the drop)
+
+```bash
+$ git show origin/main:compliance-requirements.md | grep -n '^##' | sed -n '1,10p'
+11:## Table of Contents
+25:## 1. UAE Labor Law
+27:### 1.1 Governing Legislation
+34:### 1.2 Onboarding Requirements
+46:### 1.3 Offboarding Requirements
+62:## 2. KSA Labor Law
+64:### 2.1 Governing Legislation
+70:### 2.2 Onboarding Requirements
+83:### 2.3 Offboarding Requirements
+97:## 3. EOSB — UAE
+```
+
+## The UAE contract row (in 1.2) — the repository's answer for the UAE
+
+```bash
+$ git show origin/main:compliance-requirements.md | sed -n '38p'
+| **Employment Contract** | Must be in writing (Arabic + English/other). Must be the standard MoHRE contract template. Must specify: salary, duration, work location, working hours, leave entitlements. | Schema needs contract_type (limited/unlimited), contract_language fields. Generate compliant contract templates. |
+```
+
+## The KSA contract row (in 2.2) — the row my first draft wrongly cited
+
+```bash
+$ git show origin/main:compliance-requirements.md | sed -n '74p'
+| **Employment Contract** | Must be in Arabic (bilingual contracts permitted). Must specify: salary, duration, place of work, probation period, leave, notice period. Must be in writing. | Similar to UAE — support Arabic as mandatory language, contract templates. |
+```
+
+## The UAE PDPL 5.2 baseline: consent is not the instrument here
+
+```bash
+$ git show origin/main:compliance-requirements.md | grep -n 'Contractual necessity\|Art. 4(2)' | head -4
+300:| **Consent** | Processing employee data requires explicit consent. For HR processing (contractual necessity), Art. 4(2) allows processing without consent. | Consent capture on onboarding. Purpose limitation notices. |
+```
+
+## The Arabic-notice obligation sits under KSA, not UAE
+
+```bash
+$ git show origin/main:compliance-dpia-vendor-risk.md | sed -n '42p;47p'
+### 1.2 KSA PDPL (Royal Decree M/148, as amended 2023)
+| **Controller obligations** | Art. 7, Art. 10 | Controller must ensure lawful processing; publish a privacy policy in Arabic. | Arabic-first notices; controller register. |
+```
+
+## Nothing gives the emergency contact a basis
+
+```bash
+$ git grep -n -i 'emergency contact' origin/main -- '*.md' 'server/preboarding-items.js' | grep -v '^origin/main:client' | cut -c1-120
+origin/main:design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md:32:| The item sets | `server/preboarding-items.js:64`–
+origin/main:design-concepts/LAYER2-PREBOARDING-UI.md:252:│  │ ☐ Emergency contact      pending     │  │       
+origin/main:pdpl-portal-boundary-memo.md:36:**The question:** what must a UAE PDPL-compliant notice contain at the point
+origin/main:pdpl-portal-boundary-memo.md:75:| Emergency contact | *(no row covers it — see 3.3)* |
+origin/main:pdpl-portal-boundary-memo.md:93:### 3.3 The emergency contact is a different person
+origin/main:pdpl-portal-boundary-memo.md:221:6. **No implication that the hire's acknowledgement covers the emergency co
+origin/main:pdpl-portal-boundary-memo.md:242:| What is the lawful basis for an **emergency contact's** data, and who may
+origin/main:pdpl-portal-boundary-memo.md:256:4. **A separate, explicit line for the emergency contact** — a different 
+origin/main:pdpl-portal-boundary-memo.md:274:- `server/preboarding-items.js:29-31` (no bytes, reference only) · `:47` (
+origin/main:server/preboarding-items.js:77:      { item_key: 'emergency_contact', label: 'Emergency contact', category: 
+origin/main:server/preboarding-items.js:89:      { item_key: 'emergency_contact', label: 'Emergency contact', category: 
+origin/main:templates/privacy-notice.md:29:| **Contact Data** | home address, personal email, mobile number, emergency c
+```
+
+## The retention floor the notice already asserts (UAE column)
+
+```bash
+$ git show origin/main:templates/privacy-notice.md | sed -n '58,62p'
+| Record Type | UAE | KSA |
+|---|---|---|
+| Employment & payroll records | Minimum **2 years** post-termination (Labour Law) | Minimum **2 years** post-termination (Labour Law) |
+| End-of-Service (EOSB) and financial/settlement records | **5 years** (commercial/audit) | **6 years** (ZATCA tax retention) |
+| Consent records | Duration of employment + retention period | Duration of employment + retention period |
+```
+
+## The notice's own caution about its article references
+
+```bash
+$ git show origin/main:templates/privacy-notice.md | sed -n '8p'
+> **Note / ملاحظة:** Article references follow the Antum People compliance reference set. Confirm against final official translations before client-facing certification.
+```
+
+## Verdicts, and what each rests on
+
+| Question | Verdict | Resting on |
+|---|---|---|
+| 1 notice content | stands | our six elements are our own list, no article (`compliance-requirements.md:312-318`); the template says its references need confirming (`:8`) |
+| 2 Arabic notice | stands, sharpened | the only Arabic-notice obligation in the repository is **KSA** (`compliance-dpia-vendor-risk.md:42,47`); nothing for the UAE |
+| 3 Arabic contract | **dropped** | **UAE §1.2** answers it — writing, "Arabic + English/other" (`:38`); the Arabic-mandatory row is **KSA §2.2** (`:74`) |
+| 4 consent as a basis | narrowed | our **§5.2 UAE** baseline already says contractual necessity allows processing without consent (`:300`) |
+| 5 emergency contact | stands | no purpose row in the notice (`:43-50`), nothing else in the repository |
+| 6 retention floor | narrowed | the notice already asserts the floor (`:58-62`) |
