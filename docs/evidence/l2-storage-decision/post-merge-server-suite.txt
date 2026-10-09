@@ -1,0 +1,15 @@
+=== server suite on the merged tree (0dd1a97)
+ok 31 - schema.sql migrates a database that already has rows
+  ---
+  duration_ms: 10.987524
+  type: 'suite'
+  ...
+1..31
+# tests 134
+# suites 31
+# pass 134
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2049.714428
