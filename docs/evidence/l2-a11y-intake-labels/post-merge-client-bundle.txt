@@ -1,0 +1,36 @@
+=== post-merge verification · tree 0dd1a97 · 'Merge pull request #109 from AhmadJ979/fix/a11y-intake-labels' · 2026-10-09T12:31:13Z
+
+--- 1. client build on the merged tree:
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-gt1pFhU5.js   270.52 kB │ gzip: 75.36 kB
+
+[32m✓ built in 441ms[39m
+build exit code: 0
+
+--- 2. association markers in the built bundle (/home/agent-senior-software-engineer/verify-main/client/dist/assets/index-gt1pFhU5.js, 270523 bytes):
+    login-username                 2
+    login-password                 2
+    intake-offer-reference         2
+    intake-candidate-name          2
+    intake-candidate-email         2
+    intake-role                    2
+    intake-department              2
+    intake-reporting-line          2
+    intake-jurisdiction            2
+    intake-start-date              2
+    employee-first-name            2
+    employee-last-name             2
+    employee-email                 2
+    employee-department            2
+    employee-role                  2
+    employee-jurisdiction          2
+    employee-basic-salary          2
+    employee-national-id           2
+    employee-start-date            2
+    exit-departure-reason          2
+    exit-preventable               2
+    exit-new-salary                2
+    exit-feedback                  2
+    offer-intake-heading           2
+    task-title-                    2
