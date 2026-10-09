@@ -1,5 +1,7 @@
 # Post-cutover re-grounding of the demo documents — 2026-10-09
 
+> **Superseded in part, same day — the readings stand, the bundle moved.** This is the measurement of the **10:46 cutover's tree (`2028894`)** and it is kept exactly as taken. A **second cutover** ran **12:34 UTC on 2026-10-09** (tree `0dd1a97`, the accessibility fix #109); the served bundle is now **`assets/index-gt1pFhU5.js`, 270,523 bytes** (`assets/index-BLszozVg.css`) and the demo was re-seeded at **12:34:14**. **The figures it records did not move** — the second seed reproduced them figure-for-figure. For current state read `demo-weak-screens.md` and `demo-walkthrough-script.md`.
+
 **Why this exists:** rows `0fb0cd6a` (the demo's counts and the script's spoken figures) and the
 audit's P2-4 wording. Every number this file records is a number now written into
 `demo-weak-screens.md` and `demo-walkthrough-script.md`, so the two documents can be checked against
