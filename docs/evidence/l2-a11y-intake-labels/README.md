@@ -84,10 +84,15 @@ no `type`, no `required` and no handler was touched — which is also why the do
   with no tasks (`before/03-employee-detail.json` and `after/03-employee-detail.json` both: `total: 0`), so the
   checkbox never existed to measure. Its name comes from `aria-labelledby` → the task title div, verified in
   source and in the bundle.
-- **The dogfood's two behaviour checks were dispatched but their transcript did not finish inside this run.**
-  `after/behaviour.txt` is where it lands (submit with an empty start date → the browser's own `required`
-  validation; fill → submit → a case is created). What I claim instead is the mechanism: the diff proves no
-  validation attribute and no submit handler changed, so the behaviour the dogfood recorded is untouched.
+- **The dogfood's two behaviour checks: one is proven, one is not** (`after/behaviour.txt`, verbatim).
+  *Empty start date → submit*: the browser's own `required` validation still fires — `validBefore: false`,
+  `"Please fill out this field."` before and after the click, focus left inside the form — and **no case is
+  created** (cases: 3 before, 3 after). *Fill → submit*: **my own check script was buggy**, not the app — it
+  looked its values up by a hyphenated key while the table was keyed with underscores, so six fields were
+  typed the literal string `undefined` and the start date stayed empty; the submit was then blocked by the same
+  validation and the count stayed at 3. **I do not claim the submit leg from this run.** What stands behind it
+  is the diff: no `required`, no `type` and no `onSubmit` changed, so the path the dogfood exercised is
+  untouched — and the empty-submit leg above shows the form is alive and still gates on an incomplete submit.
 - **The client was not rebuilt for the live deployment** — `client/dist` is not committed and nothing here is
   deployed. This is undeployed until the lead cuts over.
 
