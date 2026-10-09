@@ -602,16 +602,18 @@ app.post('/api/preboarding/cases', async (req, res) => {
 // jurisdiction, UAE-first) and `?status=` (the screen's tile is labelled "Cases open", so the
 // client asks for the open ones — the number and the label cannot disagree). An unknown status
 // is a 400, never a filter that quietly matches nothing.
-// The response is the module's envelope, `{ cases, totals }`, served unchanged: this route is
-// transport and shapes nothing, so a second caller of `listCases` cannot receive a different
-// payload than this one does.
+//
+// The response is the collection contract, `{ cases, totals }`. The envelope is composed **here**,
+// at the HTTP boundary, and not inside `preboarding.listCases`: that function is an internal API
+// whose array return has module-level callers and tests, while the HTTP contract is where the shape
+// is owed — and one place composes it, so a second consumer of the list cannot get a third shape.
 app.get('/api/preboarding/cases', async (req, res) => {
   try {
-    const envelope = await preboarding.listCases({
+    const cases = await preboarding.listCases({
       jurisdiction: req.query.jurisdiction,
       status: req.query.status,
     });
-    res.json(envelope);
+    res.json({ cases, totals: preboarding.caseTotals(cases) });
   } catch (err) {
     if (err instanceof preboarding.OfferAcceptanceError) {
       return res.status(err.status).json({ error: err.message });

@@ -102,12 +102,24 @@ async function findByOfferReference(offerReference) {
 const CASE_STATUSES = ['open', 'closed'];
 
 /**
- * The cases matching the filters, as an envelope.
+ * The totals for a set of cases a caller has already read. Pure: it queries nothing.
  *
- * @returns {Promise<{cases: object[], totals: {cases: number, open: number, closed: number}}>}
- *          `totals` describes the set this call returned, not the jurisdiction's roll-up — the
- *          note inside says why the two are kept apart.
+ * `{cases, totals}` is the collection contract **at HTTP** (`GET /api/preboarding/cases`), but the
+ * envelope is composed at the route, not here: this module is an internal API, `listCases` keeps
+ * returning a plain array for its module-level callers and their tests, and the arithmetic behind
+ * the number a caller reads lives in exactly one place — this function.
+ *
+ * `open + closed === cases` because `CASE_STATUSES` is exactly those two values.
  */
+function caseTotals(cases) {
+  const rows = Array.isArray(cases) ? cases : [];
+  return {
+    cases: rows.length,
+    open: rows.filter((row) => row.status === 'open').length,
+    closed: rows.filter((row) => row.status === 'closed').length,
+  };
+}
+
 async function listCases(options = {}) {
   const conditions = [];
   if (options.jurisdiction) {
@@ -121,27 +133,7 @@ async function listCases(options = {}) {
     conditions.push(`status = ${db.escapeString(status)}`);
   }
   const where = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : '';
-  const cases = await db.query(`${SELECT_CASE}${where} ORDER BY start_date ASC, created_at ASC`);
-
-  // THE COLLECTION CONTRACT: `{ cases, totals }`, built here rather than wrapped at the route, so
-  // that every caller of this function gets one shape — the route in index.js today, the ATS
-  // adapter when a signed pilot brings one, and the tests. A caller that only wants rows reads
-  // `.cases`; a caller that wants the size of what it asked for reads `.totals`.
-  //
-  // `totals` counts THE SET THIS CALL RETURNED, under this call's own filters. It is deliberately
-  // NOT the checklist roll-up (`preboardingItems.checklistOverview`), which counts items, consents
-  // and workspace lines across a whole jurisdiction: the two answer different questions about
-  // different sets, and printing them as one number is the defect this separation exists to keep
-  // out. `open + closed === cases` because `CASE_STATUSES` is exactly those two and the filter
-  // above accepts nothing else.
-  return {
-    cases,
-    totals: {
-      cases: cases.length,
-      open: cases.filter((row) => row.status === 'open').length,
-      closed: cases.filter((row) => row.status === 'closed').length,
-    },
-  };
+  return db.query(`${SELECT_CASE}${where} ORDER BY start_date ASC, created_at ASC`);
 }
 
 async function getCase(id) {
@@ -235,5 +227,6 @@ module.exports = {
   normaliseOfferAcceptance,
   recordOfferAcceptance,
   listCases,
+  caseTotals,
   getCase,
 };

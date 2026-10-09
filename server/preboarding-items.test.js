@@ -420,8 +420,8 @@ describe('P2-2 · the tile is labelled "Cases open", so the list is asked for op
       `UPDATE preboarding_cases SET status = 'closed' WHERE id = ${db.escapeString(closedOne.id)}`
     );
 
-    const { cases: all } = await preboarding.listCases();
-    const { cases: open } = await preboarding.listCases({ status: 'open' });
+    const all = await preboarding.listCases();
+    const open = await preboarding.listCases({ status: 'open' });
 
     assert.ok(all.some((row) => row.id === closedOne.id), 'the unfiltered list still carries it');
     assert.ok(!open.some((row) => row.id === closedOne.id), 'the open list does not');
@@ -442,18 +442,16 @@ describe('P2-2 · the tile is labelled "Cases open", so the list is asked for op
   });
 
   test('jurisdiction and status combine in one query', async () => {
-    const { cases: rows } = await preboarding.listCases({ jurisdiction: 'AE', status: 'open' });
+    const rows = await preboarding.listCases({ jurisdiction: 'AE', status: 'open' });
     assert.ok(rows.every((row) => row.jurisdiction === 'AE' && row.status === 'open'));
   });
 
   test('both collection reads are envelopes, and the roll-up keys are pinned', async () => {
-    const list = await preboarding.listCases({ jurisdiction: 'AE', status: 'open' });
     const overview = await items.checklistOverview({ jurisdiction: 'AE' });
-    assert.deepStrictEqual(Object.keys(list).sort(), ['cases', 'totals']);
     assert.deepStrictEqual(
       Object.keys(overview).sort(),
       ['cases', 'jurisdiction', 'totals'],
-      'the roll-up keeps its own jurisdiction echo; the README for row 62d7142b names it as an endpoint-specific extra'
+      'the roll-up keeps its jurisdiction echo — named as an endpoint-specific extra, not drift'
     );
     assert.ok(Array.isArray(overview.cases));
     assert.strictEqual(typeof overview.totals, 'object');

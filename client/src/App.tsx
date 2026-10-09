@@ -580,12 +580,10 @@ export default function App() {
         return;
       }
       const data = await res.json();
-      // The list endpoint answers with the envelope `{ cases, totals }` — `preboarding.listCases`
-      // builds it and the route serves it unchanged. This screen reads `cases`; the tile below
-      // counts this array, which is the set this request asked for (`status=open` above), so the
-      // count and its "Cases open" label still agree. There is no fallback to a bare array on
-      // purpose: the client and the server ship from one tree and one bundle, which is why the
-      // cutover for this change is owed rather than optional.
+      // The list endpoint's collection contract is the envelope `{ cases, totals }`, composed at the
+      // route in server/index.js. This screen reads `cases` — the rows themselves. There is no
+      // fallback to a bare array on purpose: the client and the server ship from one tree and one
+      // bundle, which is why the cutover for this change is owed rather than optional.
       setPreboardingCases(data.cases);
     } catch (err) {
       console.error('Error fetching pre-boarding cases:', err);
@@ -1679,6 +1677,12 @@ export default function App() {
                     </p>
                   </div>
                   <div className="text-right shrink-0 ml-6">
+                    {/* Decision (2026-10-09, row 62d7142b): the tile counts the rows this screen
+                        holds, not the server's `totals.open`. The two agree today — the request
+                        above asks for `status=open`, measured equal in
+                        docs/evidence/response-shape-envelope-2026-10-09/ — and a tile that counted
+                        rows the screen does not show would be the worse of the two. If this list is
+                        ever paginated, this must move to `totals.open` or it will under-count. */}
                     <div className="text-2xl font-extrabold text-slate-900">{preboardingCases.length}</div>
                     <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cases open</div>
                   </div>
