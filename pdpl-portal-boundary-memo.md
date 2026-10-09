@@ -4,6 +4,7 @@
 **Author:** Compliance Expert · **Date:** 2026-10-09
 **Measured against:** `AhmadJ979/Antum-People` @ **`b7630cb`** (merged PR #86, P2-4), fetched 2026-10-09. Every `file:line` below is that tree.
 **Landed on:** `main` @ **`6221995`** (merged PR #93) — the tree the landing PR was rebased onto and every citation re-checked against. Six PRs merged while it was open (#84, #87, #88, #91, #92, #93), and the claim that matters is about their **class of files**, not the sha: `git diff --name-only b7630cb..6221995 | grep -c '^client/\|^server/'` → `0`, and the same filter over `compliance-requirements.md|legal-signoff-checklist.md|compliance-dpia-vendor-risk.md|templates/` → `0` lines. **If `main` has moved since, re-run those two commands before trusting a `file:line` here** — the merges were docs, evidence and images only (`roadmap-board-index.md`, `demo-weak-screens.md`, `demo-walkthrough-script.md`, `pilot-outreach-messages.md`, `design-concepts/**`, `docs/evidence/**`), which is why no citation moved. Stated as that reason, not a re-dating.
+**Re-grounded 2026-10-09 at `cd9daa8`:** those two commands now return non-zero — `client/src/App.tsx`, `server/index.js`, `server/preboarding.js` and `server/document-store.js` all changed after the landing — so facts 4-6 and the evidence index were re-read at `cd9daa8` and their citations updated. **Fact 5 was wrong, not merely stale**; the correction is stated in full under §5.1. The findings are unchanged.
 **Status:** working position, not legal advice. Each claim below is either **sourced** (to our own record, named), or marked **[UNCONFIRMED]**. Nothing here asserts that an existing claim is wrong — where our materials and this memo differ, the item is flagged for the lead.
 
 > **The discipline this memo follows** (settled by the team, `statutory-claims-determination.md`): a claim is cited or it is marked unconfirmed; a qualifier with no source behind it is **dropped, not kept for tone**; and no EOSB claim appears here. The UAE EOSB engine is frozen and is out of scope.
@@ -17,11 +18,11 @@ Seven facts. Nothing in the sections that follow makes sense without them.
 | # | Fact | Evidence (`b7630cb`) |
 |---|---|---|
 | 1 | **Antum is the processor; each client (employer) is the controller.** The notice is therefore *the employer's* notice, presented in Antum's product. The controller-side `[dpo_name]` placeholder in the notice belongs to the client's own DPO and is deliberately unfilled. | `legal-signoff-checklist.md:15,17` |
-| 2 | **The gate is server-side, on the item transition to `received`/`verified`** (`COLLECTED_STATUSES`), not in the UI, so a direct API call cannot bypass it. A refusal is HTTP 428. | `server/preboarding-items.js:47`, and the gate at `:327-328` |
+| 2 | **The gate is server-side, on the item transition to `received`/`verified`** (`COLLECTED_STATUSES`), not in the UI, so a direct API call cannot bypass it. A refusal is HTTP 428. | `server/preboarding-items.js:47`, and the gate at `:326-332` |
 | 3 | **The pre-boarding consent record is per case, one row, no withdrawal.** `preboarding_consents(id, case_id UNIQUE, consent_type, lawful_basis, consent_version, granted_at, recorded_by, created_at)` — no `revoked_at`, no notice text, no notice hash. | `server/schema.sql:258-267` |
-| 4 | **The client sends three literals.** Every consent record today says `consent_type:'pdpl_notice'`, `lawful_basis:'consent'`, `consent_version:'v1'` — regardless of which documents the case carries. | `client/src/App.tsx:793` |
-| 5 | **`recorded_by` is the signed-in user's username**, and there is one shared admin account until Layer 3. | `server/index.js:771` (route at `:718`) |
-| 6 | **The notice is never shown at the point of collection.** A "Record PDPL consent" button sits on the case card; the notice itself is reachable only as a *template download* in the documents area, keyed to an employee. | `client/src/App.tsx:1868` (button), `:1889` (tooltip), `:1842` (row copy), `:1423` (template download) |
+| 4 | **The client sends three literals.** Every consent record today says `consent_type:'pdpl_notice'`, `lawful_basis:'consent'`, `consent_version:'v1'` — regardless of which documents the case carries. | `client/src/App.tsx:849` |
+| 5 | **The acting party can be nobody.** The route sends `actor` = the signed-in username **or the literal `'system'`** (`server/index.js:728`, route at `:721`), and the module falls back to `'system'` itself when writing the `recorded_by` column (`server/preboarding-items.js:242`). One shared admin account until Layer 3 makes the username a shared identity in any case. | cited |
+| 6 | **The notice is never shown at the point of collection.** A "Record PDPL consent" button sits on the case card; the notice itself is reachable only as a *template download* in the documents area, keyed to an employee. | `client/src/App.tsx:1942` (button), `:1963` (tooltip), `:1914-1916` (row copy), `:1479` (template download) |
 | 7 | **The product holds a reference, not bytes.** An item carries `document_reference` (≤120 chars), a file name or the reference the hire quoted; it never enters the audit trail, and there is no file storage in this release. | `server/preboarding-items.js:29-31`, limit at `:284` |
 
 Two further facts that shape the answers:
@@ -98,7 +99,7 @@ Emergency-contact data is **third-party personal data**: the contact is not the 
 
 ### 3.4 What must change in the copy
 
-The UI string "✗ MISSING / REQUIRED" on the employee record (`client/src/App.tsx:1407-1408`) asserts a *requirement* to record consent. That is the unsourced-qualifier class we have already removed once (`statutory-claims-determination.md`). Recommended: "Not recorded", and, for the case card, "No notice acknowledgement on this case yet — documents cannot be collected until it is recorded."
+The UI string "✗ MISSING / REQUIRED" on the employee record (`client/src/App.tsx:1464`) asserts a *requirement* to record consent. That is the unsourced-qualifier class we have already removed once (`statutory-claims-determination.md`). Recommended: "Not recorded", and, for the case card, "No notice acknowledgement on this case yet — documents cannot be collected until it is recorded."
 
 ---
 
@@ -144,13 +145,15 @@ An accurate reading of `preboarding_consents` (fact 3) plus the writer (facts 4-
 | Field | What it actually proves |
 |---|---|
 | `granted_at` | A timestamp exists. Reliable. |
-| `recorded_by` | *That the shared admin account recorded a row.* It does **not** prove the hire was shown anything — the hire is not the actor today. |
+| `recorded_by` | *That the shared admin account recorded a row* — or, when no session is present, only the string `'system'` (`server/preboarding-items.js:242`). It does **not** prove the hire was shown anything: the hire is not the actor today. |
 | `consent_version` | The literal `'v1'`, which corresponds to **no document**: the notice on file is **v2.2**. Measured history — the notice has read v2.2 since `02aa858` (2026-09-17), and the literal was typed three weeks later in `9c07344` (2026-10-07, P2-2). It was therefore never a version reference, stale or otherwise, so the record cannot prove which notice, if any, was shown. |
 | `lawful_basis` | The literal `'consent'` for every case — see §3. |
 | `consent_type` | The literal `'pdpl_notice'`. Naming a notice that is not displayed in the product. |
 | *(absent)* | No notice text, no notice hash, no withdrawal, no scope (which items the acknowledgement covers). |
 
 **So the truthful sentence about today's record is:** *the product records that the signed-in administrator recorded a PDPL consent record against a case, at a time, citing a version string that does not resolve to a document.* Nothing more. No copy may claim more.
+
+> **Correction, 2026-10-09.** This memo's first revision said *"`recorded_by` is the signed-in user's username"*, citing `server/index.js:771`. Re-read at `cd9daa8`, that was wrong in two ways: the consent route sends **`actor`**, not `recorded_by` (`server/index.js:721-728`), and the module itself writes `input.actor || 'system'` into the `recorded_by` column (`server/preboarding-items.js:242`) — so the field **can name no person at all**. The `recorded_by` at `index.js`'s old `:771` belongs to the *pre-reading acknowledgement* route, a stricter module that **requires** a named actor (`server/preboarding-package.js:196-205`). The finding is unchanged and in fact sharper — the same codebase refuses an invented actor for the acknowledgement and permits one for the consent — but the first description was too generous to the product, and this is the record of the correction.
 
 ### 5.2 What it must prove once the hire is the actor
 
@@ -269,11 +272,11 @@ In order, on the hire's document step:
 - **No EOSB content.** The UAE engine is frozen and out of scope; no EOSB claim, tier or figure appears above.
 - **No legal conclusion.** Everything marked [UNCONFIRMED] stays unconfirmed: it is a question for counsel (§8), not an assertion this memo is entitled to make.
 
-## Evidence index (all at `b7630cb`, and unchanged at `6221995` — see the header's command)
+## Evidence index (read at `b7630cb`, re-read at `cd9daa8` — the header says what moved and why)
 
 - `server/preboarding-items.js:29-31` (no bytes, reference only) · `:47` (`COLLECTED_STATUSES`) · `:284` (reference ≤120) · `:206` (`hasConsent`) · `:327-328` (the gate) · `DOCUMENT_SETS` (AE set: passport, visa/entry permit, Emirates ID, education certificate, experience certificate, bank details, emergency contact)
 - `server/schema.sql:258-267` (`preboarding_consents`) · `:93-105` (legacy `consent_records`, unused `ip_address`/`revoked_at`)
-- `server/index.js:718` / `:340` (the two consent routes) · `:771` (`recorded_by` from `req.user.username`)
-- `client/src/App.tsx:793` (the three literals) · `:1840-1889` (case card, button, tooltip) · `:1406-1408` ("MISSING / REQUIRED") · `:1423` (notice reachable only as a template download)
+- `server/index.js:713` / `:721` (the two pre-boarding consent routes) · `:728` (`actor` = username **or `'system'`**) · `:340` (the older `/api/compliance/consent`) · `:771` (the acknowledgement route's `recorded_by`, `server/preboarding-package.js:196-205` requires it)
+- `client/src/App.tsx:849` (the three literals) · `:1914-1963` (case card, button, tooltip) · `:1464` ("MISSING / REQUIRED") · `:1479` (notice reachable only as a template download)
 - `templates/privacy-notice.md:6,247` (v2.2) · `:28-37` (categories) · `:41-51` (purposes ↔ bases) · `:54-65` (retention) · `:125` (Arabic version) · `:237-248` (acknowledgement block — blanket consent box at `:245`, signature row at `:248`)
 - `compliance-requirements.md` §5.3 (notice content list) · `:391` (§6.4, the KSA Arabic claim) · `legal-signoff-checklist.md:15,17,27` (processor/controller, DPO, wordmark) · `compliance-dpia-vendor-risk.md:26-30,47` (article set + its own citation caveat)
