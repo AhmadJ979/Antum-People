@@ -62,6 +62,50 @@ client-side delay on `/workspace`** → sample the chip row and the board's grou
 - Two passes on one seed, minutes apart, in one session: this is a comparison of two bundles, not a
   change-of-seed repeatability check.
 
+## Correction, 2026-10-09 — a withdrawn shot, and a rig hazard worth naming
+
+**What was wrong.** `shots/after-2-race-window.png` was captioned "the same moment with the fix". It does
+not show a fixed state. It shows `All (15) [SELECTED]` over a board with only `IT · 0/6` drawn — the
+defect — and it is near-identical to the before pass's own race-window frame (4 bytes and 760 pixels
+apart, all of them the scrollbar track). **The caption was false and is withdrawn with the file.**
+
+**What the same pass's own record says.** Everything else in the after pass shows the fixed behaviour:
+every tick of `after-samples.json` run 1 (t=485, 1042, 1800, 2758, 3118, 4076, 5735, 8392, 12051 ms) has
+`All (15) [SELECTED]` with all four groups drawn, `reading:false`; the scoring counts **0 defect ticks
+in 3 runs** against **11 in the before pass**; and `shots/after-3-settled.png` is a normal settled board
+identical to the before pass's settled shot.
+
+**So: did the capture path get a stale bundle while the sampling path got the new one?** Something of
+that kind happened, and it is a rig hazard rather than a typo. The capture and the sampling disagreed
+about what the page was rendering *in the same pass, seconds apart*, and the file lands on the wrong
+side of the fix — so the capture path cannot be assumed to depict the page the samples read. What I did
+that made that possible is named plainly: **I ran both passes in ONE browser session and swapped the
+bundle underneath it**, so the session held a page from the first pass while the second pass's reads and
+screenshots were being taken. The most likely mechanism is that the two commands resolved to different
+page targets in that session (the newly loaded one for `eval`, the older one for `screenshot`). **I did
+not verify the mechanism** — I am reporting the conditions I created and the disagreement the artifacts
+show, not a diagnosis I proved.
+
+**Rules this bundle now carries for the future:**
+1. **One browser session per bundle.** Never swap a bundle under a live session and then reuse it.
+2. **A screenshot must carry its own identity**: record the page's own script src (`/assets/index-…js`)
+   and the panel's DOM reading in the same breath as the shot, so the file cannot be read against the
+   wrong bundle. This capture predates that rule; the before/after figures still name their bundles, but
+   the shots did not carry it themselves, and that is how the wrong one survived review.
+3. A shot that contradicts the machine-scored samples of its own pass is a defect in the bundle, not a
+   curiosity: the samples are per-tick DOM readings and win.
+
+**Was the race window photographed with the fix, then?** No — and this is the honest answer rather than a
+replacement claim. I attempted a verified re-capture on the merged `main` (`da3330d`, where the blob
+`7fb5678d0861d977efac3b1521bcaaebdb7e0337` for `client/src/App.tsx` is identical in the rig, on
+`origin/main` and on the branch, and where the served asset answers md5 `abfe49feb21dc90b77743922f76a7399`)
+with the page's script src recorded around every shot; the capture hung at the sampling step and I
+abandoned it rather than keep spending on it. **So the race window with the fix is not captured, and the
+machine-scored samples are the evidence**: `after-samples.json` (per-tick chip row, group headers, read
+state) against `before-samples.json`, scored by `after-verdict.json` / `before-verdict.json`. `shots/`
+still carries one trustworthy race-window frame — the before pass's, which is the side that needed
+photographing to show the defect existed.
+
 ## Verdict, straight from the samples
 
 ```
@@ -114,6 +158,11 @@ drwxr-xr-x 3 root root   4096 Oct  9 13:38 ..
 -rw-r--r-- 1 root root 101120 Oct  9 13:37 before-race-window.png
 ```
 
+And one line to read the block above correctly: that summary is a **verbatim capture from before the
+correction below**, so its trailing `ls` still lists `after-2-race-window.png` under the old name. That
+entry is the withdrawn file; nothing else in the block is affected, and the figures in it are the ones
+the correction quotes.
+
 ## Files
 
 | file | what it is |
@@ -121,8 +170,9 @@ drwxr-xr-x 3 root root   4096 Oct  9 13:38 ..
 | `before-samples.json` / `after-samples.json` | every tick captured, with its chip row, group headers, read state and ms-since-click |
 | `before-verdict.json` / `after-verdict.json` | the scoring of those ticks (a defect tick = an `All`-selected chip over fewer groups than the `All` view holds, with no read in flight) |
 | `before-narrowed-it.json` / `after-narrowed-it.json` | the narrowed state each pass started from |
-| `shots/before-race-window.png` | the defect photographed during the induced window (unmodified tree) |
-| `shots/after-2-race-window.png`, `shots/after-3-settled.png` | the same moment with the fix, and the settled board |
+| `shots/before-race-window.png` | the defect photographed during the induced window (unmodified tree) — the only race-window capture in this bundle that is trustworthy, and the one the `before-*` samples agree with |
+| `shots/after-3-settled.png` | the settled board with the fix — md5 `55ffece74dc9787f65bd7ddc3c15d5f1`, **byte-identical to the before pass's settled shot**, which is the expected result of a fix to a transient state: both bundles settle on the same board |
+| `withdrawn-after-2-race-window-DEPICTS-DEFECT-STATE.png` | **WITHDRAWN — do not read as evidence for the fix.** It depicts the *defect* state: `All (15) [SELECTED]` over a board showing only `IT · 0/6`. md5 `e556b8c6e86049769d60cd17b84b8aea`, 101,116 bytes; it differs from `before-race-window.png` (101,120 bytes) by 4 bytes and 760 pixels, every one of them in the scrollbar track. Kept so the record shows what was withdrawn rather than quietly deleting it |
 | `transcript-before.txt` / `transcript-after.txt` | the driving transcript of each pass |
 | `preflight-main-build.txt`, `rig-setup-log.txt`, `build-fixed-log.txt` | the builds and the rig's own record |
 | `before-fetches.json` / `after-fetches.json` | the `/workspace` requests the page made, with each one's induced delay |
