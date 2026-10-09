@@ -76,3 +76,37 @@ D-0), which is why they move with the seed.
   Unattributed; the register states the hypothesis and the reason it stays a hypothesis.
 - The label counts in §2 were read on `127.0.0.1:3000`, which serves the same bundle as the public URL by md5
   (§1). They are counts over rendered text, not over the payloads in §3.
+
+## Why the 13:46 re-seed reproduced the 12:34 seed — confirmed, not assumed
+
+Asked for by the lead this cycle, with the note that if anything had moved, that would be the finding.
+Nothing moved, and the reason is in the seed's own code rather than in an assumption:
+
+- `scripts/seed-demo.js:492-500` states the rule and implements it: *"Every date is an offset from the
+  seed's own reference date, so what is fixed here is the offset, not the date."* `dayOffset(days)` is
+  `new Date()` (today, UTC) plus `days`, returned as an ISO date.
+- The three case offsets are constants: DEMO-01 `offset_days: 14` (:529), DEMO-02 `1` (:542),
+  DEMO-03 `-1` (:555), applied at :562.
+- All three seeds ran on **2026-10-09** (10:46, 12:34:14, 13:46:16), so each computed today+14/+1/−1 =
+  **2026-10-23 / 2026-10-10 / 2026-10-08** — exactly the start dates the served API returns. Same day
+  gives the same dates, which give the same derived figures. The reproduction is a consequence of the
+  mechanism, not a coincidence and not an inert re-seed.
+- Independent corroboration from that cutover's own log (`cutover-20261009-1346/seed.log`): it prints
+  `- Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-10-23)`, `-02 … start 2026-10-10`,
+  `-03 … start 2026-10-08`. It says **Opened**, not **Refreshed** — `--force-clear` deletes the demo
+  rows first, so each run *creates* the cases and the date-refresh branch (:574-585) never fires. The
+  same-day reproduction does not even depend on the refresh path.
+- Consequence, derived rather than quoted: case 02 reads amber while today+1 is 2026-10-10. At 00:00 UTC
+  on 2026-10-10 (= 04:00 GST) the seed's own arithmetic moves DEMO-02 to "start date already passed" and
+  the demo has no amber state at all until a re-seed on or after the 10th. The shelf-life comes from
+  `offset_days: 1`, not from a clock anyone has to watch.
+
+## What each capture shows, and the md5 it ran against
+
+Prompted by the same note (a shot that proves the rig ran is not evidence of the thing it claims), the
+label pass was re-backed: two probe fields were **disqualified** for matching the sidebar rather than a
+screen, and the identity claim now rests on content-region captures whose cross-comparison is computed
+and committed — `docs/evidence/label-rule-recheck/raw/da3330d-identity2-cross-comparison.txt`. All four
+readings (pass 1, pass 2, identity, identity2) ran against **270,982 bytes / md5
+`abfe49feb21dc90b77743922f76a7399`**, read off `assets/index-B8Hoaanh.js` on the served product once per
+surface. Details and limits: `docs/evidence/label-rule-recheck/README.md`.

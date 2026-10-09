@@ -80,3 +80,46 @@ Probes: `probes/count.js`, `probes/direct.js` — both pure DOM reads, no writes
 - No figure here was pinned, moved or softened to make a screen agree (WORKFLOW.md rules 15 and 16).
 
 Raw captures for both passes, alongside the files this section's predecessor wrote: `raw/da3330d-pass1-*.json` and `raw/da3330d-pass2-*.json` (counts), `*-labels.json` (label strings by their own text nodes). **The probes are unchanged** — that is what makes the two sections comparable. **A third corroboration of which screens were walked:** each capture's `len` matches the reading above exactly on four surfaces (693, 1120, 348, 1264) and on Pre-boarding within two characters (5923 against 5925), so the screens read are the screens this register reads. A `document.querySelector('h1,h2')` heading probe was attempted on both passes and returned an empty string everywhere (the app's screen titles are not `h1`/`h2` elements); it is **not** committed as evidence and is recorded here instead.
+
+## Identity pass — "which screen was that?" answered from the DOM (2026-10-09, after cutover #3)
+
+Prompted by the lead's note that a capture must show the thing it claims. Every `screen` field the
+count probe emits is empty, so *which surface a capture came from* rested on the click order and on
+the length matching this register's prior reading. That was an inference. It is measurement now.
+
+**Two probe faults found and disqualified** (both would have let a capture be captioned wrongly):
+- `probes/identity.js` `dir_heading` (`/Employee Directory/i` over body text) is **true on all five
+  surfaces** — the sidebar carries that label on every screen (client/src/App.tsx:213; sidebar is a
+  real `<aside>` at :1080 wrapping `<nav>` at :1108).
+- `probes/identity.js` `active_nav` listed the three **non-selected** nav labels on every surface:
+  the `[aria-current]` selector matched nothing and the class fallback matched inactive buttons.
+
+Neither field supports the identity claim. Both are left in `raw/da3330d-identity-*` so the
+correction is visible rather than retro-fitted.
+
+**What the claim rests on now** — `probes/identity2.js`, `raw/da3330d-identity2-*`: it reads only the
+**content region** (a body clone with `aside`/`nav`/`header` removed). All five regions are pairwise
+distinct, and each carries a marker string absent from the other four:
+
+| surface | region len | body len | marker only it has |
+|---|---|---|---|
+| Executive Dashboard | 422 | 693 | `Retention Lift (1-yr)` |
+| Employee Directory | 771 | 1120 | `Name & Region` (table headers) |
+| Transitions Hub | 113 | 348 | `Ramping Employees (Onboarding)` |
+| Pre-boarding | 5564 | 5923 | `Pre-boarding Intelligence` |
+| Strategic Intelligence | 965 | 1264 | `Strategic Workforce Intelligence` |
+
+Region lengths are below the body-level lengths because the sidebar and header drop out — 5923 → 5564
+on Pre-boarding is the check that the region probe really excluded them. Full comparison, computed:
+`raw/da3330d-identity2-cross-comparison.txt`.
+
+**Bundle md5, recorded per pass rather than once:** all four readings — `da3330d-pass1`, `-pass2`,
+`-identity`, `-identity2` — ran against **270,982 bytes / md5 `abfe49feb21dc90b77743922f76a7399`**,
+read off `assets/index-B8Hoaanh.js` on the served product (once per surface in the identity2 pass:
+`raw/da3330d-identity2-*-bundle.txt`), matching the third cutover's build log line (`270.98 kB`).
+The count probe reproduced identically in all four (Sample Demo Data ×1 per surface; Illustrative
+5/0/0/0/10).
+
+Honest limits: this is repeatability on **one** seed, not a change-of-seed check; counts are
+case-insensitive over rendered text; `innerText` on a detached clone inserts no line breaks, so
+exclusivity above is a whole-region property.

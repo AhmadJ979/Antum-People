@@ -1,0 +1,14 @@
+Cross-comparison of the five content-region captures of the identity2 pass (2026-10-09, after cutover #3).
+Probe: docs/evidence/label-rule-recheck/probes/identity2.js (body clone, aside/nav/header removed).
+Whole-region text compared pairwise; every region is distinct from the other four, so no two captures
+can be the same screen. Each region contains one marker string absent from all four others:
+
+Executive Dashboard: marker 'Retention Lift (1-yr)' | region_len 422 | body_len 693 | starts 'Retention Lift (1-yr)+19%ℹ️ IllustrativeIllustrative BenchmarkTime-to-Value19.2 '
+Employee Directory: marker 'Name & Region' | region_len 771 | body_len 1120 | starts 'Name & RegionDepartment / RoleStatusGratuity AccruedActionsOmar Al-Farsi🇦🇪 UAEFi'
+Transitions Hub: marker 'Ramping Employees (Onboarding)' | region_len 113 | body_len 348 | starts 'Ramping Employees (Onboarding)Omar Al-FarsiDay 51Departing Employees (Offboardin'
+Pre-boarding: marker 'Pre-boarding Intelligence' | region_len 5564 | body_len 5923 | starts 'Pre-boarding IntelligenceLayer 2A pre-boarding case opens the moment a job offer'
+Strategic Intelligence: marker 'Strategic Workforce Intelligence' | region_len 965 | body_len 1264 | starts 'Strategic Workforce IntelligenceRetention Insight (Illustrative)Retention lift h'
+
+bundle md5 read once per surface during this pass: abfe49feb21dc90b77743922f76a7399, 270982 bytes on all five.
+Limit: innerText on a detached clone inserts no line breaks, so "lines" in the per-surface JSON is a
+single string and exclusivity is a whole-region property, not a per-line one.
