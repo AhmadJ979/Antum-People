@@ -47,3 +47,23 @@ workflow document a clone could see.**
 - **One thing this note cannot do by itself:** keep them in step. The live file is edited whenever the team
   learns something, and this copy only moves when someone syncs it. The next reader who finds them different
   should sync the repo copy and add a line here rather than trusting either file to be current.
+
+---
+
+## The read-back, done after the merge (2026-10-09, task `b1d378b9`)
+
+This note's whole point is that a mirror nobody reads back drifts, so the check is run from the repository on
+the **merged** copy and its output is pasted here rather than asserted:
+
+```
+$ git log --oneline -1 origin/main
+cd9daa8 Merge pull request #129 from AhmadJ979/docs/workflow-mirror-and-1234-record
+$ diff -B <(grep -v '^>' WORKFLOW.md) /home/team/shared/WORKFLOW.md ; echo "exit=$?"
+exit=0
+```
+
+**It prints nothing and exits 0**, so as of commit `cd9daa8` this mirror says exactly what the live file says —
+the same 79 lines of policy, rule 26 included on both sides. Two things that read-back does **not** cover, said
+rather than implied: it compares against the live file *as it stands at that moment* (the next edit to the live
+file makes the mirror behind again, which is the drift this note is about), and it ignores blank-line placement
+(`-B`), so a future diff that is only whitespace would pass this check.
