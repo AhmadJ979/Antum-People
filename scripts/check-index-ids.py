@@ -63,6 +63,7 @@ CONTENT_SHAS = {
     "0171e2f3",  # index content merged by PR #101, 2026-10-09 09:35:52Z
     "1132b63b",  # #102 as 3 commits - the tree the lead's first verification measured
     "1171239d",  # #102 as frozen and merged, 4 commits (now on main as 2028894)
+    "b484920f",  # index content merged by PR #105 (Round 32), 2026-10-09 12:12:31Z
 }
 
 print("index checked:", INDEX)
