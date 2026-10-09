@@ -1,0 +1,30 @@
+== pass start 2026-10-09T12:53:48Z
+-- open + login
+✓ Antum People
+  http://localhost:4721/
+"{\"id\":\"scratch-admin\",\"username\":\"scratch\",\"role\":\"admin\"}"
+== surface: Executive Dashboard (dashboard)
+"clicked Executive Dashboard"
+  probe: "{\"sidebar_clicked\":\"Executive Dashboard\",\"len_T\":695,\"sample_demo_data\":1,\"illustrative\":5,\"labels\":[\"Sample Demo Data\",\"Illustrative Benchmark\"],\"headings\":[\"Onboarding PipelineView All →\",\"Offboarding PipelineView All →\"],\"text_head\":\"Antum scratch ADMIN Executive Das
+== surface: Employee Directory (employees)
+"clicked Employee Directory"
+  probe: "{\"sidebar_clicked\":\"Employee Directory\",\"len_T\":1122,\"sample_demo_data\":1,\"illustrative\":0,\"labels\":[\"Sample Demo Data\"],\"headings\":[],\"text_head\":\"Antum scratch ADMIN Executive Dashboard Employee Directory Transitions Hub Pre-boarding Strategic Intelligence Antum Peo\"}"
+== surface: Transitions Hub (transitions)
+"clicked Transitions Hub"
+  probe: "{\"sidebar_clicked\":\"Transitions Hub\",\"len_T\":350,\"sample_demo_data\":1,\"illustrative\":0,\"labels\":[\"Sample Demo Data\"],\"headings\":[\"Ramping Employees (Onboarding)\",\"Departing Employees (Offboarding)\"],\"text_head\":\"Antum scratch ADMIN Executive Dashboard Employee Directory Trans
+== surface: Pre-boarding (preboarding)
+"clicked Pre-boarding"
+  probe: "{\"sidebar_clicked\":\"Pre-boarding\",\"len_T\":5927,\"sample_demo_data\":1,\"illustrative\":0,\"labels\":[\"Sample Demo Data\"],\"headings\":[\"Pre-boarding Intelligence\"],\"text_head\":\"Antum scratch ADMIN Executive Dashboard Employee Directory Transitions Hub Pre-boarding Strategic Intelligenc
+== surface: Strategic Intelligence (analytics)
+"clicked Strategic Intelligence"
+  probe: "{\"sidebar_clicked\":\"Strategic Intelligence\",\"len_T\":1266,\"sample_demo_data\":1,\"illustrative\":10,\"labels\":[\"Sample Demo Data\",\"Retention Insight (Illustrative)\",\"Productivity Gap (Illustrative)\",\"Liability Exposure (Illustrative)\",\"Comparing cohort retention (Illustrative Benchm
+-- shots landed
+total 464
+drwxr-xr-x 2 root root    210 Oct  9 12:54 .
+drwxr-xr-x 4 root root   4096 Oct  9 12:53 ..
+-rw-r--r-- 1 root root  90128 Oct  9 12:54 screenshot-1791550441123.png
+-rw-r--r-- 1 root root 114571 Oct  9 12:54 screenshot-1791550444728.png
+-rw-r--r-- 1 root root  53190 Oct  9 12:54 screenshot-1791550448300.png
+-rw-r--r-- 1 root root 109321 Oct  9 12:54 screenshot-1791550451911.png
+-rw-r--r-- 1 root root  94273 Oct  9 12:54 screenshot-1791550455497.png
+== pass end 2026-10-09T12:54:15Z
