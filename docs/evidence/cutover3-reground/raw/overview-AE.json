@@ -1,0 +1,826 @@
+{
+ "jurisdiction": "AE",
+ "cases": [
+  {
+   "case_id": "2688b889-e950-4030-9dc7-cd574d848ccf",
+   "offer_reference": "OFR-2026-DEMO-03",
+   "candidate_name": "Yousef Al-Hammadi",
+   "candidate_email": "yousef.alhammadi@example.com",
+   "role": "Operations Analyst",
+   "department": "Operations",
+   "jurisdiction": "AE",
+   "start_date": "2026-10-08",
+   "days_to_start": -1,
+   "flag": {
+    "open_count": 21,
+    "open_items": [
+     {
+      "item_key": "bank_details",
+      "label": "Bank details (IBAN letter)",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "education_certificate",
+      "label": "Education certificate",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "emergency_contact",
+      "label": "Emergency contact",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "emirates_id",
+      "label": "Emirates ID",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "experience_certificate",
+      "label": "Experience certificate",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "passport",
+      "label": "Passport copy",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "visa_or_entry_permit",
+      "label": "Visa or entry permit",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "ws_buddy_mentor",
+      "label": "Buddy or mentor assigned",
+      "status": "not_started",
+      "owner": "Manager",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_building_card",
+      "label": "Building card or access badge issued",
+      "status": "not_started",
+      "owner": "Admin",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_day_30_checkin",
+      "label": "30-day check-in scheduled",
+      "status": "not_started",
+      "owner": "Manager",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_desk_seat",
+      "label": "Desk and seat allocated",
+      "status": "not_started",
+      "owner": "Admin",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_device",
+      "label": "Laptop or device issued",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_email_sso",
+      "label": "Email and SSO account created",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_employee_file",
+      "label": "Employee file opened",
+      "status": "not_started",
+      "owner": "HR",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_first_week_agenda",
+      "label": "First-week agenda prepared",
+      "status": "not_started",
+      "owner": "Manager",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_licensed_software",
+      "label": "Licensed software installed",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_parking",
+      "label": "Parking pass issued",
+      "status": "not_started",
+      "owner": "Admin",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_payroll_setup",
+      "label": "Payroll setup",
+      "status": "not_started",
+      "owner": "HR",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_system_access",
+      "label": "System access granted with the role's permissions",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_team_introduction",
+      "label": "Team introduction arranged",
+      "status": "not_started",
+      "owner": "Manager",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_vpn",
+      "label": "VPN access provisioned",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     }
+    ],
+    "hours_to_start": -38.1456875,
+    "days_to_start": -1,
+    "boundary_hours": 48,
+    "boundary_inclusive": true,
+    "scope_note": "Derived from every item on this case, whatever track created it: the employee track's documents and the workspace track's provisioning lines both count, because both are items on the case.",
+    "state": "started",
+    "raised": true,
+    "tone": "rose",
+    "chip": "Started 1 day ago \u00b7 21 items open",
+    "headline": "Started with 21 items still open",
+    "body": [
+     "These were due before day one."
+    ]
+   },
+   "document_set_active": true,
+   "checklist_seeded": true,
+   "items_total": 7,
+   "by_status": {
+    "not_started": 7,
+    "requested": 0,
+    "received": 0,
+    "verified": 0
+   },
+   "outstanding_count": 7,
+   "outstanding": [
+    {
+     "item_key": "passport",
+     "label": "Passport copy",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "visa_or_entry_permit",
+     "label": "Visa or entry permit",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "emirates_id",
+     "label": "Emirates ID",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "education_certificate",
+     "label": "Education certificate",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "experience_certificate",
+     "label": "Experience certificate",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "bank_details",
+     "label": "Bank details (IBAN letter)",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "emergency_contact",
+     "label": "Emergency contact",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    }
+   ],
+   "by_track": {
+    "employee": {
+     "lines": 7,
+     "complete": 0,
+     "open": 7,
+     "active": true
+    },
+    "workspace": {
+     "lines": 14,
+     "complete": 0,
+     "open": 14,
+     "active": true,
+     "functions": [
+      "IT",
+      "Admin",
+      "HR",
+      "Manager"
+     ]
+    }
+   },
+   "consent_recorded": false,
+   "consent_granted_at": null,
+   "last_reminder_at": null,
+   "last_reminder_count": null
+  },
+  {
+   "case_id": "1fd944e8-e663-4eb9-9b34-30e163dccca3",
+   "offer_reference": "OFR-2026-DEMO-02",
+   "candidate_name": "Mariam Al-Kaabi",
+   "candidate_email": "mariam.alkaabi@example.com",
+   "role": "Marketing Coordinator",
+   "department": "Marketing",
+   "jurisdiction": "AE",
+   "start_date": "2026-10-10",
+   "days_to_start": 1,
+   "flag": {
+    "open_count": 21,
+    "open_items": [
+     {
+      "item_key": "bank_details",
+      "label": "Bank details (IBAN letter)",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "education_certificate",
+      "label": "Education certificate",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "emergency_contact",
+      "label": "Emergency contact",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "emirates_id",
+      "label": "Emirates ID",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "experience_certificate",
+      "label": "Experience certificate",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "passport",
+      "label": "Passport copy",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "visa_or_entry_permit",
+      "label": "Visa or entry permit",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "ws_buddy_mentor",
+      "label": "Buddy or mentor assigned",
+      "status": "not_started",
+      "owner": "Manager",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_building_card",
+      "label": "Building card or access badge issued",
+      "status": "not_started",
+      "owner": "Admin",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_day_30_checkin",
+      "label": "30-day check-in scheduled",
+      "status": "not_started",
+      "owner": "Manager",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_desk_seat",
+      "label": "Desk and seat allocated",
+      "status": "not_started",
+      "owner": "Admin",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_device",
+      "label": "Laptop or device issued",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_email_sso",
+      "label": "Email and SSO account created",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_employee_file",
+      "label": "Employee file opened",
+      "status": "not_started",
+      "owner": "HR",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_first_week_agenda",
+      "label": "First-week agenda prepared",
+      "status": "not_started",
+      "owner": "Manager",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_licensed_software",
+      "label": "Licensed software installed",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_parking",
+      "label": "Parking pass issued",
+      "status": "not_started",
+      "owner": "Admin",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_payroll_setup",
+      "label": "Payroll setup",
+      "status": "not_started",
+      "owner": "HR",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_system_access",
+      "label": "System access granted with the role's permissions",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_team_introduction",
+      "label": "Team introduction arranged",
+      "status": "not_started",
+      "owner": "Manager",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_vpn",
+      "label": "VPN access provisioned",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     }
+    ],
+    "hours_to_start": 9.8543125,
+    "days_to_start": 1,
+    "boundary_hours": 48,
+    "boundary_inclusive": true,
+    "scope_note": "Derived from every item on this case, whatever track created it: the employee track's documents and the workspace track's provisioning lines both count, because both are items on the case.",
+    "state": "inside_48_hours",
+    "raised": true,
+    "tone": "amber",
+    "chip": "Inside 48 hours \u00b7 21 items open",
+    "headline": "21 items open \u00b7 start in 48 hours or less",
+    "body": []
+   },
+   "document_set_active": true,
+   "checklist_seeded": true,
+   "items_total": 7,
+   "by_status": {
+    "not_started": 7,
+    "requested": 0,
+    "received": 0,
+    "verified": 0
+   },
+   "outstanding_count": 7,
+   "outstanding": [
+    {
+     "item_key": "passport",
+     "label": "Passport copy",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "visa_or_entry_permit",
+     "label": "Visa or entry permit",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "emirates_id",
+     "label": "Emirates ID",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "education_certificate",
+     "label": "Education certificate",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "experience_certificate",
+     "label": "Experience certificate",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "bank_details",
+     "label": "Bank details (IBAN letter)",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "emergency_contact",
+     "label": "Emergency contact",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    }
+   ],
+   "by_track": {
+    "employee": {
+     "lines": 7,
+     "complete": 0,
+     "open": 7,
+     "active": true
+    },
+    "workspace": {
+     "lines": 14,
+     "complete": 0,
+     "open": 14,
+     "active": true,
+     "functions": [
+      "IT",
+      "Admin",
+      "HR",
+      "Manager"
+     ]
+    }
+   },
+   "consent_recorded": false,
+   "consent_granted_at": null,
+   "last_reminder_at": null,
+   "last_reminder_count": null
+  },
+  {
+   "case_id": "e02f0eda-0b99-432f-b3c2-d0c7d790af06",
+   "offer_reference": "OFR-2026-DEMO-01",
+   "candidate_name": "Omar Al-Farsi",
+   "candidate_email": "omar.alfarsi@example.com",
+   "role": "Finance Analyst",
+   "department": "Finance",
+   "jurisdiction": "AE",
+   "start_date": "2026-10-23",
+   "days_to_start": 14,
+   "flag": {
+    "open_count": 22,
+    "open_items": [
+     {
+      "item_key": "bank_details",
+      "label": "Bank details (IBAN letter)",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "education_certificate",
+      "label": "Education certificate",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "emergency_contact",
+      "label": "Emergency contact",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "experience_certificate",
+      "label": "Experience certificate",
+      "status": "not_started",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "ws_buddy_mentor",
+      "label": "Buddy or mentor assigned",
+      "status": "not_started",
+      "owner": "Manager",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_building_card",
+      "label": "Building card or access badge issued",
+      "status": "not_started",
+      "owner": "Admin",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_day_30_checkin",
+      "label": "30-day check-in scheduled",
+      "status": "not_started",
+      "owner": "Manager",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_desk_seat",
+      "label": "Desk and seat allocated",
+      "status": "not_started",
+      "owner": "Admin",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_device",
+      "label": "Laptop or device issued",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_email_sso",
+      "label": "Email and SSO account created",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_employee_file",
+      "label": "Employee file opened",
+      "status": "not_started",
+      "owner": "HR",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_finance_system_access",
+      "label": "Finance system access",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_first_week_agenda",
+      "label": "First-week agenda prepared",
+      "status": "not_started",
+      "owner": "Manager",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_licensed_software",
+      "label": "Licensed software installed",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_parking",
+      "label": "Parking pass issued",
+      "status": "not_started",
+      "owner": "Admin",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_payroll_setup",
+      "label": "Payroll setup",
+      "status": "not_started",
+      "owner": "HR",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_system_access",
+      "label": "System access granted with the role's permissions",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_team_introduction",
+      "label": "Team introduction arranged",
+      "status": "not_started",
+      "owner": "Manager",
+      "owner_known": true
+     },
+     {
+      "item_key": "ws_vpn",
+      "label": "VPN access provisioned",
+      "status": "not_started",
+      "owner": "IT",
+      "owner_known": true
+     },
+     {
+      "item_key": "emirates_id",
+      "label": "Emirates ID",
+      "status": "requested",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "passport",
+      "label": "Passport copy",
+      "status": "requested",
+      "owner": null,
+      "owner_known": false
+     },
+     {
+      "item_key": "visa_or_entry_permit",
+      "label": "Visa or entry permit",
+      "status": "requested",
+      "owner": null,
+      "owner_known": false
+     }
+    ],
+    "hours_to_start": 321.8543125,
+    "days_to_start": 14,
+    "boundary_hours": 48,
+    "boundary_inclusive": true,
+    "scope_note": "Derived from every item on this case, whatever track created it: the employee track's documents and the workspace track's provisioning lines both count, because both are items on the case.",
+    "state": "clear",
+    "raised": false,
+    "tone": "slate",
+    "chip": "On track",
+    "headline": "On track",
+    "body": [
+     "22 items still open, with 14 days to go \u2014 the flag starts 48 hours before the start date."
+    ]
+   },
+   "document_set_active": true,
+   "checklist_seeded": true,
+   "items_total": 7,
+   "by_status": {
+    "not_started": 4,
+    "requested": 3,
+    "received": 0,
+    "verified": 0
+   },
+   "outstanding_count": 7,
+   "outstanding": [
+    {
+     "item_key": "passport",
+     "label": "Passport copy",
+     "status": "requested",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "visa_or_entry_permit",
+     "label": "Visa or entry permit",
+     "status": "requested",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "emirates_id",
+     "label": "Emirates ID",
+     "status": "requested",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "education_certificate",
+     "label": "Education certificate",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "experience_certificate",
+     "label": "Experience certificate",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "bank_details",
+     "label": "Bank details (IBAN letter)",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    },
+    {
+     "item_key": "emergency_contact",
+     "label": "Emergency contact",
+     "status": "not_started",
+     "required": true,
+     "track": "employee",
+     "owner": null
+    }
+   ],
+   "by_track": {
+    "employee": {
+     "lines": 7,
+     "complete": 0,
+     "open": 7,
+     "active": true
+    },
+    "workspace": {
+     "lines": 15,
+     "complete": 0,
+     "open": 15,
+     "active": true,
+     "functions": [
+      "IT",
+      "Admin",
+      "HR",
+      "Manager"
+     ]
+    }
+   },
+   "consent_recorded": false,
+   "consent_granted_at": null,
+   "last_reminder_at": null,
+   "last_reminder_count": null
+  }
+ ],
+ "totals": {
+  "cases": 3,
+  "items": 21,
+  "items_outstanding": 21,
+  "items_received": 0,
+  "items_verified": 0,
+  "cases_without_consent": 3,
+  "cases_ready": 0,
+  "workspace_lines": 43,
+  "workspace_lines_open": 43,
+  "cases_provisioned": 0
+ }
+}
