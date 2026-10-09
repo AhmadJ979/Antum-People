@@ -13,7 +13,7 @@
 
 - **The audit's job is being done:** of the 10 items closed on 2026-10-06, **10 re-checked clean today**, and of the Layer 2 findings raised since, **four are already fixed** (item F1–F4 below) — including the row that printed a bare **`· -1 d`**.
 - **Three things a prospect can see today, still open:** the settlement statement's header still reads **"Jurisdiction: UAE / KSA"** with employer **"Antum Regional Hub"** for a UAE employee (item 1); exit-interview data is captured and **nothing renders it** (item 2); the sign-in screen still calls the product an **"HR Onboarding/Offboarding Intelligence Platform"** (item 8, new).
-- **Two new weak screens found this pass:** that sign-in line (item 8) and the roster's **unguarded day-count arithmetic**, which prints a negative day for a future-dated hire (item 9). Neither is visible on today's demo data — and the pre-boarding hires are exactly the records that would make the second one visible.
+- **Three new findings this pass — and one of the three is a reclassification rather than a new screen.** The sign-in screen still calls the product an **"HR Onboarding/Offboarding Intelligence Platform"** (item 8, new). The roster's **unguarded day-count arithmetic** prints a negative day for a future-dated hire (item 9, new *as a reclassification*: the 2026-10-06 audit listed the `Day 193` symptom as closed, and what this pass found is that the arithmetic behind it has no floor). The EOSB forecast carries an all-zero **`KSA: 0.00 SAR`** column on the UAE surface (item 10, new). None of the three is visible on today's demo data — and the pre-boarding hires (+1 d, +14 d) are exactly the records that would make item 9 visible.
 - **One item is not a defect and should not be "fixed":** the H1 2023 cohort at 50% (item 4). It is the only proof on screen that cohorts come from real leaver records.
 - **The honest limits stay on the document, not hidden in it:** no delivery channel, no hire-facing portal, an acknowledgement is an in-product record and **not** an e-signature, and the workspace track (IT/Admin/HR/Manager checklists) is **not built yet**.
 
@@ -44,7 +44,7 @@ Two documents describing the same weak screens differently is a credibility prob
 | 6 — the KSA switch is visible | Caveat 12 | identical (leave the controls alone; answer verbally) |
 | 7 — "Illustrative" labels | Caveat 3 | identical |
 | 8 — the sign-in line undersells the platform | **added to the script's list this session (Caveat 15)** | new finding; the script now carries it |
-| 9 — roster day count unguarded (`Day -n`) | Caveat 11 (last paragraph) | same finding and same seed behaviour; the script's line now also names `2584361` as the revision it was re-read on |
+| 9 — roster day count unguarded (`Day -n`) | Caveat 11 (last paragraph) | **new as a reclassification**: the 2026-10-06 audit listed the `Day 193` symptom as *closed*, so what is new is that the arithmetic behind it has no floor — same finding and same seed behaviour as the script's line, which now also names `2584361` as the revision it was re-read on |
 | 10 — the forecast's all-zero `KSA: 0.00 SAR` column | **added to the script's list this session (Caveat 16)** | new finding; the script now carries it |
 | F1–F4, the chip, the package | Caveats 13 and 14, and Segment 3 | same limits in the same words: no delivery channel, no hire-facing portal, nothing "sent", an acknowledgement **recorded in the product** |
 
@@ -74,7 +74,7 @@ Each item was re-opened this pass rather than restated. "Closed" means **seen on
    - **Seen:** Employee Directory and Executive Dashboard, 2026-10-08; values re-read from the API the same minute.
 9. **Offboarding pipeline shows an exit date.** The departing record reads **`Exit 2026-10-10`**, not a blank.
    - **Seen:** Executive Dashboard → Offboarding Pipeline, 2026-10-08 (screenshot `01-dashboard.png`).
-10. **"Day 193" is gone — but the arithmetic behind it is not guarded.** The in-flight hire renders a plausible count (Omar: Day 49). The formula is still `Math.ceil((now − start_date) / 24h)` with no floor (`App.tsx:1383`), which is why it can go negative — see **item 9**, the new finding.
+10. **"Day 193" is gone — but the arithmetic behind it is not guarded.** The in-flight hire renders a plausible count (Omar: Day 49). The formula is still `Math.ceil((now − start_date) / 24h)` with no floor (`App.tsx:1383`), which is why it can go negative — see **item 9**, where the arithmetic is newly known to be unguarded (the audit that closed `Day 193` did not know that).
     - **Seen:** day counts computed for all 8 UAE rows this pass (49, 859, 911, 966, 997, 1272, 1308, 1682); formula read in the client at `App.tsx:1383`.
 
 ### Also closed: the `Origin` / blank-page / stack-trace hole (2026-10-06, re-checked anonymously today)
@@ -151,7 +151,7 @@ These are the audit doing its job. Each was found by re-reading running code aga
 - **Why it matters:** the pitch opens on workforce intelligence — cost-per-hire, retention, EOSB exposure — and the product's own first line narrows it to onboarding/offboarding administration. It is one string, and it is the cheapest credibility fix on this list.
 - **Verdict:** change one line; the product underneath already does more than the line says.
 
-### 9. **New — the roster's day count has no floor, so a future-dated hire prints `Day -n`**
+### 9. **New — the roster's day count has no floor, so a future-dated hire prints `Day -n`** *(new as a reclassification: the 2026-10-06 audit listed the `Day 193` symptom as closed — what is new is that the arithmetic behind it is unguarded)*
 - **Screen:** the day-count badge the dashboard renders per in-flight hire (`App.tsx:1383`).
 - **What a prospect would see:** a **negative** day count (`Day -2`) for anyone whose start date is in the future — raw arithmetic, not a labelled state. `Math.ceil((now − start_date) / 24h)` has no guard below zero.
 - **Measured 2026-10-08:** **not visible on this seed** — every one of the 8 UAE rows has a past start date (day counts 49, 859, 911, 966, 997, 1272, 1308, 1682), so nothing renders negative today. The exposure is the direction the demo is heading: the pre-boarding hires (start **+1 day** and **+14 days**) are exactly the records that would be added to a roster to show pre-boarding in the same view. This is a **code-level** finding, stated as one.
