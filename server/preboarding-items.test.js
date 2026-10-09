@@ -408,7 +408,8 @@ describe('P2-2 · what the audit trail records, and what it never records', () =
 
 // ---------------------------------------------------------------------------
 // The tile and the list agree on what "open" means (lead's fix, 2026-10-07), and the
-// document-byte boundary refuses to store anything until a store is chosen (spec §9 D5).
+// document-byte boundary refuses to store bytes by decision — a reference string only until
+// IFZA registration (owner, 2026-10-07) — and the refusal says so (spec §9 D5).
 // ---------------------------------------------------------------------------
 const documentStore = require('./document-store');
 
@@ -446,16 +447,30 @@ describe('P2-2 · the tile is labelled "Cases open", so the list is asked for op
   });
 });
 
-describe('P2-2 · no document bytes are stored, and the boundary says so', () => {
-  test('no store is configured, and it refuses rather than choosing a place for the bytes', async () => {
-    assert.strictEqual(documentStore.isConfigured(), false, 'no store has been chosen');
+describe('P2-2 · no document bytes are stored, and the boundary says why — not that it is undecided', () => {
+  test('the store is absent by decision, and every byte path refuses with that reason', async () => {
+    assert.strictEqual(
+      documentStore.isConfigured(),
+      false,
+      "the owner's decision (2026-10-07) is a reference string only — no bytes are stored"
+    );
     await assert.rejects(
       () => documentStore.saveDocument({ case_id: 'any', item_key: 'passport', bytes: 'x' }),
-      (err) => err instanceof documentStore.DocumentStoreNotConfiguredError && err.status === 501
+      (err) => err instanceof documentStore.DocumentStoreNotConfiguredError
+        && err.status === 501
+        // The refusal must carry the decision and its gate, and must not read as though nobody
+        // had ruled yet — that wording is what this test exists to hold down.
+        && /reference string/.test(err.message)
+        && /2026-10-07/.test(err.message)
+        && /IFZA registration/.test(err.message)
+        && !/undecided/i.test(err.message)
     );
     await assert.rejects(
       () => documentStore.readDocument(),
-      (err) => err.status === 501 && /nothing has been stored/.test(err.message)
+      (err) => err.status === 501
+        && /reference string/.test(err.message)
+        && /IFZA/.test(err.message)
+        && !/undecided/i.test(err.message)
     );
   });
 
@@ -463,7 +478,7 @@ describe('P2-2 · no document bytes are stored, and the boundary says so', () =>
     const columns = (await db.query('PRAGMA table_info(preboarding_items)')).map((c) => c.name);
     assert.ok(columns.includes('document_reference'), 'the reference is where HR names the document');
     for (const forbidden of ['document_bytes', 'document_body', 'file_data', 'content']) {
-      assert.ok(!columns.includes(forbidden), `${forbidden} would mean a store had been chosen`);
+      assert.ok(!columns.includes(forbidden), `${forbidden} would mean document bytes are stored, which the owner's decision (a reference string only) does not permit`);
     }
   });
 });
