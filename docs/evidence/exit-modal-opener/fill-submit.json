@@ -1,0 +1,1 @@
+"{\n \"found\": {\n  \"exit-departure-reason\": true,\n  \"exit-preventable\": true,\n  \"exit-new-salary\": true,\n  \"exit-feedback\": true\n },\n \"readback\": {\n  \"departure_reason\": \"Compensation\",\n  \"preventable\": \"1\",\n  \"new_salary\": \"24000\",\n  \"feedback_chars\": 50\n },\n \"submitted\": true\n}"

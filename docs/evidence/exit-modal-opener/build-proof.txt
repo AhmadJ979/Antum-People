@@ -1,0 +1,16 @@
+# rule 15 build proof - tree 7c5e68c, node v22.23.3, 2026-10-09T12:44:50Z
+$ cd client && npm run build
+
+> antum-people-client@0.0.0 build
+> tsc -b && vite build
+
+[36mvite v8.0.16 [32mbuilding client environment for production...[36m[39m
+[2Ktransforming...✓ 16 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-s9UoJ3fD.js   270.74 kB │ gzip: 75.41 kB
+
+[32m✓ built in 451ms[39m
+npm run build exit code: 0
