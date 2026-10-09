@@ -1,0 +1,3 @@
+(node:28286) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"exit_interviews":{"c":5},"by_reason":[{"departure_reason":"Better Opportunity","c":2},{"departure_reason":"Career Change","c":1},{"departure_reason":"Compensation","c":1},{"departure_reason":"Relocation","c":1}],"offboarding":{"c":1},"terminated":{"c":3}}
