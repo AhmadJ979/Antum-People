@@ -7,6 +7,8 @@
 run, `docs/evidence/p2-2/http-acceptance.txt` and `docs/evidence/p2-2/build-proof.txt`. Nothing here
 was re-run by the author, and nothing here is a substitute for those files.
 
+> ⚠ **Superseded in part — corrected 2026-10-09.** This file is the P2-2 reading, taken on `5ed731e`; its body stays exactly as it was read, and this note says what has since stopped being true of `main`. **Item 1** ("No flag chip, and no derived state at all") — P2-5 merged the derived flag, its chip and its headlines (PR #76). **Item 2** ("One list of items, not two tracks") — P2-4 merged the workspace track (PR #86, `b7630cb`), on the same case-creation path, so both tracks now exist in one item table kept apart by a `track` column (`server/schema.sql:216`). **Item 3**'s closing promise ("§10 Q3 … when P2-4 lands it becomes real") — it has landed: the due offsets ship in `WORKSPACE_CATALOG` as configuration, still **placeholders pending the owner's ruling**, so §10 Q3 is now a live product decision rather than a dormant one. **Item 4** — the owner functions and per-item due dates it says do not exist now exist **on the workspace lines**: one owner per line (`server/preboarding-workspace.js:67`) and a due date derived on every read from the line's offset (`:242`–`:247`); the **employee** track still records neither, and still says so.
+
 **Re-derive any line number instead of trusting one:**
 ```bash
 grep -n "const NAV_ITEMS"  client/src/App.tsx

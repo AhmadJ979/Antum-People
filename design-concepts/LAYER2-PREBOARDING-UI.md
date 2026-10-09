@@ -1,6 +1,6 @@
 # Antum People — Layer 2 Pre-boarding: the HR working surface
 
-> **Status: every screen here is still design — and P2-2 has now built a first cut of it.**
+> **Status: every screen here is still design — and P2-2 has now built a first cut of it.** *(Corrected 2026-10-09: "still design" now describes the mock's layout only. **P2-3** (the pre-reading package and its acknowledgement record), **P2-4** (the workspace track) and **P2-5** (the derived 48-hour flag and its chip) are merged on `main` — P2-4 as PR #86 — and §§8A–8C specify the P2-6 portal. Read §5's rule and §6's track as shipped and checked, not as intent.)*
 > **P2-2 landed on `main` as PR #70 (`5ed731e`, 2026-10-07):** the per-case checklist, the AE and SA
 > item sets, the status machine, the PDPL consent gate, an in-product reminder record, an HR
 > roll-up, and the document-byte boundary. **Before quoting §§2–3 as a description of the product,
@@ -188,7 +188,7 @@ F1.)
 | **Relative time** — one reading, from the flag | **The row renders the flag's own derivation, never a second computation** (lead ruling, 2026-10-07, §5) — so one row can never carry two distances that disagree. Derived from the start date **at read time**, never stored; whole days = `ceil((start_date 00:00 − now) / 24h)`. The three readings, exactly: **clear / not raised → whole days** (`· 14 d`) · **inside 48 hours → hours, one decimal** (`· 7.5 h before 00:00 on the start date`) · **start date passed → `started 1 d ago`**, absolute value, **never a bare negative** — and the same absolute branch catches the case a reader will not think of, a *clear* case whose start date has passed with every item complete (`· started 6 d ago`). §5's copy rules carry the arithmetic behind this. | **Nothing** — must be computed |
 | **Employee-track progress** | `n of m` items complete, plus a bar. Counts, not percentages-as-scores. | **Partly** — counts computable from `onboarding_tasks.status`; the *track split* has no column (§9 D2) |
 | **Workspace-track progress** | Same shape, separate bar, same row height. | Same |
-| **Open-now list** | **Owner + item title** for the incomplete items, worst-first, capped at 4 with a `(n more)` tail. This is the "who owns each open item" answer (P2-4) and it is on the *row*, not behind the click. | **Owner does not exist** (§9 D1) |
+| **Open-now list** | **Owner + item title** for the incomplete items, worst-first, capped at 4 with a `(n more)` tail. This is the "who owns each open item" answer (P2-4) and it is on the *row*, not behind the click. | **Owner exists on the workspace lines only**; the employee track records none (§9 D1 — corrected 2026-10-09: this cell read "Owner does not exist") |
 | **Open case** | Drill-down to S2. The only action on the row. | — |
 
 ### Ordering
@@ -328,8 +328,7 @@ flag_is_raised  =  open_items_in_case > 0
 ```
 
 - **Track-agnostic (lead ruling, 2026-10-07):** the flag reads **every item on the case, whichever
-  track created it**. Today that is the employee track, because it is the only one that exists; when
-  P2-4 lands, its workspace items join this same rule and the definition above does not change.
+  track created it**. Since **P2-4 merged** (2026-10-08, PR #86) that is **both** tracks — the employee track's documents and the workspace track's provisioning lines — and the definition above did not change when they joined, which is the property this rule was written to have. *(Corrected 2026-10-09: this bullet read "Today that is the employee track, because it is the only one that exists; when P2-4 lands, its workspace items join this same rule and the definition above does not change." The merge made the description false, not the rule.)*
 - **Derived, not stored:** it is computed on every read from the start date and the items' current
   status, so it cannot drift from the data and cannot survive a restart as a stale value.
 - **Boundary is inclusive at exactly 48 hours.** P2-5 says the flag *"fires on the 48-hour
@@ -383,11 +382,10 @@ The flag is a **state, not an event**. On this product there is no mailer, webho
     covers the *clear* case whose start date has passed with every item complete: it is not overdue,
   and its row still may not print `· -6 d`. **As built (PR #77), that case renders `· started 6 d
   ago`** — the absolute form is what keeps this rule true where it is least expected.
-- **An owner is never invented.** Owners exist only on the workspace track (P2-4), which does not
-  exist yet, so on today's employee-track items the flag names the item, its status and the distance
+- **An owner is never invented.** Owners exist **only** on the workspace track (P2-4), and since that track merged (PR #86) it exists — **one owner per provisioning line, stored on the line**, so a later catalogue edit cannot silently reassign work in flight. **The employee track records no owner**, so there the flag names the item, its status and the distance
   to start (§2's one reading), and says plainly that **no owner is recorded** rather than implying
   one. If the owner later wants owners on the employee track, that is his decision and its own row
-  (lead ruling, 2026-10-07).
+  (lead ruling, 2026-10-07). *(Corrected 2026-10-09: this bullet read "Owners exist only on the workspace track (P2-4), which does not exist yet" — the track exists now, and the employee track's honesty about having no owner is unchanged.)*
 - **Always:** present-tense state — "5 items open", "start in 48 hours or less", "opens in this view".
 - When an unprompted in-app notice exists (Gate 2's in-process timer), it says what the app did:
   *"This case reached the 48-hour mark while the app was open"* — and, if the server was down
@@ -1107,3 +1105,4 @@ row is `App.tsx:1970` with its distance at `:1972`–`:1974`, not the range this
 also now names the two consent stores (`preboarding_consents` for the case; `consent_records` +
 `employees.consent_granted` at Layer 1) and the gap that `consent_version: 'v1'` is hard-coded in the
 client with no notice behind it (`App.tsx:790`–`:793`).*
+*Amended 2026-10-09, after P2-3, P2-4 and P2-5 merged and this document's own §§8A–8C went in (PR #89): **three places here said the workspace track did not exist, and all three are now false** — §5's track-agnostic bullet ("today that is the employee track, because it is the only one that exists; when P2-4 lands…"), §5's owner bullet ("owners exist only on the workspace track (P2-4), which does not exist yet") and §2's open-now row ("owner does not exist"). They are corrected in place and each quotes what it replaced, because this document is the design of record rather than a dated snapshot; the snapshot beside it, `LAYER2-P2-2-IMPLEMENTATION-NOTES.md`, carries a superseded-note instead, because rewriting a reading taken on a named revision is worse than a stale line. What did **not** change is the point of the exercise: §5's rule is the same rule and both tracks obey it — the merge added items to it and altered nothing, which the flag module's own note records (`server/preboarding-flag.js:43`) — and no count anywhere in this document moved. **Checked and deliberately left:** §4's note that the chip draws inside the built HR roll-up and not yet on §2's list row or §3's detail header is dated to a re-read on `404b29d` (2026-10-08) and still describes where it draws; re-dating a reading to a tree it was not taken on is the failure this pass exists to avoid.*
