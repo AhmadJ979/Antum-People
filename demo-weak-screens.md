@@ -17,7 +17,7 @@
 - **Three things a prospect can see today, still open:** the settlement statement's header still reads **"Jurisdiction: UAE / KSA"** with employer **"Antum Regional Hub"** for a UAE employee (item 1); exit-interview data is captured and **nothing renders it** (item 2); the sign-in screen still calls the product an **"HR Onboarding/Offboarding Intelligence Platform"** (item 8, new).
 - **Three new findings this pass — and one of the three is a reclassification rather than a new screen.** The sign-in screen still calls the product an **"HR Onboarding/Offboarding Intelligence Platform"** (item 8, new). The roster's **unguarded day-count arithmetic** prints a negative day for a future-dated hire (item 9, new *as a reclassification*: the 2026-10-06 audit listed the `Day 193` symptom as closed, and what this pass found is that the arithmetic behind it has no floor). The EOSB forecast carries an all-zero **`KSA: 0.00 SAR`** column on the UAE surface (item 10, new). None of the three is visible on today's demo data — and the pre-boarding hires (+1 d, +14 d) are exactly the records that would make item 9 visible.
 - **One item is not a defect and should not be "fixed":** the H1 2023 cohort at 50% (item 4). It is the only proof on screen that cohorts come from real leaver records.
-- **The honest limits stay on the document, not hidden in it:** no delivery channel, no hire-facing portal, an acknowledgement is an in-product record and **not** an e-signature, and the workspace track (IT/Admin/HR/Manager checklists) is **built and merged but not cut over** *(corrected 2026-10-09 — P2-4 merged as PR #86; see the note at the top)*.
+- **The honest limits stay on the document, not hidden in it:** no delivery channel, no hire-facing portal, an acknowledgement is an in-product record and **not** an e-signature, and the workspace track (IT/Admin/HR/Manager checklists) is **built, merged, cut over and seeded** *(corrected 2026-10-09, twice: P2-4 merged as PR #86, then the cutover ran the same day and the three demo cases now carry 15 / 14 / 14 provisioning lines)*.
 
 ## What the next cutover changes for a prospect
 
@@ -32,7 +32,7 @@
 
 ## The counts on the served surface (read 2026-10-09, post-cutover)
 
-Three seeded cases, one per flag state. Read off the served surface by the **engineer's rendered pass at 10:52–10:56 UTC on 2026-10-09** (raw payloads committed under `docs/evidence/p2-4-served-pass/`, merged in #103 as `693325d`; **I did not re-run that pass**; the bundle and endpoint readings in the note at the top of this file are mine, taken at 11:55–11:58 UTC the same morning).
+Three seeded cases, one per flag state, **as seeded 2026-10-09 10:46 UTC** (the lead's cutover run — every figure below belongs to that seed and to no other). Read off the served surface by the **engineer's rendered pass at 10:52–10:56 UTC on 2026-10-09** (raw payloads committed under `docs/evidence/p2-4-served-pass/`, merged in #103 as `693325d`; **I did not re-run that pass**; the bundle and endpoint readings in the note at the top of this file are mine, taken at 11:55–11:58 UTC the same morning).
 
 | Case | Hire · role | Start | Flag chip | The flag's own count | Employee track | Workspace track (derived from role + department) |
 |---|---|---|---|---|---|---|
@@ -47,6 +47,12 @@ Roll-up totals for the jurisdiction (`payload-overview-ae.json`): `cases` 3 · `
 **The two figures that must never be printed as one number.** The roll-up's **21 items outstanding** is the employee track across three cases (7 × 3). The workspace track's **43 lines open** is 15 + 14 + 14. They arrive as two separate fields and the screen keeps them separate; a document that adds them into "64 outstanding" would be inventing a number the product does not compute, and would hand an HR lead one problem where the product models two, owned by different people. **Read one, name which one it is, then read the other.**
 
 **And the flag records; it does not deliver.** `delivery: "none"`; two boundaries recorded (the two cases that crossed the line), each marked **late** in its own record (34.77 h and 82.77 h) because the process was down when they fell — recorded late, and the record says so. Nothing was sent anywhere.
+
+**Flag copy, verbatim (2026-10-09 seed).** Case 01 — *"22 items still open, with 14 days to go — the flag starts 48 hours before the start date."* · Case 02 — **body empty**, headline *"21 items open · start in 48 hours or less"* · Case 03 — *"These were due before day one."*
+
+**Shelf life, and the rule that goes next to these figures.** Everything above describes **one seed, taken 2026-10-09**. Case 02's amber window closes at **00:00 UTC on 2026-10-10 — 04:00 GST**; after that it reads `started` like case 03 and the demo has **no amber at all**. So: **re-seed before any demo on or after 2026-10-10**, and re-read every figure in this section afterwards — a re-seed moves the start dates, and therefore every count derived from them. The walkthrough script carries the same warning where its spoken figures sit: **re-check those figures against a freshly seeded instance before any demo that is not run on one.**
+
+**And do not resolve the consent label.** The live endpoint answers `{"consent": null}` on all three cases, so the demo's own **"3 WITHOUT CONSENT"** wording is still true today. Owner decision 14 — consent versus a notice acknowledgement — is **open**, so this document keeps the label accurate and leaves the decision alone.
 
 **Say which surface you are showing.** The cutover has run, so the pre-boarding segment may be demoed from the public URL — but **re-read the counts on the day**: they are seeded, and a re-seed moves every derived figure. Check the header reads **3 CASES OPEN** before you start.
 
