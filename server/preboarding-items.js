@@ -535,6 +535,14 @@ function caseSummary(caseRow, items, consent, reminders) {
  * The roll-up HR reads: every case, its progress and **the names of its outstanding items**,
  * from one list and without opening each case. Four queries in total, whatever the number of
  * cases — the items, consents and reminders are fetched once for all of them.
+ *
+ * @returns {Promise<{jurisdiction: string|null, cases: object[], totals: object}>}
+ *          `totals` describes **the set this response carries, under this endpoint's own filters** —
+ *          and this endpoint's only filter is `jurisdiction`, so `totals.cases` counts the open and
+ *          the closed cases alike. It is deliberately not the same measure as
+ *          `preboarding.listCases`'s own `totals`, which describes the set *that* call returned under
+ *          both of its filters (jurisdiction and status). Two different questions about two different
+ *          sets; they are never printed as one number.
  */
 async function checklistOverview(options = {}) {
   const jurisdiction = options.jurisdiction ? String(options.jurisdiction).toUpperCase() : null;
