@@ -1,0 +1,130 @@
+# P2-6 portal specification — the measurements §8B.1 and §8A rest on
+
+Revision: `main` at `b7630cb` (`Merge pull request #86 from AhmadJ979/feat/p2-4-workspace-track`), read 2026-10-09T06:23Z.
+Every figure below is the output of the command above it. Nothing here is a recalled number.
+
+## 1. Direction / i18n in the built client — client/src/App.tsx
+```
+space-x-           28
+space-x-reverse    0
+gap-               21
+border-r-          2
+ml-                4
+mr-                5
+text-left          6
+text-right         3
+text-start         0
+text-end           0
+dir=               0
+
+toLocaleString(undefined, …) sites: 7
+language state / Arabic string in the client: 0
+```
+
+The physical/logical split is the size of the RTL pass. `ms-`/`me-` are deliberately NOT counted here: a naive grep matches inside `items-` and `name-`, so they are measured per component during the pass.
+
+## 2. How dates and numbers are rendered today
+```
+1183:                            <span>{analytics.avgCostPerHireAE.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">AED</span></span>
+1189:                            <span>{analytics.avgCostPerHireSA.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">SAR</span></span>
+1220:                            <span>{analytics.eosbByJurisdiction.AE.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">AED</span></span>
+1226:                            <span>{analytics.eosbByJurisdiction.SA.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">SAR</span></span>
+1347:                            {emp.data_residency_country === 'SA' ? 'SAR' : 'AED'} {(emp.eosb_accrued || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+1461:                      <div className="text-[10px] font-bold text-teal-600">Day {Math.ceil((Date.now() - new Date(emp.start_date).getTime()) / (1000*60*60*24))}</div>
+1596:                              <div className="flex justify-between space-x-2"><span>UAE:</span> <span>{s.uae.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED</span></div>
+1597:                              <div className="flex justify-between space-x-2 border-t border-slate-700 mt-1 pt-1"><span>KSA:</span> <span>{s.ksa.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span></div>
+1970:                                                        {line.due_date ? ` · due ${line.due_date} (${line.due_rule})` : ''}
+```
+
+## 3. The AR precedent — design-concepts/intelligence-dashboard-prototype.html
+```
+16:  body.ar{font-family:'Segoe UI',Tahoma,'Noto Naskh Arabic',sans-serif}
+290:    document.documentElement.dir  = lang==='ar' ? 'rtl' : 'ltr';
+317:  function toArabic(s){
+```
+
+## 4. The consent record as shipped (P2-2) — server/preboarding-items.js
+```
+    INSERT INTO preboarding_consents (
+      id, case_id, consent_type, lawful_basis, consent_version, granted_at, recorded_by
+    ) VALUES (
+      ${db.escapeString(id)},
+
+recorded_by filled from: 242:      ${db.escapeString(input.actor || 'system')}
+247:    VALUES (${db.escapeString(randomUUID())}, ${db.escapeString(input.actor || 'system')},
+fields required: 221:  for (const field of ['consent_type', 'lawful_basis', 'consent_version']) {
+```
+No language column: `preboarding_consents` carries consent_type, lawful_basis, consent_version, granted_at, recorded_by — hence D15.
+
+## 5. Stock signals the portal changes — server/preboarding-package.js
+```
+const DELIVERY = {
+  state: 'not_available',
+  reason: 'no_delivery_channel',
+  label: 'Not sent — this release has no delivery channel (no mailer, webhook or SMS), so the '
+    + 'product cannot deliver this item',
+};
+
+/** Reading is not observable either: there is no hire-facing surface to read from (P2-6). */
+const READING = {
+  state: 'not_tracked',
+  reason: 'no_hire_portal',
+  label: 'Not tracked — there is no hire-facing portal in this release, so no read event exists '
+    + 'to record',
+};
+
+/** The only method this release can honestly write. */
+```
+
+## 6. Reference-string-only storage — server/document-store.js
+```
+ * Store a document's bytes against a case item. Unimplemented on purpose: see the header.
+ *
+ * @param {object} input { case_id, item_key, filename, contentType, bytes, actor }
+ */
+async function saveDocument() {
+  throw new DocumentStoreNotConfiguredError(
+    'No document store is configured: where collected documents live is undecided, so the '
+    + 'product refuses to store document content rather than choose a place for it. '
+    + `A chosen store is configured through ${STORE_CONFIG_VAR}.`
+  );
+}
+
+/** Read a stored document back. Unimplemented on purpose: nothing has been stored. */
+```
+document_reference cap: 284:    throw new PreboardingItemError('document_reference must be 120 characters or fewer', 400);
+
+## 7. The item sets the portal reads (never re-lists)
+```
+AE+SA document items: 13
+44:const ITEM_STATUSES = ['not_started', 'requested', 'received', 'verified'];
+53:const ALLOWED_TRANSITIONS = {
+```
+
+## 8. The consent surfaces as shipped — the citations §8 now carries
+```
+-- the case's own line (what §8 was corrected TO):
+1842:                                  No PDPL consent record — no document can be collected on this case yet.
+1864:                                        <span className="text-[10px] text-teal-700 font-semibold">PDPL consent recorded {detail.consent.granted_at}</span>
+-- the record button and what it posts (hard-coded version, no notice shown):
+793:        body: JSON.stringify({ consent_type: 'pdpl_notice', lawful_basis: 'consent', consent_version: 'v1' })
+1868:                                          Record PDPL consent
+-- the EMPLOYEE-level display, a different object (what §8 cited before):
+1408:                          {selectedEmployee.consent_granted ? `✓ GRANTED ON ${selectedEmployee.consent_date}` : '✗ MISSING / REQUIRED'}
+-- the two server paths:
+340:app.post('/api/compliance/consent', async (req, res) => {
+718:app.post('/api/preboarding/cases/:id/consent', async (req, res) => {
+server/index.js:344:  await db.query(`INSERT INTO consent_records (id, employee_id, consent_type, lawful_basis, granted_at, consent_version) 
+server/preboarding-items.js:233:    INSERT INTO preboarding_consents (
+```
+
+## 9. The workspace row's due-date + verb block
+```
+1924:                                          {wsData && wsData.totals.overdue > 0 && <span className="text-rose-600 normal-case tracking-normal font-semibold"> · {wsData.totals.overdue} past due</span>}
+1970:                                                        {line.due_date ? ` · due ${line.due_date} (${line.due_rule})` : ''}
+1973:                                                            ? <span className="text-rose-600 font-semibold"> · {Math.abs(line.days_to_due)} d past due</span>
+1974:                                                            : <span> · in {line.days_to_due} d</span>
+1980:                                                        <ItemButton label="Requested" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'requested')} />
+1984:                                                          <ItemButton label="Received" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'received')} />
+1990:                                                          <ItemButton label="Verified" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'verified')} />
+```
