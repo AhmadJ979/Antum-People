@@ -158,6 +158,11 @@ drwxr-xr-x 3 root root   4096 Oct  9 13:38 ..
 -rw-r--r-- 1 root root 101120 Oct  9 13:37 before-race-window.png
 ```
 
+And one line to read the block above correctly: that summary is a **verbatim capture from before the
+correction below**, so its trailing `ls` still lists `after-2-race-window.png` under the old name. That
+entry is the withdrawn file; nothing else in the block is affected, and the figures in it are the ones
+the correction quotes.
+
 ## Files
 
 | file | what it is |
