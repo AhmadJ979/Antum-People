@@ -140,6 +140,88 @@ Did not edit either copy (per the brief). Did not settle the statutory questions
 "counsel required, here is the question" is the answer for them. Did not regenerate the pack artifacts. Did not touch
 the notice's attestation block (on the owner's list separately).
 
+## 7. Executed — the movement ran, and the served KSA text is now the repository's (2026-10-12)
+
+§2's ruling is no longer a plan. Cutover #5 ran **06:41:58–06:42:25Z, exit 0, deploying `9d2182a`**, and the lead
+measured the served route afterwards:
+
+| what | measured after the cutover |
+|---|---|
+| `GET /api/compliance/templates/ksa-employment-contract/demo-emp-sarah` | **200** · contains **"never deducted from the EOSB"** · contains **no** "Up to 50" · contains **no** "Articles 74" |
+
+So the three blocks §1 identifies are gone from what a client receives. The mechanism is the one that flipped the
+notice in the same movement: `templatePath()` resolves every template inside this repository
+(`server/privacy-notice.js`) and the route that serves them reads through that module (`server/index.js:369`). The
+notice's own route reports the flip explicitly — `path` = the tree's `templates/privacy-notice.md` (**not** the host
+directory), `version` `v2.3`, content md5 `6004b0a5…` = `origin/main`'s file — and its stale host copy was retired to
+`templates/retired/privacy-notice.md.retired-9d2182a` with bytes preserved.
+
+## 8. The host copy — recommendation: retire it, the same way the notice was retired
+
+**Recommendation (compliance's call, the lead executes):** move `/home/team/shared/templates/ksa-employment-contract.md`
+aside to `templates/retired/ksa-employment-contract.md.retired-9d2182a`, bytes preserved, exactly as the notice was.
+Do **not** leave a marker or any replacement text at the path.
+
+**Four measurements decide it, and the first is new this cycle.**
+
+1. **The host copy was *shadowing* this repository's, not sitting beside it.** Until 2026-10-12 the resolution was
+   host-first with the repository as the fallback — `d618a96:14` ("*the host-shared templates directory first, this
+   repository's own `templates/` as the fallback*"), `:36-45` (`SHARED_TEMPLATES_DIR = '/home/team/shared/templates'`,
+   "the first existing candidate wins"). The divergent copy therefore **replaced** the reviewed text wherever it
+   existed. Moving it aside cannot make any path worse — the fallback is the reviewed file — and it settles the
+   rollback question in the safe direction: after the move, a rollback serves the reviewed text, which is the opposite
+   of the hazard the notice's ordering rule was written for.
+2. **It is wrong text about an employee's money, in a document a client reads.** The three blocks include "up to 50%
+   of EOSB may be deducted" — a figure `eosb-engine-gaps-spec.md:46` supersedes and `statutory-claims-determination.md`
+   Group 4 replaces with a separate settlement line — and an accrual ladder giving a KSA employee **no EOSB under two
+   years**, against the Art. 84 accrual the engine actually computes (`server/eosb.js:38-48`). Both errors run against
+   the employee, and a reader of the pack reads them as our contractual position.
+3. **The pack is a delivery channel of its own** (§4, Tier 2): `build-html.js` renders `.md` → `.html`/`.pdf`, and the
+   pack is what gets handed to a pilot. Retiring the file loses no history — the pilot snapshot survives under
+   `templates/retired/`, named for the commit, bytes intact.
+4. **After the move the pack is internally consistent, which is why this is *not* a pack-level decision.** Measured
+   2026-10-12, after the notice's retirement: the pack holds six `.md` files, **five byte-identical** to the
+   authoritative copies and **exactly one diverging — this one** (`3518c1af…` vs `1c6ad895…`; every other file:
+   `770ae371` breach letters, `3326d10b` DPA, `770b522d` DPIA, `7b1ade31` final settlement, `f28dc42a` UAE contract).
+   The pack-level question was never about the pack — it was about the one file in it that no longer matches the
+   reviewed text. Retiring that file **dissolves** the question instead of deferring it, and leaves a pack that can be
+   handed to a client through any channel, because every `.md` remaining in it is the reviewed text.
+
+**Procedure** — the notice's, unchanged, so the team has one procedure rather than two: record the source md5 **before**
+the move (`3518c1af4931afc7b5cd54d0689987e0`); move it to `templates/retired/ksa-employment-contract.md.retired-9d2182a`;
+read the md5 back and assert it equals the before value; then re-hit the route and assert it still returns the
+repository's text — the move must be **inert by measurement**, as the notice's was. Ordering: **after** a restart on a
+tree that resolves templates from this repository, which is already satisfied (the cutover happened, and the served
+tree does not consult the host directory).
+
+**What retiring it does *not* fix — stated so this is not read as "the pack is now clean":**
+
+- **The notice's derivatives in the pack are stale against the reviewed notice.** `privacy-notice.html` carries
+  `statutory retention` ×2 (EN + AR) and `v2.2` ×4, and with its `.md` now under `retired/`, the pack shows notice
+  derivatives whose source no longer sits beside them. Regenerating is the owner's act (`templates/build-html.js`).
+- **The paper attestation block is a live document question, not a stale-text one.** "I consent … ☐ Yes / نعم" is
+  present in the **served** v2.3 (verified after the cutover). Nothing in this cycle touched it.
+- **Five identical duplicates remain** (Tier 2). Inert under either resolution, but drift-prone; retiring them is a
+  tidy-up, not a compliance fix.
+
+## 9. Where counsel stands — plainly
+
+The PDPL set is **five** questions (`pdpl-lawful-basis-mapping.md` §4, audited down from six: notice content elements ·
+Arabic notice · acknowledgement-as-instrument · emergency contact · retention floor). This ruling adds the **sixth**
+(§3: whether the notice compensation may be set off against the EOSB, and the notice day counts). Two EOSB requests
+exist drafted and send-ready in `/home/team/shared/` (`uae-counsel-confirmation-request--send-ready.txt`,
+`ksa-counsel-confirmation-request--send-ready.txt`); the PDPL five need a recipient **and** one permission — whether
+the letter may quote our internal documents (`pdpl-lawful-basis-mapping.md` §5).
+
+**No recipient for any of them.** The engineering is no longer what stands between this product and a pilot: a name does.
+
+**One discrepancy, recorded rather than smoothed.** Plan revision 76 counts "six questions standing — five plus the
+KSA statutory half" (Current Focus #1) and separately calls the notice's paper attestation block "the sixth counsel
+question" (#3). Both cannot be the sixth. The attestation block most likely belongs *inside* the acknowledgement
+question (Q4) — the product records the notice as *shown* while the paper block still collects consent, which is the
+same question met at the point of the document. I have not chosen on the plan's behalf: the two readings differ by one,
+and the owner is who settles it.
+
 ## Sources (all read at `origin/main` = `a11d5c8` unless a host path is named)
 
 - Host: `/home/team/shared/templates/ksa-employment-contract.md` (`3518c1af…`), `/home/team/shared/templates/privacy-notice.html`, `…/privacy-notice.md` (`e011d3d6…`), `…/build-html.js`.
@@ -150,3 +232,9 @@ the notice's attestation block (on the owner's list separately).
   `compliance-audit-enhancement.md:30,50,89`.
 - Serving path: `client/src/App.tsx:1564,1571,1579` · `server/index.js:369,414-416` · `server/privacy-notice.js:10,31,51`
   · `server/privacy-notice.test.js:35-38` · `server/eosb.js` (no notice parameter).
+- **Addendum §7–§9 (2026-10-12), read at `origin/main` = `fa69750`:** the pre-2026-10-12 host-first resolution —
+  `d618a96:14,36-45`; the repository-first resolution — `3712822` (`server/privacy-notice.js`, `templatePath()`); the
+  cutover that executed the ruling — `9d2182a` (06:41:58–06:42:25Z, exit 0, bundle `index-Cc1GodRa.js`); the retirements
+  — `templates/retired/privacy-notice.md.retired-9d2182a`; the counsel set — `pdpl-lawful-basis-mapping.md:78-92` and
+  §5; the pack, measured 2026-10-12: five `.md` files byte-identical to the repository, `ksa-employment-contract.md`
+  `3518c1af…` vs `1c6ad895…` the only divergence.
