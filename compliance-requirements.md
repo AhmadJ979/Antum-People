@@ -2,7 +2,7 @@
 
 > **Author:** Compliance Expert (Agent)
 > **Date:** 2026-06-13
-> **Revision:** Brand updated to Antum People on 2026-09-17.
+> **Revision:** Brand updated to Antum People on 2026-09-17. **2026-10-12:** PDPL §5.2 gained a measured subsection (§5.2.1) recording surplus national-ID decryption on two unreachable routes.
 > **Scope:** UAE & KSA — Labor Law, End-of-Service Benefits (EOSB), Data Privacy (PDPL)
 > **Audience:** Engineering (schema/datastore design), Product Design (UX flows), Lead (strategy/prioritization)
 
@@ -299,13 +299,42 @@ function calculateEOSB_KSA(totalSalary, startDate, endDate):
 |---|---|---|
 | **Consent** | Processing employee data requires explicit consent. For HR processing (contractual necessity), Art. 4(2) allows processing without consent. | Consent capture on onboarding. Purpose limitation notices. |
 | **Purpose Limitation** | Data must be collected for specified, explicit, legitimate purposes. | Privacy notice at data collection point. |
-| **Data Minimisation** | Only collect data necessary for the employment relationship. | Review schema: do not collect unnecessary personal data. |
+| **Data Minimisation** | Only collect data necessary for the employment relationship. | Review schema: do not collect unnecessary personal data. **Measured 2026-10-12 — two routes decrypt the national ID for no purpose a feature needs; see §5.2.1.** |
 | **Data Retention** | Must not retain longer than necessary. Specific retention periods for HR data: typically 2-5 years post-termination (per UAE labour law). | Data retention policy and auto-purge schedules. |
 | **Data Subject Rights** | Right of access, rectification, erasure, restriction, portability, objection. | Employee self-service portal for data requests. |
 | **Cross-Border Transfer** | Personal data may not be transferred outside UAE unless the destination has adequate data protection (or contractual safeguards are in place). | Data residency requirement. Adequacy determination or SCCs. |
 | **Data Protection Officer** | DPO required if core activities involve processing sensitive data or large-scale monitoring. | DPO registration feature for clients. |
 | **Data Breach Notification** | Must notify regulator within 72 hours of becoming aware. | Breach notification workflow. |
 | **Sensitive Data** | Health data, biometric data, trade union membership, etc. require higher safeguards. | Encrypt at rest. Access control flags. |
+
+#### 5.2.1 Measured 2026-10-12 — surplus decryption of the national ID (two routes, no caller)
+
+The row above is design intent; this is measured state. Two server routes decrypt the roster's national-ID
+columns while returning something that does not need them. **Neither route has a caller, so nothing is exposed
+to a client today** — this is a widened API surface and unnecessary processing, not an incident. Both are
+removal candidates under owner decision 21.
+
+| Route | Code | What it decrypts | What the response needs | Caller |
+|---|---|---|---|---|
+| `GET /api/employees/:id` | `server/index.js:170–181` | the row's `national_id_value` **and** `national_id_iqama` | the employee row | **none** |
+| `GET /api/compliance/report` | `server/index.js:424–436` | **every** employee's `national_id_value` **and** `national_id_iqama` — `SELECT * FROM employees`, mapped through `auth.decrypt` | two counts (`total`, `consentGranted`) and a visa-expiry window | **none** |
+
+Three things a grep would not tell you:
+
+- **The decryption is not idle in either route.** `GET /api/employees/:id` returns the row itself
+  (`res.json(emp)`), so the plaintext identifier is the response body. In the report route the decrypted values
+  are never read by the summary fields — but `alerts` is a filter over the *decrypted* array and is returned
+  whole (`res.json({ …, alerts })`), so wiring that route would ship a plaintext national ID for every employee
+  whose visa expires within 60 days. Remove, or project the columns, before wiring.
+- **`GET /api/employees/:id` looks called and is not.** The path string `api/employees/<id>` appears twice in the
+  client, at `client/src/App.tsx:1090` and `:1110` — **both are `method: 'PUT'`**. Two hits on the path, neither
+  one reaching this handler.
+- **The report route's headline figure is not fit to display anyway.** Its `consentGranted` is the
+  seeder-written flag (owner decision 17), so wiring the route unchanged would put a fabricated number on a
+  screen.
+
+**Disposition belongs to owner decision 21; this subsection only records the measurement.** It changes no served
+document, removes no code, and does not touch the demo.
 
 ### 5.3 Implementation Requirements
 
