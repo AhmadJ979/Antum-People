@@ -1,0 +1,22 @@
+=== merged-tree build check — 2026-10-12T05:58:06Z
+=== tree under test: origin/main = eaeddc9135c7da844703215f0383a97aa35992a1 (eaeddc9)
+=== live deployment, only to show this run did not touch it: 200
+=== the label as it stands in the merged source:
+    1889:                        {/* "Cases · notice not shown" replaces "Without consent", and the meaning moves with the
+    1896:                        <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Cases · notice not shown</div>
+=== worktree HEAD: eaeddc9135c7da844703215f0383a97aa35992a1
+tsc -b exit code: 0
+vite build exit code: 0
+dist/assets/index-Cc1GodRa.js   274.06 kB │ gzip: 76.40 kB
+
+[32m✓ built in 261ms[39m
+=== the bundle this tree builds:
+  index-Cc1GodRa.js 274065 bytes  md5 9cdfbe5da81f6acf38fdb10de8a5e6fd
+     'Cases · notice not shown' : 1
+     'WITHOUT CONSENT'          : 0
+     'cases_without_consent'    : 0
+     'cases_notice_not_shown'   : 1
+=== NOTE: this is what origin/main builds on this machine, at the run stamp above.
+    It is not yet the served asset: the served name/size/md5 are read off the live URL
+    after the cutover, and a cutover re-dates the demo seed.
+=== live deployment after: 200
