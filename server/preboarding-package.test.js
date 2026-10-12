@@ -7,6 +7,11 @@
  * The point of this file is the refusal path. "Nothing is ever shown as acknowledged unless the
  * acknowledgement record exists" is not a UI convention here, so most of these tests call the
  * module directly — the way a hand-written API call would — and assert that it refuses.
+ *
+ * Offer references come from a counter, never from Math.random(). Case creation is idempotent per
+ * reference (preboarding.js: `if (existing) return { case: existing, created: false }`), so a
+ * reference minted twice hands the second caller the first caller's case — which is how this file's
+ * refusal test once read `recorded_count` 1 where it asserts 0. A counter cannot re-mint a value.
  */
 const { test, describe, after } = require('node:test');
 const assert = require('node:assert');
@@ -20,8 +25,11 @@ const db = require('./db');
 const preboarding = require('./preboarding');
 const pkg = require('./preboarding-package');
 
+/** Unique per case by construction: a counter cannot re-mint a reference, so no test in this file can
+ *  inherit another test's case. (The previous 900-value random space collided, one run in ~7.) */
+let offerCounter = 100;
 const acceptedOffer = (overrides = {}) => ({
-  offer_reference: `OFR-2026-${Math.floor(Math.random() * 900) + 100}`,
+  offer_reference: `OFR-2026-P23-${offerCounter += 1}`,
   candidate_name: 'Layla Haddad',
   candidate_email: 'layla.haddad@example.com',
   role: 'Financial Analyst',
