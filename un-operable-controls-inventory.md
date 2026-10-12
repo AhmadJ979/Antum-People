@@ -179,8 +179,8 @@ defect stays visible, so removing the code and the entry are one act.
 
 ## 7. The fourth instance (2026-10-12) — a state a user can enter and cannot leave
 
-Found on the live product by the designer; measured here from the source. A **different class** from the
-three above: not "no caller", not "no opener", but **a control that leads somewhere the product will not
+Found on the live product by the designer; measured from the source, then observed over HTTP on a
+scratch instance (both, below). A **different class** from the three above: not "no caller", not "no opener", but **a control that leads somewhere the product will not
 let you leave.**
 
 | where | what it does | line read |
@@ -201,9 +201,29 @@ still guarded, and that every no-basis item is registered — so a fourth one ca
 Green on the real tree (10 tests / 10 pass / 0 fail); **red under both injections** (C6, C7):
 `docs/evidence/un-operable-controls-2026-10-12/negative-controls-flow-2026-10-12.txt`.
 
-**Honest gap:** the rig run that was to show the 200/409 pair over HTTP did not complete; the failure is
-recorded at `rig-attempt-instance-4-2026-10-12.txt` rather than deleted. The mechanism is read from the
-source, not observed over HTTP — the fix's author should re-run the rig.
+**Now measured over HTTP** (2026-10-12, after a first attempt died on my own probe's assumptions — both
+runs are on file). A scratch instance of `origin/main` `1dae076` (port 4720, its own database; the live
+product on 3000 was left alone and answered 200 before and after) reproduces the whole path raw:
+
+| step | request | answer |
+|---|---|---|
+| the seeded demo case | `GET /api/preboarding/cases/:id/checklist` | **7** employee items, the three no-basis ones among them |
+| a case the product opens | `POST /api/preboarding/cases` (accepted offer) | **201** — the same seven items |
+| press `Request` | `POST …/items/education_certificate/status {status:"requested"}` | **200** — the item becomes `requested` |
+| press `Mark received` | same route, `{status:"received"}` | **409** — "*cannot be collected in this release … (pending counsel Q1)*" |
+| after both calls | `GET …/checklist` | still `requested` — **entered, cannot leave** |
+| the roll-up | `GET /api/preboarding/checklist/overview?jurisdiction=AE` | `items_outstanding` **21 → 28** with the new case, and **still 28** through all three stranded requests |
+
+`experience_certificate` and `emergency_contact` behave identically (409 naming **Q1** and **Q5**).
+Transcript: `docs/evidence/un-operable-controls-2026-10-12/rig-instance-4-2026-10-12.txt`. The first,
+incomplete attempt stays on file at `rig-attempt-instance-4-2026-10-12.txt`, superseded by it.
+
+So the dead end is worse than "a refusal one step too late": **the item counts against the case
+permanently** — the roll-up never moves while it sits in `requested`, and no status the product accepts
+can clear it. It is reachable on the shipped demo, not only in a case a user creates.
+**Correction to my own method:** the first probe located its items by searching the payload recursively,
+and on two cases it landed on a shorter nested array — reporting four-item checklists where the answer is
+seven. The transcript reads the documented top-level `items` field, filtered to `track === 'employee'`.
 
 ## 8. Dispositions — wire or remove, and what each costs
 

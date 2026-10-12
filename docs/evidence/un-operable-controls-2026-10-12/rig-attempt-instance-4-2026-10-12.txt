@@ -3,3 +3,7 @@ The scratch instance booted from a worktree of origin/main 5fb4fa4 and the rig t
 but the run did not reach the HTTP probe. There is NO raw-request evidence here.
 What the check asserts about instance 4 is read statically (the collect gate's scope and the two
 control lines), not observed over HTTP. Whoever takes the fix should re-run the rig.
+
+Superseded 2026-10-12: the rig was re-run and the 200/409 pair is now observed over HTTP — see
+rig-instance-4-2026-10-12.txt in this directory. This file is kept rather than replaced because the
+failure and its cause (the probe assumed the wrong payload shape) are part of the record.

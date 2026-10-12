@@ -1,0 +1,74 @@
+Instance 4 over HTTP — the Request dead end, measured on a scratch instance — 2026-10-12
+
+Scratch instance of origin/main 1dae076 (worktree, separate DB), bound to port 4720 with nothing else
+touched: it was seeded, probed and torn down while the live product on 3000 answered 200 before and after.
+The client was never opened — every line below is a raw request and the server's own response body.
+
+What it shows, in one line each:
+  * every seeded demo case carries SEVEN employee-grade items, including all three the notice gives no
+    basis to (education_certificate, experience_certificate, emergency_contact) — so the dead end is
+    present on the shipped demo, not only in a case a user creates.
+  * a case opened through the product's own POST /api/preboarding/cases gets the same seven (201).
+  * Request on a no-basis item: the status call answers 200 and the item becomes 'requested'.
+  * Mark received: the same endpoint refuses 'received' with 409 and names the counsel question
+    (Q1 for both certificates, Q5 for the emergency contact). The item stays 'requested'.
+  * the roll-up does not move while the item is stranded: items_outstanding rises to 28 with the new
+    case and stays 28 through all three stranded requests — the item counts against the case and no
+    status the product accepts can clear it. That is the dead end, and it is permanent.
+
+Reproduction: seed a scratch instance; log in; POST /api/preboarding/cases with an accepted offer;
+take any no-basis item_key from GET /api/preboarding/cases/:id/checklist and POST its status
+'requested' (200), then 'received' (409).
+
+One correction to my own method, recorded here rather than quietly dropped: the first probe located
+its item array by searching the payload recursively, and on two cases it landed on a shorter nested
+array instead of the checklist's own 'items' field — which made those cases look like they carried
+four items. The transcript below reads the documented top-level 'items' field and filters
+track='employee'. The earlier reading was an artifact of the probe, not a property of the product.
+
+== raw transcript ==
+rig tree: 1dae076 (origin/main) | port 4720 | live product on 3000 left alone
+seed: exit=0 errors=0 | employees=13
+scratch user ok
+auth gate, no token (expect 401): 401
+live product untouched: 200 (expect 200)
+login: 200
+seeded case d377085a (AE, open, start 2026-10-11):
+   employee items: 7 -> passport, visa_or_entry_permit, emirates_id, education_certificate, experience_certificate, bank_details, emergency_contact
+   checklist top-level keys: case_id, jurisdiction, document_set_active, notice, reminders, summary, items
+seeded case 67810fa0 (AE, open, start 2026-10-13):
+   employee items: 7 -> passport, visa_or_entry_permit, emirates_id, education_certificate, experience_certificate, bank_details, emergency_contact
+   checklist top-level keys: case_id, jurisdiction, document_set_active, notice, reminders, summary, items
+seeded case fb39d380 (AE, open, start 2026-10-26):
+   employee items: 7 -> passport, visa_or_entry_permit, emirates_id, education_certificate, experience_certificate, bank_details, emergency_contact
+   checklist top-level keys: case_id, jurisdiction, document_set_active, notice, reminders, summary, items
+overview before: 200 {"cases":3,"items":21,"items_outstanding":21,"items_received":0,"items_verified":0,"cases_notice_not_shown":1,"cases_ready":0,"workspace_lines":43,"workspace_lines_open":43,"cases_provisioned":0}
+
+POST /api/preboarding/cases (offer RIG-EVIDENCE-1791801293787) -> 201 (created=true) case a2108ef0
+new case employee items: 7 -> passport, visa_or_entry_permit, emirates_id, education_certificate, experience_certificate, bank_details, emergency_contact
+
+--- education_certificate (Education certificate) | status: not_started | lawful_basis on the row: (none)
+POST /items/education_certificate/status {status:"requested"} -> 200
+   item status now: requested
+POST /items/education_certificate/status {status:"received"}  -> 409 {"error":"Education certificate cannot be collected in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1)."}
+   item status after both calls: requested  <- the state a user cannot leave
+   roll-up now: {"cases":4,"items":28,"items_outstanding":28,"items_received":0,"items_verified":0,"cases_notice_not_shown":2,"cases_ready":0,"workspace_lines":57,"workspace_lines_open":57,"cases_provisioned":0}
+
+--- experience_certificate (Experience certificate) | status: not_started | lawful_basis on the row: (none)
+POST /items/experience_certificate/status {status:"requested"} -> 200
+   item status now: requested
+POST /items/experience_certificate/status {status:"received"}  -> 409 {"error":"Experience certificate cannot be collected in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1)."}
+   item status after both calls: requested  <- the state a user cannot leave
+   roll-up now: {"cases":4,"items":28,"items_outstanding":28,"items_received":0,"items_verified":0,"cases_notice_not_shown":2,"cases_ready":0,"workspace_lines":57,"workspace_lines_open":57,"cases_provisioned":0}
+
+--- emergency_contact (Emergency contact) | status: not_started | lawful_basis on the row: (none)
+POST /items/emergency_contact/status {status:"requested"} -> 200
+   item status now: requested
+POST /items/emergency_contact/status {status:"received"}  -> 409 {"error":"Emergency contact cannot be collected in this release: the privacy notice assigns no basis for this item, and the data is a third person's, not the hire's (pending counsel Q5)."}
+   item status after both calls: requested  <- the state a user cannot leave
+   roll-up now: {"cases":4,"items":28,"items_outstanding":28,"items_received":0,"items_verified":0,"cases_notice_not_shown":2,"cases_ready":0,"workspace_lines":57,"workspace_lines_open":57,"cases_provisioned":0}
+--- teardown
+  killing 7838 (cwd /home/agent-senior-software-engineer/rig4d/server)
+Terminated
+  listeners on 4720 now: 0 | live product still: 200 (expect 200)
+=== END ===
