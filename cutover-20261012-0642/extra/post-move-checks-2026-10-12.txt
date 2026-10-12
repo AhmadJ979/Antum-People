@@ -1,0 +1,137 @@
+nohup: ignoring input
+=== post-move checks, cutover #5 (9d2182a) — read at 2026-10-12T06:53:21Z ===
+
+--- 1. the live surface (port 3000), uncredentialed ---
+status/title: 200 <title>Antum People</title>
+served asset in HTML: assets/index-Cc1GodRa.js
+served bytes: 274065
+served md5  : 9cdfbe5da81f6acf38fdb10de8a5e6fd
+css         : assets/index-BLszozVg.css
+our asset named in the served HTML: 1 hit(s)
+
+--- 2. the tree's own build, for comparison ---
+    
+   35199 index-BLszozVg.css
+   274065 index-Cc1GodRa.js
+tree build md5: 
+
+--- 3. what holds port 3000, and its cwd (from /proc, not from ps) ---
+pid: 
+
+--- 4. the guard ---
+8053 bash scripts/keep-alive.sh
+  guard log: 2026-10-12T06:42:19+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+  guard log: 2026-10-12T06:42:19+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+
+--- 5. the host copy is retired, and by a move rather than a delete ---
+host templates dir now:
+  total 748
+  -rw-rw-r-- 1 root root  16545 Sep 17 06:31 breach-notification-letters.md
+  -rw-rw-r-- 1 root root   9936 Sep 18 08:31 build-html.js
+  -rw-rw-r-- 1 root root  24626 Sep 18 08:31 data-processing-agreement.html
+  -rw-rw-r-- 1 root root  19191 Sep 18 08:31 data-processing-agreement.md
+  -rw-rw-r-- 1 root root 158561 Sep 18 08:31 data-processing-agreement.pdf
+  -rw-rw-r-- 1 root root  18501 Sep 18 08:31 dpia-questionnaire.html
+  -rw-rw-r-- 1 root root  11214 Sep 18 08:31 dpia-questionnaire.md
+  -rw-rw-r-- 1 root root 208147 Sep 18 08:31 dpia-questionnaire.pdf
+  -rw-rw-r-- 1 root root   3018 Sep 17 06:31 final-settlement-statement.md
+  -rw-rw-r-- 1 root root  10662 Sep 17 06:31 ksa-employment-contract.md
+  -rw-rw-r-- 1 root root  31446 Sep 18 08:31 privacy-notice.html
+  -rw-rw-r-- 1 root root 217970 Sep 18 08:31 privacy-notice.pdf
+  drwxr-sr-x 2 root root     55 Oct 12 06:43 retired
+  -rw-rw-r-- 1 root root  10824 Sep 17 06:31 uae-employment-contract.md
+retired copy:
+  total 24
+  -rw-rw-r-- 1 root root 23566 Sep 18 08:31 privacy-notice.md.retired-9d2182a
+retired copy md5: e011d3d6f18eb8175050917bb4fb08fe
+the old path exists again?: no — nothing was left at the path
+
+--- 6. the two copies of the notice, by bytes, after the move ---
+repo  (origin/main:templates/privacy-notice.md): 6004b0a5b23ac5aa68415da5e45ec2cd
+deployed tree file                             : 6004b0a5b23ac5aa68415da5e45ec2cd
+retired host copy (the stale one)              : e011d3d6f18eb8175050917bb4fb08fe
+
+--- 7. the version lines in the deployed notice, and where the retired wording sits ---
+  5:> **Status / الحالة:** Template v2.3 — pilot-ready
+  6:> **Version / الإصدار:** v2.3 (2026-10-12) — retention wording corrected: "statutory retention" → "retention period"
+  247:| Consent Version / إصدار الموافقة | v2.3 (2026-10-12) |
+  "statutory retention" lines:   6:> **Version / الإصدار:** v2.3 (2026-10-12) — retention wording corrected: "statutory retention" → "retention period"
+  of those, in the retention CONTENT (header lines excluded): 0
+  the EN retention row     : | Consent records | Duration of employment + retention period | Duration of employment + retention period |
+  the AR retention row     : | سجلات الموافقة | مدة التوظيف + مدة الاحتفاظ | مدة التوظيف + مدة الاحتفاظ |
+  retired AR qualifier hits: 0
+
+--- 8. does any deployed module still read the host path? ---
+  /home/team/shared/probable-octo-sniffle/server/privacy-notice.js:13: * Until 2026-10-12 the resolution was the other way round: `/home/team/shared/templates` first, this
+  /home/team/shared/probable-octo-sniffle/server/privacy-notice.test.js:4: * Measured on 2026-10-12: the product served `/home/team/shared/templates/privacy-notice.md`, a copy
+
+--- 9. templates/build-html.js — the derivative path cannot depend on the host copy ---
+  #!/usr/bin/env node
+  // Antum People — Markdown → print-ready HTML builder for the pilot compliance pack.
+  // No external deps. Usage: node build-html.js
+  const fs = require('fs');
+  const path = require('path');
+  
+  const DIR = __dirname;
+  const DATE = '2026-09-17';
+  
+  // ---------------- Markdown → HTML (small, dependency-free) ----------------
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  __dirname hits in that file: 1
+  host-path hits in that file: 0
+
+--- 10. the delta this cutover carried (rule 22) ---
+origin/main at the run: 9d2182a
+files under client/|server/ in b54412d..9d2182a: 9
+  client/src/App.tsx
+  server/demo-seed.test.js
+  server/index.js
+  server/preboarding-items.js
+  server/preboarding-items.test.js
+  server/preboarding-workspace.test.js
+  server/privacy-notice.js
+  server/privacy-notice.test.js
+  server/schema.sql
+
+=== end of post-move checks ===
+=== addendum, read at 2026-10-12T06:53:46Z ===
+Two sections of the first pass printed nothing. Corrected here, with the cause:
+  (a) section 2 — I joined the asset path twice (the HTML names 'assets/index-…', and I appended
+      it to a directory that already ended in .../assets/), so md5sum read a path that is not there.
+  (b) section 3 — 'ss -ltnp' produced no pid on this host, so the /proc lookup had nothing to read.
+
+--- 2 (corrected). the served asset vs the tree's own build ---
+tree file      : /home/team/shared/probable-octo-sniffle/client/dist/assets/index-Cc1GodRa.js
+tree bytes     : 274065
+tree md5       : 9cdfbe5da81f6acf38fdb10de8a5e6fd
+served bytes   : 274065   (fetched in the first pass, http://localhost:3000/assets/index-Cc1GodRa.js)
+served md5     : 9cdfbe5da81f6acf38fdb10de8a5e6fd
+identical      : yes — byte-for-byte, cmp silent
+
+--- 3 (corrected). what holds port 3000, from /proc ---
+pid 7917
+  cmd: node index.js 
+  cwd: /home/team/shared/probable-octo-sniffle/server
+  /proc/7917 created: 2026-10-12 06:42:07
+pid 13197
+  cmd: node index.js 
+  cwd: /home/agent-product-designer/rig-final3/server
+  /proc/13197 created: 2026-10-12 06:49:39
+pid 15701
+  cmd: node index.js 
+  cwd: /home/agent-product-designer/rig-final3/server
+  /proc/15701 created: 2026-10-12 06:53:06
+listeners on 3000 (lsof): 7917 
+
+--- 9 (strengthened). is the tree's build-html.js the repository's own file? ---
+tree file : 206ff7ca5a6f00996ae3a4402b257a8b
+repo file : 206ff7ca5a6f00996ae3a4402b257a8b
+line 7, verbatim: const DIR = __dirname;
+host path in that file: 0 hit(s)
+
+--- and the retired copy is a MOVE, not a delete: the bytes are still readable ---
+retired file, first line: # Employee Privacy Notice — Antum People
+retired file, version line: > **Version / الإصدار:** v2.2 (2026-09-17) — owner legal details applied (DPO name, partial address, entity status)
+retired copy carries the retired wording in its retention row: 1 hit(s)
+=== end of addendum ===

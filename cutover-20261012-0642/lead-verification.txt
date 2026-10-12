@@ -1,0 +1,79 @@
+# Cutover 2026-10-12 06:41:58–06:42:25Z — the lead's own verification (beyond the script's)
+Deployed tree: 9d2182a  ("Merge pull request #156 from AhmadJ979/docs/tracker-round-40")
+Delta measured before the run (rule 22): 9 files under client/ or server/ — client/src/App.tsx,
+server/demo-seed.test.js, server/index.js, server/preboarding-items.js, server/preboarding-items.test.js,
+server/preboarding-workspace.test.js, server/privacy-notice.js, server/privacy-notice.test.js, server/schema.sql.
+(Plan said 8; measured 9 — the plan's figure was stale by one and is corrected in revision 76.)
+
+## A. The served asset, read off the live URL (never from the tree)
+page title            : "Antum People"
+served asset          : assets/index-Cc1GodRa.js   274,065 bytes   md5 9cdfbe5da81f6acf38fdb10de8a5e6fd
+tree's own build      : same name, same 274,065 bytes, same md5  -> the live file IS the tree's build
+css                   : assets/index-BLszozVg.css
+previous served asset : assets/index-Dt2oLspq.js  270,962 bytes  (b54412d) — now superseded
+
+## B. The privacy notice the product now serves (the point of the movement)
+route                 : GET /api/compliance/notice (Bearer) -> 200
+envelope keys         : content, path, version
+reported path         : /home/team/shared/probable-octo-sniffle/templates/privacy-notice.md  <-- the TREE's own
+                        templates dir, NOT /home/team/shared/templates/ . The resolution has flipped.
+version field         : v2.3
+served content md5    : 6004b0a5b23ac5aa68415da5e45ec2cd
+repository file (main): 6004b0a5b23ac5aa68415da5e45ec2cd   -> IDENTICAL, and `diff` is empty (byte-for-byte)
+the stale host copy   : e011d3d6f18eb8175050917bb4fb08fe   -> NOT what comes back
+version lines served  : :5 Status "Template v2.3", :6 "v2.3 (2026-10-12) — retention wording corrected",
+                        :247 "Consent Version | v2.3 (2026-10-12)"
+"statutory retention" : 1 hit, at line 6 ONLY — inside the v2.3 change note that quotes the retired wording
+                        ("...corrected: \"statutory retention\" → \"retention period\""). NOT a retention claim.
+                        The retention table itself now reads "retention period"; the Arabic row no longer
+                        carries مدة الاحتفاظ القانونية (0 hits, old string).
+                        -> A naive `grep -c == 0` check is WRONG on this text. See the note to #153 below.
+
+## C. The KSA contract — the ruling (#155) executed on the live surface
+route                 : GET /api/compliance/templates/ksa-employment-contract/demo-emp-sarah -> 200, 10,985 B
+"never deducted from the EOSB" : 1   (the reviewed repository clause)
+"Up to 50"                     : 0   (the retired 50%-deduction figure: absent from what clients get)
+"Article 84"                   : 1   | "Articles 74" (the unsourced range): 0
+host copy on disk still carries "50%" twice — untouched; the SERVED direction is the repository copy.
+
+## D. Security re-measured after this cutover
+no token -> /api/compliance/notice   : 401
+bad password -> /api/login           : 401
+foreign Origin -> /api/employees     : 403
+demo token length                    : 201 chars
+roster                               : 200, 13 employees (first id demo-emp-omar)
+
+## E. The process and the guard
+port 3000 held by pid 7917 `node index.js` (started by this run; etime ~54s at check time)
+watchdog                             : pid 8053 `bash scripts/keep-alive.sh`
+
+## F. Demo state after the re-seed (script's own reads, reproduced verbatim)
+totals: cases 3, cases_notice_not_shown 1, items 21, items_outstanding 21, workspace_lines 43, workspace_lines_open 43
+  start 2026-10-11 | started         | rose  | open 21 | lines emp/ws 7/14
+  start 2026-10-13 | inside_48_hours | amber | open 21 | lines emp/ws 7/14
+  start 2026-10-26 | clear           | slate | open 22 | lines emp/ws 7/15
+-> the roll-up tile reads 1 (two imminent cases acknowledged, the clear case left open for a live
+   acknowledgement) — the ruled state. Distinct flag states: clear, inside_48_hours, started.
+seed line: "notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal
+obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract /
+contractual necessity)" — 15(b) is now live, not latent.
+
+## G. The host copy retired (the one-authoritative-copy rule, applied at the host)
+Nothing in the deployed tree reads /home/team/shared/templates any more: the only matches are comments in
+server/privacy-notice.js and server/privacy-notice.test.js plus an evidence JSON — and that test FAILS if a
+module under server/ reads it again. templates/build-html.js resolves via __dirname (the repo's own dir),
+so regenerating the HTML/PDF derivatives is unaffected.
+Moved: /home/team/shared/templates/privacy-notice.md
+     -> /home/team/shared/templates/retired/privacy-notice.md.retired-9d2182a
+        (md5 preserved: e011d3d6f18eb8175050917bb4fb08fe — recoverable, not deleted)
+AFTER the move: route 200, path still the tree's templates dir, served md5 still 6004b0a5... (unchanged),
+live page 200, asset still assets/index-Cc1GodRa.js. The move is inert by measurement, not by argument.
+
+## H. One counter-finding against the plan in #153
+host-copy-disposition.md prescribes, as its post-move proof:
+  grep -c 'statutory retention' /tmp/served.md   # must be 0
+On the served v2.3 text that count is **1**, and it is correct: the version line quotes the retired wording
+to record the correction. The check must be role-aware (count the retired claim in the RETENTION CONTENT, not
+anywhere in the file) — exactly the recorded lesson that a hit count answers "does this text appear", never
+"in what role". The other three checks in that block hold as written (path inside the tree, served md5 ==
+tree file, retired md5 does not return).
