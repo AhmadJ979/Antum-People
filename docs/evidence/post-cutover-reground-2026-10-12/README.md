@@ -10,6 +10,12 @@ in the repository (`git ls-tree -r --name-only origin/main | grep -c 'cutover-20
 run's own evidence does exist outside it — cited by md5 in **§6**, which also cross-checks the live figures.
 What is here is my independent, read-only read of what the run left behind.
 
+> **Update, 2026-10-12 (second pass, after this pack merged).** The record has since landed:
+> `cutover-20261012-0506/` (PR #140, commit `c3dc408`), so the `grep -c 'cutover-2026101'` above now returns
+> **9**, not 0. §6 has been repointed at it and verifies that every filed artifact is byte-identical to the
+> `/tmp` copy this pack first cited; §7's matching bullet is updated to match. The measurements themselves are
+> unchanged — only the citation and the tense of two sentences that were true when they were written.
+
 ## 1. What is actually being served (read anonymously, 05:15–05:20Z)
 
 | | |
@@ -121,15 +127,23 @@ So **the limit stated in §5 is now closed**: the live demo's row-level figures 
 surface — by the run, not by me — and the rig reproduces them exactly. What the rig added that the run's
 read could not is §4 (the board's rendered content across the `IT → All` round trip), which needs a browser.
 
-**The run's artifacts, by content** (they live in `/tmp` and are being filed into the cutover record, so
-compare copies by md5 rather than trusting the path):
+**The run's artifacts, by content** — filed in the repository under `cutover-20261012-0506/` (PR #140,
+`c3dc408`) and read from there. Every filed copy was compared byte-for-byte against the `/tmp` original this
+pack first cited, and **all four are identical**, so the citation is now durable rather than path-dependent
+and the `/tmp` files are no longer needed to check any figure in this pack:
 
-| artifact | md5 |
+| artifact (in the repository) | md5 |
 |---|---|
-| `cutover-20261012-050655-evidence.txt` | `bb5401129c8003b8dabc81026b9d4c8c` |
-| `cutover-20261012-050655-pb-overview.json` (the live post-seed read above) | `268190a537b0abc062998b3f3cbd6a2c` |
-| `cutover-20261012-050655-build.log` (→ `index-Dt2oLspq.js`, 270.96 kB) | `048f9588e6d0f8b4de23c8059617df82` |
-| `cutover-20261012-050655-seed.log` | `d6171f770b3d2ecafc46fddeb941c6e7` |
+| `cutover-20261012-0506/raw-evidence.txt` | `bb5401129c8003b8dabc81026b9d4c8c` |
+| `cutover-20261012-0506/pb-overview.json` (the live post-seed read above) | `268190a537b0abc062998b3f3cbd6a2c` |
+| `cutover-20261012-0506/build.log` (→ `index-Dt2oLspq.js`, 270.96 kB) | `048f9588e6d0f8b4de23c8059617df82` |
+| `cutover-20261012-0506/seed.log` | `d6171f770b3d2ecafc46fddeb941c6e7` |
+
+The record reaches the same readings by its own route: its README names `assets/index-Dt2oLspq.js`, **270,962**
+bytes, md5 `5720cd6fbeca1966cb642f9cf6338a9c`, and the same three flag states — and it files the product's
+served HTML (`extra/served-page.html`, which references `index-Dt2oLspq.js`), i.e. the run kept the very
+evidence that separates the product from the platform's placeholder page. Pack and record corroborate; neither
+replaces the other.
 
 Two facts in the run's evidence worth carrying beside the figures: the flag recorded its boundary
 **late** on this run (*"reached the 48-hour mark while the app was not running (noticed 77.12h late) … the
@@ -137,11 +151,12 @@ flag itself is derived and read correctly on the first read after restart; nothi
 the run had to **evict a foreign listener** (`vite dev`, the platform site server) before the product could
 claim port 3000 — the same displacement the plan records, seen from the run's side.
 
-**One correction to the confirmation, for the record's accuracy:** `origin/main` is **`b87b065`**, not
-`b54412d` — PR #139 (the 15(b) acknowledgement spec) merged after the 10-09 movement. The delta is
-**docs only** (`pdpl-acknowledgement-route-spec.md` and its evidence README), so it changes no served byte;
-`git diff --name-only b54412d origin/main -- client server` is empty. The deployed tree is `b54412d`, which
-is what the run's own evidence names as `deployed commit`.
+**One correction to the confirmation, for the record's accuracy:** when this pack was written, `origin/main`
+was **`b87b065`**, not `b54412d` — PR #139 (the 15(b) acknowledgement spec) merged after the 10-09 movement.
+It has since advanced further (#140, #142 — this pack's own merge — #141) and stands at **`35fb75a`**; every
+one of those steps is **docs-only**, so it changes no served byte, and
+`git diff --name-only b54412d origin/main -- client server` measured **0** at `35fb75a` as well. The deployed
+tree is `b54412d`, which is what the run's own evidence names as `deployed commit`.
 
 ## 7. What this pack does not claim
 
@@ -150,8 +165,10 @@ is what the run's own evidence names as `deployed commit`.
   the served tree and seeded the same day — and the run's own signed-in live read (§6) agrees with them figure
   for figure, which is what upgraded this bullet from a limit to a cross-check. What remains mine alone is the
   rendered board check (§4).
-- **Not the run's own record** (§ preamble): the run's evidence files are cited by md5 in §6 but sat in `/tmp`
-  and were not yet in the repository; filing the record is the lead's. This pack reproduces, it does not replace.
+- **Not the run's own record** (§ preamble): the run's evidence is cited by md5 in §6. When this pack was
+  first submitted those files sat in `/tmp` and filing the record was the lead's; it has since landed
+  (`cutover-20261012-0506/`, PR #140), and §6 now cites that copy and verifies all four artifacts
+  byte-identical to the `/tmp` originals. This pack reproduces, it does not replace — and vice versa.
 - **No accrual-derived figure is re-read.** The money figures in the walkthrough script remain the
   2026-10-08 walk's readings, as they say.
 - **The label registers were not re-counted in this pass.** They were re-measured on 2026-10-09 against
