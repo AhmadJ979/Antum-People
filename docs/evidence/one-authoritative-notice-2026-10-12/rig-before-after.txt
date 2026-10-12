@@ -1,0 +1,60 @@
+Preparing worktree (detached HEAD a63fc04)
+HEAD is now at a63fc04 Merge pull request #148 from AhmadJ979/pdpl/spec-section4-file-citations
+Preparing worktree (detached HEAD a63fc04)
+HEAD is now at a63fc04 Merge pull request #148 from AhmadJ979/pdpl/spec-section4-file-citations
+### the after tree IS the branch's content (blob hashes, not trust)
+server/privacy-notice.js after=7faa8c3d8520b8a6223763fde7a87f13303a134f branch=7faa8c3d8520b8a6223763fde7a87f13303a134f SAME
+server/index.js after=1c3161c9caadbbd62a168775faea1757047f096f branch=1c3161c9caadbbd62a168775faea1757047f096f SAME
+server/privacy-notice.test.js after=2e3e0c701d5bd0cf6d69e4b2b0e33574443da197 branch=2e3e0c701d5bd0cf6d69e4b2b0e33574443da197 SAME
+### main at a63fc04, branch at 3712822
+### the new guard, run against the BEFORE tree (expected: it fails there)
+not ok 1 - the notice resolves from this repository
+not ok 2 - the host-shared directory is not a source any more
+# tests 6
+# pass 1
+# fail 5
+### [before] seeding before.db
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-13) — inside 48 hours with every item still open; items: 7 not_started
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-11) — start date already passed, items still open; items: 7 not_started
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+(node:24956) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch user ok
+### [after] seeding after.db
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-13) — inside 48 hours with every item still open; items: 7 not_started
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-11) — start date already passed, items still open; items: 7 not_started
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+(node:24974) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch user ok
+### live deployment before the rig: 200
+### [before] booting on 4711
+### [before] unauthenticated /api/employees -> 401 (401 is the health contract)
+[before] roster=13 (ae=demo-emp-omar sa=demo-emp-reem)
+[before] notice_route: HTTP 200 23566B md5=e011d3d6f18eb8175050917bb4fb08fe statutory_retention=true plain_retention=false arabic_legal_retention=true
+[before] template_privacy_notice: HTTP 200 23673B md5=ae566fc1697b92c5c7ca4f0bdc182bc2 statutory_retention=true plain_retention=false arabic_legal_retention=true
+[before] template_ksa_contract: HTTP 200 10649B md5=4e150ef34c60a26e073507a42bf4e7e4 statutory_retention=false plain_retention=false arabic_legal_retention=false article84=false articles74_86=true compensation_clause=false penalty_deduction=true
+[before] template_uae_contract: HTTP 200 10788B md5=94bfb21702dd316b16e9f90227edd1db statutory_retention=false plain_retention=false arabic_legal_retention=false
+### [before] killing pid 24984 cwd=/home/agent-senior-software-engineer/race/rig/before/server
+Terminated
+### [before] listeners on 4711 now: 0
+### [after] booting on 4712
+### [after] unauthenticated /api/employees -> 401 (401 is the health contract)
+[after] roster=13 (ae=demo-emp-omar sa=demo-emp-reem)
+[after] notice_route: HTTP 200 23522B md5=9c060b9fd07129cdb466471bbed7945b statutory_retention=false plain_retention=true arabic_legal_retention=false
+[after] template_privacy_notice: HTTP 200 23629B md5=418b3d7580570acea19c9468d65fe527 statutory_retention=false plain_retention=true arabic_legal_retention=false
+[after] template_ksa_contract: HTTP 200 10745B md5=d23c70cf15f7b1d5f995fa7a7a471857 statutory_retention=false plain_retention=false arabic_legal_retention=false article84=true articles74_86=false compensation_clause=true penalty_deduction=false
+[after] template_uae_contract: HTTP 200 10788B md5=94bfb21702dd316b16e9f90227edd1db statutory_retention=false plain_retention=false arabic_legal_retention=false
+### [after] killing pid 25082 cwd=/home/agent-senior-software-engineer/race/rig/after/server
+Terminated
+### [after] listeners on 4712 now: 0
+### live deployment after the rig: 200
+### the files on disk, by md5
+host-shared  /home/team/shared/templates/privacy-notice.md        e011d3d6f18eb8175050917bb4fb08fe
+before tree  /home/agent-senior-software-engineer/race/rig/before/templates/privacy-notice.md             9c060b9fd07129cdb466471bbed7945b
+after tree   /home/agent-senior-software-engineer/race/rig/after/templates/privacy-notice.md              9c060b9fd07129cdb466471bbed7945b
+host-shared  /home/team/shared/templates/ksa-employment-contract.md 3518c1af4931afc7b5cd54d0689987e0
+after tree   /home/agent-senior-software-engineer/race/rig/after/templates/ksa-employment-contract.md      1c6ad895d403e8caf75606eea8c3db05
+### instance stopped

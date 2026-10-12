@@ -1,0 +1,197 @@
+### server/privacy-notice.js
+     1	/**
+     2	 * Antum People — the privacy notice the server serves.
+     3	 *
+     4	 * ---------------------------------------------------------------------------
+     5	 * ONE DEFINITION OF "THE NOTICE"
+     6	 * ---------------------------------------------------------------------------
+     7	 * An acknowledgement record's evidential value rests on one thing: the version it names must be
+     8	 * the version of the notice a client could actually have been shown. So the route that serves the
+     9	 * notice and the route that records an acknowledgement read the SAME file through this module.
+    10	 * Two independent resolutions could disagree, and a record stating a version the served notice does
+    11	 * not carry is precisely the defect the acknowledgement work exists to remove.
+    12	 *
+    13	 * The resolution order below is the one the template route already used before this module existed
+    14	 * (the host-shared templates directory first, this repository's own `templates/` as the fallback).
+    15	 * It is kept rather than chosen because changing what the product serves is a decision with its own
+    16	 * blast radius, not a side effect of this one — see the note on divergence below.
+    17	 *
+    18	 * ---------------------------------------------------------------------------
+    19	 * A KNOWN DIVERGENCE, RECORDED NOT FIXED
+    20	 * ---------------------------------------------------------------------------
+    21	 * At the time of writing the two copies differ in content (not in version): the copy this module
+    22	 * resolves first still carries the words "statutory retention" in its retention table, and the
+    23	 * repository's copy does not — that qualifier was removed as unsourced in an earlier change that
+    24	 * landed in the repository only. So the notice a client can download today is the older text.
+    25	 * That is a finding for the owner of the notice, not something this module should paper over by
+    26	 * silently preferring the repository's copy: which copy the product serves is a deliberate choice,
+    27	 * and until it is made this module reads what the product actually serves and says so here.
+    28	 */
+    29	
+    30	const fs = require('fs');
+    31	const path = require('path');
+    32	
+    33	/** The template name the notice is served under (`GET /api/compliance/templates/:name/:employeeId`). */
+    34	const NOTICE_TEMPLATE = 'privacy-notice';
+    35	
+    36	/** Where the product's shared templates live, and where this repository keeps its own. */
+    37	const SHARED_TEMPLATES_DIR = '/home/team/shared/templates';
+    38	const REPO_TEMPLATES_DIR = path.join(__dirname, '..', 'templates');
+    39	
+    40	/**
+    41	 * The absolute path of the notice the server serves. The first existing candidate wins, so a host
+    42	 * without the shared directory still serves the repository's copy rather than failing.
+    43	 */
+    44	function noticePath() {
+    45	  const shared = path.join(SHARED_TEMPLATES_DIR, `${NOTICE_TEMPLATE}.md`);
+    46	  if (fs.existsSync(shared)) return shared;
+    47	  return path.join(REPO_TEMPLATES_DIR, `${NOTICE_TEMPLATE}.md`);
+    48	}
+    49	
+    50	/** The notice's markdown, exactly as it is served. */
+    51	function readNotice() {
+    52	  return fs.readFileSync(noticePath(), 'utf8');
+    53	}
+    54	
+    55	/**
+    56	 * The notice's own version string, read from its version header line:
+    57	 *
+    58	 *     > **Version / الإصدار:** v2.2 (2026-09-17) — owner legal details applied
+    59	 *
+    60	 * Never a literal in code. The rule that keeps a record true is that changing the notice's content
+    61	 * means bumping this line — a content change that did not bump it is how a record ends up
+    62	 * describing a notice nobody can produce. So the record reads whatever the served file says, and
+    63	 * the `Arabic: الإصدار` half of the header is matched structurally rather than by its characters.
+    64	 *
+    65	 * @throws {Error} when the served file carries no version header at all — better a loud failure
+    66	 *                 than a record written against an unknown version.
+    67	 */
+    68	function noticeVersion() {
+    69	  const match = readNotice().match(/^\s*>\s*\*\*Version[^*]*\*\*:?\s*(v[0-9][0-9A-Za-z.\-]*)/m);
+    70	  if (!match) {
+    71	    throw new Error(
+    72	      `No version header in ${noticePath()}: expected a line like '> **Version / ...:** v2.2'`
+    73	    );
+    74	  }
+    75	  return match[1];
+    76	}
+    77	
+    78	module.exports = {
+    79	  NOTICE_TEMPLATE,
+    80	  noticePath,
+    81	  readNotice,
+    82	  noticeVersion,
+    83	};
+
+### server/index.js 340-425
+       1	
+       2	// The privacy notice the product serves. One definition, read by the route below and by the
+       3	// pre-boarding acknowledgement record, so a record's version cannot disagree with the notice a
+       4	// client can download (server/privacy-notice.js).
+       5	app.get('/api/compliance/notice', async (req, res) => {
+       6	  try {
+       7	    // No substitution: this is the notice as published — the document the hire is shown — not a
+       8	    // per-employee rendering. A pre-boarding case has no employee row to render against, which is
+       9	    // exactly why the gate needs this read.
+      10	    res.json({
+      11	      version: privacyNotice.noticeVersion(),
+      12	      content: privacyNotice.readNotice(),
+      13	      path: privacyNotice.noticePath(),
+      14	    });
+      15	  } catch (err) {
+      16	    console.error('[Compliance] Failed to read the privacy notice:', err);
+      17	    res.status(500).json({ error: 'Internal Server Error' });
+      18	  }
+      19	});
+      20	app.post('/api/compliance/consent', async (req, res) => {
+      21	  const { employee_id, consent_type, lawful_basis, version } = req.body;
+      22	  const id = generateId();
+      23	  const now = new Date().toISOString();
+      24	  await db.query(`INSERT INTO consent_records (id, employee_id, consent_type, lawful_basis, granted_at, consent_version) 
+      25	    VALUES (${db.escapeString(id)}, ${db.escapeString(employee_id)}, ${db.escapeString(consent_type)}, ${db.escapeString(lawful_basis)}, ${db.escapeString(now)}, ${db.escapeString(version)})`);
+      26	  await db.query(`UPDATE employees SET consent_granted = 1, consent_date = ${db.escapeString(now.split('T')[0])} WHERE id = ${db.escapeString(employee_id)}`);
+      27	  res.json({ id });
+      28	});
+      29	
+      30	app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) => {
+      31	  try {
+      32	    const { templateName, employeeId } = req.params;
+      33	    const employees = await db.query(`SELECT * FROM employees WHERE id = ${db.escapeString(employeeId)}`);
+      34	    if (employees.length === 0) return res.status(404).json({ error: 'Employee not found' });
+      35	    const emp = employees[0];
+      36	    emp.national_id_value = auth.decrypt(emp.national_id_value);
+      37	    emp.national_id_iqama = auth.decrypt(emp.national_id_iqama);
+      38	
+      39	    // FIX 1: Settlement Statement Calculations
+      40	    let eosb_amount = (emp.eosb_accrued || 0).toFixed(2);
+      41	    let final_pro_rated_salary = 'not calculated';
+      42	    if (emp.end_date && emp.salary) {
+      43	      const endDate = new Date(emp.end_date);
+      44	      const day = endDate.getDate();
+      45	      const month = endDate.getMonth();
+      46	      const year = endDate.getFullYear();
+      47	      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      48	      final_pro_rated_salary = (emp.salary * (day / daysInMonth)).toFixed(2);
+      49	    }
+      50	    
+      51	    const gross_val = (parseFloat(final_pro_rated_salary) || 0) + parseFloat(eosb_amount);
+      52	    const total_deductions = (0).toFixed(2);
+      53	    const net_settlement = (gross_val - parseFloat(total_deductions)).toFixed(2);
+      54	
+      55	    const templateData = {
+      56	      ...emp,
+      57	      full_name: `${emp.first_name} ${emp.last_name}`,
+      58	      national_id: emp.national_id_value,
+      59	      employee_id: emp.id,
+      60	      total_salary: (emp.salary || 0).toFixed(2),
+      61	      basic_salary: (emp.basic_salary || 0).toFixed(2),
+      62	      eosb_amount,
+      63	      final_pro_rated_salary,
+      64	      gross_settlement: gross_val.toFixed(2),
+      65	      total_deductions,
+      66	      net_settlement,
+      67	      termination_reason: emp.termination_type || 'Resignation',
+      68	      current_date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+      69	    };
+      70	
+      71	    // The notice resolves through the same module the acknowledgement record reads, so the template
+      72	    // a client downloads and the version a record names can never come from two different files.
+      73	    // Every other template keeps the shared directory it has always used.
+      74	    const templatePath = templateName === privacyNotice.NOTICE_TEMPLATE
+      75	      ? privacyNotice.noticePath()
+      76	      : path.join('/home/team/shared/templates', `${templateName}.md`);
+      77	    if (!fs.existsSync(templatePath)) return res.status(404).json({ error: 'Template not found' });
+      78	    const templateContent = fs.readFileSync(templatePath, 'utf8');
+      79	    const rendered = compliance.renderTemplate(templateContent, templateData);
+      80	    res.json({ content: rendered });
+      81	  } catch (err) {
+      82	    res.status(500).json({ error: "Internal Server Error" });
+      83	  }
+      84	});
+      85	
+      86	app.get('/api/compliance/report', async (req, res) => {
+
+### client callers of the template route
+client/src/App.tsx:898:      const res = await authedFetch(`${API_BASE}/api/compliance/notice`);
+client/src/App.tsx:1005:      const res = await authedFetch(`${API_BASE}/api/compliance/templates/${templateName}/${selectedEmployee.id}`);
+
+### what is /home/team/shared/antum-people-working ?
+total 0
+drwxrwsr-x 4 root root 299 2026-06-15 09:29 client
+drwxrwsr-x 2 root root 132 2026-09-09 08:16 server
+
+### full md5 diff, shared vs repo templates
+SAME     breach-notification-letters.md     shared=770ae3713563 repo=770ae3713563
+SAME     build-html.js                      shared=206ff7ca5a6f repo=206ff7ca5a6f
+SAME     data-processing-agreement.html     shared=cf5c83c40dba repo=cf5c83c40dba
+SAME     data-processing-agreement.md       shared=3326d10bb73e repo=3326d10bb73e
+SAME     data-processing-agreement.pdf      shared=9a38d4b3acbe repo=9a38d4b3acbe
+SAME     dpia-questionnaire.html            shared=9a5b3fc77004 repo=9a5b3fc77004
+SAME     dpia-questionnaire.md              shared=770b522dde97 repo=770b522dde97
+SAME     dpia-questionnaire.pdf             shared=73b2b1854a73 repo=73b2b1854a73
+SAME     final-settlement-statement.md      shared=7b1ade315359 repo=7b1ade315359
+DIFF     ksa-employment-contract.md         shared=3518c1af4931 repo=1c6ad895d403
+SAME     privacy-notice.html                shared=68c8478a0e5a repo=68c8478a0e5a
+DIFF     privacy-notice.md                  shared=e011d3d6f18e repo=9c060b9fd071
+SAME     privacy-notice.pdf                 shared=4bb82afa10cc repo=4bb82afa10cc
+SAME     uae-employment-contract.md         shared=f28dc42aa50e repo=f28dc42aa50e
