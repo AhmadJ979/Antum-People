@@ -538,6 +538,9 @@ async function seed() {
       offset_days: 14,
       request_items: ['passport', 'visa_or_entry_permit', 'emirates_id'],
       state: 'on track — 14 days out, three items requested, none verified',
+      // Nothing has been shown to this hire yet — three weeks out. This is the case the
+      // walkthrough uses to record the acknowledgement live.
+      notice_shown: false,
     },
     {
       offer_reference: 'OFR-2026-DEMO-02',
@@ -551,6 +554,7 @@ async function seed() {
       offset_days: 1,
       request_items: [],
       state: 'inside 48 hours with every item still open',
+      notice_shown: true,
     },
     {
       offer_reference: 'OFR-2026-DEMO-03',
@@ -564,6 +568,7 @@ async function seed() {
       offset_days: -1,
       request_items: [],
       state: 'start date already passed, items still open',
+      notice_shown: true,
     },
   ];
 
@@ -620,11 +625,21 @@ async function seed() {
     // is a third person's data) are NOT recorded and NOT collectible: the module refuses them by
     // name, with the counsel question they wait on, and that refusal is behaviour the demo can
     // show rather than paper over.
-    for (const item of await preboardingItems.listItems(caseRow.id)) {
-      if (!preboardingItems.isNoticeCollectible(item.item_key)) continue;
-      await preboardingItems.recordNoticeAcknowledgement({
-        case_id: caseRow.id, item_key: item.item_key, recorded_by: DEMO_NOTICE_RECORDED_BY,
-      });
+    // WHICH CASES HAVE THE NOTICE SHOWN IS PART OF THE DEMO'S STATE, NOT A BYPRODUCT (owner
+    // decision, 2026-10-12). The two cases whose start is imminent — `inside_48_hours` (+1 day) and
+    // `started` (-1 day) — are the hires HR has already put the notice in front of, so their
+    // records are seeded. The `clear` case is three weeks out and nothing has been shown on it:
+    // that is what the roll-up tile is for, and it is what lets a walkthrough record the
+    // acknowledgement live — open the notice from the gate, record it per item, and watch the count
+    // fall. A seed that acknowledged all three cases would read 0 and demonstrate nothing; one that
+    // acknowledged none would show none of the behaviour this cycle adds.
+    if (demoCase.notice_shown) {
+      for (const item of await preboardingItems.listItems(caseRow.id)) {
+        if (!preboardingItems.isNoticeCollectible(item.item_key)) continue;
+        await preboardingItems.recordNoticeAcknowledgement({
+          case_id: caseRow.id, item_key: item.item_key, recorded_by: DEMO_NOTICE_RECORDED_BY,
+        });
+      }
     }
 
     const checklist = await preboardingItems.listItems(caseRow.id);

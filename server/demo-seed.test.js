@@ -18,7 +18,9 @@
  *   5. each case also arrives with its P2-4 workspace lines — all open, every line owned by one
  *      of the four functions, all four functions represented — because the case-creation path
  *      seeds both tracks and the demo has to show the provisioning half too;
- *   6. the notice is recorded as SHOWN for every item the notice assigns a basis to, per item, by
+ *   6. the notice is recorded as SHOWN, per item, on the two cases whose starts are imminent
+ *      only — the `clear` case stays unacknowledged, so the roll-up tile reads 1 and a
+ *      walkthrough can record it live — and never for the items the notice assigns no basis to, by
  *      the demo account a walkthrough signs in as — and NOT for the two items §4 leaves without a
  *      basis, which this release cannot collect and which the record must not carry a basis for;
  *   7. `preboarding_cases` carries no flag-like column, and the seed writes none — the state is
@@ -168,28 +170,35 @@ describe('Layer 2 demo seed — the three pre-boarding cases', () => {
       JOIN preboarding_cases c ON c.id = a.case_id
       ORDER BY c.offer_reference, a.item_key
     `);
-    // Three cases, four collectible documents each (passport, visa/entry permit, Emirates ID, bank
-    // details). Seven employee-track items minus the three the notice assigns no basis to.
-    assert.strictEqual(acked.length, 12, 'three demo cases × four collectible documents');
+    // Two imminent cases, four collectible documents each (passport, visa/entry permit, Emirates
+    // ID, bank details). Seven employee-track items minus the three the notice assigns no basis to.
+    assert.strictEqual(acked.length, 8,
+      'the two imminent cases × four collectible documents — the clear case is deliberately unacknowledged');
     assert.ok(acked.every((r) => r.instrument === 'notice_shown'),
       'the record says the notice was shown — it is not a consent record under another name');
     assert.ok(acked.every((r) => r.recorded_by === 'admin'),
       'every row names the person a walkthrough signs in as');
     assert.ok(!acked.some((r) => ['system', 'demo-seed', ''].includes(r.recorded_by)),
       'no row signs as the system or as the seeder: the module refuses an unnamed actor');
-    assert.strictEqual(one(`SELECT COUNT(*) AS n FROM preboarding_cases c WHERE NOT EXISTS (
-      SELECT 1 FROM preboarding_notice_acknowledgements a WHERE a.case_id = c.id)`).n, 0,
-    'every demo case has at least one acknowledgement');
+    // Exactly one case has nothing recorded, and it is the `clear` one. That single case is the
+    // roll-up's "notice not shown" count — the tile reads 1, and the walkthrough can act on it.
+    const unacked = rows(`SELECT c.offer_reference FROM preboarding_cases c WHERE NOT EXISTS (
+      SELECT 1 FROM preboarding_notice_acknowledgements a WHERE a.case_id = c.id)
+      ORDER BY c.offer_reference`);
+    assert.deepStrictEqual(unacked.map((r) => r.offer_reference), ['OFR-2026-DEMO-01'],
+      'the clear case is the one with nothing shown — three weeks out, nothing to show yet');
+    assert.ok(!acked.some((r) => r.offer_reference === 'OFR-2026-DEMO-01'),
+      'and no acknowledgement leaked onto it');
     // The version is the notice's own, read from the file when the seed ran.
     assert.ok(acked.every((r) => r.notice_version === notice.noticeVersion()),
       'the record carries the served notice\'s version');
     // The basis is per item and it is the notice's own: three items under legal obligation and the
-    // bank details under contract, on each of the three cases.
+    // bank details under contract, on each of the two acknowledged cases.
     const byBasis = {};
     for (const r of acked) byBasis[r.lawful_basis] = (byBasis[r.lawful_basis] || 0) + 1;
     assert.deepStrictEqual(byBasis, {
-      'Legal obligation': 9,
-      'Performance of the employment contract / contractual necessity': 3,
+      'Legal obligation': 6,
+      'Performance of the employment contract / contractual necessity': 2,
     });
     // The items the notice assigns no basis to carry no row at all — the module refuses them, and
     // no basis is invented to make the count look complete.
