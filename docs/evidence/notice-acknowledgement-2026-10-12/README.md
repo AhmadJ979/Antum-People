@@ -1,5 +1,12 @@
 # Evidence — the notice-shown acknowledgement route (15(b), option B)
 
+> **Superseded in part, 2026-10-12 (row `a4fea509`).** The `served — /home/team/shared/templates/privacy-notice.md`
+> row below records the notice as it was served *that day*: 23566 bytes, md5 `e011d3d6f18eb8175050917bb4fb08fe`,
+> the unreviewed host copy. The route now resolves `templates/privacy-notice.md` in this repository
+> (23522 bytes, md5 `9c060b9fd07129cdb466471bbed7945b`) — see
+> `docs/evidence/one-authoritative-notice-2026-10-12/README.md`. The finding below is kept as the movement
+> that exposed it, not as a current reading.
+
 **Rig tree:** this working tree at `d618a96` (branch `feat/notice-acknowledgement-bbf54b1a`), copied to a
 scratch directory with its own database and its own port. The live product on port 3000 was not touched
 and was re-read as still serving (`200`) while the rig ran.

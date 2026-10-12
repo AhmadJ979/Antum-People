@@ -1,0 +1,67 @@
+{
+  "label": "before",
+  "port": 4711,
+  "probes": {
+    "login": {
+      "status": 200
+    },
+    "roster": {
+      "count": 13,
+      "ae": "demo-emp-omar",
+      "sa": "demo-emp-reem"
+    },
+    "notice_route": {
+      "status": 200,
+      "content_bytes": 23566,
+      "content_md5": "e011d3d6f18eb8175050917bb4fb08fe",
+      "notice_version": "v2.2",
+      "has_statutory_retention": true,
+      "has_plain_retention_period": false,
+      "has_arabic_legal_retention": true,
+      "has_article_84": false,
+      "has_articles_74_86": false,
+      "has_compensation_clause": false,
+      "has_penalty_deduction": false,
+      "served_path_reported": "/home/team/shared/templates/privacy-notice.md"
+    },
+    "template_privacy_notice": {
+      "status": 200,
+      "content_bytes": 23673,
+      "content_md5": "ae566fc1697b92c5c7ca4f0bdc182bc2",
+      "notice_version": null,
+      "has_statutory_retention": true,
+      "has_plain_retention_period": false,
+      "has_arabic_legal_retention": true,
+      "has_article_84": false,
+      "has_articles_74_86": false,
+      "has_compensation_clause": false,
+      "has_penalty_deduction": false
+    },
+    "template_ksa_contract": {
+      "status": 200,
+      "content_bytes": 10649,
+      "content_md5": "4e150ef34c60a26e073507a42bf4e7e4",
+      "notice_version": null,
+      "has_statutory_retention": false,
+      "has_plain_retention_period": false,
+      "has_arabic_legal_retention": false,
+      "has_article_84": false,
+      "has_articles_74_86": true,
+      "has_compensation_clause": false,
+      "has_penalty_deduction": true
+    },
+    "template_uae_contract": {
+      "status": 200,
+      "content_bytes": 10788,
+      "content_md5": "94bfb21702dd316b16e9f90227edd1db",
+      "notice_version": null,
+      "has_statutory_retention": false,
+      "has_plain_retention_period": false,
+      "has_arabic_legal_retention": false,
+      "has_article_84": false,
+      "has_articles_74_86": false,
+      "has_compensation_clause": false,
+      "has_penalty_deduction": false
+    }
+  }
+}

@@ -1,30 +1,47 @@
 /**
- * Antum People — the privacy notice the server serves.
+ * Antum People — the legal templates the server serves, and the privacy notice among them.
  *
  * ---------------------------------------------------------------------------
- * ONE DEFINITION OF "THE NOTICE"
+ * ONE AUTHORITATIVE COPY, AND IT IS THIS REPOSITORY'S
  * ---------------------------------------------------------------------------
- * An acknowledgement record's evidential value rests on one thing: the version it names must be
- * the version of the notice a client could actually have been shown. So the route that serves the
- * notice and the route that records an acknowledgement read the SAME file through this module.
- * Two independent resolutions could disagree, and a record stating a version the served notice does
- * not carry is precisely the defect the acknowledgement work exists to remove.
+ * An acknowledgement record's evidential value rests on one thing: the version it names must be the
+ * version of a text somebody can produce. So the route that serves the notice and the route that
+ * writes a record read the SAME file through this module — and that file is
+ * `templates/privacy-notice.md` in this repository, beside the code that serves it, reviewed in git
+ * like every other document here.
  *
- * The resolution order below is the one the template route already used before this module existed
- * (the host-shared templates directory first, this repository's own `templates/` as the fallback).
- * It is kept rather than chosen because changing what the product serves is a decision with its own
- * blast radius, not a side effect of this one — see the note on divergence below.
+ * Until 2026-10-12 the resolution was the other way round: `/home/team/shared/templates` first, this
+ * repository as a fallback. The host copy had drifted, and both copies read **v2.2** — one version
+ * string describing two different texts:
+ *
+ *     host copy (served)     : "Duration of employment + statutory retention"
+ *     repo copy (reviewed)   : "Duration of employment + retention period"
+ *
+ * The repository's copy is the reviewed one: `313a017` dropped that qualifier as unsourced. So the
+ * product served the text we had reviewed *out*, and the `v2.2` on any record written against it
+ * could not distinguish the two texts — the exact defect the acknowledgement work exists to remove.
+ *
+ * The resolution below therefore follows the code, not the host: this repository is authoritative and
+ * the host-shared directory is not consulted at all. A host copy that still exists is a duplicate,
+ * never a source.
  *
  * ---------------------------------------------------------------------------
- * A KNOWN DIVERGENCE, RECORDED NOT FIXED
+ * WHY EVERY TEMPLATE RESOLVES HERE, NOT ONLY THE NOTICE
  * ---------------------------------------------------------------------------
- * At the time of writing the two copies differ in content (not in version): the copy this module
- * resolves first still carries the words "statutory retention" in its retention table, and the
- * repository's copy does not — that qualifier was removed as unsourced in an earlier change that
- * landed in the repository only. So the notice a client can download today is the older text.
- * That is a finding for the owner of the notice, not something this module should paper over by
- * silently preferring the repository's copy: which copy the product serves is a deliberate choice,
- * and until it is made this module reads what the product actually serves and says so here.
+ * The same drift was measured on 2026-10-12 for `templates/ksa-employment-contract.md` — a document
+ * the product renders for a KSA employee's contract, whose EOSB bands and notice-penalty clause
+ * `9f4426d` corrected in the repository only. Two copies of a served document is the defect; which
+ * template it is does not change that. `templatePath()` is the single resolution for all of them, and
+ * `server/privacy-notice.test.js` fails if any module under `server/` starts reading the host-shared
+ * directory again.
+ *
+ * ---------------------------------------------------------------------------
+ * THE VERSION LINE IS DOCUMENT CONTENT, NOT CODE
+ * ---------------------------------------------------------------------------
+ * `noticeVersion()` reads the version out of the file it serves, never a literal here, so the only
+ * way a record can name an unknown text is a content change that forgot to bump the line. Writing or
+ * bumping that line is the notice owner's act, not the engineer's: this module reports what the
+ * served file says.
  */
 
 const fs = require('fs');
@@ -33,18 +50,23 @@ const path = require('path');
 /** The template name the notice is served under (`GET /api/compliance/templates/:name/:employeeId`). */
 const NOTICE_TEMPLATE = 'privacy-notice';
 
-/** Where the product's shared templates live, and where this repository keeps its own. */
-const SHARED_TEMPLATES_DIR = '/home/team/shared/templates';
+/** This repository's own template directory — the single authoritative copy of every template. */
 const REPO_TEMPLATES_DIR = path.join(__dirname, '..', 'templates');
 
 /**
- * The absolute path of the notice the server serves. The first existing candidate wins, so a host
- * without the shared directory still serves the repository's copy rather than failing.
+ * The absolute path of a template the server serves, resolved inside this repository.
+ *
+ * `path.basename` keeps a caller from walking out of the template directory through the route's
+ * `:templateName` parameter; every legitimate name is a single path segment, so it is a no-op for
+ * them.
  */
+function templatePath(templateName) {
+  return path.join(REPO_TEMPLATES_DIR, `${path.basename(templateName)}.md`);
+}
+
+/** The absolute path of the notice the server serves. */
 function noticePath() {
-  const shared = path.join(SHARED_TEMPLATES_DIR, `${NOTICE_TEMPLATE}.md`);
-  if (fs.existsSync(shared)) return shared;
-  return path.join(REPO_TEMPLATES_DIR, `${NOTICE_TEMPLATE}.md`);
+  return templatePath(NOTICE_TEMPLATE);
 }
 
 /** The notice's markdown, exactly as it is served. */
@@ -57,10 +79,7 @@ function readNotice() {
  *
  *     > **Version / الإصدار:** v2.2 (2026-09-17) — owner legal details applied
  *
- * Never a literal in code. The rule that keeps a record true is that changing the notice's content
- * means bumping this line — a content change that did not bump it is how a record ends up
- * describing a notice nobody can produce. So the record reads whatever the served file says, and
- * the `Arabic: الإصدار` half of the header is matched structurally rather than by its characters.
+ * The `Arabic: الإصدار` half of the header is matched structurally rather than by its characters.
  *
  * @throws {Error} when the served file carries no version header at all — better a loud failure
  *                 than a record written against an unknown version.
@@ -77,6 +96,8 @@ function noticeVersion() {
 
 module.exports = {
   NOTICE_TEMPLATE,
+  REPO_TEMPLATES_DIR,
+  templatePath,
   noticePath,
   readNotice,
   noticeVersion,

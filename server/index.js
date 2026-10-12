@@ -407,12 +407,11 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
       current_date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
     };
 
-    // The notice resolves through the same module the acknowledgement record reads, so the template
-    // a client downloads and the version a record names can never come from two different files.
-    // Every other template keeps the shared directory it has always used.
-    const templatePath = templateName === privacyNotice.NOTICE_TEMPLATE
-      ? privacyNotice.noticePath()
-      : path.join('/home/team/shared/templates', `${templateName}.md`);
+    // Every template resolves through the same module the acknowledgement record reads, so the
+    // document a client downloads and the version a record names can never come from two different
+    // files — and both come from this repository, never from the host-shared copy that had drifted
+    // (see server/privacy-notice.js).
+    const templatePath = privacyNotice.templatePath(templateName);
     if (!fs.existsSync(templatePath)) return res.status(404).json({ error: 'Template not found' });
     const templateContent = fs.readFileSync(templatePath, 'utf8');
     const rendered = compliance.renderTemplate(templateContent, templateData);

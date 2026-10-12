@@ -1,0 +1,15 @@
+### COMMAND: does this branch touch client/ at all?
+ server/index.js               |  11 ++---
+ server/privacy-notice.js      |  81 ++++++++++++++++++++------------
+ server/privacy-notice.test.js | 104 ++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 160 insertions(+), 36 deletions(-)
+
+### COMMAND: has anything under client/ changed since the last cutover tree b54412d?
+ client/src/App.tsx | 213 ++++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 186 insertions(+), 27 deletions(-)
+(empty above = the shipped bundle cannot have changed)
+
+### COMMAND: the deployed tree's code, and its own template copy
+391:    const templatePath = path.join('/home/team/shared/templates', `${templateName}.md`);
+9c060b9fd07129cdb466471bbed7945b  /home/team/shared/probable-octo-sniffle/templates/privacy-notice.md
+1c6ad895d403e8caf75606eea8c3db05  /home/team/shared/probable-octo-sniffle/templates/ksa-employment-contract.md

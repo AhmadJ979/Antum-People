@@ -1,0 +1,67 @@
+{
+  "label": "after",
+  "port": 4712,
+  "probes": {
+    "login": {
+      "status": 200
+    },
+    "roster": {
+      "count": 13,
+      "ae": "demo-emp-omar",
+      "sa": "demo-emp-reem"
+    },
+    "notice_route": {
+      "status": 200,
+      "content_bytes": 23522,
+      "content_md5": "9c060b9fd07129cdb466471bbed7945b",
+      "notice_version": "v2.2",
+      "has_statutory_retention": false,
+      "has_plain_retention_period": true,
+      "has_arabic_legal_retention": false,
+      "has_article_84": false,
+      "has_articles_74_86": false,
+      "has_compensation_clause": false,
+      "has_penalty_deduction": false,
+      "served_path_reported": "/home/agent-senior-software-engineer/race/rig/after/templates/privacy-notice.md"
+    },
+    "template_privacy_notice": {
+      "status": 200,
+      "content_bytes": 23629,
+      "content_md5": "418b3d7580570acea19c9468d65fe527",
+      "notice_version": null,
+      "has_statutory_retention": false,
+      "has_plain_retention_period": true,
+      "has_arabic_legal_retention": false,
+      "has_article_84": false,
+      "has_articles_74_86": false,
+      "has_compensation_clause": false,
+      "has_penalty_deduction": false
+    },
+    "template_ksa_contract": {
+      "status": 200,
+      "content_bytes": 10745,
+      "content_md5": "d23c70cf15f7b1d5f995fa7a7a471857",
+      "notice_version": null,
+      "has_statutory_retention": false,
+      "has_plain_retention_period": false,
+      "has_arabic_legal_retention": false,
+      "has_article_84": true,
+      "has_articles_74_86": false,
+      "has_compensation_clause": true,
+      "has_penalty_deduction": false
+    },
+    "template_uae_contract": {
+      "status": 200,
+      "content_bytes": 10788,
+      "content_md5": "94bfb21702dd316b16e9f90227edd1db",
+      "notice_version": null,
+      "has_statutory_retention": false,
+      "has_plain_retention_period": false,
+      "has_arabic_legal_retention": false,
+      "has_article_84": false,
+      "has_articles_74_86": false,
+      "has_compensation_clause": false,
+      "has_penalty_deduction": false
+    }
+  }
+}

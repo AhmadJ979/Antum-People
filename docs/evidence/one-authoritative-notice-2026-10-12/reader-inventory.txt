@@ -1,0 +1,113 @@
+# Reader inventory — every reader of /home/team/shared/templates/
+
+Run 2026-10-12 on the working tree `fix/one-authoritative-notice-a4fea509` (base `a63fc04`), before any
+change. The commands are given with what they returned, so each line can be re-run.
+
+## 1. The path, anywhere in the repository
+
+```
+$ grep -rn "shared/templates" .   # excludes node_modules by inspection of the output
+./compliance-dpia-vendor-risk.md:336:**`/home/team/shared/templates/data-processing-agreement.md`**
+./server/index.js:415:      : path.join('/home/team/shared/templates', `${templateName}.md`);
+./server/privacy-notice.js:37:const SHARED_TEMPLATES_DIR = '/home/team/shared/templates';
+./docs/evidence/notice-acknowledgement-2026-10-12/README.md:55:| served — `/home/team/shared/templates/privacy-notice.md` ... | `e011d3d6f18eb8175050917bb4fb08fe` | 1 |
+```
+
+Two of the four are code (readers); two are documents that name the path. Note: a careless pattern like
+`shared.*templates` also matches the minified bundle in the working tree's `client/dist/`, which is how one
+line of output becomes 200 KB of noise — the pattern matters when the answer is "who reads this".
+
+## 2. The shared directory, from outside the repository
+
+```
+$ grep -rln "shared/templates\|templates/privacy-notice" /home/team/shared --exclude-dir=node_modules --exclude-dir=.git
+/home/team/shared/antum-people-working/server/index.js
+/home/team/shared/probable-octo-sniffle/server/index.js
+/home/team/shared/probable-octo-sniffle/compliance-dpia-vendor-risk.md
+/home/team/shared/probable-octo-sniffle/legal-signoff-checklist.md
+/home/team/shared/probable-octo-sniffle/docs/evidence/p2-6-pdpl-memo/README.md
+/home/team/shared/probable-octo-sniffle/docs/evidence/pdpl-lawful-basis-mapping/README.md
+/home/team/shared/probable-octo-sniffle/demo-walkthrough-script.md
+/home/team/shared/probable-octo-sniffle/pdpl-lawful-basis-mapping.md
+/home/team/shared/probable-octo-sniffle/pdpl-portal-boundary-memo.md
+/home/team/shared/probable-octo-sniffle/roadmap-board-index.md
+/home/team/shared/compliance-dpia-vendor-risk.md
+/home/team/shared/legal-signoff-checklist.md
+/home/team/shared/deployment-secret-sweep.md
+/home/team/shared/skills/antum-reground-a-doc-after-a-merge/SKILL.md
+/home/team/shared/statutory-class-verification-20261006.md
+/home/team/shared/pdpl-acknowledgement-spec-citation-fixes.md
+```
+
+- `probable-octo-sniffle` is the **deployed tree** (`git rev-parse --short HEAD` → `b54412d`) and its
+  `server/index.js:391` reads the path directly. That is the live reader.
+- `antum-people-working` is a non-git partial copy (only `client/` and `server/`, dated 2026-06-15 and
+  2026-09-09) with **no `templates/` of its own**; nothing runs from it.
+- Every other hit is a document, in either the deployed tree or the shared folder.
+
+## 3. Code references to the shared directory, inside the repository
+
+```
+$ grep -rn "/home/team/shared" server/ scripts/ client/src/
+server/index.js:415:      : path.join('/home/team/shared/templates', `${templateName}.md`);
+server/privacy-notice.js:37:const SHARED_TEMPLATES_DIR = '/home/team/shared/templates';
+scripts/antum-keep-alive.service:7:ExecStart=/bin/bash /home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh
+scripts/keep-alive.sh:65:DEPLOY_DIR="${ANTUM_DEPLOY_DIR:-/home/team/shared/probable-octo-sniffle}"
+scripts/check-index-ids.py:5:(roadmap-board-index.md in AhmadJ979/Antum-People); /home/team/shared holds only a
+```
+
+`scripts/` names the **deploy directory**, not templates — the guard job that keeps the product served, and
+not a reader of a template. `client/src/` has no reference at all: the UI fetches
+`/api/compliance/templates/<name>/<employeeId>` and `/api/compliance/notice`, so it needs no path and no
+change.
+
+## 4. Tests and the seed
+
+```
+$ grep -rn "privacy-notice\|noticeVersion\|noticePath" server/*.test.js scripts/*.js
+server/demo-seed.test.js:40:const notice = require('./privacy-notice');
+server/demo-seed.test.js:184:    assert.ok(acked.every((r) => r.notice_version === notice.noticeVersion()),
+server/preboarding-items.test.js:20:const privacyNotice = require('./privacy-notice');
+server/preboarding-items.test.js:251:    assert.strictEqual(passport.acknowledgement.notice_version, privacyNotice.noticeVersion());
+server/preboarding-items.test.js:521:      notice_version: privacyNotice.noticeVersion(),
+```
+
+No test names a path and no test reads the shared file: both suites go through the module, so they follow
+whatever the module resolves. The seed (`scripts/seed-demo.js`) has no reference to templates at all.
+
+## 5. Which templates the client can ask for
+
+```
+$ grep -n "fetchTemplate(" client/src/App.tsx
+1564:   onClick={() => fetchTemplate('privacy-notice', 'PDPL Privacy Notice')}
+1571:   onClick={() => fetchTemplate(selectedEmployee.data_residency_country === 'SA' ? 'ksa-employment-contract' : 'uae-employment-contract', 'Employment Contract')}
+1579:   onClick={() => fetchTemplate('final-settlement-statement', 'Final Settlement')}
+```
+
+Four document names, and every one of them exists in the repository's `templates/` — which is what makes
+repository-only resolution safe, and what `server/privacy-notice.test.js` now asserts.
+
+## 6. The two directories, file by file
+
+```
+$ for f in /home/team/shared/templates/*; do ... md5sum both ... done
+SAME     breach-notification-letters.md     shared=770ae3713563 repo=770ae3713563
+SAME     build-html.js                      shared=206ff7ca5a6f repo=206ff7ca5a6f
+SAME     data-processing-agreement.html     shared=cf5c83c40dba repo=cf5c83c40dba
+SAME     data-processing-agreement.md       shared=3326d10bb73e repo=3326d10bb73e
+SAME     data-processing-agreement.pdf      shared=9a38d4b3acbe repo=9a38d4b3acbe
+SAME     dpia-questionnaire.html            shared=9a5b3fc77004 repo=9a5b3fc77004
+SAME     dpia-questionnaire.md              shared=770b522dde97 repo=770b522dde97
+SAME     dpia-questionnaire.pdf             shared=73b2b1854a73 repo=73b2b1854a73
+SAME     final-settlement-statement.md      shared=7b1ade315359 repo=7b1ade315359
+DIFF     ksa-employment-contract.md         shared=3518c1af4931 repo=1c6ad895d403
+SAME     privacy-notice.html                shared=68c8478a0e5a repo=68c8478a0e5a
+DIFF     privacy-notice.md                  shared=e011d3d6f18e repo=9c060b9fd071
+SAME     privacy-notice.pdf                 shared=4bb82afa10cc repo=4bb82afa10cc
+SAME     uae-employment-contract.md         shared=f28dc42aa50e repo=f28dc42aa50e
+```
+
+Two divergent documents, not one. Both are served by the product (the notice and, for a KSA employee, the
+contract). The `.html`/`.pdf` derivatives are byte-identical in both directories — i.e. neither was
+regenerated when the repository's markdown changed, and `privacy-notice.html` still contains
+`statutory retention`.
