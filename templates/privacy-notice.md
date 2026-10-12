@@ -2,8 +2,8 @@
 # إشعار خصوصية الموظفين — Antum People
 
 > **Jurisdictions / النطاق القانوني:** UAE (Federal Decree-Law No. 45 of 2021 — UAE PDPL) and KSA (Personal Data Protection Law — Royal Decree M/148, as amended 2023)
-> **Status / الحالة:** Template v2.2 — pilot-ready
-> **Version / الإصدار:** v2.2 (2026-09-17) — owner legal details applied (DPO name, partial address, entity status)
+> **Status / الحالة:** Template v2.3 — pilot-ready
+> **Version / الإصدار:** v2.3 (2026-10-12) — retention wording corrected: "statutory retention" → "retention period"
 > **Usage / الاستخدام:** Display to employee during onboarding. Capture consent acknowledgment in `consent_records` table.
 > **Note / ملاحظة:** Article references follow the Antum People compliance reference set. Confirm against final official translations before client-facing certification.
 > **Arabic wordmark / العلامة العربية:** Latin "Antum" used in Arabic text — [TO CONFIRM — Arabic wordmark transliteration]
@@ -244,5 +244,5 @@ For any questions about this notice or your data: **[dpo_name]** — **[dpo_emai
 | I confirm I have read and understood this Privacy Notice / أُقر بأنني اطلعت على إشعار الخصوصية هذا وفهمته | Yes / نعم |
 | I consent to the processing of my personal data as described, including [sensitive categories, where applicable] / أوافق على معالجة بياناتي الشخصية كما هو موضح، بما في ذلك [الفئات الحساسة، عند الاقتضاء] | ☐ Yes / نعم |
 | Date / التاريخ | [current_date] |
-| Consent Version / إصدار الموافقة | v2.2 (2026-09-17) |
+| Consent Version / إصدار الموافقة | v2.3 (2026-10-12) |
 | Signature / التوقيع | ________________ |
