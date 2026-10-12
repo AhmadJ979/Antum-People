@@ -48,6 +48,7 @@ REMOVED = {
     "91f44175-4204-4a20-976a-b1318578da7b",  # demo case-1 decision row, removed 2026-10-09 (owner ruled: leave case 1)
     "2c37f2da-1fa1-4b1c-8117-c639c5880658",  # All-chip race parent, removed 2026-10-09 (superseded by db4e7b1c)
     "62d7142b-955a-433e-8f42-1c07a5d67ee3",  # read-endpoint response-shape parent, removed 2026-10-09 (superseded by aa6c9bd7)
+    "9dc454df-b5cb-4d1c-aeba-b67cf795db4e",  # question-only row for owner decision 17, removed 2026-10-12 (duplicate; superseded by 385589e1)
 }
 
 # 8-hex tokens the index quotes that are neither board ids nor git objects: rule 19
@@ -66,6 +67,7 @@ CONTENT_SHAS = {
     "1132b63b",  # #102 as 3 commits - the tree the lead's first verification measured
     "1171239d",  # #102 as frozen and merged, 4 commits (now on main as 2028894)
     "b484920f",  # index content merged by PR #105 (Round 32), 2026-10-09 12:12:31Z
+    "57e6aa74",  # the merge check Round 44 read: sha256 of origin/main:roadmap-board-index.md before its edits
 }
 
 print("index checked:", INDEX)
