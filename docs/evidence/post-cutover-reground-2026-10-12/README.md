@@ -10,11 +10,15 @@ in the repository (`git ls-tree -r --name-only origin/main | grep -c 'cutover-20
 run's own evidence does exist outside it — cited by md5 in **§6**, which also cross-checks the live figures.
 What is here is my independent, read-only read of what the run left behind.
 
-> **Update, 2026-10-12 (second pass, after this pack merged).** The record has since landed:
-> `cutover-20261012-0506/` (PR #140, commit `c3dc408`), so the `grep -c 'cutover-2026101'` above now returns
-> **9**, not 0. §6 has been repointed at it and verifies that every filed artifact is byte-identical to the
-> `/tmp` copy this pack first cited; §7's matching bullet is updated to match. The measurements themselves are
-> unchanged — only the citation and the tense of two sentences that were true when they were written.
+> **Update, 2026-10-12 (second pass, after this pack merged).** The record landed at **05:24:39Z while this
+> pack was being written** (authored `c3dc408` 05:20:07Z, merged `0f2b28f`), so "no record in the repository"
+> was true at my read and false twenty minutes later. `grep -c 'cutover-2026101'` now returns **9**, not 0. §6
+> is repointed at the record and verifies every filed artifact byte-identical to the `/tmp` copy this pack first
+> cited; §7's matching bullet is updated. **The record also brackets the window this pack was working around:**
+> its README carries the before/after pair — the platform's `vite dev` placeholder holding port 3000 (the run's
+> own eviction line) **before**, and `/proc/1610` created **05:07:11.565Z** **after** — with its own honest limit
+> that no request was captured from inside those four minutes. §2's clock note is corrected against it. The
+> measurements in this pack are otherwise unchanged.
 
 ## 1. What is actually being served (read anonymously, 05:15–05:20Z)
 
@@ -37,11 +41,31 @@ KSA → 0, the labels) describe what is served now rather than what was about to
 |---|---|
 | deployed tree | `/home/team/shared/probable-octo-sniffle`, HEAD **`b54412d`**, working tree clean but for the guard's two untracked runtime files |
 | built asset in that tree | `client/dist/assets/index-Dt2oLspq.js` — mtime **2026-10-12T05:07:00Z** |
-| product process | pid **1610**, cwd `…/probable-octo-sniffle/server`, started **05:09:30Z** |
+| product process | pid **1610**, cwd `…/probable-octo-sniffle/server`, created **2026-10-12T05:07:11.565Z** (`/proc/1610` ctime, kernel-side) — **inside the run's own window** |
+| guard (watchdog) | pid **1707**, created **2026-10-12T05:07:15.865Z** (`/proc/1707`) — its own log agrees: `2026-10-12T05:07:15+00:00 armed as its own session leader` |
+| ⚠️ clock source | these are **`/proc`** times. `ps -o lstart` reports **05:09:30** / **05:09:35** for the same two pids — about **2m19s later**. Read the note at the end of this section before quoting either one |
 | demo database | `/home/team/.data/antum-product.db` — mtime **2026-10-12T05:07:02Z**, so **the seed ran in this movement** |
 
 The DB write is the evidence that the movement's re-seed happened; the seeder derives every date as an
 offset from the day it runs, so the seed date fixes the three cases' start dates.
+
+### The clock correction — `ps` and `/proc` disagree on this host
+
+This section first read *"product process … started **05:09:30Z**"*. That figure is `ps -o lstart`, and on this host
+**the `ps`/uptime family runs ahead of the kernel.** Re-measured in this session at **05:35:42Z**, same pid:
+
+| reading | value | which clock |
+|---|---|---|
+| `/proc/1610` ctime | **2026-10-12 05:07:11.565119173Z** | kernel — **the authoritative one** |
+| `ps -o lstart -p 1610` | **Mon Oct 12 05:09:30 2026** | `ps` family, ~**2m19s ahead** |
+| `uptime -s` · `/proc/uptime` | **05:05:24** · 1817.82 s | same family, same offset |
+
+Quote the `/proc` time: it falls **inside** the run's own window (05:06:55–05:07:21Z) while the `ps` figure falls
+*after* the window closes, and the process's own log agrees with `/proc` — the standing method note (**trust a
+process's own log**) with a number attached. The cutover's own record measures the same pair for the same two pids
+(`cutover-20261012-0506/README.md`, "The guard and the product"), so the two merged documents now agree instead of
+quoting two different clocks. The earlier sentence is corrected here rather than deleted, so a reader who saw the
+first version can reconcile the two readings.
 
 ## 3. The rig — the served tree, built and seeded, read through the product's own API
 
@@ -127,8 +151,8 @@ So **the limit stated in §5 is now closed**: the live demo's row-level figures 
 surface — by the run, not by me — and the rig reproduces them exactly. What the rig added that the run's
 read could not is §4 (the board's rendered content across the `IT → All` round trip), which needs a browser.
 
-**The run's artifacts, by content** — filed in the repository under `cutover-20261012-0506/` (PR #140,
-`c3dc408`) and read from there. Every filed copy was compared byte-for-byte against the `/tmp` original this
+**The run's artifacts, by content** — filed in the repository under `cutover-20261012-0506/` (PR #140:
+authored `c3dc408` 05:20:07Z, merged `0f2b28f` 05:24:39Z) and read from there. Every filed copy was compared byte-for-byte against the `/tmp` original this
 pack first cited, and **all four are identical**, so the citation is now durable rather than path-dependent
 and the `/tmp` files are no longer needed to check any figure in this pack:
 
@@ -140,10 +164,14 @@ and the `/tmp` files are no longer needed to check any figure in this pack:
 | `cutover-20261012-0506/seed.log` | `d6171f770b3d2ecafc46fddeb941c6e7` |
 
 The record reaches the same readings by its own route: its README names `assets/index-Dt2oLspq.js`, **270,962**
-bytes, md5 `5720cd6fbeca1966cb642f9cf6338a9c`, and the same three flag states — and it files the product's
-served HTML (`extra/served-page.html`, which references `index-Dt2oLspq.js`), i.e. the run kept the very
-evidence that separates the product from the platform's placeholder page. Pack and record corroborate; neither
-replaces the other.
+bytes, md5 `5720cd6fbeca1966cb642f9cf6338a9c`, and the same three flag states. It also **brackets the four
+minutes this pack could only work around** — *before*: the platform's `vite dev` placeholder holding port 3000
+(the run's eviction line, quoted verbatim there); *after*: `/proc/1610` created **05:07:11.565Z**, the window
+closing 05:07:21Z — and it states its own limit, that no request was captured from inside the interval, so
+"a visitor would have seen the wrong site" rests on the eviction line rather than on a captured page. One
+artifact is correctly not trusted by its name: `extra/served-page.html` is the **product's** own HTML (it
+references `index-Dt2oLspq.js`), *not* the placeholder's, and the record says so too. Pack and record
+corroborate; neither replaces the other.
 
 Two facts in the run's evidence worth carrying beside the figures: the flag recorded its boundary
 **late** on this run (*"reached the 48-hour mark while the app was not running (noticed 77.12h late) … the
