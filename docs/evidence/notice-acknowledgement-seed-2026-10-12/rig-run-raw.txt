@@ -1,0 +1,33 @@
+=== client build (from client/, never the repo root) ===
+npm run build exit=0
+dist/assets/index-BcziNE91.js   274.05 kB │ gzip: 76.39 kB
+-rw-r--r-- 1 root root 274056 Oct 12 05:37 dist/assets/index-BcziNE91.js
+md5: e29f5ef4bc6ffb6a1e09907e7bc5980b  bytes: 274056
+
+=== isolated rig, seeded with the new seed ===
+rig db: /tmp/ack-rig2/rig.db (the live demo's database is untouched; nothing re-seeded)
+  - Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-10-26) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+  - Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-13) — inside 48 hours with every item still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+  - Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-11) — start date already passed, items still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+  Seeding completed successfully.
+
+=== the demo's counts, re-read after the seed ===
+(node:16434) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+totals: {"cases":3,"items":21,"items_outstanding":21,"items_received":0,"items_verified":0,"cases_notice_not_shown":0,"cases_ready":0,"workspace_lines":43,"workspace_lines_open":43,"cases_provisioned":0}
+  OFR-2026-DEMO-03 {"items_total":7,"outstanding_count":7,"by_status":{"not_started":7,"requested":0,"received":0,"verified":0},"notice_recorded":true,"notice_version":"v2.2","notice_items_collectible":4,"notice_items_acknowledged":4,"notice_items_no_basis":3}
+  OFR-2026-DEMO-02 {"items_total":7,"outstanding_count":7,"by_status":{"not_started":7,"requested":0,"received":0,"verified":0},"notice_recorded":true,"notice_version":"v2.2","notice_items_collectible":4,"notice_items_acknowledged":4,"notice_items_no_basis":3}
+  OFR-2026-DEMO-01 {"items_total":7,"outstanding_count":7,"by_status":{"not_started":4,"requested":3,"received":0,"verified":0},"notice_recorded":true,"notice_version":"v2.2","notice_items_collectible":4,"notice_items_acknowledged":4,"notice_items_no_basis":3}
+acknowledgement rows by basis: [{"lawful_basis":"Legal obligation","n":9},{"lawful_basis":"Performance of the employment contract / contractual necessity","n":3}]
+distinct recorded_by: [{"recorded_by":"admin"}]
+rows for the no-basis items: 0
+rows in the retired consent table: 0
+notice version on the demo rows == the served file: true
+
+=== before/after on a case with nothing recorded ===
+BEFORE: receive the passport -> refused 428 The privacy notice has not been shown for Passport copy yet, so it cannot be collected. Record that the notice was shown first.
+record, unnamed actor    -> refused 400 recorded_by is required: there is no new-hire login in this release, so the record must name the person who showed the notice, on the hire's behalf
+record passport          -> {"created":true,"item":"Passport copy","basis":"Legal obligation","version":"v2.2","recorded_by":"admin"}
+record bank details      -> {"created":true,"item":"Bank details (IBAN letter)","basis":"Performance of the employment contract / contractual necessity","version":"v2.2","recorded_by":"admin"}
+record education cert    -> refused 409 Education certificate is not collectible in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1). No acknowledgement can be recorded for it, because the notice has no basis to record.
+AFTER:  receive the passport -> "received"
