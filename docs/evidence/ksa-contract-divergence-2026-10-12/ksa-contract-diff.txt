@@ -1,0 +1,20 @@
+host lines=225 | repo lines=223
+====================================================================================================
+
+### BLOCK 1: replace  host[134:135] -> repo[134:135]
+  -HOST    0| EOSB shall be calculated in accordance with Articles 74–86 of Saudi Labor Law (Royal Decree M/51), based on the employee's **total monthly salary**.
+  +REPO    0| EOSB shall be calculated in accordance with Article 84 of the Saudi Labor Law (Royal Decree M/51), based on the employee's **total monthly salary**.
+
+### BLOCK 2: replace  host[138:142] -> repo[138:140]
+  -HOST    0| | Less than 2 years / أقل من سنتين | No entitlement |
+  -HOST    0| | 2 to 5 years / من 2 إلى 5 سنوات | 1/3 of one month's total salary per year |
+  -HOST    0| | 5 to 10 years / من 5 إلى 10 سنوات | 2/3 of one month's total salary per year |
+  -HOST    0| | 10+ years / أكثر من 10 سنوات | 1 full month's total salary per year |
+  +REPO    0| | First 5 years / أول 5 سنوات | Half a month's total salary per year / نصف شهر من إجمالي الراتب عن كل سنة |
+  +REPO    0| | Each subsequent year / كل سنة تالية | One full month's total salary per year / شهر كامل من إجمالي الراتب عن كل سنة |
+
+### BLOCK 3: replace  host[143:144] -> repo[141:142]
+  -HOST    0| > **Penalty for Failure to Give Proper Notice:** Up to 50% of EOSB may be deducted if the employee fails to serve the full notice period.
+  +REPO    0| > **Compensation for Failure to Give Proper Notice:** If the employee fails to serve the full notice period, the employee owes compensation equal to the wage for the unserved notice period, recorded as a separate settlement item — never deducted from the EOSB.
+
+3 differing blocks
