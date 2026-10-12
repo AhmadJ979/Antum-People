@@ -6,7 +6,7 @@
  * ONE MODULE OWNS THE CHECKLIST
  * ---------------------------------------------------------------------------
  * This file holds every rule about the employee track: which items a case carries, the item
- * status machine, the reminder records, and the PDPL consent gate that the collection step
+ * status machine, the reminder records, and the notice-shown gate that the collection step
  * reads. The routes in index.js are transport only — they carry no checklist rules of their
  * own, so an ATS adapter or a hire-facing portal later becomes another CALLER, never a second
  * implementation.
@@ -20,11 +20,13 @@
  *    HR team collects, and the compliance engine remains the only place a statutory claim
  *    could ever be sourced from.
  *
- * 2. A document cannot be collected before the PDPL consent record exists. "Collected" means
- *    an item reaches `received`, and the check sits on that transition — not in the UI, which
- *    a direct API call would bypass. P2-6 owns the consent lifecycle (notice versioning,
- *    withdrawal, the Arabic-first notice, the hire-facing capture); P2-2 ships the record the
- *    gate reads and nothing more.
+ * 2. A document cannot be collected before the privacy notice has been SHOWN for it. "Collected"
+ *    means an item reaches `received`, and the check sits on that transition — not in the UI, which
+ *    a direct API call would bypass. The record the gate reads is per document, names the person who
+ *    showed the notice, and carries the basis the notice itself assigns that document — never
+ *    `consent`, which is the one basis a person can withdraw and which the notice assigns to
+ *    biometrics and sensitive data alone (none of them in this set). NOTICE_BASES below is where
+ *    those values live, including the two items the notice assigns no basis to at all.
  *
  * What this module deliberately does NOT do: hold a document's contents. An item carries a
  * short `document_reference` (a file name or the reference the hire quoted), not the personal
@@ -34,6 +36,9 @@
 
 const { randomUUID } = require('crypto');
 const db = require('./db');
+// One definition of the notice the product serves — the record's version comes from the same file
+// the client can download, so the two cannot disagree (see that module for why).
+const privacyNotice = require('./privacy-notice');
 const preboardingFlag = require('./preboarding-flag');
 // The workspace track (P2-4) owns its own catalog and its own switch. This module asks it two
 // questions — is the track active for a jurisdiction, and what are the per-track counts — rather
@@ -90,6 +95,85 @@ const DOCUMENT_SETS = {
     ],
   },
 };
+
+/**
+ * The lawful basis the privacy notice assigns to each document item, and whether the item can be
+ * collected at all in this release — one row per item, data rather than logic, and the only place a
+ * product value for either exists.
+ *
+ * Every `basis` string is the notice's own wording for the purpose that covers that document,
+ * copied from its purpose table (`templates/privacy-notice.md`, read at v2.2; `notice_line` cites
+ * the row). The record must carry the basis the notice already assigns, so a value invented here
+ * would be the exact defect this work removes — which is why two of these rows carry none at all.
+ *
+ * `collectible: false` is a product state, not a legal conclusion: the notice assigns no basis to
+ * the item, so there is nothing to record and nothing that may be collected. Each such row names
+ * the counsel question it waits on, and both the record writer and the collection gate refuse the
+ * item by that name rather than writing an invented basis. When counsel answers, this table
+ * changes — not a code path.
+ */
+const NOTICE_BASES = {
+  passport: {
+    basis: 'Legal obligation',
+    notice_line: 44,
+    collectible: true,
+  },
+  visa_or_entry_permit: {
+    basis: 'Legal obligation',
+    notice_line: 44,
+    collectible: true,
+  },
+  emirates_id: {
+    basis: 'Legal obligation',
+    notice_line: 44,
+    collectible: true,
+  },
+  education_certificate: {
+    basis: null,
+    notice_line: null,
+    collectible: false,
+    pending_counsel: 'Q1',
+    reason: 'the privacy notice has no purpose row for qualifications, so no basis is assigned to it',
+  },
+  experience_certificate: {
+    basis: null,
+    notice_line: null,
+    collectible: false,
+    pending_counsel: 'Q1',
+    reason: 'the privacy notice has no purpose row for qualifications, so no basis is assigned to it',
+  },
+  bank_details: {
+    basis: 'Performance of the employment contract / contractual necessity',
+    notice_line: 43,
+    collectible: true,
+  },
+  emergency_contact: {
+    basis: null,
+    notice_line: null,
+    collectible: false,
+    pending_counsel: 'Q5',
+    reason: 'the privacy notice assigns no basis for this item, and the data is a third person\'s, not the hire\'s',
+  },
+};
+
+/** What every row in the notice-acknowledgement table records. Not `consent`: this row says the
+ *  notice was SHOWN, and the table's CHECK constraint makes it incapable of holding anything else. */
+const NOTICE_INSTRUMENT = 'notice_shown';
+
+/** The only method this release can write: an in-product record, never an e-signature. */
+const NOTICE_RECORD_METHOD = 'in_product_record';
+
+/** The notice's row for one item, or null when the notice says nothing about it. */
+function noticeBasisFor(itemKey) {
+  const entry = NOTICE_BASES[String(itemKey)];
+  return entry ? Object.assign({ item_key: itemKey }, entry) : null;
+}
+
+/** Whether the notice assigns a basis to this item — and therefore whether it may be collected. */
+function isNoticeCollectible(itemKey) {
+  const entry = NOTICE_BASES[String(itemKey)];
+  return Boolean(entry && entry.collectible);
+}
 
 /** A rejection the caller can act on; anything else is a server fault. */
 class PreboardingItemError extends Error {
@@ -196,63 +280,113 @@ async function seedItemsForCase(caseRow) {
   return listItems(caseRow.id);
 }
 
-async function getConsent(caseId) {
+/** Every notice acknowledgement this case carries, one row per document. */
+async function listNoticeAcknowledgements(caseId) {
+  return db.query(
+    `SELECT * FROM preboarding_notice_acknowledgements WHERE case_id = ${db.escapeString(caseId)}
+      ORDER BY rowid ASC`
+  );
+}
+
+/** The acknowledgement for one document, or null — what the collection gate asks about. */
+async function getNoticeAcknowledgement(caseId, itemKey) {
   const rows = await db.query(
-    `SELECT * FROM preboarding_consents WHERE case_id = ${db.escapeString(caseId)}`
+    `SELECT * FROM preboarding_notice_acknowledgements WHERE case_id = ${db.escapeString(caseId)}
+      AND item_key = ${db.escapeString(itemKey)}`
   );
   return rows[0] || null;
 }
 
-async function hasConsent(caseId) {
-  return Boolean(await getConsent(caseId));
-}
-
 /**
- * Record the PDPL consent this case's document collection is gated on.
+ * Record that the privacy notice was SHOWN, for one document — the record the collection gate reads.
  *
- * Replay-safe in the same spirit as the case writer: recording consent for a case that already
- * has a record returns the existing record and changes nothing.
+ * Four refusals, and each is a rule rather than an input check:
+ *
+ *   * the case and the item must exist (404): the record is about a document this case carries.
+ *   * the notice must assign a basis to the item (409): an item the notice does not cover is not
+ *     collectible, so there is nothing to record and no basis to write. This is the refusal that
+ *     keeps an invented basis out of the database instead of leaving the gap for whoever writes the
+ *     copy to fill in.
+ *   * `recorded_by` must name a person (400): the record's whole value is that somebody put the
+ *     notice in front of the hire, and this release has no hire login, so the only actor pickable
+ *     is the person recording on the hire's behalf. The fallback this module uses elsewhere — the
+ *     literal `'system'` — is deliberately NOT used here: it is defensible for an audit trail of a
+ *     machine action and indefensible for this record. The pre-reading acknowledgement module
+ *     already refuses it one file away; this follows that rule rather than the older one.
+ *   * the version is not taken from the caller at all: it is read from the notice the server
+ *     serves, so a record cannot state a version the hire was never shown.
+ *
+ * Replay-safe in the same spirit as the case writer: an item that already has a record returns it
+ * and changes nothing, so the timestamp HR reads is the one that was first written.
  */
-async function recordConsent(input) {
+async function recordNoticeAcknowledgement(input) {
   const caseId = input.case_id;
+  const itemKey = input.item_key;
   const caseRow = await getCaseRow(caseId);
   if (!caseRow) throw new PreboardingItemError('Pre-boarding case not found', 404);
+  if (!itemKey) throw new PreboardingItemError('item_key is required', 400);
 
-  for (const field of ['consent_type', 'lawful_basis', 'consent_version']) {
-    if (!input[field] || !String(input[field]).trim()) {
-      throw new PreboardingItemError(`${field} is required to record PDPL consent`, 400);
-    }
+  const item = await getItem(caseId, itemKey);
+  if (!item) throw new PreboardingItemError(`No checklist item ${itemKey} on this case`, 404);
+
+  const catalog = noticeBasisFor(itemKey);
+  if (!catalog || !catalog.collectible) {
+    throw new PreboardingItemError(
+      `${item.label} is not collectible in this release: `
+      + `${(catalog && catalog.reason) || 'the privacy notice assigns no basis for it'} `
+      + `(pending counsel ${(catalog && catalog.pending_counsel) || 'Q1'}). No acknowledgement can `
+      + 'be recorded for it, because the notice has no basis to record.',
+      409
+    );
   }
 
-  const existing = await getConsent(caseId);
-  if (existing) return { consent: existing, created: false };
+  const recordedBy = typeof input.recorded_by === 'string' ? input.recorded_by.trim() : '';
+  if (!recordedBy) {
+    throw new PreboardingItemError(
+      'recorded_by is required: there is no new-hire login in this release, so the record must '
+      + 'name the person who showed the notice, on the hire\'s behalf',
+      400
+    );
+  }
 
-  const id = randomUUID();
-  const grantedAt = input.granted_at || new Date().toISOString();
+  const existing = await getNoticeAcknowledgement(caseId, itemKey);
+  if (existing) return { acknowledgement: existing, created: false };
+
+  const noticeVersion = privacyNotice.noticeVersion();
+  const acknowledgedAt = new Date().toISOString();
   await db.query(`
-    INSERT INTO preboarding_consents (
-      id, case_id, consent_type, lawful_basis, consent_version, granted_at, recorded_by
+    INSERT INTO preboarding_notice_acknowledgements (
+      id, case_id, item_key, item_label, jurisdiction, instrument, lawful_basis, notice_version,
+      recorded_by, method, note, acknowledged_at
     ) VALUES (
-      ${db.escapeString(id)},
+      ${db.escapeString(randomUUID())},
       ${db.escapeString(caseId)},
-      ${db.escapeString(input.consent_type)},
-      ${db.escapeString(input.lawful_basis)},
-      ${db.escapeString(input.consent_version)},
-      ${db.escapeString(grantedAt)},
-      ${db.escapeString(input.actor || 'system')}
+      ${db.escapeString(item.item_key)},
+      ${db.escapeString(item.label)},
+      ${db.escapeString(caseRow.jurisdiction)},
+      ${db.escapeString(NOTICE_INSTRUMENT)},
+      ${db.escapeString(catalog.basis)},
+      ${db.escapeString(noticeVersion)},
+      ${db.escapeString(recordedBy)},
+      ${db.escapeString(NOTICE_RECORD_METHOD)},
+      ${db.escapeString(input.note === undefined ? null : input.note)},
+      ${db.escapeString(acknowledgedAt)}
     )
   `);
 
+  // The audit trail records the acknowledgement, never its note body: keys, instrument and basis
+  // only, so a free-text field cannot leak into a log that is read widely.
   await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, new_values, timestamp)
-    VALUES (${db.escapeString(randomUUID())}, ${db.escapeString(input.actor || 'system')},
-      'preboarding_consent', ${db.escapeString(caseId)}, 'CREATE',
+    VALUES (${db.escapeString(randomUUID())}, ${db.escapeString(recordedBy)},
+      'preboarding_notice_acknowledgement', ${db.escapeString(caseId)}, 'CREATE',
       ${db.escapeString(JSON.stringify({
-        consent_type: input.consent_type,
-        lawful_basis: input.lawful_basis,
-        consent_version: input.consent_version,
+        item_key: item.item_key,
+        instrument: NOTICE_INSTRUMENT,
+        lawful_basis: catalog.basis,
+        notice_version: noticeVersion,
       }))}, CURRENT_TIMESTAMP)`);
 
-  return { consent: await getConsent(caseId), created: true };
+  return { acknowledgement: await getNoticeAcknowledgement(caseId, itemKey), created: true };
 }
 
 /**
@@ -261,7 +395,8 @@ async function recordConsent(input) {
  * The order of the checks is the whole point: the case and the item must exist, the status
  * must be one of the four, the set must be active for this jurisdiction, the transition must
  * be legal from where the item is now, and only then does a collection step have to clear the
- * PDPL consent gate. Refusals name what was wrong so the caller can act on them.
+ * notice-shown gate — first that the notice assigns a basis to the item at all, then that it has
+ * been shown for it. Refusals name what was wrong so the caller can act on them.
  */
 async function setItemStatus(input) {
   const { case_id: caseId, item_key: itemKey, status } = input;
@@ -317,20 +452,34 @@ async function setItemStatus(input) {
     );
   }
 
-  // The gate itself. Receiving a document means the hire's personal data is collected, so the
-  // consent record must already exist — checked here, on the transition, for every caller.
+  // The gate itself, per document. Receiving a document means the hire's personal data is
+  // collected, so the notice must already have been shown for THIS item — checked here, on the
+  // transition, for every caller. Two refusals, because they need different actions from HR: an
+  // item the notice assigns no basis to is not collectible in this release at all (409, and the
+  // counsel question it waits on is named), while an item whose notice has not been shown yet is
+  // HR's own next step (428 — the status this gate has always used for "show the notice first").
+  //
   // Scoped to the employee track on purpose: a provisioning line (a laptop, a badge, a seat) is
-  // not the hire's personal document, and making IT's work wait on a PDPL consent the hire has
-  // not signed would invent a rule nobody stated. The `track` column is what keeps those apart —
-  // without it, putting both tracks in one table would have silently gated the laptop too.
-  if (track === 'employee'
-      && COLLECTED_STATUSES.indexOf(status) !== -1
-      && !(await hasConsent(caseId))) {
-    throw new PreboardingItemError(
-      'A document cannot be collected before the PDPL consent record exists for this case. '
-      + 'Record PDPL consent first.',
-      428
-    );
+  // not the hire's personal document, and making IT's work wait on a notice about the hire's data
+  // would invent a rule nobody stated. The `track` column is what keeps those apart — without it,
+  // putting both tracks in one table would have silently gated the laptop too.
+  if (track === 'employee' && COLLECTED_STATUSES.indexOf(status) !== -1) {
+    const catalog = noticeBasisFor(itemKey);
+    if (!catalog || !catalog.collectible) {
+      throw new PreboardingItemError(
+        `${item.label} cannot be collected in this release: `
+        + `${(catalog && catalog.reason) || 'the privacy notice assigns no basis for it'} `
+        + `(pending counsel ${(catalog && catalog.pending_counsel) || 'Q1'}).`,
+        409
+      );
+    }
+    if (!(await getNoticeAcknowledgement(caseId, itemKey))) {
+      throw new PreboardingItemError(
+        `The privacy notice has not been shown for ${item.label} yet, so it cannot be collected. `
+        + 'Record that the notice was shown first.',
+        428
+      );
+    }
   }
 
   const now = new Date().toISOString();
@@ -469,7 +618,7 @@ function daysUntil(startDate) {
 }
 
 /**
- * One case's roll-up: the counts, the outstanding items by name, the consent state.
+ * One case's roll-up: the counts, the outstanding items by name, the notice state.
  *
  * **Every count here is the EMPLOYEE track's** unless it is inside `by_track`, and that is
  * deliberate. Pre-P2-4 this table held one track, so "the counts" needed no qualifier; now that
@@ -479,8 +628,11 @@ function daysUntil(startDate) {
  * in `by_track`, and each surface prints the track it is talking about. The 48-hour flag is the
  * one thing that reads BOTH, because it is defined over every item on the case (P2-5).
  */
-function caseSummary(caseRow, items, consent, reminders) {
+function caseSummary(caseRow, items, noticeAcknowledgements, reminders) {
   const employeeItems = items.filter((item) => (item.track || 'employee') === 'employee');
+  const acknowledgedKeys = new Set(noticeAcknowledgements.map((row) => row.item_key));
+  const acknowledgedCount = employeeItems.filter((i) => acknowledgedKeys.has(i.item_key)).length;
+  const collectibleCount = employeeItems.filter((i) => isNoticeCollectible(i.item_key)).length;
   const byStatus = { not_started: 0, requested: 0, received: 0, verified: 0 };
   for (const item of employeeItems) {
     if (byStatus[item.status] === undefined) byStatus[item.status] = 0;
@@ -524,8 +676,14 @@ function caseSummary(caseRow, items, consent, reminders) {
         functions: workspace.WORKSPACE_FUNCTIONS,
       },
     },
-    consent_recorded: Boolean(consent),
-    consent_granted_at: consent ? consent.granted_at : null,
+    // The notice state, per document rather than per case — the three figures below are printed
+    // separately and never summed into one, because "the notice has not been shown yet" and "the
+    // notice assigns no basis for this item" are different answers for HR and different work.
+    notice_version: privacyNotice.noticeVersion(),
+    notice_recorded: acknowledgedCount > 0,
+    notice_items_collectible: collectibleCount,
+    notice_items_acknowledged: acknowledgedCount,
+    notice_items_no_basis: employeeItems.length - collectibleCount,
     last_reminder_at: lastReminder ? lastReminder.created_at : null,
     last_reminder_count: lastReminder ? lastReminder.outstanding_count : null,
   };
@@ -534,7 +692,7 @@ function caseSummary(caseRow, items, consent, reminders) {
 /**
  * The roll-up HR reads: every case, its progress and **the names of its outstanding items**,
  * from one list and without opening each case. Four queries in total, whatever the number of
- * cases — the items, consents and reminders are fetched once for all of them.
+ * cases — the items, notice acknowledgements and reminders are fetched once for all of them.
  *
  * @returns {Promise<{jurisdiction: string|null, cases: object[], totals: object}>}
  *          `totals` describes **the set this response carries, under this endpoint's own filters** —
@@ -559,7 +717,12 @@ async function checklistOverview(options = {}) {
     items_outstanding: 0,
     items_received: 0,
     items_verified: 0,
-    cases_without_consent: 0,
+    // Cases where the notice has not been shown for a single document yet — the like-for-like
+    // replacement for the old `cases_without_consent`, which counted cases with no consent record.
+    // Partial coverage is deliberately NOT this figure: a case where HR has shown the notice for
+    // some documents is a case the notice HAS been shown on, and the per-item figures in each
+    // summary (and the per-item gate itself) are what say how far it got.
+    cases_notice_not_shown: 0,
     cases_ready: 0,
     // Workspace-track totals (P2-4), side by side and never summed with the above.
     workspace_lines: 0,
@@ -569,9 +732,9 @@ async function checklistOverview(options = {}) {
   if (cases.length === 0) return { jurisdiction, cases: [], totals: emptyTotals };
 
   const idList = cases.map((row) => db.escapeString(row.id)).join(', ');
-  const [items, consents, reminders] = await Promise.all([
+  const [items, noticeAcknowledgements, reminders] = await Promise.all([
     db.query(`SELECT * FROM preboarding_items WHERE case_id IN (${idList}) ORDER BY rowid ASC`),
-    db.query(`SELECT * FROM preboarding_consents WHERE case_id IN (${idList})`),
+    db.query(`SELECT * FROM preboarding_notice_acknowledgements WHERE case_id IN (${idList})`),
     db.query(`SELECT * FROM preboarding_reminders WHERE case_id IN (${idList}) ORDER BY created_at ASC`),
   ]);
 
@@ -580,13 +743,13 @@ async function checklistOverview(options = {}) {
     return acc;
   }, {});
   const itemsByCase = groupBy(items);
-  const consentByCase = groupBy(consents);
+  const noticeAcksByCase = groupBy(noticeAcknowledgements);
   const remindersByCase = groupBy(reminders);
 
   const summaries = cases.map((row) => caseSummary(
     row,
     itemsByCase[row.id] || [],
-    (consentByCase[row.id] || [])[0] || null,
+    noticeAcksByCase[row.id] || [],
     remindersByCase[row.id] || []
   ));
 
@@ -596,7 +759,7 @@ async function checklistOverview(options = {}) {
     acc.items_outstanding += summary.outstanding_count;
     acc.items_received += summary.by_status.received;
     acc.items_verified += summary.by_status.verified;
-    if (!summary.consent_recorded) acc.cases_without_consent += 1;
+    if (!summary.notice_recorded) acc.cases_notice_not_shown += 1;
     if (summary.checklist_seeded && summary.outstanding_count === 0) acc.cases_ready += 1;
     acc.workspace_lines += summary.by_track.workspace.lines;
     acc.workspace_lines_open += summary.by_track.workspace.open;
@@ -609,26 +772,35 @@ async function checklistOverview(options = {}) {
   return { jurisdiction, cases: summaries, totals };
 }
 
-/** Everything the case screen needs in one read: the checklist, the set state, the consent. */
+/** Everything the case screen needs in one read: the checklist, the set state, the notice record. */
 async function caseChecklist(caseId) {
   const caseRow = await getCaseRow(caseId);
   if (!caseRow) throw new PreboardingItemError('Pre-boarding case not found', 404);
-  const [allItems, consent, reminders] = await Promise.all([
+  const [allItems, noticeAcknowledgements, reminders] = await Promise.all([
     listAllItems(caseId),
-    getConsent(caseId),
+    listNoticeAcknowledgements(caseId),
     listReminders(caseId),
   ]);
   return {
     case_id: caseRow.id,
     jurisdiction: caseRow.jurisdiction,
     document_set_active: isDocumentSetActive(caseRow.jurisdiction),
-    consent: consent || null,
+    // The notice the gate is about: its version (read from the file the server serves, never a
+    // literal), the per-document records, and the catalog itself — so a surface can say WHY an
+    // item is not collectible, and name the counsel question it waits on, instead of offering a
+    // control that would refuse. `bases` is data: nothing here is inferred by the client.
+    notice: {
+      version: privacyNotice.noticeVersion(),
+      instrument: NOTICE_INSTRUMENT,
+      acknowledgements: noticeAcknowledgements,
+      bases: NOTICE_BASES,
+    },
     reminders,
     // The summary counts both tracks (it carries by_track and the flag), so it is built from
     // every item on the case…
-    summary: caseSummary(caseRow, allItems, consent, reminders),
+    summary: caseSummary(caseRow, allItems, noticeAcknowledgements, reminders),
     // …while this list is the EMPLOYEE track's, because that is the panel it feeds: documents,
-    // the status machine's verbs and the PDPL consent gate. P2-4's provisioning lines have their
+    // the status machine's verbs and the notice-shown gate. P2-4's provisioning lines have their
     // own read (GET …/workspace) with its own shape and their own function grouping.
     items: allItems.filter((item) => (item.track || 'employee') === 'employee'),
   };
@@ -675,9 +847,13 @@ module.exports = {
   listAllItems,
   getItem,
   setItemStatus,
-  getConsent,
-  hasConsent,
-  recordConsent,
+  NOTICE_BASES,
+  NOTICE_INSTRUMENT,
+  noticeBasisFor,
+  isNoticeCollectible,
+  listNoticeAcknowledgements,
+  getNoticeAcknowledgement,
+  recordNoticeAcknowledgement,
   recordReminder,
   listReminders,
   checklistOverview,

@@ -330,16 +330,16 @@ describe('P2-4 · one item model, two tracks — and they are never merged', () 
       'the employee track records no owner, so none is named');
   });
 
-  test('the PDPL consent gate stays on documents: a provisioning line is not gated by it', async () => {
+  test('the notice-shown gate stays on documents: a provisioning line is not gated by it', async () => {
     const row = await openCase();
-    // No consent record exists on this case. A document is asked for, then arrives — and the
-    // arrival is what the gate refuses, exactly as it did before P2-4.
-    assert.strictEqual(await items.hasConsent(row.id), false);
+    // The notice has not been shown for anything on this case. A document is asked for, then
+    // arrives — and the arrival is what the gate refuses, exactly as it did before P2-4.
+    assert.strictEqual(await items.getNoticeAcknowledgement(row.id, 'passport'), null);
     await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'requested', actor: 'hr' });
     await assert.rejects(
       () => items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'received', actor: 'hr' }),
-      (err) => err.status === 428 && /PDPL consent/.test(err.message),
-      'a hire\'s document still cannot be collected before consent'
+      (err) => err.status === 428 && /privacy notice has not been shown/.test(err.message),
+      "a hire's document still cannot be collected before the notice is shown for it"
     );
     // The provisioning line walks the same four-state machine and is NOT gated: issuing a laptop
     // is not collecting the hire's personal data.

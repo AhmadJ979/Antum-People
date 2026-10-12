@@ -17,6 +17,7 @@ process.env.PRODUCT_DB_PATH = TEST_DB;
 const db = require('./db');
 const preboarding = require('./preboarding');
 const items = require('./preboarding-items');
+const privacyNotice = require('./privacy-notice');
 
 const acceptedOffer = (overrides = {}) => ({
   offer_reference: 'OFR-2026-101',
@@ -43,6 +44,15 @@ const countRows = async (table) => {
   const rows = await db.query(`SELECT COUNT(*) AS n FROM ${table}`);
   return rows[0].n;
 };
+
+/**
+ * Record that the privacy notice was shown for one document, the way the route does: a named
+ * actor, no version (the module reads it from the notice the server serves).
+ */
+const showNotice = (caseId, itemKey, recordedBy = 'hr-user', note) =>
+  items.recordNoticeAcknowledgement({
+    case_id: caseId, item_key: itemKey, recorded_by: recordedBy, note,
+  });
 
 after(() => {
   for (const suffix of ['', '-wal', '-shm', '-journal']) {
@@ -122,10 +132,7 @@ describe('P2-2 · every item carries an explicit status', () => {
 
   test('verified is terminal: nothing moves out of it', async () => {
     const row = await openCase({ offer_reference: 'OFR-2026-107' });
-    await items.recordConsent({
-      case_id: row.id, consent_type: 'pdpl_notice', lawful_basis: 'consent',
-      consent_version: 'v1', actor: 'hr-user',
-    });
+    await showNotice(row.id, 'passport');
     await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'requested' });
     await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'received' });
     await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'verified' });
@@ -138,10 +145,7 @@ describe('P2-2 · every item carries an explicit status', () => {
 
   test('a rejection sends a received item back to requested and clears the receipt', async () => {
     const row = await openCase({ offer_reference: 'OFR-2026-108' });
-    await items.recordConsent({
-      case_id: row.id, consent_type: 'pdpl_notice', lawful_basis: 'consent',
-      consent_version: 'v1', actor: 'hr-user',
-    });
+    await showNotice(row.id, 'emirates_id');
     await items.setItemStatus({ case_id: row.id, item_key: 'emirates_id', status: 'requested' });
     await items.setItemStatus({ case_id: row.id, item_key: 'emirates_id', status: 'received' });
 
@@ -172,14 +176,19 @@ describe('P2-2 · every item carries an explicit status', () => {
   });
 });
 
-describe('P2-2 · a document cannot be collected before the PDPL consent record exists', () => {
-  test('received is refused with 428 while no consent record exists', async () => {
-    const row = await openCase({ offer_reference: 'OFR-2026-110' });
+describe('P2-2 · a document cannot be collected before the privacy notice was shown for it', () => {
+  // The instrument is `notice_shown`, and the record is per document: it carries the basis the
+  // notice itself assigns that document. The gate is per item too — a case-level flag would open
+  // every document on the strength of one.
+
+  test('received is refused with 428 while the notice has not been shown for the item', async () => {
+    const row = await openCase({ offer_reference: 'OFR-2026-201' });
     await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'requested' });
 
     await assert.rejects(
       () => items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'received' }),
-      (err) => err.status === 428 && /cannot be collected before the PDPL consent record/.test(err.message)
+      (err) => err.status === 428
+        && /privacy notice has not been shown for Passport copy/.test(err.message)
     );
     // The refusal left the item where it was: nothing was collected.
     const unchanged = await items.getItem(row.id, 'passport');
@@ -188,66 +197,155 @@ describe('P2-2 · a document cannot be collected before the PDPL consent record 
   });
 
   test('verified is gated the same way, not only received', async () => {
-    const row = await openCase({ offer_reference: 'OFR-2026-111' });
+    const row = await openCase({ offer_reference: 'OFR-2026-202' });
     await assert.rejects(
       () => items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'verified' }),
       (err) => err.status === 409 || err.status === 428
     );
   });
 
-  test('recording consent opens the gate, and replaying it changes nothing', async () => {
-    const row = await openCase({ offer_reference: 'OFR-2026-112' });
+  test('the gate is per item: showing the notice for one document does not open another', async () => {
+    const row = await openCase({ offer_reference: 'OFR-2026-203' });
+    await showNotice(row.id, 'passport');
+
+    await items.setItemStatus({ case_id: row.id, item_key: 'bank_details', status: 'requested' });
+    await assert.rejects(
+      () => items.setItemStatus({ case_id: row.id, item_key: 'bank_details', status: 'received' }),
+      (err) => err.status === 428 && /has not been shown for Bank details/.test(err.message),
+      'a case-level record would have opened this item on the passport\'s strength'
+    );
+
+    // …while the document whose notice WAS shown collects normally, and is time-stamped.
     await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'requested' });
-
-    const first = await items.recordConsent({
-      case_id: row.id, consent_type: 'pdpl_notice', lawful_basis: 'consent',
-      consent_version: 'v1', actor: 'hr-user',
-    });
-    assert.strictEqual(first.created, true);
-
-    const consentRowsBefore = await countRows('preboarding_consents');
-    const replay = await items.recordConsent({
-      case_id: row.id, consent_type: 'pdpl_notice', lawful_basis: 'consent',
-      consent_version: 'v1', actor: 'hr-user',
-    });
-    assert.strictEqual(replay.created, false);
-    assert.strictEqual(replay.consent.id, first.consent.id);
-    assert.strictEqual(await countRows('preboarding_consents'), consentRowsBefore, 'the replay added no row');
-
-    const received = await items.setItemStatus({
+    await items.setItemStatus({
       case_id: row.id, item_key: 'passport', status: 'received',
       document_reference: 'passport-scan.pdf',
     });
+    const received = await items.getItem(row.id, 'passport');
     assert.strictEqual(received.status, 'received');
     assert.ok(received.received_at);
   });
 
-  test('consent requires its own fields and a real case', async () => {
-    const row = await openCase({ offer_reference: 'OFR-2026-113' });
-    await assert.rejects(
-      () => items.recordConsent({ case_id: row.id, consent_type: 'pdpl_notice', lawful_basis: 'consent' }),
-      (err) => err.status === 400 && /consent_version is required/.test(err.message)
+  test('the record carries the notice\'s own basis per document, its version, and a named actor', async () => {
+    const row = await openCase({ offer_reference: 'OFR-2026-204' });
+    const passport = await showNotice(row.id, 'passport', 'Aisha Al-Mansoori', 'id check at handover');
+    const bank = await showNotice(row.id, 'bank_details', 'Aisha Al-Mansoori');
+    await showNotice(row.id, 'emirates_id', 'Aisha Al-Mansoori');
+
+    assert.strictEqual(passport.created, true);
+    assert.strictEqual(passport.acknowledgement.instrument, 'notice_shown',
+      'the instrument says the notice was shown — this record is not a consent record');
+    assert.strictEqual(passport.acknowledgement.lawful_basis, 'Legal obligation');
+    assert.strictEqual(
+      bank.acknowledgement.lawful_basis,
+      'Performance of the employment contract / contractual necessity',
+      'the basis is the notice\'s per-document value, not one value repeated across the case'
     );
-    await assert.rejects(
-      () => items.recordConsent({
-        case_id: randomUUID(), consent_type: 'pdpl_notice', lawful_basis: 'consent', consent_version: 'v1',
-      }),
-      (err) => err.status === 404
-    );
+    assert.strictEqual(passport.acknowledgement.recorded_by, 'Aisha Al-Mansoori');
+    assert.strictEqual(passport.acknowledgement.item_label, 'Passport copy');
+    assert.strictEqual(passport.acknowledgement.jurisdiction, 'AE');
+    assert.strictEqual(passport.acknowledgement.method, 'in_product_record',
+      'an in-product record, not an e-signature');
+    // The version is read from the notice the server serves and is never taken from the caller, so
+    // no caller can state a version the hire was never shown.
+    assert.strictEqual(passport.acknowledgement.notice_version, privacyNotice.noticeVersion());
+    assert.ok(/^v[0-9]/.test(passport.acknowledgement.notice_version));
+    assert.strictEqual((await items.listNoticeAcknowledgements(row.id)).length, 3);
   });
 
-  test('consent is per case: one case cannot collect on another case\'s record', async () => {
-    const consented = await openCase({ offer_reference: 'OFR-2026-114' });
-    const other = await openCase({ offer_reference: 'OFR-2026-115' });
-    await items.recordConsent({
-      case_id: consented.id, consent_type: 'pdpl_notice', lawful_basis: 'consent',
-      consent_version: 'v1', actor: 'hr-user',
+  test('an unnamed actor is refused: the record must name who showed the notice', async () => {
+    const row = await openCase({ offer_reference: 'OFR-2026-205' });
+    for (const actor of [undefined, null, '', '   ']) {
+      await assert.rejects(
+        () => items.recordNoticeAcknowledgement({
+          case_id: row.id, item_key: 'passport', recorded_by: actor,
+        }),
+        (err) => err.status === 400 && /recorded_by is required/.test(err.message),
+        `recorded_by=${JSON.stringify(actor)} must not be accepted`
+      );
+    }
+    assert.strictEqual((await items.listNoticeAcknowledgements(row.id)).length, 0,
+      'the refusals wrote nothing');
+  });
+
+  test('replaying a record changes nothing: the timestamp is the one first written', async () => {
+    const row = await openCase({ offer_reference: 'OFR-2026-206' });
+    const first = await showNotice(row.id, 'passport', 'Aisha Al-Mansoori');
+    const replay = await showNotice(row.id, 'passport', 'Someone Else');
+    assert.strictEqual(replay.created, false);
+    assert.strictEqual(replay.acknowledgement.id, first.acknowledgement.id);
+    assert.strictEqual(replay.acknowledgement.recorded_by, 'Aisha Al-Mansoori');
+    assert.strictEqual((await items.listNoticeAcknowledgements(row.id)).length, 1);
+  });
+
+  test('the two items the notice assigns no basis to cannot be recorded, and name their question', async () => {
+    const row = await openCase({ offer_reference: 'OFR-2026-207' });
+    for (const itemKey of ['education_certificate', 'experience_certificate']) {
+      await assert.rejects(
+        () => showNotice(row.id, itemKey),
+        (err) => err.status === 409
+          && /no purpose row for qualifications/.test(err.message)
+          && /pending counsel Q1/.test(err.message),
+        `${itemKey}: the notice assigns no basis, so no basis may be written for it`
+      );
+    }
+    await assert.rejects(
+      () => showNotice(row.id, 'emergency_contact'),
+      (err) => err.status === 409
+        && /third person/.test(err.message)
+        && /pending counsel Q5/.test(err.message),
+      "the emergency contact is a third person's data and the notice assigns no basis for it"
+    );
+    assert.strictEqual((await items.listNoticeAcknowledgements(row.id)).length, 0);
+  });
+
+  test('the gate refuses a document the notice assigns no basis to, with its own reason', async () => {
+    const row = await openCase({ offer_reference: 'OFR-2026-208' });
+    // Asking for a document is not collecting it: the gate sits on collection, so this succeeds —
+    // which is exactly why the screen has to say the item cannot be collected.
+    await items.setItemStatus({
+      case_id: row.id, item_key: 'education_certificate', status: 'requested',
     });
+    await assert.rejects(
+      () => items.setItemStatus({
+        case_id: row.id, item_key: 'education_certificate', status: 'received',
+      }),
+      (err) => err.status === 409 && /cannot be collected in this release/.test(err.message),
+      'a 428 would be wrong here: there is nothing HR could show to open this item'
+    );
+    const still = await items.getItem(row.id, 'education_certificate');
+    assert.strictEqual(still.status, 'requested');
+  });
+
+  test("the record is per case: one case cannot collect on another case's record", async () => {
+    const shown = await openCase({ offer_reference: 'OFR-2026-209' });
+    const other = await openCase({ offer_reference: 'OFR-2026-210' });
+    await showNotice(shown.id, 'passport');
 
     await items.setItemStatus({ case_id: other.id, item_key: 'passport', status: 'requested' });
     await assert.rejects(
       () => items.setItemStatus({ case_id: other.id, item_key: 'passport', status: 'received' }),
       (err) => err.status === 428
+    );
+  });
+
+  test('an unknown case or item is refused before any rule about the notice', async () => {
+    const row = await openCase({ offer_reference: 'OFR-2026-211' });
+    await assert.rejects(
+      () => items.recordNoticeAcknowledgement({
+        case_id: randomUUID(), item_key: 'passport', recorded_by: 'hr',
+      }),
+      (err) => err.status === 404 && /case not found/.test(err.message)
+    );
+    await assert.rejects(
+      () => items.recordNoticeAcknowledgement({
+        case_id: row.id, item_key: 'nope', recorded_by: 'hr',
+      }),
+      (err) => err.status === 404
+    );
+    await assert.rejects(
+      () => items.recordNoticeAcknowledgement({ case_id: row.id, recorded_by: 'hr' }),
+      (err) => err.status === 400 && /item_key is required/.test(err.message)
     );
   });
 });
@@ -281,15 +379,18 @@ describe('P2-2 · HR sees the incomplete items from one list', () => {
       'the per-status counts add up to the items on the case'
     );
     assert.strictEqual(typeof withOutstanding.days_to_start, 'number');
-    assert.strictEqual(typeof withOutstanding.consent_recorded, 'boolean');
+    assert.strictEqual(typeof withOutstanding.notice_recorded, 'boolean');
+    assert.strictEqual(typeof withOutstanding.notice_version, 'string');
+    assert.strictEqual(
+      withOutstanding.notice_items_collectible + withOutstanding.notice_items_no_basis,
+      withOutstanding.items_total,
+      'every employee-track item is either covered by the notice or has no basis at all'
+    );
   });
 
   test('a collected item leaves the outstanding list, and the totals follow', async () => {
     const row = await openCase({ offer_reference: 'OFR-2026-117' });
-    await items.recordConsent({
-      case_id: row.id, consent_type: 'pdpl_notice', lawful_basis: 'consent',
-      consent_version: 'v1', actor: 'hr-user',
-    });
+    await showNotice(row.id, 'passport');
     const before = (await items.checklistOverview()).cases.find((c) => c.case_id === row.id);
     assert.strictEqual(before.outstanding_count, before.items_total);
 
@@ -303,7 +404,7 @@ describe('P2-2 · HR sees the incomplete items from one list', () => {
     assert.ok(!after.outstanding.some((item) => item.item_key === 'passport'));
   });
 
-  test('the roll-up filters by jurisdiction and reports the consent gap', async () => {
+  test('the roll-up filters by jurisdiction and reports the notice gap', async () => {
     const ksa = await items.checklistOverview({ jurisdiction: 'SA' });
     assert.ok(ksa.cases.length >= 1);
     assert.ok(ksa.cases.every((row) => row.jurisdiction === 'SA'));
@@ -312,7 +413,10 @@ describe('P2-2 · HR sees the incomplete items from one list', () => {
 
     const ae = await items.checklistOverview({ jurisdiction: 'AE' });
     assert.ok(ae.cases.every((row) => row.jurisdiction === 'AE'));
-    assert.ok(ae.totals.cases_without_consent >= 1, 'cases still missing a consent record are counted');
+    assert.ok(
+      ae.totals.cases_notice_not_shown >= 1,
+      'cases where the notice has not been shown for a single document are counted'
+    );
   });
 });
 
@@ -334,14 +438,27 @@ describe('P2-2 · reminders are recorded, not claimed as delivered', () => {
 
   test('a reminder for a case with nothing outstanding is refused', async () => {
     const row = await openCase({ offer_reference: 'OFR-2026-119' });
-    await items.recordConsent({
-      case_id: row.id, consent_type: 'pdpl_notice', lawful_basis: 'consent',
-      consent_version: 'v1', actor: 'hr-user',
-    });
+    // Every collectible document goes through the product's own path, notice first.
     for (const item of await items.listItems(row.id)) {
+      if (!items.isNoticeCollectible(item.item_key)) continue;
+      await showNotice(row.id, item.item_key);
       await items.setItemStatus({ case_id: row.id, item_key: item.item_key, status: 'requested' });
       await items.setItemStatus({ case_id: row.id, item_key: item.item_key, status: 'received' });
     }
+    // The items the notice assigns no basis to cannot be collected by ANY path in this release, so
+    // this test writes their statuses directly to reach the state it is about — HR with nothing
+    // left to chase. The gate that refuses them is the subject of its own test above; invoking it
+    // here would only make this test about that one.
+    for (const item of await items.listItems(row.id)) {
+      if (items.isNoticeCollectible(item.item_key)) continue;
+      await db.query(`UPDATE preboarding_items SET status = 'verified'
+        WHERE case_id = ${db.escapeString(row.id)} AND item_key = ${db.escapeString(item.item_key)}`);
+    }
+    assert.strictEqual(
+      (await items.checklistOverview()).cases.find((c) => c.case_id === row.id).outstanding_count,
+      0,
+      'nothing is left outstanding, which is the state the refusal is about'
+    );
     await assert.rejects(
       () => items.recordReminder({ case_id: row.id }),
       (err) => err.status === 400 && /nothing to remind about/.test(err.message)
@@ -386,12 +503,33 @@ describe('P2-2 · what the audit trail records, and what it never records', () =
     assert.ok(!logs[0].new_values.includes('iban-letter.pdf'), 'the document reference is not logged');
   });
 
+  test('a notice acknowledgement is audited with its basis and version, never its note body', async () => {
+    const row = await openCase({ offer_reference: 'OFR-2026-216' });
+    await items.recordNoticeAcknowledgement({
+      case_id: row.id, item_key: 'passport', recorded_by: 'hr-user',
+      note: 'shown at the desk; the hire asked about WPS reporting',
+    });
+    const logs = await db.query(
+      `SELECT * FROM audit_logs WHERE entity_type = 'preboarding_notice_acknowledgement'
+        AND entity_id = ${db.escapeString(row.id)}`
+    );
+    assert.strictEqual(logs.length, 1);
+    assert.deepStrictEqual(JSON.parse(logs[0].new_values), {
+      item_key: 'passport',
+      instrument: 'notice_shown',
+      lawful_basis: 'Legal obligation',
+      notice_version: privacyNotice.noticeVersion(),
+    });
+    assert.ok(!logs[0].new_values.includes('WPS'), 'the note body is not logged');
+  });
+
   test('the checklist lives in the product database, and nowhere else', async () => {
     const rows = await db.query(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'preboarding_%' ORDER BY name"
     );
     const names = rows.map((row) => row.name);
-    for (const table of ['preboarding_cases', 'preboarding_items', 'preboarding_reminders', 'preboarding_consents']) {
+    for (const table of ['preboarding_cases', 'preboarding_items', 'preboarding_reminders',
+      'preboarding_consents', 'preboarding_notice_acknowledgements']) {
       assert.ok(names.includes(table), `${table} is in the product database`);
     }
   });

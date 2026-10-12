@@ -7,6 +7,7 @@ const auth = require('./auth');
 const eosb = require('./eosb');
 const preboarding = require('./preboarding');
 const preboardingItems = require('./preboarding-items');
+const privacyNotice = require('./privacy-notice');
 const preboardingWorkspace = require('./preboarding-workspace');
 const preboardingPackage = require('./preboarding-package');
 const { createFlagWatcher } = require('./preboarding-flag-scheduler');
@@ -337,6 +338,24 @@ app.post('/api/compliance/calculate-eosb', (req, res) => {
   res.json({ amount });
 });
 
+// The privacy notice the product serves. One definition, read by the route below and by the
+// pre-boarding acknowledgement record, so a record's version cannot disagree with the notice a
+// client can download (server/privacy-notice.js).
+app.get('/api/compliance/notice', async (req, res) => {
+  try {
+    // No substitution: this is the notice as published — the document the hire is shown — not a
+    // per-employee rendering. A pre-boarding case has no employee row to render against, which is
+    // exactly why the gate needs this read.
+    res.json({
+      version: privacyNotice.noticeVersion(),
+      content: privacyNotice.readNotice(),
+      path: privacyNotice.noticePath(),
+    });
+  } catch (err) {
+    console.error('[Compliance] Failed to read the privacy notice:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 app.post('/api/compliance/consent', async (req, res) => {
   const { employee_id, consent_type, lawful_basis, version } = req.body;
   const id = generateId();
@@ -388,7 +407,12 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
       current_date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
     };
 
-    const templatePath = path.join('/home/team/shared/templates', `${templateName}.md`);
+    // The notice resolves through the same module the acknowledgement record reads, so the template
+    // a client downloads and the version a record names can never come from two different files.
+    // Every other template keeps the shared directory it has always used.
+    const templatePath = templateName === privacyNotice.NOTICE_TEMPLATE
+      ? privacyNotice.noticePath()
+      : path.join('/home/team/shared/templates', `${templateName}.md`);
     if (!fs.existsSync(templatePath)) return res.status(404).json({ error: 'Template not found' });
     const templateContent = fs.readFileSync(templatePath, 'utf8');
     const rendered = compliance.renderTemplate(templateContent, templateData);
@@ -710,26 +734,56 @@ app.post('/api/preboarding/cases/:id/reminders', async (req, res) => {
   }
 });
 
-app.get('/api/preboarding/cases/:id/consent', async (req, res) => {
+// The record the collection gate reads: that the privacy notice was SHOWN, per document. The two
+// consent routes that stood here are removed rather than reworded — `consent` is the instrument
+// option B replaces, and leaving a writer in place would keep the defect reachable while the screen
+// said something else. Nothing else in the product called them.
+//
+// `item_key` in the body names one document. With no `item_key`, the caller means "the notice was
+// shown for this case" — the notice is one document covering all of its purposes, so the act is
+// one act — and every collectible document without a record yet is recorded through the SAME module
+// function, one row each. The record stays per document either way, because the lawful basis it
+// carries is per document; a per-case row could only state one of them.
+//
+// The actor is the signed-in user, passed explicitly: the module refuses a record that does not
+// name a person, so this route cannot write the literal 'system' its predecessor wrote.
+app.post('/api/preboarding/cases/:id/notice-acknowledgements', async (req, res) => {
   try {
-    res.json({ consent: await preboardingItems.getConsent(req.params.id) });
-  } catch (err) {
-    sendItemError(res, err, 'Failed to read the consent record');
-  }
-});
-
-app.post('/api/preboarding/cases/:id/consent', async (req, res) => {
-  try {
-    const result = await preboardingItems.recordConsent({
-      case_id: req.params.id,
-      consent_type: req.body && req.body.consent_type,
-      lawful_basis: req.body && req.body.lawful_basis,
-      consent_version: req.body && req.body.consent_version,
-      actor: (req.user && req.user.username) || 'system',
+    const caseId = req.params.id;
+    const recordedBy = (req.user && req.user.username) || null;
+    const requested = req.body && req.body.item_key;
+    let targets;
+    if (requested) {
+      targets = [requested];
+    } else {
+      const checklist = await preboardingItems.caseChecklist(caseId);
+      targets = checklist.items
+        .filter((item) => preboardingItems.isNoticeCollectible(item.item_key))
+        .map((item) => item.item_key);
+    }
+    const results = [];
+    for (const itemKey of targets) {
+      results.push(await preboardingItems.recordNoticeAcknowledgement({
+        case_id: caseId,
+        item_key: itemKey,
+        recorded_by: recordedBy,
+        note: req.body && req.body.note,
+      }));
+    }
+    const created = results.filter((result) => result.created).length;
+    res.status(created > 0 ? 201 : 200).json({
+      acknowledgements: results.map((result) => result.acknowledgement),
+      created,
+      considered: results.length,
+      // The record's own version, echoed from the row that was written rather than from the file
+      // read: what the caller is told is what the record says.
+      notice_version: results.length ? results[0].acknowledgement.notice_version : null,
+      // The case re-read, the way the pre-reading acknowledgement route returns its package: the
+      // caller renders the state the server holds instead of assuming the write landed.
+      checklist: await preboardingItems.caseChecklist(caseId),
     });
-    res.status(result.created ? 201 : 200).json(result);
   } catch (err) {
-    sendItemError(res, err, 'Failed to record PDPL consent');
+    sendItemError(res, err, 'Failed to record that the privacy notice was shown');
   }
 });
 

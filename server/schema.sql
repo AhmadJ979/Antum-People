@@ -251,10 +251,20 @@ CREATE TABLE IF NOT EXISTS preboarding_reminders (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
--- The PDPL consent record the collection gate reads. P2-6 owns the consent lifecycle (notice
--- versioning, withdrawal, the Arabic-first notice, the hire-facing capture); P2-2 ships only
--- what the gate needs — does a consent record exist for this case, and on what basis. Case
--- scoped, because a pre-boarding hire has no employee row yet.
+-- RETIRED 2026-10-12 — kept, not dropped, and read by nothing.
+--
+-- This was the case-level PDPL consent record the document collection gate read. It is retired
+-- because it recorded the wrong instrument: `consent` is the one basis a person can withdraw, and
+-- the notice the hire is actually shown assigns consent to biometrics and sensitive data alone —
+-- none of which are in the pre-boarding document set. It is also structurally incapable of the
+-- replacement: one row per case cannot carry seven different lawful bases.
+--
+-- `preboarding_notice_acknowledgements` below is what the gate reads now. No code path writes or
+-- reads this table any more (the writers were removed with the decision, so the old record cannot
+-- be recreated), and the seed clears any row a previous deploy left behind rather than leaving a
+-- stale row that claims a hire consented to something nobody asked them about. The table itself is
+-- left in place because dropping it is a destructive migration with no benefit this cycle; nothing
+-- in the product depends on its existence.
 CREATE TABLE IF NOT EXISTS preboarding_consents (
   id TEXT PRIMARY KEY,
   case_id TEXT NOT NULL UNIQUE,
@@ -265,6 +275,48 @@ CREATE TABLE IF NOT EXISTS preboarding_consents (
   recorded_by TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+-- The record the document collection gate reads: that the privacy notice was SHOWN, one row per
+-- document, naming the person who showed it, against the version of the notice actually shown.
+--
+-- Why one row per document rather than one per case, which is the whole point of the shape:
+--   * the lawful basis differs per document (the notice's purpose table assigns legal obligation
+--     to the passport/visa/Emirates ID, contractual necessity to the bank details), so a case-level
+--     basis could only ever be one of them, stated as if it covered all seven;
+--   * the gate is satisfied per item — "may this document be collected?" is a question about this
+--     document, and a case-level flag would open the whole checklist on the strength of one;
+--   * `instrument` says what this record IS, and the CHECK constraint makes the table capable of
+--     holding nothing else. Option B exists because a consent record and a notice-shown record are
+--     different instruments; the schema is where that separateness has to be structural, so a
+--     future writer cannot store one as the other.
+--
+-- `recorded_by` is NOT NULL: the record's evidential value is that a person put the notice in front
+-- of the hire, so a row with no named person must not be constructible (there is no hire login in
+-- this release — portal identity is decision 14, open). `method` is an in-product record, never a
+-- signature; the product cannot obtain an e-signature, so a row claiming one must not be writable.
+-- `lawful_basis` is NOT NULL: an item the notice assigns no basis to is not recordable at all
+-- (server/preboarding-items.js refuses it by name), so "no basis" is a refusal rather than a row
+-- holding a NULL that a reader could mistake for "consent not needed".
+-- UNIQUE (case_id, item_key) makes recording idempotent: a replay returns the existing row instead
+-- of creating a second one, so the timestamp HR reads is the one first written.
+CREATE TABLE IF NOT EXISTS preboarding_notice_acknowledgements (
+  id TEXT PRIMARY KEY,
+  case_id TEXT NOT NULL,
+  item_key TEXT NOT NULL,
+  item_label TEXT NOT NULL,
+  jurisdiction TEXT NOT NULL,
+  instrument TEXT NOT NULL CHECK (instrument = 'notice_shown'),
+  lawful_basis TEXT NOT NULL,
+  notice_version TEXT NOT NULL,
+  recorded_by TEXT NOT NULL,
+  method TEXT NOT NULL DEFAULT 'in_product_record',
+  note TEXT,
+  acknowledged_at TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (case_id, item_key)
+);
+CREATE INDEX IF NOT EXISTS idx_preboarding_notice_ack_case
+  ON preboarding_notice_acknowledgements (case_id);
 
 -- -------------------------------------------------------------
 -- LAYER 2 — PRE-READING PACKAGE (P2-3: the acknowledgement record)
