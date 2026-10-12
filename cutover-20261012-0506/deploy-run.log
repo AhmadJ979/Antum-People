@@ -1,0 +1,59 @@
+=== cutover 2026-10-12T05:06:55+00:00 ===
+--- 1. fetch and move the tree to origin/main ---
+From https://github.com/AhmadJ979/Antum-People
+ * branch            main       -> FETCH_HEAD
+HEAD is now at b54412d Merge pull request #132 from AhmadJ979/docs/overview-totals-rule
+tree now: b54412d Merge pull request #132 from AhmadJ979/docs/overview-totals-rule
+tree content check OK
+--- 2. build the client (must succeed before anything is restarted) ---
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-Dt2oLspq.js   270.96 kB │ gzip: 75.59 kB
+
+[32m✓ built in 431ms[39m
+client build OK
+--- 3. re-seed the demo dataset against the product database ---
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-11) — start date already passed, items still open; items: 7 not_started
+Upserting demo admin user...
+Seeding completed successfully.
+seed OK
+--- 4. restart the server on port 3000 (pinned; host exports PORT=80) ---
+stopping pid 380
+port 3000 held by a foreign process (pid 1558: node /home/team/shared/site/node_modules/.bin/vite dev) — evicting and re-claiming
+port 3000 held by the product server (pid 1610)
+[preboarding-flag] c315251e-18e3-4460-b84e-2037ad3ae28f — This case reached the 48-hour mark while the app was not running (noticed 77.12h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed.
+--- 5. verify the live demo end to end ---
+public status/title: 200 <title>Antum People</title>
+demo login token chars: 201 (expect >100)
+bad-password path: 401 (expect 401)
+roster: 200
+  employees: 13 | first id: demo-emp-omar
+pre-boarding demo state as the live API serves it (expect three distinct flag states):
+  totals: {"cases": 3, "cases_provisioned": 0, "cases_ready": 0, "cases_without_consent": 3, "items": 21, "items_outstanding": 21, "items_received": 0, "items_verified": 0, "workspace_lines": 43, "workspace_lines_open": 43}
+   start 2026-10-11 | started | tone rose | open 21 | lines emp/ws 7 14
+   start 2026-10-13 | inside_48_hours | tone amber | open 21 | lines emp/ws 7 14
+   start 2026-10-26 | clear | tone slate | open 22 | lines emp/ws 7 15
+  distinct flag states: ['clear', 'inside_48_hours', 'started'] (expect 3: clear, inside_48_hours, started)
+KSA offboarding checklist as the live API serves it:
+  tasks: 10
+    1 Hardware Return
+    2 Access Revocation
+    3 Notice Period Verification
+    4 EOSB Calculation (KSA)
+    5 GOSI De-registration
+    6 Iqama Cancellation/Transfer
+    7 Final Exit Visa (or re-entry, if transferring)
+    8 Service Certificate Issuance
+    9 Annual Leave Encashment
+    10 Final Settlement Payment
+consent-date field for the departing employee:
+   ('demo-emp-sarah', 1, '2026-09-23')
+settlement statement: rendered EOSB vs the employee record (must match):
+  record eosb_accrued: 19824.78 | rendered: 19824.78 | match: True
+  unfilled [brackets]: NONE
+  net payable: 32824.78
+--- 6. re-arm the watchdog from the tree we just deployed ---
+watchdog pid: 1707
+deployed commit: b54412d Merge pull request #132 from AhmadJ979/docs/overview-totals-rule
+=== cutover finished 2026-10-12T05:07:21+00:00 — run-stamped evidence: /tmp/cutover-20261012-050655-evidence.txt | build: /tmp/cutover-20261012-050655-build.log | seed: /tmp/cutover-20261012-050655-seed.log ===
