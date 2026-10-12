@@ -7,6 +7,12 @@ guard. **The files were copied out of `/tmp` before anything else was written**,
 either re-derived in my own session (marked *measured here*, with its read time) or quoted as the run's own
 output (marked *the run's*).
 
+**Revised after review, 2026-10-12.** The first draft of this record said the moment-by-moment behaviour
+inside the reboot window was never sampled. **It was wrong, and the correction is stated rather than slipped
+in:** the lead sampled the public URL *inside* the window at **05:06:18Z**, that capture is filed here as
+`placeholder-050618.html`, and the paragraph that claimed otherwise is corrected **in place** — see *The
+finding*.
+
 ## Why a cutover was owed — the team's test, applied
 
 The test: diff the served tree against `origin/main` and count the files under `client/` or `server/`.
@@ -29,7 +35,7 @@ by code rather than by documents.
 | 1. fetch + move the tree | `HEAD is now at b54412d` — "Merge pull request #132 from AhmadJ979/docs/overview-totals-rule"; **tree content check OK** |
 | 2. client build | **OK** — `tsc -b && vite build`, `dist/assets/index-Dt2oLspq.js` (vite prints `270.96 kB`, gzip 75.59 kB, built in 431ms) |
 | 3. re-seed the demo dataset | **OK** — `FORCE CLEAR`, then all three cases re-created |
-| 4. restart on port 3000 | old pid **380** stopped; **a foreign process held the port and was evicted** (see the finding); **product pid 1610** (`node index.js`) took it |
+| 4. restart on port 3000 | pid **380** stopped — the finding identifies it as the platform's placeholder `vite dev` (cwd `/home/team/shared/site`), **not** the product; then **a foreign process held the port and was evicted** — a *different* pid, **1558**, same `vite dev` path; **product pid 1610** (`node index.js`) took it |
 | 5. verify the live demo end to end | **all green** — battery below |
 | 6. re-arm the watchdog | **watchdog pid 1707** |
 
@@ -129,31 +135,74 @@ This is the fix for the 10:46/13:46 mix-up, where three same-named files made on
 another's. Here the names cannot collide, and the evidence file's **own first line** confirms it:
 `=== cutover 2026-10-12T05:06:55+00:00 ===` (rule 28 — identity from the artifact's content).
 
-**One artifact's name would have misled me, so I checked rather than cited:** `/tmp/cutover-page` (filed in
-`extra/`) is *not* the placeholder page — it references `/assets/index-Dt2oLspq.js`, i.e. it is the **product's
-own served HTML**. The placeholder's evidence is instead the run's step-4 line, below.
+**One artifact's name would have misled me, so I checked rather than cited:** `/tmp/cutover-page` (filed here
+as `extra/served-page.html`) is *not* the placeholder page — it references `/assets/index-Dt2oLspq.js`, i.e. it
+is the **product's own served HTML**. It is also **one artifact under three `/tmp` names** — `cutover-page`
+(05:07:14.677Z) and `pub.html` (05:07:30.141Z), both md5 `e66548f9077f59117bcd2852db4059d9` (measured here) —
+fetched twice and filed once. The placeholder's evidence used to be the run's step-4 line alone; as of this
+revision it is that line **and** the two in-window captures in the finding below.
 
 ## The finding — the failure mode, stated as one
 
 **The host rebooted at 05:03:04Z and took the product and its guard with it. The platform's supervised
 placeholder (`vite dev` from `/home/team/shared/site`) claimed port 3000, so from the reboot until the
 product's first listen at 05:07:11.565Z the public URL answered 200 with a page that was not the product —
-the wrong site, not an error.**
+the wrong site, not an error.** **One point of that interval is sampled rather than inferred** — the lead's
+05:06:18Z capture, below — and the paragraphs that follow draw the sampled/inferred line precisely, because
+the first draft of this record drew it in the wrong place.
 
 What is measured, link by link:
 
 - the reboot: kernel-derived readings in the paragraph above, carrying a **−2m20s** correction to reach
   05:03:04Z;
-- the product and guard being gone: the run stopped **pid 380** and re-armed the guard at 05:07:15, and the
-  guard's log shows the 2026-10-09 arm (pid 17156) ending with no successor until this run;
+- the product and guard being gone: the run **had to take port 3000 from its holder** — the pid it stopped,
+  **380**, is identified below as the *placeholder*, not the product — it re-armed the guard at 05:07:15, and
+  the guard's log shows the 2026-10-09 arm (pid 17156) ending with no successor until this run;
 - **the placeholder holding port 3000**, verbatim from the run: *"port 3000 held by a foreign process (pid
   1558: node /home/team/shared/site/node_modules/.bin/vite dev) — evicting and re-claiming"*;
 - the product taking it back: `/proc/1610` created 05:07:11.565Z, and the run's window closes 05:07:21.
 
-**The one link nobody sampled is what the URL returned during those four minutes** — the run's eviction line
-proves the placeholder held the port at 05:07, and the product was down before that, but no request was
-captured from the interval itself. Stated because the difference matters: **a visitor would have seen the
-wrong site rather than a failure**, which is worse than an outage for anyone who happened to look.
+**The window is sampled — and the earlier draft of this record said it was not.** The first draft read *"the
+one link nobody sampled is what the URL returned during those four minutes."* **That was false.** The lead
+sampled the public URL **inside** the window, at **05:06:18Z**: `curl -s --noproxy '*' -o /tmp/now.html -w
+'%{http_code}'` against the public URL → **200**. The bytes are filed here as **`placeholder-050618.html`** —
+**2,978 bytes**, md5 **`431c26a2f646237006ff063e96c93ea2`**, the file's own write time **05:06:25.349Z** (the
+capture is stamped 05:06:18Z; both times are kept rather than one chosen). **Its identity comes from those
+bytes, not from its name** (rule 28 — `now.html` says nothing): `<title>My site</title>`, the placeholder's own
+sentence *"Your site will appear here"*, the dev stylesheets `/src/styles/app.css` and
+`/@tanstack-start/styles.css?routes=__root__%2C%2F`, the dev client entry
+`/@id/virtual:tanstack-start-dev-client-entry` — and **zero occurrences of `assets/index-*.js` and zero
+occurrences of the string `Antum`** anywhere in the file. So a visitor at 05:06:18Z got the platform's
+placeholder: not our product, and not an error.
+**A second sample, on the local side, 16 seconds later:** `/tmp/local.html` — **2,641 bytes**, md5
+**`5e43ebaa7ee5e46fa81e187c903c45a0`**, write time **05:06:34.673Z** — carries the same identity (same title,
+same sentence, **0** product-asset references, **0** `Antum`) and, unlike the public capture, **no
+platform-injected `/__engine/events` script**, which is what a fetch straight off the local socket looks like.
+It is **not** byte-identical to the public capture (2,978 vs 2,641 — and the difference is *not* one appended
+block: measured, not assumed), so the two are recorded as **the same page seen from two sides**, never as one
+capture. Filed as `placeholder-050634-local.html`. **Its honest limit:** the command that produced it is not
+recorded, so *which* address it came from is inference; what its bytes prove is that the placeholder page was
+being served on this host at 05:06:34Z.
+**What is sampled, and what is still inference.** Sampled: **05:06:18Z** (public) and **05:06:34Z** (local).
+The far bracket is the run's own step 4, which evicted a foreign `vite dev` from port 3000 at ~05:06:5x, and
+the product's first listen, `/proc/1610` created **05:07:11.565Z**. **Everything from the reboot (05:03:04Z)
+to 05:06:18Z is still inferred** — two samples inside a four-minute window are not a sampling *of* it — and
+this record says so rather than upgrading two points into a continuous measurement.
+**Who held port 3000 at 05:06:18Z — two pids, one path, and the difference is stated rather than smoothed.**
+The lead's identification is **pid 380**, `node /home/team/shared/site/node_modules/.bin/vite dev`, cwd
+`/home/team/shared/site` — and pid 380 **is** the pid the run's step 4 opens by stopping (*"stopping pid 380"*,
+line 22; the log itself gives no identity for it). But the pid the run's **eviction** line names is a
+**different** one: **1558**, same `vite dev` path. The log therefore shows a `vite dev` stopped and a
+`vite dev` evicted inside one step; **whether the platform re-spawned the placeholder between 05:06:18Z and
+the eviction is inference, not a logged event.** That hazard is the same one the next paragraph records as
+still live.
+**The before/after pair, on one URL — the strongest single comparison in this record:**
+`placeholder-050618.html` (placeholder, *"My site"*, 05:06:18Z stamp / 05:06:25.349Z write, 2,978 B) and
+`extra/served-page.html` (product, *"Antum People"*, referencing `index-Dt2oLspq.js`, 799 B, fetched
+**05:07:14.677Z** and again 05:07:30.141Z) are **the same public URL's answer on either side of the cutover**,
+**49 s apart by the artifacts' own file times** (05:06:25.349Z → 05:07:14.677Z). That gap is measurable, and it
+is under a minute — the review note's "eight minutes" was an estimate, and the artifacts do not support it.
+What is measured is the pair's order, its gap, and its opposite content.
 
 **And it can happen again, which is the part worth carrying forward:** the platform restarted the placeholder
 anyway — **pid 1631**, `node /home/team/shared/site/node_modules/.bin/vite dev`, started ~05:09, alive at my
@@ -187,14 +236,19 @@ seed's dates, not any outage.**
 | `seed.log` | `/tmp/cutover-20261012-050655-seed.log` | 1,432 |
 | `pb-overview.json` | `/tmp/cutover-20261012-050655-pb-overview.json` | 14,614 |
 | `deploy-run.log` | `/tmp/deploy-run-1210.log` | 3,415 |
+| `placeholder-050618.html` | `/tmp/now.html` — **the lead's capture inside the window**, 05:06:18Z | 2,978 |
+| `placeholder-050634-local.html` | `/tmp/local.html` — the second in-window sample, local side | 2,641 |
 
 **The sources were copied, not moved**, so the running surface keeps its own copies until this merges.
 **`deploy-run.log` and `raw-evidence.txt` are byte-identical** (both md5 `bb5401129c8003b8dabc81026b9d4c8c`) —
 the evidence file *is* the script's stdout, so these are one artifact under two names, and it is recorded that
 way rather than presented as two independent captures.
 
-**`extra/` — three further artifacts of the same run, rescued for the same reason the five above were** (the
-row named five files; these were also in `/tmp` and would die with it, so they are filed rather than described):
+**The two captures of the window itself sit at the root rather than in `extra/`, because they are evidence
+for the finding, not spares:** `placeholder-050618.html` (the lead's, inside the window) and
+`placeholder-050634-local.html` (the local-side sample).
+**`extra/` — three further artifacts, rescued for the same reason the five run files above were** (the row
+named five files; these were also in `/tmp` and would die with it, so they are filed rather than described):
 
 | file | what it is |
 |---|---|
@@ -204,8 +258,13 @@ row named five files; these were also in `/tmp` and would die with it, so they a
 
 **Notes for the merge:** `*.log` is gitignored (`.gitignore`), so `git add -f` was used for the log files and
 the **staged list was read back** before committing (rule 27 — the gitignore has swallowed a record's own
-evidence before). `origin/main` has moved past the deployed tree since the run — see below — and this record
-is docs only: **no file under `client/` or `server/`**.
+evidence before). `origin/main` has moved past the deployed tree since the run — see below.
+**Scope of this revision, read off the staged list and not asserted:** **11 files — 8 at the root, 3 in
+`extra/`, and 0 under `client/` or `server/`.** That is **one more than the review note expected (10)**: the
+revision adds `placeholder-050618.html` as instructed, plus **`placeholder-050634-local.html`**, the second
+in-window sample, filed rather than described because `/tmp` is not durable on a host that rebooted without
+warning once already today. If the second capture is unwanted it is one `git rm` away and nothing else in the
+record depends on it.
 
 ## The one figure in this record that is already stale, and why it does not matter
 
