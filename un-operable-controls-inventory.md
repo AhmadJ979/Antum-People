@@ -174,3 +174,68 @@ So the next reader knows what the check does *not* excuse:
 
 Each fix will fail this check until the register entry is removed too, on purpose: the register is how the
 defect stays visible, so removing the code and the entry are one act.
+
+---
+
+## 7. The fourth instance (2026-10-12) — a state a user can enter and cannot leave
+
+Found on the live product by the designer; measured from the source, then observed over HTTP on a
+scratch instance (both, below). A **different class** from the three above: not "no caller", not "no opener", but **a control that leads somewhere the product will not
+let you leave.**
+
+| where | what it does | line read |
+|---|---|---|
+| `client/src/App.tsx:2115` | `Request` — **no condition at all** | `sed -n '2115,2119p' client/src/App.tsx` |
+| `client/src/App.tsx:2119` | `Mark received` — `disabled={!collectible || !ack}` | same read |
+| `server/preboarding-items.js` (`setItemStatus`) | the collect gate fires **only** for `COLLECTED_STATUSES` — `not_started → requested` is not gated | the `COLLECTED_STATUSES.indexOf(status) !== -1` branch |
+| `server/preboarding-items.js` (`NOTICE_BASES`) | `education_certificate`, `experience_certificate` (counsel **Q1**) and `emergency_contact` (**Q5**) are `basis: null, collectible: false` | the table, read as data by `parseNoticeBases()` |
+
+**The flow:** press `Request` on one of those three → the status call answers **200**; `Mark received` is
+disabled, so there is no next click; the item sits in `requested` forever and keeps counting in
+`items_outstanding`. The server refuses `received` with **409** and names the counsel question — the
+refusal is right, it just arrives one step too late.
+
+**New assertion (test 10).** `deadEndItems()` measures both guards and the notice table; the test asserts
+the dead-end set is **exactly** the registered set, that `Request` is still unguarded and `Mark received`
+still guarded, and that every no-basis item is registered — so a fourth one cannot dead-end silently.
+Green on the real tree (10 tests / 10 pass / 0 fail); **red under both injections** (C6, C7):
+`docs/evidence/un-operable-controls-2026-10-12/negative-controls-flow-2026-10-12.txt`.
+
+**Now measured over HTTP** (2026-10-12, after a first attempt died on my own probe's assumptions — both
+runs are on file). A scratch instance of `origin/main` `1dae076` (port 4720, its own database; the live
+product on 3000 was left alone and answered 200 before and after) reproduces the whole path raw:
+
+| step | request | answer |
+|---|---|---|
+| the seeded demo case | `GET /api/preboarding/cases/:id/checklist` | **7** employee items, the three no-basis ones among them |
+| a case the product opens | `POST /api/preboarding/cases` (accepted offer) | **201** — the same seven items |
+| press `Request` | `POST …/items/education_certificate/status {status:"requested"}` | **200** — the item becomes `requested` |
+| press `Mark received` | same route, `{status:"received"}` | **409** — "*cannot be collected in this release … (pending counsel Q1)*" |
+| after both calls | `GET …/checklist` | still `requested` — **entered, cannot leave** |
+| the roll-up | `GET /api/preboarding/checklist/overview?jurisdiction=AE` | `items_outstanding` **21 → 28** with the new case, and **still 28** through all three stranded requests |
+
+`experience_certificate` and `emergency_contact` behave identically (409 naming **Q1** and **Q5**).
+Transcript: `docs/evidence/un-operable-controls-2026-10-12/rig-instance-4-2026-10-12.txt`. The first,
+incomplete attempt stays on file at `rig-attempt-instance-4-2026-10-12.txt`, superseded by it.
+
+So the dead end is worse than "a refusal one step too late": **the item counts against the case
+permanently** — the roll-up never moves while it sits in `requested`, and no status the product accepts
+can clear it. It is reachable on the shipped demo, not only in a case a user creates.
+**Correction to my own method:** the first probe located its items by searching the payload recursively,
+and on two cases it landed on a shorter nested array — reporting four-item checklists where the answer is
+seven. The transcript reads the documented top-level `items` field, filtered to `track === 'employee'`.
+
+## 8. Dispositions — wire or remove, and what each costs
+
+| # | element | wire it — cost | remove it — cost | recommendation |
+|---|---------|----------------|------------------|----------------|
+| 1 | Exit modal | a placement + a copy pass + the `satisfaction_score` default (decision 16's list) | delete the modal, `POST /api/exit-interviews` and the `exit_interviews` read behind `exitsByReason` — the only producer of a shipped figure | **wire** |
+| 2 | `POST /api/compliance/consent` | nothing to build: 15(b)'s notice-shown record carries basis, version and actor; retire the boolean, re-point the tile | same edit — the instrument goes either way | **remove** (17) |
+| 3 | `GET /api/compliance/report` | build the screen it implies — the largest of the six | ~10 lines; nothing reads it | **owner's call** |
+| 4 | `GET /api/employees/:id` | a detail view nothing needs | ~14 lines; also the only callerless route that decrypts a national ID | **remove** |
+| 5 | `POST /api/compliance/calculate-eosb` | a calculator UI nobody asked for | ~9 lines; the engine keeps its tests | **remove** |
+| 6 | `GET /api/preboarding/cases/:id` | nothing needs it — the list carries the case | ~20 lines | **remove** |
+| 7 | `GET /api/preboarding/flag-watch` | point the operator check at it | one route | **wire** |
+| 8 | the `Request` dead end | guard the control for non-collectible items **and** refuse `not_started → requested` with the 409 the collect gate already writes | nothing to remove; the alternative is to leave it and label it | **wire the guard** (the item's collectibility is counsel's, Q1/Q5) |
+
+Every fix lands with its register entry removed in the same commit — the test fails otherwise, on purpose.
