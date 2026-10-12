@@ -259,12 +259,13 @@ named five files; these were also in `/tmp` and would die with it, so they are f
 **Notes for the merge:** `*.log` is gitignored (`.gitignore`), so `git add -f` was used for the log files and
 the **staged list was read back** before committing (rule 27 — the gitignore has swallowed a record's own
 evidence before). `origin/main` has moved past the deployed tree since the run — see below.
-**Scope of this revision, read off the staged list and not asserted:** **11 files — 8 at the root, 3 in
-`extra/`, and 0 under `client/` or `server/`.** That is **one more than the review note expected (10)**: the
-revision adds `placeholder-050618.html` as instructed, plus **`placeholder-050634-local.html`**, the second
-in-window sample, filed rather than described because `/tmp` is not durable on a host that rebooted without
-warning once already today. If the second capture is unwanted it is one `git rm` away and nothing else in the
-record depends on it.
+**Scope, stated exactly — two different counts that must not be confused.** This revision **stages three
+files** (`README.md` plus the two captures — read back off `git diff --cached --name-only`, rule 27). The
+record it lands in then holds **11 files: 8 at the root and 3 in `extra/`** (`find cutover-20261012-0506 -type
+f`), which is **one more than the review note expected (10)**. **No file in either count is under `client/` or
+`server/`.** The extra file is **`placeholder-050634-local.html`**, the second in-window sample, filed rather
+than described because `/tmp` is not durable on a host that rebooted without warning once already today. If it
+is unwanted it is one `git rm` away and nothing else in the record depends on it.
 
 ## The one figure in this record that is already stale, and why it does not matter
 
