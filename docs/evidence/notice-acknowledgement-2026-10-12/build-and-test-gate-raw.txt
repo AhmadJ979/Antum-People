@@ -1,0 +1,31 @@
+=== client tsc ===
+tsc exit=0
+=== server tests ===
+# tests 143
+# pass 143
+# fail 0
+=== git status ===
+ M client/src/App.tsx
+ M scripts/seed-demo.js
+ M server/demo-seed.test.js
+ M server/index.js
+ M server/preboarding-items.js
+ M server/preboarding-items.test.js
+ M server/preboarding-workspace.test.js
+ M server/schema.sql
+?? server/privacy-notice.js
+=== staged (after add) ===
+M	client/src/App.tsx
+M	scripts/seed-demo.js
+M	server/demo-seed.test.js
+M	server/index.js
+M	server/preboarding-items.js
+M	server/preboarding-items.test.js
+M	server/preboarding-workspace.test.js
+A	server/privacy-notice.js
+M	server/schema.sql
+d618a96 PDPL 15(b) option B: the gate records that the notice was shown, per document
+=== push ===
+To https://github.com/AhmadJ979/Antum-People.git
+ * [new branch]      feat/notice-acknowledgement-bbf54b1a -> feat/notice-acknowledgement-bbf54b1a
+branch 'feat/notice-acknowledgement-bbf54b1a' set up to track 'origin/feat/notice-acknowledgement-bbf54b1a'.
