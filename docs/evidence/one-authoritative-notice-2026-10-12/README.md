@@ -294,6 +294,12 @@ is enforced rather than documented: `server/privacy-notice.test.js` asserts the 
 line and that the Arabic form is absent entirely. It asserts no version number, so it passes on the text as
 labelled `v2.2` and on the `v2.3` text that quotes the correction.
 
+The guard was then *controlled*, not merely run: raw output in `raw-role-aware-guard-2026-10-12.txt`. On a scratch
+merge of the branch into current main (the v2.3 text, md5 `6004b0a5…`) the suite is **154 tests / 35 suites /
+0 fail**; writing the qualifier into the English retention content row turns the guard red with "the retired
+qualifier is in the notice content", writing its Arabic form into the Arabic row turns it red again, and restoring
+the file returns it to green with identical bytes. A guard no injection turns red is vacuous.
+
 **Sections 3 and 11's `false` rows are dated readings, not prescriptions.** They measured the text as it stood
 during that run — the corrected wording before `v2.3` recorded the change. Read them as history; run the
 role-aware check above for today's answer.
