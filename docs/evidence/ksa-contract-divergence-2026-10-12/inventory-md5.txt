@@ -1,0 +1,16 @@
+breach-notification-letters.md               host=770ae37135634a4a8393a2d8605fe743   repo=770ae37135634a4a8393a2d8605fe743   IDENTICAL
+build-html.js                                host=206ff7ca5a6f00996ae3a4402b257a8b   repo=206ff7ca5a6f00996ae3a4402b257a8b   IDENTICAL
+data-processing-agreement.html               host=cf5c83c40dba77e1dd11eda3d2bd492b   repo=cf5c83c40dba77e1dd11eda3d2bd492b   IDENTICAL
+data-processing-agreement.md                 host=3326d10bb73e41fdd02b84ee205b59d8   repo=3326d10bb73e41fdd02b84ee205b59d8   IDENTICAL
+data-processing-agreement.pdf                host=9a38d4b3acbe04cdd6f88fcb82df6f37   repo=9a38d4b3acbe04cdd6f88fcb82df6f37   IDENTICAL
+dpia-questionnaire.html                      host=9a5b3fc77004078136c27360871d3790   repo=9a5b3fc77004078136c27360871d3790   IDENTICAL
+dpia-questionnaire.md                        host=770b522dde97d3e75c93e941f0675785   repo=770b522dde97d3e75c93e941f0675785   IDENTICAL
+dpia-questionnaire.pdf                       host=73b2b1854a733521a4987336b8b949c1   repo=73b2b1854a733521a4987336b8b949c1   IDENTICAL
+final-settlement-statement.md                host=7b1ade315359c433623fa2df46a3a814   repo=7b1ade315359c433623fa2df46a3a814   IDENTICAL
+ksa-employment-contract.md                   host=3518c1af4931afc7b5cd54d0689987e0   repo=1c6ad895d403e8caf75606eea8c3db05   DIFFERS
+privacy-notice.html                          host=68c8478a0e5aa1a1988e60ca08fc7800   repo=68c8478a0e5aa1a1988e60ca08fc7800   IDENTICAL
+privacy-notice.md                            host=e011d3d6f18eb8175050917bb4fb08fe   repo=9c060b9fd07129cdb466471bbed7945b   DIFFERS
+privacy-notice.pdf                           host=4bb82afa10ccc2af7de3ddbcc2ed729c   repo=4bb82afa10ccc2af7de3ddbcc2ed729c   IDENTICAL
+uae-employment-contract.md                   host=f28dc42aa50e9b9ea3262af636f2d822   repo=f28dc42aa50e9b9ea3262af636f2d822   IDENTICAL
+
+pairs=14 identical=12 DIFFERS=2 host-only=0 repo-only=0
