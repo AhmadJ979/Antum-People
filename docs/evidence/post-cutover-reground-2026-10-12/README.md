@@ -6,8 +6,9 @@ this morning, so every one of those documents' bundle readings was stale, and th
 the same movement. This pack is the measurement behind the corrections made to both documents in this PR.
 
 **This is not the cutover's own record.** The run was lead-owned; at the time of writing it has no record
-in the repository (`git ls-tree -r --name-only origin/main | grep -c 'cutover-2026101'` → **0**). What is
-here is my independent, read-only read of what the run left behind.
+in the repository (`git ls-tree -r --name-only origin/main | grep -c 'cutover-2026101'` → **0**), though the
+run's own evidence does exist outside it — cited by md5 in **§6**, which also cross-checks the live figures.
+What is here is my independent, read-only read of what the run left behind.
 
 ## 1. What is actually being served (read anonymously, 05:15–05:20Z)
 
@@ -101,13 +102,56 @@ second-case probe ran with `__caseName` still set to Omar while the row clicked 
 reports `region_found: false` for a row whose board was open. It is kept, withdrawn and named; case 2's
 line count above comes from the **API payload**, not from a board render.
 
-## 5. What this pack does not claim
+## 6. Cross-check against the cutover's own live reading — they agree figure for figure
 
-- **Not the live demo's figures, read signed in.** Rule 26: the live product was never signed into. The
-  live surface's *identity* (§1) is measured anonymously; the *figures* (§3–4) are read on a rig built
-  from the served tree and seeded the same day. The live seed's **date** is evidenced (§2); its row-level
-  figures are not independently read here.
-- **Not the run's own record** (§ preamble): the lead's cutover record is not in the repository yet.
+Added after the first submission, when the lead's confirmation of the run arrived (cutover #4,
+**2026-10-12 05:06:55–05:07:21Z, exit 0, deployed `b54412d`**). The run read the pre-boarding state **on the
+live API, signed in, after its own seed**; that payload is the authority on the live demo's figures, and my
+rig read (§3) is a reproduction of it. Compared line by line, on the payload's own content:
+
+| | the run's live read | this rig's read |
+|---|---|---|
+| `OFR-2026-DEMO-03` | start 2026-10-11 · `started` · rose · 7 emp / **14** ws | same |
+| `OFR-2026-DEMO-02` | start 2026-10-13 · `inside_48_hours` · **amber** · 7 emp / **14** ws | same |
+| `OFR-2026-DEMO-01` | start 2026-10-26 · `clear` · slate · 7 emp / **15** ws | same |
+| totals | `cases` 3 · `items_outstanding` 21 · `cases_without_consent` 3 · `workspace_lines` 43 · `workspace_lines_open` 43 | same |
+| distinct states | `['clear','inside_48_hours','started']` | same three |
+
+So **the limit stated in §5 is now closed**: the live demo's row-level figures *were* read on the live
+surface — by the run, not by me — and the rig reproduces them exactly. What the rig added that the run's
+read could not is §4 (the board's rendered content across the `IT → All` round trip), which needs a browser.
+
+**The run's artifacts, by content** (they live in `/tmp` and are being filed into the cutover record, so
+compare copies by md5 rather than trusting the path):
+
+| artifact | md5 |
+|---|---|
+| `cutover-20261012-050655-evidence.txt` | `bb5401129c8003b8dabc81026b9d4c8c` |
+| `cutover-20261012-050655-pb-overview.json` (the live post-seed read above) | `268190a537b0abc062998b3f3cbd6a2c` |
+| `cutover-20261012-050655-build.log` (→ `index-Dt2oLspq.js`, 270.96 kB) | `048f9588e6d0f8b4de23c8059617df82` |
+| `cutover-20261012-050655-seed.log` | `d6171f770b3d2ecafc46fddeb941c6e7` |
+
+Two facts in the run's evidence worth carrying beside the figures: the flag recorded its boundary
+**late** on this run (*"reached the 48-hour mark while the app was not running (noticed 77.12h late) … the
+flag itself is derived and read correctly on the first read after restart; nothing is marked missed"*), and
+the run had to **evict a foreign listener** (`vite dev`, the platform site server) before the product could
+claim port 3000 — the same displacement the plan records, seen from the run's side.
+
+**One correction to the confirmation, for the record's accuracy:** `origin/main` is **`b87b065`**, not
+`b54412d` — PR #139 (the 15(b) acknowledgement spec) merged after the 10-09 movement. The delta is
+**docs only** (`pdpl-acknowledgement-route-spec.md` and its evidence README), so it changes no served byte;
+`git diff --name-only b54412d origin/main -- client server` is empty. The deployed tree is `b54412d`, which
+is what the run's own evidence names as `deployed commit`.
+
+## 7. What this pack does not claim
+
+- **Not the live demo's figures, read *by me*, signed in.** Rule 26: I never signed into the live product.
+  The live surface's *identity* (§1) is measured anonymously; the *figures* (§3–§4) come from a rig built from
+  the served tree and seeded the same day — and the run's own signed-in live read (§6) agrees with them figure
+  for figure, which is what upgraded this bullet from a limit to a cross-check. What remains mine alone is the
+  rendered board check (§4).
+- **Not the run's own record** (§ preamble): the run's evidence files are cited by md5 in §6 but sat in `/tmp`
+  and were not yet in the repository; filing the record is the lead's. This pack reproduces, it does not replace.
 - **No accrual-derived figure is re-read.** The money figures in the walkthrough script remain the
   2026-10-08 walk's readings, as they say.
 - **The label registers were not re-counted in this pass.** They were re-measured on 2026-10-09 against
