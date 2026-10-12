@@ -102,3 +102,71 @@ describe('the host-shared directory is not a source any more', () => {
     );
   });
 });
+
+/**
+ * The version string appears three times in the served notice, and a record's truth depends on all
+ * three agreeing: the status line, the version header this module parses, and the consent-version
+ * table row a reader sees. A partial bump leaves the served document contradicting itself, and
+ * `:247`'s row must stay a table row — `noticeVersion()` takes the FIRST `**Version ...:**` match, so
+ * a second header would shadow nothing today and silently win tomorrow.
+ *
+ * These guard the shape, never the number: they pass whether the served copy reads `v2.2` or `v2.3`,
+ * so they do not pre-empt the notice owner's bump.
+ */
+describe('the served notice states one version in all three places', () => {
+  const notice = privacyNotice.readNotice();
+
+  test('the status line, the version header and the consent row agree', () => {
+    const version = privacyNotice.noticeVersion();
+    const status = notice.match(/\*\*Status[^*]*\*\*:?\s*Template\s+(v[0-9][0-9A-Za-z.\-]*)/);
+    const consent = notice.match(/\|\s*Consent Version[^|]*\|\s*(v[0-9][0-9A-Za-z.\-]*)/);
+    assert.ok(status, 'the status line carries a version');
+    assert.ok(consent, 'the consent-version table row carries a version');
+    assert.strictEqual(status[1], version, 'the status line names the served version');
+    assert.strictEqual(consent[1], version, 'the consent-version row names the served version');
+  });
+
+  test('there is exactly one version header, so a later row cannot shadow it', () => {
+    const headers = notice.match(/^\s*>\s*\*\*Version[^*]*\*\*/gm) || [];
+    assert.strictEqual(headers.length, 1, 'one version header line, never a second');
+    assert.strictEqual(
+      notice.search(/^\s*>\s*\*\*Version[^*]*\*\*/m),
+      notice.search(/^\s*>\s*\*\*Version[^*]*\*\*:?\s*(v[0-9][0-9A-Za-z.\-]*)/m),
+      'the header the parser reads is the first one in the file'
+    );
+  });
+});
+
+/**
+ * The retired qualifier's ROLE, not its count. The version header quotes it on purpose — that line
+ * is the record of the correction — so `grep -c 'statutory retention'` is 1 on a correct notice and
+ * 0 only on the older text: a bare count inverts the check. What must hold is that the qualifier
+ * `313a017` removed as unsourced stays out of the *content*, in either language.
+ *
+ * This asserts a role and no version number, so it passes on the text as labelled `v2.2` and on the
+ * `v2.3` text that quotes the correction. If the compliance owner rules the qualifier back in, this
+ * is the test to change deliberately — failing loudly is the point.
+ */
+describe('the retired retention qualifier stays out of the content', () => {
+  const RETIRED_EN = 'statutory retention';
+  const RETIRED_AR = '\u0645\u062f\u0629 \u0627\u0644\u0627\u062d\u062a\u0641\u0627\u0638 \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064a\u0629';
+
+  test('no content line carries it, and its Arabic form is absent entirely', () => {
+    const lines = privacyNotice.readNotice().split('\n');
+    const offenders = lines.filter((l) => !l.trimStart().startsWith('>') && l.includes(RETIRED_EN));
+    assert.deepStrictEqual(offenders, [], 'the retired qualifier is in the notice content');
+    assert.strictEqual(
+      lines.filter((l) => l.includes(RETIRED_AR)).length,
+      0,
+      'the retired Arabic qualifier is present'
+    );
+  });
+
+  test('the version header may quote it, and that quotation is the record, not a defect', () => {
+    const quoting = privacyNotice
+      .readNotice()
+      .split('\n')
+      .filter((l) => l.trimStart().startsWith('>') && l.includes(RETIRED_EN));
+    assert.ok(quoting.length <= 1, 'at most one header line quotes the retired wording');
+  });
+});

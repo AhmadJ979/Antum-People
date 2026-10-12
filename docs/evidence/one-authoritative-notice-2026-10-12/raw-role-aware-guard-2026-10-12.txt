@@ -1,0 +1,84 @@
+RAW RUN — the role-aware retired-qualifier guard, and the negative control that proves it is not
+vacuous. Run 2026-10-12 by agent-senior-software-engineer. Nothing here is transcribed: every figure
+below is a paste of the command output, in order.
+
+WHAT CHANGED AND WHY. The post-move read-back written earlier in this directory was
+`grep -c 'statutory retention' /tmp/served.md  # must be 0`. On the deployed v2.3 notice that count is
+1, because line 6 records the correction by quoting the retired wording. The check therefore flagged
+correct text as wrong. It is now role-aware: the version header may carry the quotation as the record
+of the correction; no content line may, in either language. The check is also enforced as a test, so it
+cannot rot back into a count.
+
+THE TEXT UNDER TEST. merge of branch `fix/notice-numbering-and-host-retire` head `301f115` into
+`origin/main` (`9d2182a`), in a scratch worktree at ~/race/mrg. The notice there is main's v2.3 copy:
+
+    6004b0a5b23ac5aa68415da5e45ec2cd  templates/privacy-notice.md
+
+The merge reverts nothing (the merged notice md5 equals main's):
+
+merged 6004b0a5b23ac5aa68415da5e45ec2cd
+main   6004b0a5b23ac5aa68415da5e45ec2cd
+IDENTICAL — the merge reverts nothing
+
+===========================================================================================
+A. THE SUITE ON THE MERGED TREE (v2.3 notice) — 154 tests, and the new guard's 2 among them
+===========================================================================================
+(the guard must pass against v2.3)
+# tests 154
+# suites 35
+# pass 154
+# fail 0
+### MRG DONE
+
+The same 154/35/0 was measured on the branch's own tree, whose notice is the older
+`9c060b9fd07129cdb466471bbed7945b` (v2.2-labelled). The guard asserts no version number, so it holds
+on both texts — which is the property that makes it a guard rather than a snapshot.
+
+===========================================================================================
+B. NEGATIVE CONTROL — the guard must FAIL when the qualifier reaches the CONTENT
+===========================================================================================
+nohup: ignoring input
+### the text under test: the merge of #153 into main (v2.3)
+6004b0a5b23ac5aa68415da5e45ec2cd  /home/agent-senior-software-engineer/race/mrg/templates/privacy-notice.md
+
+### A. BASELINE (untouched) -- the guard must be GREEN
+# tests 10
+# pass 10
+# fail 0
+
+### B. NEGATIVE CONTROL, EN: put the retired qualifier into the English retention content row
+injected at line 62 : | Consent records | Duration of employment + retention period | Duration of employment + retention period | statutory retention
+        the retired qualifier is in the notice content
+not ok 4 - the retired retention qualifier stays out of the content
+# tests 10
+# pass 9
+# fail 1
+
+### C. NEGATIVE CONTROL, AR: put the retired Arabic qualifier into the Arabic retention row
+injected at line 174 : | سجلات الموافقة | مدة التوظيف + مدة الاحتفاظ | مدة التوظيف + مدة الاحتفاظ | مدة الاحتفاظ القانونية
+        the retired Arabic qualifier is present
+not ok 4 - the retired retention qualifier stays out of the content
+# tests 10
+# pass 9
+# fail 1
+
+### D. RESTORED -- the guard must be GREEN again, and the file byte-identical to the merge
+6004b0a5b23ac5aa68415da5e45ec2cd  /home/agent-senior-software-engineer/race/mrg/templates/privacy-notice.md
+# tests 10
+# pass 10
+# fail 0
+### CONTROL DONE
+
+Reading of the control:
+- A baseline on the untouched v2.3 merge: 10 tests, 10 pass, 0 fail — the guard is green on the text
+  that shipped.
+- B the English qualifier written into the English retention content row (line 62): the guard FAILS,
+  and the failure names the role — "the retired qualifier is in the notice content".
+- C the retired Arabic qualifier written into the Arabic retention row (line 174): the guard FAILS,
+  "the retired Arabic qualifier is present".
+- D restored: green again, and the file md5 is unchanged, so the control measured the injection and
+  nothing else.
+
+A guard that no injection turns red is vacuous. This one is not.
+
+### ROLE-AWARE GUARD RUN DONE

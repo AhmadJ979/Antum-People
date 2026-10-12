@@ -42,6 +42,29 @@
  * way a record can name an unknown text is a content change that forgot to bump the line. Writing or
  * bumping that line is the notice owner's act, not the engineer's: this module reports what the
  * served file says.
+ *
+ * ---------------------------------------------------------------------------
+ * TWO NUMBERS FOR TWO TEXTS — AND THE OLD NUMBER IS NOT MEANINGLESS
+ * ---------------------------------------------------------------------------
+ * Moving which copy is served moves the *text* clients receive while the version line on it does not
+ * move on its own. The ruling of 2026-10-12 splits the numbers, and both halves are recorded because a
+ * record's version string has to name a text somebody can produce:
+ *
+ *     v2.2  the text served to date — the host copy, md5 `e011d3d6f18eb8175050917bb4fb08fe`, whose
+ *           retention row reads "Duration of employment + statutory retention". Every acknowledgement
+ *           and consent row written so far was written against this text: it is the text the route
+ *           resolved when the row was written, so `v2.2` names a real, producible document.
+ *     v2.3  the corrected text — `templates/privacy-notice.md` here, retention row "Duration of
+ *           employment + retention period". It has been served to nobody yet, so no existing record
+ *           can name it. Minted when it lands, on the notice owner's act, in the served file.
+ *
+ * The ambiguity was in the *file claim* only: one number described two byte-strings. Re-labelling the
+ * served text `v2.3` retrospectively would misdescribe every record written against the text that was
+ * actually served, so `v2.2` stays attached to the text it named and the next number moves forward.
+ * `v2.4` is the qualifications purpose row, behind counsel.
+ *
+ * Numbering rule: **one number = one byte-string.** Minted when a text lands, as the next free
+ * integer; never reserved for planned work, never reused for a different text.
  */
 
 const fs = require('fs');

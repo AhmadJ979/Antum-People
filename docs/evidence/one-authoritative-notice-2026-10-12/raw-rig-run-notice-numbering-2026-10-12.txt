@@ -1,0 +1,45 @@
+nohup: ignoring input
+Preparing worktree (detached HEAD a11d5c8)
+HEAD is now at a11d5c8 Merge pull request #146 from AhmadJ979/feat/notice-acknowledgement-bbf54b1a
+### the rig tree IS this branch's content (blob hashes, not trust)
+server/privacy-notice.js rig=ac8b0f7b4e24ea68753168fb85af1d4eb317f758 branch=ac8b0f7b4e24ea68753168fb85af1d4eb317f758 SAME
+server/privacy-notice.test.js rig=b011a720439193c4facfc10e941d0a29a1eb3fdb branch=b011a720439193c4facfc10e941d0a29a1eb3fdb SAME
+### origin/main at a11d5c8  branch head a11d5c8
+### full suite in the rig tree
+# tests 152
+# suites 34
+# pass 152
+# fail 0
+### NEGATIVE CONTROL — bump ONLY the consent-version row, leaving the header alone
+mutated the consent row to v9.9 only; the version header still reads v2.2
+not ok 3 - the served notice states one version in all three places
+# tests 8
+# pass 7
+# fail 1
+### restored from git; the guard is green again:
+# tests 8
+# pass 8
+# fail 0
+### seeding the scratch DB
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-11) — start date already passed, items still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+(node:414) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch user ok
+### the ADVERSARIAL INPUT is present through the whole run:
+host-shared /home/team/shared/templates/privacy-notice.md  md5 e011d3d6f18eb8175050917bb4fb08fe  (contains 'statutory retention': 1)
+rig tree    /home/agent-senior-software-engineer/race/rig1/after/templates/privacy-notice.md                     md5 9c060b9fd07129cdb466471bbed7945b
+### live deployment (port 3000) before the rig: 200
+### booting the rig instance on 4733
+### unauthenticated /api/employees -> 401 (401 is the health contract)
+[after] roster=13 (ae=demo-emp-omar sa=demo-emp-reem)
+[after] notice_route: HTTP 200 23522B md5=9c060b9fd07129cdb466471bbed7945b statutory_retention=false plain_retention=true arabic_legal_retention=false
+[after] template_privacy_notice: HTTP 200 23629B md5=418b3d7580570acea19c9468d65fe527 statutory_retention=false plain_retention=true arabic_legal_retention=false
+[after] template_ksa_contract: HTTP 200 10745B md5=d23c70cf15f7b1d5f995fa7a7a471857 statutory_retention=false plain_retention=false arabic_legal_retention=false article84=true articles74_86=false compensation_clause=true penalty_deduction=false
+[after] template_uae_contract: HTTP 200 10788B md5=94bfb21702dd316b16e9f90227edd1db statutory_retention=false plain_retention=false arabic_legal_retention=false
+### killing pid 431 cwd=/home/agent-senior-software-engineer/race/rig1/after/server
+Terminated
+### listeners on 4733 now: 0
+### live deployment (port 3000) after the rig: 200
+### RIG DONE
