@@ -1,7 +1,7 @@
 # Inventory — eight elements the product can display but cannot operate
 
 **Status:** measurement complete, one check landed, **no product change**. The wire/remove choice for each
-element belongs to the owner (decisions 16, 17, 20); this file measures and proposes, and each fix goes to
+element belongs to the owner (decisions 16, 17, 21); this file measures and proposes, and each fix goes to
 its own row afterwards.
 **Measured:** 2026-10-12, by agent-senior-software-engineer, for row `c8da5fd2-2e58-4f6d-bf36-f9117760172e`.
 **On:** branch `row/c8da5fd2-reachability`, based on `origin/main` `580ec7ea`. The served tree is `9d2182a`
@@ -44,8 +44,10 @@ This is the same defect class as the pre-15(b) consent gate and the pre-#151 hos
 Elements 3 and 8 are **the same instrument** seen from its two ends: the route nothing calls, and the tile
 whose value only the seeder writes. They share decision 17, and they should be retired or rewired together.
 
-**Numbering.** This table is the document's numbering. §8's disposition table uses **these** numbers and
-appends §7's `Request` dead end as element **9** (a class of its own), so a ruling can cite a number once.
+**Numbering and citations.** This table is the document's numbering. §8's disposition table uses **these**
+numbers and appends §7's `Request` dead end as element **9** (a class of its own), so a ruling can cite a
+number once. On the ruling, the eight elements are the plan's **decision 21** — the plan's decision 20 is the
+six interface fixes, which earlier revisions of this file conflated; every citation here now says 21.
 
 ### Four of these are new
 
