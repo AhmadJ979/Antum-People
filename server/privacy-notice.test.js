@@ -102,3 +102,37 @@ describe('the host-shared directory is not a source any more', () => {
     );
   });
 });
+
+/**
+ * The version string appears three times in the served notice, and a record's truth depends on all
+ * three agreeing: the status line, the version header this module parses, and the consent-version
+ * table row a reader sees. A partial bump leaves the served document contradicting itself, and
+ * `:247`'s row must stay a table row — `noticeVersion()` takes the FIRST `**Version ...:**` match, so
+ * a second header would shadow nothing today and silently win tomorrow.
+ *
+ * These guard the shape, never the number: they pass whether the served copy reads `v2.2` or `v2.3`,
+ * so they do not pre-empt the notice owner's bump.
+ */
+describe('the served notice states one version in all three places', () => {
+  const notice = privacyNotice.readNotice();
+
+  test('the status line, the version header and the consent row agree', () => {
+    const version = privacyNotice.noticeVersion();
+    const status = notice.match(/\*\*Status[^*]*\*\*:?\s*Template\s+(v[0-9][0-9A-Za-z.\-]*)/);
+    const consent = notice.match(/\|\s*Consent Version[^|]*\|\s*(v[0-9][0-9A-Za-z.\-]*)/);
+    assert.ok(status, 'the status line carries a version');
+    assert.ok(consent, 'the consent-version table row carries a version');
+    assert.strictEqual(status[1], version, 'the status line names the served version');
+    assert.strictEqual(consent[1], version, 'the consent-version row names the served version');
+  });
+
+  test('there is exactly one version header, so a later row cannot shadow it', () => {
+    const headers = notice.match(/^\s*>\s*\*\*Version[^*]*\*\*/gm) || [];
+    assert.strictEqual(headers.length, 1, 'one version header line, never a second');
+    assert.strictEqual(
+      notice.search(/^\s*>\s*\*\*Version[^*]*\*\*/m),
+      notice.search(/^\s*>\s*\*\*Version[^*]*\*\*:?\s*(v[0-9][0-9A-Za-z.\-]*)/m),
+      'the header the parser reads is the first one in the file'
+    );
+  });
+});
