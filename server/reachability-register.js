@@ -18,7 +18,9 @@ const CALLERLESS = {
     route: 'server/index.js:170',
     why: 'Returns one employee with the national ID decrypted. No client code calls it: the roster '
        + '(GET /api/employees) is what the UI reads, and the detail view takes its employee from that '
-       + 'list. An orphan that also widens the API surface by an unnecessary PII read.',
+       + 'list. An orphan that also widens the API surface by an unnecessary PII read. One of TWO '
+       + 'callerless routes that decrypt a national ID: GET /api/compliance/report decrypts the whole '
+       + 'roster and keeps only counts.',
     owner: 'decision 20 (wire or remove) — not yet ruled',
   },
   'POST /api/compliance/calculate-eosb': {
@@ -35,8 +37,13 @@ const CALLERLESS = {
   },
   'GET /api/compliance/report': {
     route: 'server/index.js:424',
-    why: 'A compliance roll-up no client code requests. Found while measuring decision 17.',
-    owner: 'decision 20 (wire or remove) — not yet ruled',
+    why: 'A compliance roll-up no client code requests, and the second callerless route that decrypts '
+       + 'national IDs: the handler runs auth.decrypt() over national_id_value and national_id_iqama for '
+       + 'every employee and keeps only counts. The figure it would print is consentGranted, the '
+       + 'seeder-written flag (scripts/seed-demo.js:320; the only other writer is the callerless '
+       + 'POST /api/compliance/consent), so wiring it would show a fabricated number until decision 17 '
+       + 'is ruled. Found while measuring decision 17.',
+    owner: 'decision 20 — recommendation: remove (whole-roster PII read, and the figure would be the seeder flag); wiring stays open only behind decision 17',
   },
   'GET /api/preboarding/cases/:id': {
     route: 'server/index.js:646',
