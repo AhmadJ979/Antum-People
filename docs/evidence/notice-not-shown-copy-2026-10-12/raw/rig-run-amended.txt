@@ -1,0 +1,22 @@
+=== rig re-run (attempt 2, --binary) for the AMENDED branch tip — 2026-10-12T05:54:25Z
+=== live deployment before (must be 200; this rig never addresses it): 200
+=== base origin/main = a63fc04   branch tip = 337cdcd
+=== what this amendment changed (dates + the count rule; no rendered JSX string):
+ .../scripts/rig-copy.sh                            |   0
+ pdpl-acknowledgement-route-spec.md                 |   4 ++-
+ pdpl-lawful-basis-mapping.md                       |   4 +--
+ 17 files changed, 49 insertions(+), 13 deletions(-)
+=== jsx string check: does 1962860..copy/notice-not-shown-2026-10-13 touch any quoted string in the client?
+    (only comment lines expected above)
+=== merge-tree (branch vs origin/main):
+63488d805d9281371e146dd150652c27ebc009d8
+diff (--binary) applied
+=== rig tree vs branch tip, blob hashes (equal means the rig IS the merge result):
+  equal   client/src/App.tsx
+  equal   demo-walkthrough-script.md
+  equal   demo-weak-screens.md
+  equal   design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md
+  equal   pdpl-acknowledgement-route-spec.md
+  equal   pdpl-lawful-basis-mapping.md
+  equal   docs/evidence/notice-not-shown-copy-2026-10-12/rollup-tiles.png
+  all blobs equal to the branch tip: 1

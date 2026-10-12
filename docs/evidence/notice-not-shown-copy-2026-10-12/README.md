@@ -151,3 +151,31 @@ agent-browser --session <n> eval "$(cat $D/scripts/probe-tiles.js)"  # read the 
 Raw outputs of that run: `raw/rig-run.txt`, `raw/api-check.txt`, `raw/dom-tiles.txt`.
 The BEFORE sample is not re-run — it is the served surface's dated capture, copied verbatim as
 `raw/03-dom-preboarding-BEFORE-served-2026-10-12.txt`.
+
+## Amendment, later on 2026-10-12 — what this pack does and does not cover
+
+Two commits landed on the branch after this pack was written (`af3ba28` and its successor). They
+corrected the dated notes, which said **2026-10-13** when the day is **2026-10-12**, and replaced the
+sentence "the count is unchanged" with the count rule the seed change requires. **No rendered string
+moved** — the client-side change in that range is a comment line.
+
+Stated rather than glossed:
+
+1. **The blob-equality claim in the rig section holds for `391fe1d`**, the tip that was actually built
+   and rendered here. It is **not** re-asserted for the amended tip.
+2. **The rendered evidence still describes the surface**, because the label string itself is untouched
+   by the amendment.
+3. **The re-earned build for the amended tip is not in this pack — it is owed.** The first attempt is
+   kept as `raw/rig-run-amended-FAILED-apply.txt` and is worth reading: generating the branch diff
+   without `--binary` made `git apply` abort on `rollup-tiles.png`, so the rig stayed at `origin/main`
+   — and the blob check said so, six lines of `DIFFER`, instead of the run being filed as branch
+   evidence. The trap in one line: **a rig whose apply failed is a rig of the wrong tree, and only the
+   blob check tells you.** Fix for the next attempt: `git diff --binary … | git apply --binary -`.
+4. **Nothing here is a claim about the served asset.** Both figures in this pack's raw output —
+   `index-Cc1GodRa.js` (274,065 B, built from `391fe1d`) and `index-BcziNE91.js` (274,056 B, produced
+   by the run the blob check rejected, i.e. from `origin/main`) — are *what those trees built on this
+   machine*. The served name, size and md5 are read off the live URL after the cutover, by whoever runs
+   it.
+
+The branch is named `copy/notice-not-shown-2026-10-13`: the name carries the 13th from the same
+before-the-date-was-checked error. The work is dated **2026-10-12**; a PR head is not renamed mid-flight.
