@@ -1,0 +1,55 @@
+nohup: ignoring input
+### merge-base a11d5c8 ; origin/main 2b50532 ; branch head b5af270
+### the branch's own diff, from its merge-base
+ .../one-authoritative-notice-2026-10-12/README.md  | 89 +++++++++++++++-------
+ .../host-copy-disposition.md                       | 61 +++++++++++++++
+ .../probe-route-notice-numbering-2026-10-12.json   | 67 ++++++++++++++++
+ .../raw-rig-run-notice-numbering-2026-10-12.txt    | 45 +++++++++++
+ .../shared-pointer-privacy-notice.md               |  4 -
+ server/privacy-notice.js                           | 23 ++++++
+ server/privacy-notice.test.js                      | 34 +++++++++
+ 7 files changed, 292 insertions(+), 31 deletions(-)
+### does the branch touch templates/ at all?
+NO templates/ file is touched by this branch
+### the notice file, by md5: v2.2-labelled copy (my branch's base) vs main's post-#154 copy
+9c060b9fd07129cdb466471bbed7945b  -
+6004b0a5b23ac5aa68415da5e45ec2cd  -
+### main's notice version lines after #154
+5:> **Status / الحالة:** Template v2.3 — pilot-ready
+6:> **Version / الإصدار:** v2.3 (2026-10-12) — retention wording corrected: "statutory retention" → "retention period"
+247:| Consent Version / إصدار الموافقة | v2.3 (2026-10-12) |
+### scratch merge of the branch into current main
+ create mode 100644 docs/evidence/one-authoritative-notice-2026-10-12/host-copy-disposition.md
+ create mode 100644 docs/evidence/one-authoritative-notice-2026-10-12/probe-route-notice-numbering-2026-10-12.json
+ create mode 100644 docs/evidence/one-authoritative-notice-2026-10-12/raw-rig-run-notice-numbering-2026-10-12.txt
+ delete mode 100644 docs/evidence/one-authoritative-notice-2026-10-12/shared-pointer-privacy-notice.md
+### after the merge: the notice's three lines
+5:> **Status / الحالة:** Template v2.3 — pilot-ready
+6:> **Version / الإصدار:** v2.3 (2026-10-12) — retention wording corrected: "statutory retention" → "retention period"
+247:| Consent Version / إصدار الموافقة | v2.3 (2026-10-12) |
+### after the merge: the merged notice md5 equals main's notice md5? (revert check)
+merged 6004b0a5b23ac5aa68415da5e45ec2cd
+main   6004b0a5b23ac5aa68415da5e45ec2cd
+IDENTICAL — the merge reverts nothing
+### after the merge: the evidence files are present
+README.md
+build-tsc-raw.txt
+build-vite-raw.txt
+host-copy-disposition.md
+probe-after.json
+probe-before.json
+probe-route-notice-numbering-2026-10-12.json
+raw-rig-run-notice-numbering-2026-10-12.txt
+raw-scope-and-deploy-tree.txt
+raw-source-reads.txt
+reader-inventory.txt
+rig-before-after.txt
+test-run-149-pass.txt
+### after the merge: pointer file gone?
+ls: cannot access 'docs/evidence/one-authoritative-notice-2026-10-12/shared-pointer-privacy-notice.md': No such file or directory
+### after the merge: the suite (the guard must pass against v2.3)
+# tests 152
+# suites 34
+# pass 152
+# fail 0
+### MRG DONE
