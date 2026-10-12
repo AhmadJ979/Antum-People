@@ -266,4 +266,107 @@ module.exports = {
   ROOT,
   parseRoutes, parseCallSites, canonPath, classify, unregisteredCallSites,
   routesAfterCatchAll, uiStateReachability, columnWriters, shapesOverlap, listFiles, read,
+  parseNoticeBases, requestControlGuard, deadEndItems, routeHasTest, tablesTouchedByRoute,
 };
+
+/**
+ * The privacy notice's item table, read as data: which items carry a basis, and which do not.
+ * Parsed from `server/preboarding-items.js` so the check cannot drift from the gate it describes.
+ */
+function parseNoticeBases(src = read(path.join(ROOT, 'server', 'preboarding-items.js'))) {
+  const block = /const NOTICE_BASES = \{([\s\S]*?)\n\};/.exec(src);
+  if (!block) return [];
+  const items = [];
+  const re = /(\w+):\s*\{([\s\S]*?)\n\s{2}\},/g;
+  for (const m of block[1].matchAll(re)) {
+    const body = m[2];
+    items.push({
+      item_key: m[1],
+      collectible: /collectible:\s*true/.test(body),
+      pending_counsel: (/pending_counsel:\s*'([^']+)'/.exec(body) || [])[1] || null,
+      reason: (/reason:\s*'([^']+)'/.exec(body) || [])[1] || null,
+    });
+  }
+  return items;
+}
+
+/**
+ * Where the client's Request control is guarded, and where it is not. Measured asymmetry, 2026-10-12:
+ * `App.tsx:2115` renders `label="Request"` with no condition, while the `Mark received` button on the
+ * next lines carries `disabled={!collectible || !ack}` — so the product offers a move into a state it
+ * will not let you leave.
+ */
+function requestControlGuard(src = read(path.join(CLIENT_GLOB_ROOT, 'App.tsx'))) {
+  const lines = src.split('\n');
+  const at = lines.findIndex((l) => l.includes('label="Request"'));
+  const receiveAt = lines.findIndex((l) => l.includes('label="Mark received"'));
+  return {
+    request_line: at + 1,
+    request_text: at === -1 ? null : lines[at].trim(),
+    request_guarded: at === -1 ? null : /collectible|disabled|basis/i.test(lines[at]),
+    receive_line: receiveAt + 1,
+    receive_text: receiveAt === -1 ? null : lines[receiveAt].trim(),
+    receive_guarded: receiveAt === -1 ? null : /collectible/.test(lines[receiveAt]),
+  };
+}
+
+/**
+ * The flow-level defect: an item the notice assigns **no basis** to can still be moved to `requested`
+ * (the status guard only fires for `received`/`verified`, `server/preboarding-items.js` collects gate),
+ * and from there the product offers no way forward — `Mark received` is disabled by that same missing
+ * basis. The item then sits in `requested` forever and counts in `items_outstanding`.
+ *
+ * This reads the *shape* of the two guards, not their runtime behaviour: the behaviour was measured on
+ * a scratch instance and filed beside the inventory. What it guarantees is that the set of items in
+ * this dead end is exactly the registered set — a fourth no-basis item, or a newly unguarded Request
+ * control, fails the build.
+ */
+function deadEndItems() {
+  const items = parseNoticeBases();
+  const guard = requestControlGuard();
+  const serverSrc = read(path.join(ROOT, 'server', 'preboarding-items.js'));
+  const collectibilityScopedToCollected = /COLLECTED_STATUSES\.indexOf\(status\)/.test(serverSrc);
+  const requestedIsUngated = collectibilityScopedToCollected; // the gate names only collected statuses
+  const out = [];
+  for (const item of items) {
+    if (item.collectible) continue;
+    if (!requestedIsUngated || guard.request_guarded === false) {
+      out.push({ ...item, guard, why: 'offered by the Request control, refused by the collect gate' });
+    }
+  }
+  return { items: out, guard, requestedIsUngated, collectibilityScopedToCollected };
+}
+
+/** Whether any test file exercises a route path — "no caller and no test" is a different finding from
+ *  "no caller", and the row asked for both. */
+function routeHasTest(routePath) {
+  const needle = canonPath(routePath).split('/').filter(Boolean).slice(1).join('/');
+  const tests = listFiles(path.join(ROOT, 'server')).filter((f) => f.endsWith('.test.js'));
+  const hits = [];
+  for (const file of tests) {
+    const rel = path.relative(ROOT, file);
+    read(file).split('\n').forEach((line, i) => {
+      if (line.includes(routePath) || (needle && line.includes(needle))) {
+        hits.push({ file: rel, line: i + 1 });
+      }
+    });
+  }
+  return hits;
+}
+
+/** The tables a route's own handler reads or writes, so "who else writes this data" has an answer. */
+function tablesTouchedByRoute(routePath, src = read(ROUTE_FILE)) {
+  const lines = src.split('\n');
+  const start = lines.findIndex((l) => l.includes(`'${routePath}'`));
+  if (start === -1) return [];
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i += 1) {
+    if (/^\s*app\.(get|post|put|delete|patch)\(\s*'/.test(lines[i])) { end = i; break; }
+  }
+  const body = lines.slice(start, end).join('\n');
+  const tables = new Set();
+  for (const m of body.matchAll(/(?:FROM|INTO|UPDATE|JOIN)\s+([a-z_][a-z0-9_]*)/gi)) {
+    if (!/^(SELECT|VALUES|preboarding_items)$/i.test(m[1])) tables.add(m[1]);
+  }
+  return [...tables];
+}

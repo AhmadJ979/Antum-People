@@ -33,7 +33,7 @@ const r = require('./reachability');
  * so" is only an answer once it is written down (decision 20).
  */
 const {
-  CALLERLESS, DYNAMIC_SITES, UNOPENABLE_CONTROLS, DISPLAYED_VALUES,
+  CALLERLESS, DYNAMIC_SITES, UNOPENABLE_CONTROLS, DISPLAYED_VALUES, DEAD_END_ITEMS,
 } = require('./reachability-register');
 
 /** Locate an anchor by its own text, so an unrelated insertion above it is not a failure. */
@@ -185,4 +185,30 @@ test('a value a tile displays has a writer in a route a user can reach — or is
     .map((e) => e.tile);
   assert.deepStrictEqual(stale, [],
     'these displayed values now have a reachable writer — remove their register entries');
+});
+
+test('an item the notice assigns no basis to is not offered a move it can never complete', () => {
+  const measured = r.deadEndItems();
+  const found = measured.items.map((x) => x.item_key).sort();
+  const registered = Object.keys(DEAD_END_ITEMS).sort();
+  assert.deepStrictEqual(found, registered,
+    'the set of items that can be requested and never received must be exactly the registered set: '
+    + 'a new no-basis item, a newly unguarded Request control, or a fix that makes one of these '
+    + 'collectible all belong in this diff');
+  const guard = measured.guard;
+  assert.ok(guard.request_line > 0, 'the Request control was not found in client/src/App.tsx');
+  assert.strictEqual(guard.request_guarded, false,
+    `the Request control at client/src/App.tsx:${guard.request_line} is now guarded — if that is the `
+    + 'fix, remove the item from DEAD_END_ITEMS in the same commit');
+  assert.strictEqual(guard.receive_guarded, true,
+    `Mark received at client/src/App.tsx:${guard.receive_line} no longer checks collectibility, which `
+    + 'is the other half of this defect');
+  for (const [key, entry] of Object.entries(DEAD_END_ITEMS)) {
+    assert.ok(entry.why && entry.why.length > 40, `${key}: needs a real reason, not a placeholder`);
+    assert.ok(/counsel|decision \d+/i.test(entry.owner), `${key}: must name who owns the fix`);
+  }
+  // Nothing may enter this dead end silently: every no-basis item must be one of the registered ones.
+  const noBasis = r.parseNoticeBases().filter((x) => !x.collectible).map((x) => x.item_key).sort();
+  assert.deepStrictEqual(noBasis, registered,
+    'a no-basis item that is not registered here would dead-end the moment someone pressed Request');
 });

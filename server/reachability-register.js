@@ -104,4 +104,39 @@ const DISPLAYED_VALUES = [
   },
 ];
 
-module.exports = { CALLERLESS, DYNAMIC_SITES, UNOPENABLE_CONTROLS, DISPLAYED_VALUES };
+/**
+ * The fourth instance, found on the live product by the designer on 2026-10-12 and measured here:
+ * a document item the notice assigns **no basis** to can still be moved to `requested`, and from
+ * there nothing can move it on. `Mark received` is disabled by that same missing basis
+ * (`client/src/App.tsx:2119`), while the `Request` control above it carries no condition
+ * (`:2115`) and the server's collect gate only fires for `received`/`verified`
+ * (`server/preboarding-items.js`, the `COLLECTED_STATUSES.indexOf(status)` branch). The item then
+ * sits in `requested` forever and counts in `items_outstanding` — a state a user can enter and
+ * cannot leave, which is a distinct class from "no caller" and "no opener".
+ *
+ * Wire/remove is not a code question: the basis for these three items is what counsel (15(a)) has
+ * not answered, so the *item* cannot be collected until it does. What can be decided now is the
+ * control: do not offer `Request` for an item that cannot be received (recommended — it is the
+ * cheap half), or offer it and say on the tile what it is waiting for.
+ */
+const DEAD_END_ITEMS = {
+  education_certificate: {
+    why: 'The notice has no purpose row for qualifications, so no basis is assigned and the item is '
+       + 'not collectible; the Request control offers the move anyway, and the collect gate refuses '
+       + 'every step after it.',
+    owner: 'counsel (15(a), question Q1) + a product ruling on the Request control — not yet ruled',
+  },
+  experience_certificate: {
+    why: 'Same as the education certificate: no notice basis, not collectible, requestable.',
+    owner: 'counsel (15(a), question Q1) + a product ruling on the Request control — not yet ruled',
+  },
+  emergency_contact: {
+    why: 'The notice assigns no basis and the data is a third person\'s, not the hire\'s, so it is not '
+       + 'collectible; requestable like the other two.',
+    owner: 'counsel (15(a), question Q5) + a product ruling on the Request control — not yet ruled',
+  },
+};
+
+module.exports = {
+  CALLERLESS, DYNAMIC_SITES, UNOPENABLE_CONTROLS, DISPLAYED_VALUES, DEAD_END_ITEMS,
+};
