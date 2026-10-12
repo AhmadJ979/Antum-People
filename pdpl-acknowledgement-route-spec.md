@@ -49,7 +49,7 @@ Item set: `server/preboarding-items.js:71-77`. Notice purposes: `templates/priva
 
 **Required: a named person. Refuse the record when none is present (HTTP 400).**
 
-- Route passes the signed-in user explicitly: `recorded_by: (req.user && req.user.username) || null` — the pattern at `server/index.js:777`.
+- Route passes the signed-in user explicitly: `recorded_by: (req.user && req.user.username) || null` — the pattern at `server/index.js:774`.
 - Module validates and refuses: `server/preboarding-package.js:196-205` (`'no invented actor… the record must name the person recording the acknowledgement'`).
 - **Do not** follow `server/index.js:728` / `server/preboarding-items.js:242`, where the fallback writes the literal `'system'`. That behaviour is defensible for an internal audit trail of a machine action; it is not defensible for a record whose entire evidential value is *that a person put the notice in front of the hire*. The same codebase already refuses it one module away.
 - **The hire is not the actor this release.** There is no hire login (portal identity is decision 14, open), so the record means *"<named HR user> recorded that the notice was shown to <hire>"*. The hire-facing copy and the internal screen must both say that, and must not imply the hire signed or agreed anything.
@@ -136,7 +136,7 @@ Item set: `server/preboarding-items.js:71-77`. Notice purposes: `templates/priva
 ## 9. Limits and what does not change
 
 - **No code in this document.** The engineer owns the implementation.
-- **Gate scope unchanged:** the employee track only; the workspace track stays ungated (`server/preboarding-items.js:326`, `:47`).
+- **Gate scope unchanged:** the employee track only; the workspace track stays ungated (`server/preboarding-items.js:326-332`).
 - **Not in tonight's cutover** — the bundle that ships was verified before this decision existed; the gate change needs its own cycle and evidence.
 - No real client data (RBAC is not built); L-2 stays behind counsel alone; `server/eosb.js` untouched (md5 `36b5dcdc0ee64e0cad5505dd757a5742`).
 - **What this spec deliberately leaves alone:** the withdrawal question. Nothing in this set is consent-based, so nothing is withdrawable — but the `instrument` value in §1 exists so that the day an item *is* consent-based (biometrics, sensitive data, `templates/privacy-notice.md:47-48`), the record can carry the instrument that has a withdrawal path rather than quietly inheriting this one.
