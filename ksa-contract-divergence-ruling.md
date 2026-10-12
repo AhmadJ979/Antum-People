@@ -9,6 +9,14 @@ Host copy `/home/team/shared/templates/ksa-employment-contract.md`, md5 **`3518c
 (10,662 B, mtime **2026-09-17 06:31** — the pilot-pack snapshot).
 Repository copy `templates/ksa-employment-contract.md`, md5 **`1c6ad895d403e8caf75606eea8c3db05`** (223 lines).
 
+**Path convention — read this before any path below.** The two trees are told apart by the shape of the path,
+and the same bare string must not mean both. A bare `templates/…` is **this repository's** tree (`git show
+origin/main:templates/…`); the host pack is **always** written absolutely, `/home/team/shared/templates/…`.
+The repository has **no `templates/retired/` directory at all** (`git ls-tree -r --name-only origin/main` → zero
+files under it), so a bare `retired/` path resolves to nothing: everything retired lives in the host pack.
+Both trees hold the same file names, so this is a live ambiguity, not a pedantic one — `templates/build-html.js`
+exists in each.
+
 | # | host (served today) | repository (served after the cutover) |
 |---|---|---|
 | **A** citation | *"EOSB shall be calculated in accordance with **Articles 74–86** of Saudi Labor Law (Royal Decree M/51), based on the employee's **total monthly salary**."* | *"…in accordance with **Article 84** of the Saudi Labor Law…, based on the employee's **total monthly salary**."* |
@@ -134,7 +142,8 @@ which is the answer the brief asked for. Only the two Tier-1 files differ, and b
    assumed.** **Divergence is the defect; duplication is inert.** Measured that day, of the **14 file pairs** §4
    compares, **12 were byte-identical** and exactly two diverged. One of the two is the notice's host copy
    `e011d3d6…` — **retired** at cutover #5, bytes preserved at
-   `templates/retired/privacy-notice.md.retired-9d2182a`. The other is `templates/ksa-employment-contract.md`
+   `/home/team/shared/templates/retired/privacy-notice.md.retired-9d2182a`. The other is
+   `/home/team/shared/templates/ksa-employment-contract.md`
    (`3518c1af…` against the repository's `1c6ad895…`), which is **not retired and must not be recorded as retired**:
    its disposition is the owner's under decision 19 and is still pending (§8). The 12 identical copies are duplicates
    that are inert today: they can drift, but nothing about their content is wrong, and the host path holding one of them
@@ -162,7 +171,7 @@ notice in the same movement: `templatePath()` resolves every template inside thi
 (`server/privacy-notice.js`) and the route that serves them reads through that module (`server/index.js:369`). The
 notice's own route reports the flip explicitly — `path` = the tree's `templates/privacy-notice.md` (**not** the host
 directory), `version` `v2.3`, content md5 `6004b0a5…` = `origin/main`'s file — and its stale host copy was retired to
-`templates/retired/privacy-notice.md.retired-9d2182a` with bytes preserved.
+`/home/team/shared/templates/retired/privacy-notice.md.retired-9d2182a` with bytes preserved.
 
 ## 8. The host copy — **recommendation only, nothing executed**: retire it, the same way the notice was retired
 
@@ -175,7 +184,7 @@ it. The lead measured the same file independently (same md5) and the live route 
 (`"never deducted"` ×1, `"Up to 50"` ×0). So the stale text is **inert today**: this is a tidy-up and a
 safety-of-the-pack question, **not** a served-text fix.
 **The disposition is the owner's (decision 19), and it has three forms:** **(A)** retire it as the notice was — bytes
-preserved under `templates/retired/`, nothing left at the path (the recommendation below); **(B)** keep it at the path
+preserved under `/home/team/shared/templates/retired/`, nothing left at the path (the recommendation below); **(B)** keep it at the path
 and label it as the superseded 2026-09-17 snapshot it is; **(C)** treat the host pack as a pack, and move the copies in
 it as one. **Nothing below — no move, no label — happens until the owner rules.**
 **How to check it, without repeating a week-old mistake (rule 32 in its fourth form).** A `50%` count is **not**
@@ -185,7 +194,7 @@ the overtime-rate row (`150% (normal) / 200% (weekends/public holidays)`). Check
 this text appear*, never *in what role*.
 **Recommendation (compliance's; the owner disposes under decision 19):** move
 `/home/team/shared/templates/ksa-employment-contract.md` aside to
-`templates/retired/ksa-employment-contract.md.retired-9d2182a`, bytes preserved, exactly as the notice was.
+`/home/team/shared/templates/retired/ksa-employment-contract.md.retired-9d2182a`, bytes preserved, exactly as the notice was.
 Do **not** leave a marker or any replacement text at the path.
 
 **Four measurements decide it, and the first is new this cycle.**
@@ -204,7 +213,7 @@ Do **not** leave a marker or any replacement text at the path.
    the employee, and a reader of the pack reads them as our contractual position.
 3. **The pack is a delivery channel of its own** (§4, Tier 2): `build-html.js` renders `.md` → `.html`/`.pdf`, and the
    pack is what gets handed to a pilot. Retiring the file loses no history — the pilot snapshot survives under
-   `templates/retired/`, named for the commit, bytes intact.
+   `/home/team/shared/templates/retired/`, named for the commit, bytes intact.
 4. **After the move the pack is internally consistent, which is why this is *not* a pack-level decision.** Measured
    2026-10-12, after the notice's retirement: the pack holds six `.md` files, **five byte-identical** to the
    authoritative copies and **exactly one diverging — this one** (`3518c1af…` vs `1c6ad895…`; every other file:
@@ -217,7 +226,7 @@ Do **not** leave a marker or any replacement text at the path.
 
 **Procedure — for (A) only, and only after the owner has ruled.** This is the notice's procedure, unchanged, so the team
 has one procedure rather than two: record the source md5 **before**
-the move (`3518c1af4931afc7b5cd54d0689987e0`); move it to `templates/retired/ksa-employment-contract.md.retired-9d2182a`;
+the move (`3518c1af4931afc7b5cd54d0689987e0`); move it to `/home/team/shared/templates/retired/ksa-employment-contract.md.retired-9d2182a`;
 read the md5 back and assert it equals the before value; then re-hit the route and assert it still returns the
 repository's text — the move must be **inert by measurement**, as the notice's was. Ordering: **after** a restart on a
 tree that resolves templates from this repository, which is already satisfied (the cutover happened, and the served
@@ -227,7 +236,7 @@ tree does not consult the host directory).
 
 - **The notice's derivatives in the pack are stale against the reviewed notice.** `privacy-notice.html` carries
   `statutory retention` ×2 (EN + AR) and `v2.2` ×4, and with its `.md` now under `retired/`, the pack shows notice
-  derivatives whose source no longer sits beside them. Regenerating is the owner's act (`templates/build-html.js`).
+  derivatives whose source no longer sits beside them. Regenerating is the owner's act (`/home/team/shared/templates/build-html.js`).
 - **The paper attestation block is a live document question, not a stale-text one.** "I consent … ☐ Yes / نعم" is
   present in the **served** v2.3 (verified after the cutover). Nothing in this cycle touched it.
 - **Five identical duplicates remain** (Tier 2). Inert under either resolution, but drift-prone; retiring them is a
@@ -274,12 +283,12 @@ is the plan's, recorded rather than chosen by me.
 - **Addendum §7–§9 (2026-10-12), read at `origin/main` = `fa69750`:** the pre-2026-10-12 host-first resolution —
   `d618a96:14,36-45`; the repository-first resolution — `3712822` (`server/privacy-notice.js`, `templatePath()`); the
   cutover that executed the ruling — `9d2182a` (06:41:58–06:42:25Z, exit 0, bundle `index-Cc1GodRa.js`); the retirements
-  — `templates/retired/privacy-notice.md.retired-9d2182a`; the counsel set — `pdpl-lawful-basis-mapping.md:78-92` and
+  — `/home/team/shared/templates/retired/privacy-notice.md.retired-9d2182a`; the counsel set — `pdpl-lawful-basis-mapping.md:78-92` and
   §5; the pack, measured 2026-10-12: five `.md` files byte-identical to the repository, `ksa-employment-contract.md`
   `3518c1af…` vs `1c6ad895…` the only divergence.
 - **Second addendum, §5.3 / §8 / §9 (2026-10-12, after the cutover), read at `origin/main` = `1dae076`:** the host KSA
   file **still present and not retired** — `/home/team/shared/templates/ksa-employment-contract.md`, 10,662 bytes, md5
-  `3518c1af4931afc7b5cd54d0689987e0`, mtime unchanged at 2026-09-17 06:31, `"Up to 50"` ×1; `templates/retired/`
+  `3518c1af4931afc7b5cd54d0689987e0`, mtime unchanged at 2026-09-17 06:31, `"Up to 50"` ×1; `/home/team/shared/templates/retired/`
   holding **one** file, the notice's; the served contract's **single** `50%` sitting inside `150%` —
   `templates/ksa-employment-contract.md:92` (overtime-rate row); the counsel numbering taken from the product itself —
   `server/preboarding-items.js:135,142` (`'Q1'`) and `:154` (`'Q5'`), asserted in
