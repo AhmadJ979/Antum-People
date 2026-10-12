@@ -1,0 +1,41 @@
+Negative controls for server/reachability.test.js — proving the check can fail
+Run 2026-10-12 in a throwaway git worktree of row/c8da5fd2-reachability (never in the working clone),
+one injection at a time, reverted between controls.
+
+Each control injects ONE regression, runs the suite, and records which test went red.
+A check that cannot be reddened proves nothing, so this file exists to be re-run, not trusted.
+
+C1  add a new route with no caller, nothing registers it           -> callerless-route test red
+C2  add a boolean UI state never set true                          -> un-openable-control test red
+C3  register a route after the SPA catch-all                        -> registration-order test red
+C4  point a client call at a path no route registers                -> drift test + callerless-route test red
+C5  change the declared dynamic call site's expression              -> declared-dynamic-site test red
+
+----- raw output -----
+baseline (no injection)
+--- baseline
+    exit=0   failing tests: NONE (!!)
+
+--- C1 new route with no caller, nothing registers it
+    exit=1   failing tests: ['every /api route is reachable from a caller, or registered as callerless with a reason']
+      |-
+
+--- C2 new boolean control state, never set true
+    exit=1   failing tests: ['every boolean control state can be opened, or is registered as un-openable with a reason']
+      |-
+
+--- C3 a route registered after the catch-all
+    exit=1   failing tests: ['no route is registered after the SPA catch-all (it would be dead on arrival)']
+      |-
+
+--- C4 a client call site naming an unregistered route
+    exit=1   failing tests: ['every /api route is reachable from a caller, or registered as callerless with a reason', 'no client call site names a route the product does not register']
+      |-
+      |-
+
+--- C5 the declared dynamic call site moved/changed
+    exit=1   failing tests: ['each declared dynamic call site still exists, and still means what it claims']
+      |-
+
+restored: exit=0 (0 = the suite is green again, byte-identical tree)
+    worktree clean
