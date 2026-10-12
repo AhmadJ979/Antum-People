@@ -1,0 +1,29 @@
+=== rig re-run for the AMENDED branch tip — 2026-10-12T05:53:05Z
+=== live deployment before (must be 200, untouched by this rig): 200
+=== base origin/main = a63fc04   branch tip = af3ba28
+=== what the amendment changed (comment/date only, no rendered string):
+ pdpl-acknowledgement-route-spec.md                          |   4 +++-
+ pdpl-lawful-basis-mapping.md                                |   4 ++--
+ 16 files changed, 20 insertions(+), 13 deletions(-)
+=== merge-tree (branch vs origin/main):
+80529223f07fe722753d636e5350879a37189666
+error: cannot apply binary patch to 'docs/evidence/notice-not-shown-copy-2026-10-12/rollup-tiles.png' without full index line
+error: docs/evidence/notice-not-shown-copy-2026-10-12/rollup-tiles.png: patch does not apply
+=== rig tree vs branch tip, blob hashes (equal means the rig IS the merge result):
+  DIFFER  client/src/App.tsx  rig=b08a181aeb16c75a3b511e557c2fe756e219b677 branch=b8498050c3df30774714c675c893db7ca2dc6cab
+  DIFFER  demo-walkthrough-script.md  rig=c6437c358b533cb3a493b4dfc2c28aa9fd7d91b4 branch=b050a62546dfdf8ab6f1ff539d8f8349c2af3e68
+  DIFFER  demo-weak-screens.md  rig=e2b8bd09a536e67a13270ffba2a477bfa631a2a4 branch=e3108508ae99a9dfd2d408ff7a921671011b1523
+  DIFFER  design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md  rig=74b23996941258ab07128f9cc875cb4d8579a5f5 branch=cef484fec4b5623aba06481132ee8d08a4d23b12
+  DIFFER  pdpl-acknowledgement-route-spec.md  rig=2cbd2697e4e3b95fb00d14f4e906a53a43a5fc6a branch=1e0d289c2a9dbf4f76de4722307d2dfa04bd0235
+  DIFFER  pdpl-lawful-basis-mapping.md  rig=5ad03567b83be04dff93acc0e6b836b0980838e1 branch=b8fefd58aa9c10d4913c3815d135b0172d2ad418
+tsc -b exit code: 0
+vite build exit code: 0
+dist/assets/index-BcziNE91.js   274.05 kB │ gzip: 76.39 kB
+
+[32m✓ built in 305ms[39m
+=== built bundle (the rig's own build; NOT a claim about the served asset):
+  index-BcziNE91.js 274056 bytes  md5 e29f5ef4bc6ffb6a1e09907e7bc5980b
+     'Cases · notice not shown' : 0
+     'WITHOUT CONSENT'          : 0
+     'cases_without_consent'    : 0
+=== live deployment after (must still be 200): 200

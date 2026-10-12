@@ -1,0 +1,34 @@
+nohup: ignoring input
+=== live deployment before (must be 200): 200
+=== base: origin/main = a63fc04   branch tip = 391fe1d
+=== merge-tree check (branch vs current origin/main):
+5e0f29e31f53cf7d9f4985075771c3773f728a42
+=== rig tree vs branch, blob hashes (equal means the rig IS the merge result):
+  equal   client/src/App.tsx
+  equal   demo-walkthrough-script.md
+  equal   demo-weak-screens.md
+  equal   design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md
+  equal   pdpl-acknowledgement-route-spec.md
+  equal   pdpl-lawful-basis-mapping.md
+=== build (both halves, with exit codes):
+  tsc -b exit code: 0
+  vite build exit code: 0
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-Cc1GodRa.js   274.06 kB │ gzip: 76.40 kB
+
+[32m✓ built in 364ms[39m
+=== built bundle: the new label in, the retired wording out:
+  index-Cc1GodRa.js 274065 bytes
+     'Cases · notice not shown' occurrences: 1
+     old label 'Notice not shown' (bare)     : 0
+     'WITHOUT CONSENT' occurrences          : 0
+=== seed a scratch DB (DEMO_SEED) + a throwaway admin:
+  seed exit code: 0  (29 lines)
+(Use `node --trace-warnings ...` to show where the warning was created)
+user ok
+=== boot the scratch server on 4716:
+  listener pid: 22135  cwd: /home/agent-product-designer/rig-copy/server
+  health contract (/api/employees without a token, want 401): 401
+  page (want 200): 200
+  served asset: assets/index-Cc1GodRa.js
+=== live deployment after (must still be 200): 200

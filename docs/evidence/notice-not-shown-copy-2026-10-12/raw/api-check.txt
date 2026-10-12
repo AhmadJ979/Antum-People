@@ -1,0 +1,12 @@
+login ok; token chars: 204  (written to token.txt)
+totals keys: ['cases', 'items', 'items_outstanding', 'items_received', 'items_verified', 'cases_notice_not_shown', 'cases_ready', 'workspace_lines', 'workspace_lines_open', 'cases_provisioned']
+cases: 3 · items_outstanding: 21 · items_verified: 0 · cases_ready: 0
+cases_notice_not_shown: 3
+retired field cases_without_consent present? False
+distinct flag states: ['clear', 'inside_48_hours', 'started']
+
+=== the gate's own strings, from one case detail (per-item notice record):
+notice version served: None
+bases per item: {}
+acknowledgements: []
+notice_items_collectible: None · notice_items_no_basis: None
