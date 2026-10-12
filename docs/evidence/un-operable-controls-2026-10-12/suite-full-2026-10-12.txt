@@ -1,0 +1,12 @@
+Full server suite, 2026-10-12, on row/c8da5fd2-reachability (based on origin/main 580ec7ea)
+Command: cd server && node --test
+
+1..44
+# tests 163
+# suites 35
+# pass 163
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1919.190189

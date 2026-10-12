@@ -1,0 +1,111 @@
+Reachability measurement — Antum People
+Filed 2026-10-12 by agent-senior-software-engineer, row c8da5fd2-2e58-4f6d-bf36-f9117760172e.
+Command: node scripts/reachability-report.js   (from the repository root)
+Tree: branch row/c8da5fd2-reachability, based on origin/main 580ec7ea (cutover #5's served tree is 9d2182a;
+      this branch adds docs, tests and a script only — no served behaviour changes).
+Reading: exit 0 = every un-operable element is registered with an owning decision. Exit 1 = a new one exists.
+
+----- raw output -----
+
+==============================================================================
+ROUTE REACHABILITY
+every route registered in server/index.js, and what can reach it
+==============================================================================
+          REACHABLE(client)  POST /api/login                                      client/src/App.tsx:327, scripts/cors-error-contract-test.sh:131
+          REACHABLE(client)  GET /api/employees                                   client/src/App.tsx:581, scripts/keep-alive-deploypath-test.sh:86
+  [known] NONE               GET /api/employees/:id                               —
+          REACHABLE(client)  POST /api/employees                                  client/src/App.tsx:1029
+          REACHABLE(client)  PUT /api/employees/:id                               client/src/App.tsx:1090, client/src/App.tsx:1110
+          REACHABLE(client)  GET /api/employees/:id/onboarding                    client/src/App.tsx:983
+          PLAUSIBLE(dynamic) PUT /api/onboarding-tasks/:id                        dynamic: client/src/App.tsx:1068
+          REACHABLE(client)  GET /api/employees/:id/offboarding                   client/src/App.tsx:984
+          PLAUSIBLE(dynamic) PUT /api/offboarding-tasks/:id                       dynamic: client/src/App.tsx:1068
+  [known] NONE               POST /api/compliance/calculate-eosb                  —
+          REACHABLE(client)  GET /api/compliance/notice                           client/src/App.tsx:898
+  [known] NONE               POST /api/compliance/consent                         —
+          REACHABLE(client)  GET /api/compliance/templates/:templateName/:employeeId client/src/App.tsx:1005
+  [known] NONE               GET /api/compliance/report                           —
+          REACHABLE(client)  GET /api/analytics/dashboard                         client/src/App.tsx:582
+          REACHABLE(client)  POST /api/exit-interviews                            client/src/App.tsx:1131
+          REACHABLE(client)  POST /api/preboarding/cases                          client/src/App.tsx:652
+          REACHABLE(client)  GET /api/preboarding/cases                           client/src/App.tsx:623
+  [known] NONE               GET /api/preboarding/cases/:id                       —
+          REACHABLE(client)  GET /api/preboarding/checklist/overview              client/src/App.tsx:693
+          REACHABLE(client)  GET /api/preboarding/cases/:id/checklist             client/src/App.tsx:711
+          REACHABLE(client)  GET /api/preboarding/cases/:id/workspace             client/src/App.tsx:766
+          REACHABLE(client)  POST /api/preboarding/cases/:id/items/:itemKey/status client/src/App.tsx:867
+          REACHABLE(client)  POST /api/preboarding/cases/:id/reminders            client/src/App.tsx:956
+          REACHABLE(client)  POST /api/preboarding/cases/:id/notice-acknowledgements client/src/App.tsx:926
+          REACHABLE(client)  GET /api/preboarding/cases/:id/package               client/src/App.tsx:739
+          REACHABLE(client)  POST /api/preboarding/cases/:id/package/:itemKey/acknowledgement client/src/App.tsx:822
+  [known] NONE               GET /api/preboarding/flag-watch                      —
+  (28 routes; non-/api handlers such as the SPA catch-all are out of scope)
+
+==============================================================================
+ROUTES WITH NO CALLER
+a defect to wire or to remove — "leave it and say so" must be written down
+==============================================================================
+
+  GET /api/employees/:id  (server/index.js:170)
+    registered: yes — decision 20 (wire or remove) — not yet ruled
+    Returns one employee with the national ID decrypted. No client code calls it: the roster (GET /api/employees) is what the UI reads, and the detail view takes its employee from that list. An orphan that also widens the API surface by an unnecessary PII read.
+
+  POST /api/compliance/calculate-eosb  (server/index.js:335)
+    registered: yes — decision 20 (wire or remove) — not yet ruled
+    A pure EOSB calculator over the request body. The product computes EOSB server-side for the settlement statement, so nothing calls the endpoint form of it.
+
+  POST /api/compliance/consent  (server/index.js:359)
+    registered: yes — decision 17 — measured; recommendation is to retire the instrument and keep the subject
+    The employee-record consent instrument. No caller and no test; the tile it feeds is written by the demo seeder (scripts/seed-demo.js). Measured for decision 17.
+
+  GET /api/compliance/report  (server/index.js:424)
+    registered: yes — decision 20 (wire or remove) — not yet ruled
+    A compliance roll-up no client code requests. Found while measuring decision 17.
+
+  GET /api/preboarding/cases/:id  (server/index.js:646)
+    registered: yes — decision 20 (wire or remove) — not yet ruled
+    Single-case detail. The UI reads the list (GET /api/preboarding/cases) and each sub-resource it actually shows (checklist, workspace, package), never this one.
+
+  GET /api/preboarding/flag-watch  (server/index.js:840)
+    registered: yes — decision 20 (wire to a monitor, or remove) — not yet ruled
+    Reports the flag watcher record over HTTP. Nothing calls it — the scheduler reads the module directly (flagWatcher.status()), so this route is a second, unused door to the same value.
+
+==============================================================================
+CONTROLS THAT CANNOT BE OPENED
+boolean UI state whose setter is never called with true
+==============================================================================
+  [known] showExitModal (client/src/App.tsx:459) — setter called 2x, never with true
+          decision 16 (wire it, or leave it and say so) — not yet ruled
+  (6 of 7 boolean states are openable)
+
+==============================================================================
+VALUES A TILE DISPLAYS
+does anything that RUNS IN PRODUCTION write it?
+==============================================================================
+
+  employee record — "✓ GRANTED ON {date}"
+    read at client/src/App.tsx:1549 (consent_granted, consent_date)
+    written: server  server/index.js:365
+    written: script  scripts/seed-demo.js:488
+    decision 17
+
+==============================================================================
+DECLARED DYNAMIC CALL SITES
+paths built at runtime — equality cannot prove these, so they are declared
+==============================================================================
+  client/src/App.tsx:1068  /api/${endpoint}/${taskId}
+    covers: PUT /api/onboarding-tasks/:id, PUT /api/offboarding-tasks/:id
+
+==============================================================================
+REGISTRATION ORDER
+a route declared after the SPA catch-all is dead on arrival
+==============================================================================
+  none
+
+==============================================================================
+CLIENT CALLS THAT NAME NO ROUTE
+drift between the client and the route table
+==============================================================================
+  none
+
+Nothing new: every un-operable element on this product is registered with an owner.
