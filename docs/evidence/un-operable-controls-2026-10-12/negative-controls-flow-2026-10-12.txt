@@ -1,0 +1,30 @@
+Negative controls for the flow-level assertion (test 10) — 2026-10-12
+Against the working files copied into a throwaway worktree of origin/main 5fb4fa4.
+C6 a fourth no-basis item appears in NOTICE_BASES -> test 10 red
+C7 the Request control is guarded, register left stale -> test 10 red
+Restored: 10 tests / 10 pass / 0 fail.
+'pathspec did not match' lines are expected: the new files are untracked in origin/main and were copied in.
+
+== baseline on the working files ==
+# tests 10 # pass 10 # fail 0 
+error: pathspec 'server/reachability.js' did not match any file(s) known to git
+error: pathspec 'server/reachability-register.js' did not match any file(s) known to git
+error: pathspec 'server/reachability.test.js' did not match any file(s) known to git
+  injected C6: a fourth no-basis item
+== control 1 ==
+   not ok 10 - an item the notice assigns no basis to is not offered a move it can never complete
+       the set of items that can be requested and never received must be exactly the registered set: a new no-basis item, a newly unguarded Request control, or a fix that makes one of these collectible all belong in this diff
+   # pass 9
+   # fail 1
+error: pathspec 'server/reachability.js' did not match any file(s) known to git
+error: pathspec 'server/reachability-register.js' did not match any file(s) known to git
+error: pathspec 'server/reachability.test.js' did not match any file(s) known to git
+  injected C7: the Request control is guarded, register left stale
+== control 2 ==
+   not ok 10 - an item the notice assigns no basis to is not offered a move it can never complete
+       the set of items that can be requested and never received must be exactly the registered set: a new no-basis item, a newly unguarded Request control, or a fix that makes one of these collectible all belong in this diff
+   # pass 9
+   # fail 1
+== restored ==
+# tests 10 # pass 10 # fail 0 
+worktree clean
