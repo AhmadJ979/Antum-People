@@ -117,6 +117,9 @@ Item set: `server/preboarding-items.js:71-77`. Notice purposes: `templates/priva
 | The roll-up label | `Without consent` (`:1804`) | *notice not shown* — the count is unchanged, its meaning is not. This is the label that replaces the demo's "3 WITHOUT CONSENT", and the demo documents must be re-grounded with it |
 | Refusal on collection | `A document cannot be collected before the PDPL consent record exists…` (`server/preboarding-items.js:330`) | the notice has not been shown for this item yet |
 
+
+**Wording, settled 2026-10-13 (designer).** The one wording refinement to the table above: the roll-up label reads **`Cases · notice not shown`**, not a bare "notice not shown". The unit is named because that tile sits beside two **item** counts (`items_outstanding`, `items_verified`) inside a single panel, so a unit-less label reads as a third item count — and this one counts cases. The control, the recorded state, the empty state and the per-item line are as the table says. Every string was checked against the rule at the top of this section: none of them says consent, agreed, signed or accepted, and none of them claims the hire read the notice.
+
 ---
 
 ## 7. Implementation checklist (runbook)

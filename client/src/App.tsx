@@ -1886,11 +1886,14 @@ export default function App() {
                       </div>
                       <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
                         <div className="text-lg font-extrabold text-slate-900">{checklistOverview.totals.cases_notice_not_shown}</div>
-                        {/* "Notice not shown" replaces "Without consent" and only the label changed: a case
-                            with no acknowledgement is not a case where the hire refused anything — it is a
-                            case where HR has not yet put the notice in front of them. The count is the
-                            server's, over the same endpoint's own filters. */}
-                        <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Notice not shown</div>
+                        {/* "Cases · notice not shown" replaces "Without consent", and the meaning moves with the
+                            words: a case with no acknowledgement is not a case where the hire refused
+                            anything — it is a case where HR has not yet put the notice in front of
+                            them. The UNIT is named (designer, 2026-10-13) because the two tiles beside
+                            this one count ITEMS inside one panel: a bare "notice not shown" reads as a
+                            third item count, and this one counts cases. The count itself is the
+                            server's, over the same endpoint's own filters — no number moved. */}
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Cases · notice not shown</div>
                       </div>
                     </div>
                   )}
