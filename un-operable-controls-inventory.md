@@ -62,9 +62,12 @@ operate, or a figure with no producer. Wire, remove, or write down the choice �
 an answer once it is in this table.
 
 1. **`GET /api/employees/:id`** — the roster is what the UI reads and the detail view takes its employee from
-   that list, so this route is dead; it also **decrypts the national ID** and is therefore an unnecessary PII
-   surface — **one of two** callerless routes that decrypt a national ID, the other being element 4, which
-   does it over the whole roster. **Recommended: remove** (an unoperable control that widens the API is the worst case here).
+   that list, so this route is dead: the two client hits on that path (`client/src/App.tsx:1090`, `:1110`) are
+   both `method: 'PUT'` (`handleMarkProductive`, `handleTransitionToOffboarding`), and the client contains no
+   `method: 'GET'` call at all — a hit count does not know a string's role. It also **decrypts the national ID**
+   and answers `res.json(emp)`: the plaintext identifier is not an incidental field, it **is** the response
+   body. **One of two** callerless routes that decrypt a national ID, the other being element 4, which returns
+   the whole roster's. **Recommended: remove** (an unoperable control that widens the API is the worst case here).
 2. **`POST /api/compliance/calculate-eosb`** — a pure calculator over the request body; the product computes
    EOSB server-side for the settlement statement, so nothing needs the endpoint form. **Recommended: remove**
    (the engine keeps its unit tests; only the HTTP door goes).
@@ -75,9 +78,13 @@ an answer once it is in this table.
    `consentGranted` — the **seeder-written** flag, written in exactly two places: `scripts/seed-demo.js:320`
    and the callerless `POST /api/compliance/consent` (`server/index.js:365`). Wiring it would put a number
    the seeder fabricates in front of a prospect until decision 17 is ruled *(the compliance expert's
-   measurement)*. (ii) The handler (`server/index.js:424`) runs `auth.decrypt()` over `national_id_value` and
-   `national_id_iqama` **for every employee** to compute those counts — it decrypts the **whole roster** and
-   keeps only counts, and nothing calls it. Removing it takes a whole-roster PII read with it.
+   measurement)*. (ii) The handler (`server/index.js:424`) is **not a roll-up at all**: it decrypts
+   `national_id_value` and `national_id_iqama` for **every employee**, filters that **decrypted** array by visa
+   expiry and returns `alerts` **whole** — full employee objects carrying the plaintext national ID and Iqama.
+   Wiring it unchanged would hand a plaintext national ID and Iqama to anyone who can load the screen, for
+   every employee whose visa expires within 60 days. That payload is why **remove** is the default rather than
+   a preference, and removing it takes the whole-roster PII with it *(the compliance expert's measurement,
+   `compliance-requirements.md` §5.2.1)*.
 5. **`GET /api/preboarding/cases/:id`** — single-case detail; the UI reads the list plus the sub-resources it
    shows (checklist, workspace, package). **Recommended: remove** (the list response already carries the case).
 6. **`GET /api/preboarding/flag-watch`** — exposes the flag watcher's record over HTTP while the scheduler
@@ -244,10 +251,10 @@ own. One scheme in this document, so a ruling can cite a number once.
 
 | # | element | wire it — cost | remove it — cost | recommendation |
 |---|---------|----------------|------------------|----------------|
-| 1 | `GET /api/employees/:id` | a detail view nothing needs | ~14 lines; also **one of two** callerless routes that decrypt a national ID (the other is #4) | **remove** |
+| 1 | `GET /api/employees/:id` | a detail view nothing needs; it would answer with the decrypted identifier | ~14 lines; also **one of two** callerless routes that decrypt a national ID (the other is #4), and here the plaintext identifier **is** the response body (`res.json(emp)`) | **remove** |
 | 2 | `POST /api/compliance/calculate-eosb` | a calculator UI nobody asked for | ~9 lines; the engine keeps its tests | **remove** |
 | 3 | `POST /api/compliance/consent` | nothing to build: 15(b)'s notice-shown record carries basis, version and actor; retire the boolean, re-point the tile | same edit — the instrument goes either way | **remove** (17) |
-| 4 | `GET /api/compliance/report` | build the screen it implies — but the account it would print is `consentGranted`, the **seeder-written flag** (`scripts/seed-demo.js:320`; the only other writer is the callerless `POST /api/compliance/consent`, `server/index.js:365`), so wiring it puts a fabricated compliance figure in front of a prospect until decision 17 is ruled *(the compliance expert's measurement)* | ~10 lines, and nothing reads it — **and it takes a whole-roster PII read with it**: the handler at `server/index.js:424` runs `auth.decrypt()` over `national_id_value` and `national_id_iqama` for **every employee** and keeps only counts | **remove** — the default; wiring stays open only behind decision 17 |
+| 4 | `GET /api/compliance/report` | build the screen it implies — but the account it would print is `consentGranted`, the **seeder-written flag** (`scripts/seed-demo.js:320`; the only other writer is the callerless `POST /api/compliance/consent`, `server/index.js:365`), so wiring it puts a fabricated compliance figure in front of a prospect until decision 17 is ruled *(the compliance expert's measurement)* | ~10 lines, and nothing reads it — **and it takes a whole-roster PII read with it**: the handler at `server/index.js:424` decrypts `national_id_value` and `national_id_iqama` for **every employee** and returns the decrypted `alerts` array **whole** — plaintext national IDs and Iqamas for every employee whose visa expires within 60 days | **remove** — the default: this is a PII payload, not a roll-up screen; wiring stays open only behind decision 17 |
 | 5 | `GET /api/preboarding/cases/:id` | nothing needs it — the list carries the case | ~20 lines | **remove** |
 | 6 | `GET /api/preboarding/flag-watch` | point the operator check at it | one route | **wire** |
 | 7 | the Exit modal (decision 16) | a placement + a copy pass + the `satisfaction_score` default | delete the modal, `POST /api/exit-interviews` and the `exit_interviews` read behind `exitsByReason` — the only producer of a shipped figure | **wire** |

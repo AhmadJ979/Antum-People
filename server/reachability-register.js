@@ -5,7 +5,7 @@
  *
  * What a register is for: a defect the team knows about and has NOT fixed. Every entry names the
  * decision that owns the fix, so "leave it and say so" is written down rather than assumed — that
- * is the whole reason decision 20 exists. The test asserts each register matches reality EXACTLY:
+ * is the whole reason decision 21 exists. The test asserts each register matches reality EXACTLY:
  * a new orphan fails the build, and a fixed one cannot linger here looking like a defect.
  *
  * Measured 2026-10-12 on origin/main 83dd151 (the tree that served cutover #5). Line numbers in the
@@ -18,14 +18,15 @@ const CALLERLESS = {
     route: 'server/index.js:170',
     why: 'Returns one employee with the national ID decrypted. No client code calls it: the roster '
        + '(GET /api/employees) is what the UI reads, and the detail view takes its employee from that '
-       + 'list. An orphan that also widens the API surface by an unnecessary PII read.',
-    owner: 'decision 20 (wire or remove) — not yet ruled',
+       + 'list. An orphan that also widens the API surface by an unnecessary PII read: the handler answers '
+       + 'res.json(emp), so the decrypted identifier is the response body, not an incidental field.',
+    owner: 'decision 21 — recommendation: remove (a dead route whose response body is the decrypted national ID)',
   },
   'POST /api/compliance/calculate-eosb': {
     route: 'server/index.js:335',
     why: 'A pure EOSB calculator over the request body. The product computes EOSB server-side for the '
        + 'settlement statement, so nothing calls the endpoint form of it.',
-    owner: 'decision 20 (wire or remove) — not yet ruled',
+    owner: 'decision 21 — recommendation: remove (the engine keeps its tests; only the HTTP door goes)',
   },
   'POST /api/compliance/consent': {
     route: 'server/index.js:359',
@@ -35,20 +36,25 @@ const CALLERLESS = {
   },
   'GET /api/compliance/report': {
     route: 'server/index.js:424',
-    why: 'A compliance roll-up no client code requests. Found while measuring decision 17.',
-    owner: 'decision 20 (wire or remove) — not yet ruled',
+    why: 'A compliance roll-up no client code requests, and the second callerless route that decrypts '
+       + 'national IDs: it decrypts national_id_value and national_id_iqama, filters the decrypted array by '
+       + 'visa expiry and returns the alerts array whole, so wiring it unchanged would return a plaintext '
+       + 'national ID and Iqama for every employee whose visa expires within 60 days. The figure it would '
+       + 'print is consentGranted, the seeder-written flag (scripts/seed-demo.js:320; the only other writer '
+       + 'is the callerless POST /api/compliance/consent). Found while measuring decision 17.',
+    owner: 'decision 21 — recommendation: remove (wiring it would return a plaintext national ID and Iqama for every employee whose visa expires within 60 days); wiring stays open only behind decision 17',
   },
   'GET /api/preboarding/cases/:id': {
     route: 'server/index.js:646',
     why: 'Single-case detail. The UI reads the list (GET /api/preboarding/cases) and each sub-resource '
        + 'it actually shows (checklist, workspace, package), never this one.',
-    owner: 'decision 20 (wire or remove) — not yet ruled',
+    owner: 'decision 21 — recommendation: remove (the list response already carries the case)',
   },
   'GET /api/preboarding/flag-watch': {
     route: 'server/index.js:840',
     why: 'Reports the flag watcher record over HTTP. Nothing calls it — the scheduler reads the module '
        + 'directly (flagWatcher.status()), so this route is a second, unused door to the same value.',
-    owner: 'decision 20 (wire to a monitor, or remove) — not yet ruled',
+    owner: 'decision 21 — recommendation: wire it to the operator check, or remove',
   },
 };
 

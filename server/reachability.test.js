@@ -30,7 +30,7 @@ const r = require('./reachability');
 /**
  * Routes with no caller anywhere, and no user path to them. Every one of these is a defect to wire
  * or to remove — the register records which decision owns that choice, because "leave it and say
- * so" is only an answer once it is written down (decision 20).
+ * so" is only an answer once it is written down (decision 21).
  */
 const {
   CALLERLESS, DYNAMIC_SITES, UNOPENABLE_CONTROLS, DISPLAYED_VALUES, DEAD_END_ITEMS,
