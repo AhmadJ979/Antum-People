@@ -18,7 +18,11 @@
  *   5. each case also arrives with its P2-4 workspace lines — all open, every line owned by one
  *      of the four functions, all four functions represented — because the case-creation path
  *      seeds both tracks and the demo has to show the provisioning half too;
- *   6. no notice acknowledgement is seeded, so the gate on `received` stays demonstrable;
+ *   6. the notice is recorded as SHOWN, per item, on the two cases whose starts are imminent
+ *      only — the `clear` case stays unacknowledged, so the roll-up tile reads 1 and a
+ *      walkthrough can record it live — and never for the items the notice assigns no basis to, by
+ *      the demo account a walkthrough signs in as — and NOT for the two items §4 leaves without a
+ *      basis, which this release cannot collect and which the record must not carry a basis for;
  *   7. `preboarding_cases` carries no flag-like column, and the seed writes none — the state is
  *      derived, not stored.
  *
@@ -33,6 +37,9 @@ const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 
 const repoRoot = path.join(__dirname, '..');
+// The version the seed's records must carry is the served notice's, read the same way the server
+// reads it — so this test cannot pass by agreeing with a literal.
+const notice = require('./privacy-notice');
 const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'antum-demo-seed-'));
 const dbPath = path.join(workDir, 'demo.db');
 
@@ -156,16 +163,62 @@ describe('Layer 2 demo seed — the three pre-boarding cases', () => {
     assert.strictEqual(one(`SELECT COUNT(*) AS n FROM preboarding_items WHERE track NOT IN ('employee','workspace')`).n, 0);
   });
 
-  test('no notice acknowledgement is seeded, so the gate on received stays demonstrable', () => {
-    // The demo's own design intent, carried across from the consent instrument this replaces: a
-    // case the demo opens has had no notice shown for it, so the collection gate is demonstrably
-    // closed — which is also what gives "Record that the notice was shown" something to do on
-    // screen. Every seeded acknowledgement would have to name a person; the seed writes none.
-    assert.strictEqual(one('SELECT COUNT(*) AS n FROM preboarding_notice_acknowledgements').n, 0);
-    // The retired consent table is cleared on every seed too: a stale row left by an earlier deploy
-    // would claim an instrument nothing writes and nothing reads.
+  test('the notice is recorded as shown per item, by a named person, for the collectible items only', () => {
+    const acked = rows(`
+      SELECT c.offer_reference, a.item_key, a.instrument, a.lawful_basis, a.notice_version, a.recorded_by
+      FROM preboarding_notice_acknowledgements a
+      JOIN preboarding_cases c ON c.id = a.case_id
+      ORDER BY c.offer_reference, a.item_key
+    `);
+    // Two imminent cases, four collectible documents each (passport, visa/entry permit, Emirates
+    // ID, bank details). Seven employee-track items minus the three the notice assigns no basis to.
+    assert.strictEqual(acked.length, 8,
+      'the two imminent cases × four collectible documents — the clear case is deliberately unacknowledged');
+    assert.ok(acked.every((r) => r.instrument === 'notice_shown'),
+      'the record says the notice was shown — it is not a consent record under another name');
+    assert.ok(acked.every((r) => r.recorded_by === 'admin'),
+      'every row names the person a walkthrough signs in as');
+    assert.ok(!acked.some((r) => ['system', 'demo-seed', ''].includes(r.recorded_by)),
+      'no row signs as the system or as the seeder: the module refuses an unnamed actor');
+    // Exactly one case has nothing recorded, and it is the `clear` one. That single case is the
+    // roll-up's "notice not shown" count — the tile reads 1, and the walkthrough can act on it.
+    const unacked = rows(`SELECT c.offer_reference FROM preboarding_cases c WHERE NOT EXISTS (
+      SELECT 1 FROM preboarding_notice_acknowledgements a WHERE a.case_id = c.id)
+      ORDER BY c.offer_reference`);
+    assert.deepStrictEqual(unacked.map((r) => r.offer_reference), ['OFR-2026-DEMO-01'],
+      'the clear case is the one with nothing shown — three weeks out, nothing to show yet');
+    assert.ok(!acked.some((r) => r.offer_reference === 'OFR-2026-DEMO-01'),
+      'and no acknowledgement leaked onto it');
+    // The version is the notice's own, read from the file when the seed ran.
+    assert.ok(acked.every((r) => r.notice_version === notice.noticeVersion()),
+      'the record carries the served notice\'s version');
+    // The basis is per item and it is the notice's own: three items under legal obligation and the
+    // bank details under contract, on each of the two acknowledged cases.
+    const byBasis = {};
+    for (const r of acked) byBasis[r.lawful_basis] = (byBasis[r.lawful_basis] || 0) + 1;
+    assert.deepStrictEqual(byBasis, {
+      'Legal obligation': 6,
+      'Performance of the employment contract / contractual necessity': 2,
+    });
+    // The items the notice assigns no basis to carry no row at all — the module refuses them, and
+    // no basis is invented to make the count look complete.
+    assert.strictEqual(one(`SELECT COUNT(*) AS n FROM preboarding_notice_acknowledgements
+      WHERE item_key IN ('education_certificate','experience_certificate','emergency_contact')`).n, 0);
+    // The retired instrument stays empty, and the reminders too: a stale consent row left by an
+    // earlier deploy would claim something nothing writes and nothing reads.
     assert.strictEqual(one('SELECT COUNT(*) AS n FROM preboarding_consents').n, 0);
     assert.strictEqual(one('SELECT COUNT(*) AS n FROM preboarding_reminders').n, 0);
+  });
+
+  test('the demo figures the walkthrough quotes are intact: 7 items per case, 21 outstanding', () => {
+    // §4's demo arithmetic: the two no-basis items STAY in the set, so the seeded counts do not
+    // move. This is the assertion that catches a future tidy-up from the item set.
+    assert.strictEqual(one(`SELECT COUNT(*) AS n FROM preboarding_items WHERE track = 'employee'`).n, 21);
+    assert.strictEqual(one(`SELECT COUNT(*) AS n FROM preboarding_items
+      WHERE track = 'employee' AND status NOT IN ('received','verified')`).n, 21,
+      'nothing is collected: the notice being shown is not a document arriving');
+    assert.strictEqual(one(`SELECT COUNT(*) AS n FROM preboarding_items WHERE track = 'workspace'`).n,
+      43, 'the workspace lines are untouched: 14 + 14 + 15');
   });
 
   test('the state is derived, not stored: no flag-like column on the case table', () => {

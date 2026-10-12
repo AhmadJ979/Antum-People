@@ -1,0 +1,21 @@
+### cd server && npm test
+# tests 144
+# suites 31
+# pass 144
+# fail 0
+
+### the seed, its own log (scratch DB)
+- Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-10-26) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started; notice shown for 0/4 collectible ()
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-13) — inside 48 hours with every item still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-11) — start date already passed, items still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+
+### the roll-up count, read from the seeded DB
+(node:28440) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ack rows total: 8
+per case: [{"offer_reference":"OFR-2026-DEMO-01","n":0},{"offer_reference":"OFR-2026-DEMO-02","n":4},{"offer_reference":"OFR-2026-DEMO-03","n":4}]
+cases with the notice not shown (the tile): 1
+by basis: [{"lawful_basis":"Legal obligation","n":6},{"lawful_basis":"Performance of the employment contract / contractual necessity","n":2}]
+rows for the no-basis items: 0

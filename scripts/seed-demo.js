@@ -8,6 +8,11 @@ const auth = require('../server/auth');
 const preboarding = require('../server/preboarding');
 const preboardingItems = require('../server/preboarding-items');
 
+// Who the seed signs the notice record as: the demo account a walkthrough signs in as, because
+// that is the session that would write the row in the product. Not 'system' — the module refuses
+// an unnamed actor — and not 'demo-seed', which would name the seeder rather than the person.
+const DEMO_NOTICE_RECORDED_BY = 'admin';
+
 /**
  * Antum People Coherent Demo Seed v3.1
  * 
@@ -533,6 +538,9 @@ async function seed() {
       offset_days: 14,
       request_items: ['passport', 'visa_or_entry_permit', 'emirates_id'],
       state: 'on track — 14 days out, three items requested, none verified',
+      // Nothing has been shown to this hire yet — three weeks out. This is the case the
+      // walkthrough uses to record the acknowledgement live.
+      notice_shown: false,
     },
     {
       offer_reference: 'OFR-2026-DEMO-02',
@@ -546,6 +554,7 @@ async function seed() {
       offset_days: 1,
       request_items: [],
       state: 'inside 48 hours with every item still open',
+      notice_shown: true,
     },
     {
       offer_reference: 'OFR-2026-DEMO-03',
@@ -559,6 +568,7 @@ async function seed() {
       offset_days: -1,
       request_items: [],
       state: 'start date already passed, items still open',
+      notice_shown: true,
     },
   ];
 
@@ -590,11 +600,9 @@ async function seed() {
     }
 
     // Items move through the product's own transition function, never by direct write. Only
-    // not_started -> requested is used here: nothing in the demo holds a collected document, so no
-    // case needs the notice shown for it and the gate on `received` stays demonstrable — which is
-    // the demo's design intent, the same one this seed had when the gate read a consent record.
-    // Nothing here records an acknowledgement; if it ever did, it would have to go through
-    // preboardingItems.recordNoticeAcknowledgement, which refuses a record with no named person.
+    // not_started -> requested is used here: nothing in the demo holds a collected document, so
+    // every case still reads its 7 employee-track items with 21 outstanding across the three, and
+    // the `received` step is still ahead of every document on screen.
     for (const itemKey of demoCase.request_items) {
       const item = await preboardingItems.getItem(caseRow.id, itemKey);
       if (item && item.status === 'not_started') {
@@ -604,14 +612,50 @@ async function seed() {
       }
     }
 
+    // The notice is recorded as SHOWN, per item, by a named person — the acknowledgement spec's
+    // §7.6, and the same writer the product uses (recordNoticeAcknowledgement), never direct SQL.
+    //
+    // The name is the demo account a walkthrough signs in as: that is the person whose session
+    // would write this row in the product, so a demo of the record shows the record as it really
+    // is. It is NOT 'system' (the module refuses an unnamed actor, and the literal the retired
+    // consent route wrote is exactly the defect this work removes) and not 'demo-seed' either —
+    // the seed is how the row got here, not who showed anyone anything.
+    //
+    // The two items §4 leaves without a basis (the certificates, and the emergency contact, which
+    // is a third person's data) are NOT recorded and NOT collectible: the module refuses them by
+    // name, with the counsel question they wait on, and that refusal is behaviour the demo can
+    // show rather than paper over.
+    // WHICH CASES HAVE THE NOTICE SHOWN IS PART OF THE DEMO'S STATE, NOT A BYPRODUCT (owner
+    // decision, 2026-10-12). The two cases whose start is imminent — `inside_48_hours` (+1 day) and
+    // `started` (-1 day) — are the hires HR has already put the notice in front of, so their
+    // records are seeded. The `clear` case is three weeks out and nothing has been shown on it:
+    // that is what the roll-up tile is for, and it is what lets a walkthrough record the
+    // acknowledgement live — open the notice from the gate, record it per item, and watch the count
+    // fall. A seed that acknowledged all three cases would read 0 and demonstrate nothing; one that
+    // acknowledged none would show none of the behaviour this cycle adds.
+    if (demoCase.notice_shown) {
+      for (const item of await preboardingItems.listItems(caseRow.id)) {
+        if (!preboardingItems.isNoticeCollectible(item.item_key)) continue;
+        await preboardingItems.recordNoticeAcknowledgement({
+          case_id: caseRow.id, item_key: item.item_key, recorded_by: DEMO_NOTICE_RECORDED_BY,
+        });
+      }
+    }
+
     const checklist = await preboardingItems.listItems(caseRow.id);
     const byStatus = {};
     for (const item of checklist) byStatus[item.status] = (byStatus[item.status] || 0) + 1;
+    // The run prints the state it produced, so a seed proves it rather than asserting it: the item
+    // counts, and the notice record per item with its own basis.
+    const acks = await preboardingItems.listNoticeAcknowledgements(caseRow.id);
+    const collectible = checklist.filter((item) => preboardingItems.isNoticeCollectible(item.item_key)).length;
     console.log(
       `- ${created ? 'Opened' : 'Replayed'} ${caseRow.offer_reference} `
       + `(${caseRow.candidate_name}, ${caseRow.jurisdiction}, start ${caseRow.start_date}) — `
       + `${demoCase.state}; items: `
       + Object.keys(byStatus).map((s) => `${byStatus[s]} ${s}`).join(', ')
+      + `; notice shown for ${acks.length}/${collectible} collectible `
+      + `(${acks.map((a) => `${a.item_key}=${a.lawful_basis}`).join(', ')})`
     );
   }
 
