@@ -1,7 +1,7 @@
 # The roll-up's third total, renamed — `Cases · notice not shown`
 
 **Row:** `7cfe0ac3` — *[Demo] The acknowledgement copy: retire "3 WITHOUT CONSENT" and every document that quotes it*
-**Date:** 2026-10-13 · **Author:** product designer · **Branch:** `copy/notice-not-shown-2026-10-13` (tip `391fe1d`, cut from `origin/main` `a63fc04`)
+**Date:** 2026-10-12 · **Author:** product designer · **Branch:** `copy/notice-not-shown-2026-10-13` (tip `391fe1d`, cut from `origin/main` `a63fc04`)
 
 ## The decision this serves
 
@@ -32,7 +32,7 @@ this one counts **cases**. §6 now carries the refinement.
 | `demo-weak-screens.md` | the screen row, the payload field lists (`cases_without_consent` → `cases_notice_not_shown`), and the governing paragraph **rewritten** (it used to say the label "stays as it is") |
 | `design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md` | the field list and the "three totals" description |
 | `pdpl-lawful-basis-mapping.md` | facts 6 and the consequence bullet now read as achieved, with the new name and current line citations |
-| `pdpl-acknowledgement-route-spec.md` | §6 gains a dated **"Wording, settled 2026-10-13"** block (additive; no substance changed) |
+| `pdpl-acknowledgement-route-spec.md` | §6 gains a dated **"Wording, settled 2026-10-12"** block (additive; no substance changed) |
 
 **No number moved.** Every figure in those documents is the one the post-cutover re-grounding froze; this pass
 changes labels, field names and meaning only, and deliberately does not restate the bundle or the seed.
@@ -54,6 +54,11 @@ worktree was made from `origin/main` (`a63fc04`) and the branch's diff applied, 
 ```
 
 ### 2. Build, both halves, with exit codes (`raw/rig-run.txt`)
+
+> **What the bundle figures below are, and are not.** `index-Cc1GodRa.js` / 274,065 bytes is **this rig's own
+> build** of this branch's tree, produced by `vite build` in the rig at `a63fc04`+`391fe1d` on 2026-10-12. It is
+> **not** the served asset and **not** a prediction of it: the served name, size and md5 are read off the live URL
+> after the cutover, by whoever runs it. Quote this figure only as "what that rig built".
 
 ```
   tsc -b exit code: 0
@@ -134,7 +139,7 @@ installed `client/`+`server/` `node_modules` to symlink from; edit those two pat
 differ. It never touches port 3000.
 
 ```bash
-D=docs/evidence/notice-not-shown-copy-2026-10-13
+D=docs/evidence/notice-not-shown-copy-2026-10-12
 HOME=/home/agent-product-designer bash $D/scripts/rig-copy.sh        # worktree of origin/main + the branch
                                                                     # diff, tsc + vite, seed, boot on 4716
 HOME=/home/agent-product-designer bash $D/scripts/api-check.sh       # payload / field-rename check
