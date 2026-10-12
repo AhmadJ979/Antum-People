@@ -1,6 +1,16 @@
 # Antum People — Layer 2 Pre-boarding: the HR working surface
 
 > **Status: every screen here is still design — and P2-2 has now built a first cut of it.** *(Corrected 2026-10-09: "still design" now describes the mock's layout only. **P2-3** (the pre-reading package and its acknowledgement record), **P2-4** (the workspace track) and **P2-5** (the derived 48-hour flag and its chip) are merged on `main` — P2-4 as PR #86 — and §§8A–8C specify the P2-6 portal. Read §5's rule and §6's track as shipped and checked, not as intent.)* **Deployment state, named 2026-10-09:** P2-3, P2-4, P2-5 and the L2 demo seed are **deployed on the served surface** (the **first cutover ran 2026-10-09 10:46 UTC**, and a **second ran 12:34 UTC the same day**, moving the served tree to `0dd1a97` with the accessibility fix #109 and re-seeding the demo to the same figures; a **third ran 13:46 UTC** the same day (tree `0dd1a97` → `da3330d`, the All-chip rendering-race fix #119), re-seeding at **13:46:16** and reproducing the same figures again, so the bundle serving now is **`assets/index-B8Hoaanh.js`, 270,982 bytes, md5 `abfe49fe…`**; the public URL answers the product and the three demo cases render in three flag states). The three lines below that read "on `main` and not deployed" (:60, :79, :80) are therefore a **pre-cutover record, kept as written**.
+> **Updated for the fourth movement, 2026-10-12 05:07 UTC — the bundle named above is not what is served now.**
+> The cutover ran (05:06:55–05:07:21Z, served tree `b54412d`) and the bundle being served is
+> **`assets/index-Dt2oLspq.js`, 270,962 bytes, md5 `5720cd6fbeca1966cb642f9cf6338a9c`** — read anonymously off
+> both the public URL and `127.0.0.1:3000` (each HTTP 200, the two fetched files md5-identical), the stylesheet
+> unchanged at `assets/index-BLszozVg.css`, and the same bytes a rig built from that tree produces. The demo was
+> re-seeded in the same movement (the product's own database written **05:07:02Z**), so the three cases are live
+> again on new dates. **The `index-B8Hoaanh.js` reading above stands exactly as written** — it is a correct record
+> of what was served on 2026-10-09, not a description of the surface today. Current figures:
+> `demo-weak-screens.md`, "The counts on the served surface"; raw evidence:
+> `docs/evidence/post-cutover-reground-2026-10-12/`.
 > **P2-2 landed on `main` as PR #70 (`5ed731e`, 2026-10-07):** the per-case checklist, the AE and SA
 > item sets, the status machine, the PDPL consent gate, an in-product reminder record, an HR
 > roll-up, and the document-byte boundary. **Before quoting §§2–3 as a description of the product,
