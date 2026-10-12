@@ -35,7 +35,7 @@ This is the same defect class as the pre-15(b) consent gate and the pre-#151 hos
 | 1 | `GET /api/employees/:id` | `server/index.js:170` | route — no caller | **new here** |
 | 2 | `POST /api/compliance/calculate-eosb` | `server/index.js:335` | route — no caller | **new here** |
 | 3 | `POST /api/compliance/consent` | `server/index.js:359` | route — no caller | known (decision 17) |
-| 4 | `GET /api/compliance/report` | `server/index.js:424` | route — no caller | known (decision 20) |
+| 4 | `GET /api/compliance/report` | `server/index.js:424` | route — no caller | known (decision 21) |
 | 5 | `GET /api/preboarding/cases/:id` | `server/index.js:646` | route — no caller | **new here** |
 | 6 | `GET /api/preboarding/flag-watch` | `server/index.js:840` | route — no caller | **new here** |
 | 7 | `showExitModal` — Exit Intelligence Intake | `client/src/App.tsx:459` (declaration) | control — never opened | known (decision 16) |
@@ -43,6 +43,9 @@ This is the same defect class as the pre-15(b) consent gate and the pre-#151 hos
 
 Elements 3 and 8 are **the same instrument** seen from its two ends: the route nothing calls, and the tile
 whose value only the seeder writes. They share decision 17, and they should be retired or rewired together.
+
+**Numbering.** This table is the document's numbering. §8's disposition table uses **these** numbers and
+appends §7's `Request` dead end as element **9** (a class of its own), so a ruling can cite a number once.
 
 ### Four of these are new
 
@@ -58,15 +61,21 @@ an answer once it is in this table.
 
 1. **`GET /api/employees/:id`** — the roster is what the UI reads and the detail view takes its employee from
    that list, so this route is dead; it also **decrypts the national ID** and is therefore an unnecessary PII
-   surface. **Recommended: remove** (an unoperable control that widens the API is the worst case here).
+   surface — **one of two** callerless routes that decrypt a national ID, the other being element 4, which
+   does it over the whole roster. **Recommended: remove** (an unoperable control that widens the API is the worst case here).
 2. **`POST /api/compliance/calculate-eosb`** — a pure calculator over the request body; the product computes
    EOSB server-side for the settlement statement, so nothing needs the endpoint form. **Recommended: remove**
    (the engine keeps its unit tests; only the HTTP door goes).
 3. **`POST /api/compliance/consent`** — the consent instrument. **Recommended: retire** per decision 17
    (retire the instrument, keep the subject), and stop the seeder fabricating consent.
-4. **`GET /api/compliance/report`** — a compliance roll-up no client requests. **Recommended: wire or remove**
-   — it is the only one of the six that looks like a *missing screen* rather than stray code, so the decision
-   is genuinely the owner's.
+4. **`GET /api/compliance/report`** — a compliance roll-up no client requests. **Recommended: remove.**
+   Two measured facts moved this from "the owner's call" to a default. (i) The figure it would display is
+   `consentGranted` — the **seeder-written** flag, written in exactly two places: `scripts/seed-demo.js:320`
+   and the callerless `POST /api/compliance/consent` (`server/index.js:365`). Wiring it would put a number
+   the seeder fabricates in front of a prospect until decision 17 is ruled *(the compliance expert's
+   measurement)*. (ii) The handler (`server/index.js:424`) runs `auth.decrypt()` over `national_id_value` and
+   `national_id_iqama` **for every employee** to compute those counts — it decrypts the **whole roster** and
+   keeps only counts, and nothing calls it. Removing it takes a whole-roster PII read with it.
 5. **`GET /api/preboarding/cases/:id`** — single-case detail; the UI reads the list plus the sub-resources it
    shows (checklist, workspace, package). **Recommended: remove** (the list response already carries the case).
 6. **`GET /api/preboarding/flag-watch`** — exposes the flag watcher's record over HTTP while the scheduler
@@ -163,11 +172,12 @@ So the next reader knows what the check does *not* excuse:
 
 ## 6. Follow-ups proposed (each its own row — none done here)
 
-1. **Remove `GET /api/employees/:id`** — dead route that decrypts a national ID (owner ruling, decision 20).
+1. **Remove `GET /api/employees/:id`** — dead route that decrypts a national ID (one of two; element 4
+   decrypts the whole roster) (owner ruling, decision 21).
 2. **Remove `POST /api/compliance/calculate-eosb`** if the owner agrees the engine needs no HTTP door.
 3. **Execute decision 17** — retire the consent instrument and the tile; stop the seeder writing consent.
-4. **`GET /api/compliance/report`** — wire it to a screen, or remove it (owner ruling; this one looks like a
-   missing screen).
+4. **`GET /api/compliance/report`** — remove it: the figure it would show is the seeder's, and the handler
+   decrypts the whole roster (owner ruling, decision 21). Wiring stays open only behind decision 17.
 5. **`GET /api/preboarding/cases/:id`** — remove.
 6. **`GET /api/preboarding/flag-watch`** — wire it to the operator check, or remove it.
 7. **Decision 16** — unchanged; it is the one instance already documented.
@@ -227,15 +237,18 @@ seven. The transcript reads the documented top-level `items` field, filtered to 
 
 ## 8. Dispositions — wire or remove, and what each costs
 
+Numbered as **§2** — the same element numbers, with §7's `Request` dead end appended as **9**, a class of its
+own. One scheme in this document, so a ruling can cite a number once.
+
 | # | element | wire it — cost | remove it — cost | recommendation |
 |---|---------|----------------|------------------|----------------|
-| 1 | Exit modal | a placement + a copy pass + the `satisfaction_score` default (decision 16's list) | delete the modal, `POST /api/exit-interviews` and the `exit_interviews` read behind `exitsByReason` — the only producer of a shipped figure | **wire** |
-| 2 | `POST /api/compliance/consent` | nothing to build: 15(b)'s notice-shown record carries basis, version and actor; retire the boolean, re-point the tile | same edit — the instrument goes either way | **remove** (17) |
-| 3 | `GET /api/compliance/report` | build the screen it implies — the largest of the six | ~10 lines; nothing reads it | **owner's call** |
-| 4 | `GET /api/employees/:id` | a detail view nothing needs | ~14 lines; also the only callerless route that decrypts a national ID | **remove** |
-| 5 | `POST /api/compliance/calculate-eosb` | a calculator UI nobody asked for | ~9 lines; the engine keeps its tests | **remove** |
-| 6 | `GET /api/preboarding/cases/:id` | nothing needs it — the list carries the case | ~20 lines | **remove** |
-| 7 | `GET /api/preboarding/flag-watch` | point the operator check at it | one route | **wire** |
-| 8 | the `Request` dead end | guard the control for non-collectible items **and** refuse `not_started → requested` with the 409 the collect gate already writes | nothing to remove; the alternative is to leave it and label it | **wire the guard** (the item's collectibility is counsel's, Q1/Q5) |
-
+| 1 | `GET /api/employees/:id` | a detail view nothing needs | ~14 lines; also **one of two** callerless routes that decrypt a national ID (the other is #4) | **remove** |
+| 2 | `POST /api/compliance/calculate-eosb` | a calculator UI nobody asked for | ~9 lines; the engine keeps its tests | **remove** |
+| 3 | `POST /api/compliance/consent` | nothing to build: 15(b)'s notice-shown record carries basis, version and actor; retire the boolean, re-point the tile | same edit — the instrument goes either way | **remove** (17) |
+| 4 | `GET /api/compliance/report` | build the screen it implies — but the account it would print is `consentGranted`, the **seeder-written flag** (`scripts/seed-demo.js:320`; the only other writer is the callerless `POST /api/compliance/consent`, `server/index.js:365`), so wiring it puts a fabricated compliance figure in front of a prospect until decision 17 is ruled *(the compliance expert's measurement)* | ~10 lines, and nothing reads it — **and it takes a whole-roster PII read with it**: the handler at `server/index.js:424` runs `auth.decrypt()` over `national_id_value` and `national_id_iqama` for **every employee** and keeps only counts | **remove** — the default; wiring stays open only behind decision 17 |
+| 5 | `GET /api/preboarding/cases/:id` | nothing needs it — the list carries the case | ~20 lines | **remove** |
+| 6 | `GET /api/preboarding/flag-watch` | point the operator check at it | one route | **wire** |
+| 7 | the Exit modal (decision 16) | a placement + a copy pass + the `satisfaction_score` default | delete the modal, `POST /api/exit-interviews` and the `exit_interviews` read behind `exitsByReason` — the only producer of a shipped figure | **wire** |
+| 8 | the "✓ GRANTED ON {date}" tile | re-point it at 15(b)'s notice-shown record — nothing to build; that record carries basis, version and actor | retire the instrument with the tile, and stop the seeder writing consent | **retire the instrument** (decision 17) |
+| 9 | the `Request` dead end (§7) | guard the control for non-collectible items **and** refuse `not_started → requested` with the 409 the collect gate already writes | nothing to remove; the alternative is to leave it and label it | **wire the guard** (the item's collectibility is counsel's, Q1/Q5) |
 Every fix lands with its register entry removed in the same commit — the test fails otherwise, on purpose.
