@@ -260,25 +260,3 @@ labelled `v2.2`; `#154` then changed three version lines, so the repository copy
 `6004b0a5b23ac5aa68415da5e45ec2cd`. The claim those sections make is an **equality** — the bytes the route
 returns are the bytes of the repository file — not a fixed hash, and the equality is unaffected by the bump.
 Anyone needing today's figure should re-read the route rather than quote a number from this directory.
-
-## 12. Merge check against post-`#154` main, and a hash that went stale
-
-Raw: `raw-merge-check-2026-10-12.txt`. The compliance expert's `#154` (the three v2.3 version lines) merged to
-`main` while this branch was open, and this branch was cut from `a11d5c8` — before that bump. So the question
-that matters before an owner merges #153 is not "does it conflict" but "**does it revert the bump**". It does
-not, and here is the measurement rather than the reasoning:
-
-- **This branch touches no `templates/` file at all.** `git diff --name-only <merge-base> <head>` lists seven
-  files under `server/` and `docs/evidence/` only — so it cannot carry an older notice text.
-- **The scratch merge into current `main` is clean**, and the merged notice is byte-identical to `main`'s:
-  both md5 `6004b0a5b23ac5aa68415da5e45ec2cd`. The three lines still read `v2.3` at `:5`, `:6` and `:247`, the
-  evidence files land, and the withdrawn pointer file is gone.
-- **The suite on the merged tree: 152 tests / 34 suites / 0 fail.** That is the guard passing *against a v2.3
-  notice* — the claim that it cannot pre-empt the notice owner's bump, now measured instead of asserted.
-
-**The stale hash, recorded rather than quietly left.** §3 and §11 quote `9c060b9fd07129cdb466471bbed7945b` as
-the repository copy's md5. That was the corrected text as it stood while labelled `v2.2`; `#154` then changed
-three version lines, so the repository copy is now `6004b0a5b23ac5aa68415da5e45ec2cd`. The claim those
-sections make is an **equality** — the bytes the route returns are the bytes of the repository file — not a
-fixed hash, and the equality is unaffected by the bump. Anyone needing today's figure should re-read the route
-rather than quote a number from this directory.
