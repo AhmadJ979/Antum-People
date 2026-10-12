@@ -12,9 +12,10 @@
 > table (`NOTICE_BASES`), the acknowledgement writer and the per-item gate — `if (track === 'employee' …)` at
 > `:466`, where this document cites `:326-332` — and a new `server/privacy-notice.js` is the single definition
 > of the notice the server serves (§3). **The "Today" columns below describe the product before that change:**
-> three of the four strings §6 quotes (`Record PDPL consent`, `PDPL consent recorded`, `No PDPL consent
-> record`) no longer exist in the client, and the item set cited at `server/preboarding-items.js:71-77` is at
-> `:76-82` today. Those readings stand as the record of the tree they were taken on (`b54412d`); §4's two
+> three of the five strings §6 quotes as today's (`Record PDPL consent`, `PDPL consent recorded`, `No PDPL
+> consent record`) no longer exist in the client — the control now reads *Record that the notice was shown* —
+> `Without consent` has moved (`:1804` → `:1889`), and the item set cited at
+> `server/preboarding-items.js:71-77` is at `:76-82` today. Those readings stand as the record of the tree they were taken on (`b54412d`); §4's two
 > citations were re-grounded at `5d61de5`, where they name their file.
 > **§4 was implemented as written:** the two qualification certificates and the emergency contact are
 > `collectible: false` in `NOTICE_BASES` (`pending_counsel: 'Q1'` and `'Q5'`), the gate refuses them with 409,
