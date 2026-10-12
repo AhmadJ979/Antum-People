@@ -122,10 +122,17 @@ which is the answer the brief asked for. Only the two Tier-1 files differ, and b
 2. **The engine does not compute either clause.** `server/eosb.js` has no notice parameter at all (grep: no `notice`
    match), so *neither* wording describes current product behaviour. That is legitimate for a contract term — but the
    clause must not be read by anyone as "what our software does".
-3. **Retiring the host directory covers all 14 files, not just the notice.** The pointer may only be swapped *after* the
-   product is restarted on a tree that resolves templates from the repository (the ordering rule in
-   `pdpl-notice-version-ruling.md`); whichever file the old process still reads would otherwise serve stale text, and
-   the KSA contract is the one where stale text says something false about an employee's money.
+3. **Retiring the host directory covers all 14 files, not just the notice — and by removal, not by a pointer.**
+   *Amended 2026-10-12, later the same day, on the lead's ruling carried by #153 (`b5af270`): the pointer plan is
+   **withdrawn**.* A pointer at the host path is read only by the old, host-first resolution — live until a cutover, and
+   exactly what a rollback restores — so **any** text left there is a candidate to be served as the document, and "this
+   is not the document any more" would be worse than the stale-but-real text. The resolution merged as #151 consults the
+   repository for every template (`templatePath()` in `server/privacy-notice.js` is the single resolution for all of
+   them), so **nothing needs installing at the host path**; each copy is retired by removing or moving it aside. That
+   single resolution is also why the retirement covers all fourteen: until the movement — and after any rollback — the
+   old code reads the host directory for every one of them, and the KSA contract is the file where stale text says
+   something false about an employee's money. The procedure and its byte-level read-back land in
+   `docs/evidence/one-authoritative-notice-2026-10-12/host-copy-disposition.md` (#153).
 
 ## 6. What this row did not do
 
