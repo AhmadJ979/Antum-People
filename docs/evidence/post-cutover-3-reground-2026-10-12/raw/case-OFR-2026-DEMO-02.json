@@ -1,0 +1,17 @@
+{
+ "id": "43c3a320-f60f-4221-9e5b-baa2694faa65",
+ "offer_reference": "OFR-2026-DEMO-02",
+ "candidate_name": "Mariam Al-Kaabi",
+ "candidate_email": "mariam.alkaabi@example.com",
+ "role": "Marketing Coordinator",
+ "department": "Marketing",
+ "reporting_line": "Head of Marketing",
+ "jurisdiction": "AE",
+ "start_date": "2026-10-13",
+ "status": "open",
+ "source": "demo_seed",
+ "offered_at": null,
+ "created_by": "demo-seed",
+ "created_at": "2026-10-12 06:42:04",
+ "updated_at": "2026-10-12 06:42:04"
+}

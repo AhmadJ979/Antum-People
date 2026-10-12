@@ -1,0 +1,19 @@
+pristine tile: cases_notice_not_shown = 1  (cases 3)
+clear case OFR-2026-DEMO-01  acked case OFR-2026-DEMO-03
+
+A. receive a qualification certificate  (education_certificate)  -> HTTP 409  "Item education_certificate is not_started; it cannot move to received (allowed: requested)"
+A. receive the emergency contact  (emergency_contact)  -> HTTP 409  "Item emergency_contact is not_started; it cannot move to received (allowed: requested)"
+A. receive bank details with no notice shown  (bank_details)  -> HTTP 409  "Item bank_details is not_started; it cannot move to received (allowed: requested)"
+
+B. REQUEST a no-basis item (education_certificate -> requested) -> HTTP 200  "ACCEPTED"
+   after the request, that item's status is: not in payload
+   tile after the request: 1  | OFR-2026-DEMO-01 flag On track
+
+C. record with body recorded_by='Someone Else' -> HTTP 201; the row's recorded_by is "scratch-admin"
+   full row: {"id":"04b642b5-33fb-4103-ac3e-a87597f38ef0","case_id":"a6a8c076-edc2-4ddd-b9e4-e4c2cbd86cfb","item_key":"bank_details","item_label":"Bank details (IBAN letter)","jurisdiction":"AE","instrument":"notice_shown","lawful_basis":"Performance of the employment contract / contractual necessity","notice_version":"v2.3","recorded_by":"scratch-admin","method":"in_product_record","note":null,"acknowledged_at":"2026-10-12T06:52:04.477Z","created_at":"2026-10-12 06:52:04"}
+
+D. Record for the whole case (no item_key) -> HTTP 201  created 3 of 4 | version v2.3
+   tile after: 0
+   OFR-2026-DEMO-03 notice_recorded true acked 4/4 no-basis 3
+   OFR-2026-DEMO-02 notice_recorded true acked 4/4 no-basis 3
+   OFR-2026-DEMO-01 notice_recorded true acked 4/4 no-basis 3

@@ -1,0 +1,2 @@
+token length 212  user {"id":"scratch-admin","username":"scratch-admin","role":"admin"}
+done 2026-10-12T06:55:38Z

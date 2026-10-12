@@ -1,0 +1,22 @@
+=== tree under test vs deployed: 9d2182a  ==  origin/main 9d2182a
+Preparing worktree (detached HEAD 9d2182a)
+HEAD is now at 9d2182a Merge pull request #156 from AhmadJ979/docs/tracker-round-40
+=== build the served tree (both halves, exit codes)
+tsc -b exit: 0
+vite exit: 0
+dist/assets/index-Cc1GodRa.js   274.06 kB │ gzip: 76.40 kB
+
+[32m✓ built in 290ms[39m
+built asset : index-Cc1GodRa.js 274065 bytes md5 9cdfbe5da81f6acf38fdb10de8a5e6fd
+live asset  : assets/index-Cc1GodRa.js 274065 bytes md5 9cdfbe5da81f6acf38fdb10de8a5e6fd
+live page 3000 before: 200
+=== the live DB copy (the live demo state, read on a rig)
+live db      : /home/team/.data/antum-product.db 7c74c485fe925a6d0498df825d40f64c 229376 bytes mtime 2026-10-12 06:42:04.560798208 +0000
+rig db copy  : md5 7c74c485fe925a6d0498df825d40f64c  (equal to the live db: YES)
+scratch-admin inserted
+listeners 4744 : 1  cwd /home/agent-product-designer/rig-final3/server
+GET / rig            : 200
+rig serves asset     : assets/index-Cc1GodRa.js
+no token /api/employees: 401
+=== live page 3000 after : 200  (must be 200; this rig never addresses it)
+=== done 2026-10-12T06:49:44Z

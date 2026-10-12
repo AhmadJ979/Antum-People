@@ -1,0 +1,14 @@
+tile now: 1 | clear case OFR-2026-DEMO-01
+GET /cases/:id keys: id, offer_reference, candidate_name, candidate_email, role, department, reporting_line, jurisdiction, start_date, status, source, offered_at, created_by, created_at, updated_at
+  summary items_total undefined by_track undefined
+  notice keys:   acked rows 0
+  checklist.items 0  workspace lines 0
+
+1. request education_certificate (no-basis item) -> HTTP 200
+   then receive -> HTTP 409  "Education certificate cannot be collected in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1)."
+   POST notice-acknowledgements on it -> HTTP 409  "Education certificate is not collectible in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1). No acknowledgement can be recorded for it, because the notice has no basis to record."
+   after that request: tile 1 | items_outstanding 21 | this case flag "On track" open_count 22
+
+2. request passport (collectible) -> HTTP 409 ; then receive with no notice shown -> HTTP 428
+   "The privacy notice has not been shown for Passport copy yet, so it cannot be collected. Record that the notice was shown first."
+   tile after: 1

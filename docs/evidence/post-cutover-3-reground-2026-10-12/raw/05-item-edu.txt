@@ -1,0 +1,1 @@
+"{\"item\":\"Education certificate\",\"text\":\"Education certificate qualification · not started Not collectible in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1). Request\",\"buttons\":[\"Request [enabled]\"]}"
