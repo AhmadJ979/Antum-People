@@ -96,6 +96,15 @@ Assembled so that the moment the owner names a recipient, the letter is one edit
 
 **One UAE letter.** The six join the existing UAE counsel request. *For:* one counterparty, one scope, one reply, one fee; the notice and the EOSB letter both sit with the same adviser, so a contradiction between them is less likely. *Against:* it mixes labour law with data protection (different expertise), and re-issuing the existing letter delays the EOSB answer that is already outstanding. **A letter of its own.** The six travel as a PDPL request, with no EOSB content. *For:* it can go to a privacy specialist, the EOSB letter keeps the scope it already has, and the two can move at different speeds. *Against:* a second engagement, and somebody must keep the two answers consistent where they touch (the notice touches both — question 1 and the retention floor). I have no preference to argue; what either framing needs from the owner is the same: **a recipient, and whether the letter may quote our internal documents** (the memo, this mapping, the notice template).
 
+**Amended 2026-10-12, after the drafting was done — one of those two needs is already met.** The letter exists:
+`/home/team/shared/pdpl-counsel-request--send-ready.txt` (provenance and the letter-item ↔ Q-number table in
+`pdpl-counsel-request.md`), so §4's "one edit from sending" is done rather than pending. It **quotes no internal
+document** — it describes what the product does, not what our memos say — so *whether the letter may quote our internal
+documents* is not something the owner has to answer for **this** letter: **a recipient alone unblocks the PDPL five**
+(owner decision 15(a)). The permission would still be needed for any letter that does quote them, which is why the
+sentence above stands rather than being deleted. The numbering the letter uses is the product's — **Q1, Q2, Q4, Q5, Q6,
+Q3 retired**, because `server/preboarding-items.js:135,142,154` shows a client those numbers in a 409.
+
 ---
 
 ## 6. How each cell was read (re-runnable)
