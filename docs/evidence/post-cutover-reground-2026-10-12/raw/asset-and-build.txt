@@ -1,0 +1,16 @@
+# Asset identity and the movement's timestamps — read 2026-10-12 (read-only, no writes anywhere)
+# public URL (anonymous):
+  https://b974147c03228029e277d1cbe6646fe6.ctonew.app/ -> 200, <title>Antum People</title>, entry assets/index-Dt2oLspq.js
+  fetched bytes: 270962   md5: 5720cd6fbeca1966cb642f9cf6338a9c
+# 127.0.0.1:3000 (anonymous):
+  entry assets/index-Dt2oLspq.js   270962 bytes   md5: 5720cd6fbeca1966cb642f9cf6338a9c
+  md5(public) == md5(:3000) ?  YES
+# anonymous API: GET /api/preboarding/checklist/overview?jurisdiction=AE -> 401 {"error":"Authentication token required"}
+# deployed tree /home/team/shared/probable-octo-sniffle:
+  HEAD b54412d ; git status --short -> 2 lines (the guard's untracked runtime files)
+  -rw-r--r-- 1 root root  35199 2026-10-12 05:07:00.693467799 +0000 index-BLszozVg.css
+  -rw-r--r-- 1 root root 270962 2026-10-12 05:07:00.693467799 +0000 index-Dt2oLspq.js
+  product process: pid 1610 cwd=/home/team/shared/probable-octo-sniffle/server started=Mon Oct 12 05:09:30 2026
+  demo db: 2026-10-12 05:07:02.473407671 +0000  208896 bytes  /home/team/.data/antum-product.db
+# no cutover record in the repository: git ls-tree -r --name-only origin/main | grep -c cutover-2026101 -> 0
+# rig (worktree of b54412d at ~/rig-served, own port 4742, own db, own throwaway credential): built asset matches the served bytes; rig served assets/index-Dt2oLspq.js

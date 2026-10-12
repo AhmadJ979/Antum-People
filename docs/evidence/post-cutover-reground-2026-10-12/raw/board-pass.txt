@@ -1,0 +1,26 @@
+== board pass start 2026-10-12T05:19:37Z  rig http://localhost:4742  tree b54412d
+   live :3000 before: 200
+== token chars: 212
+✓ Antum People
+  http://localhost:4742/
+"session injected"
+   page identity: "{\"url\":\"http://localhost:4742/\",\"script_src\":\"/assets/index-Dt2oLspq.js\",\"title\":\"Antum People\"}"
+"set"
+"clicked nav:Pre-boarding (scope 0)"
+"clicked to expand"
+   boardA-case1-all: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"region_found\":true,\"groups\":[\"IT · 0/6\",\"ADMIN · 0/3\",\"HR · 0/2\",\"MANAGER · 0/4\"],\"group_count\":4,\"ownerless_lines\":0,\"region_len\":4029,\"region_fnv\":3111454695,\"region\":\"WORKSPACE TRACK · 0 of 15 done from Finance Analyst �
+✓ Screenshot saved to /home/agent-product-designer/rig-served-out/board/boardA-case1-all.png
+"set"
+"clicked chip:IT"
+   boardB-case1-it: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"region_found\":true,\"groups\":[\"IT · 0/6\"],\"group_count\":1,\"ownerless_lines\":0,\"region_len\":3080,\"region_fnv\":3990918787,\"region\":\"WORKSPACE TRACK · 0 of 6 done from Finance Analyst · Finance View by function: All (15) IT (6) Admin (
+✓ Screenshot saved to /home/agent-product-designer/rig-served-out/board/boardB-case1-it.png
+"set"
+"clicked chip:All"
+   boardC-case1-all-again: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"region_found\":true,\"groups\":[\"IT · 0/6\",\"ADMIN · 0/3\",\"HR · 0/2\",\"MANAGER · 0/4\"],\"group_count\":4,\"ownerless_lines\":0,\"region_len\":4029,\"region_fnv\":3111454695,\"region\":\"WORKSPACE TRACK · 0 of 15 done from Finance Analyst �
+✓ Screenshot saved to /home/agent-product-designer/rig-served-out/board/boardC-case1-all-again.png
+"clicked to expand"
+   boardD-case2-all: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"region_found\":false,\"groups\":[],\"group_count\":0,\"ownerless_lines\":0,\"region_len\":0,\"region_fnv\":5381,\"region\":\"\"}"
+✓ Screenshot saved to /home/agent-product-designer/rig-served-out/board/boardD-case2-all.png
+   page errors: []
+   live :3000 after: 200
+== board pass end 2026-10-12T05:19:58Z

@@ -1,0 +1,44 @@
+== served tree per the deployed HEAD: b54412d ; worktree:
+HEAD is now at b54412d Merge pull request #132 from AhmadJ979/docs/overview-totals-rule
+dist/assets/index-BLszozVg.css   35.19 kB │ gzip:  6.80 kB
+dist/assets/index-Dt2oLspq.js   270.96 kB │ gzip: 75.59 kB
+
+[32m✓ built in 368ms[39m
+### vite exit: 0
+== built asset vs the live surface:
+   index-Dt2oLspq.js 270962 bytes 5720cd6fbeca1966cb642f9cf6338a9c
+   live :3000  assets/index-Dt2oLspq.js 270962 bytes 5720cd6fbeca1966cb642f9cf6338a9c
+   - Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-10-26) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started
+   - Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-13) — inside 48 hours with every item still open; items: 7 not_started
+   - Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-11) — start date already passed, items still open; items: 7 not_started
+   scratch-admin inserted
+== health:
+   listeners: 1  cwd: /home/agent-product-designer/rig-served/server
+   GET / -> 200
+   /api/employees no token -> 401
+   live :3000 -> 200
+   rig serves: assets/index-Dt2oLspq.js
+overview HTTP 200  keys: jurisdiction,cases,totals
+totals: {"cases":3,"items":21,"items_outstanding":21,"items_received":0,"items_verified":0,"cases_without_consent":3,"cases_ready":0,"workspace_lines":43,"workspace_lines_open":43,"cases_provisioned":0}
+cases: 3
+case keys: case_id,offer_reference,candidate_name,candidate_email,role,department,jurisdiction,start_date,days_to_start,flag,document_set_active,checklist_seeded,items_total,by_status,outstanding_count,outstanding,by_track,consent_recorded,consent_granted_at,last_reminder_at,last_reminder_count
+
+--- OFR-2026-DEMO-03  Yousef Al-Hammadi  Operations Analyst · Operations
+    start 2026-10-11   flag {"state":"started","chip":"Started 1 day ago · 21 items open","tone":"rose","hours_to_start":-29.29455611111111,"days_to_start":-1,"raised":true,"headline":"Started with 21 items still open","boundary_hours":48}
+    items_total 7   by_status {"not_started":7,"requested":0,"received":0,"verified":0}   by_track {"employee":{"lines":7,"complete":0,"open":7,"active":true},"workspace":{"lines":14,"complete":0,"open":14,"active":true,"functions":["IT","Admin","HR","Manager"]}}
+    consent undefined   outstanding 7   jurisdiction AE
+    workspace view undefined  totals undefined
+    workspace groups []  (0 groups)
+--- OFR-2026-DEMO-02  Mariam Al-Kaabi  Marketing Coordinator · Marketing
+    start 2026-10-13   flag {"state":"inside_48_hours","chip":"Inside 48 hours · 21 items open","tone":"amber","hours_to_start":18.70544361111111,"days_to_start":1,"raised":true,"headline":"21 items open · start in 48 hours or less","boundary_hours":48}
+    items_total 7   by_status {"not_started":7,"requested":0,"received":0,"verified":0}   by_track {"employee":{"lines":7,"complete":0,"open":7,"active":true},"workspace":{"lines":14,"complete":0,"open":14,"active":true,"functions":["IT","Admin","HR","Manager"]}}
+    consent undefined   outstanding 7   jurisdiction AE
+    workspace view undefined  totals undefined
+    workspace groups []  (0 groups)
+--- OFR-2026-DEMO-01  Omar Al-Farsi  Finance Analyst · Finance
+    start 2026-10-26   flag {"state":"clear","chip":"On track","tone":"slate","hours_to_start":330.7054436111111,"days_to_start":14,"raised":false,"headline":"On track","boundary_hours":48}
+    items_total 7   by_status {"not_started":4,"requested":3,"received":0,"verified":0}   by_track {"employee":{"lines":7,"complete":0,"open":7,"active":true},"workspace":{"lines":15,"complete":0,"open":15,"active":true,"functions":["IT","Admin","HR","Manager"]}}
+    consent undefined   outstanding 7   jurisdiction AE
+    workspace view undefined  totals undefined
+    workspace groups []  (0 groups)
+== done 2026-10-12T05:17:40Z

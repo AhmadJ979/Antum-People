@@ -1,0 +1,39 @@
+# md5 and first line of every artifact in this pack ‚Äî verify identity from content, not filename
+# pack: docs/evidence/post-cutover-reground-2026-10-12 (branch docs/post-cutover-reground-2026-10-12)
+
+05fd2eea97b0d5548947fcb6f3b29128      1387  ./raw/asset-and-build.txt
+     first: # Asset identity and the movement's timestamps ‚Äî read 2026-10-12 (read-only, no writes a
+698b134bc8a0adcbb08a992b7e84e23a      4396  ./raw/board-A-case1-all.json
+     first: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"region_found\":true,\"groups\":[\"IT ¬∑ 
+c363bc3a0b3dd81cedbb7b09f321d924      3358  ./raw/board-B-case1-it.json
+     first: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"region_found\":true,\"groups\":[\"IT ¬∑ 
+698b134bc8a0adcbb08a992b7e84e23a      4396  ./raw/board-C-case1-all-again.json
+     first: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"region_found\":true,\"groups\":[\"IT ¬∑ 
+d41d8cd98f00b204e9800998ecf8427e         0  ./raw/board-console.txt
+     first: 
+6c1ca206c1e0b95a3900f826e36ef179      2090  ./raw/board-pass.txt
+     first: == board pass start 2026-10-12T05:19:37Z  rig http://localhost:4742  tree b54412d    live 
+9700d9ea243a9507341b1b8da2f72a29       180  ./raw/boardD-case2-all-WITHDRAWN-wrong-case-name.json
+     first: "{\"case\":\"Omar Al-Farsi\",\"row_found\":true,\"region_found\":false,\"groups\":[],\"gro
+f445d974c8ea67e9be51175f85e10059       513  ./raw/build.txt
+     first: ### npx tsc -b --force   (cwd=/home/agent-product-designer/rig-served/client) ### tsc exit
+f88d2be23aed55180864e4078c3ea949      1521  ./raw/md5-manifest.txt
+     first: # md5 and first line of every artifact in this pack ‚Äî verify identity from content, not 
+6b64d81296504634c24932e62f3f9968     20167  ./raw/overview-AE.json
+     first: {  "jurisdiction": "AE",  "cases": [   {    "case_id": "c9a78ae1-392d-4e8d-b1b7-1fb8083591
+d41d8cd98f00b204e9800998ecf8427e         0  ./raw/page-errors.txt
+     first: 
+fc869abe4b942dc4d8e61d0449da0f21       111  ./raw/page-identity.json
+     first: "{\"url\":\"http://localhost:4742/\",\"script_src\":\"/assets/index-Dt2oLspq.js\",\"title\
+f39ec2f3afb21e77f7c74006ce8acda3      3866  ./raw/rig-setup-transcript.txt
+     first: == served tree per the deployed HEAD: b54412d ; worktree: HEAD is now at b54412d Merge pul
+11c0936ae6d89ff7847d96958463093e      1607  ./raw/seed-demo.txt
+     first: ### seed: DEMO_SEED=true PRODUCT_DB_PATH=/home/agent-product-designer/rig-served-out/db.sq
+e2e835d9dfeac15fff0c2bf040932a6f    109852  ./shots/boardA-case1-all.png
+     first: âPNG  IHDRAñ%èÁIDATxúÏ›	\W˛I»I8√NÂ, V<P¡≥ı™ıj´mÌv›Z∑]€≠›Ì]
+70f212750b0c1ee88b50e0e3953f14f6    109861  ./shots/boardB-case1-it.png
+     first: âPNG  IHDRAñ%èÁIDATxúÏ›\S◊˛I»Ä$Ñvò , V®‡¨£ÆZW[mk_Î´µÌ≥}µÔ’N
+e2e835d9dfeac15fff0c2bf040932a6f    109852  ./shots/boardC-case1-all-again.png
+     first: âPNG  IHDRAñ%èÁIDATxúÏ›	\W˛I»I8√NÂ, V<P¡≥ı™ıj´mÌv›Z∑]€≠›Ì]
+e2e835d9dfeac15fff0c2bf040932a6f    109852  ./shots/boardD-case2-all-WITHDRAWN-wrong-case-name.png
+     first: âPNG  IHDRAñ%èÁIDATxúÏ›	\W˛I»I8√NÂ, V<P¡≥ı™ıj´mÌv›Z∑]€≠›Ì]
