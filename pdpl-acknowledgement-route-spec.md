@@ -7,6 +7,19 @@
 > **The engineer cannot start the route, the gate's copy, or the per-item basis until this lands** — this is the only place the per-document basis values, the actor rule and the version source are stated.
 > **Nothing here is in tonight's cutover:** that movement ships a bundle verified before this decision existed. The gate change needs its own cycle and its own evidence.
 
+> **Movement, 2026-10-12 — the implementation this spec specifies has landed, and the code citations below
+> have moved.** It merged as PR #143 (`ce9fe05`): `server/preboarding-items.js` now carries the per-item basis
+> table (`NOTICE_BASES`), the acknowledgement writer and the per-item gate — `if (track === 'employee' …)` at
+> `:466`, where this document cites `:326-332` — and a new `server/privacy-notice.js` is the single definition
+> of the notice the server serves (§3). **The "Today" columns below describe the product before that change:**
+> three of the four strings §6 quotes (`Record PDPL consent`, `PDPL consent recorded`, `No PDPL consent
+> record`) no longer exist in the client, and the item set cited at `server/preboarding-items.js:71-77` is at
+> `:76-82` today. Those readings stand as the record of the tree they were taken on (`b54412d`); §4's two
+> citations were re-grounded at `5d61de5`, where they name their file.
+> **§4 was implemented as written:** the two qualification certificates and the emergency contact are
+> `collectible: false` in `NOTICE_BASES` (`pending_counsel: 'Q1'` and `'Q5'`), the gate refuses them with 409,
+> and an un-shown notice is refused with 428 — no basis is written for any of the three.
+
 ---
 
 ## 0. What changes, in one paragraph
@@ -70,10 +83,10 @@ Item set: `server/preboarding-items.js:71-77`. Notice purposes: `templates/priva
 
 **[PENDING COUNSEL] — my judgement, given as the internal position the product needs, not as law.**
 
-**Education and experience certificates (`:74-75`).** The notice has no purpose row for qualifications and no category that names them, so there is **no basis to record**. My judgement: the notice gains the purpose row (§5) and from then on the record carries **contractual necessity**; **until that row exists the two items are not collectible** and their acknowledgement rows are not writable. Recording a basis the notice does not assign is the exact defect this work exists to remove — it must not be replaced with a different invented basis.
+**Education and experience certificates** — `server/preboarding-items.js`, item keys `education_certificate` / `experience_certificate` (`:79-80` at `5d61de5`). The notice has no purpose row for qualifications and no category that names them, so there is **no basis to record**. My judgement: the notice gains the purpose row (§5) and from then on the record carries **contractual necessity**; **until that row exists the two items are not collectible** and their acknowledgement rows are not writable. Recording a basis the notice does not assign is the exact defect this work exists to remove — it must not be replaced with a different invented basis.
 *Depends on:* question **1** (notice content).
 
-**The emergency contact (`:77`).** No purpose row, no basis anywhere, and the data belongs to a third person who is not the hire. My judgement: **the record carries no basis for this item, ever, until counsel answers**; the item is **not collectible**, its copy must not suggest the hire's acknowledgement covers a third party's data, and nothing in the product may claim a basis for it.
+**The emergency contact** — `server/preboarding-items.js`, item key `emergency_contact` (`:82` at `5d61de5`). No purpose row, no basis anywhere, and the data belongs to a third person who is not the hire. My judgement: **the record carries no basis for this item, ever, until counsel answers**; the item is **not collectible**, its copy must not suggest the hire's acknowledgement covers a third party's data, and nothing in the product may claim a basis for it.
 *Depends on:* question **5**. It stays behind it whatever is decided here — this spec does not settle it.
 **Demo arithmetic:** keep the item in the set (so the seeded counts stay 7 per case, 21 outstanding — `demo-weak-screens.md:29`) and mark it non-collectible. Dropping it from the set would move every demo figure in the walkthrough documents.
 
