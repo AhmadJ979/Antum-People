@@ -1,0 +1,1 @@
+"clicked: Record that the notice was shown [enabled] title=\"Records, in the product, that the signed-in user showed the notice\""

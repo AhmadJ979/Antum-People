@@ -1,0 +1,17 @@
+{
+ "id": "a6a8c076-edc2-4ddd-b9e4-e4c2cbd86cfb",
+ "offer_reference": "OFR-2026-DEMO-01",
+ "candidate_name": "Omar Al-Farsi",
+ "candidate_email": "omar.alfarsi@example.com",
+ "role": "Finance Analyst",
+ "department": "Finance",
+ "reporting_line": "Head of Finance",
+ "jurisdiction": "AE",
+ "start_date": "2026-10-26",
+ "status": "open",
+ "source": "roster:demo-emp-omar",
+ "offered_at": null,
+ "created_by": "demo-seed",
+ "created_at": "2026-10-12 06:42:03",
+ "updated_at": "2026-10-12 06:42:03"
+}
