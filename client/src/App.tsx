@@ -71,6 +71,37 @@ interface PreboardingItem {
   verified_at: string | null;
 }
 
+// Option B — the notice-shown record, one row per document, carrying the basis the notice itself
+// assigns that document. Every value below is the server's; the client renders them and composes
+// none of them, so a lawful basis cannot originate in a view.
+interface NoticeAcknowledgement {
+  item_key: string;
+  item_label: string;
+  instrument: string;
+  lawful_basis: string;
+  notice_version: string;
+  recorded_by: string;
+  method: string;
+  note: string | null;
+  acknowledged_at: string;
+}
+/** The notice's own state for one document, from the server's catalog — including the items it
+ *  assigns no basis to, which this release cannot collect. `reason` and `pending_counsel` are the
+ *  server's words, so the screen cannot state a legal position of its own. */
+interface NoticeBasis {
+  basis: string | null;
+  collectible: boolean;
+  pending_counsel?: string;
+  reason?: string;
+  notice_line?: number | null;
+}
+interface CaseNotice {
+  version: string;
+  instrument: string;
+  acknowledgements: NoticeAcknowledgement[];
+  bases: Record<string, NoticeBasis>;
+}
+
 // The HR roll-up row: what is outstanding on a case, named, so HR never opens a case to find
 // out. Every figure here is computed by the server; the client renders what it is given.
 // P2-3 - the pre-reading package as the server derives it. The nine items are NOT listed here:
@@ -133,8 +164,15 @@ interface PreboardingChecklistRow {
   by_status: { not_started: number; requested: number; received: number; verified: number };
   outstanding_count: number;
   outstanding: { item_key: string; label: string; status: string; required: boolean }[];
-  consent_recorded: boolean;
-  consent_granted_at: string | null;
+  // The notice state, per document. `notice_recorded` is the case-level fact the retired
+  // `consent_recorded` stood for — the notice has been shown for at least one document here; the
+  // three counts say how far it got, and `notice_items_no_basis` is the set the notice assigns no
+  // basis to, which this release cannot collect at all.
+  notice_version: string;
+  notice_recorded: boolean;
+  notice_items_collectible: number;
+  notice_items_acknowledged: number;
+  notice_items_no_basis: number;
   last_reminder_at: string | null;
   last_reminder_count: number | null;
   // P2-5 - the derived 48-hour flag, exactly as the server derived it on this read. The client
@@ -211,7 +249,9 @@ interface PreboardingOverview {
     items_outstanding: number;
     items_received: number;
     items_verified: number;
-    cases_without_consent: number;
+    // Cases where the notice has not been shown for a single document: the tile's count, and the
+    // like-for-like replacement for the retired `cases_without_consent`.
+    cases_notice_not_shown: number;
     cases_ready: number;
   };
 }
@@ -455,7 +495,13 @@ export default function App() {
   // when that case is opened, so the list stays cheap however many cases there are.
   const [checklistOverview, setChecklistOverview] = useState<PreboardingOverview | null>(null);
   const [openCaseId, setOpenCaseId] = useState<string | null>(null);
-  const [caseChecklist, setCaseChecklist] = useState<Record<string, { items: PreboardingItem[]; consent: { granted_at: string } | null; document_set_active: boolean }>>({});
+  const [caseChecklist, setCaseChecklist] = useState<Record<string, { items: PreboardingItem[]; notice: CaseNotice | null; document_set_active: boolean }>>({});
+  // Whether the notice has been OPENED on a case in this session. The record control is offered
+  // only after it has been: the record means somebody put the notice in front of the hire, and a
+  // control enabled before the notice can be read would record an act nobody could perform here.
+  // This is an affordance, not proof — nothing on this screen claims the hire read anything, and
+  // the record still says only what it says: that the signed-in user recorded the notice as shown.
+  const [noticeOpened, setNoticeOpened] = useState<Record<string, boolean>>({});
   // P2-3 - the pre-reading package per case, straight from the server's derivation. Nothing is
   // marked acknowledged here; the record is written by the endpoint and this re-renders from it.
   const [casePackages, setCasePackages] = useState<Record<string, PreboardingPackage>>({});
@@ -674,7 +720,7 @@ export default function App() {
       }
       setCaseChecklist(prev => ({
         ...prev,
-        [caseId]: { items: data.items, consent: data.consent, document_set_active: data.document_set_active }
+        [caseId]: { items: data.items, notice: data.notice || null, document_set_active: data.document_set_active }
       }));
     } catch (err) {
       console.error('Error fetching the case checklist:', err);
@@ -841,12 +887,46 @@ export default function App() {
     }
   };
 
-  const handleRecordConsent = async (caseId: string) => {
+  /**
+   * Open the privacy notice at the point of collection. This is the gap the gate had: the notice
+   * was a download on an employee record, and a pre-boarding case has no employee row — so the
+   * screen asking "has the notice been shown?" could not show it. The version comes from the same
+   * file the server writes a record against, so the screen and the record cannot disagree.
+   */
+  const handleViewNotice = async (caseId: string) => {
     try {
-      const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/consent`, {
+      const res = await authedFetch(`${API_BASE}/api/compliance/notice`);
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setChecklistNotice({ kind: 'error', text: data.error || `The privacy notice could not be read (HTTP ${res.status}).` });
+        return;
+      }
+      setRenderedTemplate({ title: `Privacy Notice ${data.version} — the notice shown to the hire`, content: data.content });
+      setShowTemplateModal(true);
+      setNoticeOpened(prev => ({ ...prev, [caseId]: true }));
+    } catch (err) {
+      console.error('Error reading the privacy notice:', err);
+      setChecklistNotice({ kind: 'error', text: 'The privacy notice could not be read.' });
+    }
+  };
+
+  /**
+   * Record that the notice was shown. The notice is one document covering all of its purposes, so
+   * the act is one act — but the record is one row per document, because the lawful basis it
+   * carries is per document, and the server writes each row from its own catalog with the notice's
+   * own version. The items the notice assigns no basis to are not sent: the server refuses them by
+   * name and the screen says why, rather than recording an invented basis.
+   */
+  const handleRecordNoticeShown = async (caseId: string) => {
+    try {
+      const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/notice-acknowledgements`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ consent_type: 'pdpl_notice', lawful_basis: 'consent', consent_version: 'v1' })
+        body: JSON.stringify({})
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 401) {
@@ -854,15 +934,20 @@ export default function App() {
         return;
       }
       if (!res.ok) {
-        setChecklistNotice({ kind: 'error', text: data.error || `Consent was not recorded (HTTP ${res.status}).` });
+        setChecklistNotice({ kind: 'error', text: data.error || `The record was not written (HTTP ${res.status}).` });
         return;
       }
-      setChecklistNotice({ kind: 'ok', text: data.created ? 'PDPL consent recorded — documents can now be collected on this case.' : 'This case already had a PDPL consent record; nothing was recorded twice.' });
+      setChecklistNotice({
+        kind: 'ok',
+        text: data.created > 0
+          ? `Recorded that the notice (${data.notice_version}) was shown, for ${data.created} of ${data.considered} document(s) that can be collected — one row per document, each with that document's own basis.`
+          : 'This case already records the notice as shown for every document it can be recorded for; nothing was written twice.'
+      });
       await fetchCaseChecklist(caseId);
       await fetchChecklistOverview();
     } catch (err) {
-      console.error('Error recording PDPL consent:', err);
-      setChecklistNotice({ kind: 'error', text: 'Consent could not be recorded.' });
+      console.error('Error recording that the notice was shown:', err);
+      setChecklistNotice({ kind: 'error', text: 'The record could not be written.' });
     }
   };
 
@@ -1800,8 +1885,12 @@ export default function App() {
                         <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Items verified</div>
                       </div>
                       <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                        <div className="text-lg font-extrabold text-slate-900">{checklistOverview.totals.cases_without_consent}</div>
-                        <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Without consent</div>
+                        <div className="text-lg font-extrabold text-slate-900">{checklistOverview.totals.cases_notice_not_shown}</div>
+                        {/* "Notice not shown" replaces "Without consent" and only the label changed: a case
+                            with no acknowledgement is not a case where the hire refused anything — it is a
+                            case where HR has not yet put the notice in front of them. The count is the
+                            server's, over the same endpoint's own filters. */}
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Notice not shown</div>
                       </div>
                     </div>
                   )}
@@ -1911,9 +2000,10 @@ export default function App() {
                                   ))}
                                 </div>
                               )}
-                              {!row.consent_recorded && (
+                              {!row.notice_recorded && (
                                 <div className="mt-2 text-[10px] text-amber-700 font-medium">
-                                  No PDPL consent record — no document can be collected on this case yet.
+                                  The privacy notice has not been shown on this case yet, so no document can be
+                                  collected on it.
                                 </div>
                               )}
                               {row.last_reminder_at && (
@@ -1929,22 +2019,73 @@ export default function App() {
                                   <p className="text-[11px] text-slate-400">Reading the checklist…</p>
                                 ) : (
                                   <>
-                                    <div className="flex justify-between items-center">
+                                    <div className="flex justify-between items-start gap-2">
                                       <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                                         Employee track
                                         {!detail.document_set_active && <span className="text-amber-700 normal-case tracking-normal"> · set not active in this release</span>}
                                       </div>
-                                      {detail.consent ? (
-                                        <span className="text-[10px] text-teal-700 font-semibold">PDPL consent recorded {detail.consent.granted_at}</span>
+                                      <button onClick={() => handleViewNotice(row.case_id)}
+                                        className="shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-300 text-slate-700">
+                                        Open the notice{detail.notice ? ` ${detail.notice.version}` : ''}
+                                      </button>
+                                    </div>
+                                    {/* The notice gate. Its question is whether the notice has been SHOWN, per
+                                        document — never whether the hire consented, and never a claim that they
+                                        read it: the record names the person who showed it, on the hire's behalf. */}
+                                    <div className="p-2 rounded-lg border border-slate-100 bg-slate-50 text-[10px] text-slate-600 space-y-1">
+                                      {detail.notice && detail.notice.acknowledgements.length > 0 ? (
+                                        <div className="space-y-0.5">
+                                          <div className="text-teal-700 font-semibold">
+                                            The notice has been shown for {detail.notice.acknowledgements.length} of{' '}
+                                            {row.notice_items_collectible} document(s) that can be collected.
+                                          </div>
+                                          {detail.notice.acknowledgements.map(ack => (
+                                            <div key={ack.item_key} className="text-slate-500">
+                                              {ack.item_label}: shown on {ack.acknowledged_at} against notice {ack.notice_version},
+                                              recorded by {ack.recorded_by} · basis {ack.lawful_basis}
+                                              {ack.note ? ` · ${ack.note}` : ''}
+                                            </div>
+                                          ))}
+                                        </div>
                                       ) : (
-                                        <button onClick={() => handleRecordConsent(row.case_id)}
-                                          className="text-[10px] font-bold px-2 py-1 bg-slate-900 text-white rounded-lg">
-                                          Record PDPL consent
-                                        </button>
+                                        <div className="text-amber-700 font-medium">
+                                          The notice has not been shown on this case yet, so no document can be
+                                          collected on it.
+                                        </div>
                                       )}
+                                      {row.notice_items_no_basis > 0 && (
+                                        <div className="text-slate-500">
+                                          {row.notice_items_no_basis} item(s) the notice assigns no basis to cannot be
+                                          collected in this release; each one names the counsel question it waits on.
+                                        </div>
+                                      )}
+                                      <div className="flex items-center gap-2 pt-1">
+                                        <button onClick={() => handleRecordNoticeShown(row.case_id)}
+                                          disabled={!noticeOpened[row.case_id]}
+                                          title={!noticeOpened[row.case_id]
+                                            ? 'Open the notice first — this records that it was shown, and the notice has to be openable from here for that to mean anything'
+                                            : 'Records, in the product, that the signed-in user showed the notice'}
+                                          className="text-[10px] font-bold px-2 py-1 bg-slate-900 text-white rounded-lg disabled:opacity-40">
+                                          Record that the notice was shown
+                                        </button>
+                                        <span className="text-[9px] text-slate-400">
+                                          One act, one record per document — each carries that document's own basis
+                                          from the notice. Not a signature; the product cannot obtain one.
+                                        </span>
+                                      </div>
                                     </div>
                                     <div className="space-y-2">
-                                      {detail.items.map(item => (
+                                      {detail.items.map(item => {
+                                        // The gate is per document, so this row reads its own two facts: the basis
+                                        // the notice assigns THIS item (the server's catalog, never composed here)
+                                        // and whether the notice has been shown for it. An item with no basis is
+                                        // not collectible in this release, and says which question it waits on.
+                                        const basis = detail.notice ? detail.notice.bases[item.item_key] : undefined;
+                                        const ack = detail.notice
+                                          ? detail.notice.acknowledgements.find(row => row.item_key === item.item_key)
+                                          : undefined;
+                                        const collectible = !basis || basis.collectible;
+                                        return (
                                         <div key={item.item_key} className="flex justify-between items-center p-2 rounded-lg border border-slate-100">
                                           <div>
                                             <div className="text-[11px] font-semibold text-slate-800">{item.label}</div>
@@ -1952,6 +2093,19 @@ export default function App() {
                                               {item.category} · {item.status.replace('_', ' ')}
                                               {item.document_reference ? ` · ${item.document_reference}` : ''}
                                             </div>
+                                            {basis && basis.collectible && (
+                                              <div className="text-[9px] text-slate-400">
+                                                Notice basis: {basis.basis}
+                                                {ack
+                                                  ? ` · shown ${ack.acknowledged_at} by ${ack.recorded_by} against ${ack.notice_version}`
+                                                  : ' · the notice has not been shown for this document yet'}
+                                              </div>
+                                            )}
+                                            {basis && !basis.collectible && (
+                                              <div className="text-[9px] text-amber-700">
+                                                Not collectible in this release: {basis.reason} (pending counsel {basis.pending_counsel}).
+                                              </div>
+                                            )}
                                           </div>
                                           <div className="flex space-x-1 shrink-0">
                                             {item.status === 'not_started' && (
@@ -1959,8 +2113,12 @@ export default function App() {
                                             )}
                                             {item.status === 'requested' && (
                                               <>
-                                                <ItemButton label="Mark received" disabled={!detail.consent}
-                                                  title={!detail.consent ? 'A document cannot be collected before the PDPL consent record exists' : undefined}
+                                                <ItemButton label="Mark received" disabled={!collectible || !ack}
+                                                  title={!collectible
+                                                    ? 'The notice assigns no basis to this document, so it cannot be collected in this release — the reason is on the line above'
+                                                    : !ack
+                                                      ? 'The notice has not been shown for this document yet'
+                                                      : undefined}
                                                   onClick={() => handleItemStatus(row.case_id, item.item_key, 'received')} />
                                                 <ItemButton label="Cancel" onClick={() => handleItemStatus(row.case_id, item.item_key, 'not_started')} />
                                               </>
@@ -1976,7 +2134,8 @@ export default function App() {
                                             )}
                                           </div>
                                         </div>
-                                      ))}
+                                        );
+                                      })}
                                     </div>
                                     <button onClick={() => handleRemind(row.case_id)} disabled={row.outstanding_count === 0}
                                       className="w-full text-[10px] font-bold px-3 py-2 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-40">

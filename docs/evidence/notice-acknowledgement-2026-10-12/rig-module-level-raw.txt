@@ -1,0 +1,52 @@
+=== rig tree ===
+d618a96 PDPL 15(b) option B: the gate records that the notice was shown, per document
+PRODUCT_DB_PATH=/tmp/ack-rig/rig.db PORT=3199 (the live product is on 3000, untouched)
+(node:12278) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+rig user created
+Antum server listening on port 3199
+=== login ===
+token acquired
+
+=== 1. GET /api/compliance/notice — the notice the gate shows, with its own version ===
+version: undefined
+path   : undefined
+[eval]:5
+console.log('first line:', d.content.split('\n')[0]);
+                                     ^
+
+TypeError: Cannot read properties of undefined (reading 'split')
+    at Socket.<anonymous> ([eval]:5:38)
+    at Socket.emit (node:events:531:35)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+
+Node.js v22.23.3
+
+=== 2. the retired writer is gone: POST .../consent ===
+HTTP 403
+body: {"error":"Invalid or expired token"}
+
+=== 3. the same rig database, module level: the gate, the record, the two pending-counsel items ===
+(node:12327) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+case: 88b5460f jurisdiction AE — items: 7
+receiving the passport with no notice recorded -> refused 428 The privacy notice has not been shown for Passport copy yet, so it cannot be collected. Record that the notice was shown first.
+recording the notice with NO actor -> refused 400 recorded_by is required: there is no new-hire login in this release, so the record must name the person who showed the notice, on the hire's behalf
+recording the notice for the passport (named actor) -> OK {"created":true,"basis":"Legal obligation","version":"v2.2","recorded_by":"rig-hr","instrument":"notice_shown"}
+recording it again (replay) -> OK {"created":false,"basis":"Legal obligation","version":"v2.2","recorded_by":"rig-hr","instrument":"notice_shown"}
+receiving the passport now -> OK {"id":"aa4fcb63-bef1-4011-8e72-97bd24d7fc66","case_id":"88b5460f-4b3e-406e-bb0b-49b5324f385e","item_key":"passport","label":"Passport copy","category":"identity","jurisdiction":"AE","required":1,"status":"received","track":"employee","owner":null,"document_reference":"scan.pdf","note":null,"requested_at":"2026-10-12T05:28:04.335Z","received_at":"2026-10-12T05:28:04.339Z","verified_at":null,"last_actor":"system","created_at":"2026-10-12 05:28:04","updated_at":"2026-10-12 05:28:04"}
+receiving the bank details, whose notice has NOT been shown -> refused 428 The privacy notice has not been shown for Bank details (IBAN letter) yet, so it cannot be collected. Record that the notice was shown first.
+recording the notice for the education certificate -> refused 409 Education certificate is not collectible in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1). No acknowledgement can be recorded for it, because the notice has no basis to record.
+recording the notice for the emergency contact -> refused 409 Emergency contact is not collectible in this release: the privacy notice assigns no basis for this item, and the data is a third person's, not the hire's (pending counsel Q5). No acknowledgement can be recorded for it, because the notice has no basis to record.
+receiving the education certificate -> refused 409 Education certificate cannot be collected in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1).
+case summary: {"notice_version":"v2.2","notice_recorded":true,"notice_items_collectible":4,"notice_items_acknowledged":1,"notice_items_no_basis":3,"items_total":7,"outstanding_count":6}
+rows in the retired table (this script) : 0
+rows in the notice table (this script)  : 1
+notice version the record carries == the served file: true
+
+=== 4. the demo database is untouched ===
+node index.js processes on this host now: 2 (this rig's own included)
+live product still serving: 200
+
+rig done; scratch tree at /tmp/ack-rig (not committed)

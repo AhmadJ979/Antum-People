@@ -278,6 +278,10 @@ async function seed() {
     // the product created from a real intake submission.
     await db.query("DELETE FROM preboarding_items WHERE case_id IN (SELECT id FROM preboarding_cases WHERE offer_reference LIKE 'OFR-2026-DEMO-%')");
     await db.query("DELETE FROM preboarding_reminders WHERE case_id IN (SELECT id FROM preboarding_cases WHERE offer_reference LIKE 'OFR-2026-DEMO-%')");
+    // The notice-shown record is what the collection gate reads; the consent table it replaced is
+    // cleared as well, so a row left by an earlier deploy cannot sit there claiming an instrument
+    // the product no longer writes or reads.
+    await db.query("DELETE FROM preboarding_notice_acknowledgements WHERE case_id IN (SELECT id FROM preboarding_cases WHERE offer_reference LIKE 'OFR-2026-DEMO-%')");
     await db.query("DELETE FROM preboarding_consents WHERE case_id IN (SELECT id FROM preboarding_cases WHERE offer_reference LIKE 'OFR-2026-DEMO-%')");
     await db.query("DELETE FROM preboarding_cases WHERE offer_reference LIKE 'OFR-2026-DEMO-%'");
   }
@@ -586,8 +590,11 @@ async function seed() {
     }
 
     // Items move through the product's own transition function, never by direct write. Only
-    // not_started -> requested is used here: nothing in the demo holds a collected document,
-    // so no case needs a consent record, and the PDPL gate on received stays demonstrable.
+    // not_started -> requested is used here: nothing in the demo holds a collected document, so no
+    // case needs the notice shown for it and the gate on `received` stays demonstrable — which is
+    // the demo's design intent, the same one this seed had when the gate read a consent record.
+    // Nothing here records an acknowledgement; if it ever did, it would have to go through
+    // preboardingItems.recordNoticeAcknowledgement, which refuses a record with no named person.
     for (const itemKey of demoCase.request_items) {
       const item = await preboardingItems.getItem(caseRow.id, itemKey);
       if (item && item.status === 'not_started') {

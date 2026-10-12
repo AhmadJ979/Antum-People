@@ -18,7 +18,7 @@
  *   5. each case also arrives with its P2-4 workspace lines — all open, every line owned by one
  *      of the four functions, all four functions represented — because the case-creation path
  *      seeds both tracks and the demo has to show the provisioning half too;
- *   6. no consent record is seeded, so the PDPL gate on `received` stays demonstrable;
+ *   6. no notice acknowledgement is seeded, so the gate on `received` stays demonstrable;
  *   7. `preboarding_cases` carries no flag-like column, and the seed writes none — the state is
  *      derived, not stored.
  *
@@ -156,7 +156,14 @@ describe('Layer 2 demo seed — the three pre-boarding cases', () => {
     assert.strictEqual(one(`SELECT COUNT(*) AS n FROM preboarding_items WHERE track NOT IN ('employee','workspace')`).n, 0);
   });
 
-  test('no consent record is seeded, so the PDPL gate on received stays demonstrable', () => {
+  test('no notice acknowledgement is seeded, so the gate on received stays demonstrable', () => {
+    // The demo's own design intent, carried across from the consent instrument this replaces: a
+    // case the demo opens has had no notice shown for it, so the collection gate is demonstrably
+    // closed — which is also what gives "Record that the notice was shown" something to do on
+    // screen. Every seeded acknowledgement would have to name a person; the seed writes none.
+    assert.strictEqual(one('SELECT COUNT(*) AS n FROM preboarding_notice_acknowledgements').n, 0);
+    // The retired consent table is cleared on every seed too: a stale row left by an earlier deploy
+    // would claim an instrument nothing writes and nothing reads.
     assert.strictEqual(one('SELECT COUNT(*) AS n FROM preboarding_consents').n, 0);
     assert.strictEqual(one('SELECT COUNT(*) AS n FROM preboarding_reminders').n, 0);
   });
