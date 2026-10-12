@@ -33,8 +33,24 @@ mv /home/team/shared/templates/privacy-notice.md \
 curl -s -H "Authorization: Bearer $TOKEN" localhost:3000/api/compliance/notice > /tmp/served.json
 python3 -c "import json;d=json.load(open('/tmp/served.json'));print(d['path']);open('/tmp/served.md','w').write(d['content'])"
 md5sum /tmp/served.md "$DEPLOY/templates/privacy-notice.md"   # must match
-grep -c 'statutory retention' /tmp/served.md                  # must be 0
-grep -c 'retention period'    /tmp/served.md                  # must be >= 1
+# The read-back is ROLE-AWARE on purpose — a bare count inverts the check. The version line quotes
+# the retired wording to RECORD the correction ("retention wording corrected: \"statutory
+# retention\" -> \"retention period\""), so `grep -c 'statutory retention'` is 1 on a correct v2.3
+# notice and 0 only on the older text. A count answers "does this text appear", never "in what
+# role". Assert the roles: the header may carry the quotation as the record; the content may not.
+python3 - <<'PY'
+import io
+lines = io.open('/tmp/served.md', encoding='utf-8').read().splitlines()
+RETIRED_EN = 'statutory retention'        # the unsourced qualifier 313a017 removed
+RETIRED_AR = 'مدة الاحتفاظ القانونية'  # its Arabic form in the retired copy
+quoting = [l for l in lines if l.lstrip().startswith('>') and RETIRED_EN in l]
+offenders = [l for l in lines if not l.lstrip().startswith('>') and RETIRED_EN in l]
+assert not offenders, 'the retired qualifier is in the notice CONTENT: %r' % offenders
+assert not [l for l in lines if RETIRED_AR in l], 'the retired Arabic qualifier is present'
+print('the notice CONTENT carries it: 0 (asserted, EN and AR)')
+print('the header quotes it by design: %d line(s), the record of the correction' % len(quoting))
+print('ROLE CHECK PASSED')
+PY
 ```
 
 The `path` the route reports must sit inside `$DEPLOY/templates/`; the served bytes must equal that

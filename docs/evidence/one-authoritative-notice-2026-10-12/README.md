@@ -198,7 +198,9 @@ The read-back that decides it — by the bytes the route returns, not by reading
 curl -s -H "Authorization: Bearer $TOKEN" localhost:3000/api/compliance/notice > /tmp/served.json
 python3 -c "import json;d=json.load(open('/tmp/served.json'));print(d['path']);open('/tmp/served.md','w').write(d['content'])"
 md5sum /tmp/served.md /home/team/shared/probable-octo-sniffle/templates/privacy-notice.md  # must match
-grep -c 'statutory retention' /tmp/served.md   # must be 0; the host copy's md5 must not come back
+# then the ROLE-AWARE content check from `host-copy-disposition.md`. Do NOT fall back to a bare
+# count: `grep -c 'statutory retention'` is 1 on a correct v2.3 notice, because the version line
+# quotes the retired wording to record the correction. Assert the roles, never the count.
 ```
 
 ## 10. Amendment — 2026-10-12, after `#151` merged
@@ -260,3 +262,38 @@ labelled `v2.2`; `#154` then changed three version lines, so the repository copy
 `6004b0a5b23ac5aa68415da5e45ec2cd`. The claim those sections make is an **equality** — the bytes the route
 returns are the bytes of the repository file — not a fixed hash, and the equality is unaffected by the bump.
 Anyone needing today's figure should re-read the route rather than quote a number from this directory.
+
+## 13. The read-back is role-aware, not a count — corrected 2026-10-12
+
+The cutover ran at 06:41:58Z and the retirement was executed after the restart: the host copy at
+`/home/team/shared/templates/privacy-notice.md` was moved aside, never replaced with text, and no code reader
+remains on that path. **The post-move check as this directory first wrote it does not survive the text that
+shipped**, and the correction is the point of this section.
+
+The check was `grep -c 'statutory retention' /tmp/served.md # must be 0`. On the deployed v2.3 notice
+(md5 `6004b0a5b23ac5aa68415da5e45ec2cd`) that count is **1**, because line 6 records the correction by
+quoting the retired wording:
+
+```
+6:> **Version / الإصدار:** v2.3 (2026-10-12) — retention wording corrected: "statutory retention" → "retention period"
+```
+
+So the check flagged *correct* text as wrong and passed *older* text — it inverted. A count answers "does this
+text appear", never "in what role". Measured on the deployed notice, the roles are:
+
+| role | occurrences |
+|---|---|
+| the version header quoting it, as the record of the correction | **1** (line 6) |
+| any content line (`^>`-excluded) | **0** |
+| the English retention row, line 62 | `Duration of employment + retention period` — clean |
+| the Arabic retention row, line 174 | `مدة التوظيف + مدة الاحتفاظ` — clean |
+| the retired Arabic qualifier `مدة الاحتفاظ القانونية` anywhere | **0** |
+
+The check is now role-aware in both places it appears (`host-copy-disposition.md`, and section 9 above), and it
+is enforced rather than documented: `server/privacy-notice.test.js` asserts the qualifier appears in no content
+line and that the Arabic form is absent entirely. It asserts no version number, so it passes on the text as
+labelled `v2.2` and on the `v2.3` text that quotes the correction.
+
+**Sections 3 and 11's `false` rows are dated readings, not prescriptions.** They measured the text as it stood
+during that run — the corrected wording before `v2.3` recorded the change. Read them as history; run the
+role-aware check above for today's answer.
