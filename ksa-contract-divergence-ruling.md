@@ -122,17 +122,25 @@ which is the answer the brief asked for. Only the two Tier-1 files differ, and b
 2. **The engine does not compute either clause.** `server/eosb.js` has no notice parameter at all (grep: no `notice`
    match), so *neither* wording describes current product behaviour. That is legitimate for a contract term — but the
    clause must not be read by anyone as "what our software does".
-3. **Retiring the host directory covers all 14 files, not just the notice — and by removal, not by a pointer.**
+3. **A stale copy is retired by removing it or moving it aside — never by a pointer at the same path.**
    *Amended 2026-10-12, later the same day, on the lead's ruling carried by #153 (`b5af270`): the pointer plan is
    **withdrawn**.* A pointer at the host path is read only by the old, host-first resolution — live until a cutover, and
    exactly what a rollback restores — so **any** text left there is a candidate to be served as the document, and "this
    is not the document any more" would be worse than the stale-but-real text. The resolution merged as #151 consults the
    repository for every template (`templatePath()` in `server/privacy-notice.js` is the single resolution for all of
-   them), so **nothing needs installing at the host path**; each copy is retired by removing or moving it aside. That
-   single resolution is also why the retirement covers all fourteen: until the movement — and after any rollback — the
-   old code reads the host directory for every one of them, and the KSA contract is the file where stale text says
-   something false about an employee's money. The procedure and its byte-level read-back land in
+   them), so **nothing needs installing at the host path**. The procedure and its byte-level read-back land in
    `docs/evidence/one-authoritative-notice-2026-10-12/host-copy-disposition.md` (#153).
+   **Amended again 2026-10-12, after the cutover: "all fourteen" was the wrong rule, and the count is measured, not
+   assumed.** **Divergence is the defect; duplication is inert.** Measured that day, of the **14 file pairs** §4
+   compares, **12 were byte-identical** and exactly two diverged. One of the two is the notice's host copy
+   `e011d3d6…` — **retired** at cutover #5, bytes preserved at
+   `templates/retired/privacy-notice.md.retired-9d2182a`. The other is `templates/ksa-employment-contract.md`
+   (`3518c1af…` against the repository's `1c6ad895…`), which is **not retired and must not be recorded as retired**:
+   its disposition is the owner's under decision 19 and is still pending (§8). The 12 identical copies are duplicates
+   that are inert today: they can drift, but nothing about their content is wrong, and the host path holding one of them
+   is not by itself a defect. The earlier wording here ("the retirement
+   covers all fourteen") is kept only as the record of what was believed before the measurement; it is not the rule, and
+   no document should act on it.
 
 ## 6. What this row did not do
 
@@ -156,10 +164,28 @@ notice's own route reports the flip explicitly — `path` = the tree's `template
 directory), `version` `v2.3`, content md5 `6004b0a5…` = `origin/main`'s file — and its stale host copy was retired to
 `templates/retired/privacy-notice.md.retired-9d2182a` with bytes preserved.
 
-## 8. The host copy — recommendation: retire it, the same way the notice was retired
+## 8. The host copy — **recommendation only, nothing executed**: retire it, the same way the notice was retired
 
-**Recommendation (compliance's call, the lead executes):** move `/home/team/shared/templates/ksa-employment-contract.md`
-aside to `templates/retired/ksa-employment-contract.md.retired-9d2182a`, bytes preserved, exactly as the notice was.
+**Status: NOT RETIRED. The file is still at its path, and no document may record it as retired until the owner rules.**
+Measured by me on 2026-10-12, after the cutover: `/home/team/shared/templates/ksa-employment-contract.md` is present,
+**10,662 bytes, md5 `3518c1af4931afc7b5cd54d0689987e0`**, mtime unchanged at 2026-09-17 06:31, `"Up to 50"` ×1; and
+`/home/team/shared/templates/retired/` holds **one** file — `privacy-notice.md.retired-9d2182a` — with no KSA copy in
+it. The lead measured the same file independently (same md5) and the live route read-only
+(`GET /api/compliance/templates/ksa-employment-contract/demo-emp-omar`) → **200**, returning the **repository** text
+(`"never deducted"` ×1, `"Up to 50"` ×0). So the stale text is **inert today**: this is a tidy-up and a
+safety-of-the-pack question, **not** a served-text fix.
+**The disposition is the owner's (decision 19), and it has three forms:** **(A)** retire it as the notice was — bytes
+preserved under `templates/retired/`, nothing left at the path (the recommendation below); **(B)** keep it at the path
+and label it as the superseded 2026-09-17 snapshot it is; **(C)** treat the host pack as a pack, and move the copies in
+it as one. **Nothing below — no move, no label — happens until the owner rules.**
+**How to check it, without repeating a week-old mistake (rule 32 in its fourth form).** A `50%` count is **not**
+evidence of the retired wording: the served contract contains exactly one `50%`, and it sits inside `150%` — line 92,
+the overtime-rate row (`150% (normal) / 200% (weekends/public holidays)`). Check the **phrase**
+(`"Up to 50"` → expects 0; `"never deducted from the EOSB"` → expects 1), never the number. A hit count answers *does
+this text appear*, never *in what role*.
+**Recommendation (compliance's; the owner disposes under decision 19):** move
+`/home/team/shared/templates/ksa-employment-contract.md` aside to
+`templates/retired/ksa-employment-contract.md.retired-9d2182a`, bytes preserved, exactly as the notice was.
 Do **not** leave a marker or any replacement text at the path.
 
 **Four measurements decide it, and the first is new this cycle.**
@@ -185,9 +211,12 @@ Do **not** leave a marker or any replacement text at the path.
    `770ae371` breach letters, `3326d10b` DPA, `770b522d` DPIA, `7b1ade31` final settlement, `f28dc42a` UAE contract).
    The pack-level question was never about the pack — it was about the one file in it that no longer matches the
    reviewed text. Retiring that file **dissolves** the question instead of deferring it, and leaves a pack that can be
-   handed to a client through any channel, because every `.md` remaining in it is the reviewed text.
+   handed to a client through any channel, because every `.md` remaining in it is the reviewed text. (This is why I read
+   the question as being about one file rather than about the pack — but the owner may still choose to move the pack as
+   one unit, option (C) above, and that choice is not foreclosed by anything here.)
 
-**Procedure** — the notice's, unchanged, so the team has one procedure rather than two: record the source md5 **before**
+**Procedure — for (A) only, and only after the owner has ruled.** This is the notice's procedure, unchanged, so the team
+has one procedure rather than two: record the source md5 **before**
 the move (`3518c1af4931afc7b5cd54d0689987e0`); move it to `templates/retired/ksa-employment-contract.md.retired-9d2182a`;
 read the md5 back and assert it equals the before value; then re-hit the route and assert it still returns the
 repository's text — the move must be **inert by measurement**, as the notice's was. Ordering: **after** a restart on a
@@ -206,21 +235,31 @@ tree does not consult the host directory).
 
 ## 9. Where counsel stands — plainly
 
-The PDPL set is **five** questions (`pdpl-lawful-basis-mapping.md` §4, audited down from six: notice content elements ·
-Arabic notice · acknowledgement-as-instrument · emergency contact · retention floor). This ruling adds the **sixth**
-(§3: whether the notice compensation may be set off against the EOSB, and the notice day counts). Two EOSB requests
-exist drafted and send-ready in `/home/team/shared/` (`uae-counsel-confirmation-request--send-ready.txt`,
-`ksa-counsel-confirmation-request--send-ready.txt`); the PDPL five need a recipient **and** one permission — whether
-the letter may quote our internal documents (`pdpl-lawful-basis-mapping.md` §5).
+The set is **six**, numbered as the product names them, because a client-facing 409 shows those numbers: **Q1** the
+notice content elements (including the purpose row the two qualification certificates wait on), **Q2** the Arabic
+notice, **Q4** acknowledgement-as-instrument — 15(b) itself, and the question the paper attestation block meets again
+at the point of the document — **Q5** the emergency contact, **Q6** the retention floor: the five PDPL items of
+`pdpl-lawful-basis-mapping.md` §4. The **sixth** is the KSA clause this ruling adds (§3: whether the notice
+compensation may be set off against the EOSB, and the notice day counts). **Q3 is retired** — the Arabic-contract
+question, dropped 2026-10-09 because our own baseline answers it (`compliance-requirements.md:38`); it takes no letter
+item, which is why the letter numbers five where the spec numbers six. The product's own refusals carry this numbering:
+`server/preboarding-items.js:135,142` refuse the two certificates with `pending_counsel: 'Q1'`, and `:154` refuses the
+emergency contact with `'Q5'`.
+
+**Send-ready as of 2026-10-12.** The two EOSB requests (`uae-counsel-confirmation-request--send-ready.txt`,
+`ksa-counsel-confirmation-request--send-ready.txt`) have existed in `/home/team/shared/` since 09-28/10-02; the PDPL
+five now have a letter too — `/home/team/shared/pdpl-counsel-request--send-ready.txt`, with its provenance and the
+letter-item ↔ Q-number table in `pdpl-counsel-request.md`. The PDPL letter **quotes no internal document**, so §5's
+permission question no longer gates it: that gap was closed by drafting, not by asking.
 
 **No recipient for any of them.** The engineering is no longer what stands between this product and a pilot: a name does.
 
-**One discrepancy, recorded rather than smoothed.** Plan revision 76 counts "six questions standing — five plus the
-KSA statutory half" (Current Focus #1) and separately calls the notice's paper attestation block "the sixth counsel
-question" (#3). Both cannot be the sixth. The attestation block most likely belongs *inside* the acknowledgement
-question (Q4) — the product records the notice as *shown* while the paper block still collects consent, which is the
-same question met at the point of the document. I have not chosen on the plan's behalf: the two readings differ by one,
-and the owner is who settles it.
+**The count is settled (amended 2026-10-12).** Plan revision 79 states the set once — **five PDPL items plus the KSA
+clause = six**, in the product's numbering, with the paper attestation block read as the acknowledgement question met
+**at the point of the document** rather than as a seventh. Revision 76's two readings (Current Focus #1's "six … five
+plus the KSA statutory half" and #3's attestation block as "the sixth counsel question") are both superseded by that.
+This section carried the discrepancy, so it is corrected here rather than left showing the older count; the resolution
+is the plan's, recorded rather than chosen by me.
 
 ## Sources (all read at `origin/main` = `a11d5c8` unless a host path is named)
 
@@ -238,3 +277,11 @@ and the owner is who settles it.
   — `templates/retired/privacy-notice.md.retired-9d2182a`; the counsel set — `pdpl-lawful-basis-mapping.md:78-92` and
   §5; the pack, measured 2026-10-12: five `.md` files byte-identical to the repository, `ksa-employment-contract.md`
   `3518c1af…` vs `1c6ad895…` the only divergence.
+- **Second addendum, §5.3 / §8 / §9 (2026-10-12, after the cutover), read at `origin/main` = `1dae076`:** the host KSA
+  file **still present and not retired** — `/home/team/shared/templates/ksa-employment-contract.md`, 10,662 bytes, md5
+  `3518c1af4931afc7b5cd54d0689987e0`, mtime unchanged at 2026-09-17 06:31, `"Up to 50"` ×1; `templates/retired/`
+  holding **one** file, the notice's; the served contract's **single** `50%` sitting inside `150%` —
+  `templates/ksa-employment-contract.md:92` (overtime-rate row); the counsel numbering taken from the product itself —
+  `server/preboarding-items.js:135,142` (`'Q1'`) and `:154` (`'Q5'`), asserted in
+  `server/preboarding-items.test.js:288,296`; and the plan's settled count (revision 79). The dispositions these
+  measurements are waiting on are the owner's: **decision 19** (this file) and 15(a) (the recipient).
