@@ -6,7 +6,7 @@ proposed fixes, "rather than applying them blind".
 
 Read on a rig carrying the **served tree** (`9d2182a` = `origin/main`, build byte-identical to the live
 asset `index-Cc1GodRa.js`) over a **copy of the live demo DB** (md5 `7c74c485…`), after the 06:42Z
-cutover. Raw captures: `docs/evidence/post-cutover-3-reground-2026-10-12/` (DOM text under `raw/`, the
+cutover. Raw captures: `docs/evidence/post-cutover-5-2026-10-12-0642-reground/` (DOM text under `raw/`, the
 payloads, and the probes' logs). The live `:3000` was never signed in to (rule 26).
 
 ## What is new to the eye

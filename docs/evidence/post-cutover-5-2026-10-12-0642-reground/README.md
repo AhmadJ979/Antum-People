@@ -1,6 +1,6 @@
-# Post-cutover 3 — the served demo state, re-read (2026-10-12)
+# Post-cutover 5 — the served demo state, re-read (2026-10-12, cutover 06:41:58–06:42:25Z)
 
-The cutover ran **2026-10-12 06:41:58–06:42:25Z** (deployed tree `9d2182a`, which is `origin/main`). The
+The cutover ran **2026-10-12 06:41:58–06:42:25Z**. This is the movement the team calls **cutover #5** (its own record is PR #160), and the pack is named for the run — `-5-2026-10-12-0642-` — so the ordinal the team uses and the run’s own timestamp sit in the same name. The tree deployed was `9d2182a`; `main` has moved on since. The
 movement shipped the notice-shown acknowledgement gate, the corrected privacy notice (v2.3) and the KSA
 contract ruling, and re-seeded the demo. This pack is the re-reading of the demo surface afterwards, on a
 rig, at the state the live demo is in.
