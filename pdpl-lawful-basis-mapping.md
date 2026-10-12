@@ -98,12 +98,15 @@ Assembled so that the moment the owner names a recipient, the letter is one edit
 
 **Amended 2026-10-12, after the drafting was done — one of those two needs is already met.** The letter exists:
 `/home/team/shared/pdpl-counsel-request--send-ready.txt` (provenance and the letter-item ↔ Q-number table in
-`pdpl-counsel-request.md`), so §4's "one edit from sending" is done rather than pending. It **quotes no internal
+`/home/team/shared/pdpl-counsel-request.md`), so §4's "one edit from sending" is done rather than pending. It **quotes no internal
 document** — it describes what the product does, not what our memos say — so *whether the letter may quote our internal
 documents* is not something the owner has to answer for **this** letter: **a recipient alone unblocks the PDPL five**
 (owner decision 15(a)). The permission would still be needed for any letter that does quote them, which is why the
-sentence above stands rather than being deleted. The numbering the letter uses is the product's — **Q1, Q2, Q4, Q5, Q6,
-Q3 retired**, because `server/preboarding-items.js:135,142,154` shows a client those numbers in a 409.
+sentence above stands rather than being deleted. **The letter numbers its points 1–5**, while our records and the
+product's 409 use **Q1, Q2, Q4, Q5, Q6** (Q3 retired) — the two series are not the same, and a bare "4" is not Q4. The
+cross-walk is the letter-item ↔ Q-number table in `/home/team/shared/pdpl-counsel-request.md:19-25` (letter 3 ↔ Q4, letter
+4 ↔ Q5, letter 5 ↔ Q6); the Q-numbers are what the product shows a client in a 409
+(`server/preboarding-items.js:135,142,154`).
 
 ---
 
