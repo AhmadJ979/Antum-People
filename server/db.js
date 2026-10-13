@@ -10,7 +10,18 @@ const fs = require('fs');
  * It replaces the previous implementation that shared the team's coordination store.
  */
 
-// Database path comes from an environment variable with a default outside the git tree
+// Database path comes from an environment variable with a default outside the git tree.
+// The default belongs to the product itself. Under the test runner there is no legitimate reason to
+// reach it — one unpinned test would bind the live database, and this module executes schema.sql on
+// open, i.e. DDL against live data — so refuse loudly instead of binding it silently.
+// The check that keeps test files pinned is server/live-db-guard.test.js; this is the second layer.
+if (!process.env.PRODUCT_DB_PATH && process.env.NODE_TEST_CONTEXT) {
+  throw new Error(
+    'PRODUCT_DB_PATH is unset while running under the test runner, so db.js would bind the live '
+    + 'product database and execute schema.sql against it. Pin PRODUCT_DB_PATH to a throwaway path '
+    + 'above the first require that loads db.js (see server/live-db-guard.test.js).',
+  );
+}
 const PRODUCT_DB_PATH = process.env.PRODUCT_DB_PATH || '/home/team/.data/antum-product.db';
 
 // Ensure the directory exists
