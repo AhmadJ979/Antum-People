@@ -3,6 +3,12 @@
 **Status:** measurement complete, one check landed, **no product change**. The wire/remove choice for each
 element belongs to the owner (decisions 16, 17, 21); this file measures and proposes, and each fix goes to
 its own row afterwards.
+**Update 2026-10-13 — superseded in part by §9.** Elements **1, 3, 4 and 8** are executed on
+`feat/decisions-21-17-remove-pii-routes-consent` (routes gone, instrument retired) and are now held by a
+`RETIRED` register that reddens if any of them returns. The **line citations in §2, §3 and §8 are the
+readings of the pre-removal tree (`a48668d`)**; §9 carries the post-removal anchors and the measured
+evidence. The numbering is unchanged — §2/§8 are the measurement as it was made, and a report describes the
+state it was written in.
 **Measured:** 2026-10-12, by agent-senior-software-engineer, for row `c8da5fd2-2e58-4f6d-bf36-f9117760172e`.
 **On:** branch `row/c8da5fd2-reachability`, based on `origin/main` `580ec7ea`. The served tree is `9d2182a`
 (cutover #5); this branch's delta is docs, tests and one script — **no served behaviour changes**.
@@ -261,3 +267,57 @@ own. One scheme in this document, so a ruling can cite a number once.
 | 8 | the "✓ GRANTED ON {date}" tile | re-point it at 15(b)'s notice-shown record — nothing to build; that record carries basis, version and actor | retire the instrument with the tile, and stop the seeder writing consent | **retire the instrument** (decision 17) |
 | 9 | the `Request` dead end (§7) | guard the control for non-collectible items **and** refuse `not_started → requested` with the 409 the collect gate already writes | nothing to remove; the alternative is to leave it and label it | **wire the guard** (the item's collectibility is counsel's, Q1/Q5) |
 Every fix lands with its register entry removed in the same commit — the test fails otherwise, on purpose.
+
+---
+
+## 9. Executed 2026-10-13 — decisions 21 and 17 (elements 1, 3, 4, 8)
+
+Branch `feat/decisions-21-17-remove-pii-routes-consent`, based on `origin/main` `a48668d`, head `ff0138c`.
+Raw evidence and the before/after route table: `docs/evidence/decisions-21-17-2026-10-13/`. **Nothing was
+deployed** — a cutover is owed (measured debt in §9.4) and is not part of this change.
+
+| # | element | what was done | measured proof (scratch instances of both commits, ports 4731/4732) |
+|---|---------|---------------|----------------------------------------------------------------------|
+| 1 | `GET /api/employees/:id` | **removed** from `server/index.js` | **200 → 404**; before: 37-key body with `national_id_value` non-null — the decrypted identifier *was* the body |
+| 3 | `POST /api/compliance/consent` | **removed** (decision 17) | **200 → 404**; before: wrote `consent_records` 13 → 14 *and* `consent_granted = 1, consent_date = today` on the employee row; after: neither |
+| 4 | `GET /api/compliance/report` | **removed** (decision 21) | **200 → 404**; before: `{total:13, consentGranted:13, …}` and a decrypted `alerts` array |
+| 8 | the "✓ GRANTED ON {date}" tile | **retired**; states the instrument the product operates (notice recorded as *shown*, per document, per case) | built bundle: `GRANTED ON` 1 → **0**, `MISSING / REQUIRED` 1 → **0**, `Notice-based` 0 → **1** |
+| — | the demo seeder | no longer writes `consent_granted` / `consent_date` (`scripts/seed-demo.js:314`) | freshly seeded DB: employees with the flag set **13 → 0**; `consent_records` rows **13 in both** (table kept, decision 14) |
+
+### 9.1 What a green suite could not tell us, and what now can
+
+The class this file is about — *correct-looking code with no live path* — applies to its own fix. So the
+removal is not a memory: `server/reachability-register.js` gains a **`RETIRED`** block (each removed route
+must not be registered again; each retired string must not be back in its file — `client/src/App.tsx`,
+`scripts/seed-demo.js`, `server/index.js`), `server/reachability.test.js` asserts it, and
+`scripts/reachability-report.js` prints the same six checks for a person and exits non-zero on a return.
+
+**Both branches of that assertion were reddened before it was trusted** — a retired route re-added, and the
+retired tile string re-added, each in turn. Transcripts in the evidence pack, including the honest note that
+the *first* attempt planted both injections at once so only one branch could redden; the second isolated the
+other. `CALLERLESS` drops the three entries; **`DISPLAYED_VALUES` is now empty, and the comment in the
+register says what emptied it and what the empty state means** — an empty register without that sentence is
+a silent deletion, which is the thing the register exists to prevent.
+
+### 9.2 The columns stay, and here is who touches them now
+
+`employees.consent_granted` / `consent_date` are **not dropped**: readers in the product **0** (the last
+server-side reader was element 4; the tile was the only client reader); writers still present **2** — `POST
+/api/employees` (`server/index.js:201`) writes the literal `0`, and `PUT /api/employees/:id`'s numeric
+whitelist (`:254`) still admits the key. No path can produce the `GRANTED` state the tile printed.
+`consent_records` keeps its table and schema; production writers now **none** (the seeder writes 13 rows).
+**Follow-up, not done:** narrow the PUT whitelist and drop the column from the INSERT list.
+
+### 9.3 Deliberately untouched
+
+`POST /api/compliance/calculate-eosb`, `GET /api/preboarding/cases/:id` and `GET
+/api/preboarding/flag-watch` stay in `CALLERLESS` (elements 2, 5, 6); the `Request` dead end (§7, element 9)
+and the Exit modal (element 7, decision 16) are unchanged. `GET
+/api/compliance/templates/:templateName/:employeeId` also decrypts both ID columns and was left alone on
+purpose — it renders them into a document the employee is a party to.
+
+### 9.4 Cutover debt, measured
+
+PR scope 6 files (+190/−73); `server/index.js` +20/−33; served tree `9d2182a` → head 103 files, of which
+**1 under `client/`** and **8 under `server/`**. Both a served server file and the client bundle change, so
+the next cutover is owed.

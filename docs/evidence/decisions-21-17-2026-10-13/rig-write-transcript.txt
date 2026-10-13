@@ -1,0 +1,47 @@
+
+===== before (a48668d) =====
+HEAD is now at a48668d Merge pull request #181 from AhmadJ979/infra/version-the-guard-hook
+  seed: Seeding completed successfully.
+  up (no-token probe): 401
+  before the POST:
+(node:18996) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  demo-emp-omar row: {"id":"demo-emp-omar","consent_granted":1,"consent_date":"2026-09-23"}
+  consent_records rows: 13
+  POST /api/compliance/consent -> 200   body: {"id":"fea0047d-5de7-4af3-a445-4b2ae4ed77da"}
+  after the POST:
+(node:19005) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  demo-emp-omar row: {"id":"demo-emp-omar","consent_granted":1,"consent_date":"2026-10-13"}
+  consent_records rows: 14
+Terminated
+  listeners on 4733 now: 0
+
+===== after (ff0138c) =====
+HEAD is now at ff0138c Decisions 21 and 17, executed: remove the two PII routes, retire the employee-record consent instrument
+  seed: Seeding completed successfully.
+  up (no-token probe): 401
+  before the POST:
+(node:19220) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  demo-emp-omar row: {"id":"demo-emp-omar","consent_granted":0,"consent_date":null}
+  consent_records rows: 13
+  POST /api/compliance/consent -> 404   body: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot POST /api
+  after the POST:
+(node:19229) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  demo-emp-omar row: {"id":"demo-emp-omar","consent_granted":0,"consent_date":null}
+  consent_records rows: 13
+Terminated
+  listeners on 4734 now: 0
+
+live product on 3000: 200
+worktrees: 1
+instance stopped
