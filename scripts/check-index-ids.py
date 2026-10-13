@@ -68,6 +68,7 @@ CONTENT_SHAS = {
     "1171239d",  # #102 as frozen and merged, 4 commits (now on main as 2028894)
     "b484920f",  # index content merged by PR #105 (Round 32), 2026-10-09 12:12:31Z
     "57e6aa74",  # the merge check Round 44 read: sha256 of origin/main:roadmap-board-index.md before its edits
+    "8dc7bba7",  # the merge check Round 45 read: sha256 of origin/main:roadmap-board-index.md before its edits
 }
 
 print("index checked:", INDEX)
@@ -129,3 +130,41 @@ print("  ...NEITHER (typos) - must be empty:", bad_bare)
 for i in quoted:
     if i in board:
         print("%s  %s  [%s]" % (i, board[i]["title"][:70], board[i]["status"]))
+
+# STRUCTURE - added 2026-10-13 (Round 45), and it is ROLE-aware on purpose, because
+# this is the failure it was written for and it is one the checks above cannot see.
+# What happened: an edit inserted a blockquote without a trailing newline, so the next
+# line - trigger 7's definition, the standing test that decides every cutover - was
+# SWALLOWED into the previous line. Every character of it survived, and a hit count over
+# the file therefore found it; what was lost is that the rule no longer OPENED a line,
+# so no reader and no re-check could reach it as a trigger. Presence is not role.
+# So these two assertions test the role:
+#   (a) every service number 1..10 must OPEN a line inside the re-check section, and
+#   (b) the standing test must sit inside the line that opens with "7. ".
+# (b) carried on its own would have passed on the broken file, which is why (a) exists.
+# Both reddened on the broken file before the fix - measured, not assumed - and both
+# pass after it. A trigger whose definition is not a list item cannot fire, silently.
+try:
+    _start = text.index("## When to re-check this index")
+    _end = text.index("## Label discipline")
+except ValueError:
+    print("STRUCTURE: FAIL - the re-check section or the section that ends it is missing")
+    raise SystemExit(1)
+section = text[_start:_end]
+opens = sorted(int(m) for m in re.findall(r"(?m)^(\d+)\. ", section))
+seven = [ln for ln in section.splitlines() if ln.startswith("7. ")]
+trig_bad = opens != list(range(1, 11))
+standing_bad = (len(seven) != 1) or ("THE STANDING TEST, from the lead" not in seven[0])
+print("triggers opening a line in the re-check section:", opens)
+print("  ...1..10 all present:", "OK" if not trig_bad else "FAIL - a trigger definition is not a list item")
+print("lines opening with '7. ':", len(seven))
+print("  ...and the standing test sits in that line:", not standing_bad)
+struct_bad = trig_bad or standing_bad
+
+# One exit status, so this runs as a gate rather than as something to read. The lists
+# above say what failed; a caller that only checks the exit code still cannot miss it.
+if unexpected or bad_short or bad_bare or struct_bad:
+    print("FAIL: see the lists above")
+    raise SystemExit(1)
+print("OK: every quoted id resolves, no removal is unrecorded, and the re-check "
+      "section's trigger structure is intact")
