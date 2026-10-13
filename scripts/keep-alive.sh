@@ -15,6 +15,11 @@
 #   The script re-execs itself under setsid on the way, so it does not die with the shell
 #   that armed it: after arming, the armed shell shows no loop and the detached instance
 #   carries on. (See "WHY IT DETACHES" below.)
+#   A THIRD PATH arms it without a human: a login/interactive shell sources
+#   /etc/profile.d/zz-antum-product-guard.sh - the repository file scripts/antum-product-guard-hook.sh,
+#   installed by deploy-main.sh - and that hook arms the loop through path 1 below when no live
+#   guard can be verified. Every attempt and outcome goes to server/guard-hook.log. See the
+#   KNOWN HARD LIMIT note for what a restart does and does not bring back.
 #
 # CHECKING STATUS:
 #   tail -f /home/team/shared/probable-octo-sniffle/server/keep-alive.log
@@ -54,8 +59,18 @@
 #   scripts/keep-alive-deploypath-test.sh
 #
 # KNOWN HARD LIMIT - do not invent a mechanism this host does not have:
-#   there is no cron and no systemd here, so nothing re-arms the loop after a host restart.
-#   The deploy script arms it; a boot does not. Re-arming after a restart stays manual.
+#   there is no cron and no systemd here, so nothing re-arms the loop at BOOT. Two things arm it:
+#   1) the deploy script, on every cutover; and
+#   2) since 2026-10-13, the login-shell hook scripts/antum-product-guard-hook.sh, installed by
+#      deploy-main.sh as /etc/profile.d/zz-antum-product-guard.sh: a login/interactive shell (what
+#      the platform opens whenever it wakes an agent) arms the loop when no live guard can be
+#      verified, and appends every attempt and every outcome to server/guard-hook.log.
+#   So after a host restart the loop returns on the next *session* - not at boot, and not on the
+#   next human. That gap had a price: on 2026-10-13 the third restart killed the product and its
+#   guard, and the public URL answered 200 with the platform's placeholder until someone re-armed
+#   it by hand.
+#   The hook is a stopgap for owner decision 5 (an off-host check, or a scheduled task on a paid
+#   plan), and it can only arm anything once such a session exists.
 #
 # TESTING OFF THE LIVE TREE (WORKFLOW rule 14):
 #   The paths and the two waits can be redirected for a scratch run without changing the
