@@ -294,3 +294,33 @@ is the plan's, recorded rather than chosen by me.
   `server/preboarding-items.js:135,142` (`'Q1'`) and `:154` (`'Q5'`), asserted in
   `server/preboarding-items.test.js:288,296`; and the plan's settled count (revision 79). The dispositions these
   measurements are waiting on are the owner's: **decision 19** (this file) and 15(a) (the recipient).
+
+## 10. Executed — the owner ruled, and the host copy is retired (2026-10-13)
+
+*Appended the day the ruling landed. **§8 above is kept as the recommendation it was — nothing in it is rewritten** —
+including its status line, which was true when written and is the reason this note exists.*
+
+**Owner decision 19, form (A): retire it as the notice was.** The movement ran on 2026-10-13, exactly as §8's procedure
+prescribes — bytes moved aside, nothing left at the path:
+
+| | 2026-10-12 (as §8 measured it) | 2026-10-13 (after the move) |
+|---|---|---|
+| the host template | present, 10,662 B, md5 `3518c1af4931afc7b5cd54d0689987e0` | **nothing at the path** — no pointer, no stub, no redirect |
+| the retired directory | one file — `privacy-notice.md.retired-9d2182a` (23,566 B) | two — the KSA copy joined it as `/home/team/shared/templates/retired/ksa-employment-contract.md.retired-9d2182a` (10,662 B, md5 `3518c1af4931afc7b5cd54d0689987e0`, mtime preserved) |
+
+The retired bytes are identical to the bytes that stood at the path, and the filename is the one §8 prescribed. The sha
+in it names the **served tree** `9d2182a` — the tree pid 1255 executes, `readlink /proc/1255/cwd` →
+`…/probable-octo-sniffle/server` — so the two retired templates name the same cutover, and the next reader can tell
+which tree's hash it is without asking.
+
+**No cutover is owed, measured rather than inherited.** The served tree's resolution module builds every template path
+with `path.join(__dirname, '..', 'templates')` — inside the repository — and its docblock records the reversal in
+words: *the host-shared directory is not consulted at all. A host copy that still exists is a duplicate, never a
+source.* Its guard test fails if any module under `server/` starts reading the host-shared directory again. On the tree
+that is actually running (`9d2182a`), `templates/ksa-employment-contract.md` is md5 `1c6ad895d403e8caf75606eea8c3db05`
+— byte-identical to `origin/main`'s. **The bytes a client downloads are unchanged by this movement.**
+
+**The strings in §8 that name the host path are now historical, and are left exactly as written.** A statement that a
+copy was still at its path is not made false by the copy's later removal; the record's date is what qualifies it. That
+is the class the path-resolution sweep declared on 2026-10-13 — **a historical quotation in a dated record**. The two
+`retired/` targets §8 named as a *future* path (`:197`, `:229`) now resolve: the file exists.
