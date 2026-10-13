@@ -1131,3 +1131,68 @@ also now names the two consent stores (`preboarding_consents` for the case; `con
 `employees.consent_granted` at Layer 1) and the gap that `consent_version: 'v1'` is hard-coded in the
 client with no notice behind it (`App.tsx:790`–`:793`).*
 *Amended 2026-10-09, after P2-3, P2-4 and P2-5 merged and this document's own §§8A–8C went in (PR #89): **three places here said the workspace track did not exist, and all three are now false** — §5's track-agnostic bullet ("today that is the employee track, because it is the only one that exists; when P2-4 lands…"), §5's owner bullet ("owners exist only on the workspace track (P2-4), which does not exist yet") and §2's open-now row ("owner does not exist"). They are corrected in place and each quotes what it replaced, because this document is the design of record rather than a dated snapshot; the snapshot beside it, `LAYER2-P2-2-IMPLEMENTATION-NOTES.md`, carries a superseded-note instead, because rewriting a reading taken on a named revision is worse than a stale line. What did **not** change is the point of the exercise: §5's rule is the same rule and both tracks obey it — the merge added items to it and altered nothing, which the flag module's own note records (`server/preboarding-flag.js:43`) — and no count anywhere in this document moved. **Checked and deliberately left:** §4's note that the chip draws inside the built HR roll-up and not yet on §2's list row or §3's detail header is dated to a re-read on `404b29d` (2026-10-08) and still describes where it draws; re-dating a reading to a tree it was not taken on is the failure this pass exists to avoid.*
+*Amended 2026-10-13 (compliance) — **§8's premise has moved: the pre-boarding documents are gated on
+the notice being shown, not on a consent record.** The P2-6 criterion this document quotes at `:541`
+comes from the team's roadmap, and that roadmap was amended today at its source
+(`/home/team/shared/phase-roadmap-2-4.md:38-39`) because the wording kept reproducing a requirement
+the product does not implement and must not. The notice the hire is shown assigns `consent` to
+exactly **two** purpose rows, both sensitive data (`templates/privacy-notice.md:47-48`), and none of
+the seven pre-boarding documents (`server/preboarding-items.js:76-82`) is either. What the gate reads
+is the per-item record that the **notice was shown** — `server/preboarding-items.js:161`
+(`NOTICE_INSTRUMENT = 'notice_shown'`), the gate at `:466`–`:480` refusing with **428** when the
+notice has not been shown *for that item*, the writer requiring a **named actor** (`:310`–`:312`; a
+record with no name is refused **400**), the version taken from the notice the server actually serves
+(v2.3 today) — and **409** for the two certificates and the emergency contact, which the notice
+assigns no basis to, each naming the counsel question it waits on (`:432`–`:451`). The record lands
+at `POST /api/preboarding/cases/:id/notice-acknowledgements` (`server/index.js:749`); the client's
+`{ consent_type, lawful_basis: 'consent', consent_version: 'v1' }` literal is gone.
+
+**The case-level consent instrument §8 is built on is retired, not merely unused.** No reader, no
+writer, and the reason recorded in the schema itself — `consent` is the one basis a person can
+withdraw, the notice assigns it to two sensitive-data purposes only, and one row per case cannot
+carry seven bases (`server/schema.sql:255`–`:270`). The two case consent routes were removed rather
+than reworded, because leaving a writer in place would keep the defect reachable while the screen
+said something else (`server/index.js:735`–`:738`). The **employee**-level path is separate and still
+exists: `POST /api/compliance/consent` writes `consent_records` and sets `employees.consent_granted`
+(`server/index.js:359`–`:366`); it has **no caller**, and whether the tile that reads it survives is
+owner decision 17, not this document.
+
+**What that leaves stale in §8 — named so the next pass acts on it instead of rediscovering it.**
+Nothing below is rewritten in this amendment, and nothing above it moved: the block is appended
+precisely so that **no line number in this document changes**, because other documents cite them and
+§8's redesign is the Product Designer's pass, not a compliance note's. Line numbers are as at
+`main` = `a48668d` (this document: 1,133 lines, md5 `cfb487a6a691a6e2a3c8c47ffae17a1b` before this
+block).
+
+| line(s) | what it says | state after the change |
+|---|---|---|
+| `:539` | section heading, "The consent gate" | the gate exists; its instrument is the notice-shown record |
+| `:541` | the quoted P2-6 acceptance | superseded — the criterion is amended at its source |
+| `:544`, `:550`, `:552`, `:553` | mock copy: "Locked state (no consent record)", "🔒 Documents are locked until consent is recorded", "… before a PDPL consent record exists for this case", "[ Record consent ]" | none of these strings is in the product; the shipped control reads *Record that the notice was shown* |
+| `:562`, `:564`–`:566` | "a direct API write … for a case with no consent record is a defect"; the consent line's copy, `PDPL consent recorded …` / `No PDPL consent record — no document can be collected on this case yet.` | true in substance — read *notice-shown record*; the refusal is **428** and both UI strings are gone |
+| `:574`–`:575` | "Two consent stores exist, and P2-6 must bind the portal to exactly one of them", citing `POST /api/preboarding/cases/:id/consent` → `preboarding_consents` (`server/index.js:718`–`:729`) and the gate (`server/preboarding-items.js:321`–`:332`) | both citations are **stranded**: that route, that table as a live instrument, and that gate line are gone |
+| `:583`–`:589` | the `consent_version: 'v1'` literal and "`v1` names a text the product has never shown" | both answered: the literal is gone and the recorded version is the served notice's own |
+| `:1036` | §11's P2-6 row, repeating "no document collected before a consent record exists" and citing `server/preboarding-items.js:321`–`:332` / `:211`–`:228` | same premise, same stranded lines — the acceptance test it describes is shipped, on the acknowledgement table |
+
+**Not only §8**, and the rest belongs to a pass this note does not perform: `:82` lists *"A consent
+record to gate documents on"* as a dependency of the tab; `:628` and `:714`–`:716` (S4b's states) say
+items cannot be collected until the consent record exists and cite the gate at
+`server/preboarding-items.js:328`–`:332`, which has moved; `:885`, `:902`, `:937` and `:1013` (D15)
+ask whether *the consent record* gains `notice_language` and per-item granularity. Read *consent
+record* as *the notice-shown record* throughout — and note that what D15 leaves open, the shipped
+record already answers in the affirmative: it is per item, and the version it stores is the notice's
+own. **That vocabulary is §8A's and §11's, and the portal pass that owns it is blocked on owner
+decision 14.**
+
+**One stale premise here is not a document at all.** The comment at
+`server/preboarding-workspace.js:56` still justifies an omission by saying *"Consent recorded" is the
+PDPL consent record the employee track's gate already reads*. The gate reads the notice-shown record
+now, and no UI string named *Consent recorded* exists in either tree — the only hit in `client/` or
+`server/` **is that comment**. It is a comment inside a **served** file, so it cannot ride a
+docs-only PR: recorded here for the next cutover, on the same footing as the `server/db.js` fix the
+plan already books for it.
+
+*Read as one thing: §8's **design** is what needs re-grounding, not this document's finding. The
+question §8 asks — "is the notice in front of the hire before we collect their documents?" — is the
+right question, and the shipped answer is the acknowledgement record. What the section cannot keep is
+the **instrument** it names.*

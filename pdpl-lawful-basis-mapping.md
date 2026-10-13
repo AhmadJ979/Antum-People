@@ -134,3 +134,33 @@ The transcripts, with the output of each, are in `docs/evidence/pdpl-lawful-basi
 - **No real client data** (RBAC is not built) and **L-2 stays behind counsel alone.**
 - **A numbering caution:** the demo documents attribute the consent-versus-acknowledgement decision to "owner decision 14" (`demo-weak-screens.md:64`). The current plan numbers it **15(b)** (14 is the portal-identity question). Same decision, stale number — flagged so nobody decides the wrong one.
 - **The sibling memo is corrected in the same PR as this file:** `pdpl-portal-boundary-memo.md`'s fact 5 and its `App.tsx`/`index.js` line citations were re-ground at this tree; the correction is recorded there and in the PR body. Its finding is unchanged — but its description of the actor was too generous to the product, and that matters here, where the actor is what the record has to prove.
+*Amended 2026-10-13 (compliance) — **the change this document recommended has landed, so §1's
+mechanism and §7's last bullet now describe a tree that is gone; the note is appended rather than
+edited in.** The header above scopes every cell to a reading taken at `cd9daa8` (2026-10-09), and a
+dated reading is corrected by a dated note, not by rewriting it — §1, §2 and §3 stand exactly as
+written, and nothing above line 137 moved.*
+
+Measured on `main` = `a48668d`:
+
+- **§1 fact 1's instrument has been replaced.** The gate no longer reads a consent row for the case;
+  it reads the per-item record that **the notice was shown** — `server/preboarding-items.js:161`
+  (`NOTICE_INSTRUMENT = 'notice_shown'`), gate at `:466`–`:480` (**428** when the notice has not been
+  shown for that item; **409** for an item the notice assigns no basis to, naming the counsel
+  question; **400** for a record with no named actor). §3's recommendation (option B) was **decided
+  2026-10-09, implemented in PR #143 (`ce9fe05`) and served**; every reason §3 gives still holds, and
+  §2.1's "Instrument mismatch" class is now the shipped state rather than the gap.
+- **The table §1 fact 5 describes is retired, not merely unused:** no reader, no writer, the reason
+  recorded in the schema (`server/schema.sql:255`–`:270`), and the two case consent routes removed
+  rather than reworded (`server/index.js:735`–`:738`). The employee-level `POST /api/compliance/consent`
+  still writes `consent_records` and sets `employees.consent_granted` (`server/index.js:359`–`:366`) —
+  **callerless**, and owner decision 17 recommends retiring that instrument while keeping its subject.
+- **§1 facts 2–4 and §7's last bullet are answered, not pending.** `:131`'s "Facts 2 and 3 will change
+  the day 15(b) is decided, not before" — that day has come: the client literal (`client/src/App.tsx`,
+  facts 2–4) is gone, the recorded version is the notice's own (v2.3), and `recorded_by` cannot be
+  `'system'` on this path. §2's "What the product records" column, all seven rows, is therefore the
+  pre-change state, and the record it describes as frozen for one case does not exist in the demo.
+- **The wording this file's subject came from is amended at its source:**
+  `/home/team/shared/phase-roadmap-2-4.md:38-39` (P2-6's criterion), amended 2026-10-13.
+
+*Nothing above this line changed. Lines 1–136 and every citation in them are as they were; this
+file's md5 was `d12e2df439726590f8271da920f42950` before this block was appended.*
