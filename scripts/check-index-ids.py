@@ -129,3 +129,33 @@ print("  ...NEITHER (typos) - must be empty:", bad_bare)
 for i in quoted:
     if i in board:
         print("%s  %s  [%s]" % (i, board[i]["title"][:70], board[i]["status"]))
+
+# Structural assertion (Round 45): the re-check section must open a line for each
+# service number 1..10, and trigger 7 (the standing cutover test) must sit inside
+# the line that opens with "7. ". The trigger's definition was inadvertently merged
+# into a preceding sentence in PR #179; this check reddens on that shape so the
+# failure cannot recur silently.
+with open(INDEX) as _f:
+    _lines = _f.read().split("\n")
+
+_service_lines_found = sorted(set(
+    int(_m.group(1))
+    for _l in _lines
+    for _m in [re.match(r"^(\d+)\. ", _l)]
+    if _m and 1 <= int(_m.group(1)) <= 10
+))
+print("service numbers opening their own lines (expect [1..10]):", _service_lines_found)
+
+_trigger7_lines = [_l for _l in _lines if _l.startswith("7. **ADDED")]
+print("lines opening with '7. ': %d" % len(_trigger7_lines))
+
+_fail = False
+if _service_lines_found != list(range(1, 11)):
+    print("ERROR: service numbers 1..10 do not all open their own lines; found:", _service_lines_found)
+    _fail = True
+if len(_trigger7_lines) != 1:
+    print("ERROR: trigger 7 definition does not open exactly one line starting '7. **ADDED'")
+    _fail = True
+
+if bad_bare or bad_short or unexpected or _fail:
+    sys.exit(1)
