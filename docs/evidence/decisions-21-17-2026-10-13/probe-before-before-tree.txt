@@ -1,0 +1,9 @@
+  GET (no token) /api/employees -> 401
+  GET    /api/employees                                       -> 200
+  GET    /api/employees/demo-emp-omar                         -> 200
+  GET    /api/compliance/report                               -> 200
+  POST   /api/compliance/consent                              -> 200
+  GET    /api/compliance/notice                               -> 200
+  GET    /api/analytics/dashboard?jurisdiction=AE             -> 200
+  GET    /api/preboarding/checklist/overview?jurisdiction=AE  -> 200
+  GET    /api/compliance/templates/final-settlement-statement/demo-emp-sarah -> 200

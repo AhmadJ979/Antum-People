@@ -1,0 +1,73 @@
+### callers of the three retired routes, measured on ff0138c (register + test excluded, they are the books that record the removal)
+
+--- '/api/employees/' in client/src, server/*.js (minus reachability-register.js/reachability.test.js), scripts/
+client/src/App.tsx:985:        authedFetch(`${API_BASE}/api/employees/${employeeId}/onboarding`),
+client/src/App.tsx:986:        authedFetch(`${API_BASE}/api/employees/${employeeId}/offboarding`)
+client/src/App.tsx:1092:      const res = await authedFetch(`${API_BASE}/api/employees/${selectedEmployee.id}`, {
+client/src/App.tsx:1112:      const res = await authedFetch(`${API_BASE}/api/employees/${selectedEmployee.id}`, {
+server/index.js:170:// REMOVED 2026-10-13, owner decision 21 executed: the single-employee read `GET /api/employees/:id`
+server/index.js:237:app.put('/api/employees/:id', async (req, res) => {
+server/index.js:306:app.get('/api/employees/:id/onboarding', async (req, res) => {
+server/index.js:318:app.get('/api/employees/:id/offboarding', async (req, res) => {
+
+--- '/api/compliance/report' in client/src, server/*.js (minus reachability-register.js/reachability.test.js), scripts/
+server/index.js:416:// REMOVED 2026-10-13, owner decision 21 executed: `GET /api/compliance/report` used to sit here. No
+
+--- '/api/compliance/consent' in client/src, server/*.js (minus reachability-register.js/reachability.test.js), scripts/
+server/index.js:354:// REMOVED 2026-10-13, owner decision 17 executed: `POST /api/compliance/consent` used to sit here.
+
+### every occurrence of the retired columns on ff0138c
+client/src/App.tsx:25:  consent_granted: number;
+client/src/App.tsx:26:  consent_date: string | null;
+server/index.js:201:        consent_granted, 
+server/index.js:254:      } else if (['salary', 'basic_salary', 'recruitment_cost', 'eosb_paid', 'consent_granted', 'unpaid_leave_days'].includes(key)) {
+server/index.js:356:// consent_records plus `UPDATE employees SET consent_granted = 1, consent_date = ...` — and no
+server/index.js:421:// 17 retires. Removing it also removed the only server-side READER of `employees.consent_granted`.
+server/reachability-register.js:143:        + 'consent_granted = 1 with consent_date.',
+server/reachability-register.js:158:        + 'employees.consent_granted, so removing it retired the last thing that could print the '
+server/reachability-register.js:172:      absent: '\u2713 GRANTED ON ${selectedEmployee.consent_date}',
+server/reachability-register.js:181:      absent: 'consent_granted, consent_date, created_at, updated_at',
+server/schema.sql:22:  consent_granted INTEGER DEFAULT 0,
+server/schema.sql:23:  consent_date TEXT,
+server/schema.sql:98:  consent_date TEXT,
+scripts/seed-demo.js:314:    // Decision 17 (2026-10-13): this insert no longer writes `consent_granted` / `consent_date`.
+scripts/seed-demo.js:493:      INSERT OR REPLACE INTO consent_records (id, employee_id, consent_type, status, consent_date)
+
+### every occurrence of consent_records
+server/index.js:356:// consent_records plus `UPDATE employees SET consent_granted = 1, consent_date = ...` — and no
+server/index.js:357:// client code called it. The `consent_records` TABLE stays: purpose-scoped consent is decision 14's
+server/reachability-register.js:142:      usedToReturn: 'The id of the consent_records row it wrote — and, on the employee record, '
+server/reachability-register.js:147:        + 'version and a named actor. The `consent_records` TABLE stays (purpose-scoped consent is '
+server/reachability-register.js:189:      absent: 'INSERT INTO consent_records',
+server/reachability-register.js:191:      why: 'The only product-side write into consent_records sat inside that removed route.',
+server/schema.sql:93:CREATE TABLE IF NOT EXISTS consent_records (
+scripts/seed-demo.js:280:    await db.query("DELETE FROM consent_records WHERE employee_id LIKE 'demo-emp-%'");
+scripts/seed-demo.js:493:      INSERT OR REPLACE INTO consent_records (id, employee_id, consent_type, status, consent_date)
+
+### route table now (method path) from the reachability module
+  api routes: 25
+   POST /api/login  index.js:104
+   GET /api/employees  index.js:148
+   POST /api/employees  index.js:178
+   PUT /api/employees/:id  index.js:237
+   GET /api/employees/:id/onboarding  index.js:306
+   PUT /api/onboarding-tasks/:id  index.js:311
+   GET /api/employees/:id/offboarding  index.js:318
+   PUT /api/offboarding-tasks/:id  index.js:323
+   POST /api/compliance/calculate-eosb  index.js:330
+   GET /api/compliance/notice  index.js:339
+   GET /api/compliance/templates/:templateName/:employeeId  index.js:361
+   GET /api/analytics/dashboard  index.js:424
+   POST /api/exit-interviews  index.js:577
+   POST /api/preboarding/cases  index.js:594
+   GET /api/preboarding/cases  index.js:618
+   GET /api/preboarding/cases/:id  index.js:633
+   GET /api/preboarding/checklist/overview  index.js:661
+   GET /api/preboarding/cases/:id/checklist  index.js:669
+   GET /api/preboarding/cases/:id/workspace  index.js:682
+   POST /api/preboarding/cases/:id/items/:itemKey/status  index.js:693
+   POST /api/preboarding/cases/:id/reminders  index.js:709
+   POST /api/preboarding/cases/:id/notice-acknowledgements  index.js:736
+   GET /api/preboarding/cases/:id/package  index.js:796
+   POST /api/preboarding/cases/:id/package/:itemKey/acknowledgement  index.js:807
+   GET /api/preboarding/flag-watch  index.js:827

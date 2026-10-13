@@ -11,7 +11,7 @@
  */
 const r = require('../server/reachability');
 const {
-  CALLERLESS, DYNAMIC_SITES, UNOPENABLE_CONTROLS, DISPLAYED_VALUES,
+  CALLERLESS, DYNAMIC_SITES, UNOPENABLE_CONTROLS, DISPLAYED_VALUES, RETIRED,
 } = require('../server/reachability-register');
 
 const key = (x) => `${x.method} ${x.path}`;
@@ -81,6 +81,30 @@ for (const entry of DISPLAYED_VALUES) {
   console.log(`    read at ${entry.reader}:${at} (${entry.columns.join(', ')})`);
   for (const w of writers) console.log(`    written: ${w.scope.padEnd(7)} ${w.file}:${w.line}`);
   console.log(`    ${entry.owner}`);
+}
+if (!DISPLAYED_VALUES.length) {
+  console.log('  none — no tile in the product displays a value nothing reachable writes.');
+}
+rule('RETIRED ELEMENTS', 'removals, re-measured: a retired route that answers again is a finding');
+for (const [k, entry] of Object.entries(RETIRED.routes)) {
+  const back = routes.find((x) => key(x) === k);
+  console.log(`  ${back ? '[BACK]' : '[gone]'} ${k.padEnd(40)} ${entry.decision}`
+    + ` — removed ${entry.removed}`);
+  if (back) {
+    console.log(`         registered again at server/index.js:${back.line}`);
+    newFindings += 1;
+  }
+}
+for (const a of RETIRED.sourceAnchors) {
+  const lines = r.read(`${r.ROOT}/${a.file}`).split('\n')
+    .map((text, i) => ({ line: i + 1, text }))
+    .filter((x) => x.text.includes(a.absent));
+  console.log(`  ${lines.length ? '[BACK]' : '[gone]'} ${a.file.padEnd(24)} ${a.decision}`
+    + ` — ${a.what}`);
+  for (const x of lines) {
+    console.log(`         ${a.file}:${x.line} contains ${JSON.stringify(a.absent)}`);
+    newFindings += 1;
+  }
 }
 
 rule('DECLARED DYNAMIC CALL SITES', 'paths built at runtime — equality cannot prove these, so they are declared');

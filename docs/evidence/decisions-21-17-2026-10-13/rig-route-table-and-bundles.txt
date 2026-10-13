@@ -1,0 +1,112 @@
+
+=================== 0. ports free before we start ===================
+  port 4731: 0 listener(s)
+  port 4732: 0 listener(s)
+  live product on 3000: 200
+
+=================== 1. two trees, one per commit ===================
+Preparing worktree (detached HEAD a48668d)
+HEAD is now at a48668d Merge pull request #181 from AhmadJ979/infra/version-the-guard-hook
+Preparing worktree (detached HEAD ff0138c)
+HEAD is now at ff0138c Decisions 21 and 17, executed: remove the two PII routes, retire the employee-record consent instrument
+  before tree HEAD: a48668d3733b41b491323774af7fff4bf5f02d01  (want a48668d)
+  after  tree HEAD: ff0138c6a3ab62984c51e1cf33608285213df4f9  (want ff0138c)
+
+=================== 2.before seed before.db (demo seed, throwaway DB) ===================
+- Replayed OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-12) — start date already passed, items still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+(node:16940) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  seeded rows: employees=13
+(node:16948) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  employees with consent_granted=1: 13
+(node:16956) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  consent_records rows: 13
+
+=================== 3.before throwaway credential into before.db ===================
+  user written
+
+=================== 4.before boot on port 4731 ===================
+  boot probe (no token) GET /api/employees -> 401  (401 = up)
+  pid 16974 cwd=/home/agent-senior-software-engineer/scratch-dec21-17/before/server
+
+=================== 2.after seed after.db (demo seed, throwaway DB) ===================
+- Replayed OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-12) — start date already passed, items still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+(node:17096) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  seeded rows: employees=13
+(node:17104) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  employees with consent_granted=1: 0
+(node:17112) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  consent_records rows: 13
+
+=================== 3.after throwaway credential into after.db ===================
+  user written
+
+=================== 4.after boot on port 4732 ===================
+  boot probe (no token) GET /api/employees -> 401  (401 = up)
+  pid 17130 cwd=/home/agent-senior-software-engineer/scratch-dec21-17/after/server
+
+=================== 5.before route table (path -> status), token vs no token ===================
+  login token length: 204
+  GET (no token) /api/employees -> 401
+  GET    /api/employees                                       -> 200
+  GET    /api/employees/demo-emp-omar                         -> 200
+     body keys / national_id_value is non-null? 37 keys; national_id_value non-null: true
+  GET    /api/compliance/report                               -> 200
+     body: {"total":13,"consentGranted":13,"visaAlerts":0,"alerts_len":0}
+  POST   /api/compliance/consent                              -> 200
+  GET    /api/compliance/notice                               -> 200
+     notice version: v2.3
+  GET    /api/analytics/dashboard?jurisdiction=AE             -> 200
+  GET    /api/preboarding/checklist/overview?jurisdiction=AE  -> 200
+  GET    /api/compliance/templates/final-settlement-statement/demo-emp-sarah -> 200
+     rendered document bytes: 3003
+
+=================== 6.before state of the instrument in before.db, after the probes ===================
+Node.js v22.23.3
+
+=================== 5.after route table (path -> status), token vs no token ===================
+  login token length: 204
+  GET (no token) /api/employees -> 401
+  GET    /api/employees                                       -> 200
+  GET    /api/employees/demo-emp-omar                         -> 404
+     body keys / national_id_value is non-null? 1 keys; national_id_value non-null: false
+  GET    /api/compliance/report                               -> 404
+     body: {"alerts_len":null}
+  POST   /api/compliance/consent                              -> 404
+  GET    /api/compliance/notice                               -> 200
+     notice version: v2.3
+  GET    /api/analytics/dashboard?jurisdiction=AE             -> 200
+  GET    /api/preboarding/checklist/overview?jurisdiction=AE  -> 200
+  GET    /api/compliance/templates/final-settlement-statement/demo-emp-sarah -> 200
+     rendered document bytes: 3003
+
+=================== 6.after state of the instrument in after.db, after the probes ===================
+Node.js v22.23.3
+
+=================== 7. the built client bundle, both sides (static, no browser) ===================
+  before: index-Cc1GodRa.js 274065 bytes md5 9cdfbe5da81f6acf38fdb10de8a5e6fd
+     'GRANTED ON' in bundle: 1   'MISSING / REQUIRED' in bundle: 1   'Notice-based' in bundle: 0
+  after: index-Bh1-0KrL.js 274243 bytes md5 91f05725a25c2b7b1f4328f1a5a110d5
+     'GRANTED ON' in bundle: 0   'MISSING / REQUIRED' in bundle: 0   'Notice-based' in bundle: 1
+
+=================== 8. teardown ===================
+  port 4731 held by pid 16974 cwd=/home/agent-senior-software-engineer/scratch-dec21-17/before/server
+    killed (scratch tree)
+Terminated
+  port 4732 held by pid 17130 cwd=/home/agent-senior-software-engineer/scratch-dec21-17/after/server
+    killed (scratch tree)
+Terminated
+  port 4731 listeners now: 0
+  port 4732 listeners now: 0
+  live product on 3000: 200
+  worktrees: 1 entries
+instance stopped
