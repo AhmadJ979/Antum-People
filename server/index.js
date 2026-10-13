@@ -167,18 +167,13 @@ app.get('/api/employees', async (req, res) => {
   }
 });
 
-app.get('/api/employees/:id', async (req, res) => {
-  try {
-    const employees = await db.query(`SELECT * FROM employees WHERE id = ${db.escapeString(req.params.id)}`);
-    if (employees.length === 0) return res.status(404).json({ error: 'Employee not found' });
-    const emp = employees[0];
-    emp.national_id_value = auth.decrypt(emp.national_id_value);
-    emp.national_id_iqama = auth.decrypt(emp.national_id_iqama);
-    res.json(emp);
-  } catch (err) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
+// REMOVED 2026-10-13, owner decision 21 executed: the single-employee read `GET /api/employees/:id`
+// used to sit here. Its response body WAS the decrypted identifier — `SELECT * FROM employees`
+// filtered to one row, `auth.decrypt()` on both national-ID columns, then `res.json(emp)` — and it
+// had no caller at all: the roster above is what the UI reads, and the detail view takes its
+// employee from that list. The retirement is asserted rather than remembered: the path is written
+// down in RETIRED (server/reachability-register.js), and server/reachability.test.js reddens if it
+// is answerable again.
 
 app.post('/api/employees', async (req, res) => {
   try {
@@ -356,15 +351,12 @@ app.get('/api/compliance/notice', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-app.post('/api/compliance/consent', async (req, res) => {
-  const { employee_id, consent_type, lawful_basis, version } = req.body;
-  const id = generateId();
-  const now = new Date().toISOString();
-  await db.query(`INSERT INTO consent_records (id, employee_id, consent_type, lawful_basis, granted_at, consent_version) 
-    VALUES (${db.escapeString(id)}, ${db.escapeString(employee_id)}, ${db.escapeString(consent_type)}, ${db.escapeString(lawful_basis)}, ${db.escapeString(now)}, ${db.escapeString(version)})`);
-  await db.query(`UPDATE employees SET consent_granted = 1, consent_date = ${db.escapeString(now.split('T')[0])} WHERE id = ${db.escapeString(employee_id)}`);
-  res.json({ id });
-});
+// REMOVED 2026-10-13, owner decision 17 executed: `POST /api/compliance/consent` used to sit here.
+// It was the employee-record consent instrument's only writer inside the product — one INSERT into
+// consent_records plus `UPDATE employees SET consent_granted = 1, consent_date = ...` — and no
+// client code called it. The `consent_records` TABLE stays: purpose-scoped consent is decision 14's
+// subject, and this removal takes away the door, not the store. Asserted in RETIRED
+// (server/reachability-register.js).
 
 app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) => {
   try {
@@ -421,18 +413,13 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
   }
 });
 
-app.get('/api/compliance/report', async (req, res) => {
-  const employees = await db.query(`SELECT * FROM employees`);
-  const decrypted = employees.map(emp => ({
-    ...emp,
-    national_id_value: auth.decrypt(emp.national_id_value),
-    national_id_iqama: auth.decrypt(emp.national_id_iqama)
-  }));
-  const total = decrypted.length;
-  const consent = decrypted.filter(e => e.consent_granted).length;
-  const alerts = decrypted.filter(e => e.visa_expiry_date && new Date(e.visa_expiry_date) < new Date(Date.now() + 60*24*60*60*1000));
-  res.json({ total, consentGranted: consent, visaAlerts: alerts.length, alerts });
-});
+// REMOVED 2026-10-13, owner decision 21 executed: `GET /api/compliance/report` used to sit here. No
+// client code called it, and what it would have returned is the reason: it decrypted
+// `national_id_value` and `national_id_iqama` for EVERY employee, filtered that decrypted array by
+// visa expiry, and returned `alerts` whole — a plaintext national ID and Iqama for every employee
+// whose visa expires within 60 days — alongside `consentGranted`, the seeder-written flag decision
+// 17 retires. Removing it also removed the only server-side READER of `employees.consent_granted`.
+// Asserted in RETIRED (server/reachability-register.js).
 
 app.get('/api/analytics/dashboard', async (req, res) => {
   try {

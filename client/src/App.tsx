@@ -20,6 +20,8 @@ interface Employee {
   national_id_type: string | null;
   national_id_value: string | null;
   data_residency_country: string | null;
+  // Retired as a displayed value by decision 17 (2026-10-13). The roster route still returns the
+  // two columns (it is `SELECT *`), and no tile on this screen reads them any more.
   consent_granted: number;
   consent_date: string | null;
   visa_status: string | null;
@@ -1545,8 +1547,20 @@ export default function App() {
                     <div className="space-y-4">
                       <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Privacy Consent (PDPL)</div>
-                        <div className={`text-xs font-bold ${selectedEmployee.consent_granted ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {selectedEmployee.consent_granted ? `✓ GRANTED ON ${selectedEmployee.consent_date}` : '✗ MISSING / REQUIRED'}
+                        {/* Decision 17 (2026-10-13): the employee-record consent flag is retired. What
+                            the product actually records is that the notice was SHOWN — one row per
+                            collectable document, per pre-boarding case, carrying that document's own
+                            basis, the notice's version and the name of the person who showed it. So this
+                            tile states the instrument the product operates instead of printing a status:
+                            the old text asserted a requirement ("MISSING / REQUIRED") that the notice's
+                            purpose table assigns to almost nothing, and its value came from the demo
+                            seeder, not from anything that runs in production. Nothing is displayed here
+                            that the product cannot produce. */}
+                        <div className="text-xs font-bold text-slate-300">
+                          Notice-based — recorded per pre-boarding case
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-1 leading-snug">
+                          One record per document that can be collected, with its basis, the notice version and the person who showed it. No consent flag is held on the employee record.
                         </div>
                       </div>
 

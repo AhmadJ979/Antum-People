@@ -33,7 +33,7 @@ const r = require('./reachability');
  * so" is only an answer once it is written down (decision 21).
  */
 const {
-  CALLERLESS, DYNAMIC_SITES, UNOPENABLE_CONTROLS, DISPLAYED_VALUES, DEAD_END_ITEMS,
+  CALLERLESS, DYNAMIC_SITES, UNOPENABLE_CONTROLS, DISPLAYED_VALUES, DEAD_END_ITEMS, RETIRED,
 } = require('./reachability-register');
 
 /** Locate an anchor by its own text, so an unrelated insertion above it is not a failure. */
@@ -116,6 +116,43 @@ test('no route is registered after the SPA catch-all (it would be dead on arriva
   const dead = r.routesAfterCatchAll().map((x) => `${x.method} ${x.path} (index.js:${x.line})`);
   assert.deepStrictEqual(dead, [],
     'the catch-all answers every unknown path, so a route below it can never match');
+});
+/**
+ * The other half of a register. The registers above say "we know about this defect and it is still
+ * there"; this one says "we removed this, and here is the proof it has not come back". Both halves
+ * are needed on this product: a retired thing has already been re-acquired here once (the tracker's
+ * standing test stopped being a line inside an unrelated merge, invisible to ancestry and blob
+ * checks alike), and a removal that lives only in a memory or a commit message is not a check.
+ *
+ * Measured 2026-10-13, owner decisions 21 and 17 executed: `GET /api/employees/:id`,
+ * `GET /api/compliance/report` and `POST /api/compliance/consent` are gone, the employee-record
+ * consent tile is retired, and the seeder no longer writes the flag. Every entry is re-measured
+ * here against the tree that would merge.
+ */
+test('a retired element stays retired — the removal is re-measured, not remembered', () => {
+  const routes = apiRoutes();
+  const routeKeys = Object.keys(RETIRED.routes);
+  assert.ok(routeKeys.length >= 3, `the retired-route register lost entries: ${routeKeys.length}`);
+  for (const [key, entry] of Object.entries(RETIRED.routes)) {
+    const back = routes.find((x) => `${x.method} ${x.path}` === key);
+    assert.ok(!back,
+      `${key} is registered again (server/index.js:${back && back.line}) — a retired route that `
+      + 'answers is the defect returning: remove it, or re-decide the retirement and delete its '
+      + 'RETIRED entry');
+    assert.ok(/decision \d+/.test(entry.decision), `${key}: must name the decision that removed it`);
+    assert.ok(entry.why && entry.why.length > 40, `${key}: needs the reason it went`);
+  }
+  const anchors = RETIRED.sourceAnchors;
+  assert.ok(anchors.length >= 3, `the retired-source register lost entries: ${anchors.length}`);
+  for (const a of anchors) {
+    const found = r.read(`${r.ROOT}/${a.file}`).split('\n')
+      .map((text, i) => ({ line: i + 1, text }))
+      .filter((x) => x.text.includes(a.absent));
+    assert.deepStrictEqual(found.map((x) => `${a.file}:${x.line}`), [],
+      `${a.what} is back in ${a.file} — the string ${JSON.stringify(a.absent)} is the retired `
+      + 'instrument returning; if it is intended, the retirement itself needs re-deciding first');
+    assert.ok(/decision \d+/.test(a.decision), `${a.what}: must name the decision`);
+  }
 });
 
 test('every boolean control state can be opened, or is registered as un-openable with a reason', () => {

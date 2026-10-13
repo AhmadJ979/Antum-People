@@ -14,35 +14,11 @@
  */
 
 const CALLERLESS = {
-  'GET /api/employees/:id': {
-    route: 'server/index.js:170',
-    why: 'Returns one employee with the national ID decrypted. No client code calls it: the roster '
-       + '(GET /api/employees) is what the UI reads, and the detail view takes its employee from that '
-       + 'list. An orphan that also widens the API surface by an unnecessary PII read: the handler answers '
-       + 'res.json(emp), so the decrypted identifier is the response body, not an incidental field.',
-    owner: 'decision 21 — recommendation: remove (a dead route whose response body is the decrypted national ID)',
-  },
   'POST /api/compliance/calculate-eosb': {
     route: 'server/index.js:335',
     why: 'A pure EOSB calculator over the request body. The product computes EOSB server-side for the '
        + 'settlement statement, so nothing calls the endpoint form of it.',
     owner: 'decision 21 — recommendation: remove (the engine keeps its tests; only the HTTP door goes)',
-  },
-  'POST /api/compliance/consent': {
-    route: 'server/index.js:359',
-    why: 'The employee-record consent instrument. No caller and no test; the tile it feeds is written '
-       + 'by the demo seeder (scripts/seed-demo.js). Measured for decision 17.',
-    owner: 'decision 17 — measured; recommendation is to retire the instrument and keep the subject',
-  },
-  'GET /api/compliance/report': {
-    route: 'server/index.js:424',
-    why: 'A compliance roll-up no client code requests, and the second callerless route that decrypts '
-       + 'national IDs: it decrypts national_id_value and national_id_iqama, filters the decrypted array by '
-       + 'visa expiry and returns the alerts array whole, so wiring it unchanged would return a plaintext '
-       + 'national ID and Iqama for every employee whose visa expires within 60 days. The figure it would '
-       + 'print is consentGranted, the seeder-written flag (scripts/seed-demo.js:320; the only other writer '
-       + 'is the callerless POST /api/compliance/consent). Found while measuring decision 17.',
-    owner: 'decision 21 — recommendation: remove (wiring it would return a plaintext national ID and Iqama for every employee whose visa expires within 60 days); wiring stays open only behind decision 17',
   },
   'GET /api/preboarding/cases/:id': {
     route: 'server/index.js:646',
@@ -99,15 +75,11 @@ const UNOPENABLE_CONTROLS = {
  * 17's defect in one sentence, and this is the assertion that keeps it from being re-forgotten.
  */
 const DISPLAYED_VALUES = [
-  {
-    tile: 'employee record — "✓ GRANTED ON {date}"',
-    reader: 'client/src/App.tsx',
-    readerPattern: '✓ GRANTED ON ${selectedEmployee.consent_date}',
-    columns: ['consent_granted', 'consent_date'],
-    why: 'The only writer in the product is inside POST /api/compliance/consent, which no client code '
-       + 'calls; every value the demo shows was written by scripts/seed-demo.js.',
-    owner: 'decision 17',
-  },
+  // EMPTY as of 2026-10-13, and that is the measurement: this register held exactly one entry — the
+  // employee record's "✓ GRANTED ON {date}" tile, whose value only the demo seeder wrote (decision
+  // 17). The tile is retired, so there is nothing left to register here. A displayed value with no
+  // reachable writer that is NOT written down still fails the test above; this list is where it goes
+  // when one is found, and it is deliberately empty rather than deleted.
 ];
 
 /**
@@ -143,6 +115,84 @@ const DEAD_END_ITEMS = {
   },
 };
 
+/**
+ * Elements a decision REMOVED, each with an anchor the test re-measures. A register of defects is
+ * only half a check: this repository has already re-acquired a retired thing once (the tracker's
+ * standing test stopped being a line inside an unrelated merge, invisible to ancestry and blob
+ * checks alike). So a removal is not a memory here — it is a route that must not be registered and
+ * a string that must not be in a file, and server/reachability.test.js reddens if either returns.
+ *
+ * Measured 2026-10-13, owner decisions 21 and 17 executed.
+ */
+const RETIRED = {
+  routes: {
+    'GET /api/employees/:id': {
+      removed: '2026-10-13',
+      decision: 'decision 21',
+      usedToReturn: 'One employee row with national_id_value and national_id_iqama decrypted and '
+        + 'returned as the response body.',
+      why: 'No caller existed (the roster is what the UI reads, and the detail view takes its '
+        + 'employee from that list) and the payload was the decrypted identifier. Removed rather '
+        + 'than wired: there is no screen that needs it, so the only thing wiring it would produce '
+        + 'is a second copy of a national ID in a response.',
+    },
+    'POST /api/compliance/consent': {
+      removed: '2026-10-13',
+      decision: 'decision 17',
+      usedToReturn: 'The id of the consent_records row it wrote — and, on the employee record, '
+        + 'consent_granted = 1 with consent_date.',
+      why: "The employee-record consent instrument's only writer inside the product, and no client "
+        + 'called it. The instrument is retired: the product records the notice as SHOWN, one row '
+        + "per collectable document per pre-boarding case, with that document's basis, the notice's "
+        + 'version and a named actor. The `consent_records` TABLE stays (purpose-scoped consent is '
+        + "decision 14's subject) — this takes away the door, not the store.",
+    },
+    'GET /api/compliance/report': {
+      removed: '2026-10-13',
+      decision: 'decision 21',
+      usedToReturn: 'A whole-roster PII payload: it decrypted national_id_value and '
+        + 'national_id_iqama for every employee, filtered that decrypted array by visa expiry and '
+        + 'returned `alerts` whole — a plaintext national ID and Iqama for every employee whose visa '
+        + 'expires within 60 days — plus `consentGranted`, the seeder-written flag.',
+      why: 'No client code called it, and it was also the only server-side READER of '
+        + 'employees.consent_granted, so removing it retired the last thing that could print the '
+        + 'fabricated count.',
+    },
+  },
+  /**
+   * Strings whose return would mean the retired instrument came back. Each is checked against the
+   * file named, on the line's own text — not by counting hits anywhere, because a hit count does
+   * not know what role a string plays (the pass that corrected this register learned that a
+   * corrected document quoting a retired phrase is not the defect coming back).
+   */
+  sourceAnchors: [
+    {
+      what: 'the employee-record consent tile, which printed a status the product cannot produce',
+      file: 'client/src/App.tsx',
+      absent: '\u2713 GRANTED ON ${selectedEmployee.consent_date}',
+      decision: 'decision 17',
+      why: 'Its value was written only by the demo seeder, and its "MISSING / REQUIRED" branch '
+        + 'asserted an obligation the notice\u2019s purpose table assigns to almost nothing. The tile '
+        + 'now states the instrument the product operates and displays no status.',
+    },
+    {
+      what: 'the seeder writing the consent flag as granted onto every employee',
+      file: 'scripts/seed-demo.js',
+      absent: 'consent_granted, consent_date, created_at, updated_at',
+      decision: 'decision 17',
+      why: '13 of 13 seeded employees read GRANTED because of this line, and no production path '
+        + 'could have written it. The columns keep their schema default (0).',
+    },
+    {
+      what: 'the orphan writer\u2019s SQL, which set the flag on the employee record',
+      file: 'server/index.js',
+      absent: 'INSERT INTO consent_records',
+      decision: 'decision 17',
+      why: 'The only product-side write into consent_records sat inside that removed route.',
+    },
+  ],
+};
+
 module.exports = {
-  CALLERLESS, DYNAMIC_SITES, UNOPENABLE_CONTROLS, DISPLAYED_VALUES, DEAD_END_ITEMS,
+  CALLERLESS, DYNAMIC_SITES, UNOPENABLE_CONTROLS, DISPLAYED_VALUES, DEAD_END_ITEMS, RETIRED,
 };

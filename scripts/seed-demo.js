@@ -311,13 +311,18 @@ async function seed() {
       0
     );
 
+    // Decision 17 (2026-10-13): this insert no longer writes `consent_granted` / `consent_date`.
+    // The employee-record consent flag is retired — nothing displays it, no route writes it, and a
+    // seeder-written "GRANTED" was the fabrication the decision was about. The columns stay in the
+    // schema (a drop is a separate call) and now keep their own default, 0, which is the truth:
+    // this product has no per-employee consent record to produce.
     // INSERT OR REPLACE for idempotency
     const sql = `
       INSERT OR REPLACE INTO employees (
         id, first_name, last_name, email, department, role, start_date, end_date,
         status, salary, basic_salary, recruitment_cost, data_residency_country,
         jurisdiction, total_salary, national_id_value,
-        eosb_accrued, fully_productive_date, consent_granted, consent_date, created_at, updated_at
+        eosb_accrued, fully_productive_date, created_at, updated_at
       ) VALUES (
         ${db.escapeString(emp.id)}, ${db.escapeString(emp.first_name)}, ${db.escapeString(emp.last_name)},
         ${db.escapeString(emp.email)}, ${db.escapeString(emp.department)}, ${db.escapeString(emp.role)},
@@ -326,7 +331,7 @@ async function seed() {
         ${emp.recruitment_cost}, ${db.escapeString(emp.data_residency_country)},
         ${db.escapeString(jurisdiction)}, ${totalSalary}, ${db.escapeString(auth.encrypt('ID-' + emp.id))},
         ${eosbAccrued},
-        ${db.escapeString(emp.fully_productive_date)}, 1, ${db.escapeString('2026-09-23')}, '2026-09-23 09:00:00', '2026-09-23 09:00:00'
+        ${db.escapeString(emp.fully_productive_date)}, '2026-09-23 09:00:00', '2026-09-23 09:00:00'
       )
     `;
     await db.query(sql);
