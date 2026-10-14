@@ -49,6 +49,7 @@ REMOVED = {
     "2c37f2da-1fa1-4b1c-8117-c639c5880658",  # All-chip race parent, removed 2026-10-09 (superseded by db4e7b1c)
     "62d7142b-955a-433e-8f42-1c07a5d67ee3",  # read-endpoint response-shape parent, removed 2026-10-09 (superseded by aa6c9bd7)
     "9dc454df-b5cb-4d1c-aeba-b67cf795db4e",  # question-only row for owner decision 17, removed 2026-10-12 (duplicate; superseded by 385589e1)
+    "d6931bae-666a-4d90-ad59-09b64c588cda",  # decision-19 row (KSA host copy), removed 2026-10-14 once the ruling was executed and recorded (#184)
 }
 
 # 8-hex tokens the index quotes that are neither board ids nor git objects: rule 19
@@ -69,6 +70,7 @@ CONTENT_SHAS = {
     "b484920f",  # index content merged by PR #105 (Round 32), 2026-10-09 12:12:31Z
     "57e6aa74",  # the merge check Round 44 read: sha256 of origin/main:roadmap-board-index.md before its edits
     "8dc7bba7",  # the merge check Round 45 read: sha256 of origin/main:roadmap-board-index.md before its edits
+    "c398e567",  # the merge check Round 46 read: sha256 of origin/main:roadmap-board-index.md before its edits
 }
 
 print("index checked:", INDEX)
