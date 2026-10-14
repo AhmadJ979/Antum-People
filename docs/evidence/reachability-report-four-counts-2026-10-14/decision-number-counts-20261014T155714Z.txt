@@ -1,0 +1,6 @@
+the tracker's Round 43 entry states the report prints 'decision 21' x5 / 'decision 20' x0.
+re-measured on the branch tip, old report vs new report, same tree:
+  old report 'decision 21': 5
+  new report 'decision 21': 5
+  old report 'decision 20': 0
+  new report 'decision 20': 0
