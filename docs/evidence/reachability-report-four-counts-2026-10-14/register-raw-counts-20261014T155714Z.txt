@@ -1,0 +1,4 @@
+command: node -e "const r=require('./server/reachability-register');const n=v=>Array.isArray(v)?v.length:Object.keys(v).length;console.log(JSON.stringify({CALLERLESS:n(r.CALLERLESS),UNOPENABLE_CONTROLS:n(r.UNOPENABLE_CONTROLS),DISPLAYED_VALUES:n(r.DISPLAYED_VALUES),DEAD_END_ITEMS:n(r.DEAD_END_ITEMS)}))"
+cwd: /home/agent-senior-software-engineer/antum-people   run: 20261014T155714Z
+--- output ---
+{"CALLERLESS":3,"UNOPENABLE_CONTROLS":1,"DISPLAYED_VALUES":0,"DEAD_END_ITEMS":3}

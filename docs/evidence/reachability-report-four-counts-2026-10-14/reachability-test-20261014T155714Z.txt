@@ -1,0 +1,83 @@
+TAP version 13
+# Subtest: the reachability measurement found the routes at all (it cannot pass vacuously)
+ok 1 - the reachability measurement found the routes at all (it cannot pass vacuously)
+  ---
+  duration_ms: 71.629619
+  type: 'test'
+  ...
+# Subtest: every /api route is reachable from a caller, or registered as callerless with a reason
+ok 2 - every /api route is reachable from a caller, or registered as callerless with a reason
+  ---
+  duration_ms: 19.405113
+  type: 'test'
+  ...
+# Subtest: the callerless register matches reality — a fixed orphan must leave it
+ok 3 - the callerless register matches reality — a fixed orphan must leave it
+  ---
+  duration_ms: 62.011576
+  type: 'test'
+  ...
+# Subtest: a route reachable only through a runtime-built path is covered by a declared call site
+ok 4 - a route reachable only through a runtime-built path is covered by a declared call site
+  ---
+  duration_ms: 20.854415
+  type: 'test'
+  ...
+# Subtest: each declared dynamic call site still exists, and still means what it claims
+ok 5 - each declared dynamic call site still exists, and still means what it claims
+  ---
+  duration_ms: 5.904127
+  type: 'test'
+  ...
+# Subtest: no client call site names a route the product does not register
+ok 6 - no client call site names a route the product does not register
+  ---
+  duration_ms: 16.947646
+  type: 'test'
+  ...
+# Subtest: no route is registered after the SPA catch-all (it would be dead on arrival)
+ok 7 - no route is registered after the SPA catch-all (it would be dead on arrival)
+  ---
+  duration_ms: 1.044433
+  type: 'test'
+  ...
+# Subtest: a retired element stays retired — the removal is re-measured, not remembered
+ok 8 - a retired element stays retired — the removal is re-measured, not remembered
+  ---
+  duration_ms: 16.430614
+  type: 'test'
+  ...
+# Subtest: the retired consent flag has no write path left, and its column stays
+ok 9 - the retired consent flag has no write path left, and its column stays
+  ---
+  duration_ms: 1.90759
+  type: 'test'
+  ...
+# Subtest: every boolean control state can be opened, or is registered as un-openable with a reason
+ok 10 - every boolean control state can be opened, or is registered as un-openable with a reason
+  ---
+  duration_ms: 15.622332
+  type: 'test'
+  ...
+# Subtest: a value a tile displays has a writer in a route a user can reach — or is registered
+ok 11 - a value a tile displays has a writer in a route a user can reach — or is registered
+  ---
+  duration_ms: 11.271628
+  type: 'test'
+  ...
+# Subtest: an item the notice assigns no basis to is not offered a move it can never complete
+ok 12 - an item the notice assigns no basis to is not offered a move it can never complete
+  ---
+  duration_ms: 4.164264
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 379.171281
+exit=0

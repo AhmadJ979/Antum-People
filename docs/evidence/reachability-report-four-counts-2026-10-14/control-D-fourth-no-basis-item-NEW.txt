@@ -1,0 +1,145 @@
+
+==============================================================================
+REGISTER SUMMARY
+the four categories the plan and the tracker quote, counted from the register
+==============================================================================
+
+  CALLERLESS            3   routes registered in server/index.js that nothing calls
+    measured: 3 — agrees with the register
+
+  UNOPENABLE_CONTROLS   1   boolean UI state whose setter is never called with true
+    measured: 1 — agrees with the register
+
+  DISPLAYED_VALUES      0   a tile whose value no production path writes
+    measured: not re-derived here — the test measures this set (its rule: a production writer inside a REACHABLE route), this report prints the entries
+
+  DEAD_END_ITEMS        3   an item offered a move the collect gate then refuses
+    measured: 4 — DISAGREES
+      measured but not registered: insurance_card — found just now, no decision owns it
+
+  raw: {"CALLERLESS":3,"UNOPENABLE_CONTROLS":1,"DISPLAYED_VALUES":0,"DEAD_END_ITEMS":3}
+  (the registers that are NOT in those four counts: DYNAMIC_SITES, RETIRED)
+
+==============================================================================
+ROUTE REACHABILITY
+every route registered in server/index.js, and what can reach it
+==============================================================================
+          REACHABLE(client)  POST /api/login                                      client/src/App.tsx:329, scripts/cors-error-contract-test.sh:131
+          REACHABLE(client)  GET /api/employees                                   client/src/App.tsx:583, scripts/keep-alive-deploypath-test.sh:86
+          REACHABLE(client)  POST /api/employees                                  client/src/App.tsx:1031
+          REACHABLE(client)  PUT /api/employees/:id                               client/src/App.tsx:1092, client/src/App.tsx:1112
+          REACHABLE(client)  GET /api/employees/:id/onboarding                    client/src/App.tsx:985
+          PLAUSIBLE(dynamic) PUT /api/onboarding-tasks/:id                        dynamic: client/src/App.tsx:1070
+          REACHABLE(client)  GET /api/employees/:id/offboarding                   client/src/App.tsx:986
+          PLAUSIBLE(dynamic) PUT /api/offboarding-tasks/:id                       dynamic: client/src/App.tsx:1070
+  [known] NONE               POST /api/compliance/calculate-eosb                  —
+          REACHABLE(client)  GET /api/compliance/notice                           client/src/App.tsx:900
+          REACHABLE(client)  GET /api/compliance/templates/:templateName/:employeeId client/src/App.tsx:1007
+          REACHABLE(client)  GET /api/analytics/dashboard                         client/src/App.tsx:584
+          REACHABLE(client)  POST /api/exit-interviews                            client/src/App.tsx:1133
+          REACHABLE(client)  POST /api/preboarding/cases                          client/src/App.tsx:654
+          REACHABLE(client)  GET /api/preboarding/cases                           client/src/App.tsx:625
+  [known] NONE               GET /api/preboarding/cases/:id                       —
+          REACHABLE(client)  GET /api/preboarding/checklist/overview              client/src/App.tsx:695
+          REACHABLE(client)  GET /api/preboarding/cases/:id/checklist             client/src/App.tsx:713
+          REACHABLE(client)  GET /api/preboarding/cases/:id/workspace             client/src/App.tsx:768
+          REACHABLE(client)  POST /api/preboarding/cases/:id/items/:itemKey/status client/src/App.tsx:869
+          REACHABLE(client)  POST /api/preboarding/cases/:id/reminders            client/src/App.tsx:958
+          REACHABLE(client)  POST /api/preboarding/cases/:id/notice-acknowledgements client/src/App.tsx:928
+          REACHABLE(client)  GET /api/preboarding/cases/:id/package               client/src/App.tsx:741
+          REACHABLE(client)  POST /api/preboarding/cases/:id/package/:itemKey/acknowledgement client/src/App.tsx:824
+  [known] NONE               GET /api/preboarding/flag-watch                      —
+  (25 routes; non-/api handlers such as the SPA catch-all are out of scope)
+
+==============================================================================
+ROUTES WITH NO CALLER
+a defect to wire or to remove — "leave it and say so" must be written down
+==============================================================================
+
+  POST /api/compliance/calculate-eosb  (server/index.js:334)
+    registered: yes — decision 21 — recommendation: remove (the engine keeps its tests; only the HTTP door goes)
+    A pure EOSB calculator over the request body. The product computes EOSB server-side for the settlement statement, so nothing calls the endpoint form of it.
+
+  GET /api/preboarding/cases/:id  (server/index.js:637)
+    registered: yes — decision 21 — recommendation: remove (the list response already carries the case)
+    Single-case detail. The UI reads the list (GET /api/preboarding/cases) and each sub-resource it actually shows (checklist, workspace, package), never this one.
+
+  GET /api/preboarding/flag-watch  (server/index.js:831)
+    registered: yes — decision 21 — recommendation: wire it to the operator check, or remove
+    Reports the flag watcher record over HTTP. Nothing calls it — the scheduler reads the module directly (flagWatcher.status()), so this route is a second, unused door to the same value.
+
+==============================================================================
+CONTROLS THAT CANNOT BE OPENED
+boolean UI state whose setter is never called with true
+==============================================================================
+  [known] showExitModal (client/src/App.tsx:461) — setter called 2x, never with true
+          decision 16 (wire it, or leave it and say so) — not yet ruled
+  (6 of 7 boolean states are openable)
+
+==============================================================================
+ITEMS OFFERED A MOVE THEY CAN NEVER COMPLETE
+a no-basis item can be pressed to `requested`, and the collect gate refuses every step after it
+==============================================================================
+
+  [measured] education_certificate
+    The notice has no purpose row for qualifications, so no basis is assigned and the item is not collectible; the Request control offers the move anyway, and the collect gate refuses every step after it.
+    owner: counsel (15(a), question Q1) + a product ruling on the Request control — not yet ruled
+
+  [measured] experience_certificate
+    Same as the education certificate: no notice basis, not collectible, requestable.
+    owner: counsel (15(a), question Q1) + a product ruling on the Request control — not yet ruled
+
+  [measured] emergency_contact
+    The notice assigns no basis and the data is a third person's, not the hire's, so it is not collectible; requestable like the other two.
+    owner: counsel (15(a), question Q5) + a product ruling on the Request control — not yet ruled
+
+  Request control (client/src/App.tsx:2129): NOT guarded — it offers a move the product then refuses
+  Mark received (client/src/App.tsx:2133): disabled unless collectible: true
+  collect gate fires only for collected statuses (COLLECTED_STATUSES.indexOf(status)): true
+
+==============================================================================
+VALUES A TILE DISPLAYS
+does anything that RUNS IN PRODUCTION write it?
+==============================================================================
+  none — no tile in the product displays a value nothing reachable writes.
+
+==============================================================================
+RETIRED ELEMENTS
+removals, re-measured: a retired route that answers again is a finding
+==============================================================================
+  [gone] GET /api/employees/:id                   decision 21 — removed 2026-10-13
+  [gone] POST /api/compliance/consent             decision 17 — removed 2026-10-13
+  [gone] GET /api/compliance/report               decision 21 — removed 2026-10-13
+  [gone] client/src/App.tsx       decision 17 — the employee-record consent tile, which printed a status the product cannot produce
+  [gone] scripts/seed-demo.js     decision 17 — the seeder writing the consent flag as granted onto every employee
+  [gone] server/index.js          decision 17 — the orphan writer’s SQL, which set the flag on the employee record
+
+==============================================================================
+RETIRED COLUMNS
+a retired instrument must not keep a write path (decision 17 fence)
+==============================================================================
+  [fenced] consent_granted
+  [fenced] consent_date
+
+==============================================================================
+DECLARED DYNAMIC CALL SITES
+paths built at runtime — equality cannot prove these, so they are declared
+==============================================================================
+  client/src/App.tsx:1070  /api/${endpoint}/${taskId}
+    covers: PUT /api/onboarding-tasks/:id, PUT /api/offboarding-tasks/:id
+
+==============================================================================
+REGISTRATION ORDER
+a route declared after the SPA catch-all is dead on arrival
+==============================================================================
+  none
+
+==============================================================================
+CLIENT CALLS THAT NAME NO ROUTE
+drift between the client and the route table
+==============================================================================
+  none
+
+1 NEW finding(s) — wire it, remove it, or register it with the decision that owns it.
+Summary of the four counted categories: {"CALLERLESS":3,"UNOPENABLE_CONTROLS":1,"DISPLAYED_VALUES":0,"DEAD_END_ITEMS":3}
+exit=1

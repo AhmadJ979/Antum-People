@@ -1,0 +1,87 @@
+=== CONTROL A — rename the category in the register (DEAD_END_ITEMS -> DEAD_END_PENDING) ===
+  [reset] status entries other than the report script: 0
+  injected: both occurrences renamed; count now 2
+  [old report]  exit 0, 102 lines ; mentions a dead end at all: 0
+  [new report]  exit 1, 12 lines
+  [new report]  first verdict: REGISTER SUMMARY — REFUSED
+  [new report]  counts line : 
+  [new report]  summary    :   MISSING    DEAD_END_ITEMS — declared in this report, not exported by server/reachability-register.js
+  [new report]  measured   : 
+  [new report]  refusal    :   MISSING    DEAD_END_ITEMS — declared in this report, not exported by server/reachability-register.js
+  [new report]  disagree   : 
+=== CONTROL B — a fifth category exported by the register and declared nowhere ===
+  [reset] status entries other than the report script: 0
+  injected: ORPHANED_JOBS defined and exported
+  [old report]  exit 0, 102 lines ; mentions a dead end at all: 0
+  [new report]  exit 1, 11 lines
+  [new report]  first verdict: REGISTER SUMMARY — REFUSED
+  [new report]  counts line : 
+  [new report]  summary    : 
+  [new report]  measured   : 
+  [new report]  refusal    :   UNDECLARED ORPHANED_JOBS — exported by the register, not covered by this report's summary
+  [new report]  disagree   : 
+=== CONTROL C — an entry added to DEAD_END_ITEMS that the measurement does not support ===
+  [reset] status entries other than the report script: 0
+  injected: one extra registered dead-end entry (measured set unchanged)
+  [old report]  exit 0, 102 lines ; mentions a dead end at all: 0
+  [new report]  exit 1, 149 lines
+  [new report]  first verdict: 1 NEW finding(s) — wire it, remove it, or register it with the decision that owns it.
+  [new report]  counts line :   raw: {"CALLERLESS":3,"UNOPENABLE_CONTROLS":1,"DISPLAYED_VALUES":0,"DEAD_END_ITEMS":4}
+  [new report]  summary    :   DEAD_END_ITEMS        4   an item offered a move the collect gate then refuses
+  [new report]  measured   :     measured: 3 — DISAGREES
+  [new report]  refusal    : 
+  [new report]  disagree   :     measured: 3 — DISAGREES
+=== CONTROL D — a fourth no-basis item in the product that the register does not carry ===
+  [reset] status entries other than the report script: 0
+  injected: a fourth no-basis item into NOTICE_BASES (the register still lists three)
+  [old report]  exit 0, 102 lines ; mentions a dead end at all: 0
+  [new report]  exit 1, 145 lines
+  [new report]  first verdict: 1 NEW finding(s) — wire it, remove it, or register it with the decision that owns it.
+  [new report]  counts line :   raw: {"CALLERLESS":3,"UNOPENABLE_CONTROLS":1,"DISPLAYED_VALUES":0,"DEAD_END_ITEMS":3}
+  [new report]  summary    :   DEAD_END_ITEMS        3   an item offered a move the collect gate then refuses
+  [new report]  measured   :     measured: 4 — DISAGREES
+  [new report]  refusal    : 
+  [new report]  disagree   :     measured: 4 — DISAGREES
+=== back to a clean tree ===
+  [reset] status entries other than the report script: 0
+0
+=== the unmodified tree, both reports (the pre-PR comparison) ===
+  [old report]  exit 0, 102 lines ; mentions a dead end at all: 0
+  [new report]  exit 0, 144 lines
+  [new report]  first verdict: Nothing new: every un-operable element on this product is registered with an owner.
+  [new report]  counts line :   raw: {"CALLERLESS":3,"UNOPENABLE_CONTROLS":1,"DISPLAYED_VALUES":0,"DEAD_END_ITEMS":3}
+  [new report]  summary    :   DEAD_END_ITEMS        3   an item offered a move the collect gate then refuses
+  [new report]  measured   :     measured: 3 — agrees with the register
+  [new report]  refusal    : 
+  [new report]  disagree   : 
+=== CONTROL F — one new callerless route: is it counted once, in both reports? ===
+  [reset] status entries other than the report script: 0
+  injected: GET /api/control-orphan-route, called by nothing (before the SPA catch-all)
+  [old report]  exit 1, 106 lines ; mentions a dead end at all: 0
+  [new report]  exit 1, 149 lines
+  [new report]  first verdict: 1 NEW finding(s) — wire it, remove it, or register it with the decision that owns it.
+  [new report]  counts line :   raw: {"CALLERLESS":3,"UNOPENABLE_CONTROLS":1,"DISPLAYED_VALUES":0,"DEAD_END_ITEMS":3}
+  [new report]  summary    :   DEAD_END_ITEMS        3   an item offered a move the collect gate then refuses
+  [new report]  measured   :     measured: 3 — agrees with the register
+  [new report]  refusal    : 
+  [new report]  disagree   :     measured: 4 — DISAGREES
+
+stub runs detected (a run that is not a report, counted as no result): 0
+evidence written to /home/agent-senior-software-engineer/rc-controls-20261014T155546Z
+total 132
+drwxr-xr-x  2 root root  4096 Oct 14 15:55 .
+drwxr-x--- 46 root root  8192 Oct 14 15:55 ..
+-rw-r--r--  1 root root  6402 Oct 14 15:55 .old-report.js
+-rw-r--r--  1 root root   247 Oct 14 15:55 HEADER.txt
+-rw-r--r--  1 root root   689 Oct 14 15:55 control-A-renamed-category-NEW.txt
+-rw-r--r--  1 root root  7200 Oct 14 15:55 control-A-renamed-category-OLD.txt
+-rw-r--r--  1 root root   581 Oct 14 15:55 control-B-fifth-category-NEW.txt
+-rw-r--r--  1 root root  7200 Oct 14 15:55 control-B-fifth-category-OLD.txt
+-rw-r--r--  1 root root 10109 Oct 14 15:55 control-C-extra-register-entry-NEW.txt
+-rw-r--r--  1 root root  7200 Oct 14 15:55 control-C-extra-register-entry-OLD.txt
+-rw-r--r--  1 root root  9843 Oct 14 15:55 control-D-fourth-no-basis-item-NEW.txt
+-rw-r--r--  1 root root  7200 Oct 14 15:55 control-D-fourth-no-basis-item-OLD.txt
+-rw-r--r--  1 root root  9764 Oct 14 15:55 control-E-unmodified-tree-NEW.txt
+-rw-r--r--  1 root root  7200 Oct 14 15:55 control-E-unmodified-tree-OLD.txt
+-rw-r--r--  1 root root 10074 Oct 14 15:55 control-F-one-orphan-route-NEW.txt
+-rw-r--r--  1 root root  7420 Oct 14 15:55 control-F-one-orphan-route-OLD.txt

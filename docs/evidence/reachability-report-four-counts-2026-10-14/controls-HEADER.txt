@@ -1,0 +1,4 @@
+control run stamp: 20261014T155546Z
+worktree: /home/agent-senior-software-engineer/rc-scratch (detached at fa58787)
+old report: origin/main:scripts/reachability-report.js  (6402 B)
+new report: working tree scripts/reachability-report.js (14495 B)

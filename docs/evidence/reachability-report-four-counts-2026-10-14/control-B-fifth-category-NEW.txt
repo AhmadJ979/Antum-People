@@ -1,0 +1,11 @@
+
+==============================================================================
+REGISTER SUMMARY — REFUSED
+this report does not recognise the register it was handed
+==============================================================================
+  UNDECLARED ORPHANED_JOBS — exported by the register, not covered by this report's summary
+
+  Refusing to print a summary that would silently omit a category.
+  Fix: update DECLARED (scripts/reachability-report.js) in the SAME commit as the register
+  change, so the four-count line stays a measurement rather than a memory.
+exit=1
