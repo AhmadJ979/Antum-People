@@ -75,7 +75,7 @@ answers one more row of this table, marked in place.**
 | A place to live in the nav | **Five** tabs: **Executive Dashboard, Employee Directory, Transitions Hub, Pre-boarding, Strategic Intelligence**. **Changed by P2-2:** the tabs are one list now, read by both the sidebar and the breadcrumb | `App.tsx:265`–`:271` (`NAV_ITEMS`), `:274` (`navLabel`); tab state `:436` |
 | A case to hang every item on | `preboarding_cases(id, offer_reference UNIQUE, candidate_name, candidate_email, role, department, reporting_line, jurisdiction, start_date, status, source, offered_at, created_by, created_at, updated_at)` — **exists since P2-1**; on `main`, **not deployed** | `schema.sql:177`–`:193` |
 | One case-creation path, not two | `recordOfferAcceptance` is the only writer (idempotent on `offer_reference`); `POST /api/preboarding/cases` reaches it, `GET` list and `GET :id` read it back | `server/preboarding.js:162` (`recordOfferAcceptance`), `:111` (`listCases`), `:147` (`getCase`); `server/index.js:598` (`POST`), `:622` (`GET` list), `:637` (`GET :id`) |
-| A Layer 2 tab to extend | The tab exists — an intake form and a case list, house-styled | `App.tsx:1184`–`:1321`. **Changed by P2-2:** the tab is now the intake form plus an "HR roll-up — outstanding items" panel, in `App.tsx:1397`–`:1650`; the old range is gone |
+| A Layer 2 tab to extend | The tab exists — an intake form and a case list, house-styled | `App.tsx:1184`–`:1321`. **Changed by P2-2:** the tab is now the intake form plus an "HR roll-up — outstanding items" panel, in `App.tsx:1765`–`:2356` (*re-measured 2026-10-14*); the old range is gone |
 | A checklist item that can carry an **owner** | `interface Task` has `id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone` — **no owner, no track, no Arabic text** | `App.tsx:34`–`:44` |
 | The same, in storage | `onboarding_tasks(id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone, created_at)` — **no owner, no track, no function** | `schema.sql:43`–`:55` |
 | **Any item at all, attached to a case** | **Built by P2-2:** `preboarding_items(id, case_id, item_key, label, category, jurisdiction, required, status, document_reference, note, requested_at, received_at, verified_at, last_actor, …)`, `UNIQUE (case_id, item_key)`. The AE set is 7 items, the SA set 6 and inactive this release. **Still absent: owner, due date, track** — so §3's per-item owner and due date, and §6's track split, are still waiting | `schema.sql:202`–`:227`; `server/preboarding-items.js:64`–`84` |
@@ -1235,8 +1235,8 @@ without changing it.
 | `:937` | `986` | D15's row, which described the retired consent row's columns → the shipped table's own columns |
 | `:1013` | `1066` | Q10 → the same finding, re-cited |
 | `:1036` | `1090` | §11's P2-6 row → the amended criterion and the shipped acceptance test |
-| `:906` | `911` | **found by sweeping the class:** §8C contrasted the retired consent route's `input.actor` (with its `'system'` fallback) with the package module's refusal → both records now refuse to invent an actor |
-| `:1028` | `1040` | **found by sweeping the class:** §12's 2026-10-09 cite-resolution record keeps its text and gains a clause naming what happened to its first target |
+| `:869` | `911` | **found by sweeping the class:** §8C contrasted the retired consent route's `input.actor` (with its `'system'` fallback) with the package module's refusal → both records now refuse to invent an actor |
+| `:991` | `1040` | **found by sweeping the class:** §12's 2026-10-09 cite-resolution record keeps its text and gains a clause naming what happened to its first target |
 
 **The two stranded citations, both repaired:** `server/index.js:718`–`:729` (the removed
 `POST /api/preboarding/cases/:id/consent`) → the shipped route at `server/index.js:736`; and
@@ -1326,12 +1326,16 @@ records that the served-file comment and the `db.js` refusal landed together in 
 
 **Reported, not changed — where I will not guess.**
 
-- **The §8 tab row's JSX ranges** (`App.tsx:1184`–`:1321` and the panel at `:1397`–`:1650`) are
-  stale: at `:1397` the file renders the dashboard's pipeline card, and the `HR roll-up — outstanding
-  items` heading is at **`:1865`**. These are *ranges over JSX blocks*; a corrected range means measuring
-  where the block begins and ends, and plausible bounds are how this document acquired the defects it has
-  been removing, so they are flagged with the measurement rather than silently renumbered. The row already
-  declares `:1184`–`:1321` "the old range... gone", so the live half is the panel range.
+- **The §8 tab row's JSX ranges** — measured 2026-10-14, so this bullet is **no longer a "reported, not
+  changed" item**: the live half is corrected in the row above. `:1184`–`:1321` is declared historical by
+  that row itself and stays as written. The live half, `App.tsx:1397`–`:1650`, was stale — at `:1397` the
+  file renders the dashboard's pipeline card and `:1650` lands inside the *analytics* block that opens at
+  `:1635` — and is now **`App.tsx:1765`–`:2356`**: the `{activeTab === 'preboarding' && (` line at `:1765`,
+  closed by its matching `)}` at `:2356`, found by brace-matching rather than by plausible arithmetic, and
+  holding the intake form (`:1793`) and the `HR roll-up — outstanding items` heading at **`:1865`**. The
+  bounds are unambiguous, so they are applied rather than flagged. The same stale pair is cited twice more
+  in this document — recorded with the measured value in the pass record below, and **neither is edited**
+  (one is pinned to PR #66; the other needs its sentence re-cast, not its number swapped).
 - **The header's own cross-reference** to "lines `:60`, `:79`, `:80`" as the pre-cutover records no longer
   lands on the rows it names (by the current numbering those are `:76`, `:79` and `:80`) — noted, not
   renumbered, because the declaration is a historic record in its own right.
@@ -1352,3 +1356,61 @@ bundle owes is real and is not this document's.
 **File identity.** This section is appended, so the file cannot carry its own final hash: the file as
 PR #185 merged it was md5 `de33cdbd715ff43968ad16a76f1ef620`, 1,286 lines. The hash of the file *with*
 this section is in the commit message.
+
+---
+
+## Pass record — 2026-10-14: the two map rows corrected, and the JSX bounds measured
+
+*(Appended. What it corrects is above and rewritten **in place** — two rows of the movement note's map, the
+row at `:78`, and this note's own tail bullet — for the reason this file gives at the movement note: this
+document is the design of record. Read at `origin/main` = `f46b7a9` (2026-10-14, PR #187 merged).)*
+
+**1. Two of the map's sixteen rows gave an old line number that holds different content.** The map pairs
+**the same line's text** before and after, which was checked on five rows this pass did not touch —
+`:885`→`931`, `:902`→`949`, `:937`→`986`, `:1013`→`1066`, `:1036`→`1090`, each pair the same sentence
+rewritten in place — so each "was" value was re-derived by finding the "is now" line's text in the pre-pass
+file (`a48668d` = `9ce469d`, md5 `cfb487a6a691a6e2a3c8c47ffae17a1b`, 1,133 lines), never by arithmetic:
+
+| row | was written | what that line holds instead | measured | is now |
+|---|---|---|---|---|
+| §8C's `recorded_by` paragraph | `:906` | §10's read-event question | **`:869`** | `911` |
+| §12's cite-resolution record | `:1028` | §11's heading and its table | **`:991`** | `1040` |
+
+The first is the finding as it was raised. **The second is not, and the difference is reported rather than
+smoothed over.** The finding named `:989`; `:989` holds the record's *heading* line, whose same-text pair is
+**`:1038`** — while the row's own "is now" is `:1040`, whose text ("pointed at the wrong line. All are
+corrected in place: the consent's actor fill is") sits at **`:991`** in the old file. So three pairings are
+each true and none is interchangeable: `989↔1038` the heading, `991↔1040` this row, `993↔1042` the sentence
+that actually gained the clause naming what happened to its first target. The row keeps the "is now" it
+declared and takes the "was" that pairs with it.
+
+**2. The §8 tab row's JSX bounds, measured.** `client/src/App.tsx` on `f46b7a9` is **2,493 lines** and holds
+six tab blocks, opened at `:1267` (dashboard), `:1450` (employees), `:1607` (transitions), `:1635`
+(analytics) and `:1765` (pre-boarding). The pre-boarding block — `{activeTab === 'preboarding' && (` at
+`:1765` — closes at **`:2356`**, 592 lines, found by brace-matching from the opening line. Four independent
+anchors sit inside it: the `Pre-boarding Intelligence` heading at `:1771`; the intake form
+(`<form onSubmit={handleRecordOfferAcceptance}>`) at `:1793`, under its heading at `:1789`; the `HR roll-up —
+outstanding items` heading at `:1865`; and the case list's `{checklistOverview.cases.map(row => {` at
+`:1922`. The corrected range is in the row. Why the old pair was wrong is worth keeping: `:1397` is the
+dashboard's pipeline card and `:1650` is inside the *analytics* block, so the range the row called "the tab"
+never described one block at all.
+
+**3. The class, not only the reported sites.** The same stale pair is cited twice more in this document:
+`:108`–`:109`, a blockquote that pins P2-1's placement to PR #66 and its date; and `:1098`, an unpinned
+claim that P2-1's intake form and case list "are built on `main`". Both are recorded here with the measured
+value the tab is — **`App.tsx:1765`–`:2356`** — and **neither is edited**: the first is a pinned historical
+record, which this note's own rule leaves as written (a pinned-revision cite is not a defect; an unpinned one
+is), and the second would have to be re-cast rather than renumbered, because the tab now also holds P2-2's
+roll-up panel and P2-1's contribution is no longer the whole of it.
+
+**One sentence that stopped being true, corrected in place.** The bullet above said the JSX ranges were
+"reported, not changed". With the bounds measured and applied, that sentence is false and is rewritten — the
+ground this note already gives at its own point 3 for the `db.js` sentence.
+
+**File identity.** Before this pass: **1,354 lines, md5 `9fcd6e839a7f4cb9fed9e3d113ee8041`** (the file as PR
+#187 merged it; as PR #185 merged it, `de33cdbd715ff43968ad16a76f1ef620`, 1,286 lines). Every replacement
+was asserted to occur exactly once before it was written; every byte before the first edit is unchanged, and
+this appended record is the only text after the last one. The file *with* this section cannot carry its own
+hash, so that hash is in the commit message.
+
+**Cutover.** Docs-only: one path under `design-concepts/`, so **it owes no cutover.**
