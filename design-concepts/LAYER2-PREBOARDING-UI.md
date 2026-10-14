@@ -75,7 +75,7 @@ answers one more row of this table, marked in place.**
 | A place to live in the nav | **Five** tabs: **Executive Dashboard, Employee Directory, Transitions Hub, Pre-boarding, Strategic Intelligence**. **Changed by P2-2:** the tabs are one list now, read by both the sidebar and the breadcrumb | `App.tsx:265`–`:271` (`NAV_ITEMS`), `:274` (`navLabel`); tab state `:436` |
 | A case to hang every item on | `preboarding_cases(id, offer_reference UNIQUE, candidate_name, candidate_email, role, department, reporting_line, jurisdiction, start_date, status, source, offered_at, created_by, created_at, updated_at)` — **exists since P2-1**; on `main`, **not deployed** | `schema.sql:177`–`:193` |
 | One case-creation path, not two | `recordOfferAcceptance` is the only writer (idempotent on `offer_reference`); `POST /api/preboarding/cases` reaches it, `GET` list and `GET :id` read it back | `server/preboarding.js:162` (`recordOfferAcceptance`), `:111` (`listCases`), `:147` (`getCase`); `server/index.js:598` (`POST`), `:622` (`GET` list), `:637` (`GET :id`) |
-| A Layer 2 tab to extend | The tab exists — an intake form and a case list, house-styled | `App.tsx:1184`–`:1321`. **Changed by P2-2:** the tab is now the intake form plus an "HR roll-up — outstanding items" panel, in `App.tsx:1397`–`:1650`; the old range is gone |
+| A Layer 2 tab to extend | The tab exists — an intake form and a case list, house-styled | `App.tsx:1184`–`:1321`. **Changed by P2-2:** the tab is now the intake form plus an "HR roll-up — outstanding items" panel, in `App.tsx:1765`–`:2356`; the old range is gone |
 | A checklist item that can carry an **owner** | `interface Task` has `id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone` — **no owner, no track, no Arabic text** | `App.tsx:34`–`:44` |
 | The same, in storage | `onboarding_tasks(id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone, created_at)` — **no owner, no track, no function** | `schema.sql:43`–`:55` |
 | **Any item at all, attached to a case** | **Built by P2-2:** `preboarding_items(id, case_id, item_key, label, category, jurisdiction, required, status, document_reference, note, requested_at, received_at, verified_at, last_actor, …)`, `UNIQUE (case_id, item_key)`. The AE set is 7 items, the SA set 6 and inactive this release. **Still absent: owner, due date, track** — so §3's per-item owner and due date, and §6's track split, are still waiting | `schema.sql:202`–`:227`; `server/preboarding-items.js:64`–`84` |
@@ -1235,8 +1235,8 @@ without changing it.
 | `:937` | `986` | D15's row, which described the retired consent row's columns → the shipped table's own columns |
 | `:1013` | `1066` | Q10 → the same finding, re-cited |
 | `:1036` | `1090` | §11's P2-6 row → the amended criterion and the shipped acceptance test |
-| `:906` | `911` | **found by sweeping the class:** §8C contrasted the retired consent route's `input.actor` (with its `'system'` fallback) with the package module's refusal → both records now refuse to invent an actor |
-| `:1028` | `1040` | **found by sweeping the class:** §12's 2026-10-09 cite-resolution record keeps its text and gains a clause naming what happened to its first target |
+| `:869` | `911` | **found by sweeping the class:** §8C contrasted the retired consent route's `input.actor` (with its `'system'` fallback) with the package module's refusal → both records now refuse to invent an actor |
+| `:991` | `1040` | **found by sweeping the class:** §12's 2026-10-09 cite-resolution record keeps its text and gains a clause naming what happened to its first target; the discrepancy between the map's own "is now" (:1040) and the sentence that gained the clause (:993 in the pre-pass file, :1042 now) is noted in the appended pass record |
 
 **The two stranded citations, both repaired:** `server/index.js:718`–`:729` (the removed
 `POST /api/preboarding/cases/:id/consent`) → the shipped route at `server/index.js:736`; and
@@ -1326,12 +1326,14 @@ records that the served-file comment and the `db.js` refusal landed together in 
 
 **Reported, not changed — where I will not guess.**
 
-- **The §8 tab row's JSX ranges** (`App.tsx:1184`–`:1321` and the panel at `:1397`–`:1650`) are
-  stale: at `:1397` the file renders the dashboard's pipeline card, and the `HR roll-up — outstanding
-  items` heading is at **`:1865`**. These are *ranges over JSX blocks*; a corrected range means measuring
-  where the block begins and ends, and plausible bounds are how this document acquired the defects it has
-  been removing, so they are flagged with the measurement rather than silently renumbered. The row already
-  declares `:1184`–`:1321` "the old range... gone", so the live half is the panel range.
+- **The §8 tab row's JSX ranges** — the live half (`App.tsx:1397`–`:1650`) has been measured and
+  corrected to `App.tsx:1765`–`:2356` (brace-matched from the `{activeTab === 'preboarding' &&` opener
+  at `:1765` to its close at `:2356` on `f46b7a9`, 592 lines). The old dead half (`App.tsx:1184`–`:1321`)
+  the row already declares "gone" and is not touched. Why the old live pair was wrong is recorded in the
+  appended pass record: `:1397` landed on the dashboard's pipeline card and `:1650` inside the analytics
+  block, so the range never described one block at all. The same stale pair appears twice more in this
+  document (`:108`–`:109` pinned, left as written; `:1098` unpinned, noted in the pass record — its
+  sentence needs recasting, not a number swap, because the tab now also holds P2-2's roll-up panel).
 - **The header's own cross-reference** to "lines `:60`, `:79`, `:80`" as the pre-cutover records no longer
   lands on the rows it names (by the current numbering those are `:76`, `:79` and `:80`) — noted, not
   renumbered, because the declaration is a historic record in its own right.
@@ -1352,3 +1354,75 @@ bundle owes is real and is not this document's.
 **File identity.** This section is appended, so the file cannot carry its own final hash: the file as
 PR #185 merged it was md5 `de33cdbd715ff43968ad16a76f1ef620`, 1,286 lines. The hash of the file *with*
 this section is in the commit message.
+
+---
+
+## Pass record — 2026-10-14 (PR #188)
+
+**What this pass corrected and why.**
+
+Triggered by two findings raised against the movement note's map rows and one measurement
+taken on `f46b7a9` to resolve a flagged-but-unresolved JSX range. PR #187 merged before
+this work was cut, so it targets `f46b7a9` directly rather than appending to that PR.
+
+### 1 · Map row "was" corrections
+
+The movement note maps line numbers before and after the cite-repair pass using same-text
+pairing (each "was" value is found by locating the "is now" line's text in the pre-pass
+file at `a48668d` = `9ce469d`, md5 `cfb487a6a691a6e2a3c8c47ffae17a1b`, 1,133 lines).
+Two rows carried "was" values that, by this rule, pointed to a different line's text:
+
+| Row | Was written | What that line actually held | Measured "was" | "Is now" |
+|-----|-------------|------------------------------|----------------|---------|
+| §8C's `recorded_by` paragraph | `:906` | §10's read-event question | `:869` | `911` |
+| §12's cite-resolution record | `:1028` | §11's heading and its table | `:991` | `1040` |
+
+The §12 row warrants a note. The finding named `:989`; `:989` holds the record's heading
+line (same-text pair `:1038`), while the row's own declared "is now" is `:1040`, whose
+pre-pass text sits at `:991`. Three pairings are each true and none interchangeable:
+
+| Pairing | What it is |
+|---------|-----------|
+| `989`↔`1038` | the record's heading line |
+| `991`↔`1040` | this row — the pairing the map's own rule gives |
+| `993`↔`1042` | the sentence that gained the clause about its first target |
+
+The row keeps the "is now" it declared (`:1040`) and takes the "was" that pairs with it
+(`:991`). The discrepancy is recorded here rather than smoothed over.
+
+### 2 · §8 tab row JSX range — measured on `f46b7a9`
+
+`client/src/App.tsx` on `f46b7a9` is 2,493 lines with six tab blocks. The pre-boarding
+block was located by brace-matching:
+
+| Anchor | Line |
+|--------|------|
+| `{activeTab === 'preboarding' &&` (block opener) | `:1765` |
+| Pre-boarding Intelligence heading | `:1771` |
+| Intake form heading | `:1789`; form at `:1793` |
+| HR roll-up — outstanding items heading | `:1865` |
+| `{checklistOverview.cases.map(row => {` | `:1922` |
+| Block close | `:2356` |
+
+Corrected range: `App.tsx:1765`–`:2356` (592 lines). The old pair (`:1397`–`:1650`) never
+described one block: `:1397` is the dashboard's pipeline card and `:1650` lands inside the
+analytics block.
+
+### 3 · Same stale pair cited elsewhere in this file
+
+| Location | Kind | Disposition |
+|----------|------|-------------|
+| `:108`–`:109` | pinned (blockquote, revision declared) | left as written — pinned-revision cites are not defects |
+| `:1098` | unpinned claim ("are built on main") | noted here; needs sentence recasting, not a number swap: the tab now also holds P2-2's roll-up panel, so P2-1's contribution is no longer the whole of the range |
+
+### 4 · Tail bullet rewritten
+
+The "Reported, not changed" tail bullet said the JSX ranges were "reported, not changed".
+With the bounds measured and applied to the map row, that sentence became false and was
+rewritten in place — consistent with the note's own point 3, which applied the same ground
+to the `db.js` sentence.
+
+**Method:** assert-then-write on every replacement; each old string asserted to occur
+exactly once before the write. Three difflib hunks: `:78`, `:1238`–`:1239`, `:1329`–`:1334`.
+Pre-append sha256 prefix: `02f52c7e`. File identity: before 1,356 lines (1,354 base + 2
+net from edits), md5 `d876e11b630a6c9f29898a28714ead25`.
