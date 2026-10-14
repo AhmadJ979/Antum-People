@@ -72,14 +72,14 @@ answers one more row of this table, marked in place.**
 
 | Thing the Layer 2 surface needs | What exists today | Where |
 |---|---|---|
-| A place to live in the nav | **Five** tabs: **Executive Dashboard, Employee Directory, Transitions Hub, Pre-boarding, Strategic Intelligence**. **Changed by P2-2:** the tabs are one list now, read by both the sidebar and the breadcrumb | `App.tsx:265`–`:271` (`NAV_ITEMS`), `:274` (`navLabel`); tab state `:436` |
+| A place to live in the nav | **Five** tabs: **Executive Dashboard, Employee Directory, Transitions Hub, Pre-boarding, Strategic Intelligence**. **Changed by P2-2:** the tabs are one list now, read by both the sidebar and the breadcrumb | `App.tsx:115`–`:125` (`NAV_ITEMS`, `navLabel`); tab state `:272` |
 | A case to hang every item on | `preboarding_cases(id, offer_reference UNIQUE, candidate_name, candidate_email, role, department, reporting_line, jurisdiction, start_date, status, source, offered_at, created_by, created_at, updated_at)` — **exists since P2-1**; on `main`, **not deployed** | `schema.sql:177`–`:193` |
-| One case-creation path, not two | `recordOfferAcceptance` is the only writer (idempotent on `offer_reference`); `POST /api/preboarding/cases` reaches it, `GET` list and `GET :id` read it back | `server/preboarding.js:162` (`recordOfferAcceptance`), `:111` (`listCases`), `:147` (`getCase`); `server/index.js:598` (`POST`), `:622` (`GET` list), `:637` (`GET :id`) |
+| One case-creation path, not two | `recordOfferAcceptance` is the only writer (idempotent on `offer_reference`); `POST /api/preboarding/cases` reaches it, `GET` list and `GET :id` read it back | `server/preboarding.js:119`, `:97`, `:104`; `server/index.js:580`, `:597`, `:606` |
 | A Layer 2 tab to extend | The tab exists — an intake form and a case list, house-styled | `App.tsx:1184`–`:1321`. **Changed by P2-2:** the tab is now the intake form plus an "HR roll-up — outstanding items" panel, in `App.tsx:1397`–`:1650`; the old range is gone |
-| A checklist item that can carry an **owner** | `interface Task` has `id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone` — **no owner, no track, no Arabic text** | `App.tsx:34`–`:44` |
+| A checklist item that can carry an **owner** | `interface Task` has `id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone` — **no owner, no track, no Arabic text** | `App.tsx:32`–`:41` |
 | The same, in storage | `onboarding_tasks(id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone, created_at)` — **no owner, no track, no function** | `schema.sql:43`–`:55` |
 | **Any item at all, attached to a case** | **Built by P2-2:** `preboarding_items(id, case_id, item_key, label, category, jurisdiction, required, status, document_reference, note, requested_at, received_at, verified_at, last_actor, …)`, `UNIQUE (case_id, item_key)`. The AE set is 7 items, the SA set 6 and inactive this release. **Still absent: owner, due date, track** — so §3's per-item owner and due date, and §6's track split, are still waiting | `schema.sql:202`–`:227`; `server/preboarding-items.js:64`–`84` |
-| **A record to gate document collection on** | **Built — and it is not a consent record.** The gate reads the per-item record that the notice was **shown**: `preboarding_notice_acknowledgements(case_id, item_key, item_label, jurisdiction, instrument CHECK (instrument = 'notice_shown'), lawful_basis, notice_version, recorded_by, method, note, acknowledged_at)`, `UNIQUE (case_id, item_key)`. A document cannot reach `received`/`verified` until the record exists **for that item** (**428**), and an item the notice assigns no basis to is refused outright with the counsel question it waits on (**409**). The case-level `preboarding_consents` table is **retired** — no reader, no writer — because one row per case cannot carry seven lawful bases; `consent_records` stays for purpose-scoped consent, and its only writer was removed on 2026-10-13 (decision 17) | `schema.sql:302`–`:317` (the shipped table), `:254`–`:267` (the retired one's own reason); `server/preboarding-items.js:161`, `:466`–`:481` |
+| A consent record to gate documents on | `consent_records(id, employee_id, …)` for *employees*, plus `employees.consent_granted` / `consent_date` — and, **added by P2-2**, `preboarding_consents(case_id UNIQUE, consent_type, lawful_basis, consent_version, granted_at, recorded_by)` for the *case*, which is the one this surface gates collection on (refused **428** without it) | `schema.sql:93`–`:105`, `:244`–`:255`; `server/preboarding-items.js:195` |
 | Per-function identity ("IT sees only its own lines") | `users(id, username, password_hash, role, created_at)` exists, but the product seeds **one shared account** — no per-user login to scope a view by | `schema.sql:165`–`:171` |
 | Somewhere to put a collected document | **Nothing — deliberately, and now by the owner's decision.** P2-2 records a short `document_reference` (a file name, or the reference HR quoted) and refuses the bytes: `server/document-store.js` throws **501** behind `saveDocument`/`readDocument` and names `ANTUM_DOCUMENT_STORE` as the one door. **The owner decided the shape on 2026-10-07: Option D ships now — reference string only, no bytes — and Option C (an S3-compatible object store) is built when the entity is registered; IFZA registration is the gate, an event rather than a date. No real document bytes before it.** The pointer is therefore the personal data: the item says *which* document, whose, when recorded and where it lives, and the content stays where HR already keeps it | `server/document-store.js`; spec §10 Q5 |
 | A record of an acknowledgement (JD, NDA) | **Built by P2-3 (PR #79, `main` = `404b29d`):** `preboarding_acknowledgements`, written only by `recordAcknowledgement` — `recorded_by` required, method `in_product_record`, signature-implying methods refused by name, and nothing reads `acknowledged` without the row (lead ruling, 2026-10-08) | `server/preboarding-package.js` |
@@ -536,96 +536,59 @@ names. **What is not translated:** the case subject's name, and any value read f
 
 ---
 
-## 8. The collection gate — the notice shown (P2-6)
+## 8. The consent gate (P2-6)
 
-*(Renamed 2026-10-13. This section was called **"The consent gate"**; the gate, its position, its
-refusals and its scoping are unchanged — what was wrong is the **instrument** it named. Nothing else
-in this document was renumbered to make the change, and the movement note at the end of this file
-carries the line map for anyone holding an older citation.)*
+P2-6's acceptance: **"no document is collected before the consent record exists."** That makes the
+gate the *first* thing on the employee track, not a checkbox buried in a settings panel.
 
-P2-6's acceptance, as amended at its source on 2026-10-13: **"no document reaches `received` before
-the privacy notice has been shown for that item."** *(The line this section quoted until then — "no
-document is collected before the consent record exists" — was replaced in the roadmap pack
-(`phase-roadmap-2-4.md:38-39`) because it kept regenerating a requirement the product does not
-implement and must not: the notice assigns `consent` to two sensitive-data purposes only, and none of
-the seven pre-boarding documents is either. The compliance sweep that measured it is recorded at
-`docs/evidence/p2-6-premise-sweep/`.)* The gate is therefore the *first* thing on the employee track,
-not a checkbox buried in a settings panel — and what it gates on is a record that the notice was
-**shown**, per document.
-
-**Locked state (the notice not yet shown for a document):**
+**Locked state (no consent record):**
 
 ```
 │ EMPLOYEE TRACK   0 of 9 complete                                                        │
 │                                                                                          │
 │  ┌──────────────────────────────────────────────────────────────────────────────────┐   │
-│  │ 🔒 No document can be collected until the notice is shown                         │   │
+│  │ 🔒 Documents are locked until consent is recorded                                 │   │
 │  │ The new hire's documents (passport, Emirates ID, certificates, bank details)      │   │
-│  │ cannot be collected until the privacy notice has been shown for each one.         │   │
-│  │ [ Record that the notice was shown ]  ← once the notice has been opened           │   │
+│  │ cannot be collected or verified before a PDPL consent record exists for this case.│   │
+│  │ [ Record consent ]      ← the only enabled action on this track                   │   │
 │  └──────────────────────────────────────────────────────────────────────────────────┘   │
-│  ☐ Passport copy      not shown   ☐ Emirates ID    not shown   ☐ Bank details not shown │
+│  ☐ Passport copy        locked   ☐ Emirates ID     locked   ☐ Bank details   locked     │
 ```
 
 - The lock is a state on the **document items**, not on the case: the workspace track stays
   available (a laptop does not require personal documents), and the pre-reading package may be
-  offered, since it collects nothing. It is scoped to the **employee** track in the code,
-  deliberately — a provisioning line is not the hire's personal document, and gating IT's work on a
-  notice about the hire's data would invent a rule nobody stated
-  (`server/preboarding-items.js:462`–`:465`).
-- **Nothing may be collected without the record** — the gate is on the transition, not just on the
-  button: a write that would move a document to `received` or `verified` is refused unless the
-  notice's record exists for **that item**, and it is checked for every caller
-  (`server/preboarding-items.js:466`–`:481`); an item the notice assigns no basis to is refused
-  outright, naming the counsel question it waits on (`:468`–`:473`, **409**). The acceptance test
-  for P2-6 is exactly that request.
-- The screen reads the gate from the record, and the **shipped** strings are: the case's own panel
-  prints `The notice has not been shown on this case yet, so no document can be collected on it.` in
-  amber while no document on the case has a record (`client/src/App.tsx:2069`–`:2070`; the roll-up
-  row carries the same sentence at `:2022`–`:2023`); each item prints
-  `· the notice has not been shown for this document yet` until it has its own record (`:2118`), and
-  once recorded prints `· shown <acknowledged_at> by <recorded_by> against <notice_version>`
-  (`:2117`). The control is `Record that the notice was shown` (`:2086`), offered only after the
-  notice has been opened in that session (`:2080`–`:2084`). The screen shows **that** the notice was
-  shown, **by whom**, and **against which version** — it never claims a consent, and never shows the
-  notice's contents.
+  offered, since it collects nothing.
+- **Nothing collected may be stored while locked** — the lock is on collection, not just on the
+  button: a direct API write of a document for a case with no consent record is a defect, and the
+  acceptance test for P2-6 is exactly that request.
+- The consent line reads from the record, and what it actually says is: `PDPL consent recorded
+  <granted_at>` in teal when the record exists (`client/src/App.tsx:1863`–`:1864`), and
+  `No PDPL consent record — no document can be collected on this case yet.` in amber when it does
+  not (`:1840`–`:1843`). The screen shows **that** a record exists and **when** — never the
+  record's contents.
   *(Corrected 2026-10-09: this bullet previously cited `App.tsx:981`–`:982` for `✓ Recorded <date>`
   / `✗ Missing / required`. Those lines are offboarding code, and the strings cited belong to a
   different object — the **employee** record's `consent_granted` flag, shown as `✓ GRANTED ON
-  <consent_date>` / `✗ MISSING / REQUIRED` at `:1407`–`:1408`. A later pass replaced the pair that
-  correction installed — `PDPL consent recorded <granted_at>` /
-  `No PDPL consent record — no document can be collected on this case yet.` — with the notice-shown
-  strings above on 2026-10-13; the correction stands as the record of its own moment.)*
-**One record gates collection, it is per document, and it is not a consent.** The case path is the
-per-item acknowledgement: `POST /api/preboarding/cases/:id/notice-acknowledgements`
-(`server/index.js:740`) → `preboarding_notice_acknowledgements` (`server/schema.sql:302`–`:317`),
-written by `recordNoticeAcknowledgement` (`server/preboarding-items.js:322`) and read by the gate
-(`:466`–`:481`). *(Until 2026-10-13 this paragraph cited `POST /api/preboarding/cases/:id/consent` →
-`preboarding_consents` at `server/index.js:718`–`:729` and the gate at
-`server/preboarding-items.js:321`–`:332`. **Both citations are stranded**: the case consent route and
-its table were retired with the instrument, and that line is no longer the gate.)* Layer 1's
-**employee**-level consent path — `POST /api/compliance/consent`, writing `consent_records` and
-setting `employees.consent_granted` — **was removed on 2026-10-13** (owner decision 17), and it had
-no caller; the removal is recorded where it stood (`server/index.js:358`–`:363`), and the
-`consent_records` table stays for purpose-scoped consent. A pre-hire has no employee row yet, so the
-portal binds to the **notice-shown record** and to nothing else, and nothing mirrors it into the
-employee flag — one act, one record. If an accepted offer later needs a consent recorded against the
-employee, that is an explicit integration step to be designed, and a *different* instrument — not a
-second copy of this one.
-**And the version recorded is the notice's own — the promise is kept.** *(Until 2026-10-13 this
-paragraph read that the HR-side button posts
+  <consent_date>` / `✗ MISSING / REQUIRED` at `:1407`–`:1408`. The case's own consent line is the
+  pair above.)*
+**Two consent stores exist, and P2-6 must bind the portal to exactly one of them.** The case path
+is `POST /api/preboarding/cases/:id/consent` → `preboarding_consents` (`server/index.js:718`–`:729`,
+`actor` from the authenticated user) — this is the record the document gate reads
+(`server/preboarding-items.js:321`–`:332`) and the only one a pre-boarding case has. Layer 1 has a
+separate, **employee**-level path: `POST /api/compliance/consent` writes `consent_records` and sets
+`employees.consent_granted` (`server/index.js:340`–`:346`). A pre-hire has no employee row yet, so
+the portal writes the **case** record and nothing else; nothing today mirrors a case consent into
+the employee flag, and nothing should — one act, one record. If an accepted offer later needs the
+employee record updated, that is an explicit integration step to be designed, not a second consent.
+**And the version string is a promise the product cannot yet keep.** The HR-side button posts
 `{ consent_type: 'pdpl_notice', lawful_basis: 'consent', consent_version: 'v1' }` hard-coded in the
-client — `client/src/App.tsx:790`–`:793` — "so `v1` names a text the product has never shown". Both
-halves are answered: that literal is gone, and the only `lawful_basis` left in `client/src/App.tsx`
-is the **record's own** value as displayed (`:83`, `:2062`); the version is read from the notice the
-server serves, never taken from the caller (`server/preboarding-items.js:355`; the rule is stated in
-the writer's own docblock at `:316`–`:317`), and `noticeVersion()` (`server/privacy-notice.js:110`)
-parses it out of the served file and **throws** rather than let a record be written against an
-unknown version (`:112`–`:116`).)* What that means for the portal is unchanged: put the notice in
-front of the person **before** the record is made, and record the version of the text that was on
-screen — which is now the only behaviour the code allows.
-- Unlocking is automatic on the notice record's existence; there is no "unlock" button, so the state
-  can never disagree with the record.
+client (`client/src/App.tsx:790`–`:793`), and **no notice is displayed to anyone before it is
+recorded** — so `v1` names a text the product has never shown. `server/preboarding-items.js:23`–`:25`
+already assigns the consent lifecycle (notice versioning) to P2-6; this is what that means in
+practice: the portal must put the notice in front of the person **before** the button, and the
+version it records must be the version of the text that was on screen.
+- Unlocking is automatic on the record's existence; there is no "unlock" button, so the state can
+  never disagree with the record.
 
 ---
 
@@ -656,25 +619,22 @@ document to track, and the board names internal owners); and any figure without 
 ### 8A.2 The document list — the hire's own rows
 
 One row per item of the case's jurisdiction set, from the server's own list — `DOCUMENT_SETS` in
-`server/preboarding-items.js:65`–`:97` (`AE` active with 7 items; `SA` intact and inactive). The
+`server/preboarding-items.js:66`–`:100` (`AE` active with 7 items; `SA` intact and inactive). The
 row is never re-listed in the portal's own code, so EN and AR cannot drift item by item (§7).
 
 Each row carries: the item's name, what is needed, **the item's own status in the hire's words**
 (8A.3), the due date and its distance, and the single action available. The document list is
-readable **before the notice has been shown** — it is the hire's own list of what they will be asked
-for — and its items cannot be collected until the notice has been shown **for that item** (§8, and the
-shipped refusals at `server/preboarding-items.js:466`–`:481`: **409** for an item the notice assigns
-no basis to, **428** for an item whose notice has not been shown).
+readable **before** consent — it is the hire's own list of what they will be asked for — and its
+items cannot be collected until the consent record exists (§8, and the shipped refusal at
+`server/preboarding-items.js:321`–`:332`).
 
 ### 8A.3 The hire's vocabulary for the four statuses
 
 The state machine is the server's and stays the server's: `ITEM_STATUSES` at
-`server/preboarding-items.js:49`, the transitions at `:58`–`:63`, `verified` terminal. The hire
+`server/preboarding-items.js:44`, the transitions at `:53`–`:58`, `verified` terminal. The hire
 must not read the HR keys, and must not see HR's verbs — today's HR surface shows `Request`,
-`Mark received`, `Cancel`, `Verify`, `Send back` (`client/src/App.tsx:2129`–`:2146`) and
-`Requested` / `Received` / `Verified` on the workspace rows (`:2242`–`:2253`).
-*(All four numbers re-derived on `9ce469d` on 2026-10-13; the previous set pointed at offboarding
-copy and at the roll-up tiles.)*
+`Mark received`, `Cancel`, `Verify`, `Send back` (`client/src/App.tsx:1884`–`:1897`) and
+`Requested` / `Received` / `Verified` on the workspace rows (`:1980`–`:1991`).
 
 The mapping is **derived from the key**, never a second state machine:
 
@@ -700,7 +660,7 @@ All seven strings in that table are **copy, not code**, and all seven need human
 ### 8A.4 How a document is supplied when storage is reference-string-only
 
 The shipped constraint: an item carries a short `document_reference` — a file name, or the
-reference the hire gave — capped at 120 characters (`server/preboarding-items.js:418`–`:419`), and
+reference the hire gave — capped at 120 characters (`server/preboarding-items.js:283`–`:284`), and
 `server/document-store.js:89`–`:109` **refuses to store bytes by design** (owner's Option D,
 2026-10-07: reference string only, no bytes, until IFZA registration). A portal upload control
 would therefore be a lie, and building one is out of scope (D5).
@@ -751,16 +711,14 @@ hire's behalf with `recorded_by` required and method `in_product_record`
 **S4a — consent.** One screen, shown first, gated on nothing. Its content comes from the
 compliance memo at this boundary (row `5c0a9ceb`) — see §8, §8C and Q8–Q10.
 
-**S4b — the document list.** States: *notice not shown* (rows visible and readable, collection
-disabled, the record control offered — the shipped message is *"The notice has not been shown on this
-case yet, so no document can be collected on it."*, `client/src/App.tsx:2069`–`:2070`); *notice shown,
-items outstanding*; *everything
+**S4b — the document list.** States: *no consent record* (rows visible, actions disabled, the only
+enabled action is the consent screen — the shipped message is
+`server/preboarding-items.js:328`–`:332`); *consent recorded, items outstanding*; *everything
 collected*; *start date passed with items open* (the hire reads "these were due before day one",
 never a negative count — §5's rule); and *the jurisdiction's set is not active* (a case outside
 the active set seeds and can be read, but its items cannot move off `not_started` —
-`server/preboarding-items.js:437`–`:442`, which is the employee set's own switch (the workspace
-track's is `:428`–`:433`, decided by the line's own `track`, never by the caller) — so the portal
-must not offer an action the server will refuse).
+`server/preboarding-items.js:293` and `:302` — so the portal must not offer an action the server
+will refuse).
 
 **S4c — the pre-reading package.** Item text, and the acknowledgement control where
 `acknowledgement_required` is true, with the state read from the record and never inferred
@@ -879,7 +837,7 @@ numeral/date decision the product has not yet made.
   easy as giving consent (`compliance-requirements.md:325`).
 - **May follow later:** HR-only comfort copy; the workspace track (not shown to the hire); the
   demo's own labels; and any KSA-specific string while the KSA set is switched off
-  (`server/preboarding-items.js:65`–`:97`; the KSA consent item is already recorded as
+  (`server/preboarding-items.js:66`–`:99`; the KSA consent item is already recorded as
   "Arabic first" in `server/compliance_engine.js:38`).
 - **Never:** a machine-translated legal or consent string.
 
@@ -908,17 +866,13 @@ The portal needs an identity for the hire, and the product does not have one. **
 shared admin account** (`server/auth.js`; the JWT lives in `localStorage`), per-user accounts land
 at Layer 3 (owner, 2026-10-07 — §10 Q4), and the standing rule is **no real client data before
 RBAC**. Both records that would carry the hire's own act take their actor from the authenticated
-user: the **notice record's** `recorded_by` — required, and the `'system'` fallback this module uses
-elsewhere is deliberately *not* used for it (`server/preboarding-items.js:343`–`:349`; the rule and
-its reasoning are in the writer's own docblock at `:310`–`:315`) — and the acknowledgement's
-(`server/index.js:818`, `recorded_by: (req.user && req.user.username) || null` — route `:811`;
-written at `server/preboarding-package.js:170`). Both **refuse to invent an actor**, which is the
-standard §10 Q8 has to meet. *(Until 2026-10-13 this paragraph contrasted the **case consent** route —
-`input.actor || 'system'` at `server/preboarding-items.js:242`, supplied by `server/index.js:725` —
-with the package module's refusal. That route and that line are gone with the retired consent
-instrument, so the two records named here now agree instead of differing; the field it discusses is
-`recorded_by` on the notice record.)* So the question is not what the button looks like — it is **who
-the product can truthfully say acted**.
+user: the consent's `recorded_by` (`server/preboarding-items.js:242`, `input.actor || 'system'`,
+supplied by the route at `server/index.js:725`) and the acknowledgement's (`server/index.js:771`,
+`recorded_by: (req.user && req.user.username) || null` — route `:718`; written at
+`server/preboarding-package.js:170`). The difference is worth naming, because §10 Q8 has to answer
+it: the consent route fills its actor with a `'system'` fallback, while the package module **refuses
+an empty actor rather than inventing one** (`preboarding-package.js:198`–`:201`). So the question is
+not what the button looks like — it is **who the product can truthfully say acted**.
 
 | # | Option | What becomes true | Consequences and costs |
 |---|---|---|---|
@@ -928,10 +882,9 @@ the product can truthfully say acted**.
 | **4** | **No portal in this release** | nothing changes, and the honest labels stay true | **+** `READING`'s *"there is no hire-facing portal"* (`server/preboarding-package.js:83`–`:90`) stays exactly true; no identity question; no bearer credential in the world. **−** Layer 2's completeness claim stays "not end-to-end", the hire's consent stays recorded by HR on their behalf, and the EN/AR work has nowhere to land |
 | **5** | **Assisted consent (today's behaviour) with a read-only portal** | HR records consent in person; the portal only shows state | **+** honest, no new identity, no bearer credential, and it removes the "who consented" problem entirely. **−** it is not a portal in P2-6's sense (the hire never acts in it), and a read-only view of one person's list still needs *some* access control — so it collapses back into option 1 or 2 unless the list is not personal, and it is |
 
-**What every option shares** — these do not move with the decision: one notice-shown record per
-**document** and never a second store, with the shipped replay-safety (recording an item that already
-has one returns the existing row and changes nothing, `server/preboarding-items.js:352`–`:353`);
-`recorded_by` describing the actor truthfully, which
+**What every option shares** — these do not move with the decision: one consent record per case and
+never a second store, with the shipped replay-safety (`recordConsent` returns the existing record,
+`server/preboarding-items.js:211`–`:228`); `recorded_by` describing the actor truthfully, which
 means a link-holder is recorded as a link-holder; the portal showing one case and never another
 hire; and the EN/AR work being identical in every option (build it once).
 
@@ -946,11 +899,9 @@ fails the same evidence standard the acknowledgement already keeps (`UNAVAILABLE
    boundary (row `5c0a9ceb`), not this document.
 2. **The notice's text**, its required elements' wording, its version string, and the lawful basis
    to record on the portal path.
-3. **Whether the notice record gains `notice_language`** (D15). The per-item granularity this
-   question used to leave open is **shipped**: the record is one row per document and carries the
-   notice's own version (`server/schema.sql:302`–`:317`). What remains open is the language the hire
-   read it in, which the record does not carry. My recommendation is additive on the one record; the
-   requirement is the memo's.
+3. **Whether the consent record gains `notice_language`** (D15) — and whether it needs per-item
+   granularity, which the shipped row does not carry. My recommendation is additive on the one
+   record; the requirement is the memo's.
 4. **Whether a read event may be recorded at all** — a data-minimisation question (8A.5.2). The
    honest default is not to record it, which means the package's label keeps saying "not tracked".
 5. **Who supplies and reviews the Arabic**, and when (§10 Q9) — including the consent notice, which
@@ -983,7 +934,7 @@ fails the same evidence standard the acknowledgement already keeps (`UNAVAILABLE
 | **D12** | A decision on **how the three flag states are shown in a demo** | Three states need three cases at different distances from their start dates | Owner (§10 Q3) |
 | **D13** | **How a Manager owner is identified** | `employees.manager_id` exists, but the case must name the manager **for the accepted offer**, which may differ from the current record | P2-1's case model |
 | **D14** | **An identity for the hire** | The portal (§8A) and both records that would carry the hire's own act (§8C) need one; today there is a single shared admin account and no role model — which is also why "the hire can never move an item to `verified`" has to be a server-side rule rather than a hidden button | **Product — the lead/owner decision on §8C's options, §10 Q8** — then engineering |
-| **D15** | **The notice language on the notice record** | The shipped row carries `case_id`, `item_key`, `item_label`, `jurisdiction`, `instrument`, `lawful_basis`, `notice_version`, `recorded_by`, `method`, `acknowledged_at` — **one row per document** — and **no language** (`server/schema.sql:302`–`:317`; written at `server/preboarding-items.js:357`–`:375`); what a person agreed to includes the language they read it in, and the older bilingual design already recorded `language` (`INTERACTIVE-CONSENT-SPECS.md` §5.3). *(Until 2026-10-13 this row described the retired case-consent row's columns at `server/preboarding-items.js:233`–`:252` — now `listAllItems` — and left per-item granularity open; that half is shipped, the language is not.)* | Compliance memo (row `5c0a9ceb`) decides the requirement; engineering adds it **to the one record**, never as a second store |
+| **D15** | **The notice language on the consent record** | The shipped row carries `consent_type`, `lawful_basis`, `consent_version`, `granted_at`, `recorded_by` and **no language** (`server/preboarding-items.js:233`–`:252`); what a person agreed to includes the language they read it in, and the older bilingual design already recorded `language` (`INTERACTIVE-CONSENT-SPECS.md` §5.3) | Compliance memo (row `5c0a9ceb`) decides the requirement; engineering adds it **to the one record**, never as a second store |
 | **D16** | **A read event for the pre-reading package** | §8A.5.2: the package's label says "not tracked — no hire portal" (`server/preboarding-package.js:83`–`:90`). A portal makes that reason false while the conclusion stays true unless reading is recorded — and recording it is a data-minimisation question | Product/PDPL — and the honest default is **not to record it** and re-word the label instead |
 
 ---
@@ -1039,14 +990,10 @@ be surfaced rather than solved; Q9–Q12 are consequences I will not settle by d
 this specification resolved every `file:line` cite it added against running code and found three that
 pointed at the wrong line. All are corrected in place: the consent's actor fill is
 `server/preboarding-items.js:242` (not `:252`, which is `consent_version` inside the same INSERT); the
-acknowledgement's actor is supplied by the route at `server/index.js:818` *(re-derived 2026-10-13;
-`:771` was this file's number for it before #182 moved the module)* and refused when empty at
+acknowledgement's actor is supplied by the route at `server/index.js:771` and refused when empty at
 `preboarding-package.js:198`–`:201` (the write site is `:170`); and the withdrawal line is
 `compliance-requirements.md:325` (not `:323`, which is the marketing-consent line) at the three places
-this section cites it. *(2026-10-13: the first of those three targets no longer exists — the case
-consent route and its `input.actor || 'system'` fill were removed with the retired instrument, and
-`server/preboarding-items.js:242` is now inside `listAllItems`. The other two still stand, and this
-paragraph stands as the record of that pass.)* **The measurements and every other cite below still stand, and the read above is
+this section cites it. **The measurements and every other cite below still stand, and the read above is
 not re-dated:** the pass was resolved on `main` = `501d5fa`, and no code has merged since the read
 (`git diff b7630cb 501d5fa -- client server package.json` is empty — documentation only).
 
@@ -1063,12 +1010,11 @@ not re-dated:** the pass was resolved on `main` = `501d5fa`, and no code has mer
    hire's four status words and the refusal messages are **blocking** for launch (§8B.4). No
    machine translation of a legal or consent string, in either direction (§8B.5), and the Arabic
    wordmark is still `[TO CONFIRM]` — Arabic strings use the Latin "Antum" until you confirm it.
-10. **Does the notice record gain `notice_language`?** The shipped row is **one row per document**
-    and carries the notice's own version, and it has **no language field**
-    (`server/schema.sql:302`–`:317`; written at `server/preboarding-items.js:357`–`:375`) — so today the
-    product cannot say *which language the hire read the notice in*. The per-item granularity the
-    earlier wording of this question left open is shipped. My recommendation is one additive column on
-    the same record; the requirement is the compliance memo's (row `5c0a9ceb`).
+10. **Does the consent record gain `notice_language` (and per-item granularity)?** The shipped row
+    has neither (`server/preboarding-items.js:233`–`:252`), so today the product cannot say *which
+    language the hire agreed in* — and the older bilingual design did record a language. My
+    recommendation is one additive column on the same record; the requirement is the compliance
+    memo's (row `5c0a9ceb`).
 11. **Is the portal ever demonstrated?** My assumption is **no** — nothing in §§8A–8C touches the
     demo surface, and the demo rule against rendering a fake case stands. If it is demonstrated, it
     needs its own surface decision, not a quiet inclusion.
@@ -1087,7 +1033,7 @@ not re-dated:** the pass was resolved on `main` = `501d5fa`, and no code has mer
 | **P2-3** — each item shows sent/read/acknowledged; JD and NDA have a recorded acknowledgement | §3 pre-reading strip; the record itself is D6; "sent" is blocked by D10 |
 | **P2-4** — assignment derived from the role, not typed; each line has a responsible function; IT/Admin see only their own lines | §6 derivation; §2 owner chips; the last clause is D4 (and is not claimable until then) |
 | **P2-5** — fires on the 48-hour boundary; names the incomplete items and their owners; clears when the items complete | §5 definition (inclusive boundary), copy rules, and three states; **§5.1 holds the three seeded cases' expected readings to build against; the derivation is **track-agnostic**, and no surface prints a negative `days_to_start` or invents an item owner**. **Two lead rulings of 2026-10-07 are folded in: the row and the chip share one derivation** (§2's relative-time row: whole days / hours to one decimal / `started n d ago`, so one row cannot carry two distances), **and the amber headline reads *"n items open · start in 48 hours or less"***, because the boundary is inclusive at exactly 48.00 h and "under 48 hours" is false there |
-| **P2-6** — EN/AR documents and portal; no document collected before the notice has been shown for it | §7 (the standing standard) and §8 (the gate is on the transition, not only on the button) for the **HR** surface; **§8A the portal's three screens and the hire's own vocabulary, §8B the EN/AR and RTL consequences, §8C the identity options** for the portal itself. **Acceptance tests this specification adds:** a write that would move a document to `received` or `verified` without a notice-shown record **for that item** must be refused (**shipped** — `server/preboarding-items.js:466`–`:481`, 428; and 409 for an item the notice assigns no basis to); the portal must not create a **second** record for one item (recording is replay-safe, `:352`–`:353`); the hire must never move an item to `verified` (D14); no portal string may say "sent", "delivered", "signed" or "e-signed" (§8A.5); and every AR string renders with its provenance marker (§8B.5) |
+| **P2-6** — EN/AR documents and portal; no document collected before a consent record exists | §7 (the standing standard) and §8 (the gate is on collection, not only on the button) for the **HR** surface; **§8A the portal's three screens and the hire's own vocabulary, §8B the EN/AR and RTL consequences, §8C the identity options** for the portal itself. **Acceptance tests this specification adds:** a direct API write of a document for a case with no consent record must be refused (shipped — `server/preboarding-items.js:321`–`:332`); the portal must not create a **second** consent record (`recordConsent` is replay-safe, `:211`–`:228`); the hire must never move an item to `verified` (D14); no portal string may say "sent", "delivered", "signed" or "e-signed" (§8A.5); and every AR string renders with its provenance marker (§8B.5) |
 
 ---
 
@@ -1123,14 +1069,133 @@ not re-dated:** the pass was resolved on `main` = `501d5fa`, and no code has mer
 - **An older design is not relied on where it disagrees.** `design-concepts/INTERACTIVE-CONSENT-SPECS.md`
   (2026-09-21) specifies an **e-signature component** (§3) and a consent record keyed to `employee_id`
   carrying an `ip_address` and a `signature_method` (§5.3). That is **not** the shipped record
-  (`preboarding_notice_acknowledgements`, keyed by `(case_id, item_key)`, one row per document, no
-  IP, no signature method, `instrument` constrained to `notice_shown`), and the e-signature method
+  (`preboarding_consents`, keyed by `case_id`, no IP, no signature method), and the e-signature method
   is refused by name in the shipped module (`server/preboarding-package.js:99`; lead ruling,
   2026-10-08). **Where the two documents disagree, the shipped shape and the ruling win** — only its
   language-toggle anatomy (§1.1–§1.3) carries forward.
 - **The RTL work is specified, not done.** §8B.1's counts measure the *current* English-only, LTR
   client: they are the size of the pass, not evidence that any of it is built.
 
+---
+
+*Product Designer — 2026-10-06. Written against `origin/main` at `34fdd63`; **re-grounded
+2026-10-07 on `main` at `75e3ff2`** (the merge of PR #66), which is what the line numbers now
+name. Amended 2026-10-07 with the owner's scoping decision (§2 S1: scope the list, keep the row
+chip; §3 S2: the case's own jurisdiction in the detail header) and §10's status. **Amended again
+2026-10-07 after P2-2 landed (PR #70, `5ed731e`)** — the §0 rows P2-2 changed are marked in place,
+and `LAYER2-P2-2-IMPLEMENTATION-NOTES.md` carries the build-vs-design deltas. Screens are design,
+not build.*
+*Amended again 2026-10-07 after the L2 demo seed landed (PR #73) — **§5.1 is new**: the three seeded
+cases read off a scratch instance of that merge, the readings P2-5 must produce for each, and the
+copy rule that no surface prints a negative `days_to_start`. The three-state demo's one-morning
+shelf life is stated there too. Independent design review of the same surface:
+`/home/team/shared/l2-surface-review/REVIEW.md`.*
+*Amended 2026-10-07 with the lead's P2-5 ruling: the flag is **track-agnostic** — workspace items
+join it unchanged when P2-4 lands — and an item's **owner is never invented** where none is recorded,
+which on today's employee-track items is always. See §5's definition, state table and copy rules.*
+*Amended 2026-10-07 with the lead's **one-distance ruling** (attributed to the lead, not the owner):
+**the row reads the flag's own derivation, never a second computation** — so its reading is whole
+days when clear (`· 14 d`), **hours to one decimal** inside 48 hours (`· 7.5 h before 00:00 on the
+start date`), and `started n d ago` once the start date has passed, never a bare negative. The
+arithmetic is in §5's copy rules: §2 counts whole days while §5 measures hours, so a case with
+`days_to_start = 2` is 24–48 h out all day and could read `2 d` beside an amber chip — both true,
+one row. **The same amendment corrects §5's amber headline to "*n* items open · start in 48 hours or
+less"**, because the boundary is inclusive at exactly 48.00 h and "under 48 hours" is false at the
+instant the flag first fires. §5.1's distance column now states the reading the rule *requires*; §2's
+S1 and §3's S2 mocks were re-padded to it. Three status statements the PR #76 merge had made false
+are marked in place, each with its citation: §0's "flag computation — **Nothing**" row, §5.1 item 1,
+and §12's "§5's flag [does] not exist anywhere".*
+*Corrected 2026-10-07 with **PR #77 merged** (`main` at `56fd1fd`), while this branch was open: the
+row rule is written in the past tense against the strings #77 implemented — `· 14 d` / `· 7.5 h
+before 00:00 on the start date` / `· started 1 d ago` / `· started 6 d ago` — and the sentence
+saying the built roll-up "prints `-1 d` today" now reads as what it printed before #77. The server is
+unchanged: `days_to_start` is still the raw signed input, and the absolute-value guard is in the
+built bundle.*
+*Amended 2026-10-09 with **P2-6's portal specification** — §§8A–8C, inserted between §8 and §9 so
+that no existing section number, and therefore no citation in another document, moves. Read against
+`main` at **`b7630cb`** (the merge of PR #86, P2-4) on 2026-10-09: §8A states the hire's three
+screens, the four status words the hire reads, and what the product can honestly show while storage
+is a reference string and nothing has a delivery channel; §8B names the EN/AR and RTL consequences and
+measures the client as it stands (`dir=` 0, no language state, `space-x-*` 28 against
+`space-x-reverse` 0, no logical-direction utilities, `toLocaleString(undefined, …)` in 7 places, ISO
+dates printed raw); §8C lays out five identity options with their consequences and **decides none of
+them** — that is Q8. §9 gains D14–D16, §10 gains Q8–Q12, §11's P2-6 row carries the acceptance tests
+this pass adds, and §12 records what still does not exist. The consent notice's text is **not** in
+this document: it comes from the compliance expert's memo at the portal boundary (task `5c0a9ceb`),
+and nothing here may be used to invent it.*
+*The same pass re-read every citation it touched and **corrected two**: §8's consent-line citation
+(`App.tsx:981`–`:982`) pointed at offboarding code and at the wrong object — the case's own line is
+`App.tsx:1863`–`:1864`, while `:1407`–`:1408` is the **employee** flag — and the workspace due-date
+row is `App.tsx:1970` with its distance at `:1972`–`:1974`, not the range this document carried. §8
+also now names the two consent stores (`preboarding_consents` for the case; `consent_records` +
+`employees.consent_granted` at Layer 1) and the gap that `consent_version: 'v1'` is hard-coded in the
+client with no notice behind it (`App.tsx:790`–`:793`).*
+*Amended 2026-10-09, after P2-3, P2-4 and P2-5 merged and this document's own §§8A–8C went in (PR #89): **three places here said the workspace track did not exist, and all three are now false** — §5's track-agnostic bullet ("today that is the employee track, because it is the only one that exists; when P2-4 lands…"), §5's owner bullet ("owners exist only on the workspace track (P2-4), which does not exist yet") and §2's open-now row ("owner does not exist"). They are corrected in place and each quotes what it replaced, because this document is the design of record rather than a dated snapshot; the snapshot beside it, `LAYER2-P2-2-IMPLEMENTATION-NOTES.md`, carries a superseded-note instead, because rewriting a reading taken on a named revision is worse than a stale line. What did **not** change is the point of the exercise: §5's rule is the same rule and both tracks obey it — the merge added items to it and altered nothing, which the flag module's own note records (`server/preboarding-flag.js:43`) — and no count anywhere in this document moved. **Checked and deliberately left:** §4's note that the chip draws inside the built HR roll-up and not yet on §2's list row or §3's detail header is dated to a re-read on `404b29d` (2026-10-08) and still describes where it draws; re-dating a reading to a tree it was not taken on is the failure this pass exists to avoid.*
+*Amended 2026-10-13 (compliance) — **§8's premise has moved: the pre-boarding documents are gated on
+the notice being shown, not on a consent record.** The P2-6 criterion this document quotes at `:541`
+comes from the team's roadmap, and that roadmap was amended today at its source
+(`/home/team/shared/phase-roadmap-2-4.md:38-39`) because the wording kept reproducing a requirement
+the product does not implement and must not. The notice the hire is shown assigns `consent` to
+exactly **two** purpose rows, both sensitive data (`templates/privacy-notice.md:47-48`), and none of
+the seven pre-boarding documents (`server/preboarding-items.js:76-82`) is either. What the gate reads
+is the per-item record that the **notice was shown** — `server/preboarding-items.js:161`
+(`NOTICE_INSTRUMENT = 'notice_shown'`), the gate at `:466`–`:480` refusing with **428** when the
+notice has not been shown *for that item*, the writer requiring a **named actor** (`:310`–`:312`; a
+record with no name is refused **400**), the version taken from the notice the server actually serves
+(v2.3 today) — and **409** for the two certificates and the emergency contact, which the notice
+assigns no basis to, each naming the counsel question it waits on (`:432`–`:451`). The record lands
+at `POST /api/preboarding/cases/:id/notice-acknowledgements` (`server/index.js:749`); the client's
+`{ consent_type, lawful_basis: 'consent', consent_version: 'v1' }` literal is gone.
+
+**The case-level consent instrument §8 is built on is retired, not merely unused.** No reader, no
+writer, and the reason recorded in the schema itself — `consent` is the one basis a person can
+withdraw, the notice assigns it to two sensitive-data purposes only, and one row per case cannot
+carry seven bases (`server/schema.sql:255`–`:270`). The two case consent routes were removed rather
+than reworded, because leaving a writer in place would keep the defect reachable while the screen
+said something else (`server/index.js:735`–`:738`). The **employee**-level path is separate and still
+exists: `POST /api/compliance/consent` writes `consent_records` and sets `employees.consent_granted`
+(`server/index.js:359`–`:366`); it has **no caller**, and whether the tile that reads it survives is
+owner decision 17, not this document.
+
+**What that leaves stale in §8 — named so the next pass acts on it instead of rediscovering it.**
+Nothing below is rewritten in this amendment, and nothing above it moved: the block is appended
+precisely so that **no line number in this document changes**, because other documents cite them and
+§8's redesign is the Product Designer's pass, not a compliance note's. Line numbers are as at
+`main` = `a48668d` (this document: 1,133 lines, md5 `cfb487a6a691a6e2a3c8c47ffae17a1b` before this
+block).
+
+| line(s) | what it says | state after the change |
+|---|---|---|
+| `:539` | section heading, "The consent gate" | the gate exists; its instrument is the notice-shown record |
+| `:541` | the quoted P2-6 acceptance | superseded — the criterion is amended at its source |
+| `:544`, `:550`, `:552`, `:553` | mock copy: "Locked state (no consent record)", "🔒 Documents are locked until consent is recorded", "… before a PDPL consent record exists for this case", "[ Record consent ]" | none of these strings is in the product; the shipped control reads *Record that the notice was shown* |
+| `:562`, `:564`–`:566` | "a direct API write … for a case with no consent record is a defect"; the consent line's copy, `PDPL consent recorded …` / `No PDPL consent record — no document can be collected on this case yet.` | true in substance — read *notice-shown record*; the refusal is **428** and both UI strings are gone |
+| `:574`–`:575` | "Two consent stores exist, and P2-6 must bind the portal to exactly one of them", citing `POST /api/preboarding/cases/:id/consent` → `preboarding_consents` (`server/index.js:718`–`:729`) and the gate (`server/preboarding-items.js:321`–`:332`) | both citations are **stranded**: that route, that table as a live instrument, and that gate line are gone |
+| `:583`–`:589` | the `consent_version: 'v1'` literal and "`v1` names a text the product has never shown" | both answered: the literal is gone and the recorded version is the served notice's own |
+| `:1036` | §11's P2-6 row, repeating "no document collected before a consent record exists" and citing `server/preboarding-items.js:321`–`:332` / `:211`–`:228` | same premise, same stranded lines — the acceptance test it describes is shipped, on the acknowledgement table |
+
+**Not only §8**, and the rest belongs to a pass this note does not perform: `:82` lists *"A consent
+record to gate documents on"* as a dependency of the tab; `:628` and `:714`–`:716` (S4b's states) say
+items cannot be collected until the consent record exists and cite the gate at
+`server/preboarding-items.js:328`–`:332`, which has moved; `:885`, `:902`, `:937` and `:1013` (D15)
+ask whether *the consent record* gains `notice_language` and per-item granularity. Read *consent
+record* as *the notice-shown record* throughout — and note that what D15 leaves open, the shipped
+record already answers in the affirmative: it is per item, and the version it stores is the notice's
+own. **That vocabulary is §8A's and §11's, and the portal pass that owns it is blocked on owner
+decision 14.**
+
+**One stale premise here is not a document at all.** The comment at
+`server/preboarding-workspace.js:56` still justifies an omission by saying *"Consent recorded" is the
+PDPL consent record the employee track's gate already reads*. The gate reads the notice-shown record
+now, and no UI string named *Consent recorded* exists in either tree — the only hit in `client/` or
+`server/` **is that comment**. It is a comment inside a **served** file, so it cannot ride a
+docs-only PR: recorded here for the next cutover, on the same footing as the `server/db.js` fix the
+plan already books for it.
+
+*Read as one thing: §8's **design** is what needs re-grounding, not this document's finding. The
+question §8 asks — "is the notice in front of the hire before we collect their documents?" — is the
+right question, and the shipped answer is the acknowledgement record. What the section cannot keep is
+the **instrument** it names.*
 ---
 
 *Product Designer — 2026-10-06. Written against `origin/main` at `34fdd63`; **re-grounded
