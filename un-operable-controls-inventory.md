@@ -142,7 +142,9 @@ registered after the SPA catch-all.
 
 ## 4. The check that now asks the question
 
-`server/reachability.test.js` (9 assertions) + `server/reachability.js` (the measurement) +
+`server/reachability.test.js` — **12 tests as of 2026-10-14**, the count derived rather than remembered:
+`node --test server/reachability.test.js` prints `# tests 12 / # pass 12 / # fail 0` and exits 0; the file
+holds 12 `test(` declarations and 38 `assert.*` sites. Plus `server/reachability.js` (the measurement) +
 `server/reachability-register.js` (the registers). `scripts/reachability-report.js` prints the same measurement
 for a person and exits non-zero if a new un-operable element appears, so the tool and the test cannot disagree.
 
@@ -159,6 +161,18 @@ What it asserts, and what each assertion would catch:
 | every boolean control state can be opened, or is registered | a control with no opener (C2) |
 | a displayed value has a writer in a reachable route, or is registered | a tile the product cannot produce |
 | the measurement found routes and call sites at all | the whole check passing vacuously |
+| a retired route or source anchor coming back, and a `RETIRED` entry that cannot name the decision that removed it | the defect returning unnoticed, or a register that has stopped saying why (test 8) |
+| the retired consent flag has no write path left, and its column stays in `schema.sql` | a writer the line-by-line search cannot see, and a tidy-up that drops the column (test 9) |
+| a no-basis item cannot be requested and never received without being registered as one | the dead-end category: a new uncollectible item, an unguarded `Request`, or a fix that makes one collectible (test 12) |
+
+**The table was nine rows and the suite is twelve tests (measured 2026-10-14).** The three rows labelled
+`test 8`, `test 9` and `test 12` at the foot of the table are **appended, not renumbered** — every row above
+them keeps its original position and wording. The counts recorded further down ("163 tests, 35 suites … was
+154 before these 9", and §7's "10 tests / 10 pass") are the figures **at the dates they were written**, not
+this suite's present size. The three tests: `a retired element stays retired — the removal is re-measured,
+not remembered`; `the retired consent flag has no write path left, and its column stays`; and `an item the
+notice assigns no basis to is not offered a move it can never complete` — the dead-end category §7
+describes, and the one `scripts/reachability-report.js` could not print until #193.
 
 **It was reddened before it was trusted.** Five negative controls — one injected regression each, in a
 throwaway worktree, reverted between them — each turned exactly the intended assertion red, and the tree
