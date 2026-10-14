@@ -154,6 +154,28 @@ test('a retired element stays retired — the removal is re-measured, not rememb
     assert.ok(/decision \d+/.test(a.decision), `${a.what}: must name the decision`);
   }
 });
+/**
+ * A retired instrument with live write paths is not retired. Decision 17 was executed as "retire the
+ * instrument, keep the subject"; the flag's two remaining writers — a key admitted by the PUT
+ * whitelist, and a column named on the continuation line of the create-INSERT — were invisible to
+ * `columnWriters` (line-by-line text search), so they are checked structurally here. The column
+ * itself STAYS with its DEFAULT 0: decision 17's scope is enumerated-first, not dropped.
+ */
+test('the retired consent flag has no write path left, and its column stays', () => {
+  const paths = r.columnWritePaths('consent_granted');
+  assert.deepStrictEqual(
+    paths.map((p) => `${p.what} (server/index.js:${p.line})`),
+    [],
+    'a write path names the retired consent flag again — either remove it, or re-decide the '
+    + 'retirement and delete this assertion deliberately'
+  );
+  assert.match(
+    r.read(`${r.ROOT}/server/schema.sql`),
+    /consent_granted\s+INTEGER\s+DEFAULT\s+0/i,
+    'the column was dropped: decision 17 keeps it (enumerated first, recommended later) — dropping '
+    + 'it is a separate decision, not a tidy-up'
+  );
+});
 
 test('every boolean control state can be opened, or is registered as un-openable with a reason', () => {
   const states = r.uiStateReachability();

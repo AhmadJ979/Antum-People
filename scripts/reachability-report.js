@@ -107,6 +107,15 @@ for (const a of RETIRED.sourceAnchors) {
   }
 }
 
+rule('RETIRED COLUMNS', 'a retired instrument must not keep a write path (decision 17 fence)');
+for (const col of ['consent_granted', 'consent_date']) {
+  const paths = r.columnWritePaths(col);
+  console.log(`  ${paths.length ? '[WRITABLE]' : '[fenced]'} ${col}`);
+  for (const p of paths) {
+    console.log(`         ${p.what} (server/index.js:${p.line})`);
+    newFindings += 1;
+  }
+}
 rule('DECLARED DYNAMIC CALL SITES', 'paths built at runtime — equality cannot prove these, so they are declared');
 for (const d of DYNAMIC_SITES) {
   const lines = r.read(`${r.ROOT}/${d.file}`).split('\n');
