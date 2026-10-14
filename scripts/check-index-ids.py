@@ -49,7 +49,7 @@ REMOVED = {
     "2c37f2da-1fa1-4b1c-8117-c639c5880658",  # All-chip race parent, removed 2026-10-09 (superseded by db4e7b1c)
     "62d7142b-955a-433e-8f42-1c07a5d67ee3",  # read-endpoint response-shape parent, removed 2026-10-09 (superseded by aa6c9bd7)
     "9dc454df-b5cb-4d1c-aeba-b67cf795db4e",  # question-only row for owner decision 17, removed 2026-10-12 (duplicate; superseded by 385589e1)
-    "d6931bae-666a-4d90-ad59-09b64c588cda",  # decision-19 row (KSA host copy), removed 2026-10-14 once the ruling was executed and recorded (#184)
+    "d6931bae-666a-4d90-ad59-09b64c588cda",  # decision-19 row (KSA host copy), removed 2026-10-14 once the ruling was executed and recorded (#184; Round 46, task a3641427)
 }
 
 # 8-hex tokens the index quotes that are neither board ids nor git objects: rule 19
