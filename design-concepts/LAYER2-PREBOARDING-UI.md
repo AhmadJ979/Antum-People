@@ -72,11 +72,11 @@ answers one more row of this table, marked in place.**
 
 | Thing the Layer 2 surface needs | What exists today | Where |
 |---|---|---|
-| A place to live in the nav | **Five** tabs: **Executive Dashboard, Employee Directory, Transitions Hub, Pre-boarding, Strategic Intelligence**. **Changed by P2-2:** the tabs are one list now, read by both the sidebar and the breadcrumb | `App.tsx:115`–`:125` (`NAV_ITEMS`, `navLabel`); tab state `:272` |
+| A place to live in the nav | **Five** tabs: **Executive Dashboard, Employee Directory, Transitions Hub, Pre-boarding, Strategic Intelligence**. **Changed by P2-2:** the tabs are one list now, read by both the sidebar and the breadcrumb | `App.tsx:265`–`:271` (`NAV_ITEMS`), `:274` (`navLabel`); tab state `:436` |
 | A case to hang every item on | `preboarding_cases(id, offer_reference UNIQUE, candidate_name, candidate_email, role, department, reporting_line, jurisdiction, start_date, status, source, offered_at, created_by, created_at, updated_at)` — **exists since P2-1**; on `main`, **not deployed** | `schema.sql:177`–`:193` |
-| One case-creation path, not two | `recordOfferAcceptance` is the only writer (idempotent on `offer_reference`); `POST /api/preboarding/cases` reaches it, `GET` list and `GET :id` read it back | `server/preboarding.js:119`, `:97`, `:104`; `server/index.js:580`, `:597`, `:606` |
+| One case-creation path, not two | `recordOfferAcceptance` is the only writer (idempotent on `offer_reference`); `POST /api/preboarding/cases` reaches it, `GET` list and `GET :id` read it back | `server/preboarding.js:162` (`recordOfferAcceptance`), `:111` (`listCases`), `:147` (`getCase`); `server/index.js:598` (`POST`), `:622` (`GET` list), `:637` (`GET :id`) |
 | A Layer 2 tab to extend | The tab exists — an intake form and a case list, house-styled | `App.tsx:1184`–`:1321`. **Changed by P2-2:** the tab is now the intake form plus an "HR roll-up — outstanding items" panel, in `App.tsx:1397`–`:1650`; the old range is gone |
-| A checklist item that can carry an **owner** | `interface Task` has `id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone` — **no owner, no track, no Arabic text** | `App.tsx:32`–`:41` |
+| A checklist item that can carry an **owner** | `interface Task` has `id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone` — **no owner, no track, no Arabic text** | `App.tsx:34`–`:44` |
 | The same, in storage | `onboarding_tasks(id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone, created_at)` — **no owner, no track, no function** | `schema.sql:43`–`:55` |
 | **Any item at all, attached to a case** | **Built by P2-2:** `preboarding_items(id, case_id, item_key, label, category, jurisdiction, required, status, document_reference, note, requested_at, received_at, verified_at, last_actor, …)`, `UNIQUE (case_id, item_key)`. The AE set is 7 items, the SA set 6 and inactive this release. **Still absent: owner, due date, track** — so §3's per-item owner and due date, and §6's track split, are still waiting | `schema.sql:202`–`:227`; `server/preboarding-items.js:64`–`84` |
 | **A record to gate document collection on** | **Built — and it is not a consent record.** The gate reads the per-item record that the notice was **shown**: `preboarding_notice_acknowledgements(case_id, item_key, item_label, jurisdiction, instrument CHECK (instrument = 'notice_shown'), lawful_basis, notice_version, recorded_by, method, note, acknowledged_at)`, `UNIQUE (case_id, item_key)`. A document cannot reach `received`/`verified` until the record exists **for that item** (**428**), and an item the notice assigns no basis to is refused outright with the counsel question it waits on (**409**). The case-level `preboarding_consents` table is **retired** — no reader, no writer — because one row per case cannot carry seven lawful bases; `consent_records` stays for purpose-scoped consent, and its only writer was removed on 2026-10-13 (decision 17) | `schema.sql:302`–`:317` (the shipped table), `:254`–`:267` (the retired one's own reason); `server/preboarding-items.js:161`, `:466`–`:481` |
@@ -598,7 +598,7 @@ not a checkbox buried in a settings panel — and what it gates on is a record t
   strings above on 2026-10-13; the correction stands as the record of its own moment.)*
 **One record gates collection, it is per document, and it is not a consent.** The case path is the
 per-item acknowledgement: `POST /api/preboarding/cases/:id/notice-acknowledgements`
-(`server/index.js:736`) → `preboarding_notice_acknowledgements` (`server/schema.sql:302`–`:317`),
+(`server/index.js:740`) → `preboarding_notice_acknowledgements` (`server/schema.sql:302`–`:317`),
 written by `recordNoticeAcknowledgement` (`server/preboarding-items.js:322`) and read by the gate
 (`:466`–`:481`). *(Until 2026-10-13 this paragraph cited `POST /api/preboarding/cases/:id/consent` →
 `preboarding_consents` at `server/index.js:718`–`:729` and the gate at
@@ -606,7 +606,7 @@ written by `recordNoticeAcknowledgement` (`server/preboarding-items.js:322`) and
 its table were retired with the instrument, and that line is no longer the gate.)* Layer 1's
 **employee**-level consent path — `POST /api/compliance/consent`, writing `consent_records` and
 setting `employees.consent_granted` — **was removed on 2026-10-13** (owner decision 17), and it had
-no caller; the removal is recorded where it stood (`server/index.js:354`–`:357`), and the
+no caller; the removal is recorded where it stood (`server/index.js:358`–`:363`), and the
 `consent_records` table stays for purpose-scoped consent. A pre-hire has no employee row yet, so the
 portal binds to the **notice-shown record** and to nothing else, and nothing mirrors it into the
 employee flag — one act, one record. If an accepted offer later needs a consent recorded against the
@@ -911,7 +911,7 @@ RBAC**. Both records that would carry the hire's own act take their actor from t
 user: the **notice record's** `recorded_by` — required, and the `'system'` fallback this module uses
 elsewhere is deliberately *not* used for it (`server/preboarding-items.js:343`–`:349`; the rule and
 its reasoning are in the writer's own docblock at `:310`–`:315`) — and the acknowledgement's
-(`server/index.js:814`, `recorded_by: (req.user && req.user.username) || null` — route `:807`;
+(`server/index.js:818`, `recorded_by: (req.user && req.user.username) || null` — route `:811`;
 written at `server/preboarding-package.js:170`). Both **refuse to invent an actor**, which is the
 standard §10 Q8 has to meet. *(Until 2026-10-13 this paragraph contrasted the **case consent** route —
 `input.actor || 'system'` at `server/preboarding-items.js:242`, supplied by `server/index.js:725` —
@@ -1039,7 +1039,7 @@ be surfaced rather than solved; Q9–Q12 are consequences I will not settle by d
 this specification resolved every `file:line` cite it added against running code and found three that
 pointed at the wrong line. All are corrected in place: the consent's actor fill is
 `server/preboarding-items.js:242` (not `:252`, which is `consent_version` inside the same INSERT); the
-acknowledgement's actor is supplied by the route at `server/index.js:814` *(re-derived 2026-10-13;
+acknowledgement's actor is supplied by the route at `server/index.js:818` *(re-derived 2026-10-13;
 `:771` was this file's number for it before #182 moved the module)* and refused when empty at
 `preboarding-package.js:198`–`:201` (the write site is `:170`); and the withdrawal line is
 `compliance-requirements.md:325` (not `:323`, which is the marketing-consent line) at the three places
@@ -1282,5 +1282,73 @@ copy for the **employee-level** consent register — a different instrument, who
 among what P2-2 landed — the gate exists and its instrument is what was misnamed, so the sentence is
 true of the gate; and §8C's **withdrawal** questions, which are about the notice's own consent purposes
 and are still open. The stale premise inside a **served** file
-(`server/preboarding-workspace.js:56`, a comment) is not a document and cannot ride this PR — it is
-booked for the next cutover beside the `server/db.js` fix.
+(`server/preboarding-workspace.js:56`, a comment) did not ride PR #185 — it landed the same day with the `server/db.js` fix in **PR #186**'s cutover bundle (commit `959babd`, *"the last stale consent comment"*), so **neither is pending**. The comment now names the retired employee-record flag and the notice-shown record in its place (`server/preboarding-workspace.js:56`–`:59`). *(Recorded 2026-10-14: this sentence read "booked for the next cutover beside the `server/db.js` fix" when PR #185 merged — true of the moment it was written and false within the day, which is why it is corrected here rather than left standing as an outstanding item. The served surface's own state is a deployment fact, measured at a cutover, not asserted by this document.)*
+
+---
+
+## Cite re-verification pass, 2026-10-14 — the merge that moved the ground under the last one
+
+**Why this pass exists.** PR #185 re-grounded §8/§8A/§11 onto the shipped instrument and merged at
+`ee4722b`. It merged **on top of PR #186** (`8e7e2c3`), which changed two files this document cites:
+`server/index.js` (the decision-17 fence, **+4 net lines** below `:259`) and
+`server/preboarding-workspace.js` (`:56`, the stale consent comment). A document whose cites a later merge
+moves is the defect class this specification has spent the week removing, so every cite below is
+re-measured against the tree a reader will actually open, rather than restated from the last pass.
+
+**Tree measured:** `origin/main` = `ee4722b`.
+
+**1. Invalidated by #186 — each was correct when PR #185 landed.** Four live `server/index.js`
+cites shifted by exactly +4:
+
+| Cite as landed | What `main` holds there now | Corrected to | What the corrected line holds |
+|---|---|---|---|
+| `server/index.js:736` | a comment about per-document scope | **`:740`** | `app.post('/api/preboarding/cases/:id/notice-acknowledgements'` |
+| `server/index.js:354`–`357` | `console.error('[Compliance] Failed to read the privacy notice:', err);` | **`:358`–`363`** | the `// REMOVED 2026-10-13, owner decision 17 executed...` block |
+| `server/index.js:814` (cited twice) | `case_id: req.params.id,` | **`:818`** | the `recorded_by` field's line |
+| `server/index.js:807` (the route) | a different route's closing lines | **`:811`** | the package-acknowledgement route |
+
+**2. Already stale before #186 — and my previous pass's scope is the reason it survived.** The §8
+"what exists today" table was **never re-verified** by #185: that pass resolved the cites it *rewrote*
+(§8A/§8C/§11), not every cite in the file. Measured on `9ce469d` — the tree #185 was cut from — the
+`POST /api/preboarding/cases` route already sat at `:592`, not the `:580` the table claimed, so this row was
+wrong *before* the merge and is not #186's doing:
+
+| Row | Cite as landed | Measured on `9ce469d` | Corrected to (`ee4722b`) |
+|---|---|---|---|
+| One case-creation path, not two | `server/index.js:580`, `:597`, `:606` | `:592`, `:616`, `:631` | **`:598`, `:622`, `:637`** |
+| same row | `server/preboarding.js:119`, `:97`, `:104` | `listCases` at `:111`, not `:97` | **`:162`, `:111`, `:147`** |
+| A place to live in the nav | `App.tsx:115`–`:125`, `:272` | `NAV_ITEMS` at `:265` | **`:265`–`:271`, `:274`, `:436`** |
+| A checklist item that can carry an owner | `App.tsx:32`–`:41` | `interface Task` at `:34` | **`:34`–`:44`** |
+
+**3. Corrected for a third reason — a sentence that stopped being true.** The closing paragraph's
+"booked for the next cutover beside the `server/db.js` fix" describes work #186 had already done. It now
+records that the served-file comment and the `db.js` refusal landed together in #186's cutover bundle.
+
+**Reported, not changed — where I will not guess.**
+
+- **The §8 tab row's JSX ranges** (`App.tsx:1184`–`:1321` and the panel at `:1397`–`:1650`) are
+  stale: at `:1397` the file renders the dashboard's pipeline card, and the `HR roll-up — outstanding
+  items` heading is at **`:1865`**. These are *ranges over JSX blocks*; a corrected range means measuring
+  where the block begins and ends, and plausible bounds are how this document acquired the defects it has
+  been removing, so they are flagged with the measurement rather than silently renumbered. The row already
+  declares `:1184`–`:1321` "the old range... gone", so the live half is the panel range.
+- **The header's own cross-reference** to "lines `:60`, `:79`, `:80`" as the pre-cutover records no longer
+  lands on the rows it names (by the current numbering those are `:76`, `:79` and `:80`) — noted, not
+  renumbered, because the declaration is a historic record in its own right.
+- **§8B's cites are pinned by declaration** — that section is headed "measured on `main` at
+  `b7630cb`" — so its `App.tsx:1183`/`:1970`/`:1461` cites are correctly stale *for that revision* and
+  are left as written. A pinned-revision cite is not a defect; an unpinned one is.
+
+**Not touched, by declaration.** Historical quotations inside `*(Until 2026-10-13 ...)*` parentheticals
+(`:718`–`:729`, `preboarding-items.js:321`–`:332`, `index.js:725`, `:359`–`:366`) name the
+old state on purpose; the movement note above is a map, not a set of live cites; and the demo and label
+records cited in §11 keep their own revisions.
+
+**Cutover, measured.** This pass is docs-only: `git diff --name-only ee4722b..HEAD` is one path under
+`design-concepts/`, so **it owes no cutover**. It records a separate consequence: **#186 changed served
+files** (`server/index.js`, `server/db.js`, `server/preboarding-workspace.js`), so the cutover *that*
+bundle owes is real and is not this document's.
+
+**File identity.** This section is appended, so the file cannot carry its own final hash: the file as
+PR #185 merged it was md5 `de33cdbd715ff43968ad16a76f1ef620`, 1,286 lines. The hash of the file *with*
+this section is in the commit message.
