@@ -1,0 +1,39 @@
+=== (0) the live product database, before (must be untouched at the end) ===
+  /home/team/.data/antum-product.db  229376 bytes  mtime=2026-10-12 06:42:04.560798208 +0000
+7c74c485fe925a6d0498df825d40f64c  /home/team/.data/antum-product.db
+
+=== (1) guard test on the fixed tree — expect 3/3 green ===
+  exit=0  # tests 3 # pass 3 # fail 0 
+  (the premise assertions still match: fallback line kept for the product)
+25:const PRODUCT_DB_PATH = process.env.PRODUCT_DB_PATH || '/home/team/.data/antum-product.db';
+
+=== (2) the three directions of the new refusal ===
+(Use `node --trace-warnings ...` to show where the warning was created)
+Error: PRODUCT_DB_PATH is unset while running under the test runner, so db.js would bind the live product database and execute schema.sql against it. Pin PRODUCT_DB_PATH to a throwaway path above the first require that loads db.js (see server/live-db-guard.test.js).
+  fallback for the product still in the source: true
+  refusal is conditioned on the test-runner signal: true
+
+=== (3) THE HAZARD ITSELF: an unpinned test file (the case db.js now refuses) ===
+  direct run exit=1 (non-zero = the file could not reach the live DB)
+  # Error: PRODUCT_DB_PATH is unset while running under the test runner, so db.js would bind the live product database and execute schema.sql against it. Pin PRODUCT_DB_PATH to a throwaway path above the first require that loads db.js (see server/live-db-guard.test.js).
+
+=== (4) THE GUARD REDDENS on that same file (static layer still bites) ===
+  exit=1  # pass 2 # fail 1 
+        zz-unpinned-probe.test.js: loads db.js (directly or transitively) and never sets PRODUCT_DB_PATH — it would run against the live database
+      Set process.env.PRODUCT_DB_PATH to a throwaway path (os.tmpdir() + a random name) ABOVE the first require that loads db.js.
+      + actual - expected
+
+=== (5) hazard removed -> guard green again, tree clean ===
+  exit=0  # tests 3 # pass 3 # fail 0 
+ M server/db.js
+ M server/preboarding-workspace.js
+
+=== (6) full suite ===
+  exit=0  # tests 168 # suites 35 # pass 168 # fail 0 
+  failing tests: 0
+
+=== (7) the live product database, after (same bytes, same mtime) ===
+  /home/team/.data/antum-product.db  229376 bytes  mtime=2026-10-12 06:42:04.560798208 +0000
+7c74c485fe925a6d0498df825d40f64c  /home/team/.data/antum-product.db
+  live product on 3000: 200
+=== done ===

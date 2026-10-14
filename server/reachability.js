@@ -262,11 +262,51 @@ function columnWriters(column) {
   return hits;
 }
 
+/**
+ * The statement-level paths that could WRITE `column`: the column list of an INSERT, and any
+ * `[...].includes(key)` key whitelist in the route file. Parsed structurally (balanced parens, the
+ * quoted keys inside the array), not by counting strings.
+ *
+ * Why this exists next to `columnWriters` above: that one searches LINE BY LINE for `INSERT …
+ * column`, `UPDATE … SET … column` or `column =`, so it cannot see a column named on the
+ * continuation line of a multi-line INSERT, nor a key admitted by an array checked with
+ * `.includes(key)`. Both remaining writers of the retired consent flag were of exactly those two
+ * shapes, which is how a tile's value could be written by two routes while `columnWriters` reported
+ * the demo seeder as the only writer.
+ */
+function columnWritePaths(column) {
+  const src = read(ROUTE_FILE);
+  const lineOf = (i) => src.slice(0, i).split('\n').length;
+  const hits = [];
+  for (const m of src.matchAll(/INSERT\s+INTO\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g)) {
+    const open = m.index + m[0].length - 1;
+    let depth = 0;
+    let end = -1;
+    for (let i = open; i < src.length; i += 1) {
+      if (src[i] === '(') depth += 1;
+      else if (src[i] === ')') { depth -= 1; if (depth === 0) { end = i; break; } }
+    }
+    if (end === -1) continue;
+    const cols = src.slice(open + 1, end).split(',').map((c) => c.trim()).filter(Boolean);
+    if (cols.includes(column)) {
+      hits.push({ kind: 'insert', what: `INSERT INTO ${m[1]} names it in its column list`, line: lineOf(open) });
+    }
+  }
+  for (const m of src.matchAll(/\[([^\]]*)\]\.includes\(\s*key\s*\)/g)) {
+    const keys = [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]);
+    if (keys.includes(column)) {
+      hits.push({ kind: 'whitelist', what: `a key whitelist of ${keys.length} keys admits it`, line: lineOf(m.index) });
+    }
+  }
+  return hits;
+}
+
 module.exports = {
   ROOT,
   parseRoutes, parseCallSites, canonPath, classify, unregisteredCallSites,
   routesAfterCatchAll, uiStateReachability, columnWriters, shapesOverlap, listFiles, read,
   parseNoticeBases, requestControlGuard, deadEndItems, routeHasTest, tablesTouchedByRoute,
+  columnWritePaths,
 };
 
 /**

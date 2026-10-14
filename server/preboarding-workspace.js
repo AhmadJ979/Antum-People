@@ -53,8 +53,10 @@
  * - **The number of lines** is likewise a product call. This set is the spec's direction table
  *   instantiated, and it is a table, not a code path.
  * - **Lines that would duplicate a fact the product already derives are omitted on purpose, so
- *   there is one source per fact.** "Consent recorded" is the PDPL consent record the employee
- *   track's gate already reads; "visa/entry-permit tracking" is the employee track's own
+ *   there is one source per fact.** "Consent recorded" would name the employee-record consent flag
+ *   the product **retired** on 2026-10-13 (owner decision 17): what the gate actually reads is the
+ *   notice recorded as *shown*, one row per collectable document per case, with its basis, the
+ *   notice version and a named actor. "visa/entry-permit tracking" is the employee track's own
  *   `visa_or_entry_permit` item; "signed JD filed"/"signed NDA filed" are the P2-3
  *   acknowledgement records. A second line for any of them could disagree with the record the
  *   product already holds, and a disagreement between two of our own surfaces is worse than a

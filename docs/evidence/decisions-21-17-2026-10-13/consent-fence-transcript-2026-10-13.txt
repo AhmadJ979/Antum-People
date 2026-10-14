@@ -1,0 +1,49 @@
+=== (A) no caller sends the retired key ===
+-- every mention of consent_granted/consent_date in client/src, server, scripts, tests:
+client/src/App.tsx:25:  consent_granted: number;
+client/src/App.tsx:26:  consent_date: string | null;
+server/index.js:197:    // `consent_granted`. The company-visible column keeps its schema DEFAULT 0 — what is removed is
+server/index.js:256:      // Decision 17 fence (2026-10-13): `consent_granted` was removed from this numeric whitelist.
+server/index.js:360:// consent_records plus `UPDATE employees SET consent_granted = 1, consent_date = ...` — and no
+server/index.js:425:// 17 retires. Removing it also removed the only server-side READER of `employees.consent_granted`.
+server/schema.sql:22:  consent_granted INTEGER DEFAULT 0,
+server/schema.sql:23:  consent_date TEXT,
+server/schema.sql:98:  consent_date TEXT,
+scripts/seed-demo.js:314:    // Decision 17 (2026-10-13): this insert no longer writes `consent_granted` / `consent_date`.
+scripts/seed-demo.js:493:      INSERT OR REPLACE INTO consent_records (id, employee_id, consent_type, status, consent_date)
+scripts/reachability-report.js:111:for (const col of ['consent_granted', 'consent_date']) {
+-- call sites that SEND it (a request body naming the key):
+   none — no request body names it
+
+=== (B) the write-path count, before and after, measured by columnWritePaths ===
+   edited file md5: 67add8fa51194accd9fd393c1a1375c6  /tmp/fence-after-index.js
+   after  (working tree): []
+   before (HEAD, the merged state): [{"kind":"insert","what":"INSERT INTO employees names it in its column list","line":197},{"kind":"whitelist","what":"a key whitelist of 6 keys admits it","line":254}]
+   restored: 67add8fa51194accd9fd393c1a1375c6 (must equal the edited md5 above)
+
+=== (C) the new assertion: green, then RED on each of its three branches ===
+   green: exit=0  # tests 12 # pass 12 # fail 0 
+   whitelist branch: exit=1  # pass 11 # fail 1 
+         +   'a key whitelist of 6 keys admits it (server/index.js:258)'
+   INSERT branch:    exit=1  # pass 11 # fail 1 
+         +   'INSERT INTO employees names it in its column list (server/index.js:200)'
+   dropped-column:   exit=1  # pass 11 # fail 1 
+       error: 'the column was dropped: decision 17 keeps it (enumerated first, recommended later) — dropping it is a separate decision, not a tidy-up'
+   green again: exit=0  # tests 12 # pass 12 # fail 0 
+   tree now:
+      M scripts/reachability-report.js
+      M server/index.js
+      M server/reachability.js
+      M server/reachability.test.js
+
+=== (D) item (1) is still green next to this ===
+   guard: exit=0  # tests 3 # pass 3 # fail 0 
+
+=== (E) the report script and the full suite ===
+   report: exit=0  last line: Nothing new: every un-operable element on this product is registered with an owner.
+     RETIRED COLUMNS
+     a retired instrument must not keep a write path (decision 17 fence)
+     ==============================================================================
+       [fenced] consent_granted
+   suite: exit=0  # tests 169 # suites 35 # pass 169 # fail 0 
+=== done ===

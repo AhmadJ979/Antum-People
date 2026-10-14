@@ -193,12 +193,14 @@ app.post('/api/employees', async (req, res) => {
     const encryptedNationalId = auth.encrypt(data.national_id_value);
     const encryptedIqama = auth.encrypt(data.national_id_iqama);
 
+    // Decision 17 fence (2026-10-13, lead's ruling): this INSERT no longer names
+    // `consent_granted`. The company-visible column keeps its schema DEFAULT 0 — what is removed is
+    // the product's second write path to a retired instrument, not the column.
     const insertSql = `
       INSERT INTO employees (
         id, first_name, last_name, email, department, role, manager_id, start_date, status, salary, basic_salary, 
         recruitment_cost, national_id_type, national_id_value, national_id_iqama, data_residency_country, 
         jurisdiction, total_salary,
-        consent_granted, 
         visa_status, visa_expiry_date, eosb_accrued, eosb_paid, termination_type, unpaid_leave_days
       )
       VALUES (
@@ -210,7 +212,7 @@ app.post('/api/employees', async (req, res) => {
         ${db.escapeString(encryptedIqama)},
         ${db.escapeString(country)}, 
         ${db.escapeString(country)}, ${tSalary},
-        0, ${db.escapeString(data.visa_status)},
+        ${db.escapeString(data.visa_status)},
         ${db.escapeString(data.visa_expiry_date)}, ${eosbAccrued}, 0,
         'resignation', ${parseFloat(data.unpaid_leave_days) || 0}
       )
@@ -251,7 +253,9 @@ app.put('/api/employees/:id', async (req, res) => {
         }
       } else if (['national_id_value', 'national_id_iqama'].includes(key)) {
         updates.push(`${key} = ${db.escapeString(auth.encrypt(data[key]))}`);
-      } else if (['salary', 'basic_salary', 'recruitment_cost', 'eosb_paid', 'consent_granted', 'unpaid_leave_days'].includes(key)) {
+      // Decision 17 fence (2026-10-13): `consent_granted` was removed from this numeric whitelist.
+      // A retired instrument must not keep a write path; the column stays with DEFAULT 0.
+      } else if (['salary', 'basic_salary', 'recruitment_cost', 'eosb_paid', 'unpaid_leave_days'].includes(key)) {
         const val = parseFloat(data[key]) || 0;
         updates.push(`${key} = ${val}`);
         if (key === 'salary') {

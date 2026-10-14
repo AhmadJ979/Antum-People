@@ -299,14 +299,24 @@ other. `CALLERLESS` drops the three entries; **`DISPLAYED_VALUES` is now empty, 
 register says what emptied it and what the empty state means** — an empty register without that sentence is
 a silent deletion, which is the thing the register exists to prevent.
 
-### 9.2 The columns stay, and here is who touches them now
+### 9.2 The columns stay, and here is who touches them now — **fenced 2026-10-13 (lead's ruling)**
 
 `employees.consent_granted` / `consent_date` are **not dropped**: readers in the product **0** (the last
-server-side reader was element 4; the tile was the only client reader); writers still present **2** — `POST
-/api/employees` (`server/index.js:201`) writes the literal `0`, and `PUT /api/employees/:id`'s numeric
-whitelist (`:254`) still admits the key. No path can produce the `GRANTED` state the tile printed.
-`consent_records` keeps its table and schema; production writers now **none** (the seeder writes 13 rows).
-**Follow-up, not done:** narrow the PUT whitelist and drop the column from the INSERT list.
+server-side reader was element 4; the tile was the only client reader). The **two writers this section
+originally reported as remaining are now gone** — `POST /api/employees` no longer names the column in its
+INSERT (nor carries its `0` in the value list), and `PUT /api/employees/:id`'s numeric whitelist no longer
+admits the key. Measured by the shipped check itself, `columnWritePaths('consent_granted')`: **2 → 0**
+(`docs/evidence/decisions-21-17-2026-10-13/consent-fence-2026-10-13.md`). The columns keep their schema
+`DEFAULT 0`; `consent_records` keeps its table and schema; the demo seeder still writes its 13
+purpose-scoped rows. A test now asserts the write-path set is empty **and** that the column is still in
+`schema.sql` — both halves reddened deliberately before being trusted.
+
+**Why the earlier count was incomplete, recorded so the next reader does not repeat it:** the
+`columnWriters()` check searches line by line for `INSERT … column` / `UPDATE … SET … column` / `column =`,
+so it could not see a column on the continuation line of a multi-line INSERT, nor a key admitted by an
+`.includes(key)` whitelist array. Both of the instrument's remaining writers were of exactly those shapes —
+which is how "the only writer is the demo seeder" could be reported while two routes could write the flag.
+The new `columnWritePaths()` parses the INSERT column list and the whitelist arrays structurally.
 
 ### 9.3 Deliberately untouched
 
@@ -316,8 +326,15 @@ and the Exit modal (element 7, decision 16) are unchanged. `GET
 /api/compliance/templates/:templateName/:employeeId` also decrypts both ID columns and was left alone on
 purpose — it renders them into a document the employee is a party to.
 
-### 9.4 Cutover debt, measured
+### 9.4 Cutover debt, measured — re-taken 2026-10-13 against the then-current `origin/main` (rule 22)
 
-PR scope 6 files (+190/−73); `server/index.js` +20/−33; served tree `9d2182a` → head 103 files, of which
-**1 under `client/`** and **8 under `server/`**. Both a served server file and the client bundle change, so
-the next cutover is owed.
+`origin/main` at measurement time **`9ce469d`**; served tree **`9d2182a`**.
+
+| measurement | value |
+|---|---|
+| `9d2182a` → `origin/main` | **114 files** — `client/` **1**, `server/` **8** |
+| `9d2182a` → the branch's working tree (PR #186 + the fence commit) | **118 files** — `client/` **1**, `server/` **10** |
+| client asset | moves: served `index-Cc1GodRa.js` 274,065 B md5 `9cdfbe5d…` → `index-Bh1-0KrL.js` 274,243 B md5 `91f05725…` |
+
+Both a served server file and the client bundle change, so the next cutover is owed — and it is **not taken
+here**. Deploy what `origin/main` is, not what a branch is.
