@@ -145,7 +145,7 @@ const RETIRED = {
         + 'called it. The instrument is retired: the product records the notice as SHOWN, one row '
         + "per collectable document per pre-boarding case, with that document's basis, the notice's "
         + 'version and a named actor. The `consent_records` TABLE stays (purpose-scoped consent is '
-        + "decision 14's subject) — this takes away the door, not the store.",
+        + "decision 17's subject) — this takes away the door, not the store.",
     },
     'GET /api/compliance/report': {
       removed: '2026-10-13',

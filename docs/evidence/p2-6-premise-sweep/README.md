@@ -40,7 +40,7 @@ that gates them is a per-item record that **the notice was shown** — built, se
 | The recorded version is read from the notice the server serves, not from the caller | same comment block, `:316`–`:317` (re-derived 2026-10-14; the row said `:315`–`:317`) |
 | The record has its own route; the two **case consent routes were removed, not reworded** | `POST /api/preboarding/cases/:id/notice-acknowledgements` at `server/index.js:740`; reason at `:727`–`:730` — re-derived 2026-10-14 (the row said `:749` and `:735`–`:738`, which is the numbering before #182 and #186 took that file from 892 to 883 lines) |
 | The case-level consent table is **retired**: no reader, no writer, reason in the schema | `server/schema.sql:254`–`:267` (the reason comment; the table it retires begins `:268`) — corrected 2026-10-14 from `:255`–`:270` |
-| The **employee**-level consent path is **gone — removed, not reworded** (owner decision 17, executed 2026-10-13) | the removal record where the route stood: `server/index.js:358`–`:363`. `consent_records` is **kept** for decision 14's purpose-scoped consent; the retirement is asserted in RETIRED (`server/reachability-register.js`). **Re-derived 2026-10-14:** this row read *"still writes `consent_records`, and has no caller"*, at `:359`–`:366` — true at `a48668d`, false since #182/#186 executed the decision |
+| The **employee**-level consent path is **gone — removed, not reworded** (owner decision 17, executed 2026-10-13) | the removal record where the route stood: `server/index.js:358`–`:363`. `consent_records` is **kept** for decision 17's purpose-scoped consent *(“14” → 17, numbering corrected 2026-10-15)*; the retirement is asserted in RETIRED (`server/reachability-register.js`). **Re-derived 2026-10-14:** this row read *"still writes `consent_records`, and has no caller"*, at `:359`–`:366` — true at `a48668d`, false since #182/#186 executed the decision |
 | The client literal `{ …, lawful_basis: 'consent', consent_version: 'v1' }` is gone | `git grep consent_version origin/main -- client/src` → no client hit (re-run 2026-10-14 on `f46b7a9`) |
 
 **Why amend, and not report.** Option (b) is for a spec that asks for more than we ship. The spec asks
@@ -49,7 +49,7 @@ product answers it per item, with the basis, the version and a named actor. The 
 of P2-6 is the **hire-facing portal** (specified in §§8A–8C, blocked on owner decision 14): a portal,
 not a consent capture. The last consent *capture* the product carried — the employee-level instrument —
 has since been retired by owner decision 17, executed 2026-10-13: its route is gone, its place carries
-the removal record, and the `consent_records` table stays for decision 14's purpose-scoped consent.
+the removal record, and the `consent_records` table stays for decision 17's purpose-scoped consent *(“14” → 17, numbering corrected 2026-10-15)*.
 Nothing in the product now records a consent it cannot justify.
 
 ## 3. The source fix — the pack spec
@@ -209,8 +209,8 @@ Two consequences worth stating, both measured:
   the `server/db.js` refusal both landed in #186's cutover bundle; the remaining cutover is that bundle's,
   not a booking made here.
 - **Owner, decision 17:** **executed in the repository** (#182/#186) — the instrument is retired, its
-  route is gone, its writers are fenced to zero, and `consent_records` is kept for decision 14's
-  purpose-scoped consent. The `consent_granted`/`consent_date` **columns** are not dropped in that pass;
+  route is gone, its writers are fenced to zero, and `consent_records` is kept for decision 17's
+  purpose-scoped consent *(“14” → 17, numbering corrected 2026-10-15)*. The `consent_granted`/`consent_date` **columns** are not dropped in that pass;
   the recommendation to enumerate them first stands as filed.
 - **Lead:** the pack pointers are **moved-pointers, not stale copies** (§4) — three of them now, not two;
   and `design-concepts/COMPLIANCE-AUDIT-UI.md`'s mock copy for the consent register is the designer's
