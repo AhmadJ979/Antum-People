@@ -84,7 +84,7 @@ from the bundle clients actually load, not from a reconstruction of it.
   still set it. Neither path can set `consent_date` any more, so no path produces the GRANTED state
   the retired tile printed. **Recommendation (not done here):** narrow the PUT whitelist and drop the
   column from the INSERT list in a later change — a schema/whitelist edit, not a route removal.
-- **`consent_records`:** table and schema kept (purpose-scoped consent, decision 14). Production
+- **`consent_records`:** table and schema kept (purpose-scoped consent, decision 17). *(“14” → 17, numbering corrected 2026-10-15)* Production
   writers: **none** (the removed route was the only one). The demo seeder writes 13 rows
   (`scripts/seed-demo.js:493`).
 - `client/src/App.tsx` still declares the two fields in its `Employee` interface — the roster answers

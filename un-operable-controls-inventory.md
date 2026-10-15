@@ -296,7 +296,7 @@ deployed** — a cutover is owed (measured debt in §9.4) and is not part of thi
 | 3 | `POST /api/compliance/consent` | **removed** (decision 17) | **200 → 404**; before: wrote `consent_records` 13 → 14 *and* `consent_granted = 1, consent_date = today` on the employee row; after: neither |
 | 4 | `GET /api/compliance/report` | **removed** (decision 21) | **200 → 404**; before: `{total:13, consentGranted:13, …}` and a decrypted `alerts` array |
 | 8 | the "✓ GRANTED ON {date}" tile | **retired**; states the instrument the product operates (notice recorded as *shown*, per document, per case) | built bundle: `GRANTED ON` 1 → **0**, `MISSING / REQUIRED` 1 → **0**, `Notice-based` 0 → **1** |
-| — | the demo seeder | no longer writes `consent_granted` / `consent_date` (`scripts/seed-demo.js:314`) | freshly seeded DB: employees with the flag set **13 → 0**; `consent_records` rows **13 in both** (table kept, decision 14) |
+| — | the demo seeder | no longer writes `consent_granted` / `consent_date` (`scripts/seed-demo.js:314`) | freshly seeded DB: employees with the flag set **13 → 0**; `consent_records` rows **13 in both** (table kept, decision 17; “14” → 17, corrected 2026-10-15) |
 
 ### 9.1 What a green suite could not tell us, and what now can
 

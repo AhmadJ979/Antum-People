@@ -154,7 +154,7 @@ Measured on `main` = `a48668d`:
   rather than reworded (`server/index.js:727`–`:730`; `:735`–`:738` is the numbering before #186 took
   that file from 892 to 883 lines). The employee-level `POST /api/compliance/consent` **was removed** on
   2026-10-13 (#182, owner decision 17 executed) — the removal record stands at `:358`–`:363` — and
-  `consent_records` is kept for decision 14's purpose-scoped consent.
+  `consent_records` is kept for decision 17's purpose-scoped consent *(“14” → 17, numbering corrected 2026-10-15)*.
 - **§1 facts 2–4 and §7's last bullet are answered, not pending.** `:131`'s "Facts 2 and 3 will change
   the day 15(b) is decided, not before" — that day has come: the client literal (`client/src/App.tsx`,
   facts 2–4) is gone, the recorded version is the notice's own (v2.3), and `recorded_by` cannot be
