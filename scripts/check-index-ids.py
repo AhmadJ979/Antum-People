@@ -71,6 +71,7 @@ CONTENT_SHAS = {
     "57e6aa74",  # the merge check Round 44 read: sha256 of origin/main:roadmap-board-index.md before its edits
     "8dc7bba7",  # the merge check Round 45 read: sha256 of origin/main:roadmap-board-index.md before its edits
     "c398e567",  # the merge check Round 46 read: sha256 of origin/main:roadmap-board-index.md before its edits
+    "457e7d66",  # the merge check Round 47 read: sha256 of origin/main:roadmap-board-index.md before its edits
 }
 
 print("index checked:", INDEX)
