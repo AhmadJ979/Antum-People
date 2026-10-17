@@ -14,7 +14,7 @@ const checklistTemplates = {
       { title: 'Emirates ID Biometrics', description: 'Employee to attend biometrics appointment for Emirates ID.' },
       { title: 'Residence Visa Stamping', description: 'Complete the visa stamping/issuance in the passport or E-visa.' },
       { title: 'Wages Protection System (WPS) Registration', description: 'Register employee in the WPS for salary transfers.' },
-      { title: 'Privacy Notice Consent', description: 'Capture explicit consent for UAE PDPL compliance.' }
+      { title: 'Privacy Notice — Shown', description: 'Tick once the current privacy notice has been shown. This records the date only — no name is stored here, so the tick is an unnamed assertion; the named record (one per collectable document, with its basis, the notice version and the person who showed it) lives on the pre-boarding case. No consent flag is held on the employee record.' }
     ],
     offboarding: [
       { title: 'Hardware Return', description: 'Collect company-issued laptops, phones, and other assets.' },
@@ -35,7 +35,7 @@ const checklistTemplates = {
       { title: 'Iqama Issuance', description: 'Apply for and receive the Iqama (Residency ID).' },
       { title: 'GOSI Registration', description: 'Register the employee with the General Organization for Social Insurance.' },
       { title: 'Mudad (WPS) Enrollment', description: 'Ensure employee is enrolled in Mudad for salary protection.' },
-      { title: 'Privacy Notice Consent', description: 'Capture explicit consent for KSA PDPL compliance (Arabic first).' }
+      { title: 'Privacy Notice — Shown', description: 'Show the current privacy notice in Arabic first, then tick. This records the date only — no name is stored here, so the tick is an unnamed assertion; the named record (one per collectable document, with its basis, the notice version and the person who showed it) lives on the pre-boarding case. No consent flag is held on the employee record.' }
     ],
     offboarding: [
       { title: 'Hardware Return', description: 'Collect company-issued laptops, phones, and other assets.' },

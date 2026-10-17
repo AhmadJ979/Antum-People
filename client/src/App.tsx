@@ -1546,7 +1546,7 @@ export default function App() {
                     
                     <div className="space-y-4">
                       <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Privacy Consent (PDPL)</div>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Privacy Notice (PDPL)</div>
                         {/* Decision 17 (2026-10-13): the employee-record consent flag is retired. What
                             the product actually records is that the notice was SHOWN — one row per
                             collectable document, per pre-boarding case, carrying that document's own
