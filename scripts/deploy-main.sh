@@ -232,6 +232,14 @@ echo "--- 6. re-arm the watchdog from the tree we just deployed ---"
 # cutover then finishes with NO watchdog armed. That happened twice on 2026-10-02
 # (keep-alive.log 11:42:31 and 11:48:25). So: kill, WAIT for the old process to be
 # gone, start, then verify it is actually alive and retry once if it is not.
+# Announce the movement: from here until a guard is verified, the login-shell hook must not arm one.
+# Without this, a shell opened during the kill window below arms a guard that the reap then kills
+# ("lock still held by: 5274 — reaping before arming", observed twice). The marker carries our PID so a
+# crashed deploy's marker is recognised as stale by the hook rather than trusted forever.
+MARKER="$DEPLOY_DIR/server/deploy-in-progress"
+printf '%s\n' "$$" > "$MARKER" 2>/dev/null && echo "deploy marker written: $MARKER (pid $$)" || echo "WARNING: could not write $MARKER — the hook may race this step"
+trap 'rm -f "$MARKER" 2>/dev/null' EXIT INT TERM
+
 WD_PAT='scripts/keep-alive[.]sh'
 # Also match the pinned pre-merge guard by name. It is armed from /home/team/shared (not from
 # the tree), so 'scripts/keep-alive.sh' does NOT match its cmdline — and a guard the stop step
@@ -291,6 +299,11 @@ if ! pgrep -f 'keep-alive.*\.sh' >/dev/null; then
   echo "WARNING: NO WATCHDOG ARMED — the site will not self-heal until one is started by hand"
 fi
 # ---------------------------------------------------------------------------
+# The guard is verified by now, so the movement no longer owns it: release the claim before the hook
+# step, or a shell between here and the end would correctly stand down for nothing.
+rm -f "$MARKER" 2>/dev/null && echo "deploy marker removed: $MARKER"
+trap - EXIT INT TERM
+
 # 6b. install the login-shell hook that re-arms the watchdog after a host restart
 # ---------------------------------------------------------------------------
 # There is no cron and no systemd here, so a host restart leaves the product unguarded until a
