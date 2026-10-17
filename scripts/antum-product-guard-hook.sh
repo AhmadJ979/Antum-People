@@ -32,6 +32,8 @@
 # SAFETY / HONESTY
 #   - never fails a shell: every failure goes to the log, none is propagated to the shell
 #   - never leaves a second guard: a start is attempted only when no live guard can be verified
+#   - stands down while a deploy owns the guard (server/deploy-in-progress), and logs that it did —
+#     a stand-down nobody can see in the log would be indistinguishable from a hook that failed to run
 #   - never swallows its own failure: every attempt and every outcome is appended to
 #     server/guard-hook.log, and "started it" is written only after the start is *verified* by that
 #     same lock + /proc check — a start that is not confirmed is not a repair
@@ -63,8 +65,37 @@ if [ -z "${ANTUM_GUARD_HOOK_RAN:-}" ]; then
   }
 
   _antum_now=$(_antum_guard_pid)
-
-  if [ ! -f "$_antum_dir/scripts/keep-alive.sh" ]; then
+  # A DEPLOY OWNS THE GUARD WHILE ITS KILL WINDOW IS OPEN.
+  #   Observed twice (2026-10-15, 2026-10-17): step 6 kills the old guard, a login shell in that window
+  #   finds no verified guard, arms one through this hook, and step 6 then reaps it as a stale lock holder
+  #   ("lock still held by: 5274 — reaping before arming"). One guard in the end, but the outcome is
+  #   decided by timing. So the deploy writes server/deploy-in-progress (its PID) and this hook stands
+  #   down while that claim is live.
+  #   WHY A STALE MARKER CANNOT STRAND THE GUARD — the property that decides whether this marker is safe:
+  #   the claim is believed only while BOTH hold — the PID in it is still alive AND the marker is younger
+  #   than TTL. A deploy killed by SIGKILL or a host death leaves the file with a dead PID, so the very
+  #   next shell logs it as stale and arms. A PID reused by an unrelated live process is bounded by the
+  #   age test. Worst case with the marker stuck and its PID somehow alive: TTL seconds without a guard,
+  #   which is smaller than the window this replaces, and every stand-down is logged.
+  _antum_marker="$_antum_dir/server/deploy-in-progress"
+  _antum_stand_down=""
+  if [ -f "$_antum_marker" ]; then
+    _antum_mpid=$(/usr/bin/head -1 "$_antum_marker" 2>/dev/null)
+    _antum_mtime=$(/usr/bin/stat -c %Y "$_antum_marker" 2>/dev/null || echo 0)
+    _antum_mage=$(( $(/usr/bin/date -u +%s) - ${_antum_mtime:-0} ))
+    _antum_ttl="${ANTUM_DEPLOY_MARKER_TTL:-900}"
+    case "$_antum_mpid" in '' | *[!0-9]*) _antum_mpid="" ;; esac
+    if [ -n "$_antum_mpid" ] && [ -d "/proc/$_antum_mpid" ] && [ "$_antum_mage" -lt "$_antum_ttl" ]; then
+      _antum_stand_down=1
+      _antum_note "deploy in progress (pid $_antum_mpid, marker ${_antum_mage}s old, ttl ${_antum_ttl}s) — standing down, not arming a guard"
+    else
+      _antum_note "stale deploy marker (pid ${_antum_mpid:-unknown}, ${_antum_mage}s old, ttl ${_antum_ttl}s) — ignoring it and arming as usual"
+    fi
+    unset _antum_mpid _antum_mtime _antum_mage _antum_ttl
+  fi
+  if [ -n "$_antum_stand_down" ]; then
+    : # the deploy is in its kill window; arming here is what caused the race
+  elif [ ! -f "$_antum_dir/scripts/keep-alive.sh" ]; then
     _antum_note "FAILED: no guard to arm at $_antum_dir/scripts/keep-alive.sh"
   elif [ -n "$_antum_now" ]; then
     _antum_note "guard already running (pid $_antum_now), nothing to do"
@@ -84,6 +115,6 @@ if [ -z "${ANTUM_GUARD_HOOK_RAN:-}" ]; then
     unset _antum_new _antum_try
   fi
 
-  unset _antum_now _antum_dir _antum_lock _antum_log
+  unset _antum_now _antum_dir _antum_lock _antum_log _antum_marker _antum_stand_down
   unset -f _antum_guard_pid _antum_note 2>/dev/null
 fi
