@@ -265,6 +265,11 @@ console.log(drift.length
   ? drift.map((s) => `  ${s.method} ${s.canon} at ${s.file}:${s.line}`).join('\n')
   : '  none');
 for (const s of drift) findings.add(`drift:${s.method} ${s.canon} at ${s.file}:${s.line}`);
+const prose = r.proseMentions();
+if (prose.length) {
+  console.log(`  (${prose.length} quoted mention(s) NOT counted as callers — a path in prose issues no request: ` +
+    prose.map((s) => `${s.file}:${s.line}`).join(', ') + ')');
+}
 
 const newFindings = findings.size;
 console.log(`\n${newFindings === 0

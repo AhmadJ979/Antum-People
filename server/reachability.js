@@ -97,7 +97,23 @@ function canonPath(p) {
 }
 
 /** Every `/api/...` a non-test file mentions, with the method its own call states. */
-function parseCallSites() {
+const REQUEST_PRIMITIVE = /\b(curl|wget|http\.request|https?\.get|requests\.(?:get|post|put|delete|patch)|fetch\s*\(|axios[\s.(])/;
+
+/**
+ * One scanner, two predicates — because the question is not "does this string appear" but "what is it
+ * doing here". An /api path appears in two roles:
+ *   - a CALL SITE: a code position that issues a request (fetch/axios/api helper in the client, curl or
+ *     wget in a script)
+ *   - a QUOTATION: prose, a comment, an echo/print describing what was verified
+ * On 2026-10-17 the preflight's own line "the two retired routes answer 404 (...)" counted as a call site
+ * and turned the gate red for a non-defect. Nothing was re-added; the sentence was doing its job.
+ * Scripts are judged on a request primitive within three lines either way of the mention, because a curl
+ * invocation split across lines is still one call. JS/TS keeps the looser treatment: its call idiom
+ * varies across this codebase, and narrowing it there would be a guess that silently loses callers.
+ * A prose mention is COUNTED and PRINTED, never silently dropped — a check that shrinks quietly prints
+ * the same green as one that examined everything.
+ */
+function scanApiMentions(kind) {
   const sites = [];
   const callRe = /\/api\/[A-Za-z0-9_\-/${}.]*(?=[?'"`\s,)]|$)/g;
   for (const { scope, dir } of SCAN_ROOTS) {
@@ -111,6 +127,11 @@ function parseCallSites() {
         if (/^\s*app\.(get|post|put|delete|patch)\(\s*'/.test(line)) return;
         for (const m of line.matchAll(callRe)) {
           const raw = m[0];
+          // the role test: a path quoted in a shell script issues nothing unless a request primitive is
+          // within reach of it
+          const window = lines.slice(Math.max(0, idx - 3), idx + 4).join('\n');
+          const issues = scope !== 'scripts' || REQUEST_PRIMITIVE.test(window);
+          if (kind === 'prose' ? issues : !issues) continue;
           let method = null;
           for (const probe of lines.slice(idx, idx + 4)) {
             const js = /method:\s*'([A-Za-z]+)'/.exec(probe);
@@ -128,6 +149,15 @@ function parseCallSites() {
     }
   }
   return sites;
+}
+
+function parseCallSites() {
+  return scanApiMentions('calls');
+}
+
+/** Paths quoted without issuing a request. Reported, never silently discarded. */
+function proseMentions() {
+  return scanApiMentions('prose');
 }
 
 /**
@@ -184,9 +214,27 @@ function classify(routes = parseRoutes(), sites = parseCallSites()) {
 }
 
 /** Call sites naming a path+method the product does not register — a typo, or drift. */
+/**
+ * Route matching, not string equality.
+ *   A route's ':id' canonicalises to '*'; a caller writes the real value ('demo-emp-sarah'). Equality
+ *   can therefore only ever compare two texts that happen to agree character for character — which is
+ *   how a genuine caller of GET /api/employees/:id/offboarding was reported as drift on 2026-10-17.
+ *   '*' matches exactly one segment on either side, which is what an Express parameter does, and the
+ *   segment count must agree, so a wildcard cannot swallow a longer path.
+ */
+function pathMatches(routeKey, siteKey) {
+  const a = routeKey.split('/');
+  const b = siteKey.split('/');
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== '*' && b[i] !== '*' && a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 function unregisteredCallSites(routes = parseRoutes(), sites = parseCallSites()) {
-  const known = new Set(routes.map((r) => `${r.method} ${canonPath(r.path)}`));
-  return sites.filter((s) => !s.dynamic && !known.has(`${s.method} ${s.canon}`));
+  const canons = routes.map((r) => `${r.method} ${canonPath(r.path)}`);
+  return sites.filter((s) => !s.dynamic && !canons.some((c) => pathMatches(c, `${s.method} ${s.canon}`)));
 }
 
 /**
@@ -303,7 +351,7 @@ function columnWritePaths(column) {
 
 module.exports = {
   ROOT,
-  parseRoutes, parseCallSites, canonPath, classify, unregisteredCallSites,
+  parseRoutes, parseCallSites, proseMentions, pathMatches, canonPath, classify, unregisteredCallSites,
   routesAfterCatchAll, uiStateReachability, columnWriters, shapesOverlap, listFiles, read,
   parseNoticeBases, requestControlGuard, deadEndItems, routeHasTest, tablesTouchedByRoute,
   columnWritePaths,
