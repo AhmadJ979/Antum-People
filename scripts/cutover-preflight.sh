@@ -54,16 +54,22 @@ PUBLIC="${ANTUM_PUBLIC:-https://b974147c03228029e277d1cbe6646fe6.ctonew.app}"
 BUNDLE=/home/team/shared/cutover-rollback-9d2182a
 ASSET_MD5=9cdfbe5da81f6acf38fdb10de8a5e6fd
 IDXJS_MD5=7467cec01c90cc3a1fb0156999c1997a
-# The commit whose built bundle this package can state. Moved 2026-10-15 from 8e7e2c3 to e19a98a — the
-# tip the 2026-10-14 cutover actually built and shipped, so the asset hashes below are measured against
-# the bytes the host serves right now (274243 B / 91f05725…, verified over the public URL, not restated
-# from the earlier package). The DISK figures (peak build need, reset delta) were sampled on the
-# 2026-10-14 package; a movement whose delta has grown must re-sample them — the only hard disk gate here
-# is MIN_FREE_KB, which is a floor.
-MEASURED_TIP="${ANTUM_MEASURED_TIP:-e19a98a}"
-MEASURED_ASSET=index-Bh1-0KrL.js
-MEASURED_ASSET_BYTES=274243
-MEASURED_ASSET_MD5=91f05725a25c2b7b1f4328f1a5a110d5
+# The commit whose built bundle this package can state.
+#   Re-measured 2026-10-17 at the tip the movement will ship (previously e19a98a): a FRESH build of this
+#   tree emitted index-BG0peuOK.js, 274,242 B, md5 f65f15c1…, with the CSS byte-identical to the previous
+#   package (index-pNSrK3wr.css, 35,365 B, eda54820…) — the bundle moved because one string moved, and it
+#   moved by one byte. The identity of the new bundle is stated by the counts, not the delta: the new
+#   eyebrow "Privacy Notice (PDPL)" appears once and "Privacy Consent (PDPL)" zero times in the emitted
+#   file, measured twice independently (branch, then merged main).
+#   DISK: the build's own consumption was BELOW the 50 ms df sampling floor (peak_used 0 KB against the
+#   ~3.8 MB the package reserves, net 0 KB with dist replaced in place), so no new peak figure is claimed;
+#   MIN_FREE_KB stays the hard floor and the reservation stays the conservative number.
+#   If the tip moves again with client/ unchanged, the gate warns and keeps this asset; if client/ moves,
+#   it refuses until this block is re-measured. That refusal is the gate working, not an obstacle.
+MEASURED_TIP="${ANTUM_MEASURED_TIP:-8fb4390}"
+MEASURED_ASSET=index-BG0peuOK.js
+MEASURED_ASSET_BYTES=274242
+MEASURED_ASSET_MD5=f65f15c109e76e86cd8b8abe7102f748
 MEASURED_CSS=index-pNSrK3wr.css
 MEASURED_CSS_BYTES=35365
 MEASURED_CSS_MD5=eda548202468a7e0293053981037a594
