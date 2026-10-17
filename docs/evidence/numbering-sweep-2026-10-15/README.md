@@ -102,6 +102,17 @@ discipline the sweep is about:
   script mentions the retired route inside a probe string, and the scan reads a mention as a call site.**
   The report script prints the same thing as *"1 NEW finding"*. Reported to the lead; the fix belongs to
   #196's author, not to this sweep.
+* **The whole suite, re-measured 2026-10-17 at the branch tip and on a pristine `git worktree` of
+  `origin/main` (`2a44858`): `161 tests, 159 pass, 2 fail` — and the two reds are identical on both
+  trees, so neither is this branch's.** The reds are `server/demo-seed.test.js` (top-level test 2) and the
+  reachability scan (test 43 — the same `GET /api/compliance/report at scripts/cutover-preflight.sh:223`
+  drift recorded above). **The first is this machine, not the repository:** `server/demo-seed.test.js:48`
+  shells out to `scripts/seed-demo.js`, which loads `server/compliance_engine.js`, whose first line
+  requires `uuid` — and this clone has **no `node_modules` at all** (`require.resolve('uuid')` unresolved
+  from `server/`), so the test dies before any assertion runs. **So that count is a reading of this box,
+  not of the deploy gate:** the `164/164 ×5` and `169/169` figures in the plan were taken on an installed
+  tree, and the two are not interchangeable. The bullet above (`server/reachability.test.js` → 12/11/1) is
+  scoped to **one file** and is still true of it; it is not a suite result and should not be read as one.
 
 ## What was not re-checked
 
