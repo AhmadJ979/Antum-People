@@ -25,12 +25,32 @@ happened and **none of it is recorded in the file `main` serves**:
 
 ## Where the pending record is
 
-- **`docs/round-47-recut` @ `b5dce11`** — 11 files, **+477/−11**, laid on `29a2a4d`: the index's
+- **`docs/round-47-recut` @ `b5dce11`** — the round content: 11 files, **+477/−11**, laid on `29a2a4d`: the index's
   `## Last re-checked` and Round 47 block, four files under `docs/evidence/numbering-sweep-2026-10-15/`,
   three evidence READMEs, `pdpl-lawful-basis-mapping.md`, `un-operable-controls-inventory.md`, and
   the one-string subject correction in `server/reachability-register.js` (decision 14 → 17).
   `scripts/check-index-ids.py` exits 0 on it.
 - It **supersedes** `docs/round-47-numbering-sweep-and-cutover` @ `86a77fd` (PR #198, closed).
+- **The branch tip is `939683f`, not `b5dce11`** — because it also carries *this note*. `b5dce11`
+  is the round content; `939683f` adds the marker on top. Quote whichever you mean.
+
+## What the mitigation has never done — measured on the 2026-10-17 event
+
+**The login-shell hook has never yet been observed to re-arm a guard after an event. The recovery
+has, twice.**
+
+- The installed hook is `/etc/profile.d/zz-antum-product-guard.sh`, and its **mtime is 18:51:06** —
+  *after* the event began, not before.
+- `server/guard-hook.log` is **silent from 18:40:01 to 19:02:53**: no login shell ran it across the
+  outage.
+- What re-armed the guard was the **recovery path**: `server/keep-alive.log` records
+  `18:41:52 armed as its own session leader (pid 21036)` and `18:42:15 … (pid 22723)`.
+- By **19:16** the public URL served the cutover's own bytes (274,243 B, md5 `91f05725…`) with the
+  API answering 401.
+
+**No artifact on this host timestamps the first answer**, so no outage or repair duration may be
+quoted from this event. `ps lstart` is 17m56s late on both live processes, and `/proc/stat btime`
+reads later than live processes' own records.
 
 ## Why it is not on `main`
 
