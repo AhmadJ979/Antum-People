@@ -31,8 +31,10 @@ happened and **none of it is recorded in the file `main` serves**:
   the one-string subject correction in `server/reachability-register.js` (decision 14 → 17).
   `scripts/check-index-ids.py` exits 0 on it.
 - It **supersedes** `docs/round-47-numbering-sweep-and-cutover` @ `86a77fd` (PR #198, closed).
-- **The branch tip is `939683f`, not `b5dce11`** — because it also carries *this note*. `b5dce11`
-  is the round content; `939683f` adds the marker on top. Quote whichever you mean.
+- **`b5dce11` is the round content.** This note was added on top of it, and the branch tip moves
+  whenever the note is edited — so quote **`b5dce11`** for the round, and the **branch name** for
+  the note. (An earlier draft of this line named the tip, and was wrong within ten minutes: a sha
+  that moves is not a reference.)
 
 ## What the mitigation has never done — measured on the 2026-10-17 event
 
