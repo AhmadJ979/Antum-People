@@ -166,8 +166,8 @@ A: **Say this plainly:** "The calculation is live and it's the engine's own numb
 
 ### Click path
 1. Sidebar → **Employee Directory** → click **Omar Al-Farsi** (status *ONBOARDING*) → his **Onboarding Checklist** opens.
-2. Walk it — **7 steps, 2 complete** (read 2026-10-08): **MoHRE Contract Signing ✓**, **Entry Permit Issuance ✓**, then **Medical Fitness Test**, **Emirates ID Biometrics**, **Residence Visa Stamping**, **Wages Protection System (WPS) Registration**, **Privacy Notice Consent**.
-3. Point at the **Compliance Center**: the **Privacy Consent (PDPL)** tile now **states the instrument instead of printing a status** — **"Notice-based — recorded per pre-boarding case"**, and under it *"One record per document that can be collected, with its basis, the notice version and the person who showed it. No consent flag is held on the employee record."* **The old `✓ GRANTED ON 2026-09-23` line was retired on 2026-10-13 with the employee-record consent instrument (decision 17) — do not say a date, because there is none to read.**
+2. Walk it — **7 steps, 2 complete** (read 2026-10-08): **MoHRE Contract Signing ✓**, **Entry Permit Issuance ✓**, then **Medical Fitness Test**, **Emirates ID Biometrics**, **Residence Visa Stamping**, **Wages Protection System (WPS) Registration**, **Privacy Notice — Shown**.
+3. Point at the **Compliance Center**: the **Privacy Notice (PDPL)** tile now **states the instrument instead of printing a status** — **"Notice-based — recorded per pre-boarding case"**, and under it *"One record per document that can be collected, with its basis, the notice version and the person who showed it. No consent flag is held on the employee record."* **The old `✓ GRANTED ON 2026-09-23` line was retired on 2026-10-13 with the employee-record consent instrument (decision 17) — do not say a date, because there is none to read.**
 4. Point at the roster row itself: **ONBOARDING · AED 0.00 · "Accrued to date"** — a hire mid-flow accrues nothing yet, which is the honest reading.
 
 ### What the customer sees
