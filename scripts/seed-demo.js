@@ -486,14 +486,23 @@ async function seed() {
     `);
   }
 
-  // 6. Consent Records
-  console.log('Upserting consent records...');
-  for (const emp of allEmployees) {
-    await db.query(`
-      INSERT OR REPLACE INTO consent_records (id, employee_id, consent_type, status, consent_date)
-      VALUES (${db.escapeString('demo-consent-' + emp.id)}, ${db.escapeString(emp.id)}, 'PDPL_DATA_PROCESSING', 'granted', '2026-09-23 09:00:00')
-    `);
-  }
+  // 6. Consent Records — DELIBERATELY NOT SEEDED (decision 17, applied one table over, 2026-10-17)
+  //
+  // This block wrote one row per employee into consent_records: status 'granted', a hard-coded
+  // 2026-09-23, and lawful_basis / consent_version / granted_at all NULL. Nothing reads that table —
+  // there is no SELECT anywhere in server/ or client/src/ — so it was never a live defect in what a
+  // user sees. It was the seeder ASSERTING a consent that never happened, which is exactly what
+  // decision 17 ruled out for employees.consent_granted.
+  //
+  // Why nothing is seeded instead of "honest rows": a real grant carries a purpose, a basis, the notice
+  // version and a named actor, and the demo has none of those to offer — inventing them would fabricate
+  // an instrument in a product that deliberately holds none. The table itself stays, because the subject
+  // is what decision 17 kept; when a purpose-scoped consent control exists (Layer 3, with accounts), the
+  // seeder can carry rows with a sample marker plus basis, version and granted_at.
+  //
+  // The DELETE at the top of this script is kept on purpose: a row written by an earlier version of this
+  // seeder must not survive a re-seed and sit there claiming a grant.
+  console.log('Consent records: none seeded (decision 17 — no instrument, and nothing reads the table).');
 
   // 7. Layer 2 — pre-boarding demo cases (owner decision, 2026-10-07)
   //
