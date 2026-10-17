@@ -146,6 +146,8 @@ $ git show origin/main:templates/privacy-notice.md | sed -n '6p;247p'
 $ git show origin/main:demo-weak-screens.md | sed -n '64p'
 **And do not resolve the consent label.** The live endpoint answers `{"consent": null}` on all three cases, so the demo's own **"3 WITHOUT CONSENT"** wording is still true today. Owner decision 14 — consent versus a notice acknowledgement — is **open**, so this document keeps the label accurate and leaves the decision alone.
 ```
+> **Numbering note, appended 2026-10-15.** The paragraph quoted above is a transcript of `demo-weak-screens.md:64` as it read then, and it keeps its own words and its own number. The question it calls *“owner decision 14”* — consent versus a notice acknowledgement — is **decision 15(b)**: 14 is the portal-identity question. `pdpl-lawful-basis-mapping.md:135` carries the same caution, and the sweep's record is `docs/evidence/numbering-sweep-2026-10-15/`.
+
 
 ## The frozen engine, untouched
 
