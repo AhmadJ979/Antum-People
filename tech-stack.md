@@ -41,8 +41,8 @@ Contains critical employee demographic, operational, financial, and regulatory m
 | `national_id_value` | `TEXT` | - | Document identifier value. |
 | `national_id_iqama` | `TEXT` | - | Iqama number specifically (dual-mapped for Saudi compatibility). |
 | `data_residency_country`| `TEXT` | `'AE'` | Physical host country of the employee's personal data. |
-| `consent_granted` | `INTEGER` | `0` (False) | PDPL/GDPR explicit privacy consent flag (1 = True, 0 = False). |
-| `consent_date` | `TEXT` | - | Timestamp when privacy consent was explicitly granted. |
+| `consent_granted` | `INTEGER` | `0` (False) | **Retired instrument, column retained** (decision 17, 2026-10-13): no writer, no reader, no display — the column exists at its default only. The consent *subject* lives in `consent_records` and `preboarding_notice_acknowledgements`. |
+| `consent_date` | `TEXT` | - | **Retired instrument, column retained** with `consent_granted`: never written, never read. Dropping it is a separate, enumerated decision. |
 | `visa_status` | `TEXT` | - | Visa residency processing stage (`citizen`, `sponsored`, `pending_clearance`). |
 | `visa_expiry_date` | `TEXT` | - | Visa expiration date (for proactive compliance alerting). |
 | `basic_salary` | `REAL` | `0.0` | Contractual basic salary (used as the primary base for UAE EOSB). |

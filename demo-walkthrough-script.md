@@ -162,21 +162,21 @@ A: **Say this plainly:** "The calculation is live and it's the engine's own numb
 
 # Segment 2 — Onboarding, UAE sequence (2:00 – 3:00)
 
-**Goal:** Show onboarding as a live, UAE-specific flow that captures consent as data — not a PDF afterthought. Keep this tight: Segment 3 is the new material.
+**Goal:** Show onboarding as a live, UAE-specific flow that records the privacy notice as **shown** — per document, in-flow — not a PDF afterthought. Keep this tight: Segment 3 is the new material.
 
 ### Click path
 1. Sidebar → **Employee Directory** → click **Omar Al-Farsi** (status *ONBOARDING*) → his **Onboarding Checklist** opens.
 2. Walk it — **7 steps, 2 complete** (read 2026-10-08): **MoHRE Contract Signing ✓**, **Entry Permit Issuance ✓**, then **Medical Fitness Test**, **Emirates ID Biometrics**, **Residence Visa Stamping**, **Wages Protection System (WPS) Registration**, **Privacy Notice Consent**.
-3. Point at the **Compliance Center**: the **PDPL consent** line reads **"✓ GRANTED ON 2026-09-23"** on this record (from the record's own `consent_date`; every seeded record carries a date, so a `GRANTED ON null` line cannot render from this dataset).
+3. Point at the **Compliance Center**: the **Privacy Consent (PDPL)** tile now **states the instrument instead of printing a status** — **"Notice-based — recorded per pre-boarding case"**, and under it *"One record per document that can be collected, with its basis, the notice version and the person who showed it. No consent flag is held on the employee record."* **The old `✓ GRANTED ON 2026-09-23` line was retired on 2026-10-13 with the employee-record consent instrument (decision 17) — do not say a date, because there is none to read.**
 4. Point at the roster row itself: **ONBOARDING · AED 0.00 · "Accrued to date"** — a hire mid-flow accrues nothing yet, which is the honest reading.
 
 ### What the customer sees
 - A **UAE onboarding checklist** with real completion state, sourced from the engine.
-- **Consent captured with a date**, on the employee record.
+- **The notice recorded as shown** — per document, with its basis, its version and the person who showed it — not a consent flag on the employee record.
 - Two ready-to-render documents (Privacy Notice, Employment Contract) — bilingual.
 
 ### Speaker notes
-> "Onboarding is the same product, same engine — the sequence is the UAE one: contract and MoHRE steps, insurance, visa stamping. And notice consent is in-flow and dated, tracked against a version, not chased as a PDF later. The dashboard card and this checklist read from the same source, so they can't disagree."
+> "Onboarding is the same product, same engine — the sequence is the UAE one: contract and MoHRE steps, insurance, visa stamping. And the notice is shown in-flow and recorded per document — with its version and the name of whoever showed it — not chased as a PDF later. The dashboard card and this checklist read from the same source, so they can't disagree."
 
 ### ⚠️ Before you say "Omar" twice — the demo-case-1 contradiction (decided 2026-10-09: option (a), leave case 1 as seeded)
 
@@ -361,7 +361,7 @@ A: A named HR lead, access to your current onboarding/offboarding process for on
 | EOSB engine (frozen UAE tier) | `server/eosb.js` |
 | Checklist templates (UAE onboarding/offboarding) | `server/compliance_engine.js` (`checklistTemplates`) |
 | Document previews | `GET /api/compliance/templates/:templateName/:employeeId` |
-| Consent capture | `POST /api/compliance/consent` → `consent_records` |
+| Consent capture — **retired** (decision 17, 2026-10-13) | The route and its button are **removed** (404); the product no longer collects a consent flag on the employee record. The instrument is the notice-shown acknowledgement above — `POST /api/preboarding/cases/:id/package/:itemKey/acknowledgement` → `preboarding_notice_acknowledgements` |
 | Weak-screen audit (read alongside this script) | `demo-weak-screens.md` |
 | Brand system | `design-concepts/BRAND-IDENTITY.md` (deep teal `#0F766E`) |
 

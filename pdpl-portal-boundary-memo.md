@@ -28,6 +28,8 @@ Seven facts. Nothing in the sections that follow makes sense without them.
 Two further facts that shape the answers:
 
 - **A second, older consent store exists** and is still writable: `consent_records(id, employee_id, consent_type, status, consent_date, ip_address, lawful_basis, granted_at, revoked_at, consent_version)` (`server/schema.sql:93-105`, written by `POST /api/compliance/consent`, `server/index.js:340`). It declares `ip_address` and `revoked_at` and **never writes either** (`git grep ip_address` → the schema line only). So the product has two consent records, two shapes, one meaning-word. Undecided, not wrong.
+  
+  **Superseded 2026-10-13 (decision 17, executed; live in the product from the 2026-10-14 cutover).** The route this bullet quotes — `POST /api/compliance/consent` — is **removed** (it answers 404), and the demo seeder no longer writes this table; every row now sits at the column defaults. The table and its shape remain, with **no writer, no reader and no display**. The quotation above stands as what this memo read on 2026-10-09; this note says only what has since stopped being true.
 - **The notice file is already bilingual and versioned: v2.2 (2026-09-17)**, and it carries its own "Consent Version / إصدار الموافقة" field reading **v2.2** (`templates/privacy-notice.md:6,247`). The product records `v1` (fact 4).
 
 ---
