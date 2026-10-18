@@ -100,3 +100,35 @@ understand. The re-cut branch is pushed and inert, ready to open on one word.
   latent, not displayed.
 - **The real cost is this file's existence**: the tracker's record of three availability events,
   the cutover's discharge and the sweep lives on a branch nobody reads.
+
+
+## Carriage: which copy of this note is authoritative (measured 2026-10-18)
+
+The note exists on **two branches, and `main` carries neither**. Measured with `git cat-file`:
+
+| branch | tip at measurement | blob | bytes | what it says |
+|---|---|---|---|---|
+| `docs/marker-index-stale-2026-10-17` — PR **#208**, open | `0d370f1` | `9efe782` *(pre-append)* | 7,007 | thirteen merges, read at `d0422f4`, read-tip line present |
+| `docs/round-47-recut` — the pending record | `69eb593` | `19fdec2` | 5,057 | an **earlier draft**: no read-tip line, and "**Ten merges**" |
+
+The two texts differ by 43 insertions and 20 deletions, and on the recut branch this path is a **pure
+addition** (+79 against its merge-base `29a2a4d`). So if the round is re-cut the documented way — laying
+the closed branch's final tree for its changed paths — and this path is in that list, the **older copy
+arrives second and overwrites the newer one**: a silent regression on the one record whose purpose is to
+state what is stale. (Row 1's blob is the *pre-append* content; appending this section changed it. Row 2's
+blob is stable only while the recut is untouched, which the standing hold requires.)
+
+**The rule, in the order it must be applied:**
+
+1. **#208 merges first.** From that moment `main`'s copy is authoritative, and this file is **not** the
+   recut's cargo.
+2. When the owner rules on the closed round: **rebase the recut onto `main` and take `main`'s bytes** —
+   `git checkout origin/main -- docs/evidence/round-47-staleness-2026-10-17.md` — or simply leave the path
+   out of the set the re-cut lays. **Never re-add this path from `docs/round-47-recut`.**
+3. If instead the recut is to carry the note, **#208 is closed first** and the recut's copy is brought up
+   to date before it goes up. **Not both.**
+
+**Telling the two apart without trusting a sha that moves** (both tips move; the blobs above are a
+measurement, not a reference): the current text carries a `Read against **origin/main = …**` line and its
+own re-derive commands; the older draft carries neither and opens its list with "Ten merges". A reader
+holding the 5,057-byte draft is holding the one that arrives second.
