@@ -29,4 +29,15 @@ if [ ! -f "$DEPLOY_PATH" ]; then
   echo "      movement from the repository: bash scripts/deploy-main.sh"
   exit 1
 fi
+# ASKING FOR HELP MUST NOT RESTART THE PRODUCT.
+#   deploy-main.sh dispatches on $1 alone. Without this case, "restore-product.sh --help" arrives as
+#   "--restart-only --help": the restart arm matches first, the help arm is never reached, and asking
+#   what the tool does restarts the product. Found by reading the dispatch order — running it to find
+#   out would have restarted the product. The guard goes ahead of the exec, not inside the callee,
+#   because the wrapper is what the operator types.
+case "${1:-}" in
+  -h | --help)
+    exec bash "$DEPLOY_PATH" --help
+    ;;
+esac
 exec bash "$DEPLOY_PATH" --restart-only "$@"
