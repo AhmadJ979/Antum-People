@@ -3,29 +3,35 @@
 **This is a marker, not a round.** It states what `main` does not yet carry and where the pending
 record lives. It is superseded in one line when the owner rules on the closed PR.
 
-Read against **`origin/main` = `8fb4390`**, 2026-10-17T19:2xZ. Re-derive before quoting: the tip
-moved twice while this note was being written, and every count below moved with it.
+Read against **`origin/main` = `d0422f4`** (#209), 2026-10-17. **Re-derive before quoting** — the
+tip moved three times while this note was being written, and every count below moved with it:
+`git log --oneline --first-parent 94166c3..origin/main | wc -l` for the merges, and
+`git diff --name-only e19a98a..origin/main | wc -l` for the files on the divergence.
 
 ## What a reader of `main` is told by omission
 
 `roadmap-board-index.md` on `main` (last touched `b667eb1`) still presents **Round 46** as its last
-reading — re-checked 2026-10-12 against a tip of `94166c3`. Since that read, **twelve merges** have
+reading — re-checked 2026-10-12 against a tip of `94166c3`. Since that read, **thirteen merges** have
 landed (Round 46 counted seven) and **none of it is recorded in the file `main` serves**:
 
 `fa58787` #191 · `e19a98a` #193 · `b20e4eb` #194 · `659d0a4` #195 · `f05ebc4` #196 · `4b30e63` #197 ·
-`2a44858` #200 · `662e881` #201 · `81c1dc5` #202 · `29a2a4d` #203 · `72f6a67` **#205** · `8fb4390` **#206**
+`2a44858` #200 · `662e881` #201 · `81c1dc5` #202 · `29a2a4d` #203 · `72f6a67` **#205** · `8fb4390` **#206** ·
+`d0422f4` **#209**
 
 1. **The cutover of 2026-10-14 ran and is discharged**: served tree `9d2182a → e19a98a`, all four
    success tests green, 2.5–2.8 MB consumed, the rollback rehearsed and not needed. `main` still
    describes cutover #6 as OWED.
 2. **A movement is now owed for a different reason, and the index cannot show it.** At `29a2a4d` the
-   divergence `e19a98a..main` was 14 files with **zero** under `client/` or `server/`. At `8fb4390`
-   it is **18 files, three of them code**: `client/src/App.tsx` (1 line — a client change, so the
+   divergence `e19a98a..main` was 14 files with **zero** under `client/` or `server/`. At `d0422f4`
+   it is **19 files, three of them code**: `client/src/App.tsx` (1 line — a client change, so the
    served bundle can no longer be rebuilt from `main`), `server/compliance_engine.js` (**4 executable
    changed lines**, and it is required at `server/index.js:5` — inside the running server's require
-   closure), and `server/reachability.js` (31 executable lines). **The last two merges — #205, the
-   notice-shown wording batch, and #206, the drift rule — put a movement back on the table after the
-   previous one had been discharged.**
+   closure), and `server/reachability.js` (31 executable lines). **Merges #205 (the notice-shown
+   wording batch) and #206 (the drift rule) put a movement back on the table after the previous one
+   had been discharged.** The nineteenth file, `scripts/seed-demo.js` (#209, +17/−8), is *not*
+   required by the server (`grep -c require server/*.js` → 0), so what is inside the closure stays
+   three — but it does change what the demo seeder writes, so any datastore seeded before it holds
+   rows the current script would not produce: **movement, then re-seed, then demo.**
 3. **Three availability events on this host**: the movement itself (10-14), a replacement on 10-15
    (trigger 9's INSTANCE 4) and a second replacement on 10-17 (INSTANCE 5). Each has its own cause,
    date and measurement; none is in `main`.
@@ -40,7 +46,7 @@ landed (Round 46 counted seven) and **none of it is recorded in the file `main` 
   `docs/evidence/numbering-sweep-2026-10-15/`, three evidence READMEs, `pdpl-lawful-basis-mapping.md`,
   `un-operable-controls-inventory.md`, and the one-string subject correction in
   `server/reachability-register.js` (decision 14 → 17). `scripts/check-index-ids.py` exits 0 on it.
-  **It is now two merges behind `main`** and will be re-grounded if it opens.
+  **It is now three merges behind `main`** (#205, #206, #209) and will be re-grounded if it opens.
 - It **supersedes** `docs/round-47-numbering-sweep-and-cutover` @ `86a77fd` (PR #198, closed).
 - **`b5dce11` is the round content.** This note was added on top of it, and the branch tip moves
   whenever the note is edited — so quote **`b5dce11`** for the round, and the **branch name** for
@@ -60,6 +66,12 @@ has, twice.**
   `18:41:52 armed as its own session leader (pid 21036)` and `18:42:15 … (pid 22723)`.
 - By **19:16** the public URL served the cutover's own bytes (274,243 B, md5 `91f05725…`) with the
   API answering 401.
+
+**Re-checked after `d0422f4` (#209) landed**: the public URL still answers 200, its page still names
+`assets/index-Bh1-0KrL.js`, and `/api/compliance/notice` still answers **401** — so the tree the
+product serves is still the cutover's, and the movement this note says is owed **has not run**.
+(`GET /` → 200 is only the placeholder question; the pair that means *our* build is served is the
+asset name on the page plus the bytes behind it.)
 
 **No artifact on this host timestamps the first answer**, so no outage or repair duration may be
 quoted from this event. `ps lstart` is 17m56s late on both live processes, and `/proc/stat btime`
