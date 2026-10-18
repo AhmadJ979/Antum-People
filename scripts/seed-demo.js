@@ -500,8 +500,9 @@ async function seed() {
   // is what decision 17 kept; when a purpose-scoped consent control exists (Layer 3, with accounts), the
   // seeder can carry rows with a sample marker plus basis, version and granted_at.
   //
-  // The DELETE at the top of this script is kept on purpose: a row written by an earlier version of this
-  // seeder must not survive a re-seed and sit there claiming a grant.
+  // The DELETE at the top of this script is kept on purpose, and it runs only when --force-clear is
+  // passed (the deploy's re-seed step passes it): a row written by an earlier version of this seeder
+  // must not survive that re-seed and sit there claiming a grant. Without the flag, the DELETE does not run.
   console.log('Consent records: none seeded (decision 17 — no instrument, and nothing reads the table).');
 
   // 7. Layer 2 — pre-boarding demo cases (owner decision, 2026-10-07)
