@@ -1,0 +1,15 @@
+=== install-host-tools 2026-10-18T08:56:20+00:00 ===
+  script: scripts/install-host-tools.sh | 11187 B | sha256 ad152be8c09016e3
+  repo:   /home/agent-senior-software-engineer/antum-people
+  dest:   /home/team/shared   hook: /etc/profile.d/zz-antum-product-guard.sh   mode: verify
+  source: the working tree
+  revision: 71ec7631798774c142e84ada43f3e8c79c1e0173 (working-tree)
+
+  OK        /home/team/shared/deploy-main.sh   (body) md5 c16d32540bd7ffdd5331d40ecaa60360 == scripts/deploy-main.sh at 71ec76317987
+  OK        /home/team/shared/cutover-preflight.sh   (body) md5 485876d5933b8d79374798776d2d0e00 == scripts/cutover-preflight.sh at 71ec76317987
+  OK        /home/team/shared/restore-product.sh   (body) md5 8c592edd2ac18ed0c859befced0f63d1 == scripts/restore-product.sh at 71ec76317987
+  OK        /home/team/shared/rollback-to-9d2182a.sh   (body) md5 605bb77c9e3b119a078cc96f17c263a2 == scripts/rollback-to-9d2182a.sh at 71ec76317987
+  OK        /home/team/shared/success-test.sh   (body) md5 da80db2824e8e810fd64db2a913e69bf == scripts/success-test.sh at 71ec76317987
+  OK        /etc/profile.d/zz-antum-product-guard.sh   (body) md5 728bf2cce72b8c6f9a3cf257f3dfc070 == scripts/antum-product-guard-hook.sh at 71ec76317987
+
+=== RESULT: VERIFIED — every copy's body equals its repository blob at 71ec76317987 ===
