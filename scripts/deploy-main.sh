@@ -97,6 +97,26 @@ if ! grep -q "Final Settlement Payment" server/compliance_engine.js; then
 fi
 echo "tree content check OK"
 
+echo "--- 1b. refresh the operator-facing host tooling from the tree we just moved to ---"
+# WHY HERE, and not only in step 6b. The runbook's step 3 and DEPLOY.md both run
+# /home/team/shared/deploy-main.sh, so the copy an operator INVOKES is the one the PREVIOUS movement
+# installed. Measured 2026-10-18: that copy had been installed from #201 and carried no
+# `deploy-in-progress` marker write, while the installed hook was #203's and WAITS for exactly that
+# marker — so the movement the runbook describes could not stand its own hook down, and the race #203
+# fixed was still live on the documented path.
+# Installing from the tree we have just reset to means the NEXT movement always starts from a copy as
+# new as the tip, even if this run fails later at the build or the seed. 6b calls the same script again
+# on purpose: --restart-only skips step 1, and a second call is a no-op by construction (proved: two
+# runs change no byte).
+HOST_TOOLS="$DEPLOY_DIR/scripts/install-host-tools.sh"
+if [ -f "$HOST_TOOLS" ]; then
+  ANTUM_HOOK_DST="${ANTUM_HOOK_DST:-$HOOK_DST}" \
+    ANTUM_HOST_TOOLS_DIR="${ANTUM_HOST_TOOLS_DIR:-/home/team/shared}" \
+    bash "$HOST_TOOLS" || echo "WARNING: host tooling NOT refreshed (see above) — the next movement may run a stale copy"
+else
+  echo "WARNING: $HOST_TOOLS is missing — the host tooling was NOT refreshed (this tree predates it)"
+fi
+
 echo "--- 2. build the client (must succeed before anything is restarted) ---"
 ( cd client && NODE_OPTIONS=--max-old-space-size=700 npm run build ) > "$BUILD_LOG" 2>&1
 BUILD_RC=$?
@@ -318,16 +338,30 @@ trap - EXIT INT TERM
 # /etc/profile.d (WORKFLOW rule 14) — only a test sets them.
 HOOK_SRC="${ANTUM_HOOK_SRC:-$DEPLOY_DIR/scripts/antum-product-guard-hook.sh}"
 HOOK_DST="${ANTUM_HOOK_DST:-/etc/profile.d/zz-antum-product-guard.sh}"
-if [ ! -f "$HOOK_SRC" ]; then
-  echo "WARNING: $HOOK_SRC is missing — the host hook is NOT installed (a restart will not re-arm the watchdog)"
-elif ! bash -n "$HOOK_SRC" 2>/dev/null; then
-  echo "WARNING: $HOOK_SRC does not parse as shell (bash -n failed) — refusing to install it into every login shell"
-elif cmp -s "$HOOK_SRC" "$HOOK_DST"; then
-  echo "guard hook: already installed and identical ($HOOK_DST)"
-elif install -m 0644 "$HOOK_SRC" "$HOOK_DST" 2>/dev/null && cmp -s "$HOOK_SRC" "$HOOK_DST"; then
-  echo "guard hook: installed $HOOK_DST from the deployed tree (bytes match)"
+# ONE install path. Until 2026-10-18 this block installed the hook itself, writing the raw blob: that
+# stripped the provenance block the installer had just added, and left the preflight's file comparison
+# permanently unable to go green on a hook whose body was byte-identical. The installer writes every
+# copy — this hook included — and derives the provenance from the tree.
+HOST_TOOLS="$DEPLOY_DIR/scripts/install-host-tools.sh"
+if [ -f "$HOST_TOOLS" ]; then
+  ANTUM_HOOK_DST="$HOOK_DST" ANTUM_HOST_TOOLS_DIR="${ANTUM_HOST_TOOLS_DIR:-/home/team/shared}" \
+    bash "$HOST_TOOLS" || echo "WARNING: the host tooling install reported failures — the hook may not be installed"
 else
-  echo "WARNING: could not install the guard hook at $HOOK_DST — a restart will not re-arm the watchdog"
+  # FALLBACK, named so the next reader understands why a hook WITHOUT a provenance block can exist: a
+  # --restart-only run against a tree that predates the installer. Installing the hook raw beats not
+  # installing it at all — a host restart without it leaves the product unguarded until a human notices.
+  echo "NOTE: $HOST_TOOLS is missing (this tree predates it) — installing the hook directly, without provenance"
+  if [ ! -f "$HOOK_SRC" ]; then
+    echo "WARNING: $HOOK_SRC is missing — the host hook is NOT installed (a restart will not re-arm the watchdog)"
+  elif ! bash -n "$HOOK_SRC" 2>/dev/null; then
+    echo "WARNING: $HOOK_SRC does not parse as shell (bash -n failed) — refusing to install it into every login shell"
+  elif cmp -s "$HOOK_SRC" "$HOOK_DST"; then
+    echo "guard hook: already installed and identical ($HOOK_DST)"
+  elif install -m 0644 "$HOOK_SRC" "$HOOK_DST" 2>/dev/null && cmp -s "$HOOK_SRC" "$HOOK_DST"; then
+    echo "guard hook: installed $HOOK_DST from the deployed tree (bytes match)"
+  else
+    echo "WARNING: could not install the guard hook at $HOOK_DST — a restart will not re-arm the watchdog"
+  fi
 fi
 # --- the served bytes are the on-disk bytes -----------------------------------------
 # DERIVE-OR-REFUSE: no bundle hash is remembered here. The asset the public HTML names is fetched and

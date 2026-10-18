@@ -62,6 +62,45 @@ The site is kept alive by a monitoring loop that restarts the server if port 300
 2. Check out the previous commit in the production directory.
 3. Restart server.
 
+## Host tooling (the operator copies)
+
+The scripts an operator runs live OUTSIDE the repository, in `/home/team/shared`, because every movement
+does `git reset --hard` in the deployed tree and would destroy anything kept inside it. Each copy carries a
+provenance block naming the revision it was installed from and the md5 of the blob its body came from.
+
+**There is one install path: `scripts/install-host-tools.sh`.**
+
+```
+bash scripts/install-host-tools.sh                    # install from this tree
+bash scripts/install-host-tools.sh --commit <rev>     # install the blobs at <rev>, without moving the tree
+bash scripts/install-host-tools.sh --verify           # compare every copy's BODY with its blob; exit 1 on drift
+```
+
+It installs `deploy-main.sh`, `cutover-preflight.sh`, `restore-product.sh`, `rollback-to-9d2182a.sh`,
+`success-test.sh` and the login-shell hook — **atomically** (a temporary file is renamed over the target, so
+replacing a script that is executing cannot corrupt the running process) and **idempotently** (a second run
+with the same source changes no byte, so the copies' mtimes stay put).
+
+`deploy-main.sh` calls it itself: **step 1b**, immediately after the reset, and again in **step 6b**. So the
+copies the NEXT movement runs are always as new as the tip it moved to, even if a run fails later at the
+build or the seed. Before this existed, the copy an operator invoked was the one the PREVIOUS movement had
+installed: on 2026-10-18 the host copy came from PR #201 and carried no `deploy-in-progress` marker write,
+while the installed hook was PR #203's and WAITS for that marker — so the movement could not stand its own
+hook down. See `docs/evidence/host-tools-2026-10-18/`.
+
+**Before a movement on a host whose copies are older than the tip, refresh them from the tip first:**
+
+```
+bash -c 'cd /home/team/shared/probable-octo-sniffle && git fetch origin main && git show FETCH_HEAD:scripts/install-host-tools.sh > /tmp/install-host-tools.sh && ANTUM_REPO=/home/team/shared/probable-octo-sniffle bash /tmp/install-host-tools.sh --commit FETCH_HEAD'
+```
+
+That shape is deliberate: it reads the blobs out of the fetched commit, so it never resets the deployed
+tree — a reset without a build would leave the tree's server code newer than the bundle it serves.
+
+`scripts/install-host-tools-test.sh` proves all of it off the host (53 checks: bodies, provenance,
+idempotence, the red direction of `--verify`, the refusal of a file that does not parse, and that the live
+copies are untouched by the test itself).
+
 ## Secrets Rotation Procedure
 ### 1. JWT Secret Rotation
 - Update `JWT_SECRET` in the environment.
