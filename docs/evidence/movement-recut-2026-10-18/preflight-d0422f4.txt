@@ -1,0 +1,45 @@
+=== pre-cutover preflight 2026-10-18T08:09:56+00:00 ===
+  script: scripts/cutover-preflight.sh | 18241 B | mtime 2026-10-18 08:09:52 | sha256 aadd1a176a37ddac
+  deployed tree: /home/team/shared/probable-octo-sniffle
+  serving today: e19a98a  asset index-Bh1-0KrL.js
+--- disk: the movement's measured need is ~3.8 MB; a full disk fails a movement silently ---
+  PASS  /home free 618328 KB (>= 200000 KB)
+  PASS  /home inodes free 7412789228
+--- the shipped commit, resolved against the REMOTE (never a local remote-tracking ref) ---
+  PASS  remote tip origin/main = d0422f4690cf — d0422f4 Merge pull request #209 from AhmadJ979/fix/seeder-asserts-no-consent
+  PASS  clone's origin/main ref matches the remote (d0422f4690cf68b57e550488dc73ae8038722069)
+  PASS  deployed tree's origin/main ref is current
+--- the tree is where we think it is, and has not already moved ---
+  PASS  deployed tree HEAD = e19a98a (the served commit)
+  PASS  deployed tree has an origin remote
+--- the product is the thing answering, not the platform placeholder ---
+  PASS  public GET / -> 200
+  PASS  public HTML names assets/index-Bh1-0KrL.js (ours, not the placeholder)
+  PASS  port 3000 held by pid 18724: node index.js
+  PASS  listener cwd is the deployed tree's server/
+  no-token contract: GET /api/employees -> 401 (want 401)
+--- the guard is alive, judged by its own lock and /proc (never by matching a process name) ---
+  PASS  guard alive: pid 22723 (bash scripts/keep-alive.sh )
+  PASS  lock holders: 1 (only the guard)
+--- the login-shell hook: versioned is not installed ---
+  WARN  hook installed but differs from the shipped tree (installed 54c964b43e12e868d1ac136842f72216 / shipped 728bf2cce72b8c6f9a3cf257f3dfc070) — step 6b will reinstall it from the tree
+--- the rollback target exists and is the bytes we think ---
+  PASS  rollback bundle asset index-Cc1GodRa.js md5 9cdfbe5da81f6acf38fdb10de8a5e6fd
+  PASS  rollback bundle server/index.js md5 7467cec01c90cc3a1fb0156999c1997a
+  WARN  deployed tree's server/index.js md5 67add8fa51194accd9fd393c1a1375c6 != the rollback bundle's 7467cec01c90cc3a1fb0156999c1997a — expected after a cutover: the tree carries the newer code
+--- the shipped tree's own content and the after-state expectation, derived at run time ---
+  PASS  step 1's gate string present in the shipped tree (2 hits)
+  PASS  the shipped commit IS the commit this package measured (d0422f4) — the measured build stands
+--- step 3/4's inputs ---
+  PASS  demo credential file present
+  PASS  bcryptjs present in the deployed tree (step 3 hashes the credential)
+  PASS  restart env: JWT_SECRET=present ENCRYPTION_KEY=present 
+
+--- after the movement, expect (derived from this run) ---
+    commit  d0422f4690cf68b57e550488dc73ae8038722069
+    assets/index-BG0peuOK.js   274242 B   md5 f65f15c109e76e86cd8b8abe7102f748
+    assets/index-pNSrK3wr.css   35365 B   md5 eda548202468a7e0293053981037a594
+    public GET / -> 200 with the served HTML naming that asset, the listener on 3000 ours, the guard verified from its lock
+    the two retired routes answer 404 (GET /api/employees/:id, GET /api/compliance/report)
+
+=== PREFLIGHT PASS — the movement's preconditions hold (2026-10-18T08:09:57+00:00) ===

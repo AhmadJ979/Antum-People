@@ -55,18 +55,27 @@ BUNDLE=/home/team/shared/cutover-rollback-9d2182a
 ASSET_MD5=9cdfbe5da81f6acf38fdb10de8a5e6fd
 IDXJS_MD5=7467cec01c90cc3a1fb0156999c1997a
 # The commit whose built bundle this package can state.
-#   Re-measured 2026-10-17 at the tip the movement will ship (previously e19a98a): a FRESH build of this
-#   tree emitted index-BG0peuOK.js, 274,242 B, md5 f65f15c1…, with the CSS byte-identical to the previous
-#   package (index-pNSrK3wr.css, 35,365 B, eda54820…) — the bundle moved because one string moved, and it
-#   moved by one byte. The identity of the new bundle is stated by the counts, not the delta: the new
-#   eyebrow "Privacy Notice (PDPL)" appears once and "Privacy Consent (PDPL)" zero times in the emitted
-#   file, measured twice independently (branch, then merged main).
+#   Re-measured 2026-10-17 at 8fb4390 (previously e19a98a): a FRESH build of that tree emitted
+#   index-BG0peuOK.js, 274,242 B, md5 f65f15c1…, with the CSS byte-identical to the previous package
+#   (index-pNSrK3wr.css, 35,365 B, eda54820…) — the bundle moved because one string moved, and it moved by
+#   one byte. The identity of the new bundle is stated by the counts, not the delta: the new eyebrow
+#   "Privacy Notice (PDPL)" appears once and "Privacy Consent (PDPL)" zero times in the emitted file,
+#   measured twice independently (branch, then merged main).
+#   RE-CUT 2026-10-17 to d0422f4 — the tip this movement will ship. The tip moved one merge past 8fb4390
+#   (PR #209 merged), and the package followed it, because a measurement taken at a tip stops being a
+#   measurement the moment the tip moves. What authorises carrying the SAME bytes forward is measured, not
+#   assumed: the merge changed exactly one file (git diff --stat 8fb4390 d0422f4 -> scripts/seed-demo.js,
+#   17 insertions / 8 deletions), `git diff --name-only 8fb4390 d0422f4 -- client/` is EMPTY so the build
+#   input is byte-identical, the merge commit's tree hash equals the measured branch head's tree hash
+#   (8a6c790d3fd57036f0d81ef81b2c60947dd05263), and nothing the server serves loads the changed script —
+#   server/index.js's require closure does not contain seed-demo.js (it is a script the seeder runs).
+#   Full suite at the merge result: 169 tests / 169 pass / 0 fail / 0 skipped (PRODUCT_DB_PATH pinned).
 #   DISK: the build's own consumption was BELOW the 50 ms df sampling floor (peak_used 0 KB against the
 #   ~3.8 MB the package reserves, net 0 KB with dist replaced in place), so no new peak figure is claimed;
 #   MIN_FREE_KB stays the hard floor and the reservation stays the conservative number.
 #   If the tip moves again with client/ unchanged, the gate warns and keeps this asset; if client/ moves,
 #   it refuses until this block is re-measured. That refusal is the gate working, not an obstacle.
-MEASURED_TIP="${ANTUM_MEASURED_TIP:-8fb4390}"
+MEASURED_TIP="${ANTUM_MEASURED_TIP:-d0422f4}"
 MEASURED_ASSET=index-BG0peuOK.js
 MEASURED_ASSET_BYTES=274242
 MEASURED_ASSET_MD5=f65f15c109e76e86cd8b8abe7102f748
