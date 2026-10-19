@@ -11,8 +11,8 @@
 > exists so that a clone of this repository carries the workflow; **an edit made here and not in the live file
 > does not change how the team works.**
 >
-> **Last synced: 2026-10-14**, taken from the live file and landing on repo `main` at `e19a98a` (rules 1–30
-> and 33–34 — the live file's own numbering, which skips 31–32 — plus the Submission Gate). To check whether
+> **Last synced: 2026-10-19**, taken from the live file and cut from repo `main` at `cf3dad3` (rules 1–30
+> and 33–35 — the live file's own numbering, which skips 31–32 — plus the Submission Gate). To check whether
 > this mirror has drifted, run this from the repository root — it strips the header lines and compares what is
 > left with the live file, ignoring blank-line placement:
 >
@@ -106,6 +106,11 @@ Owner-confirmed, 2026-10-02. These are the five reasons submissions have come ba
 34. **A rejection does not stop a merge — so a rework lands on top of what merged, and must address every item (2026-10-12).** A PR the lead has sent back can be merged by the owner in parallel with the review: on 2026-10-12 the designer's re-ground was sent back for three defects (a reading block pasted three times into each of two documents, the run called "cutover 3" when it is #5, and a citation reading 2026-10-13 — a day in the future) and the owner merged it with **all three intact**. The follow-up then had to be written as a **delta on `main`**, not as a rebase of the rejected branch.
     - **After any rejection, `git fetch` and re-read `origin/main` before writing the fix.** Confirm what actually merged — the tip's ancestry (rule 33) and the substance in `origin/main`'s bytes — then base the follow-up on that state, and say in the follow-up's own body which PR it follows and what it keeps.
     - **Rule 18 still governs: a multi-item rejection is one instruction.** A follow-up that fixes one item and is *silent* about the others is a failed submission even though a PR exists. Fix them all in the same PR, or argue explicitly the ones you believe are wrong.
+
+35.  **A rejection can arrive with no review comment at all — and a rebase under review is safe only if the tree is unchanged (2026-10-19; two failures in one round, both about the evidence a reviewer acts on).**
+    - **An empty review note is not a decision that nothing was asked.** A PR sent back for a real omission arrived with the platform's review channel carrying an **empty body** (0 comments) — the instruction came as an **inbox message**. A comment count of 0 says nothing about whether the work was refused, so read the row's own status and the inbox before acting, and **ask the lead before concluding you were right** (rule 4): “there were no comments” is a report about the channel, not about the work.
+    - **A rebase or force-push on a branch under review is permitted only when the content does not move, and the tree hash is how you prove it** (rule 23 forbids a moving target). Report `git rev-parse <old-head>^{tree} <new-head>^{tree}` beside the new SHA: equal trees mean the reviewer's run still describes the tree that will merge, so it needs no re-run — measured 2026-10-19, the head moved `b9ab55f` → `58e5f945` while the tree stayed `8abf849e…` on both, and a 192/192/0 verification carried over untouched. A moved SHA **with** a moved tree invalidates that verification; saying which one it is, is the author's job.
+    - **Read the remote head from the remote, never from a local ref you just fetched.** Use `git ls-remote origin refs/heads/<branch>`, `/pulls/<n>` → `head.sha`, or `gh pr view --json headRefOid`. A `git fetch` with an explicit refspec writes `FETCH_HEAD` and can leave local `origin/<branch>` at the **old** head while the remote has moved — that nearly produced a suite run against a tip that no longer existed. State the head SHA you measured, so a reviewer whose number disagrees can catch it (rule 12).
 
 ## Quality Standards
 -   **A red suite in a fresh worktree may be the rig, not the tree (2026-10-12).** `server/node_modules/` is not carried into a `git worktree`, so a test that `require`s a dependency (e.g. `uuid` in `server/demo-seed.test.js`) crashes at load and reports a failure that says nothing about the code. Link the dependencies into the untouched worktree before believing a failure — measured: 1 failure → **154 tests / 35 suites / 0 fail** once deps were linked, same tree.
