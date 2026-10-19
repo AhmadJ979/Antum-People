@@ -8,7 +8,28 @@ a different copy.
 
 Landed in the repository on 2026-10-09 (Round 32) so the next holder of the tracker
 does not have to rediscover it; the procedure it serves is skills/antum-board-row-removal.
-Run it from the repository root or anywhere else:
+THE WORKING DIRECTORY DOES NOT MATTER — WHERE THE INDEX PATH SITS DOES. The default
+index path, and the repository the git lookup runs in, are both derived absolutely from
+the index's own directory, so `python3 scripts/check-index-ids.py` gives the same answer
+from any working directory. What does not survive is an index path INSIDE A GIT WORKING
+TREE being absent: the bare 8-hex check resolves each token against the board first and
+then against git objects (`git -C <the index's directory> cat-file`), and those two
+outcomes are not interchangeable:
+
+    python3 scripts/check-index-ids.py                        # the repository's own index
+      -> ...resolving to a git object (sha): 4
+      -> ...NEITHER (typos) - must be empty: []              # exit 0: trust the result
+
+    python3 scripts/check-index-ids.py /tmp/some/index-copy.md   # copied OUT of the repo
+      -> ...resolving to a git object (sha): 0
+      -> ...NEITHER (typos) - must be empty: ['06eaf3c5', '580ec7ea', '5f885399', 'c71e893d']
+      -> exit 1
+
+So: a green run against the repository's index means the ids resolve. An exit 1 from an
+index copy outside a git working tree is the CHECKER'S OWN BLIND SPOT, not a defect in
+the index — those four tokens are legitimate objects (two commits, two trees), and the
+lookup fails silently rather than saying it could not run. Run it against the repository's
+index, or pass a copy only for the non-git checks. (Both outcomes measured 2026-10-19.)
 
     python3 scripts/check-index-ids.py
 """
