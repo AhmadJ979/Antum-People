@@ -1,0 +1,240 @@
+SLICE 1, VERIFIED AT THE MERGE — the merge result, not the report
+recorded 2026-10-19T16:06:02+00:00 on (none)
+
+PR #223 (branch feat/layer3-slice1-named-person, head 7dabbfe, cut from 3eb0a7b) is MERGED.
+merge commit c2f9bba, on top of 8b32d45 (= the merge of #221).
+
+1. THE MERGE RESULT IS THE BRANCH'S OWN TEN FILES. 'git show --stat c2f9bba' against its first
+   parent 8b32d45, read here at the merge:
+   c2f9bba Merge pull request #223 from AhmadJ979/feat/layer3-slice1-named-person
+   
+    docs/evidence/layer3-slice1-2026-10-19/README.md   |  95 ++++++
+    .../falsification-widen-then-restore.txt           |  32 ++
+    .../first-run-setup-failure.txt                    | 365 +++++++++++++++++++++
+    ...second-run-21-1-rate-limit-could-not-redden.txt | 206 ++++++++++++
+    .../suite-access-scratch-22-0.txt                  | 187 +++++++++++
+    server/access.js                                   | 181 ++++++++++
+    server/access.test.js                              | 272 +++++++++++++++
+    server/db.js                                       |   7 +
+    server/index.js                                    |  94 +++++-
+    server/schema.sql                                  |   2 +
+    10 files changed, 1433 insertions(+), 8 deletions(-)
+   client/ 0 files. Nothing was dropped and nothing extra rode in. In particular docs/access-model.md
+   (merged as #220, before this branch was cut) SURVIVES the merge: it is absent from
+   'git diff --name-only 8b32d45 origin/main'. Read against 8b32d45 my branch LOOKS like a deletion of
+   that file, because the branch was cut from 3eb0a7b before #220 landed; the merge kept it. Anyone
+   reading 'git diff 8b32d45 7dabbfe' would report a 338-line deletion that does not exist on main.
+
+2. THE MERGED TREE IS GREEN. Checked out main at the merge and re-ran the slice's own suite:
+   $ node --test server/access.test.js        (main = 6aa8600 at the time of this run)
+   # tests 22
+   # pass 22
+   # fail 0
+   # skipped 0
+   rc=0
+   the full TAP transcript is the next section, byte for byte as the runner printed it.
+
+----- raw run: node --test server/access.test.js -----
+TAP version 13
+# (node:27328) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: authentication: unchanged answers
+    # Subtest: no token is 401 on a resource
+    ok 1 - no token is 401 on a resource
+      ---
+      duration_ms: 7.988575
+      type: 'test'
+      ...
+    # Subtest: a wrong password is 401
+    ok 2 - a wrong password is 401
+      ---
+      duration_ms: 25.929917
+      type: 'test'
+      ...
+    # Subtest: a good login through the API still works — the token names the role
+    ok 3 - a good login through the API still works — the token names the role
+      ---
+      duration_ms: 16.801209
+      type: 'test'
+      ...
+    1..3
+ok 1 - authentication: unchanged answers
+  ---
+  duration_ms: 826.340007
+  type: 'suite'
+  ...
+# Subtest: authorization: the role is enforced, deny-by-default
+    # Subtest: the seeded admin still reaches the roster (nothing was narrowed by this slice)
+    ok 1 - the seeded admin still reaches the roster (nothing was narrowed by this slice)
+      ---
+      duration_ms: 12.011558
+      type: 'test'
+      ...
+    # Subtest: an authenticated caller whose role allows nothing is 403 on the roster
+    ok 2 - an authenticated caller whose role allows nothing is 403 on the roster
+      ---
+      duration_ms: 3.327201
+      type: 'test'
+      ...
+    # Subtest: and 403 on a different resource — the refusal is not one route
+    ok 3 - and 403 on a different resource — the refusal is not one route
+      ---
+      duration_ms: 10.640803
+      type: 'test'
+      ...
+    # Subtest: a path that declares NO resource is refused, not left open and not a 404
+    ok 4 - a path that declares NO resource is refused, not left open and not a 404
+      ---
+      duration_ms: 3.018025
+      type: 'test'
+      ...
+    # Subtest: a token with no username is still authorised by role, but cannot tick a task (below)
+    ok 5 - a token with no username is still authorised by role, but cannot tick a task (below)
+      ---
+      duration_ms: 5.239846
+      type: 'test'
+      ...
+    1..5
+ok 2 - authorization: the role is enforced, deny-by-default
+  ---
+  duration_ms: 53.24488
+  type: 'suite'
+  ...
+# Subtest: accounts: plural rows through an admin-authenticated path
+    # Subtest: an admin creates a second account, and that account can log in
+    ok 1 - an admin creates a second account, and that account can log in
+      ---
+      duration_ms: 175.527279
+      type: 'test'
+      ...
+    # Subtest: the roster of accounts is a list, and it does not leak a password hash
+    ok 2 - the roster of accounts is a list, and it does not leak a password hash
+      ---
+      duration_ms: 3.158858
+      type: 'test'
+      ...
+    # Subtest: a duplicate username is refused 409 rather than shadowing the first account
+    ok 3 - a duplicate username is refused 409 rather than shadowing the first account
+      ---
+      duration_ms: 3.740326
+      type: 'test'
+      ...
+    # Subtest: a short password is refused 400
+    ok 4 - a short password is refused 400
+      ---
+      duration_ms: 3.12427
+      type: 'test'
+      ...
+    # Subtest: a role this product does not know is refused 400 — a user who matches no cell can do nothing
+    ok 5 - a role this product does not know is refused 400 — a user who matches no cell can do nothing
+      ---
+      duration_ms: 9.837321
+      type: 'test'
+      ...
+    # Subtest: a caller whose role allows nothing cannot create an account (403)
+    ok 6 - a caller whose role allows nothing cannot create an account (403)
+      ---
+      duration_ms: 5.035452
+      type: 'test'
+      ...
+    1..6
+ok 3 - accounts: plural rows through an admin-authenticated path
+  ---
+  duration_ms: 212.052329
+  type: 'suite'
+  ...
+# Subtest: the tick names the person who ticked it (decision 22)
+    # Subtest: completing a task records the named actor beside the date
+    ok 1 - completing a task records the named actor beside the date
+      ---
+      duration_ms: 3.113468
+      type: 'test'
+      ...
+    # Subtest: an UNNAMED actor is refused 400, and the row is left untouched
+    ok 2 - an UNNAMED actor is refused 400, and the row is left untouched
+      ---
+      duration_ms: 3.854599
+      type: 'test'
+      ...
+    # Subtest: an unnamed actor may still mark a task pending — the refusal is about claiming work was done
+    ok 3 - an unnamed actor may still mark a task pending — the refusal is about claiming work was done
+      ---
+      duration_ms: 10.953464
+      type: 'test'
+      ...
+    1..3
+ok 4 - the tick names the person who ticked it (decision 22)
+  ---
+  duration_ms: 21.457992
+  type: 'suite'
+  ...
+# Subtest: the policy table itself
+    # Subtest: no declared route lacks a policy cell
+    ok 1 - no declared route lacks a policy cell
+      ---
+      duration_ms: 0.244841
+      type: 'test'
+      ...
+    # Subtest: no policy cell names a role this product does not know
+    ok 2 - no policy cell names a role this product does not know
+      ---
+      duration_ms: 0.142693
+      type: 'test'
+      ...
+    # Subtest: today's policy allows admin only, explicitly — nothing silently widened
+    ok 3 - today's policy allows admin only, explicitly — nothing silently widened
+      ---
+      duration_ms: 0.300031
+      type: 'test'
+      ...
+    # Subtest: the resource for a route is looked up by method and path, not by a guess
+    ok 4 - the resource for a route is looked up by method and path, not by a guess
+      ---
+      duration_ms: 0.494362
+      type: 'test'
+      ...
+    1..4
+ok 5 - the policy table itself
+  ---
+  duration_ms: 1.41091
+  type: 'suite'
+  ...
+# Subtest: the login rate limit still answers 429
+    # Subtest: a burst past the limiter (25 per minute) is answered 429
+    ok 1 - a burst past the limiter (25 per minute) is answered 429
+      ---
+      duration_ms: 88.097331
+      type: 'test'
+      ...
+    1..1
+ok 6 - the login rate limit still answers 429
+  ---
+  duration_ms: 88.266516
+  type: 'suite'
+  ...
+1..6
+# tests 22
+# suites 6
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1478.678435
+rc=0
+----- end raw run -----
+
+3. WHAT THE MERGE DID NOT DO, stated rather than implied.
+   * The host still serves a5aa0e6. server/ code is now on main and NOT in force: this slice needs a
+     MOVEMENT, and the plan's own rule applies — movement, then re-seed, then demo. Until that runs,
+     the live product is still the one shared admin account with a decorative role.
+   * docs/access-model.md (the compliance expert's, merged as #220) is now the matrix this build's
+     policy table exists to be filled from. server/access.js still holds every cell as [ROLES.ADMIN]:
+     encoded, deliberately not widened. Filling the cells is SLICE 2, not this PR; widening reddens
+     the suite, which is the designed check (docs/evidence/.../falsification-widen-then-restore.txt).
+   * The same document records a naming hazard this slice does NOT fix: users.role (a permission)
+     collides by name with employees.role and preboarding_cases.role (both job titles), and it
+     recommends renaming users.role -> users.access_role 'in the same PR that starts enforcing it'.
+     This PR started enforcing it and did not rename. That is a real, small, open item — it is
+     reported here rather than done unasked, because it touches schema.sql and every reader of the
+     column, and it belongs with slice 2's decisions, not with a merge verification.

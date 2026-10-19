@@ -2,6 +2,11 @@
 
 *2026-10-19 · decision 11 · base commit `3eb0a7b` (the merge of #219), branch `feat/layer3-slice1-named-person`*
 
+*Added after the merge: **PR #223 merged as `c2f9bba`** (on top of `8b32d45`). The merge result, the fresh
+22/0 run of this slice's suite at the merged tip, and what the merge did NOT do (no movement yet; the
+policy cells still `[ROLES.ADMIN]`; the `users.role` naming hazard unfixed) are recorded in
+`merge-verification.txt`, measured at the merge rather than taken from the merge notice.*
+
 The gate on any real pilot: the product had **one shared admin account** and its role was **decoration** —
 `server/auth.js` signed `{id, username, role}` into the token, `/api/login` returned it, and **nothing else
 read it**, so any authenticated caller reached every `/api` route. And the checklist tick recorded a date and
