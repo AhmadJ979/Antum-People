@@ -83,7 +83,12 @@ MEASURED_CSS=index-pNSrK3wr.css
 MEASURED_CSS_BYTES=35365
 MEASURED_CSS_MD5=eda548202468a7e0293053981037a594
 MIN_FREE_KB=200000
-HOOK_DST=/etc/profile.d/zz-antum-product-guard.sh
+# WORKFLOW rule 14: every host value is an override. This one was NOT, and the cost was a check that
+# could not be reddened: pointing it off-host is impossible while it names the live path, so "does this
+# line go red when the hook's body differs?" had only one way to be answered — by moving the host's own
+# hook aside, which is a worse idea than adding the override. scripts/install-host-tools-test.sh
+# asserts this knob exists.
+HOOK_DST="${ANTUM_HOOK_DST:-/etc/profile.d/zz-antum-product-guard.sh}"
 FAIL=0
 ok(){   printf '  PASS  %s\n' "$1"; }
 no(){   printf '  FAIL  %s\n' "$1"; FAIL=$((FAIL+1)); }
@@ -153,7 +158,20 @@ HOLDERS=$(lsof -t "$DEPLOY_DIR/server/keep-alive.lock" 2>/dev/null | wc -l)
 
 echo "--- the login-shell hook: versioned is not installed ---"
 if [ -f "$HOOK_DST" ]; then
-  A=$(md5sum < "$HOOK_DST" | cut -d' ' -f1)
+  # The installed copy carries a provenance block (scripts/install-host-tools.sh adds it), and that
+  # block is the ONLY intended difference from the repository blob. Comparing WHOLE FILES therefore
+  # reported drift on every run, on a host whose hook's body was byte-identical — a WARN that can never
+  # go green, which trains the reader to ignore the line. (Measured 2026-10-18: installed 54c964b4… vs
+  # shipped 728bf2cc…, differing by exactly the three inserted provenance lines.) So compare the BODY,
+  # and SAY which comparison ran rather than printing the same green either way.
+  # The marker text is the installer's; scripts/install-host-tools-test.sh asserts the two agree.
+  A_FILE=$(md5sum < "$HOOK_DST" | cut -d' ' -f1)
+  A_METHOD=whole-file
+  A="$A_FILE"
+  if grep -q '^# >>> ANTUM HOST-TOOL PROVENANCE' "$HOOK_DST" 2>/dev/null; then
+    A_METHOD=body
+    A=$(sed -e '/^# >>> ANTUM HOST-TOOL PROVENANCE/,/^# <<< ANTUM HOST-TOOL PROVENANCE/d' "$HOOK_DST" | md5sum | cut -d' ' -f1)
+  fi
   # DERIVE-OR-REFUSE. Piping `git show` into md5sum hashes EMPTY input when the show fails, and the
   # empty-string hash d41d8cd98f00b204e9800998ecf8427e then reads as a measured "shipped" hash — it was
   # printed as one on 2026-10-15, against a commit that predated the hook's versioning. So read the bytes
@@ -165,11 +183,11 @@ if [ -f "$HOOK_DST" ]; then
   fi
   [ -n "$HOOK_TMP" ] && rm -f "$HOOK_TMP"
   if [ -z "$B" ]; then
-    warn "hook installed ($A) but the shipped tree's hook could not be read — REFUSING to compare (step 6b installs from the tree anyway)"
+    warn "hook installed (whole-file $A_FILE) but the shipped tree's hook could not be read — REFUSING to compare (step 6b installs from the tree anyway)"
   elif [ "$A" = "$B" ]; then
-    ok "hook installed at $HOOK_DST and identical to the shipped tree ($A)"
+    ok "hook installed at $HOOK_DST: $A_METHOD md5 $A == the shipped tree's hook (whole-file $A_FILE; the provenance block is the only difference)"
   else
-    warn "hook installed but differs from the shipped tree (installed $A / shipped $B) — step 6b will reinstall it from the tree"
+    warn "hook installed but its $A_METHOD differs from the shipped tree ($A_METHOD $A / shipped $B; whole-file $A_FILE) — step 6b reinstalls it from the tree"
   fi
 else
   no "hook NOT installed at $HOOK_DST — a restart would not re-arm the guard"

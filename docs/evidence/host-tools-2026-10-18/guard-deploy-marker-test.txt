@@ -1,0 +1,34 @@
+== (a)+(b) marker present -> stand down, then marker absent -> arm, one log ==
+  PASS  (a) hook ran at all (it wrote its log)
+  PASS  (a) log names the stand-down and the owning pid
+  PASS  (a) log says it stood down
+  PASS  (a) nothing was armed
+  PASS  (a) no start was attempted
+  PASS  (b) arms once the marker is gone
+  PASS  (b) a guard holds the lock
+  PASS  (b) the guard it armed is the stub, verified by cmdline
+  --- the same log, stand-down then arming, in order: ---
+      2026-10-18T08:56:22+00:00 hook: deploy in progress (pid 9961, marker 0s old, ttl 900s) — standing down, not arming a guard
+      2026-10-18T08:56:22+00:00 hook: guard not running, started it (pid 9987)
+  PASS  (a<b) the stand-down precedes the arming in one log
+== (c1) marker left by a crash: pid dead -> stale, arms anyway ==
+  PASS  (c1) the marker is named stale
+  PASS  (c1) says plainly it ignored it
+  PASS  (c1) the guard is armed — a crashed deploy does not strand the product
+  PASS  (c1) it did not stand down
+== (c2) marker with a live pid but older than the TTL -> stale, arms anyway ==
+  PASS  (c2) a live-but-old marker is still stale
+  PASS  (c2) the guard is armed
+== (c3) the TTL is a knob, and it is honoured ==
+  PASS  (c3) ttl=30 makes a 70s marker stale
+== (d) the deploy's ordering, on measured line numbers ==
+  lines: write=260 reap=263 remove=324 trap=261
+  PASS  (d) all three steps exist
+  PASS  (d) the marker is written BEFORE the kill window
+  PASS  (d) it is removed after the reap, i.e. once a guard is verified
+  PASS  (d) a trap removes it on any exit path
+  PASS  (d) the genuine stale-holder reap is untouched
+  PASS  (d) the kill pattern is pinned to the guard's path, not a bare process name
+
+RESULT: 22 passed, 0 failed
+exit=0

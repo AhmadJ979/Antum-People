@@ -1,0 +1,22 @@
+=== the copies as they were found, before any change ===
+measured 2026-10-18T08:56:19+00:00 on (none)
+
+--- whole-file md5 of every host copy at the time ---
+6bd6c05cab9b8fb71c10372b52a1800e  /home/team/shared/deploy-main.sh
+9cf3bd69354d4052f2bc356345f224c7  /home/team/shared/cutover-preflight.sh
+549d88da96b613ffd60e0c29adef0614  /home/team/shared/restore-product.sh
+e1b7d13de6b76b755a2e62ff4726bb64  /home/team/shared/rollback-to-9d2182a.sh
+8aa8be124bb179c25fd7c76b975eb179  /home/team/shared/success-test.sh
+9d110e8c24ec4efadfdb76133e848296  /etc/profile.d/zz-antum-product-guard.sh
+
+--- the mismatch, measured ---
+host deploy-main.sh header : # HOST COPY, installed from main @662e881d10a0 (the merge of PR #201) on 2026-10-17.
+grep -c deploy-in-progress : 0
+hook consults the marker   : 3 hits
+
+--- the three headers that pointed at a script that did not exist ---
+/home/team/shared/host-tools-backup-20261018T085333Z/cutover-preflight.sh.pre-install:3:# Regenerate with: scripts/install-host-tools.sh in the reposi
+/home/team/shared/host-tools-backup-20261018T085333Z/restore-product.sh.pre-install:3:# Regenerate with: scripts/install-host-tools.sh in the reposito
+/home/team/shared/host-tools-backup-20261018T085333Z/rollback-to-9d2182a.sh.pre-install:3:# Regenerate with: scripts/install-host-tools.sh in the repo
+/home/team/shared/host-tools-backup-20261018T085333Z/zz-antum-product-guard.sh.pre-install:4:# Body below == lines 1 and 2.. of that blob. Regenerate:
+in the repository at that commit: 0 path(s)

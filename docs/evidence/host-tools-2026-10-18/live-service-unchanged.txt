@@ -1,0 +1,9 @@
+=== the movement's own preconditions, read after the tooling was refreshed ===
+deployed tree HEAD        : e19a98a
+deployed origin/main      : adf1332
+public GET /              : 200
+asset named by the page   : assets/index-Bh1-0KrL.js
+notice without a token    : 401
+listener on port 3000     : pid 18724
+keep-alive processes      : 1
+    22723 bash scripts/keep-alive.sh

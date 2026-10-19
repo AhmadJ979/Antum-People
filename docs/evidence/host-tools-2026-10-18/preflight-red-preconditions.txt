@@ -1,0 +1,13 @@
+=== the preflight's own documented sanity overrides (must exit 1) ===
+--- ANTUM_EXPECT_SERVED=deadbee ---
+exit=1
+  serving today: deadbee  asset index-Bh1-0KrL.js
+--- disk: the movement's measured need is ~3.8 MB; a full disk fails a movement silently ---
+  FAIL  deployed tree HEAD = e19a98a, expected deadbee
+=== PREFLIGHT FAIL — 1 precondition(s) do not hold; do not start the movement ===
+
+--- ANTUM_MEASURED_TIP=9d2182a (client/ moved) ---
+exit=1
+--- disk: the movement's measured need is ~3.8 MB; a full disk fails a movement silently ---
+  FAIL  the shipped commit adf1332071f0 is 116 commit(s) past the measured 9d2182a and client/ CHANGED (client/src/App.tsx ) — the expected bundle hash is unknown, so this package cannot state the after-state. Re-measure the build (scratch worktree + df sampling) and update ANTUM_MEASURED_TIP; conscious override: ANTUM_ALLOW_MOVED_TIP=1
+=== PREFLIGHT FAIL — 1 precondition(s) do not hold; do not start the movement ===

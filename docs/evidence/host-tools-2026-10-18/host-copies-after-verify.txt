@@ -1,0 +1,13 @@
+=== independent body comparison (awk strip, vs git blob) ===
+deploy-main.sh                                       body c16d32540bd7ffdd5331d40ecaa60360  blob c16d32540bd7ffdd5331d40ecaa60360  MATCH
+cutover-preflight.sh                                 body 485876d5933b8d79374798776d2d0e00  blob 485876d5933b8d79374798776d2d0e00  MATCH
+restore-product.sh                                   body 8c592edd2ac18ed0c859befced0f63d1  blob 8c592edd2ac18ed0c859befced0f63d1  MATCH
+rollback-to-9d2182a.sh                               body 605bb77c9e3b119a078cc96f17c263a2  blob 605bb77c9e3b119a078cc96f17c263a2  MATCH
+success-test.sh                                      body da80db2824e8e810fd64db2a913e69bf  blob da80db2824e8e810fd64db2a913e69bf  MATCH
+zz-antum-product-guard.sh                            body 728bf2cce72b8c6f9a3cf257f3dfc070  blob 728bf2cce72b8c6f9a3cf257f3dfc070  MATCH
+
+=== the marker write is in the host copy now ===
+grep -c deploy-in-progress /home/team/shared/deploy-main.sh -> 2
+  (2, not 1: one is the code that writes the marker, one is the step-1b comment that names it.)
+111:# `deploy-in-progress` marker write, while the installed hook was #203's and WAITS for exactly that
+266:MARKER="$DEPLOY_DIR/server/deploy-in-progress"
