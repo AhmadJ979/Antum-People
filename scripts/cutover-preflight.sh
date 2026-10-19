@@ -89,9 +89,13 @@ MIN_FREE_KB=200000
 # hook aside, which is a worse idea than adding the override. scripts/install-host-tools-test.sh
 # asserts this knob exists.
 HOOK_DST="${ANTUM_HOOK_DST:-/etc/profile.d/zz-antum-product-guard.sh}"
+# The deploy copy IN USE — its provenance names the revision it was installed from, and the hook must be
+# that revision's: they are one mechanism. Override (rule 14) so both directions can be exercised off-host.
+DEPLOY_COPY="${ANTUM_DEPLOY_COPY:-/home/team/shared/deploy-main.sh}"
 FAIL=0
 ok(){   printf '  PASS  %s\n' "$1"; }
 no(){   printf '  FAIL  %s\n' "$1"; FAIL=$((FAIL+1)); }
+note() { printf "  %s\n" "$*"; }
 warn(){ printf '  WARN  %s\n' "$1"; }
 
 echo "=== pre-cutover preflight $(date -Iseconds) ==="
@@ -156,14 +160,19 @@ esac
 HOLDERS=$(lsof -t "$DEPLOY_DIR/server/keep-alive.lock" 2>/dev/null | wc -l)
 [ "${HOLDERS:-0}" -le 1 ] && ok "lock holders: $HOLDERS (only the guard)" || warn "lock held by $HOLDERS processes — step 6 reaps extra holders, expect a longer window"
 
-echo "--- the login-shell hook: versioned is not installed ---"
+echo "--- the login-shell hook: which revision is it, and does it pair with its deploy ---"
 if [ -f "$HOOK_DST" ]; then
-  # The installed copy carries a provenance block (scripts/install-host-tools.sh adds it), and that
-  # block is the ONLY intended difference from the repository blob. Comparing WHOLE FILES therefore
-  # reported drift on every run, on a host whose hook's body was byte-identical — a WARN that can never
-  # go green, which trains the reader to ignore the line. (Measured 2026-10-18: installed 54c964b4… vs
-  # shipped 728bf2cc…, differing by exactly the three inserted provenance lines.) So compare the BODY,
-  # and SAY which comparison ran rather than printing the same green either way.
+  # THE BODY, NOT THE WHOLE FILE (2026-10-18), AND THE REVISION, NOT ONE CANDIDATE (2026-10-19).
+  #
+  # The installed copy carries a provenance block whose only effect is to add comment lines, so comparing
+  # whole files reported drift on every run against a hook whose body was byte-identical — a WARN that
+  # could never go green, which trains the reader to ignore the line.
+  #
+  # Attributing the bytes to ONE candidate (the served tree) was the next defect: on 2026-10-19 this host
+  # printed green while the live hook was the SERVED tree's (`ca4f9583…`, 0 occurrences of
+  # `deploy-in-progress`) and the deploy copy writing that marker came from a revision 40 commits ahead.
+  # The hook is what reads `server/deploy-in-progress`; the deploy is what writes it. They are one
+  # mechanism, so the check now says WHICH revision the live hook is and whether it is the deploy's.
   # The marker text is the installer's; scripts/install-host-tools-test.sh asserts the two agree.
   A_FILE=$(md5sum < "$HOOK_DST" | cut -d' ' -f1)
   A_METHOD=whole-file
@@ -172,23 +181,63 @@ if [ -f "$HOOK_DST" ]; then
     A_METHOD=body
     A=$(sed -e '/^# >>> ANTUM HOST-TOOL PROVENANCE/,/^# <<< ANTUM HOST-TOOL PROVENANCE/d' "$HOOK_DST" | md5sum | cut -d' ' -f1)
   fi
-  # DERIVE-OR-REFUSE. Piping `git show` into md5sum hashes EMPTY input when the show fails, and the
-  # empty-string hash d41d8cd98f00b204e9800998ecf8427e then reads as a measured "shipped" hash — it was
-  # printed as one on 2026-10-15, against a commit that predated the hook's versioning. So read the bytes
-  # into a file, hash only what actually arrived, and refuse to compare when nothing did.
-  HOOK_TMP=$(mktemp) || HOOK_TMP=""
-  B=""
-  if [ -n "$HOOK_TMP" ] && git -C "$REPO" show "${SHIPPED:-$EXPECT_SERVED}:scripts/antum-product-guard-hook.sh" >"$HOOK_TMP" 2>/dev/null && [ -s "$HOOK_TMP" ]; then
-    B=$(md5sum < "$HOOK_TMP" | cut -d' ' -f1)
+  SERVED_REV="${SHIPPED:-$EXPECT_SERVED}"
+  DREV=$(sed -n 's/^# source-revision: \([0-9a-f]\{7,\}\).*/\1/p' "$DEPLOY_COPY" 2>/dev/null | head -1)
+  # DERIVE-OR-REFUSE: read the bytes into a file and hash only what arrived. Piping `git show` into
+  # md5sum hashes EMPTY input when the show fails, and d41d8cd98f00b204e9800998ecf8427e then reads as a
+  # measured "shipped" hash — it was printed as one on 2026-10-15, against a commit that predated the
+  # hook's versioning.
+  blob_hook_md5() { # $1 = revision -> md5 of its hook, EMPTY when unreadable (never the empty hash)
+    local t; t=$(mktemp) || return 1
+    git -C "$REPO" show "$1:scripts/antum-product-guard-hook.sh" > "$t" 2>/dev/null
+    if [ -s "$t" ]; then md5sum < "$t" | cut -d' ' -f1; fi
+    rm -f "$t"
+  }
+  B_SERVED=$(blob_hook_md5 "$SERVED_REV")
+  B_MAIN=$(blob_hook_md5 origin/main)
+  B_DEPLOY=""
+  [ -n "$DREV" ] && B_DEPLOY=$(blob_hook_md5 "$DREV")
+  M_LIVE=$(grep -c 'deploy-in-progress' "$HOOK_DST" 2>/dev/null | head -1)
+  M_DEPLOY="?"
+  [ -n "$DREV" ] && M_DEPLOY=$(git -C "$REPO" show "$DREV:scripts/antum-product-guard-hook.sh" 2>/dev/null | grep -c 'deploy-in-progress' | head -1)
+
+  if [ "$A_METHOD" = whole-file ]; then
+    warn "hook installed at $HOOK_DST carries NO provenance block (whole-file md5 $A_FILE) — attributed by its bytes alone"
   fi
-  [ -n "$HOOK_TMP" ] && rm -f "$HOOK_TMP"
-  if [ -z "$B" ]; then
-    warn "hook installed (whole-file $A_FILE) but the shipped tree's hook could not be read — REFUSING to compare (step 6b installs from the tree anyway)"
-  elif [ "$A" = "$B" ]; then
-    ok "hook installed at $HOOK_DST: $A_METHOD md5 $A == the shipped tree's hook (whole-file $A_FILE; the provenance block is the only difference)"
+  if [ -z "$DREV" ]; then
+    warn "the deploy copy $DEPLOY_COPY carries NO provenance block — the hook cannot be paired with a revision; reinstall the copies (bash scripts/install-host-tools.sh)"
+  fi
+
+  # A FAIL here would block the very movement that repairs the pairing (a full movement installs the hook
+  # from the tip at step 1b/6b), so every pair verdict below is a WARN that names both halves.
+  if [ -n "$B_DEPLOY" ] && [ "$A" = "$B_DEPLOY" ]; then
+    ok "hook installed at $HOOK_DST: $A_METHOD md5 $A == the deploy copy's revision ${DREV:0:12} — PAIRED with the deploy that writes the marker"
+  elif [ -n "$B_SERVED" ] && [ "$A" = "$B_SERVED" ] && [ -n "$B_DEPLOY" ] && [ "$B_DEPLOY" != "$B_SERVED" ]; then
+    warn "hook installed at $HOOK_DST IS THE SERVED TREE'S (${SERVED_REV:0:12}, $A_METHOD md5 $A) while the deploy copy $DEPLOY_COPY came from ${DREV:0:12} — UNPAIRED: that deploy writes server/deploy-in-progress and this hook does not read it. Fix: the next step 6b, or now: bash scripts/install-host-tools.sh --hook-rev $DREV"
+  elif [ -n "$B_MAIN" ] && [ "$A" = "$B_MAIN" ]; then
+    warn "hook installed at $HOOK_DST: $A_METHOD md5 $A == origin/main's hook, but the deploy copy's revision is ${DREV:-<none: no provenance>} — check the pairing (they must be one revision)"
+  elif [ -n "$B_SERVED" ] || [ -n "$B_MAIN" ] || [ -n "$B_DEPLOY" ]; then
+    warn "hook installed at $HOOK_DST matches NO revision this repository has ($A_METHOD md5 $A; served ${SERVED_REV:0:12} -> $B_SERVED, main -> $B_MAIN${DREV:+, deploy ${DREV:0:12} -> $B_DEPLOY}) — it cannot be attributed, so no pair can be checked"
   else
-    warn "hook installed but its $A_METHOD differs from the shipped tree ($A_METHOD $A / shipped $B; whole-file $A_FILE) — step 6b reinstalls it from the tree"
+    warn "hook installed (whole-file $A_FILE) but no candidate revision's hook could be read from $REPO — REFUSING to attribute it (step 6b installs from the deploy's revision)"
   fi
+  if [ "${M_LIVE:-0}" -gt 0 ]; then
+    note "the marker this deploy writes has a reader here: the live hook mentions deploy-in-progress ${M_LIVE} time(s), the deploy copy's hook ${M_DEPLOY} time(s)"
+  else
+    warn "the marker this deploy writes has NO READER here: the live hook mentions deploy-in-progress ${M_LIVE:-0} time(s), the deploy copy's hook ${M_DEPLOY} time(s) (deploy copy revision ${DREV:-<none>}) — a restart during a deploy window would arm a guard the deploy then reaps"
+  fi
+  # Both candidates are compared with origin/main, always, because a raw install from a revision whose
+  # hook is behind main's is exactly how this host lost the #203 stand-down.
+  for _rev in "${SERVED_REV:-}" "${DREV:-}"; do
+    [ -n "$_rev" ] || continue
+    _m=$(blob_hook_md5 "$_rev")
+    [ -n "$_m" ] || continue
+    if [ "$_m" = "$B_MAIN" ]; then
+      note "  the hook at ${_rev:0:12} (=$([ "$_rev" = "$SERVED_REV" ] && echo 'served tree' || echo 'deploy copy')) IS origin/main's"
+    else
+      warn "the hook at ${_rev:0:12} (=$([ "$_rev" = "$SERVED_REV" ] && echo 'served tree' || echo 'deploy copy')) is NOT origin/main's — $(git -C "$REPO" rev-list --count "$_rev..origin/main" 2>/dev/null) commit(s) behind; the difference is the stand-down block that reads the deploy marker, so installing the hook raw from it leaves the marker without a reader"
+    fi
+  done
 else
   no "hook NOT installed at $HOOK_DST — a restart would not re-arm the guard"
 fi

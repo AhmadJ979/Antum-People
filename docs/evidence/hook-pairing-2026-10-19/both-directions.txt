@@ -1,0 +1,48 @@
+scratch: /tmp/hook-pairing.6NrM9f
+tree measured against: a5aa0e6 (this clone) · deployed tree /home/team/shared/probable-octo-sniffle at a5aa0e6
+
+=== the layout: what the host actually has today (the defect) ===
+  hook installed (served tree's, raw): md5 ca4f9583, marker reads 0
+  deploy copy's revision            : a5aa0e62f22900c330c7867b2947e84ffbd72f25 (from its provenance block)
+  that revision's hook              : 728bf2cc, marker reads 3
+
+=== RED: the preflight, on the layout above ===
+  exit=1 (the movement's other preconditions may fail; the hook lines are what is measured)
+  --- the login-shell hook: which revision is it, and does it pair with its deploy ---
+    WARN  hook installed at /tmp/hook-pairing.6NrM9f/hook-served-raw.sh carries NO provenance block (whole-file md5 ca4f958365d7fd9bae5aec8d56aede71) — attributed by its bytes alone
+    WARN  hook installed at /tmp/hook-pairing.6NrM9f/hook-served-raw.sh matches NO revision this repository has (whole-file md5 ca4f958365d7fd9bae5aec8d56aede71; served a5aa0e62f229 -> 728bf2cce72b8c6f9a3cf257f3dfc070, main -> 728bf2cce72b8c6f9a3cf257f3dfc070, deploy a5aa0e62f229 -> 728bf2cce72b8c6f9a3cf257f3dfc070) — it cannot be attributed, so no pair can be checked
+    WARN  the marker this deploy writes has NO READER here: the live hook mentions deploy-in-progress 0 time(s), the deploy copy's hook 3 time(s) (deploy copy revision a5aa0e62f22900c330c7867b2947e84ffbd72f25) — a restart during a deploy window would arm a guard the deploy then reaps
+      the hook at a5aa0e62f229 (=served tree) IS origin/main's
+      the hook at a5aa0e62f229 (=served tree) IS origin/main's
+
+=== the fix, run off-host: install the hook from the deploy's revision ===
+  exit=0
+    dest:   /tmp/hook-pairing.6NrM9f/tools   hook: /tmp/hook-pairing.6NrM9f/hook-paired.sh   mode: install
+    hook:   from the deploy's revision a5aa0e62f22900c330c7867b2947e84ffbd72f25
+    INSTALLED /tmp/hook-pairing.6NrM9f/tools/deploy-main.sh   body md5 cdf31d095597cd58b1618fcdd10de91f
+    INSTALLED /tmp/hook-pairing.6NrM9f/tools/cutover-preflight.sh   body md5 87636e3cfad1bac9562e88ec22252ed2
+    INSTALLED /tmp/hook-pairing.6NrM9f/tools/restore-product.sh   body md5 8c592edd2ac18ed0c859befced0f63d1
+    INSTALLED /tmp/hook-pairing.6NrM9f/tools/rollback-to-9d2182a.sh   body md5 605bb77c9e3b119a078cc96f17c263a2
+    INSTALLED /tmp/hook-pairing.6NrM9f/tools/success-test.sh   body md5 da80db2824e8e810fd64db2a913e69bf
+    hook source: the deploy's revision a5aa0e6
+    INSTALLED /tmp/hook-pairing.6NrM9f/hook-paired.sh   body md5 728bf2cce72b8c6f9a3cf257f3dfc070
+  === RESULT: 6 of 6 copies installed or refreshed from a5aa0e62f229; backups: /tmp/hook-pairing.6NrM9f/backup
+
+=== GREEN: the same preflight, hook now from the deploy's revision ===
+  exit=1
+  --- the login-shell hook: which revision is it, and does it pair with its deploy ---
+    PASS  hook installed at /tmp/hook-pairing.6NrM9f/hook-paired.sh: body md5 728bf2cce72b8c6f9a3cf257f3dfc070 == the deploy copy's revision a5aa0e62f229 — PAIRED with the deploy that writes the marker
+    the marker this deploy writes has a reader here: the live hook mentions deploy-in-progress 3 time(s), the deploy copy's hook 3 time(s)
+      the hook at a5aa0e62f229 (=served tree) IS origin/main's
+      the hook at a5aa0e62f229 (=served tree) IS origin/main's
+
+=== the deploy's FALLBACK path resolves the same revision (read-only, no install) ===
+  git -C /home/team/shared/probable-octo-sniffle cat-file -e a5aa0e62f22900c330c7867b2947e84ffbd72f25:scripts/antum-product-guard-hook.sh -> RESOLVES
+  its bytes: md5 728bf2cc — so 6b's fallback installs the PAIRED hook, not the tree's
+
+=== and when the revision cannot be resolved: the tree, with the reason ===
+  exit=0
+    WARNING: the deploy names deadbeefdeadbeefdeadbeef but scripts/antum-product-guard-hook.sh is not in it — installing the TREE's hook.
+    hook source: the TREE — the deploy's revision deadbeefdeadbeefdeadbeef could not be resolved in /home/agent-senior-software-engineer/antum-people
+
+scratch kept for inspection: /tmp/hook-pairing.6NrM9f

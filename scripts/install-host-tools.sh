@@ -22,6 +22,13 @@
 #   ANTUM_REPO               repository to read from (default: this script's parent directory)
 #   ANTUM_HOST_TOOLS_DIR     where the operator-facing copies go (default /home/team/shared)
 #   ANTUM_HOOK_DST           the login-shell hook's path (default /etc/profile.d/zz-antum-product-guard.sh)
+#   ANTUM_HOOK_REV           install the hook from THIS revision instead of the tree. The deploy sets it
+#                            to the revision its own provenance names, because the hook and the deploy
+#                            that writes the `deploy-in-progress` marker are ONE mechanism: a `--restart-only`
+#                            run takes its hook from the SERVED tree (older) while the deploy copy it is
+#                            executing comes from a newer revision, and the host then runs a deploy that
+#                            announces a kill window against a hook that cannot read the announcement
+#                            (measured on this host 2026-10-19). Unresolvable -> the tree, with the reason.
 #   ANTUM_HOST_TOOLS_BACKUP  where a file that is about to CHANGE is copied first
 #                            (default <dest>/host-tools-backup-<UTC stamp>; created only if needed)
 #
@@ -54,12 +61,15 @@ HOOK_DST="${ANTUM_HOOK_DST:-/etc/profile.d/zz-antum-product-guard.sh}"
 BACKUP_ROOT="${ANTUM_HOST_TOOLS_BACKUP:-}"
 
 REV=""
+HOOK_REV="${ANTUM_HOOK_REV:-}"
+HOOK_RPATH=scripts/antum-product-guard-hook.sh
 MODE=install
 BODY_FILE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --verify) MODE=verify ;;
     --commit) [ -n "${2:-}" ] || { echo "FAIL: --commit needs a revision"; exit 2; }; REV="$2"; shift ;;
+    --hook-rev) [ -n "${2:-}" ] || { echo "FAIL: --hook-rev needs a revision"; exit 2; }; HOOK_REV="$2"; shift ;;
     --body-md5) [ -n "${2:-}" ] || { echo "FAIL: --body-md5 needs a file"; exit 2; }; BODY_FILE="$2"; MODE=body ;;
     -h|--help) sed -n '2,40p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1 (use --commit <rev>, --verify, --body-md5 <file>, or --help)"; exit 2 ;;
@@ -112,6 +122,7 @@ if [ "$SRC_KIND" = working-tree ]; then
 fi
 echo "  revision: $SRC_SHA ($SRC_KIND)"
 [ "$TREE_STATE" = clean ] || echo "  WARNING: $TREE_STATE"
+[ -n "$HOOK_REV" ] && echo "  hook:   from the deploy's revision $HOOK_REV"
 echo
 
 # name in the repository | destination | mode
@@ -208,9 +219,25 @@ while IFS='|' read -r rpath dest mode; do
   [ -n "$rpath" ] || continue
   N=$((N+1))
   src="$TMPDIR_HERE/$(basename "$rpath")"
-  if ! fetch_src "$rpath" "$src"; then
+  SRC_FROM="the tree ($SRC_SHA)"
+  # THE HOOK PAIRS WITH ITS DEPLOY. This is the one target whose source is not the tree when a deploy
+  # revision was named: the marker-writer and the marker-reader are one mechanism, and a `--restart-only`
+  # run (every replacement recovery, and the path that installed the unpaired hook measured on
+  # 2026-10-19) executes a deploy copy from a NEWER revision than the tree it serves.
+  if [ "$rpath" = "$HOOK_RPATH" ] && [ -n "$HOOK_REV" ]; then
+    if git -C "$REPO" cat-file -e "$HOOK_REV:$rpath" 2>/dev/null; then
+      git -C "$REPO" show "$HOOK_REV:$rpath" > "$src" 2>/dev/null
+      SRC_FROM="the deploy's revision $(git -C "$REPO" rev-parse --short "$HOOK_REV" 2>/dev/null)"
+    else
+      SRC_FROM="the TREE — the deploy's revision $HOOK_REV could not be resolved in $REPO"
+      echo "  WARNING: the deploy names $HOOK_REV but $rpath is not in it — installing the TREE's hook."
+      echo "           An unpaired hook cannot read the marker its deploy writes; resolve the revision."
+    fi
+  fi
+  if [ ! -s "$src" ] && ! fetch_src "$rpath" "$src"; then
     echo "  FAILED    $rpath — could not read it from $SRC_SHA ($SRC_KIND)"; FAIL=1; continue
   fi
+  if [ "$rpath" = "$HOOK_RPATH" ]; then echo "  hook source: $SRC_FROM"; fi
   if [ "$MODE" = verify ]; then
     verify_target "$dest" "$src" "$rpath" || FAIL=1
   else

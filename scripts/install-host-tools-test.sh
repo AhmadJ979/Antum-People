@@ -175,5 +175,28 @@ check "[ \"\$HOST_AFTER\" = \"\$HOST_BEFORE\" ]" "(h) /home/team/shared *.sh unc
 check "[ \"\$(md5sum < '$HOOK_DST_LIVE' 2>/dev/null || echo none)\" = \"\$HOST_HOOK_BEFORE\" ]" "(h) the installed login-shell hook unchanged by this test"
 
 echo
+echo "== (i) the hook pairs with the deploy's revision, and says which =="
+# The host's hook must come from the revision the running deploy copy names, not from the tree: on
+# 2026-10-19 a replacement left the SERVED tree's hook (0 reads of deploy-in-progress) installed against
+# a deploy copy from a revision 40 commits ahead, and the pair check was green by construction.
+ANTUM_HOST_TOOLS_DIR="$DST" ANTUM_HOOK_DST="$DST/hook-from-rev.sh" ANTUM_HOST_TOOLS_BACKUP="$BK" \
+  ANTUM_HOOK_SRC="" ANTUM_REPO="$REPO" ANTUM_HOOK_REV="$SRC_SHA" \
+  bash "$INSTALLER" > "$ROOT/hookrev.log" 2>&1; HR=$?
+check "[ $HR -eq 0 ]" "(i) installing the hook from a named revision exits 0"
+check "grep -q \"hook source: the deploy's revision $(echo "$SRC_SHA" | cut -c1-7)\" '$ROOT/hookrev.log'" \
+  "(i) the log NAMES the revision it installed from"
+check "[ \"\$(body_md5 '$DST/hook-from-rev.sh')\" = \"\$(git -C '$REPO' show '$SRC_SHA:scripts/antum-product-guard-hook.sh' | md5sum | cut -d' ' -f1)\" ]" \
+  "(i) and the installed body is that revision's hook"
+ANTUM_HOST_TOOLS_DIR="$DST" ANTUM_HOOK_DST="$DST/hook-fallback.sh" ANTUM_HOST_TOOLS_BACKUP="$BK" \
+  ANTUM_HOOK_SRC="" ANTUM_REPO="$REPO" ANTUM_HOOK_REV=deadbeefdeadbeef \
+  bash "$INSTALLER" > "$ROOT/hookfb.log" 2>&1; HF=$?
+check "[ $HF -eq 0 ]" "(i) an UNRESOLVABLE revision does not crash it"
+check "grep -q 'the TREE' '$ROOT/hookfb.log'" "(i) it falls back to the tree, and names that"
+check "grep -q 'could not be resolved' '$ROOT/hookfb.log'" "(i) and says why, rather than guessing silently"
+check "grep -q 'ANTUM_DEPLOY_COPY' '$PREFLIGHT'" "(i) the preflight's deploy copy is an override (rule 14), so the pair can be exercised off-host"
+check "grep -q \"the deploy copy's revision\" '$PREFLIGHT'" "(i) and the preflight's verdict NAMES the deploy's revision"
+check "grep -q 'NO READER' '$PREFLIGHT'" "(i) and warns when the live hook has no marker reader"
+
+echo
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

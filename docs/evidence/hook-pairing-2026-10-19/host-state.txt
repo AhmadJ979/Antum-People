@@ -1,0 +1,9 @@
+=== the host's measured state, before this task changed anything ===
+host: (none), measured 2026-10-19T10:41:02+00:00
+live hook          : md5 3f7684d1, 7522 B, deploy-in-progress mentions 3, provenance block 2
+live hook == e19a98a's hook : no
+origin/main's hook : md5 728bf2cc, deploy-in-progress mentions 3
+deploy copy        : source-revision a5aa0e62f22900c330c7867b2947e84ffbd72f25
+deploy copy writes the marker : 1 reference(s)
+commits e19a98a..origin/main  : 40
+guard : 1 process(es) — untouched by this task

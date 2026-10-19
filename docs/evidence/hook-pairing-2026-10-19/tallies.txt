@@ -1,0 +1,13 @@
+=== full node suite at a5aa0e6, PRODUCT_DB_PATH pinned ===
+# tests 170
+# pass 170
+# fail 0
+# skipped 0
+
+=== guard-deploy-marker-test.sh ===
+
+RESULT: 22 passed, 0 failed
+
+=== install-host-tools-test.sh ===
+
+RESULT: 63 passed, 0 failed

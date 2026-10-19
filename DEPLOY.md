@@ -81,6 +81,18 @@ It installs `deploy-main.sh`, `cutover-preflight.sh`, `restore-product.sh`, `rol
 replacing a script that is executing cannot corrupt the running process) and **idempotently** (a second run
 with the same source changes no byte, so the copies' mtimes stay put).
 
+**The hook is installed from the deploy's revision, not from the tree.** `deploy-main.sh` step 6b reads the
+revision out of its own provenance block (`$0`) and passes it as `--hook-rev`; the installer resolves that
+revision, installs the hook from it, and **logs which revision it used** — or, when the object cannot be
+resolved, that it fell back to the tree and why. The two must come from one revision: the hook is what reads
+`server/deploy-in-progress`, and the deploy is what writes it, so a hook from an older revision cannot see
+the kill window its own deploy announces. This bit on 2026-10-19: a replacement left the host running
+`e19a98a`'s hook (0 occurrences of `deploy-in-progress`) against an installed deploy copy from a revision
+40 commits ahead, and the preflight printed green because it compared the hook with the **served** tree.
+The preflight now attributes the live hook to a revision by its bytes, compares that with the deploy copy's
+revision, warns when they differ or when the live hook carries no provenance, and states how far the served
+tree is behind `origin/main` — the distance that makes a raw install dangerous at all.
+
 `deploy-main.sh` calls it itself: **step 1b**, immediately after the reset, and again in **step 6b**. So the
 copies the NEXT movement runs are always as new as the tip it moved to, even if a run fails later at the
 build or the seed. Before this existed, the copy an operator invoked was the one the PREVIOUS movement had
@@ -91,13 +103,13 @@ hook down. See `docs/evidence/host-tools-2026-10-18/`.
 **Before a movement on a host whose copies are older than the tip, refresh them from the tip first:**
 
 ```
-bash -c 'cd /home/team/shared/probable-octo-sniffle && git fetch origin main && git show FETCH_HEAD:scripts/install-host-tools.sh > /tmp/install-host-tools.sh && ANTUM_REPO=/home/team/shared/probable-octo-sniffle bash /tmp/install-host-tools.sh --commit FETCH_HEAD'
+bash -c 'cd /home/team/shared/probable-octo-sniffle && git fetch origin main && T=$(mktemp -t install-host-tools.XXXXXX.sh) && git show FETCH_HEAD:scripts/install-host-tools.sh > "$T" && ANTUM_REPO=/home/team/shared/probable-octo-sniffle bash "$T" --commit FETCH_HEAD'
 ```
 
 That shape is deliberate: it reads the blobs out of the fetched commit, so it never resets the deployed
 tree — a reset without a build would leave the tree's server code newer than the bundle it serves.
 
-`scripts/install-host-tools-test.sh` proves all of it off the host (53 checks: bodies, provenance,
+`scripts/install-host-tools-test.sh` proves all of it off the host (54 checks: bodies, provenance,
 idempotence, the red direction of `--verify`, the refusal of a file that does not parse, and that the live
 copies are untouched by the test itself).
 

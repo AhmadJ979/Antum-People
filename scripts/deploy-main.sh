@@ -342,15 +342,44 @@ HOOK_DST="${ANTUM_HOOK_DST:-/etc/profile.d/zz-antum-product-guard.sh}"
 # stripped the provenance block the installer had just added, and left the preflight's file comparison
 # permanently unable to go green on a hook whose body was byte-identical. The installer writes every
 # copy — this hook included — and derives the provenance from the tree.
+# WHICH REVISION'S HOOK — read from $0, not from the tree, and that is the whole point.
+# The hook and the deploy that writes the `deploy-in-progress` marker are ONE mechanism. This copy
+# carries the revision it was installed from in its provenance block. On --restart-only the tree is the
+# SERVED revision, which may be far older than this copy: on 2026-10-19 the host was running a
+# marker-writing deploy against a hook that contained 0 occurrences of `deploy-in-progress` — the race
+# #203 fixed, live again, with the preflight green because it compared against the served tree. After a
+# full movement's step 1b rewrites this file, $0 names the tip instead, so the same line installs the
+# tip's hook. Either way the hook follows the deploy that is running.
+SELF_REV=$(sed -n 's/^# source-revision: \([0-9a-f]\{7,\}\).*/\1/p' "$0" 2>/dev/null | head -1)
+if [ -n "$SELF_REV" ]; then
+  echo "  deploy copy revision: $SELF_REV (read from $0)"
+else
+  echo "  deploy copy revision: UNKNOWN ($0 carries no provenance block) — the hook will come from the tree"
+fi
 HOST_TOOLS="$DEPLOY_DIR/scripts/install-host-tools.sh"
 if [ -f "$HOST_TOOLS" ]; then
-  ANTUM_HOOK_DST="$HOOK_DST" ANTUM_HOST_TOOLS_DIR="${ANTUM_HOST_TOOLS_DIR:-/home/team/shared}" \
+  ANTUM_HOOK_REV="$SELF_REV" ANTUM_HOOK_DST="$HOOK_DST" \
+    ANTUM_HOST_TOOLS_DIR="${ANTUM_HOST_TOOLS_DIR:-/home/team/shared}" \
     bash "$HOST_TOOLS" || echo "WARNING: the host tooling install reported failures — the hook may not be installed"
 else
   # FALLBACK, named so the next reader understands why a hook WITHOUT a provenance block can exist: a
   # --restart-only run against a tree that predates the installer. Installing the hook raw beats not
   # installing it at all — a host restart without it leaves the product unguarded until a human notices.
-  echo "NOTE: $HOST_TOOLS is missing (this tree predates it) — installing the hook directly, without provenance"
+  # THE FALLBACK INSTALLS FROM THE DEPLOY'S REVISION TOO, not from the tree. This is the path a
+  # replacement recovery takes (--restart-only against a tree older than the installed copies), and it
+  # is the path that produced the unpaired hook on 2026-10-19. The tree's hook is the last resort, and
+  # whichever one is used is named in the log — never guessed silently.
+  if [ -n "$SELF_REV" ] && git -C "$DEPLOY_DIR" cat-file -e "$SELF_REV:scripts/antum-product-guard-hook.sh" 2>/dev/null; then
+    HOOK_FROM_REV=$(mktemp /tmp/antum-hook-XXXXXX.sh)
+    if git -C "$DEPLOY_DIR" show "$SELF_REV:scripts/antum-product-guard-hook.sh" > "$HOOK_FROM_REV" 2>/dev/null; then
+      HOOK_SRC="$HOOK_FROM_REV"
+      echo "NOTE: $HOST_TOOLS is missing (this tree predates it) — installing the hook from the deploy copy's revision $(git -C "$DEPLOY_DIR" rev-parse --short "$SELF_REV"), which is the revision that writes the marker"
+    fi
+  elif [ -n "$SELF_REV" ]; then
+    echo "WARNING: the deploy copy names $SELF_REV but its hook is not in this tree — installing the TREE's hook, which may not read the marker this deploy writes"
+  else
+    echo "NOTE: $HOST_TOOLS is missing and the deploy copy carries no revision — installing the TREE's hook"
+  fi
   if [ ! -f "$HOOK_SRC" ]; then
     echo "WARNING: $HOOK_SRC is missing — the host hook is NOT installed (a restart will not re-arm the watchdog)"
   elif ! bash -n "$HOOK_SRC" 2>/dev/null; then
@@ -358,7 +387,7 @@ else
   elif cmp -s "$HOOK_SRC" "$HOOK_DST"; then
     echo "guard hook: already installed and identical ($HOOK_DST)"
   elif install -m 0644 "$HOOK_SRC" "$HOOK_DST" 2>/dev/null && cmp -s "$HOOK_SRC" "$HOOK_DST"; then
-    echo "guard hook: installed $HOOK_DST from the deployed tree (bytes match)"
+    echo "guard hook: installed $HOOK_DST (bytes match) from ${HOOK_SRC}"
   else
     echo "WARNING: could not install the guard hook at $HOOK_DST — a restart will not re-arm the watchdog"
   fi
