@@ -358,7 +358,7 @@ app.get('/api/compliance/notice', async (req, res) => {
 // REMOVED 2026-10-13, owner decision 17 executed: `POST /api/compliance/consent` used to sit here.
 // It was the employee-record consent instrument's only writer inside the product — one INSERT into
 // consent_records plus `UPDATE employees SET consent_granted = 1, consent_date = ...` — and no
-// client code called it. The `consent_records` TABLE stays: purpose-scoped consent is decision 14's
+// client code called it. The `consent_records` TABLE stays: purpose-scoped consent is decision 17's
 // subject, and this removal takes away the door, not the store. Asserted in RETIRED
 // (server/reachability-register.js).
 

@@ -67,6 +67,40 @@ test('every /api route is reachable from a caller, or registered as callerless w
   );
 });
 
+// ---------------------------------------------------------------------------------------------
+// THE CHECK THAT WOULD HAVE CAUGHT A WRONG DECISION NUMBER (added 2026-10-19)
+//
+// Until now this file asserted `why` by SHAPE only (`entry.why.length > 40`) and the decision by
+// PATTERN only (`/decision \d+/`): it required *a* number, never *the right* number. So an entry whose
+// prose credited the wrong decision passed the whole suite — which is exactly how
+// `server/reachability-register.js`'s consent entry came to say "decision 14" for the decision 17 that
+// kept the table, and stayed latent until a reader noticed it (corrected as a one-word delta, #211).
+//
+// THE RULE: when an entry's prose names exactly ONE decision number, it must be the number in that
+// entry's own `decision`/`owner` field. A prose with no number is fine — most entries have none. A
+// prose naming TWO OR MORE distinct numbers is ambiguous by construction and is NAMED AND SKIPPED, not
+// silently tolerated: the last test in this file prints every entry the rule did not decide, because a
+// check that quietly shrinks prints the same green.
+const decisionNumbersIn = (text) =>
+  [...String(text || '').matchAll(/decision\s+(\d+)/gi)].map((m) => m[1]);
+const WHY_DECISION_SKIPS = [];
+function assertWhyNamesTheSameDecision(label, why, field) {
+  const inWhy = [...new Set(decisionNumbersIn(why))];
+  const inField = [...new Set(decisionNumbersIn(field))];
+  if (inWhy.length === 0 || inField.length === 0) {
+    WHY_DECISION_SKIPS.push(`${label} — nothing to compare (prose: ${inWhy.join(',') || 'no number'}; field: ${inField.join(',') || 'no number'})`);
+    return;
+  }
+  if (inWhy.length > 1) {
+    WHY_DECISION_SKIPS.push(`${label} — prose names decisions ${inWhy.join(' and ')}: ambiguous, not compared`);
+    return;
+  }
+  assert.strictEqual(inWhy[0], inField[0],
+    `${label}: the prose credits decision ${inWhy[0]} but its own field says decision ${inField[0]} — `
+    + 'one of the two is wrong, and before 2026-10-19 this suite could not see it (it required a '
+    + 'number, not the right one)');
+}
+
 test('the callerless register matches reality — a fixed orphan must leave it', () => {
   const stale = [];
   for (const [key, entry] of Object.entries(CALLERLESS)) {
@@ -77,6 +111,7 @@ test('the callerless register matches reality — a fixed orphan must leave it',
     }
     assert.ok(entry.why && entry.why.length > 40,
       `${key}: the register entry needs a real reason, not a placeholder`);
+  assertWhyNamesTheSameDecision(key, entry.why, entry.owner);
     assert.ok(entry.owner && /decision \d+/.test(entry.owner),
       `${key}: the register entry must name the decision that owns the fix`);
   }
@@ -141,6 +176,7 @@ test('a retired element stays retired — the removal is re-measured, not rememb
       + 'RETIRED entry');
     assert.ok(/decision \d+/.test(entry.decision), `${key}: must name the decision that removed it`);
     assert.ok(entry.why && entry.why.length > 40, `${key}: needs the reason it went`);
+    assertWhyNamesTheSameDecision(key, entry.why, entry.decision);
   }
   const anchors = RETIRED.sourceAnchors;
   assert.ok(anchors.length >= 3, `the retired-source register lost entries: ${anchors.length}`);
@@ -152,6 +188,7 @@ test('a retired element stays retired — the removal is re-measured, not rememb
       `${a.what} is back in ${a.file} — the string ${JSON.stringify(a.absent)} is the retired `
       + 'instrument returning; if it is intended, the retirement itself needs re-deciding first');
     assert.ok(/decision \d+/.test(a.decision), `${a.what}: must name the decision`);
+      assertWhyNamesTheSameDecision(a.what, a.why, a.decision);
   }
 });
 /**
@@ -194,6 +231,7 @@ test('every boolean control state can be opened, or is registered as un-openable
   assert.deepStrictEqual(stale, [], 'these are openable now — remove their register entries');
   for (const [name, entry] of Object.entries(UNOPENABLE_CONTROLS)) {
     assert.ok(entry.why && entry.why.length > 40, `${name}: needs a real reason`);
+  assertWhyNamesTheSameDecision(name, entry.why, entry.owner);
     assert.ok(/decision \d+/.test(entry.owner), `${name}: must name the owning decision`);
     const found = findOne('client/src/App.tsx', entry.declaration);
     assert.ok(found.text.includes(name), `${name}: the declared line is not the state it names`);
@@ -264,10 +302,19 @@ test('an item the notice assigns no basis to is not offered a move it can never 
     + 'is the other half of this defect');
   for (const [key, entry] of Object.entries(DEAD_END_ITEMS)) {
     assert.ok(entry.why && entry.why.length > 40, `${key}: needs a real reason, not a placeholder`);
+    assertWhyNamesTheSameDecision(key, entry.why, entry.owner);
     assert.ok(/counsel|decision \d+/i.test(entry.owner), `${key}: must name who owns the fix`);
   }
   // Nothing may enter this dead end silently: every no-basis item must be one of the registered ones.
   const noBasis = r.parseNoticeBases().filter((x) => !x.collectible).map((x) => x.item_key).sort();
   assert.deepStrictEqual(noBasis, registered,
     'a no-basis item that is not registered here would dead-end the moment someone pressed Request');
+});
+
+test('the why/decision agreement rule names what it did not cover', () => {
+  // A check that silently shrinks prints the same green, so the run states the size of the hole and
+  // every entry inside it. If this list grows, read it — it is the part of the register the new rule
+  // does not decide.
+  console.log(`  [why/decision] entries not decided by the rule: ${WHY_DECISION_SKIPS.length}`);
+  for (const line of WHY_DECISION_SKIPS) console.log(`    - ${line}`);
 });

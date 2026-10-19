@@ -132,7 +132,7 @@ The transcripts, with the output of each, are in `docs/evidence/pdpl-lawful-basi
 - **No legal ruling.** Every legal question above is counsel's. Where I have a view it is labelled as a product recommendation (§3) and can be overturned per row.
 - **The UAE engine is frozen and byte-identical:** `server/eosb.js` md5 `36b5dcdc0ee64e0cad5505dd757a5742` at this tree, with `:18`'s unsourced comment untouched.
 - **No real client data** (RBAC is not built) and **L-2 stays behind counsel alone.**
-- **A numbering caution:** the demo documents attribute the consent-versus-acknowledgement decision to "owner decision 14" (`demo-weak-screens.md:64`). The current plan numbers it **15(b)** (14 is the portal-identity question). Same decision, stale number — flagged so nobody decides the wrong one.
+- **A numbering caution — re-grounded 2026-10-19.** The plan and this repository carry **two decision series**, and the same digit means different things in each: **14** is the portal-identity question, **15(b)** is the consent-versus-acknowledgement decision, **17** is the consent-instrument retirement that kept `consent_records`. The stale pairing "decision 14 = purpose-scoped consent" sat in `:157` of this file and in the served comment `server/index.js:361` until 2026-10-19, when both were corrected; the dated evidence records that carry it are **annotated, not rewritten** (`docs/evidence/decisions-21-17-2026-10-13/README.md:87`, `docs/evidence/p2-6-premise-sweep/README.md:52,212`). *This bullet used to name `demo-weak-screens.md:64` as the site of the stale pairing; measured 2026-10-19, that file contains no decision number at all (`grep -c 'decision 1[0-9]' demo-weak-screens.md` = 0), so the site it named could not have been the one it warned about — the caution is kept for the series it distinguishes and re-grounded to the sites that actually carried the pairing.*
 - **The sibling memo is corrected in the same PR as this file:** `pdpl-portal-boundary-memo.md`'s fact 5 and its `App.tsx`/`index.js` line citations were re-ground at this tree; the correction is recorded there and in the PR body. Its finding is unchanged — but its description of the actor was too generous to the product, and that matters here, where the actor is what the record has to prove.
 *Amended 2026-10-13 (compliance) — **the change this document recommended has landed, so §1's
 mechanism and §7's last bullet now describe a tree that is gone; the note is appended rather than
@@ -154,7 +154,8 @@ Measured on `main` = `a48668d`:
   rather than reworded (`server/index.js:727`–`:730`; `:735`–`:738` is the numbering before #186 took
   that file from 892 to 883 lines). The employee-level `POST /api/compliance/consent` **was removed** on
   2026-10-13 (#182, owner decision 17 executed) — the removal record stands at `:358`–`:363` — and
-  `consent_records` is kept for decision 14's purpose-scoped consent.
+  `consent_records` is kept for decision 17's purpose-scoped consent. *(Corrected 2026-10-19: this
+  line said "decision 14" — the portal-identity question — for the decision 17 that kept the table.)*
 - **§1 facts 2–4 and §7's last bullet are answered, not pending.** `:131`'s "Facts 2 and 3 will change
   the day 15(b) is decided, not before" — that day has come: the client literal (`client/src/App.tsx`,
   facts 2–4) is gone, the recorded version is the notice's own (v2.3), and `recorded_by` cannot be
