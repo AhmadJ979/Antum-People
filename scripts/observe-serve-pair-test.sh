@@ -16,8 +16,9 @@
 #   (f) the record: one dated line per run, the retention keeps what it says it keeps, the liveness line
 #       reports the previous run (the observer's own death made visible), and a broken→restored window is
 #       written as a dated record;
-#   (g) READ-ONLY: the observed tree's files are byte-identical with unchanged mtimes afterwards, and the
-#       live host copies and the installed login-shell hook are untouched by the whole suite;
+#   (g) READ-ONLY, stated for PROCESSES as well as files: the observed tree's files are byte-identical with
+#       unchanged mtimes afterwards, the live host copies and the installed login-shell hook are untouched by
+#       the whole suite, and the suite leaves none of its own processes running (measured, and checked in (k));
 #   (h) one loop per host: a live pid in the lock makes a second loop refuse, a stale lock is named and
 #       does not block, and killing the loop by the PID IN ITS LOCK (never a pattern match) ends it and
 #       clears the lock;
@@ -25,6 +26,9 @@
 #       than implying the product is fine;
 #   (j) OPT-IN, and NAMED WHEN NOT RUN: with ANTUM_OBSERVE_LIVE=1 the suite also observes the real public
 #       URL and states the md5 it measured off it; without it the suite prints that it did not.
+#   (k) CLEANUP IS LOAD-BEARING: every fixture pid the suite started is in the EXIT trap's array, the array
+#       is the 5 processes the suite started, and after the trap's own kill no fixture survives. This suite
+#       leaked four fixture servers per run before this check existed — the check reddens on that file.
 #
 # USAGE: bash scripts/observe-serve-pair-test.sh        (exit 0 = every case passed)
 #        ANTUM_OBSERVE_LIVE=1 bash scripts/observe-serve-pair-test.sh   (+ the live-URL case)
@@ -38,7 +42,19 @@ LIVE_URL="${ANTUM_OBSERVE_URL_LIVE:-https://b974147c03228029e277d1cbe6646fe6.cto
 LIVE_TREE="${ANTUM_OBSERVE_TREE_LIVE:-/home/team/shared/probable-octo-sniffle}"
 ROOT=$(mktemp -d /tmp/observe-serve-pair-test.XXXXXX) || { echo "ABORT: no scratch space"; exit 2; }
 PIDS=()
-cleanup() { for p in "${PIDS[@]:-}"; do [ -n "$p" ] && kill "$p" 2>/dev/null; done; rm -rf "$ROOT"; }
+# cleanup kills every process this suite started, and it now reads the pid files start_server wrote as a
+# SECOND copy of that bookkeeping, BEFORE `rm -rf "$ROOT"` deletes them. Both halves matter. `PIDS+=`
+# inside a command substitution lands in a subshell's copy of the array and cleanup never sees it; and the
+# pid files were being removed in the same breath, so nothing could have recovered the pids afterwards.
+# Measured, that combination leaked four fixture `http.server` processes per run (ps 31 -> 35 per run; 39
+# resident, ~371 MB RSS, before the host was cleared). Section (k) below is the check that keeps it fixed.
+cleanup() {
+  local pids=() p f
+  for p in "${PIDS[@]:-}"; do [ -n "$p" ] && pids+=("$p"); done
+  for f in "$ROOT"/server-*.pid; do [ -f "$f" ] && pids+=("$(cat "$f" 2>/dev/null)"); done
+  for p in "${pids[@]}"; do [ -n "$p" ] && kill "$p" 2>/dev/null; done
+  rm -rf "$ROOT"
+}
 trap cleanup EXIT
 PASS=0; FAIL=0
 ok()   { echo "  PASS  $*"; PASS=$((PASS+1)); }
@@ -82,10 +98,14 @@ start_server() { # $1 dir $2 port -> 0 only when the server ANSWERS (a stub tran
   return 1
 }
 GOOD_PORT=$(freeport); PH_PORT=$(freeport); FOR_PORT=$(freeport); EMPTY_PORT=$(freeport)
-SRV_GOOD=$(start_server "$GOOD/client/dist" "$GOOD_PORT" && echo up || echo down)
-SRV_PH=$(start_server "$PLACEHOLDER" "$PH_PORT" && echo up || echo down)
-SRV_FOR=$(start_server "$FOREIGN" "$FOR_PORT" && echo up || echo down)
-SRV_EMPTY=$(start_server "$EMPTY" "$EMPTY_PORT" && echo up || echo down)
+# These four calls are NOT written as `SRV_GOOD=$(start_server … && echo up || echo down)`. They were, and a
+# command substitution runs in a SUBSHELL — so start_server's `PIDS+=("$sp")` appended to a copy of the array
+# that died with that subshell, the EXIT trap kept only the busy pid, and four fixture servers leaked per run.
+# Hoisted out, the append happens in THIS shell, where cleanup can see it. Section (k) reddens if it regresses.
+start_server "$GOOD/client/dist" "$GOOD_PORT" && SRV_GOOD=up || SRV_GOOD=down
+start_server "$PLACEHOLDER" "$PH_PORT" && SRV_PH=up || SRV_PH=down
+start_server "$FOREIGN" "$FOR_PORT" && SRV_FOR=up || SRV_FOR=down
+start_server "$EMPTY" "$EMPTY_PORT" && SRV_EMPTY=up || SRV_EMPTY=down
 echo "  fixtures: good=$GOOD_PORT($SRV_GOOD) placeholder=$PH_PORT($SRV_PH) foreign=$FOR_PORT($SRV_FOR) empty=$EMPTY_PORT($SRV_EMPTY)"
 for s in "$SRV_GOOD" "$SRV_PH" "$SRV_FOR" "$SRV_EMPTY"; do
   [ "$s" = up ] || { echo "ABORT: a fixture server did not answer — an unanswerable fixture proves nothing"; exit 2; }
@@ -287,6 +307,32 @@ else
   echo "  NOT RUN: the live-URL case. Set ANTUM_OBSERVE_LIVE=1 to include it (this suite never touches the"
   echo "  live site by default, and it says so rather than quietly counting one fewer check)."
 fi
+
+echo
+echo "== (k) the suite's own fixture processes: accounted for, and gone when it exits =="
+# WHY THIS SECTION EXISTS. A check that cannot redden proves nothing, and this one is about a real defect:
+# this suite used to leak FOUR fixture servers per run, because `PIDS+=` lived inside a command substitution
+# (a subshell) and cleanup's `rm -rf "$ROOT"` deleted the pid files that could have rescued it. So the check
+# is not "the suite printed a number" — it is that the EXIT trap's bookkeeping actually holds every process
+# the suite started, and that killing what it holds really ends them. Both redden on the pre-fix file; that
+# run is kept in docs/evidence/observer-2026-10-19/raw/cleanup-leak-pre-fix-and-fixed.txt.
+FIX_PIDS=$(cat "$ROOT"/server-*.pid 2>/dev/null | sort -u)
+FIX_N=$(printf '%s\n' "$FIX_PIDS" | grep -c '^[0-9]')
+check "[ $FIX_N -eq 4 ]" "(k) start_server wrote a pid file for each of the 4 fixtures it started ($FIX_N)"
+HELD=" $(printf '%s ' "${PIDS[@]:-}")"
+MISSING=""
+for p in $FIX_PIDS; do case "$HELD" in *" $p "*) ;; *) MISSING="$MISSING $p";; esac; done
+check "[ -z '$MISSING' ]" "(k) every one of those pids is in the EXIT trap's PIDS array — cleanup holds them (not held:$MISSING)"
+check "[ $(printf '%s\n' "${PIDS[@]:-}" | grep -c '^[0-9]') -eq 5 ]" \
+  "(k) the trap's array is the 5 processes this suite started (4 fixtures + the busy-lock pid), not fewer"
+# Now do what the EXIT trap will do, in the open, and PROVE it worked: kill and reap everything the trap
+# holds, then confirm no fixture of this suite's own is still alive.
+for p in "${PIDS[@]:-}"; do [ -n "$p" ] && kill "$p" 2>/dev/null; done
+for p in "${PIDS[@]:-}"; do [ -n "$p" ] && wait "$p" 2>/dev/null; done
+sleep 0.5
+SURVIVORS=""
+for p in $FIX_PIDS; do kill -0 "$p" 2>/dev/null && SURVIVORS="$SURVIVORS $p"; done
+check "[ -z '$SURVIVORS' ]" "(k) after the trap's own kill, no fixture process survives this suite (survivors:$SURVIVORS)"
 
 echo
 TOTAL=$((PASS + FAIL))

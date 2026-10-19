@@ -8,6 +8,11 @@
  * is the whole reason decision 21 exists. The test asserts each register matches reality EXACTLY:
  * a new orphan fails the build, and a fixed one cannot linger here looking like a defect.
  *
+ * One class here is NOT a defect: a route a decision deliberately ships ahead of its caller (the
+ * accounts path, added 2026-10-19). The check cannot distinguish "not yet called on purpose" from
+ * "orphan", so those two entries say which they are, in their own words, and this note exists so a
+ * reader does not take every entry for a defect to remove.
+ *
  * Measured 2026-10-12 on origin/main 83dd151 (the tree that served cutover #5). Line numbers in the
  * prose are dated readings; every anchor the test uses is a string, not a line number, because a
  * line number goes stale on its own (this repository has been bitten by that repeatedly).
@@ -31,6 +36,27 @@ const CALLERLESS = {
     why: 'Reports the flag watcher record over HTTP. Nothing calls it — the scheduler reads the module '
        + 'directly (flagWatcher.status()), so this route is a second, unused door to the same value.',
     owner: 'decision 21 — recommendation: wire it to the operator check, or remove',
+  },
+  // The accounts path is the ONE case here that is not a defect to remove. It is a deliberate,
+  // decided surface with no caller YET: decision 11 ships Layer 3's account path over HTTP while the
+  // interface that calls it is the NEXT slice, and `client/` was 0 files in slice 1 by design. The
+  // reachability check cannot tell "deliberate, not yet called" from "orphan", so the difference is
+  // written down here rather than left for a reader to infer. Added 2026-10-19 because the check was
+  // RED on origin/main at c2f9bba until these two entries existed (192 tests, 191 pass, 1 fail).
+  'GET /api/users': {
+    route: 'server/index.js:163',
+    why: 'List the accounts the admin-authenticated account path created. Nothing in the product calls it '
+       + 'yet: decision 11 ships the account path over HTTP with no UI on purpose, and client/ was 0 files '
+       + 'in that slice, so the surface that calls it is the next one (design #221, '
+       + 'design-concepts/LAYER3-IDENTITY.md). Deliberate and decided, not an orphan.',
+    owner: 'decision 11 — the accounts slice ships the route; the surface that calls it is the next slice',
+  },
+  'POST /api/users': {
+    route: 'server/index.js:172',
+    why: 'Create an account, authorized by users:write. Same reason as its sibling GET: decision 11 ships '
+       + 'the account path over HTTP while the admin surface that will call it is a later slice (design '
+       + '#221, design-concepts/LAYER3-IDENTITY.md), so no caller exists in the product today.',
+    owner: 'decision 11 — the accounts slice ships the route; the surface that calls it is the next slice',
   },
 };
 

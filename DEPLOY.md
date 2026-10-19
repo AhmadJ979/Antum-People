@@ -217,9 +217,11 @@ recorded runs, and said to be bounded rather than exact.
 
 **Read-only against the product**: it queries the URL and writes only its own record directory. No restart, no
 marker, no guard interaction, nothing under the deployed tree's `client/` or `server/`. Its own suite,
-`scripts/observe-serve-pair-test.sh`, prints its own total (73 passed, 0 failed on 2026-10-19) and reddens on a
-fixture that answers 200 with a placeholder body, on one serving different bytes, and on the refusal path; the
-run against the live URL is recorded in `docs/evidence/observer-2026-10-19/`.
+`scripts/observe-serve-pair-test.sh`, prints its own total (**77 passed, 0 failed at the tip that added its
+cleanup check**; 79 with the opt-in live case) and reddens on a fixture that answers 200 with a placeholder
+body, on one serving different bytes, and on the refusal path; it also reddens if its own fixture servers stop
+being killed (section `(k)` — it leaked four per run once), and states the measured process delta, not only
+that files were untouched. The run against the live URL is recorded in `docs/evidence/observer-2026-10-19/`.
 
 ## Secrets Rotation Procedure
 ### 1. JWT Secret Rotation
