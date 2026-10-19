@@ -6,6 +6,11 @@ must never see.
 
 - **Measured at `origin/main` = `7b073f8`.** Every claim about the schema is read from `server/schema.sql`
   and `server/preboarding-items.js`; every claim about the screen is read from `client/src/App.tsx`.
+- **Re-grounded 2026-10-19 onto `8b32d45`**, after `docs/access-model.md` merged (PR #220). The
+  measurements are **not** re-dated: `client/` and `server/` are byte-identical between `7b073f8` and
+  `8b32d45` (`git diff --name-only` empty), so every `file:line` still describes the surface it measured.
+  Two things this file called `(open)` are now answered (§1, §6) — and one thing it assumed is now in
+  dispute with the merged matrix (§2, the pre-boarding blocks).
 - **Depends on the compliance expert's `docs/access-model.md`** (row `6071930d`, in progress) for the roles
   and the basis on which a person reads their own record. This design invents no permission; where a cell is
   that document's, it says **`(open)`**.
@@ -68,9 +73,17 @@ and it is the first thing this design must not paper over.
 | **B. An explicit link** (account → person, or account → case) | one stored reference, set when the account is created | needs the field and a way to create it; unambiguous afterwards | **recommended**, `(open)` |
 | **C. Roster id in source / seed-time only** | what the demo does today | fine for a seeded demo, **cannot** answer "mine" for a real person | not a solution for a client |
 
-**`(open)` — this is the decision that gates the whole surface**: which field, and who sets it. Note what
-it makes true: until the link exists, an employee view can only be honest as an **empty** view that explains
-itself (§4, case C).
+**Decided — but not by this design.** `docs/access-model.md` **§2.2** answers the question this section
+raises, in the same terms: `employee` *"cannot be expressed"* without a link, **`users.employee_id`
+(nullable, unique when set) is the prerequisite**, and **§8.7** assigns it to the engineer's slice 2. Option
+**B** is therefore the answer, and A and C are settled against — **A** because a mutable string is not a
+record of identity, **C** because seed-time linking cannot answer "mine" for a real person.
+
+**What that changes here:** nothing about the surface, everything about its first state. Until the column
+exists, this view is honest only as an **empty** view that explains itself (§4, case **C**) — which is why
+that sentence is specified rather than deferred. The model also notes what the link buys beyond this screen:
+**`manager` is derivable only from the same column** (`employees.manager_id` gives the set, the caller's
+`employee_id` gives the caller), so two of its five roles are unenforceable without it.
 
 ---
 
@@ -108,6 +121,30 @@ refined away in this slice.**
 │  put in front of you, with the basis; it cannot obtain your signature.       │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### The gap: the merged matrix does not give role `employee` most of this surface
+
+Stated here rather than discovered at build time. Read against `docs/access-model.md` §3:
+
+- **§3.1** gives `employee` exactly two permitted reads about themselves: `GET /api/employees/:id/onboarding`
+  and `GET /api/employees/:id/offboarding`, both `scoped (own)` — and refuses `PUT /api/onboarding-tasks/:id`
+  (§6.4), which is why this surface is read-only.
+- **§3.2** reads **✖ for `employee` on every row** — the case, the checklist, the workspace, and the notice
+  acknowledgements.
+- **§4**'s notice-acknowledgement row names `hr_admin` and `compliance_viewer` (read) — **not `employee`**.
+- **§3.3** gives every role the notice document itself (deliberately: `GET /api/compliance/notice` is the
+  text a data subject is shown, and §4's row says so).
+
+So **three of the four blocks below — the items, the flag, and the notice-as-shown — have no permitted
+source in the matrix as merged.** That is a policy question, not a design one, and it is the compliance
+expert's to answer: either the employee's own pre-boarding record and their own acknowledgement rows get
+`scoped (own)` cells (the natural reading of "their own record only"), or the pre-boarding half of this
+surface belongs to the decision-14 portal — which §7 puts explicitly out of Layer 3's scope.
+
+**One nuance to hand them, because it decides which of the two it is:** §2.2 says the `employee` cells
+cannot be *enforced* until `users.employee_id` exists, so a ✖ in that column may mean **"not yet
+expressible"** rather than **"denied by policy"**. The matrix does not distinguish those two, and a surface
+can only be built against the second.
 
 ### What each block is, and where it comes from
 
@@ -208,13 +245,18 @@ runtime locale, so digits would change while the words stay English. That is `LA
 2. **`(open)` The link** — §1. Which field makes "my" true, and who sets it?
 3. **`(open)` Whether the person's own EOSB appears** — §3. Recommended: not in this slice.
 4. **`(open)` Whether the workspace track appears at all**, and without owner names if it does — §3.
-5. **`(open)` The account's display name** (`LAYER3-IDENTITY.md` §2) — this surface shows the *other*
-   person's name (`recorded_by`), and it reads badly until accounts carry real names.
+5. **Narrowed: the account's display name** (`LAYER3-IDENTITY.md` §2). The link is decided
+   (`docs/access-model.md` §2.2: `users.employee_id`); a display *name* is not, and this surface shows the
+   **other** person's name (`recorded_by`), so it reads badly until accounts carry real names.
 6. **`(open)` Decision 14 — how a person proves who they are.** This surface sits behind a normal
    account login, so it does not answer the portal's identity question; it must not be presented as if it
    did.
-7. **`(counsel)` / `(open)` The basis for a person reading their own record** — the access model's cell
-   (row `6071930d`). This design assumes no basis of its own.
+7. **Answered in part.** `docs/access-model.md` **§4** gives the basis for the employment record —
+   *contract performance; the employer is the controller* — with all roles scoped to the relationship they
+   hold with that person, which is the basis a self-reading `employee` sits on. What is **still open** is the
+   acknowledgement row's basis for an `employee` reader (the model names `hr_admin`/`compliance_viewer` only,
+   §4) — that is the cell that matters for §2's notice block, and it is the same open item as the gap
+   above. This design assumes no basis of its own.
 
 ---
 

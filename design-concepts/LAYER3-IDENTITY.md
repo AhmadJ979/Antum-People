@@ -7,6 +7,11 @@ what an **unnamed-actor refusal** looks like on screen.
 
 - **Measured at `origin/main` = `7b073f8`** (`client/src/App.tsx`, 2,493 lines). The login card, the sidebar
   identity block and the checklist record line are read from the shipped file, not from a sketch.
+- **Re-grounded 2026-10-19 onto `8b32d45`**, after `docs/access-model.md` merged (PR #220, row `6071930d`) —
+  the document this file was written against while it was still in progress. **The measurements are not
+  re-dated and do not need to be:** `git diff --name-only 7b073f8 origin/main -- client server` is **empty**,
+  so every `file:line` below still describes the surface it measured. What changed is the **policy**
+  citations: what was `(open)` is now answered, and each answer is cited to its section.
 - **What this file does not do:** it does not decide permissions. The roles and the roles × resources matrix
   are the compliance expert's (`docs/access-model.md`, row `6071930d`, in progress) and the mechanism that
   enforces them is the engineer's (row `7d54faac`). Every place the surface depends on either is marked
@@ -68,9 +73,15 @@ Placed where the card is today — sidebar, under the brand row (App.tsx:1188)
 - **Sign out stays one tap and stays icon-only** (`App.tsx:1182`, `title="Sign Out"`). Do not move it, do
   not add a menu: a person must be able to leave the product without hunting, and the button already
   announces itself. Add an accessible name if the icon is ever unlabelled — today it relies on `title`.
-- **The `role` string is the access model's vocabulary, not invented here.** Until `docs/access-model.md`
-  lands, the card shows the role value the login response already returns (`{id, username, role}`) and the
-  design makes no claim about what it permits.
+- **The `role` string is the access model's vocabulary, not invented here** — and it is no longer
+  `(open)`: `docs/access-model.md` **§2.1** names the five (`hr_admin`, `manager`, `finance`, `employee`,
+  `compliance_viewer`). The card displays one of those; it makes no claim about what it permits.
+- **The card must say *which* role it is showing.** The model's **§2.4** records a naming hazard this
+  surface runs straight into: `users.role` (a permission) collides by name with `employees.role` and
+  `preboarding_cases.role` (both **job titles**), and recommends renaming it to `access_role`. A card that
+  renders the bare word *manager* beside a person whose job title is also Manager is the collision, on the
+  one screen whose job is to say who you are. **Requirement: label it as an access role, and read
+  `access_role` once the rename lands** — until then the value is the one the login response returns.
 
 ---
 
@@ -96,6 +107,15 @@ Three different readers read the same record, and the design must serve all thre
   `completed_at = datetime('now')` on completion and **no actor** — decision 22, which this slice closes,
   and both routes need it. *(The engineer's slice-1 row cites the same tick as `:317`–`330`; the range above
   is what I read on `7b073f8`. Either way it is the same two routes.)*
+- **The model found a worse case than a missing actor, and it strengthens rule 2 below.** Its **§5.2.1**:
+  `POST /api/employees` and `PUT /api/employees/:id` record the literal `'system'` as the actor
+  (`server/index.js:224`, `:292`) — *"a field that exists and holds a false name is a record a future reader
+  will trust."* That is this document's rule stated better than I had it: **an actor field that is present
+  and wrong is worse than one that is absent.**
+- **The policy for the tick is now settled:** `docs/access-model.md` **§5.2.3** — the tick gains
+  `completed_by` (decision 22) with **the same 400** as the pre-boarding side. §5.2.2 adds that the
+  `|| 'system'` fallbacks become `|| null` plus that refusal, and §5.2.4 makes the autonomous actor an
+  explicit separate value, never a fallback.
 
 **Proposed reading of a record — three parts, in this order:**
 
@@ -112,7 +132,9 @@ Three rules the design asks for, each traceable to something already decided:
 1. **The actor is a person, and the surface says which kind of acting it is.** `recorded_by` names the
    person who *showed* the notice on the hire's behalf — not the hire, and not a signature. The server's own
    refusal already says this (`preboarding-items.js`: *"the record must name the person who showed the
-   notice, on the hire's behalf"*), so the surface may not say anything stronger.
+   notice, on the hire's behalf"*), and the model confirms it independently
+   (`docs/access-model.md` **§7**: the acknowledgement's actor *"is the HR user showing the notice, not the
+   hire, and that stays true until 14 is decided"*). The surface may not say anything stronger than that.
 2. **A record with no actor renders as incomplete, never as anonymous.** After this slice, an absent actor is
    a defect; the surface says *"no actor recorded"* in the gap rather than showing only a date. (Until the
    schema change lands, existing rows have no actor — that is what `(open)` above is about.)
@@ -199,14 +221,18 @@ adds only what the two new surfaces change.
 
 ## 6. Open questions — asked, not answered
 
-1. **`(open)` What field carries a person's name?** `users` has `username` and no display name, no email,
-   no link to `employees` (`server/schema.sql`). Until this is decided the identity card can only show a
-   handle plus a qualifier.
+1. **Narrowed, not closed: what field carries a person's *name*?** The *link* is now decided —
+   `docs/access-model.md` **§2.2** adds `users.employee_id` (nullable, unique when set) and **§8.7** assigns
+   it to slice 2. But a **display name** is still unmodelled: `users` is
+   `(id, username, password_hash, role, created_at)`, so until a name field exists the card shows a handle
+   plus a qualifier — which is exactly what §2 below specifies.
 2. **`(open)` Does the checklist tick's actor need a schema change?** The engineer's row asks it explicitly
    (`server/index.js:315`–`324` → `completed_by`, on **two** routes). The design needs only to know *whether
    an actor is always present* — that decides whether §3.2's "no actor recorded" state ever renders.
-3. **`(open)` The role vocabulary and the allow-list** — `docs/access-model.md` (row `6071930d`). The card
-   shows whatever that document names; this design does not coin a role.
+3. **Answered for the vocabulary, still the model's for the matrix:** `docs/access-model.md` **§2.1** names
+   the five roles and **§3** is the allow-list. The card shows one of the five; this design coins none. Open
+   only in that the model's **§8.5** and **§8.6** are owner questions (`compliance_viewer` in the minimum
+   set; departmental scoping as a scope rather than a role).
 4. **`(open)` Decision 13 (standing):** new accounts must not reuse or expose the demo credential. The
    sign-in surface does not change; the *accounts* the demo ships with must change. Worth stating on the
    surface that a shared login is not a person if the demo is shown before plural accounts land.
