@@ -51,6 +51,12 @@ The site is kept alive by a monitoring loop that restarts the server if port 300
 2. **Logs**: Check `server/server.log` for startup success.
 
 ## Cutover Procedure (to isolated DB)
+
+**2026-10-19 — this section is the movement's PRE-2026-10-17 shape**, kept because its
+database-isolation steps still apply: it stops the loop by pattern match (`pkill -f keep-alive.sh`) and starts
+it again by hand, whereas the guard is armed by the script that holds `server/keep-alive.lock` and must be
+killed by the pid in that file. The movement as it actually runs is **`## The movement — the repo-owned
+procedure`** below; where the two disagree, that section is the procedure.
 1. Ensure the new code is deployed to the production directory.
 2. Stop any running server and existing keep-alive processes (`pkill -f keep-alive.sh`).
 3. Set the `PRODUCT_DB_PATH` in the environment.
@@ -61,6 +67,53 @@ The site is kept alive by a monitoring loop that restarts the server if port 300
 1. Stop the loop and server.
 2. Check out the previous commit in the production directory.
 3. Restart server.
+
+## The movement — the repo-owned procedure
+
+*Retired into the repository on 2026-10-19 from the host runbook `/home/team/shared/cutover-20261010-RUNBOOK.md`,
+per the 2026-10-19 ruling: the repo-owned content lives here and the host file is a checklist plus a pointer.
+The retired full text is kept byte-identically at
+`/home/team/shared/retired/cutover-20261010-RUNBOOK-full-retired-2026-10-19.md` — a dated RECORD of the
+2026-10-10 run and its 10-18/10-19 amendments, not a second copy of this procedure.*
+
+### Before you start: derive the checks, never remember them
+
+**A remembered md5 is a dated measurement, not a check.** The retired file's own precondition line proved it:
+it recorded an md5 that belonged to a copy from a run **two days later**, and could not have been the
+verification it claimed to be. Every precondition is therefore a command:
+
+```
+bash /home/team/shared/probable-octo-sniffle/scripts/install-host-tools.sh --verify   # copies vs their blobs; exit 1 on drift
+bash /home/team/shared/probable-octo-sniffle/scripts/cutover-preflight.sh             # the movement's preconditions
+```
+
+Run the installer **from a tree**, never from `/home/team/shared`: a self-copy there would be a second,
+quietly stale install path. The preflight names which revision the live hook is and whether it pairs with the
+deploy that writes the marker — see "Host tooling" below.
+
+### The sequence
+
+1. `date -u` — check the clock against the timing rule below before anything else.
+2. `git -C /home/team/shared/probable-octo-sniffle fetch origin main`, then read `git log --oneline -1 FETCH_HEAD`.
+   The tip you name in the record is the tip you move to (rule 22).
+3. If the host copies are older than that tip, refresh them from it first — the one-liner in "Host tooling".
+4. `bash /home/team/shared/deploy-main.sh` — one movement: reset → build → seed `--force-clear` → restart →
+   claim port 3000 → verify → re-arm the guard. Steps 1b and 6b install the copies from the tip it moves to.
+5. Read the run's own output for its own claims: the build's asset name, `seed OK`, port 3000 held by the
+   product server, the demo credential, the flag states, a non-empty `watchdog pid:`.
+6. **Independently confirm the served package**: fetch the public URL and hash the bytes there. What is served
+   is measured, not announced — a 200 from the wrong server is the failure this catches.
+7. Write the record into `docs/evidence/cutover-<date>-<HHMM>/`: README, run log, build and seed logs, before
+   and after readings — **staging the logs with `git add -f`**, because `.gitignore` carries `*.log` and has
+   swallowed a record's own evidence twice (rule 27).
+8. Only then the plan's follow-ups.
+
+### Timing: why a re-seed waits for 00:00 UTC (04:00 GST)
+
+The seeder derives every date as an offset (+14 / +1 / −1) **from the day it runs**, so a re-seed before
+midnight UTC dates the demo's amber case to the wrong day and its derived flag leaves `inside_48_hours` by
+morning; a re-seed on or after midnight restores the window. Measured 2026-10-09: `hours_to_start 8.72`
+against a date-only start. **The wait is a measurement.**
 
 ## Host tooling (the operator copies)
 
