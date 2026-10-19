@@ -1,0 +1,206 @@
+TAP version 13
+# (node:9653) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: authentication: unchanged answers
+    # Subtest: no token is 401 on a resource
+    ok 1 - no token is 401 on a resource
+      ---
+      duration_ms: 6.042538
+      type: 'test'
+      ...
+    # Subtest: a wrong password is 401
+    ok 2 - a wrong password is 401
+      ---
+      duration_ms: 16.591395
+      type: 'test'
+      ...
+    # Subtest: a good login through the API still works — the token names the role
+    ok 3 - a good login through the API still works — the token names the role
+      ---
+      duration_ms: 7.659204
+      type: 'test'
+      ...
+    1..3
+ok 1 - authentication: unchanged answers
+  ---
+  duration_ms: 801.662728
+  type: 'suite'
+  ...
+# Subtest: authorization: the role is enforced, deny-by-default
+    # Subtest: the seeded admin still reaches the roster (nothing was narrowed by this slice)
+    ok 1 - the seeded admin still reaches the roster (nothing was narrowed by this slice)
+      ---
+      duration_ms: 4.371335
+      type: 'test'
+      ...
+    # Subtest: an authenticated caller whose role allows nothing is 403 on the roster
+    ok 2 - an authenticated caller whose role allows nothing is 403 on the roster
+      ---
+      duration_ms: 2.016712
+      type: 'test'
+      ...
+    # Subtest: and 403 on a different resource — the refusal is not one route
+    ok 3 - and 403 on a different resource — the refusal is not one route
+      ---
+      duration_ms: 6.888722
+      type: 'test'
+      ...
+    # Subtest: a path that declares NO resource is refused, not left open and not a 404
+    ok 4 - a path that declares NO resource is refused, not left open and not a 404
+      ---
+      duration_ms: 1.8494
+      type: 'test'
+      ...
+    # Subtest: a token with no username is still authorised by role, but cannot tick a task (below)
+    ok 5 - a token with no username is still authorised by role, but cannot tick a task (below)
+      ---
+      duration_ms: 5.671599
+      type: 'test'
+      ...
+    1..5
+ok 2 - authorization: the role is enforced, deny-by-default
+  ---
+  duration_ms: 33.063934
+  type: 'suite'
+  ...
+# Subtest: accounts: plural rows through an admin-authenticated path
+    # Subtest: an admin creates a second account, and that account can log in
+    ok 1 - an admin creates a second account, and that account can log in
+      ---
+      duration_ms: 160.576707
+      type: 'test'
+      ...
+    # Subtest: the roster of accounts is a list, and it does not leak a password hash
+    ok 2 - the roster of accounts is a list, and it does not leak a password hash
+      ---
+      duration_ms: 3.148324
+      type: 'test'
+      ...
+    # Subtest: a duplicate username is refused 409 rather than shadowing the first account
+    ok 3 - a duplicate username is refused 409 rather than shadowing the first account
+      ---
+      duration_ms: 3.353328
+      type: 'test'
+      ...
+    # Subtest: a short password is refused 400
+    ok 4 - a short password is refused 400
+      ---
+      duration_ms: 2.221792
+      type: 'test'
+      ...
+    # Subtest: a role this product does not know is refused 400 — a user who matches no cell can do nothing
+    ok 5 - a role this product does not know is refused 400 — a user who matches no cell can do nothing
+      ---
+      duration_ms: 3.405262
+      type: 'test'
+      ...
+    # Subtest: a caller whose role allows nothing cannot create an account (403)
+    ok 6 - a caller whose role allows nothing cannot create an account (403)
+      ---
+      duration_ms: 1.675124
+      type: 'test'
+      ...
+    1..6
+ok 3 - accounts: plural rows through an admin-authenticated path
+  ---
+  duration_ms: 183.997768
+  type: 'suite'
+  ...
+# Subtest: the tick names the person who ticked it (decision 22)
+    # Subtest: completing a task records the named actor beside the date
+    ok 1 - completing a task records the named actor beside the date
+      ---
+      duration_ms: 3.575166
+      type: 'test'
+      ...
+    # Subtest: an UNNAMED actor is refused 400, and the row is left untouched
+    ok 2 - an UNNAMED actor is refused 400, and the row is left untouched
+      ---
+      duration_ms: 3.908005
+      type: 'test'
+      ...
+    # Subtest: an unnamed actor may still mark a task pending — the refusal is about claiming work was done
+    ok 3 - an unnamed actor may still mark a task pending — the refusal is about claiming work was done
+      ---
+      duration_ms: 15.795765
+      type: 'test'
+      ...
+    1..3
+ok 4 - the tick names the person who ticked it (decision 22)
+  ---
+  duration_ms: 26.992454
+  type: 'suite'
+  ...
+# Subtest: the policy table itself
+    # Subtest: no declared route lacks a policy cell
+    ok 1 - no declared route lacks a policy cell
+      ---
+      duration_ms: 0.263022
+      type: 'test'
+      ...
+    # Subtest: no policy cell names a role this product does not know
+    ok 2 - no policy cell names a role this product does not know
+      ---
+      duration_ms: 0.153806
+      type: 'test'
+      ...
+    # Subtest: today's policy allows admin only, explicitly — nothing silently widened
+    ok 3 - today's policy allows admin only, explicitly — nothing silently widened
+      ---
+      duration_ms: 0.271751
+      type: 'test'
+      ...
+    # Subtest: the resource for a route is looked up by method and path, not by a guess
+    ok 4 - the resource for a route is looked up by method and path, not by a guess
+      ---
+      duration_ms: 0.54755
+      type: 'test'
+      ...
+    1..4
+ok 5 - the policy table itself
+  ---
+  duration_ms: 1.392481
+  type: 'suite'
+  ...
+# Subtest: the login rate limit still answers 429
+    # Subtest: a burst of wrong passwords is rate-limited
+    not ok 1 - a burst of wrong passwords is rate-limited
+      ---
+      duration_ms: 45.066142
+      type: 'test'
+      location: '/home/agent-senior-software-engineer/antum-people/server/access.test.js:256:3'
+      failureType: 'testCodeFailure'
+      error: 'the limiter must answer 429 within 15 attempts'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        TestContext.<anonymous> (/home/agent-senior-software-engineer/antum-people/server/access.test.js:263:12)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Promise.all (index 0)
+        async Suite.run (node:internal/test_runner/test:1442:7)
+        async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    1..1
+not ok 6 - the login rate limit still answers 429
+  ---
+  duration_ms: 45.773783
+  type: 'suite'
+  location: '/home/agent-senior-software-engineer/antum-people/server/access.test.js:255:1'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..6
+# tests 22
+# suites 6
+# pass 21
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1325.228482
+rc=1

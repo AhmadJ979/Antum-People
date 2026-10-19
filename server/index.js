@@ -4,6 +4,7 @@ const path = require('path');
 const db = require('./db');
 const compliance = require('./compliance_engine');
 const auth = require('./auth');
+const access = require('./access');
 const eosb = require('./eosb');
 const preboarding = require('./preboarding');
 const preboardingItems = require('./preboarding-items');
@@ -134,12 +135,63 @@ app.post('/api/login', rateLimitLogin, async (req, res) => {
 app.use('/api', (req, res, next) => {
   if (req.path === '/login' || req.path === '/health') return next();
   auth.authenticateToken(req, res, next);
+}, (req, res, next) => {
+  // Layer 3, slice 1 (decision 11): the role is ENFORCED, deny-by-default, from ONE table in
+  // server/access.js — `users.role` used to be signed into the token and never checked, so any
+  // authenticated caller reached every route. The bypass list is repeated here on purpose: these
+  // two paths carry no token by design, and widening the list is a policy decision, not a
+  // convenience. authenticateToken runs first, so 401 (no/invalid token) and 403 (not allowed)
+  // stay different answers.
+  if (req.path === '/login' || req.path === '/health') return next();
+  access.gate(req, res, next);
 });
 
 // Helper to generate UUIDs
 const generateId = () => {
   return require('crypto').randomUUID ? require('crypto').randomUUID() : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 };
+
+// -------------------------------------------------------------
+// ACCOUNTS (Layer 3, slice 1) — plural accounts through an admin-authenticated path
+// -------------------------------------------------------------
+// Chosen shape: HTTP, admin-authenticated (POST /api/users) rather than a hand-written SQL insert.
+// WHO may create an account is the same question, and the same file, as every other resource: the
+// policy table in server/access.js ('users:write' -> admin today). It refuses a username that
+// already exists (409), a password shorter than 12 characters (400), and a role this product does
+// not know (400) — a user whose role matches no policy cell could log in and do nothing.
+
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await db.query('SELECT id, username, role, created_at FROM users ORDER BY created_at');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/users', async (req, res) => {
+  try {
+    const { username, password, role } = req.body || {};
+    if (!username || typeof username !== 'string' || !username.trim()) {
+      return res.status(400).json({ error: 'username is required' });
+    }
+    const name = username.trim();
+    if (typeof password !== 'string' || password.length < 12) {
+      return res.status(400).json({ error: 'password must be at least 12 characters' });
+    }
+    if (!access.isKnownRole(role)) {
+      return res.status(400).json({ error: 'unknown role', known_roles: access.ROLE_LIST });
+    }
+    const existing = await db.query(`SELECT id FROM users WHERE username = ${db.escapeString(name)}`);
+    if (existing.length) return res.status(409).json({ error: 'that username already exists' });
+    const id = generateId();
+    const password_hash = await auth.hashPassword(password);
+    await db.query(`INSERT INTO users (id, username, password_hash, role) VALUES (${db.escapeString(id)}, ${db.escapeString(name)}, ${db.escapeString(password_hash)}, ${db.escapeString(role)})`);
+    res.status(201).json({ id, username: name, role });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 // -------------------------------------------------------------
 // EMPLOYEE APIS
@@ -312,11 +364,24 @@ app.get('/api/employees/:id/onboarding', async (req, res) => {
   res.json(tasks);
 });
 
+// Decision 22: the tick records WHO ticked it. Before this slice the row carried a date and no
+// name, while the pre-boarding side already refuses an unnamed actor with 400 — this makes the two
+// sides agree: completing without a named actor is refused, and the name is the signed-in user's
+// (never 'system', never a placeholder).
 app.put('/api/onboarding-tasks/:id', async (req, res) => {
-  const { status } = req.body;
-  const completed_at = status === 'completed' ? `datetime('now')` : 'NULL';
-  await db.query(`UPDATE onboarding_tasks SET status = ${db.escapeString(status)}, completed_at = ${completed_at} WHERE id = ${db.escapeString(req.params.id)}`);
-  res.json({ message: 'Task updated' });
+  try {
+    const { status } = req.body || {};
+    const actor = (req.user && req.user.username) || null;
+    if (status === 'completed' && !actor) {
+      return res.status(400).json({ error: 'a named actor is required to complete a task' });
+    }
+    const completed_at = status === 'completed' ? `datetime('now')` : 'NULL';
+    const completed_by = status === 'completed' ? db.escapeString(actor) : 'NULL';
+    await db.query(`UPDATE onboarding_tasks SET status = ${db.escapeString(status)}, completed_at = ${completed_at}, completed_by = ${completed_by} WHERE id = ${db.escapeString(req.params.id)}`);
+    res.json({ message: 'Task updated', completed_by: status === 'completed' ? actor : null });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 app.get('/api/employees/:id/offboarding', async (req, res) => {
@@ -324,11 +389,24 @@ app.get('/api/employees/:id/offboarding', async (req, res) => {
   res.json(tasks);
 });
 
+// Decision 22: the tick records WHO ticked it. Before this slice the row carried a date and no
+// name, while the pre-boarding side already refuses an unnamed actor with 400 — this makes the two
+// sides agree: completing without a named actor is refused, and the name is the signed-in user's
+// (never 'system', never a placeholder).
 app.put('/api/offboarding-tasks/:id', async (req, res) => {
-  const { status } = req.body;
-  const completed_at = status === 'completed' ? `datetime('now')` : 'NULL';
-  await db.query(`UPDATE offboarding_tasks SET status = ${db.escapeString(status)}, completed_at = ${completed_at} WHERE id = ${db.escapeString(req.params.id)}`);
-  res.json({ message: 'Task updated' });
+  try {
+    const { status } = req.body || {};
+    const actor = (req.user && req.user.username) || null;
+    if (status === 'completed' && !actor) {
+      return res.status(400).json({ error: 'a named actor is required to complete a task' });
+    }
+    const completed_at = status === 'completed' ? `datetime('now')` : 'NULL';
+    const completed_by = status === 'completed' ? db.escapeString(actor) : 'NULL';
+    await db.query(`UPDATE offboarding_tasks SET status = ${db.escapeString(status)}, completed_at = ${completed_at}, completed_by = ${completed_by} WHERE id = ${db.escapeString(req.params.id)}`);
+    res.json({ message: 'Task updated', completed_by: status === 'completed' ? actor : null });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 app.post('/api/compliance/calculate-eosb', (req, res) => {
