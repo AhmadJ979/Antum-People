@@ -1,0 +1,48 @@
+### proof, both directions: bash docs/evidence/hook-pairing-2026-10-19/prove.sh a5aa0e6
+### (clone 986b9f2 · tip a5aa0e6 · served tree e19a98a · nothing outside scratch touched)
+clone: 986b9f2 · tip under test: a5aa0e6 · served tree: e19a98ac23d3 · scratch: /tmp/hook-pairing-proof.Nkq0i8
+
+== the deploy copy, as the installer writes it (provenance naming the revision) ==
+  installer exit=0 · === RESULT: 6 of 6 copies installed or refreshed from a5aa0e62f229; backups: /tmp/hook-pairing-proof.Nkq0i8/bk
+  it carries: source-revision a5aa0e62f22900c330c7867b2947e84ffbd72f25 (commit)
+
+== the layout the host is in today: the SERVED tree's hook, installed raw ==
+  served tree's hook : md5 ca4f9583, deploy-in-progress mentions 0
+  the deploy copy's hook: md5 728bf2cc, deploy-in-progress mentions 3
+
+== RED: the preflight on that layout (it must NAME the revision the live hook is) ==
+  preflight exit=1 (not a FAIL: a FAIL here would block the movement that repairs the pair)
+  --- the login-shell hook: which revision is it, and does it pair with its deploy ---
+    WARN  hook installed at /tmp/hook-pairing-proof.Nkq0i8/live-hook.sh carries NO provenance block (whole-file md5 ca4f958365d7fd9bae5aec8d56aede71) — attributed by its bytes alone
+    WARN  hook installed at /tmp/hook-pairing-proof.Nkq0i8/live-hook.sh: whole-file md5 ca4f958365d7fd9bae5aec8d56aede71 IS the hook at 5c166be (2026-10-13) — which is not the deploy copy's revision a5aa0e62f22900c330c7867b2947e84ffbd72f25: UNPAIRED, so the marker that deploy writes has no reader. Fix: step 6b, or bash scripts/install-host-tools.sh --hook-rev a5aa0e62f22900c330c7867b2947e84ffbd72f25
+    WARN  the marker this deploy writes has NO READER here: the live hook mentions deploy-in-progress 0 time(s), the deploy copy's hook 3 time(s) (deploy copy revision a5aa0e62f22900c330c7867b2947e84ffbd72f25) — a restart during a deploy window would arm a guard the deploy then reaps
+      the hook at a5aa0e62f229 (=served tree) IS origin/main's
+
+== GREEN: install the hook from the deploy copy's OWN revision, then the same preflight ==
+  installer exit=0 ·   hook source: the deploy's revision a5aa0e6
+  preflight exit=1
+  --- the login-shell hook: which revision is it, and does it pair with its deploy ---
+    PASS  hook installed at /tmp/hook-pairing-proof.Nkq0i8/hook-paired.sh: body md5 728bf2cce72b8c6f9a3cf257f3dfc070 == the deploy copy's revision a5aa0e62f229 — PAIRED with the deploy that writes the marker
+    the marker this deploy writes has a reader here: the live hook mentions deploy-in-progress 3 time(s), the deploy copy's hook 3 time(s)
+      the hook at a5aa0e62f229 (=served tree) IS origin/main's
+
+== the fallback install, extracted from the committed deploy-main.sh ==
+  fragment: 38 lines, extracted between the markers in scripts/deploy-main.sh@986b9f2
+    deploy copy revision: a5aa0e6 (read from /tmp/hook-pairing-proof.Nkq0i8/frag-resolves.sh)
+  NOTE: /tmp/hook-pairing-proof.Nkq0i8/absent/install-host-tools.sh is missing (this tree predates it) — installing the hook from the deploy copy's revision a5aa0e6, which is the revision that writes the marker
+  guard hook: installed /tmp/hook-pairing-proof.Nkq0i8/fb-resolved.sh (bytes match) from /tmp/antum-hook-mvo4Bw.sh
+  installed: md5 728bf2cc · the named revision's hook: md5 728bf2cc · MATCH: YES
+  reader in the marker it pairs with: 3 mention(s) (the served tree's hook has 0)
+
+  fragment: 38 lines, extracted between the markers in scripts/deploy-main.sh@986b9f2
+  and when the revision cannot be resolved (the fallback's last resort):
+    deploy copy revision: deadbeefdeadbeefdeadbeef (read from /tmp/hook-pairing-proof.Nkq0i8/frag-norev.sh)
+  WARNING: the deploy copy names deadbeefdeadbeefdeadbeef but its hook is not in this tree — installing the TREE's hook, which may not read the marker this deploy writes
+  guard hook: installed /tmp/hook-pairing-proof.Nkq0i8/fb-fallback.sh (bytes match) from /home/agent-senior-software-engineer/antum-people/scripts/antum-product-guard-hook.sh
+
+== the deploy hands its own revision to the installer, and never the tree ==
+  6b derives it : 1 line(s) reading $0's provenance
+  6b passes it  : 1 line(s) passing it as --hook-rev
+  the installer is still the writer of every copy: 2 call(s)
+
+scratch kept: /tmp/hook-pairing-proof.Nkq0i8

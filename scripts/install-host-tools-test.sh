@@ -158,9 +158,13 @@ echo "== (g) the deploy routes both host-touching steps through the installer ==
 check "[ \"\$(grep -c 'install-host-tools.sh' '$DEPLOY')\" -ge 2 ]" "(g) the deploy names the installer on both steps"
 check "grep -q '1b\\. refresh the operator-facing host tooling' '$DEPLOY'" "(g) step 1b refreshes straight after the reset"
 check "grep -q 'ONE install path' '$DEPLOY'" "(g) 6b documents a single install path"
-check "grep -q 'FALLBACK, named so the next reader' '$DEPLOY'" "(g) the raw hook install is labelled a fallback"
+# Re-grounded 2026-10-19: the label is now the marker pair that bounds the fallback unit (the wording
+# around it changed when 6b began reading its own revision). The invariant is unchanged: the raw install
+# is labelled a fallback, the label precedes it, and the label says which revision it takes the hook from.
+check "grep -q '>>> ANTUM FALLBACK HOOK SOURCE' '$DEPLOY'" "(g) the raw hook install is labelled a fallback"
+check "grep -q 'FALLBACK INSTALLS FROM THE DEPLOY.S REVISION' '$DEPLOY'" "(g) and the label states where the hook must come from"
 RAW=$(grep -n 'install -m 0644' "$DEPLOY" | head -1 | cut -d: -f1)
-FB=$(grep -n 'FALLBACK, named so the next reader' "$DEPLOY" | head -1 | cut -d: -f1)
+FB=$(grep -n '>>> ANTUM FALLBACK HOOK SOURCE' "$DEPLOY" | head -1 | cut -d: -f1)
 check "[ -n '$RAW' ] && [ -n '$FB' ] && [ '$FB' -lt '$RAW' ]" "(g) and it appears only after that label, never as the primary path"
 W=$(grep -n 'deploy marker written' "$DEPLOY" | head -1 | cut -d: -f1)
 R=$(grep -n "WD_PAT='scripts/keep-alive" "$DEPLOY" | head -1 | cut -d: -f1)
@@ -173,6 +177,29 @@ echo "== (h) the live host copies are exactly as they were =="
 HOST_AFTER=$(md5sum "$HOST_DIR"/*.sh 2>/dev/null | sort)
 check "[ \"\$HOST_AFTER\" = \"\$HOST_BEFORE\" ]" "(h) /home/team/shared *.sh unchanged by this test"
 check "[ \"\$(md5sum < '$HOOK_DST_LIVE' 2>/dev/null || echo none)\" = \"\$HOST_HOOK_BEFORE\" ]" "(h) the installed login-shell hook unchanged by this test"
+
+echo
+echo "== (i) the hook pairs with the deploy's revision, and says which =="
+# The host's hook must come from the revision the running deploy copy names, not from the tree: on
+# 2026-10-19 a replacement left the SERVED tree's hook (0 reads of deploy-in-progress) installed against
+# a deploy copy from a revision 40 commits ahead, and the pair check was green by construction.
+ANTUM_HOST_TOOLS_DIR="$DST" ANTUM_HOOK_DST="$DST/hook-from-rev.sh" ANTUM_HOST_TOOLS_BACKUP="$BK" \
+  ANTUM_HOOK_SRC="" ANTUM_REPO="$REPO" ANTUM_HOOK_REV="$SRC_SHA" \
+  bash "$INSTALLER" > "$ROOT/hookrev.log" 2>&1; HR=$?
+check "[ $HR -eq 0 ]" "(i) installing the hook from a named revision exits 0"
+check "grep -q \"hook source: the deploy's revision $(echo "$SRC_SHA" | cut -c1-7)\" '$ROOT/hookrev.log'" \
+  "(i) the log NAMES the revision it installed from"
+check "[ \"\$(body_md5 '$DST/hook-from-rev.sh')\" = \"\$(git -C '$REPO' show '$SRC_SHA:scripts/antum-product-guard-hook.sh' | md5sum | cut -d' ' -f1)\" ]" \
+  "(i) and the installed body is that revision's hook"
+ANTUM_HOST_TOOLS_DIR="$DST" ANTUM_HOOK_DST="$DST/hook-fallback.sh" ANTUM_HOST_TOOLS_BACKUP="$BK" \
+  ANTUM_HOOK_SRC="" ANTUM_REPO="$REPO" ANTUM_HOOK_REV=deadbeefdeadbeef \
+  bash "$INSTALLER" > "$ROOT/hookfb.log" 2>&1; HF=$?
+check "[ $HF -eq 0 ]" "(i) an UNRESOLVABLE revision does not crash it"
+check "grep -q 'the TREE' '$ROOT/hookfb.log'" "(i) it falls back to the tree, and names that"
+check "grep -q 'could not be resolved' '$ROOT/hookfb.log'" "(i) and says why, rather than guessing silently"
+check "grep -q 'ANTUM_DEPLOY_COPY' '$PREFLIGHT'" "(i) the preflight's deploy copy is an override (rule 14), so the pair can be exercised off-host"
+check "grep -q \"the deploy copy's revision\" '$PREFLIGHT'" "(i) and the preflight's verdict NAMES the deploy's revision"
+check "grep -q 'NO READER' '$PREFLIGHT'" "(i) and warns when the live hook has no marker reader"
 
 echo
 echo "RESULT: $PASS passed, $FAIL failed"
