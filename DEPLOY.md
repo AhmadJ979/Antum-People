@@ -101,8 +101,15 @@ deploy that writes the marker — see "Host tooling" below.
    claim port 3000 → verify → re-arm the guard. Steps 1b and 6b install the copies from the tip it moves to.
 5. Read the run's own output for its own claims: the build's asset name, `seed OK`, port 3000 held by the
    product server, the demo credential, the flag states, a non-empty `watchdog pid:`.
-6. **Independently confirm the served package**: fetch the public URL and hash the bytes there. What is served
-   is measured, not announced — a 200 from the wrong server is the failure this catches.
+6. **Independently confirm the served package — with the observer, not by hand**: run
+   `bash scripts/observe-serve-pair.sh` from the deployed tree. It asserts the pair the recovery asserts,
+   positively: `GET /` returns 200, the served HTML NAMES the assets this tree's build emitted, and the
+   bytes fetched off the URL hash to those artifacts' md5s — the expected names and md5s DERIVED from
+   `client/dist/`, never typed in. It prints the status, the asset it found in the page, the bytes and md5
+   it computed, and the timestamp. **Exit 0 = the pair holds · 1 = it does not · 3 = it could not derive**
+   (and then it compared nothing). A 200 from the wrong server is the failure this catches, and a 200
+   alone is not health — a fallback that hands the URL to the site's dev server answers 200 with
+   `title My site`. See "The observer" below.
 7. Write the record into `docs/evidence/cutover-<date>-<HHMM>/`: README, run log, build and seed logs, before
    and after readings — **staging the logs with `git add -f`**, because `.gitignore` carries `*.log` and has
    swallowed a record's own evidence twice (rule 27).
@@ -130,7 +137,7 @@ bash scripts/install-host-tools.sh --verify           # compare every copy's BOD
 ```
 
 It installs `deploy-main.sh`, `cutover-preflight.sh`, `restore-product.sh`, `rollback-to-9d2182a.sh`,
-`success-test.sh` and the login-shell hook — **atomically** (a temporary file is renamed over the target, so
+`success-test.sh`, `observe-serve-pair.sh` and the login-shell hook — **atomically** (a temporary file is renamed over the target, so
 replacing a script that is executing cannot corrupt the running process) and **idempotently** (a second run
 with the same source changes no byte, so the copies' mtimes stay put).
 
@@ -162,13 +169,57 @@ bash -c 'cd /home/team/shared/probable-octo-sniffle && git fetch origin main && 
 That shape is deliberate: it reads the blobs out of the fetched commit, so it never resets the deployed
 tree — a reset without a build would leave the tree's server code newer than the bundle it serves.
 
-`scripts/install-host-tools-test.sh` proves all of it off the host (71 checks: bodies, provenance,
-idempotence, the red direction of `--verify`, the refusal of a file that does not parse, and that the live
-copies are untouched by the test itself).
+`scripts/install-host-tools-test.sh` proves all of it off the host (78 checks: bodies, provenance,
+idempotence, the red direction of `--verify`, the refusal of a file that does not parse, the
+hook/deploy pairing exercised both ways, that the observer is wired where the movement will look for
+it, and that the live copies are untouched by the test itself).
 
 **The count is asserted, not remembered:** the suite compares its own printed total against
 this sentence and reddens on a drift, so a stale number fails a run instead of reaching a
 reader. The pre-pairing subtotal was 54 — history, not this claim.
+
+## The observer (decision 5 (a))
+
+**What it is.** `scripts/observe-serve-pair.sh` (installed as an operator copy at
+`/home/team/shared/observe-serve-pair.sh`) asks the only question that matters when this product disappears:
+*is the public URL serving OUR build?* One run asserts three things, positively — `GET /` returns 200; the
+served HTML names every asset the served tree's build emitted; and the bytes fetched off the URL hash to that
+artifact's md5. The expected names, byte counts and md5s are **derived at run time from `<tree>/client/dist/`**:
+with no derivable artifact it exits 3 and compares nothing, rather than comparing against a remembered number.
+A pinned literal can be supplied (`ANTUM_OBSERVE_EXPECT_ASSET` / `_MD5`) and a disagreement with the artifact
+FAILS, naming both — a literal that cannot redden is a number nobody checks.
+
+```
+bash /home/team/shared/observe-serve-pair.sh              # one run: 0 the pair holds · 1 it does not · 3 refused
+bash /home/team/shared/observe-serve-pair.sh --loop 600   # every 10 min; ONE loop per host, lock holds its pid
+bash /home/team/shared/observe-serve-pair.sh --status     # last run, its age, whether a loop is armed, the alert
+```
+
+**Who runs it, and when — no scheduler exists here and none is invented.** Measured on this host 2026-10-19:
+PID 1 is `/bin/sh`, there is no systemd bus to talk to, no `crontab` binary, and `/etc/cron.d` is executed by
+nothing (the note under "Maintenance & Stability" above says the same). So the observer runs (1) at every
+movement, as step 6 above, where the hand-done URL fetch used to be; (2) when an operator arms `--loop`; and
+(3) whenever a person runs it.
+
+**Blind spot, stated rather than implied.** The loop is a process on the host it observes. A replacement does
+not wipe `/home`, but it kills every process, and it takes `/etc` — the login-shell hook that could re-arm
+anything is exactly what a replacement removes. **A replacement therefore kills the observer, and nothing
+notices its death.** What exists instead is the next run's own liveness line: every run prints the age of the
+previous recorded run, `--status` prints it on demand, and a gap longer than twice the interval is called a
+gap in the output. Somebody has to look; nothing pushes a message to a person.
+
+**The record** — this is what ends the plan's "no artifact timestamps the first answer". Each run appends one
+dated JSON line to `/home/team/shared/observer/runs.jsonl` (overridable), timestamped by the check itself and
+keeping the most recent 2000 runs. On a failure it writes `/home/team/shared/observer/PAIR-BROKEN.txt`, which
+keeps the FIRST failure time so a window can be measured; when the pair holds again that file is moved aside
+(never deleted) as `PAIR-BROKEN-resolved-<stamp>.txt`, with the window in `restored.log` — bounded by the
+recorded runs, and said to be bounded rather than exact.
+
+**Read-only against the product**: it queries the URL and writes only its own record directory. No restart, no
+marker, no guard interaction, nothing under the deployed tree's `client/` or `server/`. Its own suite,
+`scripts/observe-serve-pair-test.sh`, prints its own total (73 passed, 0 failed on 2026-10-19) and reddens on a
+fixture that answers 200 with a placeholder body, on one serving different bytes, and on the refusal path; the
+run against the live URL is recorded in `docs/evidence/observer-2026-10-19/`.
 
 ## Secrets Rotation Procedure
 ### 1. JWT Secret Rotation

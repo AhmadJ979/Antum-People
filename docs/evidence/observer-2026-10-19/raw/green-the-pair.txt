@@ -1,0 +1,32 @@
+### observation, produced by hand on 2026-10-19 (UTC) with scripts/observe-serve-pair.sh at
+### /home/agent-senior-software-engineer/antum-people/scripts/observe-serve-pair.sh (19556 B, sha256 59cfd8f59f25a2ba)
+### fixture: a server that is the pair: the page names the asset and serves the very bytes the tree's build emitted
+### served directory: /tmp/obs-ev-fixtures/good/client/dist
+### the fixture tree's own artifact: assets/index-FIXTURE01.js 68 B md5 a2280fd1d1dcba22fd658c376019833a
+### (the placeholder fixture serves a page naming NO asset; the foreign fixture serves the page that
+###  names ours with different bytes behind it — md5 7e9286274a447ef6c44e275882b31ad4)
+
+=== observe-serve-pair 2026-10-19T15:47:37Z ===
+  script: /home/agent-senior-software-engineer/antum-people/scripts/observe-serve-pair.sh | 19556 B | sha256 59cfd8f59f25a2ba
+  url:    http://127.0.0.1:58367
+  tree:   /tmp/obs-ev-fixtures/good
+  LIVENESS: <no earlier run in this record>
+            the observer has not recorded a run here before; a gap before this line was NOT observed
+  derived: 2 asset(s) from /tmp/obs-ev-fixtures/good/client/dist (the artifact this tree serves)
+            assets/index-FIXTURE01.css  17 B  md5 376910db364488fa6f48c7c47133b3fb
+            assets/index-FIXTURE01.js  68 B  md5 a2280fd1d1dcba22fd658c376019833a
+            tree HEAD: not a git tree
+  measured: GET / → 200 | title: Antum People | page bytes: 285
+            the page names: assets/index-FIXTURE01.css assets/index-FIXTURE01.js 
+            assets/index-FIXTURE01.css → 200, 17 B, md5 376910db364488fa6f48c7c47133b3fb
+            expected:            17 B, md5 376910db364488fa6f48c7c47133b3fb
+            assets/index-FIXTURE01.js → 200, 68 B, md5 a2280fd1d1dcba22fd658c376019833a
+            expected:            68 B, md5 a2280fd1d1dcba22fd658c376019833a
+
+PAIR HOLDS (exit 0) — the page at http://127.0.0.1:58367 names our asset(s) and the bytes match the served tree's artifact
+  measured off the URL: assets/index-FIXTURE01.js 68 B md5 a2280fd1d1dcba22fd658c376019833a
+
+### exit code: 0
+### the record line this run wrote:
+###   {"ts":"2026-10-19T15:47:37Z","verdict":"PASS","url":"http://127.0.0.1:58367","status":"200","title":"Antum People","page_assets":"assets/index-FIXTURE01.css assets/index-FIXTURE01.js ","asset":"assets/index-FIXTURE01.js","expected_md5":"a2280fd1d1dcba22fd658c376019833a","fetched_bytes":"68","fetched_md5":"a2280fd1d1dcba22fd658c376019833a","tree":"/tmp/obs-ev-fixtures/good","tree_head":"none","note":"","duration_s":"0","interval_s":"0"}
+

@@ -38,6 +38,8 @@
 #     exact bytes installed (never a remembered value, which is how one header came to record a blob
 #     md5 that no copy on the host matched);
 #   * IDEMPOTENT — a second run with the same source writes nothing, so the copies' mtimes stay put;
+#   * and it installs the OBSERVER (scripts/observe-serve-pair.sh, decision 5 (a)) as an OPERATOR copy, so
+#     the movement's post-movement step and an armed loop run the same assertion from outside;
 #   * ATOMIC — each file is written to a temporary name in the destination directory and renamed over
 #     the target, so replacing a script that is EXECUTING cannot corrupt the running process (the
 #     running shell keeps reading the inode it opened);
@@ -131,6 +133,7 @@ scripts/cutover-preflight.sh|$DST/cutover-preflight.sh|0755
 scripts/restore-product.sh|$DST/restore-product.sh|0755
 scripts/rollback-to-9d2182a.sh|$DST/rollback-to-9d2182a.sh|0755
 scripts/success-test.sh|$DST/success-test.sh|0755
+scripts/observe-serve-pair.sh|$DST/observe-serve-pair.sh|0755
 scripts/antum-product-guard-hook.sh|$HOOK_DST|0644"
 
 FAIL=0

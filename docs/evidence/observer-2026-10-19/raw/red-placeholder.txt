@@ -1,0 +1,37 @@
+### observation, produced by hand on 2026-10-19 (UTC) with scripts/observe-serve-pair.sh at
+### /home/agent-senior-software-engineer/antum-people/scripts/observe-serve-pair.sh (19556 B, sha256 59cfd8f59f25a2ba)
+### fixture: a server that answers 200 with a placeholder body (the 'My site' case)
+### served directory: /tmp/obs-ev-fixtures/placeholder
+### the fixture tree's own artifact: assets/index-FIXTURE01.js 68 B md5 a2280fd1d1dcba22fd658c376019833a
+### (the placeholder fixture serves a page naming NO asset; the foreign fixture serves the page that
+###  names ours with different bytes behind it — md5 7e9286274a447ef6c44e275882b31ad4)
+
+=== observe-serve-pair 2026-10-19T15:47:37Z ===
+  script: /home/agent-senior-software-engineer/antum-people/scripts/observe-serve-pair.sh | 19556 B | sha256 59cfd8f59f25a2ba
+  url:    http://127.0.0.1:49691
+  tree:   /tmp/obs-ev-fixtures/good
+  LIVENESS: <no earlier run in this record>
+            the observer has not recorded a run here before; a gap before this line was NOT observed
+  derived: 2 asset(s) from /tmp/obs-ev-fixtures/good/client/dist (the artifact this tree serves)
+            assets/index-FIXTURE01.css  17 B  md5 376910db364488fa6f48c7c47133b3fb
+            assets/index-FIXTURE01.js  68 B  md5 a2280fd1d1dcba22fd658c376019833a
+            tree HEAD: not a git tree
+  measured: GET / → 200 | title: My site | page bytes: 93
+            the page names: <nothing>
+
+PAIR BROKEN (exit 1) — the served page does not name: assets/index-FIXTURE01.css assets/index-FIXTURE01.js
+  it names: <nothing> (title: My site)
+  a placeholder answers 200 too — this is that shape.
+  ALERT WRITTEN: /tmp/obs-ev-fixtures/rec-ph/PAIR-BROKEN.txt
+
+### exit code: 1
+### the record line this run wrote:
+###   {"ts":"2026-10-19T15:47:37Z","verdict":"BROKEN","url":"http://127.0.0.1:49691","status":"200","title":"My site","page_assets":"","asset":"assets/index-FIXTURE01.js","expected_md5":"a2280fd1d1dcba22fd658c376019833a","fetched_bytes":"","fetched_md5":"","tree":"/tmp/obs-ev-fixtures/good","tree_head":"none","note":"page names none of ours: assets/index-FIXTURE01.css assets/index-FIXTURE01.js","duration_s":"","interval_s":"0"}
+### the alert file it wrote:
+###   first broken 2026-10-19T15:47:37Z — the public URL does not serve our product as of this run.
+###   failing: the page at http://127.0.0.1:49691/ (title: My site) does not name our asset(s): assets/index-FIXTURE01.css assets/index-FIXTURE01.js
+###   record:  /tmp/obs-ev-fixtures/rec-ph/runs.jsonl (verdict BROKEN, with the numbers this run measured)
+###   what to run: bash observe-serve-pair.sh (one run) or --status (is the observer alive?)
+###   recovery:    bash /home/team/shared/restore-product.sh
+###   nothing pushes this to a person — read it here, or run --status. The observer cannot notify: it has no channel off this host.
+
