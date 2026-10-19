@@ -103,6 +103,19 @@ tree's files are byte-identical **with mtimes unchanged** after a run, the `/hom
 installed login-shell hook are unchanged by the whole suite, and the observer touches neither the guard's lock
 nor the deploy marker.
 
+**The claim covers processes, not only files — and it did not always.** The suite's four fixture servers used
+to **leak**: `start_server` appended to `PIDS` inside a command substitution (a subshell), so the EXIT trap
+held only the busy-lock pid, and cleanup's `rm -rf "$ROOT"` deleted the `server-*.pid` files that were the
+only other record of those pids. Measured, in review and again here: **`ps` count 0 → 4 across one run** of
+the pre-fix file, four fixture `http.server` processes resident per run (~9.5 MB RSS each; 39 had accumulated
+on this 3.9 GB host, holding 371 MB, before they were cleared). The fix hoists the four calls out of the
+substitution, has cleanup read the pid files **before** `rm -rf`, and adds **section (k)** so the bookkeeping
+is load-bearing: 4 pid files written, every fixture pid present in the trap's `PIDS` array, the array equal to
+the 5 processes the suite started, and after the trap's own kill **no fixture survives**. Measured at the
+fixed tip: **`ps` count 0 → 0**, delta 0. The pre-fix file **fails three of the four (k) checks** and leaves
+4 processes behind; both runs, the diff between the files, and the counts are in
+`raw/cleanup-leak-pre-fix-and-fixed.txt`.
+
 ## Tallies
 
 Measured on the tree this record belongs to (`scripts/install-host-tools-test.sh` records the revision it did
@@ -110,14 +123,26 @@ its provenance work at — `d6dd576` — because the branch for this work was cu
 after-state correction was still open; the code is identical at the branch head, verified after the final
 commit):
 
-* `scripts/observe-serve-pair-test.sh` → **73 passed, 0 failed** (`suite-observer.txt`). With the opt-in live
-  case it is **75 passed, 0 failed** (`suite-observer-with-live.txt`), and it prints the live md5 it measured.
+* `scripts/observe-serve-pair-test.sh` → **77 passed, 0 failed** (`suite-observer.txt`). With the opt-in live
+  case it is **79 passed, 0 failed** (`suite-observer-with-live.txt`), and it prints the live md5 it measured.
+  *(The first version of this suite printed 73 / 75. Four checks — section (k) — were added with the cleanup
+  fix, and both transcripts were re-derived at the fixed tip.)*
 * `scripts/install-host-tools-test.sh` → **78 passed, 0 failed** (`suite-installer.txt`).
 * **The count moved because the target moved, and the count check caught it**: adding the observer as a
-  TARGET added five checks (a ×2, b ×1, l ×3), and the suite reddened at
+  TARGET added **7** checks, and the suite reddened at
   `FAIL (k) the total this suite reports (78) is the number DEPLOY.md states (71)`
   (`raw/count-check-reddened-before-the-doc-update.txt`) until `DEPLOY.md` was updated to 78 — the (#216)
-  pattern working on the change that added to it.
+  pattern working on the change that added to it. **The 7 was derived by diffing the two PASS lists** — the
+  71-check run at `7ed470d` against the 78-check run at this branch's head — not by reading the diff of the
+  scripts: `(a) observe-serve-pair.sh is installed`; `(a) … BODY equals scripts/observe-serve-pair.sh
+  (independent strip)`; `(b) the observer copy carries its own provenance too`; and **`(l)` ×4** —
+  `DEPLOY.md's post-movement step names the observer…`, `the installer carries the observer in its TARGETS
+  list`, `as a 0755 OPERATOR copy — not sourced into every login shell`, `and the only 0644 target is still
+  the hook`. So **a ×2 + b ×1 + l ×4 = 7**. An earlier version of this record said "five (a ×2, b ×1,
+  l ×3)" beside a printed 71 → 78: the two it missed were **rewrites** of existing labels (the `(a)` log line
+  "six installs → seven installs", the `(b)` revision hash, the `(k)` total line 71 → 78), which are changes
+  to a label's text, not new checks. A number printed beside a word that contradicts it is the (#216) class,
+  and this sentence was in it until this correction.
 * Scope: `client/` **0 files**, `server/` **0 files** — nothing the product serves changed, so **no build
   proof is owed and no movement is owed** while `client/` is unchanged.
 
