@@ -60,6 +60,31 @@ side does, so the two sides agree.
 with its own credential (`cd server && node --test access.test.js`), and never touches the live service, the
 live database or the live credential.
 
+## The suite total, which this pack first failed to report — and the one check that was RED
+
+**This slice left `origin/main` red, and the record says so rather than being quietly repaired.** At
+`c2f9bba` (the merge of this slice) the full server suite was **192 tests, 191 pass, 1 FAIL**:
+
+```
+not ok 45 - every /api route is reachable from a caller, or registered as callerless with a reason
+  reachability.test.js:59 -> [ 'GET /api/users (server/index.js:163)',
+                               'POST /api/users (server/index.js:172)' ]
+```
+
+A control attributed it: the same file at this slice's base `3eb0a7b` is 13/13, at `c2f9bba` 12/13. The two
+routes this slice added had no client caller and no entry in `server/reachability-register.js`'s
+`CALLERLESS`, and this pack reported `access.test.js` **22/22** — true, and not the total. A claim printed
+beside a number that contradicts it is the class the plan names; the total is now reported here.
+
+**The fix is the register, not an exemption.** The two routes are registered in `CALLERLESS` with the truth:
+`decision 11` ships the account path over HTTP while the surface that calls it is the next slice (design
+`#221`, `design-concepts/LAYER3-IDENTITY.md`), and `client/` was 0 files in this slice by design. The check
+was not weakened, skipped or deleted, and no client caller was invented to silence it. At the fix the same
+command gives **192 tests, 192 pass, 0 failed, 0 skipped, rc 0** — `ok 45`.
+
+`suite-server-192-red-then-green.txt` carries **both raw runs** (red at `6aa8600`, which contains `c2f9bba`;
+green with the register entries), the exact command, and every count with the file it came from.
+
 The refusals it holds, each named: `401` unauthenticated; `401` on a wrong password; `429` past the login
 limiter; **`403` with an empty body** for a role with no allowance — on the roster, on a second resource, and
 on a path that declares no resource; `400` for an unnamed actor; `409`/`400`/`403` on the account path; and

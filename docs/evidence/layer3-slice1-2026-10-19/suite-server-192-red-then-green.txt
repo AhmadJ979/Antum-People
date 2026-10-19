@@ -1,0 +1,3039 @@
+THE FULL SERVER SUITE AT origin/main — RED, then GREEN, with the one check that was red
+
+WHY THIS FILE EXISTS. The slice's own pack reported access.test.js 22/22 — true — and did NOT
+report the suite total, which was 192 tests, 191 pass, 1 FAIL. A claim printed beside a number
+that contradicts it is the class the plan names, so the total is here, both ends, with the raw runs.
+
+Command, both runs:   cd server && PRODUCT_DB_PATH=<scratch> node --test
+Scratch DB only; the live service, its database, its credential and the guard were not touched.
+
+RED — at origin/main c2f9bba (the merge of this slice). Measured by the reviewer there, and
+reproduced by me on 6aa8600, which contains c2f9bba:
+   192 tests, 191 pass, 1 FAIL, rc 1
+   not ok 45 - every /api route is reachable from a caller, or registered as callerless with a reason
+     reachability.test.js:59 -> [ 'GET /api/users (server/index.js:163)',
+                                  'POST /api/users (server/index.js:172)' ]
+CONTROL, so this is attributed and not a flake: the same file at the slice's base 3eb0a7b is 13/13;
+at c2f9bba it is 12/13. The two routes the slice added had no caller and no register entry.
+
+GREEN — after this branch's fix, same command, same scratch discipline:
+   192 tests, 192 pass, 0 failed, 0 skipped, rc 0
+   ok 45 - every /api route is reachable from a caller, or registered as callerless with a reason
+
+THE FIX IS THE REGISTER, NOT THE EXEMPTION: the two routes are registered in
+server/reachability-register.js's CALLERLESS with the truth — decision 11 ships the account path
+over HTTP while the surface that calls it is the next slice (design #221 / LAYER3-IDENTITY.md) and
+client/ was 0 files in slice 1. The check was not weakened, skipped or deleted, and no client caller
+was invented to silence it. The register's own test still holds every entry to reality: an entry
+whose route becomes reachable must leave the register, and the prose must credit the same decision
+as its owner field (both entries say decision 11 in both places).
+
+COUNTS, re-derived at this tip and named with their source:
+   server suite (cd server && node --test)        192 tests, 192 pass, 0 fail, rc 0   <- this file
+   this slice's own suite (server/access.test.js)  22 pass, 0 fail                    <- README below
+   observer suite (scripts/observe-serve-pair-test.sh) 77 pass, 0 fail; 79 with the live case
+   installer suite (scripts/install-host-tools-test.sh) 78 pass, 0 fail — and DEPLOY.md states 78,
+     asserted by that suite's own (k) check, so the doc and the suite cannot drift apart.
+
+----- RAW RUN 1 of 2: the RED reproduction, tree 6aa8600 (contains c2f9bba) -----
+=== full server suite: before — 2026-10-19T16:07:21+00:00 ===
+tree: 6aa8600 (fix/layer3-slice1-reachability)
+cmd:  cd server && PRODUCT_DB_PATH=/tmp/scratch-before-2306.db node --test
+
+TAP version 13
+# (node:2316) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: authentication: unchanged answers
+    # Subtest: no token is 401 on a resource
+    ok 1 - no token is 401 on a resource
+      ---
+      duration_ms: 6.178231
+      type: 'test'
+      ...
+    # Subtest: a wrong password is 401
+    ok 2 - a wrong password is 401
+      ---
+      duration_ms: 15.925259
+      type: 'test'
+      ...
+    # Subtest: a good login through the API still works — the token names the role
+    ok 3 - a good login through the API still works — the token names the role
+      ---
+      duration_ms: 8.42646
+      type: 'test'
+      ...
+    1..3
+ok 1 - authentication: unchanged answers
+  ---
+  duration_ms: 803.653955
+  type: 'suite'
+  ...
+# Subtest: authorization: the role is enforced, deny-by-default
+    # Subtest: the seeded admin still reaches the roster (nothing was narrowed by this slice)
+    ok 1 - the seeded admin still reaches the roster (nothing was narrowed by this slice)
+      ---
+      duration_ms: 4.800052
+      type: 'test'
+      ...
+    # Subtest: an authenticated caller whose role allows nothing is 403 on the roster
+    ok 2 - an authenticated caller whose role allows nothing is 403 on the roster
+      ---
+      duration_ms: 2.591108
+      type: 'test'
+      ...
+    # Subtest: and 403 on a different resource — the refusal is not one route
+    ok 3 - and 403 on a different resource — the refusal is not one route
+      ---
+      duration_ms: 8.408976
+      type: 'test'
+      ...
+    # Subtest: a path that declares NO resource is refused, not left open and not a 404
+    ok 4 - a path that declares NO resource is refused, not left open and not a 404
+      ---
+      duration_ms: 3.194605
+      type: 'test'
+      ...
+    # Subtest: a token with no username is still authorised by role, but cannot tick a task (below)
+    ok 5 - a token with no username is still authorised by role, but cannot tick a task (below)
+      ---
+      duration_ms: 4.765291
+      type: 'test'
+      ...
+    1..5
+ok 2 - authorization: the role is enforced, deny-by-default
+  ---
+  duration_ms: 38.327384
+  type: 'suite'
+  ...
+# Subtest: accounts: plural rows through an admin-authenticated path
+    # Subtest: an admin creates a second account, and that account can log in
+    ok 1 - an admin creates a second account, and that account can log in
+      ---
+      duration_ms: 166.578549
+      type: 'test'
+      ...
+    # Subtest: the roster of accounts is a list, and it does not leak a password hash
+    ok 2 - the roster of accounts is a list, and it does not leak a password hash
+      ---
+      duration_ms: 3.453591
+      type: 'test'
+      ...
+    # Subtest: a duplicate username is refused 409 rather than shadowing the first account
+    ok 3 - a duplicate username is refused 409 rather than shadowing the first account
+      ---
+      duration_ms: 3.043814
+      type: 'test'
+      ...
+    # Subtest: a short password is refused 400
+    ok 4 - a short password is refused 400
+      ---
+      duration_ms: 2.195113
+      type: 'test'
+      ...
+    # Subtest: a role this product does not know is refused 400 — a user who matches no cell can do nothing
+    ok 5 - a role this product does not know is refused 400 — a user who matches no cell can do nothing
+      ---
+      duration_ms: 5.966519
+      type: 'test'
+      ...
+    # Subtest: a caller whose role allows nothing cannot create an account (403)
+    ok 6 - a caller whose role allows nothing cannot create an account (403)
+      ---
+      duration_ms: 3.522757
+      type: 'test'
+      ...
+    1..6
+ok 3 - accounts: plural rows through an admin-authenticated path
+  ---
+  duration_ms: 194.451456
+  type: 'suite'
+  ...
+# Subtest: the tick names the person who ticked it (decision 22)
+    # Subtest: completing a task records the named actor beside the date
+    ok 1 - completing a task records the named actor beside the date
+      ---
+      duration_ms: 3.660268
+      type: 'test'
+      ...
+    # Subtest: an UNNAMED actor is refused 400, and the row is left untouched
+    ok 2 - an UNNAMED actor is refused 400, and the row is left untouched
+      ---
+      duration_ms: 3.865865
+      type: 'test'
+      ...
+    # Subtest: an unnamed actor may still mark a task pending — the refusal is about claiming work was done
+    ok 3 - an unnamed actor may still mark a task pending — the refusal is about claiming work was done
+      ---
+      duration_ms: 12.517652
+      type: 'test'
+      ...
+    1..3
+ok 4 - the tick names the person who ticked it (decision 22)
+  ---
+  duration_ms: 24.486913
+  type: 'suite'
+  ...
+# Subtest: the policy table itself
+    # Subtest: no declared route lacks a policy cell
+    ok 1 - no declared route lacks a policy cell
+      ---
+      duration_ms: 0.280998
+      type: 'test'
+      ...
+    # Subtest: no policy cell names a role this product does not know
+    ok 2 - no policy cell names a role this product does not know
+      ---
+      duration_ms: 0.157193
+      type: 'test'
+      ...
+    # Subtest: today's policy allows admin only, explicitly — nothing silently widened
+    ok 3 - today's policy allows admin only, explicitly — nothing silently widened
+      ---
+      duration_ms: 0.339461
+      type: 'test'
+      ...
+    # Subtest: the resource for a route is looked up by method and path, not by a guess
+    ok 4 - the resource for a route is looked up by method and path, not by a guess
+      ---
+      duration_ms: 1.65649
+      type: 'test'
+      ...
+    1..4
+ok 5 - the policy table itself
+  ---
+  duration_ms: 2.599384
+  type: 'suite'
+  ...
+# Subtest: the login rate limit still answers 429
+    # Subtest: a burst past the limiter (25 per minute) is answered 429
+    ok 1 - a burst past the limiter (25 per minute) is answered 429
+      ---
+      duration_ms: 83.093336
+      type: 'test'
+      ...
+    1..1
+ok 6 - the login rate limit still answers 429
+  ---
+  duration_ms: 83.281412
+  type: 'suite'
+  ...
+# (node:2332) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a live database gains the P2-4 columns at boot
+    # Subtest: the migration is what puts the columns on a table that already exists
+    ok 1 - the migration is what puts the columns on a table that already exists
+      ---
+      duration_ms: 7.303139
+      type: 'test'
+      ...
+    # Subtest: rows that were already there survive, and the default labels them honestly
+    ok 2 - rows that were already there survive, and the default labels them honestly
+      ---
+      duration_ms: 5.027315
+      type: 'test'
+      ...
+    # Subtest: running it again adds nothing — the second boot is a no-op
+    ok 3 - running it again adds nothing — the second boot is a no-op
+      ---
+      duration_ms: 4.660915
+      type: 'test'
+      ...
+    # Subtest: a migrated database has exactly the columns a fresh one has
+    ok 4 - a migrated database has exactly the columns a fresh one has
+      ---
+      duration_ms: 8.122963
+      type: 'test'
+      ...
+    # Subtest: the module that runs at boot carries the same migration it exports
+    ok 5 - the module that runs at boot carries the same migration it exports
+      ---
+      duration_ms: 0.182588
+      type: 'test'
+      ...
+    1..5
+ok 7 - a live database gains the P2-4 columns at boot
+  ---
+  duration_ms: 27.672138
+  type: 'suite'
+  ...
+# (node:2339) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Layer 2 demo seed — the three pre-boarding cases
+    # Subtest: seeds exactly the three offer references it owns, all UAE
+    ok 1 - seeds exactly the three offer references it owns, all UAE
+      ---
+      duration_ms: 3.718591
+      type: 'test'
+      ...
+    # Subtest: dates are the seeded offsets from the day the seed ran, not fixed dates
+    ok 2 - dates are the seeded offsets from the day the seed ran, not fixed dates
+      ---
+      duration_ms: 0.801258
+      type: 'test'
+      ...
+    # Subtest: case 1 is the roster's in-flight UAE hire, by that row's id
+    ok 3 - case 1 is the roster's in-flight UAE hire, by that row's id
+      ---
+      duration_ms: 0.391701
+      type: 'test'
+      ...
+    # Subtest: item statuses are what the three states need: none verified, none collected
+    ok 4 - item statuses are what the three states need: none verified, none collected
+      ---
+      duration_ms: 0.469853
+      type: 'test'
+      ...
+    # Subtest: the workspace track arrives with each case, owned and all open
+    ok 5 - the workspace track arrives with each case, owned and all open
+      ---
+      duration_ms: 0.546226
+      type: 'test'
+      ...
+    # Subtest: the notice is recorded as shown per item, by a named person, for the collectible items only
+    ok 6 - the notice is recorded as shown per item, by a named person, for the collectible items only
+      ---
+      duration_ms: 3.374985
+      type: 'test'
+      ...
+    # Subtest: the demo figures the walkthrough quotes are intact: 7 items per case, 21 outstanding
+    ok 7 - the demo figures the walkthrough quotes are intact: 7 items per case, 21 outstanding
+      ---
+      duration_ms: 1.458013
+      type: 'test'
+      ...
+    # Subtest: the state is derived, not stored: no flag-like column on the case table
+    ok 8 - the state is derived, not stored: no flag-like column on the case table
+      ---
+      duration_ms: 0.545706
+      type: 'test'
+      ...
+    # Subtest: re-running the seed changes nothing it owns (idempotent on offer_reference)
+    ok 9 - re-running the seed changes nothing it owns (idempotent on offer_reference)
+      ---
+      duration_ms: 145.649971
+      type: 'test'
+      ...
+    1..9
+ok 8 - Layer 2 demo seed — the three pre-boarding cases
+  ---
+  duration_ms: 158.339051
+  type: 'suite'
+  ...
+# Subtest: EOSB Calculation - Option B (KSA Art. 84)
+    # Subtest: KSA: 18 months resignation should be full pro-rata (NON-ZERO)
+    ok 1 - KSA: 18 months resignation should be full pro-rata (NON-ZERO)
+      ---
+      duration_ms: 1.365261
+      type: 'test'
+      ...
+    # Subtest: KSA: 3y resignation should be full, NOT reduced by a third
+    ok 2 - KSA: 3y resignation should be full, NOT reduced by a third
+      ---
+      duration_ms: 0.165619
+      type: 'test'
+      ...
+    # Subtest: KSA: 6y resignation should be full, no 2/3 reduction
+    ok 3 - KSA: 6y resignation should be full, no 2/3 reduction
+      ---
+      duration_ms: 0.131009
+      type: 'test'
+      ...
+    # Subtest: KSA: 9y resignation should be full, no 2/3 reduction
+    ok 4 - KSA: 9y resignation should be full, no 2/3 reduction
+      ---
+      duration_ms: 0.183954
+      type: 'test'
+      ...
+    # Subtest: KSA: summary dismissal should be 0
+    ok 5 - KSA: summary dismissal should be 0
+      ---
+      duration_ms: 0.917093
+      type: 'test'
+      ...
+    # Subtest: KSA: exactly 2-year boundary
+    ok 6 - KSA: exactly 2-year boundary
+      ---
+      duration_ms: 0.174444
+      type: 'test'
+      ...
+    # Subtest: UAE: 2y resignation should be 1/3 (FDL 33/2021)
+    ok 7 - UAE: 2y resignation should be 1/3 (FDL 33/2021)
+      ---
+      duration_ms: 0.136558
+      type: 'test'
+      ...
+    # Subtest: UAE: 4y resignation should be 2/3
+    ok 8 - UAE: 4y resignation should be 2/3
+      ---
+      duration_ms: 0.205097
+      type: 'test'
+      ...
+    # Subtest: UAE: 6y resignation should be full
+    ok 9 - UAE: 6y resignation should be full
+      ---
+      duration_ms: 0.282448
+      type: 'test'
+      ...
+    # Subtest: UAE: 24 months basic salary cap
+    ok 10 - UAE: 24 months basic salary cap
+      ---
+      duration_ms: 0.334635
+      type: 'test'
+      ...
+    # Subtest: UAE: under 1 year should be 0
+    ok 11 - UAE: under 1 year should be 0
+      ---
+      duration_ms: 0.115017
+      type: 'test'
+      ...
+    # Subtest: Unpaid leave handling
+    ok 12 - Unpaid leave handling
+      ---
+      duration_ms: 0.108135
+      type: 'test'
+      ...
+    1..12
+ok 9 - EOSB Calculation - Option B (KSA Art. 84)
+  ---
+  duration_ms: 5.375037
+  type: 'suite'
+  ...
+# Subtest: no test file can reach the live product database without pinning the path first
+ok 10 - no test file can reach the live product database without pinning the path first
+  ---
+  duration_ms: 12.120749
+  type: 'test'
+  ...
+# Subtest: the guard is actually looking at the files that load db.js (not passing vacuously)
+ok 11 - the guard is actually looking at the files that load db.js (not passing vacuously)
+  ---
+  duration_ms: 4.03396
+  type: 'test'
+  ...
+# Subtest: the premise: db.js still binds the product database when the path is unset
+ok 12 - the premise: db.js still binds the product database when the path is unset
+  ---
+  duration_ms: 0.455388
+  type: 'test'
+  ...
+# (node:2375) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P2-5 · the boundary is inclusive at exactly 48 hours
+    # Subtest: exactly 48.000 hours before 00:00 of the start date, the flag IS raised
+    ok 1 - exactly 48.000 hours before 00:00 of the start date, the flag IS raised
+      ---
+      duration_ms: 8.170208
+      type: 'test'
+      ...
+    # Subtest: one second outside 48 hours, it is NOT raised
+    ok 2 - one second outside 48 hours, it is NOT raised
+      ---
+      duration_ms: 0.295783
+      type: 'test'
+      ...
+    # Subtest: one second inside 48 hours, it IS raised
+    ok 3 - one second inside 48 hours, it IS raised
+      ---
+      duration_ms: 0.15734
+      type: 'test'
+      ...
+    # Subtest: the boundary is measured from 00:00 of the start date, not from the moment of the read
+    ok 4 - the boundary is measured from 00:00 of the start date, not from the moment of the read
+      ---
+      duration_ms: 0.153978
+      type: 'test'
+      ...
+    1..4
+ok 13 - P2-5 · the boundary is inclusive at exactly 48 hours
+  ---
+  duration_ms: 9.59813
+  type: 'suite'
+  ...
+# Subtest: P2-5 · the three states on the seeded cases
+    # Subtest: start date passed with items open → Started (the tone escalates, nothing is hidden)
+    ok 1 - start date passed with items open → Started (the tone escalates, nothing is hidden)
+      ---
+      duration_ms: 1.348772
+      type: 'test'
+      ...
+    # Subtest: inside 48 hours with items open → the amber state
+    ok 2 - inside 48 hours with items open → the amber state
+      ---
+      duration_ms: 0.180524
+      type: 'test'
+      ...
+    # Subtest: more than 48 hours out with everything still open → On track, not a flag
+    ok 3 - more than 48 hours out with everything still open → On track, not a flag
+      ---
+      duration_ms: 0.224666
+      type: 'test'
+      ...
+    1..3
+ok 14 - P2-5 · the three states on the seeded cases
+  ---
+  duration_ms: 2.070132
+  type: 'suite'
+  ...
+# Subtest: P2-5 · the flag clears by derivation, and is never sticky
+    # Subtest: a case whose start date has passed with EVERY item collected renders complete, not overdue
+    ok 1 - a case whose start date has passed with EVERY item collected renders complete, not overdue
+      ---
+      duration_ms: 0.286124
+      type: 'test'
+      ...
+    # Subtest: the same case flips to the flag on the next read, with no write in between
+    ok 2 - the same case flips to the flag on the next read, with no write in between
+      ---
+      duration_ms: 0.298811
+      type: 'test'
+      ...
+    # Subtest: clearing is one-sided: any single open item keeps it raised
+    ok 3 - clearing is one-sided: any single open item keeps it raised
+      ---
+      duration_ms: 0.26559
+      type: 'test'
+      ...
+    1..3
+ok 15 - P2-5 · the flag clears by derivation, and is never sticky
+  ---
+  duration_ms: 1.026519
+  type: 'suite'
+  ...
+# Subtest: P2-5 · one rule over every item, whatever track created it
+    # Subtest: an item that is not in the employee-track document set still counts
+    ok 1 - an item that is not in the employee-track document set still counts
+      ---
+      duration_ms: 0.253999
+      type: 'test'
+      ...
+    # Subtest: open items are named worst-first, with the item, its status and the days to start
+    ok 2 - open items are named worst-first, with the item, its status and the days to start
+      ---
+      duration_ms: 0.135171
+      type: 'test'
+      ...
+    # Subtest: no owner is invented where the item model has none
+    ok 3 - no owner is invented where the item model has none
+      ---
+      duration_ms: 0.111493
+      type: 'test'
+      ...
+    1..3
+ok 16 - P2-5 · one rule over every item, whatever track created it
+  ---
+  duration_ms: 0.598543
+  type: 'suite'
+  ...
+# Subtest: P2-5 · a case with no start date
+    # Subtest: no flag is raised and the surface is told why, rather than being given a default date
+    ok 1 - no flag is raised and the surface is told why, rather than being given a default date
+      ---
+      duration_ms: 0.235667
+      type: 'test'
+      ...
+    1..1
+ok 17 - P2-5 · a case with no start date
+  ---
+  duration_ms: 0.343997
+  type: 'suite'
+  ...
+# Subtest: P2-5 · nothing about the flag is stored
+    # Subtest: no column on the Layer 2 tables holds a flag, a state or a boundary
+    ok 1 - no column on the Layer 2 tables holds a flag, a state or a boundary
+      ---
+      duration_ms: 0.391476
+      type: 'test'
+      ...
+    # Subtest: the derivation declares no write path
+    ok 2 - the derivation declares no write path
+      ---
+      duration_ms: 0.098898
+      type: 'test'
+      ...
+    1..2
+ok 18 - P2-5 · nothing about the flag is stored
+  ---
+  duration_ms: 0.568095
+  type: 'suite'
+  ...
+# Subtest: P2-5 · the in-process watcher records, catches up, and never sends
+    # Subtest: a boundary met while the process is up is recorded as met while the app was open
+    ok 1 - a boundary met while the process is up is recorded as met while the app was open
+      ---
+      duration_ms: 0.863516
+      type: 'test'
+      ...
+    # Subtest: a boundary that falls after this process started is recorded as met, not late
+    ok 2 - a boundary that falls after this process started is recorded as met, not late
+      ---
+      duration_ms: 0.215991
+      type: 'test'
+      ...
+    # Subtest: a case with nothing outstanding is never recorded, and a passed-and-complete case stays complete
+    ok 3 - a case with nothing outstanding is never recorded, and a passed-and-complete case stays complete
+      ---
+      duration_ms: 0.321169
+      type: 'test'
+      ...
+    # Subtest: the watcher holds no write path: its records are in memory and it declares no delivery
+    ok 4 - the watcher holds no write path: its records are in memory and it declares no delivery
+      ---
+      duration_ms: 0.139528
+      type: 'test'
+      ...
+    1..4
+ok 19 - P2-5 · the in-process watcher records, catches up, and never sends
+  ---
+  duration_ms: 2.238206
+  type: 'suite'
+  ...
+# (node:2382) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P2-2 · the checklist arrives with the case
+    # Subtest: an accepted offer seeds the jurisdiction document set, every item not started
+    ok 1 - an accepted offer seeds the jurisdiction document set, every item not started
+      ---
+      duration_ms: 5.170756
+      type: 'test'
+      ...
+    # Subtest: the item set is data, not a hard-coded list in the route
+    ok 2 - the item set is data, not a hard-coded list in the route
+      ---
+      duration_ms: 0.136801
+      type: 'test'
+      ...
+    # Subtest: replaying the same accepted offer does not duplicate the checklist
+    ok 3 - replaying the same accepted offer does not duplicate the checklist
+      ---
+      duration_ms: 3.371303
+      type: 'test'
+      ...
+    # Subtest: seeding twice directly is also a no-op
+    ok 4 - seeding twice directly is also a no-op
+      ---
+      duration_ms: 2.624215
+      type: 'test'
+      ...
+    1..4
+ok 20 - P2-2 · the checklist arrives with the case
+  ---
+  duration_ms: 12.160624
+  type: 'suite'
+  ...
+# Subtest: P2-2 · every item carries an explicit status
+    # Subtest: a status outside the four is refused, and the message names them
+    ok 1 - a status outside the four is refused, and the message names them
+      ---
+      duration_ms: 3.046476
+      type: 'test'
+      ...
+    # Subtest: an illegal transition is refused with the status the item is actually in
+    ok 2 - an illegal transition is refused with the status the item is actually in
+      ---
+      duration_ms: 2.626027
+      type: 'test'
+      ...
+    # Subtest: not started -> requested is allowed and time-stamped
+    ok 3 - not started -> requested is allowed and time-stamped
+      ---
+      duration_ms: 3.243469
+      type: 'test'
+      ...
+    # Subtest: verified is terminal: nothing moves out of it
+    ok 4 - verified is terminal: nothing moves out of it
+      ---
+      duration_ms: 5.616106
+      type: 'test'
+      ...
+    # Subtest: a rejection sends a received item back to requested and clears the receipt
+    ok 5 - a rejection sends a received item back to requested and clears the receipt
+      ---
+      duration_ms: 5.58446
+      type: 'test'
+      ...
+    # Subtest: an unknown item, case or an over-long reference is refused
+    ok 6 - an unknown item, case or an over-long reference is refused
+      ---
+      duration_ms: 4.146017
+      type: 'test'
+      ...
+    1..6
+ok 21 - P2-2 · every item carries an explicit status
+  ---
+  duration_ms: 24.788412
+  type: 'suite'
+  ...
+# Subtest: P2-2 · a document cannot be collected before the privacy notice was shown for it
+    # Subtest: received is refused with 428 while the notice has not been shown for the item
+    ok 1 - received is refused with 428 while the notice has not been shown for the item
+      ---
+      duration_ms: 3.123496
+      type: 'test'
+      ...
+    # Subtest: verified is gated the same way, not only received
+    ok 2 - verified is gated the same way, not only received
+      ---
+      duration_ms: 2.660113
+      type: 'test'
+      ...
+    # Subtest: the gate is per item: showing the notice for one document does not open another
+    ok 3 - the gate is per item: showing the notice for one document does not open another
+      ---
+      duration_ms: 4.527522
+      type: 'test'
+      ...
+    # Subtest: the record carries the notice's own basis per document, its version, and a named actor
+    ok 4 - the record carries the notice's own basis per document, its version, and a named actor
+      ---
+      duration_ms: 7.686622
+      type: 'test'
+      ...
+    # Subtest: an unnamed actor is refused: the record must name who showed the notice
+    ok 5 - an unnamed actor is refused: the record must name who showed the notice
+      ---
+      duration_ms: 3.22895
+      type: 'test'
+      ...
+    # Subtest: replaying a record changes nothing: the timestamp is the one first written
+    ok 6 - replaying a record changes nothing: the timestamp is the one first written
+      ---
+      duration_ms: 4.683126
+      type: 'test'
+      ...
+    # Subtest: the two items the notice assigns no basis to cannot be recorded, and name their question
+    ok 7 - the two items the notice assigns no basis to cannot be recorded, and name their question
+      ---
+      duration_ms: 2.825943
+      type: 'test'
+      ...
+    # Subtest: the gate refuses a document the notice assigns no basis to, with its own reason
+    ok 8 - the gate refuses a document the notice assigns no basis to, with its own reason
+      ---
+      duration_ms: 2.760332
+      type: 'test'
+      ...
+    # Subtest: the record is per case: one case cannot collect on another case's record
+    ok 9 - the record is per case: one case cannot collect on another case's record
+      ---
+      duration_ms: 5.964086
+      type: 'test'
+      ...
+    # Subtest: an unknown case or item is refused before any rule about the notice
+    ok 10 - an unknown case or item is refused before any rule about the notice
+      ---
+      duration_ms: 2.882026
+      type: 'test'
+      ...
+    1..10
+ok 22 - P2-2 · a document cannot be collected before the privacy notice was shown for it
+  ---
+  duration_ms: 40.707022
+  type: 'suite'
+  ...
+# Subtest: P2-2 · the KSA set is kept, and switched off
+    # Subtest: a KSA case gets the KSA set and cannot move off not started
+    ok 1 - a KSA case gets the KSA set and cannot move off not started
+      ---
+      duration_ms: 8.556342
+      type: 'test'
+      ...
+    1..1
+ok 23 - P2-2 · the KSA set is kept, and switched off
+  ---
+  duration_ms: 8.635309
+  type: 'suite'
+  ...
+# Subtest: P2-2 · HR sees the incomplete items from one list
+    # Subtest: the roll-up names each case's outstanding items without opening the case
+    ok 1 - the roll-up names each case's outstanding items without opening the case
+      ---
+      duration_ms: 22.937665
+      type: 'test'
+      ...
+    # Subtest: a collected item leaves the outstanding list, and the totals follow
+    ok 2 - a collected item leaves the outstanding list, and the totals follow
+      ---
+      duration_ms: 24.314621
+      type: 'test'
+      ...
+    # Subtest: the roll-up filters by jurisdiction and reports the notice gap
+    ok 3 - the roll-up filters by jurisdiction and reports the notice gap
+      ---
+      duration_ms: 10.622032
+      type: 'test'
+      ...
+    1..3
+ok 24 - P2-2 · HR sees the incomplete items from one list
+  ---
+  duration_ms: 58.079747
+  type: 'suite'
+  ...
+# Subtest: P2-2 · reminders are recorded, not claimed as delivered
+    # Subtest: a reminder records what was outstanding, on the in-product channel
+    ok 1 - a reminder records what was outstanding, on the in-product channel
+      ---
+      duration_ms: 3.559598
+      type: 'test'
+      ...
+    # Subtest: a reminder for a case with nothing outstanding is refused
+    ok 2 - a reminder for a case with nothing outstanding is refused
+      ---
+      duration_ms: 17.964654
+      type: 'test'
+      ...
+    # Subtest: a reminder can be aimed at named items, and an unknown key is refused
+    ok 3 - a reminder can be aimed at named items, and an unknown key is refused
+      ---
+      duration_ms: 2.886748
+      type: 'test'
+      ...
+    # Subtest: the last reminder is surfaced on the roll-up row
+    ok 4 - the last reminder is surfaced on the roll-up row
+      ---
+      duration_ms: 14.844521
+      type: 'test'
+      ...
+    1..4
+ok 25 - P2-2 · reminders are recorded, not claimed as delivered
+  ---
+  duration_ms: 39.468796
+  type: 'suite'
+  ...
+# Subtest: P2-2 · what the audit trail records, and what it never records
+    # Subtest: a status change is audited as keys and statuses only
+    ok 1 - a status change is audited as keys and statuses only
+      ---
+      duration_ms: 3.040951
+      type: 'test'
+      ...
+    # Subtest: a notice acknowledgement is audited with its basis and version, never its note body
+    ok 2 - a notice acknowledgement is audited with its basis and version, never its note body
+      ---
+      duration_ms: 3.527888
+      type: 'test'
+      ...
+    # Subtest: the checklist lives in the product database, and nowhere else
+    ok 3 - the checklist lives in the product database, and nowhere else
+      ---
+      duration_ms: 0.24089
+      type: 'test'
+      ...
+    # Subtest: one case's item status never touches another case
+    ok 4 - one case's item status never touches another case
+      ---
+      duration_ms: 4.881778
+      type: 'test'
+      ...
+    1..4
+ok 26 - P2-2 · what the audit trail records, and what it never records
+  ---
+  duration_ms: 11.871959
+  type: 'suite'
+  ...
+# Subtest: P2-2 · the tile is labelled "Cases open", so the list is asked for open cases
+    # Subtest: a closed case is out of the open list and still in the unfiltered one
+    ok 1 - a closed case is out of the open list and still in the unfiltered one
+      ---
+      duration_ms: 3.070244
+      type: 'test'
+      ...
+    # Subtest: an unknown status is a 400, not a filter that quietly matches nothing
+    ok 2 - an unknown status is a 400, not a filter that quietly matches nothing
+      ---
+      duration_ms: 0.287772
+      type: 'test'
+      ...
+    # Subtest: jurisdiction and status combine in one query
+    ok 3 - jurisdiction and status combine in one query
+      ---
+      duration_ms: 0.374315
+      type: 'test'
+      ...
+    # Subtest: both collection reads are envelopes, and the roll-up keys are pinned
+    ok 4 - both collection reads are envelopes, and the roll-up keys are pinned
+      ---
+      duration_ms: 13.491113
+      type: 'test'
+      ...
+    1..4
+ok 27 - P2-2 · the tile is labelled "Cases open", so the list is asked for open cases
+  ---
+  duration_ms: 17.400218
+  type: 'suite'
+  ...
+# Subtest: P2-2 · no document bytes are stored, and the boundary says why — not that it is undecided
+    # Subtest: the store is absent by decision, and every byte path refuses with that reason
+    ok 1 - the store is absent by decision, and every byte path refuses with that reason
+      ---
+      duration_ms: 0.565969
+      type: 'test'
+      ...
+    # Subtest: an item has a reference, and no column can hold a document body
+    ok 2 - an item has a reference, and no column can hold a document body
+      ---
+      duration_ms: 0.320882
+      type: 'test'
+      ...
+    1..2
+ok 28 - P2-2 · no document bytes are stored, and the boundary says why — not that it is undecided
+  ---
+  duration_ms: 0.992215
+  type: 'suite'
+  ...
+# (node:2389) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P2-3 · the package is one list, derived from the case
+    # Subtest: nine items, from one server-side list, with the JD and the NDA as the two required
+    ok 1 - nine items, from one server-side list, with the JD and the NDA as the two required
+      ---
+      duration_ms: 1.755505
+      type: 'test'
+      ...
+    # Subtest: the set is jurisdiction-aware: UAE is worked, KSA is kept and switched off
+    ok 2 - the set is jurisdiction-aware: UAE is worked, KSA is kept and switched off
+      ---
+      duration_ms: 0.245352
+      type: 'test'
+      ...
+    # Subtest: a pre-reading item is not a document-set item: the two lists stay separate
+    ok 3 - a pre-reading item is not a document-set item: the two lists stay separate
+      ---
+      duration_ms: 0.215779
+      type: 'test'
+      ...
+    1..3
+ok 29 - P2-3 · the package is one list, derived from the case
+  ---
+  duration_ms: 3.037515
+  type: 'suite'
+  ...
+# Subtest: P2-3 · sent cannot exist, and read is not observable
+    # Subtest: every item carries delivery: not available, with the reason, and the label says so
+    ok 1 - every item carries delivery: not available, with the reason, and the label says so
+      ---
+      duration_ms: 4.287098
+      type: 'test'
+      ...
+    # Subtest: no read state can be claimed either — there is no hire-facing portal
+    ok 2 - no read state can be claimed either — there is no hire-facing portal
+      ---
+      duration_ms: 2.701989
+      type: 'test'
+      ...
+    # Subtest: the serialised package never words a delivery or a read as a success
+    ok 3 - the serialised package never words a delivery or a read as a success
+      ---
+      duration_ms: 3.362162
+      type: 'test'
+      ...
+    1..3
+ok 30 - P2-3 · sent cannot exist, and read is not observable
+  ---
+  duration_ms: 10.590125
+  type: 'suite'
+  ...
+# Subtest: P2-3 · acknowledged is a record, never an inference
+    # Subtest: a case starts with nothing acknowledged — the package is not pre-marked
+    ok 1 - a case starts with nothing acknowledged — the package is not pre-marked
+      ---
+      duration_ms: 2.655533
+      type: 'test'
+      ...
+    # Subtest: recording one item does not mark any other: no inference from progress anywhere
+    ok 2 - recording one item does not mark any other: no inference from progress anywhere
+      ---
+      duration_ms: 3.704017
+      type: 'test'
+      ...
+    # Subtest: the record names who recorded it and a UTC timestamp, and the method says what it is
+    ok 3 - the record names who recorded it and a UTC timestamp, and the method says what it is
+      ---
+      duration_ms: 3.339159
+      type: 'test'
+      ...
+    # Subtest: another case is unaffected by it: the record is per case
+    ok 4 - another case is unaffected by it: the record is per case
+      ---
+      duration_ms: 5.93049
+      type: 'test'
+      ...
+    # Subtest: recording the same item again returns the first record and does not rewrite it
+    ok 5 - recording the same item again returns the first record and does not rewrite it
+      ---
+      duration_ms: 4.071895
+      type: 'test'
+      ...
+    # Subtest: the audit trail records the acknowledgement without the note body
+    ok 6 - the audit trail records the acknowledgement without the note body
+      ---
+      duration_ms: 4.070406
+      type: 'test'
+      ...
+    # Subtest: as of an earlier instant the item reads unrecorded: the past view cannot be rewritten
+    ok 7 - as of an earlier instant the item reads unrecorded: the past view cannot be rewritten
+      ---
+      duration_ms: 3.487012
+      type: 'test'
+      ...
+    1..7
+ok 31 - P2-3 · acknowledged is a record, never an inference
+  ---
+  duration_ms: 27.72441
+  type: 'suite'
+  ...
+# Subtest: P2-3 · the refusal path
+    # Subtest: a record without a named actor is refused, and the reason names the gap
+    ok 1 - a record without a named actor is refused, and the reason names the gap
+      ---
+      duration_ms: 3.445365
+      type: 'test'
+      ...
+    # Subtest: an item key outside the case package is refused, and the message lists the set
+    ok 2 - an item key outside the case package is refused, and the message lists the set
+      ---
+      duration_ms: 2.904842
+      type: 'test'
+      ...
+    # Subtest: a signature-implying method is refused: the product cannot obtain a signature
+    ok 3 - a signature-implying method is refused: the product cannot obtain a signature
+      ---
+      duration_ms: 3.050475
+      type: 'test'
+      ...
+    # Subtest: an unknown method is refused rather than silently accepted
+    ok 4 - an unknown method is refused rather than silently accepted
+      ---
+      duration_ms: 2.699124
+      type: 'test'
+      ...
+    # Subtest: a KSA case cannot record: the set is kept but not active
+    ok 5 - a KSA case cannot record: the set is kept but not active
+      ---
+      duration_ms: 3.077627
+      type: 'test'
+      ...
+    # Subtest: an unknown case is refused with 404, and an unusable as_of with 400
+    ok 6 - an unknown case is refused with 404, and an unusable as_of with 400
+      ---
+      duration_ms: 3.025681
+      type: 'test'
+      ...
+    1..6
+ok 32 - P2-3 · the refusal path
+  ---
+  duration_ms: 18.46487
+  type: 'suite'
+  ...
+# (node:2396) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P2-4 · the checklist is derived from the case, never typed per case
+    # Subtest: an accepted offer seeds the workspace track from the role and department on the case
+    ok 1 - an accepted offer seeds the workspace track from the role and department on the case
+      ---
+      duration_ms: 6.294388
+      type: 'test'
+      ...
+    # Subtest: the same role and department always produce the same list, whoever the hire is
+    ok 2 - the same role and department always produce the same list, whoever the hire is
+      ---
+      duration_ms: 5.752124
+      type: 'test'
+      ...
+    # Subtest: a profile fires on the case's own role or department, case-insensitively
+    ok 3 - a profile fires on the case's own role or department, case-insensitively
+      ---
+      duration_ms: 7.346703
+      type: 'test'
+      ...
+    # Subtest: the role read is the job role on the case, not a system role on an account
+    ok 4 - the role read is the job role on the case, not a system role on an account
+      ---
+      duration_ms: 2.923831
+      type: 'test'
+      ...
+    # Subtest: no argument can add a line per hire — the board takes a filter and nothing else
+    ok 5 - no argument can add a line per hire — the board takes a filter and nothing else
+      ---
+      duration_ms: 3.030535
+      type: 'test'
+      ...
+    1..5
+ok 33 - P2-4 · the checklist is derived from the case, never typed per case
+  ---
+  duration_ms: 26.234315
+  type: 'suite'
+  ...
+# Subtest: P2-4 · every line has a responsible function and a due date
+    # Subtest: each line names one of the four functions and one owner, never none and never two
+    ok 1 - each line names one of the four functions and one owner, never none and never two
+      ---
+      duration_ms: 3.128464
+      type: 'test'
+      ...
+    # Subtest: the due date is the start date minus the line's configured offset, and it says so
+    ok 2 - the due date is the start date minus the line's configured offset, and it says so
+      ---
+      duration_ms: 3.216291
+      type: 'test'
+      ...
+    # Subtest: the due date is derived on read: moving the case's start date moves every line
+    ok 3 - the due date is derived on read: moving the case's start date moves every line
+      ---
+      duration_ms: 3.986286
+      type: 'test'
+      ...
+    # Subtest: a line past its due date with nothing done is late, and a complete line is not
+    ok 4 - a line past its due date with nothing done is late, and a complete line is not
+      ---
+      duration_ms: 2.851673
+      type: 'test'
+      ...
+    # Subtest: the five areas P2-4 names are each covered by at least one line
+    ok 5 - the five areas P2-4 names are each covered by at least one line
+      ---
+      duration_ms: 0.290893
+      type: 'test'
+      ...
+    1..5
+ok 34 - P2-4 · every line has a responsible function and a due date
+  ---
+  duration_ms: 13.810043
+  type: 'suite'
+  ...
+# Subtest: P2-4 · the function filter ("IT and Admin see only their own lines")
+    # Subtest: filtering by a function returns only that function's lines
+    ok 1 - filtering by a function returns only that function's lines
+      ---
+      duration_ms: 2.787841
+      type: 'test'
+      ...
+    # Subtest: a filtered board still carries every function's counts, so the chips can be labelled
+    ok 2 - a filtered board still carries every function's counts, so the chips can be labelled
+      ---
+      duration_ms: 2.880715
+      type: 'test'
+      ...
+    # Subtest: the board says out loud that this is a filter, not access control
+    ok 3 - the board says out loud that this is a filter, not access control
+      ---
+      duration_ms: 2.973382
+      type: 'test'
+      ...
+    # Subtest: an unknown function is refused by name, never ignored
+    ok 4 - an unknown function is refused by name, never ignored
+      ---
+      duration_ms: 2.973497
+      type: 'test'
+      ...
+    # Subtest: an unknown case is a 404, and the catalogue is refused a phantom case
+    ok 5 - an unknown case is a 404, and the catalogue is refused a phantom case
+      ---
+      duration_ms: 0.212595
+      type: 'test'
+      ...
+    1..5
+ok 35 - P2-4 · the function filter ("IT and Admin see only their own lines")
+  ---
+  duration_ms: 12.041545
+  type: 'suite'
+  ...
+# Subtest: P2-4 · adding a role or a line item is configuration
+    # Subtest: the catalog is data with one owner, one offset and a unique key per line
+    ok 1 - the catalog is data with one owner, one offset and a unique key per line
+      ---
+      duration_ms: 0.259706
+      type: 'test'
+      ...
+    # Subtest: every profile adds only catalogue lines, so a profile cannot invent one
+    ok 2 - every profile adds only catalogue lines, so a profile cannot invent one
+      ---
+      duration_ms: 0.139564
+      type: 'test'
+      ...
+    # Subtest: a line no profile owns is carried by every case, and one that a profile owns is not
+    ok 3 - a line no profile owns is carried by every case, and one that a profile owns is not
+      ---
+      duration_ms: 0.145805
+      type: 'test'
+      ...
+    1..3
+ok 36 - P2-4 · adding a role or a line item is configuration
+  ---
+  duration_ms: 0.658715
+  type: 'suite'
+  ...
+# Subtest: P2-4 · one item model, two tracks — and they are never merged
+    # Subtest: case creation seeds both tracks, and a replayed acceptance adds no second copy
+    ok 1 - case creation seeds both tracks, and a replayed acceptance adds no second copy
+      ---
+      duration_ms: 3.56916
+      type: 'test'
+      ...
+    # Subtest: the employee-track checklist read never returns a workspace line
+    ok 2 - the employee-track checklist read never returns a workspace line
+      ---
+      duration_ms: 12.797172
+      type: 'test'
+      ...
+    # Subtest: the case roll-up carries both counts, and neither is the other
+    ok 3 - the case roll-up carries both counts, and neither is the other
+      ---
+      duration_ms: 3.60218
+      type: 'test'
+      ...
+    # Subtest: a reminder is about the hire's documents: a workspace line is never in one
+    ok 4 - a reminder is about the hire's documents: a workspace line is never in one
+      ---
+      duration_ms: 2.97458
+      type: 'test'
+      ...
+    # Subtest: the notice-shown gate stays on documents: a provisioning line is not gated by it
+    ok 5 - the notice-shown gate stays on documents: a provisioning line is not gated by it
+      ---
+      duration_ms: 3.999031
+      type: 'test'
+      ...
+    # Subtest: the 48-hour flag counts both tracks, and names the owner where one is recorded
+    ok 6 - the 48-hour flag counts both tracks, and names the owner where one is recorded
+      ---
+      duration_ms: 3.474212
+      type: 'test'
+      ...
+    # Subtest: the workspace track is switched off outside the active jurisdictions
+    ok 7 - the workspace track is switched off outside the active jurisdictions
+      ---
+      duration_ms: 3.316852
+      type: 'test'
+      ...
+    1..7
+ok 37 - P2-4 · one item model, two tracks — and they are never merged
+  ---
+  duration_ms: 33.985736
+  type: 'suite'
+  ...
+# (node:2403) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P2-1 · an accepted offer opens a pre-boarding case
+    # Subtest: the case carries start date, role, department, reporting line and jurisdiction
+    ok 1 - the case carries start date, role, department, reporting line and jurisdiction
+      ---
+      duration_ms: 5.385305
+      type: 'test'
+      ...
+    # Subtest: no case can exist without a start date — the write is refused and nothing is stored
+    ok 2 - no case can exist without a start date — the write is refused and nothing is stored
+      ---
+      duration_ms: 0.745069
+      type: 'test'
+      ...
+    # Subtest: a malformed start date is refused as well — the invariant is a date, not a non-empty string
+    ok 3 - a malformed start date is refused as well — the invariant is a date, not a non-empty string
+      ---
+      duration_ms: 0.265673
+      type: 'test'
+      ...
+    # Subtest: re-processing the same accepted offer does not open a second case
+    ok 4 - re-processing the same accepted offer does not open a second case
+      ---
+      duration_ms: 0.292933
+      type: 'test'
+      ...
+    # Subtest: idempotency is per offer, not per candidate: a different offer opens its own case
+    ok 5 - idempotency is per offer, not per candidate: a different offer opens its own case
+      ---
+      duration_ms: 2.622384
+      type: 'test'
+      ...
+    # Subtest: jurisdiction is a real field, not UAE-hardcoded: KSA is stored as given
+    ok 6 - jurisdiction is a real field, not UAE-hardcoded: KSA is stored as given
+      ---
+      duration_ms: 3.237372
+      type: 'test'
+      ...
+    # Subtest: the collection read is the envelope, and totals describes the set it returned
+    ok 7 - the collection read is the envelope, and totals describes the set it returned
+      ---
+      duration_ms: 1.356588
+      type: 'test'
+      ...
+    # Subtest: the route serves that envelope, and the bare-array response is gone
+    ok 8 - the route serves that envelope, and the bare-array response is gone
+      ---
+      duration_ms: 0.743835
+      type: 'test'
+      ...
+    # Subtest: an unsupported jurisdiction is refused rather than silently defaulted
+    ok 9 - an unsupported jurisdiction is refused rather than silently defaulted
+      ---
+      duration_ms: 0.342328
+      type: 'test'
+      ...
+    # Subtest: every field the two Layer 2 workflows need is required, and the error names it
+    ok 10 - every field the two Layer 2 workflows need is required, and the error names it
+      ---
+      duration_ms: 0.631981
+      type: 'test'
+      ...
+    # Subtest: the creation is audited
+    ok 11 - the creation is audited
+      ---
+      duration_ms: 0.289374
+      type: 'test'
+      ...
+    1..11
+ok 38 - P2-1 · an accepted offer opens a pre-boarding case
+  ---
+  duration_ms: 17.139354
+  type: 'suite'
+  ...
+# Subtest: P2-1 · one payload, one writer
+    # Subtest: server/ holds exactly one INSERT into preboarding_cases, and it is in preboarding.js
+    ok 1 - server/ holds exactly one INSERT into preboarding_cases, and it is in preboarding.js
+      ---
+      duration_ms: 8.141213
+      type: 'test'
+      ...
+    # Subtest: the routes are transport only: the case rules live in the shared function
+    ok 2 - the routes are transport only: the case rules live in the shared function
+      ---
+      duration_ms: 0.514395
+      type: 'test'
+      ...
+    1..2
+ok 39 - P2-1 · one payload, one writer
+  ---
+  duration_ms: 8.778996
+  type: 'suite'
+  ...
+# Subtest: the notice resolves from this repository
+    # Subtest: noticePath() is the repository copy, and it exists
+    ok 1 - noticePath() is the repository copy, and it exists
+      ---
+      duration_ms: 0.797202
+      type: 'test'
+      ...
+    # Subtest: the notice served is the repository copy byte for byte
+    ok 2 - the notice served is the repository copy byte for byte
+      ---
+      duration_ms: 1.676041
+      type: 'test'
+      ...
+    # Subtest: the version is read from the file served, never a literal in code
+    ok 3 - the version is read from the file served, never a literal in code
+      ---
+      duration_ms: 0.988164
+      type: 'test'
+      ...
+    # Subtest: every document the product offers resolves to a file in this repository
+    ok 4 - every document the product offers resolves to a file in this repository
+      ---
+      duration_ms: 0.275965
+      type: 'test'
+      ...
+    # Subtest: a caller cannot walk out of the template directory
+    ok 5 - a caller cannot walk out of the template directory
+      ---
+      duration_ms: 0.169941
+      type: 'test'
+      ...
+    1..5
+ok 40 - the notice resolves from this repository
+  ---
+  duration_ms: 4.775098
+  type: 'suite'
+  ...
+# Subtest: the host-shared directory is not a source any more
+    # Subtest: no module under server/ reads it
+    ok 1 - no module under server/ reads it
+      ---
+      duration_ms: 12.64642
+      type: 'test'
+      ...
+    1..1
+ok 41 - the host-shared directory is not a source any more
+  ---
+  duration_ms: 12.766871
+  type: 'suite'
+  ...
+# Subtest: the served notice states one version in all three places
+    # Subtest: the status line, the version header and the consent row agree
+    ok 1 - the status line, the version header and the consent row agree
+      ---
+      duration_ms: 0.701672
+      type: 'test'
+      ...
+    # Subtest: there is exactly one version header, so a later row cannot shadow it
+    ok 2 - there is exactly one version header, so a later row cannot shadow it
+      ---
+      duration_ms: 0.257655
+      type: 'test'
+      ...
+    1..2
+ok 42 - the served notice states one version in all three places
+  ---
+  duration_ms: 1.240564
+  type: 'suite'
+  ...
+# Subtest: the retired retention qualifier stays out of the content
+    # Subtest: no content line carries it, and its Arabic form is absent entirely
+    ok 1 - no content line carries it, and its Arabic form is absent entirely
+      ---
+      duration_ms: 0.714869
+      type: 'test'
+      ...
+    # Subtest: the version header may quote it, and that quotation is the record, not a defect
+    ok 2 - the version header may quote it, and that quotation is the record, not a defect
+      ---
+      duration_ms: 0.668403
+      type: 'test'
+      ...
+    1..2
+ok 43 - the retired retention qualifier stays out of the content
+  ---
+  duration_ms: 1.493315
+  type: 'suite'
+  ...
+#   [why/decision] entries not decided by the rule: 12
+#     - POST /api/compliance/calculate-eosb — nothing to compare (prose: no number; field: 21)
+#     - GET /api/preboarding/cases/:id — nothing to compare (prose: no number; field: 21)
+#     - GET /api/preboarding/flag-watch — nothing to compare (prose: no number; field: 21)
+#     - GET /api/employees/:id — nothing to compare (prose: no number; field: 21)
+#     - GET /api/compliance/report — nothing to compare (prose: no number; field: 21)
+#     - the employee-record consent tile, which printed a status the product cannot produce — nothing to compare (prose: no number; field: 17)
+#     - the seeder writing the consent flag as granted onto every employee — nothing to compare (prose: no number; field: 17)
+#     - the orphan writer’s SQL, which set the flag on the employee record — nothing to compare (prose: no number; field: 17)
+#     - showExitModal — nothing to compare (prose: no number; field: 16)
+#     - education_certificate — nothing to compare (prose: no number; field: no number)
+#     - experience_certificate — nothing to compare (prose: no number; field: no number)
+#     - emergency_contact — nothing to compare (prose: no number; field: no number)
+# Subtest: the reachability measurement found the routes at all (it cannot pass vacuously)
+ok 44 - the reachability measurement found the routes at all (it cannot pass vacuously)
+  ---
+  duration_ms: 36.211496
+  type: 'test'
+  ...
+# Subtest: every /api route is reachable from a caller, or registered as callerless with a reason
+not ok 45 - every /api route is reachable from a caller, or registered as callerless with a reason
+  ---
+  duration_ms: 15.245835
+  type: 'test'
+  location: '/home/agent-senior-software-engineer/antum-people/server/reachability.test.js:59:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    a route with no caller must be wired or removed, or registered in CALLERLESS with a reason
+    + actual - expected
+    
+    + [
+    +   'GET /api/users (server/index.js:163)',
+    +   'POST /api/users (server/index.js:172)'
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: 'GET /api/users (server/index.js:163)'
+    1: 'POST /api/users (server/index.js:172)'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/agent-senior-software-engineer/antum-people/server/reachability.test.js:63:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: the callerless register matches reality — a fixed orphan must leave it
+ok 46 - the callerless register matches reality — a fixed orphan must leave it
+  ---
+  duration_ms: 41.492728
+  type: 'test'
+  ...
+# Subtest: a route reachable only through a runtime-built path is covered by a declared call site
+ok 47 - a route reachable only through a runtime-built path is covered by a declared call site
+  ---
+  duration_ms: 12.814053
+  type: 'test'
+  ...
+# Subtest: each declared dynamic call site still exists, and still means what it claims
+ok 48 - each declared dynamic call site still exists, and still means what it claims
+  ---
+  duration_ms: 2.68198
+  type: 'test'
+  ...
+# Subtest: no client call site names a route the product does not register
+ok 49 - no client call site names a route the product does not register
+  ---
+  duration_ms: 13.390455
+  type: 'test'
+  ...
+# Subtest: no route is registered after the SPA catch-all (it would be dead on arrival)
+ok 50 - no route is registered after the SPA catch-all (it would be dead on arrival)
+  ---
+  duration_ms: 0.836464
+  type: 'test'
+  ...
+# Subtest: a retired element stays retired — the removal is re-measured, not remembered
+ok 51 - a retired element stays retired — the removal is re-measured, not remembered
+  ---
+  duration_ms: 15.403622
+  type: 'test'
+  ...
+# Subtest: the retired consent flag has no write path left, and its column stays
+ok 52 - the retired consent flag has no write path left, and its column stays
+  ---
+  duration_ms: 1.490915
+  type: 'test'
+  ...
+# Subtest: every boolean control state can be opened, or is registered as un-openable with a reason
+ok 53 - every boolean control state can be opened, or is registered as un-openable with a reason
+  ---
+  duration_ms: 17.56638
+  type: 'test'
+  ...
+# Subtest: a value a tile displays has a writer in a route a user can reach — or is registered
+ok 54 - a value a tile displays has a writer in a route a user can reach — or is registered
+  ---
+  duration_ms: 23.29167
+  type: 'test'
+  ...
+# Subtest: an item the notice assigns no basis to is not offered a move it can never complete
+ok 55 - an item the notice assigns no basis to is not offered a move it can never complete
+  ---
+  duration_ms: 3.562428
+  type: 'test'
+  ...
+# Subtest: the why/decision agreement rule names what it did not cover
+ok 56 - the why/decision agreement rule names what it did not cover
+  ---
+  duration_ms: 1.032759
+  type: 'test'
+  ...
+# (node:2431) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: schema.sql migrates a database that already has rows
+    # Subtest: the schema text really does contain a pre-P2-1 half and a post-P2-1 half
+    ok 1 - the schema text really does contain a pre-P2-1 half and a post-P2-1 half
+      ---
+      duration_ms: 0.614179
+      type: 'test'
+      ...
+    # Subtest: an existing database gains the new table with every row intact
+    ok 2 - an existing database gains the new table with every row intact
+      ---
+      duration_ms: 5.408931
+      type: 'test'
+      ...
+    # Subtest: a fresh database gets every table, including the new one
+    ok 3 - a fresh database gets every table, including the new one
+      ---
+      duration_ms: 2.377484
+      type: 'test'
+      ...
+    1..3
+ok 57 - schema.sql migrates a database that already has rows
+  ---
+  duration_ms: 9.303307
+  type: 'suite'
+  ...
+1..57
+# tests 192
+# suites 41
+# pass 191
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3404.994311
+rc=1
+----- end raw run 1 -----
+
+----- RAW RUN 2 of 2: the GREEN run on this branch, tree with the register entries -----
+=== full server suite: after — 2026-10-19T16:07:55+00:00 ===
+tree: 5ab14f7 (fix/layer3-slice1-reachability)
+cmd:  cd server && PRODUCT_DB_PATH=/tmp/scratch-after-2892.db node --test
+
+TAP version 13
+# (node:2918) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: authentication: unchanged answers
+    # Subtest: no token is 401 on a resource
+    ok 1 - no token is 401 on a resource
+      ---
+      duration_ms: 5.422883
+      type: 'test'
+      ...
+    # Subtest: a wrong password is 401
+    ok 2 - a wrong password is 401
+      ---
+      duration_ms: 15.64961
+      type: 'test'
+      ...
+    # Subtest: a good login through the API still works — the token names the role
+    ok 3 - a good login through the API still works — the token names the role
+      ---
+      duration_ms: 13.138651
+      type: 'test'
+      ...
+    1..3
+ok 1 - authentication: unchanged answers
+  ---
+  duration_ms: 807.515977
+  type: 'suite'
+  ...
+# Subtest: authorization: the role is enforced, deny-by-default
+    # Subtest: the seeded admin still reaches the roster (nothing was narrowed by this slice)
+    ok 1 - the seeded admin still reaches the roster (nothing was narrowed by this slice)
+      ---
+      duration_ms: 4.960602
+      type: 'test'
+      ...
+    # Subtest: an authenticated caller whose role allows nothing is 403 on the roster
+    ok 2 - an authenticated caller whose role allows nothing is 403 on the roster
+      ---
+      duration_ms: 3.021578
+      type: 'test'
+      ...
+    # Subtest: and 403 on a different resource — the refusal is not one route
+    ok 3 - and 403 on a different resource — the refusal is not one route
+      ---
+      duration_ms: 7.759745
+      type: 'test'
+      ...
+    # Subtest: a path that declares NO resource is refused, not left open and not a 404
+    ok 4 - a path that declares NO resource is refused, not left open and not a 404
+      ---
+      duration_ms: 2.753368
+      type: 'test'
+      ...
+    # Subtest: a token with no username is still authorised by role, but cannot tick a task (below)
+    ok 5 - a token with no username is still authorised by role, but cannot tick a task (below)
+      ---
+      duration_ms: 5.279569
+      type: 'test'
+      ...
+    1..5
+ok 2 - authorization: the role is enforced, deny-by-default
+  ---
+  duration_ms: 37.709813
+  type: 'suite'
+  ...
+# Subtest: accounts: plural rows through an admin-authenticated path
+    # Subtest: an admin creates a second account, and that account can log in
+    ok 1 - an admin creates a second account, and that account can log in
+      ---
+      duration_ms: 160.765003
+      type: 'test'
+      ...
+    # Subtest: the roster of accounts is a list, and it does not leak a password hash
+    ok 2 - the roster of accounts is a list, and it does not leak a password hash
+      ---
+      duration_ms: 3.422453
+      type: 'test'
+      ...
+    # Subtest: a duplicate username is refused 409 rather than shadowing the first account
+    ok 3 - a duplicate username is refused 409 rather than shadowing the first account
+      ---
+      duration_ms: 3.404178
+      type: 'test'
+      ...
+    # Subtest: a short password is refused 400
+    ok 4 - a short password is refused 400
+      ---
+      duration_ms: 2.654246
+      type: 'test'
+      ...
+    # Subtest: a role this product does not know is refused 400 — a user who matches no cell can do nothing
+    ok 5 - a role this product does not know is refused 400 — a user who matches no cell can do nothing
+      ---
+      duration_ms: 7.478951
+      type: 'test'
+      ...
+    # Subtest: a caller whose role allows nothing cannot create an account (403)
+    ok 6 - a caller whose role allows nothing cannot create an account (403)
+      ---
+      duration_ms: 4.565143
+      type: 'test'
+      ...
+    1..6
+ok 3 - accounts: plural rows through an admin-authenticated path
+  ---
+  duration_ms: 191.845706
+  type: 'suite'
+  ...
+# Subtest: the tick names the person who ticked it (decision 22)
+    # Subtest: completing a task records the named actor beside the date
+    ok 1 - completing a task records the named actor beside the date
+      ---
+      duration_ms: 3.056507
+      type: 'test'
+      ...
+    # Subtest: an UNNAMED actor is refused 400, and the row is left untouched
+    ok 2 - an UNNAMED actor is refused 400, and the row is left untouched
+      ---
+      duration_ms: 3.739083
+      type: 'test'
+      ...
+    # Subtest: an unnamed actor may still mark a task pending — the refusal is about claiming work was done
+    ok 3 - an unnamed actor may still mark a task pending — the refusal is about claiming work was done
+      ---
+      duration_ms: 4.097194
+      type: 'test'
+      ...
+    1..3
+ok 4 - the tick names the person who ticked it (decision 22)
+  ---
+  duration_ms: 15.056754
+  type: 'suite'
+  ...
+# Subtest: the policy table itself
+    # Subtest: no declared route lacks a policy cell
+    ok 1 - no declared route lacks a policy cell
+      ---
+      duration_ms: 0.251888
+      type: 'test'
+      ...
+    # Subtest: no policy cell names a role this product does not know
+    ok 2 - no policy cell names a role this product does not know
+      ---
+      duration_ms: 0.167566
+      type: 'test'
+      ...
+    # Subtest: today's policy allows admin only, explicitly — nothing silently widened
+    ok 3 - today's policy allows admin only, explicitly — nothing silently widened
+      ---
+      duration_ms: 0.342326
+      type: 'test'
+      ...
+    # Subtest: the resource for a route is looked up by method and path, not by a guess
+    ok 4 - the resource for a route is looked up by method and path, not by a guess
+      ---
+      duration_ms: 4.711632
+      type: 'test'
+      ...
+    1..4
+ok 5 - the policy table itself
+  ---
+  duration_ms: 5.662196
+  type: 'suite'
+  ...
+# Subtest: the login rate limit still answers 429
+    # Subtest: a burst past the limiter (25 per minute) is answered 429
+    ok 1 - a burst past the limiter (25 per minute) is answered 429
+      ---
+      duration_ms: 72.604812
+      type: 'test'
+      ...
+    1..1
+ok 6 - the login rate limit still answers 429
+  ---
+  duration_ms: 72.766744
+  type: 'suite'
+  ...
+# (node:2933) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a live database gains the P2-4 columns at boot
+    # Subtest: the migration is what puts the columns on a table that already exists
+    ok 1 - the migration is what puts the columns on a table that already exists
+      ---
+      duration_ms: 6.690147
+      type: 'test'
+      ...
+    # Subtest: rows that were already there survive, and the default labels them honestly
+    ok 2 - rows that were already there survive, and the default labels them honestly
+      ---
+      duration_ms: 5.277246
+      type: 'test'
+      ...
+    # Subtest: running it again adds nothing — the second boot is a no-op
+    ok 3 - running it again adds nothing — the second boot is a no-op
+      ---
+      duration_ms: 4.658093
+      type: 'test'
+      ...
+    # Subtest: a migrated database has exactly the columns a fresh one has
+    ok 4 - a migrated database has exactly the columns a fresh one has
+      ---
+      duration_ms: 8.528434
+      type: 'test'
+      ...
+    # Subtest: the module that runs at boot carries the same migration it exports
+    ok 5 - the module that runs at boot carries the same migration it exports
+      ---
+      duration_ms: 0.206567
+      type: 'test'
+      ...
+    1..5
+ok 7 - a live database gains the P2-4 columns at boot
+  ---
+  duration_ms: 26.466883
+  type: 'suite'
+  ...
+# (node:2940) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Layer 2 demo seed — the three pre-boarding cases
+    # Subtest: seeds exactly the three offer references it owns, all UAE
+    ok 1 - seeds exactly the three offer references it owns, all UAE
+      ---
+      duration_ms: 3.48342
+      type: 'test'
+      ...
+    # Subtest: dates are the seeded offsets from the day the seed ran, not fixed dates
+    ok 2 - dates are the seeded offsets from the day the seed ran, not fixed dates
+      ---
+      duration_ms: 0.718627
+      type: 'test'
+      ...
+    # Subtest: case 1 is the roster's in-flight UAE hire, by that row's id
+    ok 3 - case 1 is the roster's in-flight UAE hire, by that row's id
+      ---
+      duration_ms: 0.364548
+      type: 'test'
+      ...
+    # Subtest: item statuses are what the three states need: none verified, none collected
+    ok 4 - item statuses are what the three states need: none verified, none collected
+      ---
+      duration_ms: 0.464023
+      type: 'test'
+      ...
+    # Subtest: the workspace track arrives with each case, owned and all open
+    ok 5 - the workspace track arrives with each case, owned and all open
+      ---
+      duration_ms: 0.543203
+      type: 'test'
+      ...
+    # Subtest: the notice is recorded as shown per item, by a named person, for the collectible items only
+    ok 6 - the notice is recorded as shown per item, by a named person, for the collectible items only
+      ---
+      duration_ms: 3.724461
+      type: 'test'
+      ...
+    # Subtest: the demo figures the walkthrough quotes are intact: 7 items per case, 21 outstanding
+    ok 7 - the demo figures the walkthrough quotes are intact: 7 items per case, 21 outstanding
+      ---
+      duration_ms: 1.450465
+      type: 'test'
+      ...
+    # Subtest: the state is derived, not stored: no flag-like column on the case table
+    ok 8 - the state is derived, not stored: no flag-like column on the case table
+      ---
+      duration_ms: 0.519729
+      type: 'test'
+      ...
+    # Subtest: re-running the seed changes nothing it owns (idempotent on offer_reference)
+    ok 9 - re-running the seed changes nothing it owns (idempotent on offer_reference)
+      ---
+      duration_ms: 160.651006
+      type: 'test'
+      ...
+    1..9
+ok 8 - Layer 2 demo seed — the three pre-boarding cases
+  ---
+  duration_ms: 173.253881
+  type: 'suite'
+  ...
+# Subtest: EOSB Calculation - Option B (KSA Art. 84)
+    # Subtest: KSA: 18 months resignation should be full pro-rata (NON-ZERO)
+    ok 1 - KSA: 18 months resignation should be full pro-rata (NON-ZERO)
+      ---
+      duration_ms: 1.361369
+      type: 'test'
+      ...
+    # Subtest: KSA: 3y resignation should be full, NOT reduced by a third
+    ok 2 - KSA: 3y resignation should be full, NOT reduced by a third
+      ---
+      duration_ms: 0.158836
+      type: 'test'
+      ...
+    # Subtest: KSA: 6y resignation should be full, no 2/3 reduction
+    ok 3 - KSA: 6y resignation should be full, no 2/3 reduction
+      ---
+      duration_ms: 0.12955
+      type: 'test'
+      ...
+    # Subtest: KSA: 9y resignation should be full, no 2/3 reduction
+    ok 4 - KSA: 9y resignation should be full, no 2/3 reduction
+      ---
+      duration_ms: 0.179654
+      type: 'test'
+      ...
+    # Subtest: KSA: summary dismissal should be 0
+    ok 5 - KSA: summary dismissal should be 0
+      ---
+      duration_ms: 0.914912
+      type: 'test'
+      ...
+    # Subtest: KSA: exactly 2-year boundary
+    ok 6 - KSA: exactly 2-year boundary
+      ---
+      duration_ms: 0.16519
+      type: 'test'
+      ...
+    # Subtest: UAE: 2y resignation should be 1/3 (FDL 33/2021)
+    ok 7 - UAE: 2y resignation should be 1/3 (FDL 33/2021)
+      ---
+      duration_ms: 0.135058
+      type: 'test'
+      ...
+    # Subtest: UAE: 4y resignation should be 2/3
+    ok 8 - UAE: 4y resignation should be 2/3
+      ---
+      duration_ms: 0.199611
+      type: 'test'
+      ...
+    # Subtest: UAE: 6y resignation should be full
+    ok 9 - UAE: 6y resignation should be full
+      ---
+      duration_ms: 0.256906
+      type: 'test'
+      ...
+    # Subtest: UAE: 24 months basic salary cap
+    ok 10 - UAE: 24 months basic salary cap
+      ---
+      duration_ms: 0.331368
+      type: 'test'
+      ...
+    # Subtest: UAE: under 1 year should be 0
+    ok 11 - UAE: under 1 year should be 0
+      ---
+      duration_ms: 0.129867
+      type: 'test'
+      ...
+    # Subtest: Unpaid leave handling
+    ok 12 - Unpaid leave handling
+      ---
+      duration_ms: 0.105296
+      type: 'test'
+      ...
+    1..12
+ok 9 - EOSB Calculation - Option B (KSA Art. 84)
+  ---
+  duration_ms: 5.302607
+  type: 'suite'
+  ...
+# Subtest: no test file can reach the live product database without pinning the path first
+ok 10 - no test file can reach the live product database without pinning the path first
+  ---
+  duration_ms: 12.81148
+  type: 'test'
+  ...
+# Subtest: the guard is actually looking at the files that load db.js (not passing vacuously)
+ok 11 - the guard is actually looking at the files that load db.js (not passing vacuously)
+  ---
+  duration_ms: 4.108666
+  type: 'test'
+  ...
+# Subtest: the premise: db.js still binds the product database when the path is unset
+ok 12 - the premise: db.js still binds the product database when the path is unset
+  ---
+  duration_ms: 0.469661
+  type: 'test'
+  ...
+# (node:2977) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P2-5 · the boundary is inclusive at exactly 48 hours
+    # Subtest: exactly 48.000 hours before 00:00 of the start date, the flag IS raised
+    ok 1 - exactly 48.000 hours before 00:00 of the start date, the flag IS raised
+      ---
+      duration_ms: 8.234934
+      type: 'test'
+      ...
+    # Subtest: one second outside 48 hours, it is NOT raised
+    ok 2 - one second outside 48 hours, it is NOT raised
+      ---
+      duration_ms: 0.29267
+      type: 'test'
+      ...
+    # Subtest: one second inside 48 hours, it IS raised
+    ok 3 - one second inside 48 hours, it IS raised
+      ---
+      duration_ms: 0.154525
+      type: 'test'
+      ...
+    # Subtest: the boundary is measured from 00:00 of the start date, not from the moment of the read
+    ok 4 - the boundary is measured from 00:00 of the start date, not from the moment of the read
+      ---
+      duration_ms: 0.150199
+      type: 'test'
+      ...
+    1..4
+ok 13 - P2-5 · the boundary is inclusive at exactly 48 hours
+  ---
+  duration_ms: 9.675027
+  type: 'suite'
+  ...
+# Subtest: P2-5 · the three states on the seeded cases
+    # Subtest: start date passed with items open → Started (the tone escalates, nothing is hidden)
+    ok 1 - start date passed with items open → Started (the tone escalates, nothing is hidden)
+      ---
+      duration_ms: 1.348811
+      type: 'test'
+      ...
+    # Subtest: inside 48 hours with items open → the amber state
+    ok 2 - inside 48 hours with items open → the amber state
+      ---
+      duration_ms: 0.176917
+      type: 'test'
+      ...
+    # Subtest: more than 48 hours out with everything still open → On track, not a flag
+    ok 3 - more than 48 hours out with everything still open → On track, not a flag
+      ---
+      duration_ms: 0.223931
+      type: 'test'
+      ...
+    1..3
+ok 14 - P2-5 · the three states on the seeded cases
+  ---
+  duration_ms: 2.063696
+  type: 'suite'
+  ...
+# Subtest: P2-5 · the flag clears by derivation, and is never sticky
+    # Subtest: a case whose start date has passed with EVERY item collected renders complete, not overdue
+    ok 1 - a case whose start date has passed with EVERY item collected renders complete, not overdue
+      ---
+      duration_ms: 0.280704
+      type: 'test'
+      ...
+    # Subtest: the same case flips to the flag on the next read, with no write in between
+    ok 2 - the same case flips to the flag on the next read, with no write in between
+      ---
+      duration_ms: 0.323398
+      type: 'test'
+      ...
+    # Subtest: clearing is one-sided: any single open item keeps it raised
+    ok 3 - clearing is one-sided: any single open item keeps it raised
+      ---
+      duration_ms: 0.266316
+      type: 'test'
+      ...
+    1..3
+ok 15 - P2-5 · the flag clears by derivation, and is never sticky
+  ---
+  duration_ms: 1.04442
+  type: 'suite'
+  ...
+# Subtest: P2-5 · one rule over every item, whatever track created it
+    # Subtest: an item that is not in the employee-track document set still counts
+    ok 1 - an item that is not in the employee-track document set still counts
+      ---
+      duration_ms: 0.220603
+      type: 'test'
+      ...
+    # Subtest: open items are named worst-first, with the item, its status and the days to start
+    ok 2 - open items are named worst-first, with the item, its status and the days to start
+      ---
+      duration_ms: 0.135183
+      type: 'test'
+      ...
+    # Subtest: no owner is invented where the item model has none
+    ok 3 - no owner is invented where the item model has none
+      ---
+      duration_ms: 0.106725
+      type: 'test'
+      ...
+    1..3
+ok 16 - P2-5 · one rule over every item, whatever track created it
+  ---
+  duration_ms: 0.56155
+  type: 'suite'
+  ...
+# Subtest: P2-5 · a case with no start date
+    # Subtest: no flag is raised and the surface is told why, rather than being given a default date
+    ok 1 - no flag is raised and the surface is told why, rather than being given a default date
+      ---
+      duration_ms: 0.233196
+      type: 'test'
+      ...
+    1..1
+ok 17 - P2-5 · a case with no start date
+  ---
+  duration_ms: 0.347461
+  type: 'suite'
+  ...
+# Subtest: P2-5 · nothing about the flag is stored
+    # Subtest: no column on the Layer 2 tables holds a flag, a state or a boundary
+    ok 1 - no column on the Layer 2 tables holds a flag, a state or a boundary
+      ---
+      duration_ms: 0.3818
+      type: 'test'
+      ...
+    # Subtest: the derivation declares no write path
+    ok 2 - the derivation declares no write path
+      ---
+      duration_ms: 0.091384
+      type: 'test'
+      ...
+    1..2
+ok 18 - P2-5 · nothing about the flag is stored
+  ---
+  duration_ms: 0.547566
+  type: 'suite'
+  ...
+# Subtest: P2-5 · the in-process watcher records, catches up, and never sends
+    # Subtest: a boundary met while the process is up is recorded as met while the app was open
+    ok 1 - a boundary met while the process is up is recorded as met while the app was open
+      ---
+      duration_ms: 1.52933
+      type: 'test'
+      ...
+    # Subtest: a boundary that falls after this process started is recorded as met, not late
+    ok 2 - a boundary that falls after this process started is recorded as met, not late
+      ---
+      duration_ms: 0.255648
+      type: 'test'
+      ...
+    # Subtest: a case with nothing outstanding is never recorded, and a passed-and-complete case stays complete
+    ok 3 - a case with nothing outstanding is never recorded, and a passed-and-complete case stays complete
+      ---
+      duration_ms: 0.32743
+      type: 'test'
+      ...
+    # Subtest: the watcher holds no write path: its records are in memory and it declares no delivery
+    ok 4 - the watcher holds no write path: its records are in memory and it declares no delivery
+      ---
+      duration_ms: 0.137776
+      type: 'test'
+      ...
+    1..4
+ok 19 - P2-5 · the in-process watcher records, catches up, and never sends
+  ---
+  duration_ms: 2.375703
+  type: 'suite'
+  ...
+# (node:2984) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P2-2 · the checklist arrives with the case
+    # Subtest: an accepted offer seeds the jurisdiction document set, every item not started
+    ok 1 - an accepted offer seeds the jurisdiction document set, every item not started
+      ---
+      duration_ms: 5.291862
+      type: 'test'
+      ...
+    # Subtest: the item set is data, not a hard-coded list in the route
+    ok 2 - the item set is data, not a hard-coded list in the route
+      ---
+      duration_ms: 0.137464
+      type: 'test'
+      ...
+    # Subtest: replaying the same accepted offer does not duplicate the checklist
+    ok 3 - replaying the same accepted offer does not duplicate the checklist
+      ---
+      duration_ms: 3.541225
+      type: 'test'
+      ...
+    # Subtest: seeding twice directly is also a no-op
+    ok 4 - seeding twice directly is also a no-op
+      ---
+      duration_ms: 3.124247
+      type: 'test'
+      ...
+    1..4
+ok 20 - P2-2 · the checklist arrives with the case
+  ---
+  duration_ms: 12.95681
+  type: 'suite'
+  ...
+# Subtest: P2-2 · every item carries an explicit status
+    # Subtest: a status outside the four is refused, and the message names them
+    ok 1 - a status outside the four is refused, and the message names them
+      ---
+      duration_ms: 3.27064
+      type: 'test'
+      ...
+    # Subtest: an illegal transition is refused with the status the item is actually in
+    ok 2 - an illegal transition is refused with the status the item is actually in
+      ---
+      duration_ms: 2.789799
+      type: 'test'
+      ...
+    # Subtest: not started -> requested is allowed and time-stamped
+    ok 3 - not started -> requested is allowed and time-stamped
+      ---
+      duration_ms: 3.667703
+      type: 'test'
+      ...
+    # Subtest: verified is terminal: nothing moves out of it
+    ok 4 - verified is terminal: nothing moves out of it
+      ---
+      duration_ms: 5.580086
+      type: 'test'
+      ...
+    # Subtest: a rejection sends a received item back to requested and clears the receipt
+    ok 5 - a rejection sends a received item back to requested and clears the receipt
+      ---
+      duration_ms: 5.689755
+      type: 'test'
+      ...
+    # Subtest: an unknown item, case or an over-long reference is refused
+    ok 6 - an unknown item, case or an over-long reference is refused
+      ---
+      duration_ms: 4.425232
+      type: 'test'
+      ...
+    1..6
+ok 21 - P2-2 · every item carries an explicit status
+  ---
+  duration_ms: 25.916512
+  type: 'suite'
+  ...
+# Subtest: P2-2 · a document cannot be collected before the privacy notice was shown for it
+    # Subtest: received is refused with 428 while the notice has not been shown for the item
+    ok 1 - received is refused with 428 while the notice has not been shown for the item
+      ---
+      duration_ms: 3.209167
+      type: 'test'
+      ...
+    # Subtest: verified is gated the same way, not only received
+    ok 2 - verified is gated the same way, not only received
+      ---
+      duration_ms: 3.441918
+      type: 'test'
+      ...
+    # Subtest: the gate is per item: showing the notice for one document does not open another
+    ok 3 - the gate is per item: showing the notice for one document does not open another
+      ---
+      duration_ms: 4.879891
+      type: 'test'
+      ...
+    # Subtest: the record carries the notice's own basis per document, its version, and a named actor
+    ok 4 - the record carries the notice's own basis per document, its version, and a named actor
+      ---
+      duration_ms: 8.509808
+      type: 'test'
+      ...
+    # Subtest: an unnamed actor is refused: the record must name who showed the notice
+    ok 5 - an unnamed actor is refused: the record must name who showed the notice
+      ---
+      duration_ms: 4.242661
+      type: 'test'
+      ...
+    # Subtest: replaying a record changes nothing: the timestamp is the one first written
+    ok 6 - replaying a record changes nothing: the timestamp is the one first written
+      ---
+      duration_ms: 4.79176
+      type: 'test'
+      ...
+    # Subtest: the two items the notice assigns no basis to cannot be recorded, and name their question
+    ok 7 - the two items the notice assigns no basis to cannot be recorded, and name their question
+      ---
+      duration_ms: 2.997052
+      type: 'test'
+      ...
+    # Subtest: the gate refuses a document the notice assigns no basis to, with its own reason
+    ok 8 - the gate refuses a document the notice assigns no basis to, with its own reason
+      ---
+      duration_ms: 3.539585
+      type: 'test'
+      ...
+    # Subtest: the record is per case: one case cannot collect on another case's record
+    ok 9 - the record is per case: one case cannot collect on another case's record
+      ---
+      duration_ms: 6.803296
+      type: 'test'
+      ...
+    # Subtest: an unknown case or item is refused before any rule about the notice
+    ok 10 - an unknown case or item is refused before any rule about the notice
+      ---
+      duration_ms: 3.005657
+      type: 'test'
+      ...
+    1..10
+ok 22 - P2-2 · a document cannot be collected before the privacy notice was shown for it
+  ---
+  duration_ms: 45.822598
+  type: 'suite'
+  ...
+# Subtest: P2-2 · the KSA set is kept, and switched off
+    # Subtest: a KSA case gets the KSA set and cannot move off not started
+    ok 1 - a KSA case gets the KSA set and cannot move off not started
+      ---
+      duration_ms: 7.248761
+      type: 'test'
+      ...
+    1..1
+ok 23 - P2-2 · the KSA set is kept, and switched off
+  ---
+  duration_ms: 7.334997
+  type: 'suite'
+  ...
+# Subtest: P2-2 · HR sees the incomplete items from one list
+    # Subtest: the roll-up names each case's outstanding items without opening the case
+    ok 1 - the roll-up names each case's outstanding items without opening the case
+      ---
+      duration_ms: 24.080307
+      type: 'test'
+      ...
+    # Subtest: a collected item leaves the outstanding list, and the totals follow
+    ok 2 - a collected item leaves the outstanding list, and the totals follow
+      ---
+      duration_ms: 25.726173
+      type: 'test'
+      ...
+    # Subtest: the roll-up filters by jurisdiction and reports the notice gap
+    ok 3 - the roll-up filters by jurisdiction and reports the notice gap
+      ---
+      duration_ms: 11.213446
+      type: 'test'
+      ...
+    1..3
+ok 24 - P2-2 · HR sees the incomplete items from one list
+  ---
+  duration_ms: 61.235603
+  type: 'suite'
+  ...
+# Subtest: P2-2 · reminders are recorded, not claimed as delivered
+    # Subtest: a reminder records what was outstanding, on the in-product channel
+    ok 1 - a reminder records what was outstanding, on the in-product channel
+      ---
+      duration_ms: 3.365196
+      type: 'test'
+      ...
+    # Subtest: a reminder for a case with nothing outstanding is refused
+    ok 2 - a reminder for a case with nothing outstanding is refused
+      ---
+      duration_ms: 18.664253
+      type: 'test'
+      ...
+    # Subtest: a reminder can be aimed at named items, and an unknown key is refused
+    ok 3 - a reminder can be aimed at named items, and an unknown key is refused
+      ---
+      duration_ms: 3.565807
+      type: 'test'
+      ...
+    # Subtest: the last reminder is surfaced on the roll-up row
+    ok 4 - the last reminder is surfaced on the roll-up row
+      ---
+      duration_ms: 15.154193
+      type: 'test'
+      ...
+    1..4
+ok 25 - P2-2 · reminders are recorded, not claimed as delivered
+  ---
+  duration_ms: 41.34595
+  type: 'suite'
+  ...
+# Subtest: P2-2 · what the audit trail records, and what it never records
+    # Subtest: a status change is audited as keys and statuses only
+    ok 1 - a status change is audited as keys and statuses only
+      ---
+      duration_ms: 3.364722
+      type: 'test'
+      ...
+    # Subtest: a notice acknowledgement is audited with its basis and version, never its note body
+    ok 2 - a notice acknowledgement is audited with its basis and version, never its note body
+      ---
+      duration_ms: 3.677521
+      type: 'test'
+      ...
+    # Subtest: the checklist lives in the product database, and nowhere else
+    ok 3 - the checklist lives in the product database, and nowhere else
+      ---
+      duration_ms: 0.265565
+      type: 'test'
+      ...
+    # Subtest: one case's item status never touches another case
+    ok 4 - one case's item status never touches another case
+      ---
+      duration_ms: 5.091515
+      type: 'test'
+      ...
+    1..4
+ok 26 - P2-2 · what the audit trail records, and what it never records
+  ---
+  duration_ms: 12.596485
+  type: 'suite'
+  ...
+# Subtest: P2-2 · the tile is labelled "Cases open", so the list is asked for open cases
+    # Subtest: a closed case is out of the open list and still in the unfiltered one
+    ok 1 - a closed case is out of the open list and still in the unfiltered one
+      ---
+      duration_ms: 3.509698
+      type: 'test'
+      ...
+    # Subtest: an unknown status is a 400, not a filter that quietly matches nothing
+    ok 2 - an unknown status is a 400, not a filter that quietly matches nothing
+      ---
+      duration_ms: 0.278041
+      type: 'test'
+      ...
+    # Subtest: jurisdiction and status combine in one query
+    ok 3 - jurisdiction and status combine in one query
+      ---
+      duration_ms: 0.384558
+      type: 'test'
+      ...
+    # Subtest: both collection reads are envelopes, and the roll-up keys are pinned
+    ok 4 - both collection reads are envelopes, and the roll-up keys are pinned
+      ---
+      duration_ms: 13.387943
+      type: 'test'
+      ...
+    1..4
+ok 27 - P2-2 · the tile is labelled "Cases open", so the list is asked for open cases
+  ---
+  duration_ms: 17.724223
+  type: 'suite'
+  ...
+# Subtest: P2-2 · no document bytes are stored, and the boundary says why — not that it is undecided
+    # Subtest: the store is absent by decision, and every byte path refuses with that reason
+    ok 1 - the store is absent by decision, and every byte path refuses with that reason
+      ---
+      duration_ms: 0.538053
+      type: 'test'
+      ...
+    # Subtest: an item has a reference, and no column can hold a document body
+    ok 2 - an item has a reference, and no column can hold a document body
+      ---
+      duration_ms: 0.213465
+      type: 'test'
+      ...
+    1..2
+ok 28 - P2-2 · no document bytes are stored, and the boundary says why — not that it is undecided
+  ---
+  duration_ms: 0.860441
+  type: 'suite'
+  ...
+# (node:2991) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P2-3 · the package is one list, derived from the case
+    # Subtest: nine items, from one server-side list, with the JD and the NDA as the two required
+    ok 1 - nine items, from one server-side list, with the JD and the NDA as the two required
+      ---
+      duration_ms: 1.686417
+      type: 'test'
+      ...
+    # Subtest: the set is jurisdiction-aware: UAE is worked, KSA is kept and switched off
+    ok 2 - the set is jurisdiction-aware: UAE is worked, KSA is kept and switched off
+      ---
+      duration_ms: 0.290674
+      type: 'test'
+      ...
+    # Subtest: a pre-reading item is not a document-set item: the two lists stay separate
+    ok 3 - a pre-reading item is not a document-set item: the two lists stay separate
+      ---
+      duration_ms: 0.21379
+      type: 'test'
+      ...
+    1..3
+ok 29 - P2-3 · the package is one list, derived from the case
+  ---
+  duration_ms: 3.00803
+  type: 'suite'
+  ...
+# Subtest: P2-3 · sent cannot exist, and read is not observable
+    # Subtest: every item carries delivery: not available, with the reason, and the label says so
+    ok 1 - every item carries delivery: not available, with the reason, and the label says so
+      ---
+      duration_ms: 4.394969
+      type: 'test'
+      ...
+    # Subtest: no read state can be claimed either — there is no hire-facing portal
+    ok 2 - no read state can be claimed either — there is no hire-facing portal
+      ---
+      duration_ms: 2.774043
+      type: 'test'
+      ...
+    # Subtest: the serialised package never words a delivery or a read as a success
+    ok 3 - the serialised package never words a delivery or a read as a success
+      ---
+      duration_ms: 3.183272
+      type: 'test'
+      ...
+    1..3
+ok 30 - P2-3 · sent cannot exist, and read is not observable
+  ---
+  duration_ms: 10.587512
+  type: 'suite'
+  ...
+# Subtest: P2-3 · acknowledged is a record, never an inference
+    # Subtest: a case starts with nothing acknowledged — the package is not pre-marked
+    ok 1 - a case starts with nothing acknowledged — the package is not pre-marked
+      ---
+      duration_ms: 2.861784
+      type: 'test'
+      ...
+    # Subtest: recording one item does not mark any other: no inference from progress anywhere
+    ok 2 - recording one item does not mark any other: no inference from progress anywhere
+      ---
+      duration_ms: 3.774318
+      type: 'test'
+      ...
+    # Subtest: the record names who recorded it and a UTC timestamp, and the method says what it is
+    ok 3 - the record names who recorded it and a UTC timestamp, and the method says what it is
+      ---
+      duration_ms: 3.302634
+      type: 'test'
+      ...
+    # Subtest: another case is unaffected by it: the record is per case
+    ok 4 - another case is unaffected by it: the record is per case
+      ---
+      duration_ms: 5.872583
+      type: 'test'
+      ...
+    # Subtest: recording the same item again returns the first record and does not rewrite it
+    ok 5 - recording the same item again returns the first record and does not rewrite it
+      ---
+      duration_ms: 4.104633
+      type: 'test'
+      ...
+    # Subtest: the audit trail records the acknowledgement without the note body
+    ok 6 - the audit trail records the acknowledgement without the note body
+      ---
+      duration_ms: 4.340426
+      type: 'test'
+      ...
+    # Subtest: as of an earlier instant the item reads unrecorded: the past view cannot be rewritten
+    ok 7 - as of an earlier instant the item reads unrecorded: the past view cannot be rewritten
+      ---
+      duration_ms: 3.218004
+      type: 'test'
+      ...
+    1..7
+ok 31 - P2-3 · acknowledged is a record, never an inference
+  ---
+  duration_ms: 27.925159
+  type: 'suite'
+  ...
+# Subtest: P2-3 · the refusal path
+    # Subtest: a record without a named actor is refused, and the reason names the gap
+    ok 1 - a record without a named actor is refused, and the reason names the gap
+      ---
+      duration_ms: 3.343514
+      type: 'test'
+      ...
+    # Subtest: an item key outside the case package is refused, and the message lists the set
+    ok 2 - an item key outside the case package is refused, and the message lists the set
+      ---
+      duration_ms: 2.856867
+      type: 'test'
+      ...
+    # Subtest: a signature-implying method is refused: the product cannot obtain a signature
+    ok 3 - a signature-implying method is refused: the product cannot obtain a signature
+      ---
+      duration_ms: 3.063401
+      type: 'test'
+      ...
+    # Subtest: an unknown method is refused rather than silently accepted
+    ok 4 - an unknown method is refused rather than silently accepted
+      ---
+      duration_ms: 2.775883
+      type: 'test'
+      ...
+    # Subtest: a KSA case cannot record: the set is kept but not active
+    ok 5 - a KSA case cannot record: the set is kept but not active
+      ---
+      duration_ms: 3.111474
+      type: 'test'
+      ...
+    # Subtest: an unknown case is refused with 404, and an unusable as_of with 400
+    ok 6 - an unknown case is refused with 404, and an unusable as_of with 400
+      ---
+      duration_ms: 3.088832
+      type: 'test'
+      ...
+    1..6
+ok 32 - P2-3 · the refusal path
+  ---
+  duration_ms: 18.475363
+  type: 'suite'
+  ...
+# (node:2998) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P2-4 · the checklist is derived from the case, never typed per case
+    # Subtest: an accepted offer seeds the workspace track from the role and department on the case
+    ok 1 - an accepted offer seeds the workspace track from the role and department on the case
+      ---
+      duration_ms: 6.566854
+      type: 'test'
+      ...
+    # Subtest: the same role and department always produce the same list, whoever the hire is
+    ok 2 - the same role and department always produce the same list, whoever the hire is
+      ---
+      duration_ms: 6.063943
+      type: 'test'
+      ...
+    # Subtest: a profile fires on the case's own role or department, case-insensitively
+    ok 3 - a profile fires on the case's own role or department, case-insensitively
+      ---
+      duration_ms: 8.642836
+      type: 'test'
+      ...
+    # Subtest: the role read is the job role on the case, not a system role on an account
+    ok 4 - the role read is the job role on the case, not a system role on an account
+      ---
+      duration_ms: 3.234737
+      type: 'test'
+      ...
+    # Subtest: no argument can add a line per hire — the board takes a filter and nothing else
+    ok 5 - no argument can add a line per hire — the board takes a filter and nothing else
+      ---
+      duration_ms: 3.239557
+      type: 'test'
+      ...
+    1..5
+ok 33 - P2-4 · the checklist is derived from the case, never typed per case
+  ---
+  duration_ms: 28.654551
+  type: 'suite'
+  ...
+# Subtest: P2-4 · every line has a responsible function and a due date
+    # Subtest: each line names one of the four functions and one owner, never none and never two
+    ok 1 - each line names one of the four functions and one owner, never none and never two
+      ---
+      duration_ms: 3.298936
+      type: 'test'
+      ...
+    # Subtest: the due date is the start date minus the line's configured offset, and it says so
+    ok 2 - the due date is the start date minus the line's configured offset, and it says so
+      ---
+      duration_ms: 3.8386
+      type: 'test'
+      ...
+    # Subtest: the due date is derived on read: moving the case's start date moves every line
+    ok 3 - the due date is derived on read: moving the case's start date moves every line
+      ---
+      duration_ms: 4.388995
+      type: 'test'
+      ...
+    # Subtest: a line past its due date with nothing done is late, and a complete line is not
+    ok 4 - a line past its due date with nothing done is late, and a complete line is not
+      ---
+      duration_ms: 2.880237
+      type: 'test'
+      ...
+    # Subtest: the five areas P2-4 names are each covered by at least one line
+    ok 5 - the five areas P2-4 names are each covered by at least one line
+      ---
+      duration_ms: 0.330826
+      type: 'test'
+      ...
+    1..5
+ok 34 - P2-4 · every line has a responsible function and a due date
+  ---
+  duration_ms: 15.097452
+  type: 'suite'
+  ...
+# Subtest: P2-4 · the function filter ("IT and Admin see only their own lines")
+    # Subtest: filtering by a function returns only that function's lines
+    ok 1 - filtering by a function returns only that function's lines
+      ---
+      duration_ms: 3.155655
+      type: 'test'
+      ...
+    # Subtest: a filtered board still carries every function's counts, so the chips can be labelled
+    ok 2 - a filtered board still carries every function's counts, so the chips can be labelled
+      ---
+      duration_ms: 3.42264
+      type: 'test'
+      ...
+    # Subtest: the board says out loud that this is a filter, not access control
+    ok 3 - the board says out loud that this is a filter, not access control
+      ---
+      duration_ms: 3.081707
+      type: 'test'
+      ...
+    # Subtest: an unknown function is refused by name, never ignored
+    ok 4 - an unknown function is refused by name, never ignored
+      ---
+      duration_ms: 2.95814
+      type: 'test'
+      ...
+    # Subtest: an unknown case is a 404, and the catalogue is refused a phantom case
+    ok 5 - an unknown case is a 404, and the catalogue is refused a phantom case
+      ---
+      duration_ms: 0.223911
+      type: 'test'
+      ...
+    1..5
+ok 35 - P2-4 · the function filter ("IT and Admin see only their own lines")
+  ---
+  duration_ms: 13.055792
+  type: 'suite'
+  ...
+# Subtest: P2-4 · adding a role or a line item is configuration
+    # Subtest: the catalog is data with one owner, one offset and a unique key per line
+    ok 1 - the catalog is data with one owner, one offset and a unique key per line
+      ---
+      duration_ms: 0.287387
+      type: 'test'
+      ...
+    # Subtest: every profile adds only catalogue lines, so a profile cannot invent one
+    ok 2 - every profile adds only catalogue lines, so a profile cannot invent one
+      ---
+      duration_ms: 0.143124
+      type: 'test'
+      ...
+    # Subtest: a line no profile owns is carried by every case, and one that a profile owns is not
+    ok 3 - a line no profile owns is carried by every case, and one that a profile owns is not
+      ---
+      duration_ms: 0.147544
+      type: 'test'
+      ...
+    1..3
+ok 36 - P2-4 · adding a role or a line item is configuration
+  ---
+  duration_ms: 0.699662
+  type: 'suite'
+  ...
+# Subtest: P2-4 · one item model, two tracks — and they are never merged
+    # Subtest: case creation seeds both tracks, and a replayed acceptance adds no second copy
+    ok 1 - case creation seeds both tracks, and a replayed acceptance adds no second copy
+      ---
+      duration_ms: 3.52964
+      type: 'test'
+      ...
+    # Subtest: the employee-track checklist read never returns a workspace line
+    ok 2 - the employee-track checklist read never returns a workspace line
+      ---
+      duration_ms: 13.482312
+      type: 'test'
+      ...
+    # Subtest: the case roll-up carries both counts, and neither is the other
+    ok 3 - the case roll-up carries both counts, and neither is the other
+      ---
+      duration_ms: 3.999072
+      type: 'test'
+      ...
+    # Subtest: a reminder is about the hire's documents: a workspace line is never in one
+    ok 4 - a reminder is about the hire's documents: a workspace line is never in one
+      ---
+      duration_ms: 3.061439
+      type: 'test'
+      ...
+    # Subtest: the notice-shown gate stays on documents: a provisioning line is not gated by it
+    ok 5 - the notice-shown gate stays on documents: a provisioning line is not gated by it
+      ---
+      duration_ms: 5.092414
+      type: 'test'
+      ...
+    # Subtest: the 48-hour flag counts both tracks, and names the owner where one is recorded
+    ok 6 - the 48-hour flag counts both tracks, and names the owner where one is recorded
+      ---
+      duration_ms: 3.611202
+      type: 'test'
+      ...
+    # Subtest: the workspace track is switched off outside the active jurisdictions
+    ok 7 - the workspace track is switched off outside the active jurisdictions
+      ---
+      duration_ms: 3.584815
+      type: 'test'
+      ...
+    1..7
+ok 37 - P2-4 · one item model, two tracks — and they are never merged
+  ---
+  duration_ms: 36.64698
+  type: 'suite'
+  ...
+# (node:3005) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P2-1 · an accepted offer opens a pre-boarding case
+    # Subtest: the case carries start date, role, department, reporting line and jurisdiction
+    ok 1 - the case carries start date, role, department, reporting line and jurisdiction
+      ---
+      duration_ms: 5.844252
+      type: 'test'
+      ...
+    # Subtest: no case can exist without a start date — the write is refused and nothing is stored
+    ok 2 - no case can exist without a start date — the write is refused and nothing is stored
+      ---
+      duration_ms: 0.963002
+      type: 'test'
+      ...
+    # Subtest: a malformed start date is refused as well — the invariant is a date, not a non-empty string
+    ok 3 - a malformed start date is refused as well — the invariant is a date, not a non-empty string
+      ---
+      duration_ms: 0.275854
+      type: 'test'
+      ...
+    # Subtest: re-processing the same accepted offer does not open a second case
+    ok 4 - re-processing the same accepted offer does not open a second case
+      ---
+      duration_ms: 0.309315
+      type: 'test'
+      ...
+    # Subtest: idempotency is per offer, not per candidate: a different offer opens its own case
+    ok 5 - idempotency is per offer, not per candidate: a different offer opens its own case
+      ---
+      duration_ms: 2.780591
+      type: 'test'
+      ...
+    # Subtest: jurisdiction is a real field, not UAE-hardcoded: KSA is stored as given
+    ok 6 - jurisdiction is a real field, not UAE-hardcoded: KSA is stored as given
+      ---
+      duration_ms: 3.293938
+      type: 'test'
+      ...
+    # Subtest: the collection read is the envelope, and totals describes the set it returned
+    ok 7 - the collection read is the envelope, and totals describes the set it returned
+      ---
+      duration_ms: 1.512715
+      type: 'test'
+      ...
+    # Subtest: the route serves that envelope, and the bare-array response is gone
+    ok 8 - the route serves that envelope, and the bare-array response is gone
+      ---
+      duration_ms: 0.756138
+      type: 'test'
+      ...
+    # Subtest: an unsupported jurisdiction is refused rather than silently defaulted
+    ok 9 - an unsupported jurisdiction is refused rather than silently defaulted
+      ---
+      duration_ms: 0.382991
+      type: 'test'
+      ...
+    # Subtest: every field the two Layer 2 workflows need is required, and the error names it
+    ok 10 - every field the two Layer 2 workflows need is required, and the error names it
+      ---
+      duration_ms: 0.642347
+      type: 'test'
+      ...
+    # Subtest: the creation is audited
+    ok 11 - the creation is audited
+      ---
+      duration_ms: 0.270234
+      type: 'test'
+      ...
+    1..11
+ok 38 - P2-1 · an accepted offer opens a pre-boarding case
+  ---
+  duration_ms: 18.431026
+  type: 'suite'
+  ...
+# Subtest: P2-1 · one payload, one writer
+    # Subtest: server/ holds exactly one INSERT into preboarding_cases, and it is in preboarding.js
+    ok 1 - server/ holds exactly one INSERT into preboarding_cases, and it is in preboarding.js
+      ---
+      duration_ms: 8.281423
+      type: 'test'
+      ...
+    # Subtest: the routes are transport only: the case rules live in the shared function
+    ok 2 - the routes are transport only: the case rules live in the shared function
+      ---
+      duration_ms: 0.51285
+      type: 'test'
+      ...
+    1..2
+ok 39 - P2-1 · one payload, one writer
+  ---
+  duration_ms: 8.929415
+  type: 'suite'
+  ...
+# Subtest: the notice resolves from this repository
+    # Subtest: noticePath() is the repository copy, and it exists
+    ok 1 - noticePath() is the repository copy, and it exists
+      ---
+      duration_ms: 0.766118
+      type: 'test'
+      ...
+    # Subtest: the notice served is the repository copy byte for byte
+    ok 2 - the notice served is the repository copy byte for byte
+      ---
+      duration_ms: 1.64271
+      type: 'test'
+      ...
+    # Subtest: the version is read from the file served, never a literal in code
+    ok 3 - the version is read from the file served, never a literal in code
+      ---
+      duration_ms: 0.981058
+      type: 'test'
+      ...
+    # Subtest: every document the product offers resolves to a file in this repository
+    ok 4 - every document the product offers resolves to a file in this repository
+      ---
+      duration_ms: 0.415389
+      type: 'test'
+      ...
+    # Subtest: a caller cannot walk out of the template directory
+    ok 5 - a caller cannot walk out of the template directory
+      ---
+      duration_ms: 0.17361
+      type: 'test'
+      ...
+    1..5
+ok 40 - the notice resolves from this repository
+  ---
+  duration_ms: 4.840442
+  type: 'suite'
+  ...
+# Subtest: the host-shared directory is not a source any more
+    # Subtest: no module under server/ reads it
+    ok 1 - no module under server/ reads it
+      ---
+      duration_ms: 12.967097
+      type: 'test'
+      ...
+    1..1
+ok 41 - the host-shared directory is not a source any more
+  ---
+  duration_ms: 13.098707
+  type: 'suite'
+  ...
+# Subtest: the served notice states one version in all three places
+    # Subtest: the status line, the version header and the consent row agree
+    ok 1 - the status line, the version header and the consent row agree
+      ---
+      duration_ms: 0.6765
+      type: 'test'
+      ...
+    # Subtest: there is exactly one version header, so a later row cannot shadow it
+    ok 2 - there is exactly one version header, so a later row cannot shadow it
+      ---
+      duration_ms: 0.287024
+      type: 'test'
+      ...
+    1..2
+ok 42 - the served notice states one version in all three places
+  ---
+  duration_ms: 1.257866
+  type: 'suite'
+  ...
+# Subtest: the retired retention qualifier stays out of the content
+    # Subtest: no content line carries it, and its Arabic form is absent entirely
+    ok 1 - no content line carries it, and its Arabic form is absent entirely
+      ---
+      duration_ms: 0.725137
+      type: 'test'
+      ...
+    # Subtest: the version header may quote it, and that quotation is the record, not a defect
+    ok 2 - the version header may quote it, and that quotation is the record, not a defect
+      ---
+      duration_ms: 0.681058
+      type: 'test'
+      ...
+    1..2
+ok 43 - the retired retention qualifier stays out of the content
+  ---
+  duration_ms: 1.528706
+  type: 'suite'
+  ...
+#   [why/decision] entries not decided by the rule: 12
+#     - POST /api/compliance/calculate-eosb — nothing to compare (prose: no number; field: 21)
+#     - GET /api/preboarding/cases/:id — nothing to compare (prose: no number; field: 21)
+#     - GET /api/preboarding/flag-watch — nothing to compare (prose: no number; field: 21)
+#     - GET /api/employees/:id — nothing to compare (prose: no number; field: 21)
+#     - GET /api/compliance/report — nothing to compare (prose: no number; field: 21)
+#     - the employee-record consent tile, which printed a status the product cannot produce — nothing to compare (prose: no number; field: 17)
+#     - the seeder writing the consent flag as granted onto every employee — nothing to compare (prose: no number; field: 17)
+#     - the orphan writer’s SQL, which set the flag on the employee record — nothing to compare (prose: no number; field: 17)
+#     - showExitModal — nothing to compare (prose: no number; field: 16)
+#     - education_certificate — nothing to compare (prose: no number; field: no number)
+#     - experience_certificate — nothing to compare (prose: no number; field: no number)
+#     - emergency_contact — nothing to compare (prose: no number; field: no number)
+# Subtest: the reachability measurement found the routes at all (it cannot pass vacuously)
+ok 44 - the reachability measurement found the routes at all (it cannot pass vacuously)
+  ---
+  duration_ms: 39.230941
+  type: 'test'
+  ...
+# Subtest: every /api route is reachable from a caller, or registered as callerless with a reason
+ok 45 - every /api route is reachable from a caller, or registered as callerless with a reason
+  ---
+  duration_ms: 14.315036
+  type: 'test'
+  ...
+# Subtest: the callerless register matches reality — a fixed orphan must leave it
+ok 46 - the callerless register matches reality — a fixed orphan must leave it
+  ---
+  duration_ms: 66.95824
+  type: 'test'
+  ...
+# Subtest: a route reachable only through a runtime-built path is covered by a declared call site
+ok 47 - a route reachable only through a runtime-built path is covered by a declared call site
+  ---
+  duration_ms: 14.020911
+  type: 'test'
+  ...
+# Subtest: each declared dynamic call site still exists, and still means what it claims
+ok 48 - each declared dynamic call site still exists, and still means what it claims
+  ---
+  duration_ms: 2.557116
+  type: 'test'
+  ...
+# Subtest: no client call site names a route the product does not register
+ok 49 - no client call site names a route the product does not register
+  ---
+  duration_ms: 13.285522
+  type: 'test'
+  ...
+# Subtest: no route is registered after the SPA catch-all (it would be dead on arrival)
+ok 50 - no route is registered after the SPA catch-all (it would be dead on arrival)
+  ---
+  duration_ms: 1.009264
+  type: 'test'
+  ...
+# Subtest: a retired element stays retired — the removal is re-measured, not remembered
+ok 51 - a retired element stays retired — the removal is re-measured, not remembered
+  ---
+  duration_ms: 16.35918
+  type: 'test'
+  ...
+# Subtest: the retired consent flag has no write path left, and its column stays
+ok 52 - the retired consent flag has no write path left, and its column stays
+  ---
+  duration_ms: 1.535721
+  type: 'test'
+  ...
+# Subtest: every boolean control state can be opened, or is registered as un-openable with a reason
+ok 53 - every boolean control state can be opened, or is registered as un-openable with a reason
+  ---
+  duration_ms: 11.078506
+  type: 'test'
+  ...
+# Subtest: a value a tile displays has a writer in a route a user can reach — or is registered
+ok 54 - a value a tile displays has a writer in a route a user can reach — or is registered
+  ---
+  duration_ms: 13.426185
+  type: 'test'
+  ...
+# Subtest: an item the notice assigns no basis to is not offered a move it can never complete
+ok 55 - an item the notice assigns no basis to is not offered a move it can never complete
+  ---
+  duration_ms: 3.399407
+  type: 'test'
+  ...
+# Subtest: the why/decision agreement rule names what it did not cover
+ok 56 - the why/decision agreement rule names what it did not cover
+  ---
+  duration_ms: 0.98216
+  type: 'test'
+  ...
+# (node:3026) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: schema.sql migrates a database that already has rows
+    # Subtest: the schema text really does contain a pre-P2-1 half and a post-P2-1 half
+    ok 1 - the schema text really does contain a pre-P2-1 half and a post-P2-1 half
+      ---
+      duration_ms: 0.619161
+      type: 'test'
+      ...
+    # Subtest: an existing database gains the new table with every row intact
+    ok 2 - an existing database gains the new table with every row intact
+      ---
+      duration_ms: 5.615955
+      type: 'test'
+      ...
+    # Subtest: a fresh database gets every table, including the new one
+    ok 3 - a fresh database gets every table, including the new one
+      ---
+      duration_ms: 2.46455
+      type: 'test'
+      ...
+    1..3
+ok 57 - schema.sql migrates a database that already has rows
+  ---
+  duration_ms: 9.622393
+  type: 'suite'
+  ...
+1..57
+# tests 192
+# suites 41
+# pass 192
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3439.938131
+rc=0
+----- end raw run 2 -----
