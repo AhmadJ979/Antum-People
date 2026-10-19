@@ -1,0 +1,200 @@
+THE FIXTURE-SERVER LEAK: the defect, the measurement, and the check that keeps it fixed
+measured 2026-10-19T16:03:10+00:00 on (none), the fixed tree
+
+DEFECT (found in review, not by me): scripts/observe-serve-pair-test.sh leaked FOUR fixture
+http.server processes per run. start_server appended to PIDS inside a command substitution
+(a subshell), so the EXIT trap kept only the busy pid; and cleanup's rm -rf $ROOT deleted the
+server-*.pid files that were the only other record of those pids. Reviewer's measurement:
+ps count 31 -> 35 per run; 39 resident holding 371 MB RSS on a 3.9 GB host.
+
+FIX
+ 1. the four start_server calls are hoisted OUT of the command substitution, so PIDS+=
+    happens in the shell the EXIT trap runs in;
+ 2. cleanup now reads $ROOT/server-*.pid BEFORE rm -rf and kills those pids too, so a future
+    edit that puts a call back inside a substitution cannot silently leak;
+ 3. section (k) makes the bookkeeping LOAD-BEARING: 4 pid files written, every fixture pid
+    present in the trap's PIDS array, the array equal to the 5 processes the suite started,
+    and after the trap's own kill no fixture survives.
+
+FALSIFICATION — the PRE-FIX file, with section (k) added, run from inside the repo:
+  scripts/.observe-prefix-variant.sh = the fixed file with (1) reverted to the command
+  substitution and cleanup reverted to the one-liner. Only these two hunks differ.
+
+=== PRE-FIX variant, run from inside the repo: 2026-10-19T16:02:37+00:00 ===
+http.server processes before: 0
+=== observe-serve-pair-test 2026-10-19T16:02:37+00:00 ===
+  repo    /home/agent-senior-software-engineer/antum-people
+  observer /home/agent-senior-software-engineer/antum-people/scripts/observe-serve-pair.sh (19556 B)
+  scratch /tmp/observe-serve-pair-test.uNfaHH
+
+  fixtures: good=56935(up) placeholder=48079(up) foreign=34201(up) empty=36529(up)
+
+== (a) a fixture that IS the pair: exit 0, with the expectation DERIVED from the fixture tree ==
+  PASS  (a) the observer exits 0 against a fixture that is the pair (it exited 0)
+  PASS  (a) and says PAIR HOLDS
+  PASS  (a) it derived BOTH bundles the tree's build emitted
+  PASS  (a) naming the asset it derived
+  PASS  (a) with the md5 the FIXTURE TREE's artifact actually has (a2280fd1d1dcba22fd658c376019833a)
+  PASS  (a) and it prints what it measured off the URL, byte count included
+  PASS  (a) the served page's title is in the output
+  PASS  (a) the run's record line parses as JSON
+  PASS  (a) the record says PASS
+  PASS  (a) and records the md5 it computed off the URL
+  PASS  (a) beside the md5 it derived from the tree
+  PASS  (a) no alert file is left when the pair holds
+
+== (b) 200 with a placeholder body — the exact failure that has happened — must REDDEN ==
+  PASS  (b) exit 1, not 0 (a 200 alone is not health; it exited 1)
+  PASS  (b) it says PAIR BROKEN
+  PASS  (b) and names the assets the page failed to name
+  PASS  (b) printing the placeholder's own title, which a status check would have called healthy
+  PASS  (b) and says why 200 was not enough
+  PASS  (b) the record says BROKEN
+  PASS  (b) the alert file exists where a person looks
+  PASS  (b) and keeps the FIRST failure time, so a window can be measured
+  PASS  (b) the alert carries the evidence (the placeholder's title), not just a verdict
+
+== (c) the page names our asset but the BYTES differ: a stale or foreign bundle must REDDEN ==
+  PASS  (c) exit 1 (it exited 1)
+  PASS  (c) it says the served bytes are not the tree's artifact
+  PASS  (c) naming the EXPECTED md5
+  PASS  (c) and the FOREIGN md5 it actually computed
+  PASS  (c) recorded as BROKEN
+
+== (d) unreachable and 404 are named, not guessed ==
+  PASS  (d) a URL nothing answers exits 1 (it exited 1)
+  PASS  (d) and says it could not be reached
+  PASS  (d) a 404 exits 1 (it exited 1)
+  PASS  (d) and names the status or the missing name
+
+== (e) derive-or-refuse, and a pinned literal that disagrees must redden ==
+  PASS  (e) a tree with no built bundle REFUSES (exit 3; it exited 3)
+  PASS  (e) and says REFUSED
+  PASS  (e) saying why: derive-or-refuse
+  PASS  (e) and it prints NO verdict — nothing was compared
+  PASS  (e) the record says REFUSED, so a refusal is visible in the record too
+  PASS  (e) a PINNED md5 that disagrees with the artifact exits 1 (it exited 1)
+  PASS  (e) naming the pinned literal
+  PASS  (e) beside the artifact's real md5 — the literal cannot drift unnoticed
+  PASS  (e) and saying a pinned literal is a dated measurement
+
+== (f) the record: one line per run, retention, liveness, and a broken→restored window ==
+  PASS  (f) two runs leave exactly two record lines
+  PASS  (f) every run prints the age of the previous run
+  PASS  (f) the FIRST run says there was none, rather than implying coverage
+  PASS  (f) every record line parses as JSON
+  PASS  (f) five runs with ANTUM_OBSERVE_KEEP=3 all exit 0
+  PASS  (f) and the record keeps exactly 3 runs, as it says it does
+  PASS  (f) a broken run then a restored run (exits 1 then 0)
+  PASS  (f) the alert is cleared when the pair holds again
+  PASS  (f) and moved aside as a dated record of the window, not deleted
+  PASS  (f) the window records when it broke (2026-10-19T16:02:39Z)
+  PASS  (f) and says the window's granularity honestly
+  PASS  (f) while the record keeps both runs
+
+== (g) read-only against the tree, and the live host untouched by this suite ==
+  PASS  (g) the observed tree's files are byte-identical, mtimes included, after a run
+  PASS  (g) /home/team/shared *.sh unchanged by this whole suite
+  PASS  (g) the installed login-shell hook unchanged by this whole suite
+  PASS  (g) the observer states the read-only promise in its own header
+  PASS  (g) it never touches the guard's lock
+  PASS  (g) nor the deploy marker it must not interfere with
+
+== (h) one loop per host, killed by the pid in its lock ==
+  PASS  (h) a second LOOP refuses to start while the lock names a live pid (it exited 2)
+  PASS  (h) and names the pid that holds it (19519)
+  PASS  (h) telling the operator how to kill it instead
+  PASS  (h) a ONE-SHOT run still works while that lock is held (it exited 0)
+  PASS  (h) and measures the pair, as a person or a movement step needs
+  PASS  (h) a STALE lock (a dead pid) is named, and does not block arming
+  PASS  (h) the loop records its OWN pid in the lock (pid 19613)
+  PASS  (h) and records a run each interval (at least 2 in 4s)
+  PASS  (h) killing it by that pid ends the loop and clears its lock
+
+== (i) --status answers 'is the observer alive?' from the record alone ==
+  PASS  (i) --status exits 0 with no record at all
+  PASS  (i) and says NO RECORD YET rather than implying the product is fine
+  PASS  (i) saying exactly that, in those words
+  PASS  (i) with a record it reports how many runs are recorded
+  PASS  (i) the last run and its verdict
+  PASS  (i) its age — the number that makes a dead observer visible
+  PASS  (i) and whether a loop is actually armed
+
+== (j) the live public URL (opt-in; named when not run) ==
+  NOT RUN: the live-URL case. Set ANTUM_OBSERVE_LIVE=1 to include it (this suite never touches the
+  live site by default, and it says so rather than quietly counting one fewer check).
+
+== (k) the suite's own fixture processes: accounted for, and gone when it exits ==
+  PASS  (k) start_server wrote a pid file for each of the 4 fixtures it started (4)
+  FAIL  (k) every one of those pids is in the EXIT trap's PIDS array — cleanup holds them (not held: 18066 18072 18078 18084)
+  FAIL  (k) the trap's array is the 5 processes this suite started (4 fixtures + the busy-lock pid), not fewer
+  FAIL  (k) after the trap's own kill, no fixture process survives this suite (survivors: 18066 18072 18078 18084)
+
+RESULT: 74 passed, 3 failed (of 77 checks; the live-URL case is separate and opt-in)
+suite rc=1
+http.server processes after: 4
+LEAK: before=0 after=4 delta=4
+http.server processes after cleanup: 0
+
+(the /tmp run above is the same variant executed from /tmp, where $REPO resolves to / and the
+ observer path is wrong — kept only to show the leak count is reproducible, not for its verdicts)
+
+GREEN — the FIXED file at this tip:
+http.server processes before: 0 ; available MB before: 2927
+RESULT: 77 passed, 0 failed (of 77 checks; the live-URL case is separate and opt-in)
+suite rc=0
+http.server processes after: 0 ; available MB after: 2941
+LEAK: before=0 after=0 delta=0
+
+The (k) checks are the ones that redden above; (a)-(j) are unchanged by this fix.
+
+THE TWO HUNKS THAT DIFFER between the fixed file and the pre-fix variant (nothing else):
+--- fixed: cleanup() ---
+# inside a command substitution lands in a subshell's copy of the array and cleanup never sees it; and the
+# pid files were being removed in the same breath, so nothing could have recovered the pids afterwards.
+# Measured, that combination leaked four fixture `http.server` processes per run (ps 31 -> 35 per run; 39
+# resident, ~371 MB RSS, before the host was cleared). Section (k) below is the check that keeps it fixed.
+cleanup() {
+  local pids=() p f
+  for p in "${PIDS[@]:-}"; do [ -n "$p" ] && pids+=("$p"); done
+--- pre-fix: cleanup() ---
+cleanup() { for p in "${PIDS[@]:-}"; do [ -n "$p" ] && kill "$p" 2>/dev/null; done; rm -rf "$ROOT"; }
+--- fixed: the four calls ---
+# These four calls are NOT written as `SRV_GOOD=$(start_server … && echo up || echo down)`. They were, and a
+# command substitution runs in a SUBSHELL — so start_server's `PIDS+=("$sp")` appended to a copy of the array
+# that died with that subshell, the EXIT trap kept only the busy pid, and four fixture servers leaked per run.
+# Hoisted out, the append happens in THIS shell, where cleanup can see it. Section (k) reddens if it regresses.
+--- pre-fix: the four calls ---
+95:# These four calls are NOT written as `SRV_GOOD=$(start_server … && echo up || echo down)`. They were, and a
+99:SRV_GOOD=$(start_server "$GOOD/client/dist" "$GOOD_PORT" && echo up || echo down)
+100:SRV_PH=$(start_server "$PLACEHOLDER" "$PH_PORT" && echo up || echo down)
+101:SRV_FOR=$(start_server "$FOREIGN" "$FOR_PORT" && echo up || echo down)
+102:SRV_EMPTY=$(start_server "$EMPTY" "$EMPTY_PORT" && echo up || echo down)
+
+SECTION (k), as committed:
+echo
+echo "== (k) the suite's own fixture processes: accounted for, and gone when it exits =="
+# WHY THIS SECTION EXISTS. A check that cannot redden proves nothing, and this one is about a real defect:
+# this suite used to leak FOUR fixture servers per run, because `PIDS+=` lived inside a command substitution
+# (a subshell) and cleanup's `rm -rf "$ROOT"` deleted the pid files that could have rescued it. So the check
+# is not "the suite printed a number" — it is that the EXIT trap's bookkeeping actually holds every process
+# the suite started, and that killing what it holds really ends them. Both redden on the pre-fix file; that
+# run is kept in docs/evidence/observer-2026-10-19/raw/cleanup-leak-pre-fix-and-fixed.txt.
+FIX_PIDS=$(cat "$ROOT"/server-*.pid 2>/dev/null | sort -u)
+FIX_N=$(printf '%s\n' "$FIX_PIDS" | grep -c '^[0-9]')
+check "[ $FIX_N -eq 4 ]" "(k) start_server wrote a pid file for each of the 4 fixtures it started ($FIX_N)"
+HELD=" $(printf '%s ' "${PIDS[@]:-}")"
+MISSING=""
+for p in $FIX_PIDS; do case "$HELD" in *" $p "*) ;; *) MISSING="$MISSING $p";; esac; done
+check "[ -z '$MISSING' ]" "(k) every one of those pids is in the EXIT trap's PIDS array — cleanup holds them (not held:$MISSING)"
+check "[ $(printf '%s\n' "${PIDS[@]:-}" | grep -c '^[0-9]') -eq 5 ]" \
+  "(k) the trap's array is the 5 processes this suite started (4 fixtures + the busy-lock pid), not fewer"
+# Now do what the EXIT trap will do, in the open, and PROVE it worked: kill and reap everything the trap
+# holds, then confirm no fixture of this suite's own is still alive.
+for p in "${PIDS[@]:-}"; do [ -n "$p" ] && kill "$p" 2>/dev/null; done
+for p in "${PIDS[@]:-}"; do [ -n "$p" ] && wait "$p" 2>/dev/null; done
+sleep 0.5
+SURVIVORS=""
+for p in $FIX_PIDS; do kill -0 "$p" 2>/dev/null && SURVIVORS="$SURVIVORS $p"; done
+check "[ -z '$SURVIVORS' ]" "(k) after the trap's own kill, no fixture process survives this suite (survivors:$SURVIVORS)"
+

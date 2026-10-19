@@ -1,9 +1,9 @@
-=== observe-serve-pair-test 2026-10-19T15:46:02+00:00 ===
+=== observe-serve-pair-test 2026-10-19T16:03:10+00:00 ===
   repo    /home/agent-senior-software-engineer/antum-people
   observer /home/agent-senior-software-engineer/antum-people/scripts/observe-serve-pair.sh (19556 B)
-  scratch /tmp/observe-serve-pair-test.Vdzuy7
+  scratch /tmp/observe-serve-pair-test.0FLqg5
 
-  fixtures: good=36861(up) placeholder=59857(up) foreign=48851(up) empty=41611(up)
+  fixtures: good=49635(up) placeholder=46167(up) foreign=42539(up) empty=59647(up)
 
 == (a) a fixture that IS the pair: exit 0, with the expectation DERIVED from the fixture tree ==
   PASS  (a) the observer exits 0 against a fixture that is the pair (it exited 0)
@@ -64,7 +64,7 @@
   PASS  (f) a broken run then a restored run (exits 1 then 0)
   PASS  (f) the alert is cleared when the pair holds again
   PASS  (f) and moved aside as a dated record of the window, not deleted
-  PASS  (f) the window records when it broke (2026-10-19T15:46:05Z)
+  PASS  (f) the window records when it broke (2026-10-19T16:03:12Z)
   PASS  (f) and says the window's granularity honestly
   PASS  (f) while the record keeps both runs
 
@@ -78,12 +78,12 @@
 
 == (h) one loop per host, killed by the pid in its lock ==
   PASS  (h) a second LOOP refuses to start while the lock names a live pid (it exited 2)
-  PASS  (h) and names the pid that holds it (642)
+  PASS  (h) and names the pid that holds it (22100)
   PASS  (h) telling the operator how to kill it instead
   PASS  (h) a ONE-SHOT run still works while that lock is held (it exited 0)
   PASS  (h) and measures the pair, as a person or a movement step needs
   PASS  (h) a STALE lock (a dead pid) is named, and does not block arming
-  PASS  (h) the loop records its OWN pid in the lock (pid 739)
+  PASS  (h) the loop records its OWN pid in the lock (pid 22194)
   PASS  (h) and records a run each interval (at least 2 in 4s)
   PASS  (h) killing it by that pid ends the loop and clears its lock
 
@@ -100,5 +100,11 @@
   NOT RUN: the live-URL case. Set ANTUM_OBSERVE_LIVE=1 to include it (this suite never touches the
   live site by default, and it says so rather than quietly counting one fewer check).
 
-RESULT: 73 passed, 0 failed (of 73 checks; the live-URL case is separate and opt-in)
+== (k) the suite's own fixture processes: accounted for, and gone when it exits ==
+  PASS  (k) start_server wrote a pid file for each of the 4 fixtures it started (4)
+  PASS  (k) every one of those pids is in the EXIT trap's PIDS array — cleanup holds them (not held:)
+  PASS  (k) the trap's array is the 5 processes this suite started (4 fixtures + the busy-lock pid), not fewer
+  PASS  (k) after the trap's own kill, no fixture process survives this suite (survivors:)
+
+RESULT: 77 passed, 0 failed (of 77 checks; the live-URL case is separate and opt-in)
 rc=0
