@@ -72,13 +72,14 @@ check "[ $RC -eq 0 ]" "(a) the installer exits 0 against a scratch destination"
 for pair in "scripts/deploy-main.sh:deploy-main.sh" "scripts/cutover-preflight.sh:cutover-preflight.sh" \
             "scripts/restore-product.sh:restore-product.sh" "scripts/rollback-to-9d2182a.sh:rollback-to-9d2182a.sh" \
             "scripts/success-test.sh:success-test.sh" \
+            "scripts/observe-serve-pair.sh:observe-serve-pair.sh" \
             "scripts/antum-product-guard-hook.sh:zz-antum-product-guard.sh"; do
   rpath="${pair%%:*}"; name="${pair##*:}"
   inst="$DST/$name"
   check "[ -f '$inst' ]" "(a) $name is installed"
   check "[ \"\$(body_md5 '$inst')\" = \"\$(src_md5 '$rpath')\" ]" "(a) $name's BODY equals $rpath (independent strip)"
 done
-check "[ \"\$(grep -c 'INSTALLED' '$ROOT/install1.log')\" -ge 6 ]" "(a) the log reports six installs"
+check "[ \"\$(grep -c 'INSTALLED' '$ROOT/install1.log')\" -ge 7 ]" "(a) the log reports seven installs"
 check "[ -x '$DST/deploy-main.sh' ]" "(a) the operator copies are executable"
 HOOK_MODE=$(stat -c %a "$DST/zz-antum-product-guard.sh")
 check "[ '$HOOK_MODE' = '644' ]" "(a) the hook is 0644 — sourced, not executed (it reads $HOOK_MODE)"
@@ -93,6 +94,7 @@ check "grep -q \"^# source-blob-md5: $BLOB\" '$DST/deploy-main.sh'" "(b) the rec
 check "grep -q '^# tree-state: ' '$DST/deploy-main.sh'" "(b) it states whether the source tree was clean"
 check "head -1 '$DST/deploy-main.sh' | grep -q '^#!'" "(b) a shebang stays on line 1, with the block after it"
 check "head -1 '$DST/zz-antum-product-guard.sh' | grep -q '^# >>>'" "(b) a file with no shebang gets the block at line 1"
+check "grep -q '^# host-tool-of: scripts/observe-serve-pair.sh' '$DST/observe-serve-pair.sh'" "(b) the observer copy carries its own provenance too"
 
 echo
 echo "== (c) idempotence: a second run changes no byte and no mtime =="
@@ -224,6 +226,20 @@ ANTUM_REPO="$REPO_DIR" ANTUM_HOOK_DST="$DST/hook-paired.sh" ANTUM_DEPLOY_COPY="$
 check "grep -q 'PAIRED with the deploy that writes the marker' '$ROOT/preflight-paired.log'" "(j) a hook from the deploy's revision PAIRS"
 check "! grep -q 'UNPAIRED' '$ROOT/preflight-paired.log'" "(j) and that same check stays quiet there"
 check "grep -q 'has a reader here' '$ROOT/preflight-paired.log'" "(j) and reports the marker having a reader"
+
+echo
+echo "== (l) the observer is wired where the movement and an operator will find it =="
+# The observer is only an observer if something runs it. These checks are SHAPE (they read the
+# movement and the installer); the observer's own behaviour — that it reddens on a placeholder and
+# on foreign bytes — is exercised in scripts/observe-serve-pair-test.sh, and the live run is recorded
+# in docs/evidence/observer-2026-10-19/.
+check "grep -q 'observe-serve-pair.sh' '$REPO_DIR/DEPLOY.md'" \
+  "(l) DEPLOY.md's post-movement step names the observer (the hand-done URL fetch is now the same assertion)"
+check "grep -q 'scripts/observe-serve-pair.sh|' '$INSTALLER'" "(l) the installer carries the observer in its TARGETS list"
+check "[ \"\$(grep 'scripts/observe-serve-pair.sh|' '$INSTALLER' | grep -c '0755')\" = '1' ]" \
+  "(l) as a 0755 OPERATOR copy — not sourced into every login shell"
+check "[ \"\$(grep -c '|0644' '$INSTALLER')\" = '1' ]" \
+  "(l) and the only 0644 target is still the hook"
 
 echo
 echo "  SCOPE, stated rather than implied: the (i) checks that grep the preflight's text are SHAPE only —"

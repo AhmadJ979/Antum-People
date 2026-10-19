@@ -1,0 +1,16 @@
+=== what could run a periodic check on this host — measured 2026-10-19T15:47:51Z ===
+  pid 1:                    /bin/sh /entrypoint.sh 
+  /run/systemd/system:      ABSENT
+  systemctl list-timers:    System has not been booted with systemd as init system (PID 1). Can't operate.
+  crontab:                 not installed
+  crond:                   not installed
+  at:                      not installed
+  atd:                     not installed
+  anacron:                 not installed
+  systemd-crontab-generator: not installed
+  /etc/cron.d:              1 file(s); /etc/cron.daily: 2 file(s) — neither is executed by anything here (no crond)
+  the platform's own scheduler binaries in PATH: 0 match(es)
+
+  CONSEQUENCE, and it is why the observer's mechanism is what it is: there is no scheduler on this host
+  and this business has no off-host one, so scripts/observe-serve-pair.sh is run by a movement step, by an
+  armed --loop (a process on the host it observes), or by a person — never by a scheduler that does not exist.

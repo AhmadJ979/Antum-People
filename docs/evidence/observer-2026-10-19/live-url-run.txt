@@ -1,0 +1,36 @@
+### run: the observer against the REAL public URL, tree = the served tree
+### scripts/observe-serve-pair.sh, run by hand from the repo, 2026-10-19T15:46:20Z
+### log dir: /tmp/obs-live-20261019T154620Z (scratch — the host's own record dir starts on the first post-merge run)
+
+=== observe-serve-pair 2026-10-19T15:46:20Z ===
+  script: scripts/observe-serve-pair.sh | 19556 B | sha256 59cfd8f59f25a2ba
+  url:    https://b974147c03228029e277d1cbe6646fe6.ctonew.app
+  tree:   /home/team/shared/probable-octo-sniffle
+  LIVENESS: <no earlier run in this record>
+            the observer has not recorded a run here before; a gap before this line was NOT observed
+  derived: 2 asset(s) from /home/team/shared/probable-octo-sniffle/client/dist (the artifact this tree serves)
+            assets/index-BG0peuOK.js  274242 B  md5 f65f15c109e76e86cd8b8abe7102f748
+            assets/index-pNSrK3wr.css  35365 B  md5 eda548202468a7e0293053981037a594
+            tree HEAD: a5aa0e6
+  measured: GET / → 200 | title: Antum People | page bytes: 799
+            the page names: assets/index-BG0peuOK.js assets/index-pNSrK3wr.css 
+            assets/index-BG0peuOK.js → 200, 274242 B, md5 f65f15c109e76e86cd8b8abe7102f748
+            expected:            274242 B, md5 f65f15c109e76e86cd8b8abe7102f748
+            assets/index-pNSrK3wr.css → 200, 35365 B, md5 eda548202468a7e0293053981037a594
+            expected:            35365 B, md5 eda548202468a7e0293053981037a594
+
+PAIR HOLDS (exit 0) — the page at https://b974147c03228029e277d1cbe6646fe6.ctonew.app names our asset(s) and the bytes match the served tree's artifact
+  measured off the URL: assets/index-BG0peuOK.js 274242 B md5 f65f15c109e76e86cd8b8abe7102f748
+
+rc=0
+
+### its own record of that run (runs.jsonl):
+{"ts":"2026-10-19T15:46:21Z","verdict":"PASS","url":"https://b974147c03228029e277d1cbe6646fe6.ctonew.app","status":"200","title":"Antum People","page_assets":"assets/index-BG0peuOK.js assets/index-pNSrK3wr.css ","asset":"assets/index-BG0peuOK.js","expected_md5":"f65f15c109e76e86cd8b8abe7102f748","fetched_bytes":"274242","fetched_md5":"f65f15c109e76e86cd8b8abe7102f748","tree":"/home/team/shared/probable-octo-sniffle","tree_head":"a5aa0e6","note":"","duration_s":"1","interval_s":"0"}
+### is the observer's own liveness visible? --status:
+=== observe-serve-pair --status 2026-10-19T15:46:21Z ===
+  record: /tmp/obs-live-20261019T154620Z/runs.jsonl
+  runs recorded: 1 (keeping the most recent 2000)
+  last run:      2026-10-19T15:46:21Z → PASS
+  age:           0 min ago
+  no alert file: /tmp/obs-live-20261019T154620Z/PAIR-BROKEN.txt (the last recorded run held, or none has failed)
+  loop:          no lock file — no loop is armed; only a movement step or a person runs this now

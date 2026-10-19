@@ -1,0 +1,105 @@
+### (this file is the observer suite's FIRST run, kept because it shows the checks redden)
+PARSE OK
+=== observe-serve-pair-test 2026-10-19T15:44:51+00:00 ===
+  repo    /home/agent-senior-software-engineer/antum-people
+  observer /home/agent-senior-software-engineer/antum-people/scripts/observe-serve-pair.sh (19556 B)
+  scratch /tmp/observe-serve-pair-test.1kPprg
+
+  fixtures: good=57053(up) placeholder=54793(up) foreign=57159(up) empty=50891(up)
+
+== (a) a fixture that IS the pair: exit 0, with the expectation DERIVED from the fixture tree ==
+  PASS  (a) the observer exits 0 against a fixture that is the pair (it exited 0)
+  PASS  (a) and says PAIR HOLDS
+  PASS  (a) it derived BOTH bundles the tree's build emitted
+  PASS  (a) naming the asset it derived
+  PASS  (a) with the md5 the FIXTURE TREE's artifact actually has (a2280fd1d1dcba22fd658c376019833a)
+  PASS  (a) and it prints what it measured off the URL, byte count included
+  PASS  (a) the served page's title is in the output
+  PASS  (a) the run's record line parses as JSON
+  PASS  (a) the record says PASS
+  PASS  (a) and records the md5 it computed off the URL
+  PASS  (a) beside the md5 it derived from the tree
+  PASS  (a) no alert file is left when the pair holds
+
+== (b) 200 with a placeholder body — the exact failure that has happened — must REDDEN ==
+  PASS  (b) exit 1, not 0 (a 200 alone is not health; it exited 1)
+  PASS  (b) it says PAIR BROKEN
+  FAIL  (b) and names the asset the page failed to name
+  PASS  (b) printing the placeholder's own title, which a status check would have called healthy
+  PASS  (b) and says why 200 was not enough
+  PASS  (b) the record says BROKEN
+  PASS  (b) the alert file exists where a person looks
+  PASS  (b) and keeps the FIRST failure time, so a window can be measured
+  PASS  (b) the alert carries the evidence (the placeholder's title), not just a verdict
+
+== (c) the page names our asset but the BYTES differ: a stale or foreign bundle must REDDEN ==
+  PASS  (c) exit 1 (it exited 1)
+  PASS  (c) it says the served bytes are not the tree's artifact
+  PASS  (c) naming the EXPECTED md5
+  PASS  (c) and the FOREIGN md5 it actually computed
+  PASS  (c) recorded as BROKEN
+
+== (d) unreachable and 404 are named, not guessed ==
+  PASS  (d) a URL nothing answers exits 1 (it exited 1)
+  PASS  (d) and says it could not be reached
+  PASS  (d) a 404 exits 1 (it exited 1)
+  PASS  (d) and names the status or the missing name
+
+== (e) derive-or-refuse, and a pinned literal that disagrees must redden ==
+  PASS  (e) a tree with no built bundle REFUSES (exit 3; it exited 3)
+  PASS  (e) and says REFUSED
+  PASS  (e) saying why: derive-or-refuse
+  PASS  (e) and it prints NO verdict — nothing was compared
+  PASS  (e) the record says REFUSED, so a refusal is visible in the record too
+  PASS  (e) a PINNED md5 that disagrees with the artifact exits 1 (it exited 1)
+  PASS  (e) naming the pinned literal
+  PASS  (e) beside the artifact's real md5 — the literal cannot drift unnoticed
+  PASS  (e) and saying a pinned literal is a dated measurement
+
+== (f) the record: one line per run, retention, liveness, and a broken→restored window ==
+  PASS  (f) two runs leave exactly two record lines
+  PASS  (f) every run prints the age of the previous run
+  PASS  (f) the FIRST run says there was none, rather than implying coverage
+  PASS  (f) every record line parses as JSON
+  PASS  (f) five runs with ANTUM_OBSERVE_KEEP=3 all exit 0
+  PASS  (f) and the record keeps exactly 3 runs, as it says it does
+  PASS  (f) a broken run then a restored run (exits 1 then 0)
+  PASS  (f) the alert is cleared when the pair holds again
+  PASS  (f) and moved aside as a dated record of the window, not deleted
+  PASS  (f) the window records when it broke (2026-10-19T15:44:53Z)
+  PASS  (f) and says the window's granularity honestly
+  PASS  (f) while the record keeps both runs
+
+== (g) read-only against the tree, and the live host untouched by this suite ==
+  PASS  (g) the observed tree's files are byte-identical, mtimes included, after a run
+  PASS  (g) /home/team/shared *.sh unchanged by this whole suite
+  PASS  (g) the installed login-shell hook unchanged by this whole suite
+  PASS  (g) the observer states the read-only promise in its own header
+  PASS  (g) it never touches the guard's lock
+  PASS  (g) nor the deploy marker it must not interfere with
+
+== (h) one loop per host, killed by the pid in its lock ==
+  FAIL  (h) a second loop REFUSES to start while the lock names a live pid (it exited 0)
+  FAIL  (h) and says so, naming the pid
+  FAIL  (h) telling the operator how to kill it instead
+  PASS  (h) a STALE lock does not block a run (it exited 0)
+  FAIL  (h) the stale pid is named rather than silently accepted
+  PASS  (h) the loop records its pid in the lock (pid 26237)
+  PASS  (h) and records a run each interval (at least 2 in 4s)
+  PASS  (h) killing it by that pid ends the loop and clears the lock
+
+== (i) --status answers 'is the observer alive?' from the record alone ==
+  PASS  (i) --status exits 0 with no record at all
+  PASS  (i) and says NO RECORD YET rather than implying the product is fine
+  PASS  (i) saying exactly that, in those words
+  PASS  (i) with a record it reports how many runs are recorded
+  PASS  (i) the last run and its verdict
+  PASS  (i) its age — the number that makes a dead observer visible
+  PASS  (i) and whether a loop is actually armed
+
+== (j) the live public URL (opt-in; named when not run) ==
+  NOT RUN: the live-URL case. Set ANTUM_OBSERVE_LIVE=1 to include it (this suite never touches the
+  live site by default, and it says so rather than quietly counting one fewer check).
+
+RESULT: 67 passed, 5 failed (of 72 checks; the live-URL case is separate and opt-in)
+suite rc=1
