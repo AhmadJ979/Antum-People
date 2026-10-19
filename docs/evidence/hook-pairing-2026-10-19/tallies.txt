@@ -1,4 +1,4 @@
-=== full node suite (only scripts/, docs/ changed; PRODUCT_DB_PATH pinned) ===
+=== full node suite (scripts/, docs/ changed; PRODUCT_DB_PATH pinned) ===
 # tests 170
 # pass 170
 # fail 0
@@ -6,4 +6,4 @@
 === scripts/guard-deploy-marker-test.sh ===
 RESULT: 22 passed, 0 failed
 === scripts/install-host-tools-test.sh ===
-RESULT: 64 passed, 0 failed
+RESULT: 71 passed, 0 failed
