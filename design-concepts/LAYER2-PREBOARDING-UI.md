@@ -326,6 +326,15 @@ kind of claim this team has had to retract before.
 live** — so until then the filter ships under the label "View by function", and the honest answer to
 a prospect who asks about access control is *"role-based access is on the Layer 3 roadmap"*.
 
+> **Note added 2026-10-19 — an annotation, not a rewrite.** The plan’s Layer 3 (decision 11) uses the name
+> **"My lines"** for a *different* surface: the **employee’s own read-only view** of their own record (their
+> pre-boarding items and the flag, the notice as it was shown to them, their own documents). That is designed
+> in `LAYER3-EMPLOYEE-OWN-VIEW.md`, which proposes the working title **"My records"** and leaves the naming
+> to the owner. **Both surfaces are Layer 3**, so the two meanings now arrive in the same window and a reader
+> can take them for one thing — say which you mean. **§4’s meaning above is unchanged and still governs the
+> function scope**: while the chips only filter, the label is "View by function"; when per-user accounts are
+> live and the signed-in user’s function is pre-selected and forced, the label is "My lines".
+
 ---
 
 ## 5. The derived 48-hour flag (P2-5)
