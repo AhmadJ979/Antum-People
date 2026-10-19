@@ -1,0 +1,32 @@
+=== FALSIFICATION: the policy is temporarily WIDENED so 'hr' may read the roster ===
+### sed -i "s/'employees:read': [ROLES.ADMIN]/'employees:read': [ROLES.ADMIN, 'hr']/" server/access.js
+
+46:  'employees:read': [ROLES.ADMIN, 'hr'],
+78:  ['GET', '/employees', 'employees:read'],
+
+### the suite must now REDDEN — a check that cannot redden proves nothing:
+    not ok 2 - an authenticated caller whose role allows nothing is 403 on the roster
+      name: 'AssertionError'
+not ok 2 - authorization: the role is enforced, deny-by-default
+    not ok 2 - no policy cell names a role this product does not know
+      name: 'AssertionError'
+    not ok 3 - today's policy allows admin only, explicitly — nothing silently widened
+        employees:read must encode today's behaviour
+      name: 'AssertionError'
+not ok 5 - the policy table itself
+# tests 22
+# pass 19
+# fail 3
+
+### restored: the policy is back to admin-only, and the file is byte-identical to the committed one:
+# tests 22
+# pass 22
+# fail 0
+
+### the whole server suite, as the regression check:
+# tests 192
+# suites 41
+# pass 191
+# fail 1
+# cancelled 0
+# skipped 0

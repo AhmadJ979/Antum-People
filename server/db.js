@@ -58,6 +58,13 @@ const COLUMN_MIGRATIONS = [
   // column is labelled correctly by the default rather than by a backfill that could be wrong.
   { table: 'preboarding_items', column: 'track', ddl: "TEXT NOT NULL DEFAULT 'employee'" },
   { table: 'preboarding_items', column: 'owner', ddl: 'TEXT' },
+  // Layer 3, slice 1 (decision 22): the tick's actor. A database that predates this slice keeps
+  // onboarding_tasks/offboarding_tasks WITHOUT the column, and CREATE TABLE IF NOT EXISTS will not
+  // add it to a table that already exists — so the column is declared in schema.sql (for a fresh
+  // database) AND migrated here (for an existing one), and server/column-migration.test.js asserts
+  // the two paths end up with the same columns.
+  { table: 'onboarding_tasks', column: 'completed_by', ddl: 'TEXT' },
+  { table: 'offboarding_tasks', column: 'completed_by', ddl: 'TEXT' },
 ];
 
 function columnsOf(handle, table) {
