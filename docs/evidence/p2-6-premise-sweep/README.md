@@ -50,6 +50,11 @@ of P2-6 is the **hire-facing portal** (specified in §§8A–8C, blocked on owne
 not a consent capture. The last consent *capture* the product carried — the employee-level instrument —
 has since been retired by owner decision 17, executed 2026-10-13: its route is gone, its place carries
 the removal record, and the `consent_records` table stays for decision 14's purpose-scoped consent.
+
+> **Annotated 2026-10-19, not rewritten:** "decision 14" above is the stale pairing corrected in
+> the live documents on 2026-10-19 — the table was kept by **decision 17**; **14** is the
+> portal-identity question (this record uses 14 correctly for that at line 49). The text above
+> stands as written on 2026-10-17.
 Nothing in the product now records a consent it cannot justify.
 
 ## 3. The source fix — the pack spec

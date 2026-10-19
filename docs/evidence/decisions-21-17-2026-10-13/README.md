@@ -85,6 +85,10 @@ from the bundle clients actually load, not from a reconstruction of it.
   the retired tile printed. **Recommendation (not done here):** narrow the PUT whitelist and drop the
   column from the INSERT list in a later change — a schema/whitelist edit, not a route removal.
 - **`consent_records`:** table and schema kept (purpose-scoped consent, decision 14). Production
+
+> **Annotated 2026-10-19, not rewritten:** this record's "decision 14" is the stale pairing corrected
+> in the live documents on 2026-10-19 — the decision that kept the table is **17**; **14** is the
+> portal-identity question. The line above stands as what was written on 2026-10-13.
   writers: **none** (the removed route was the only one). The demo seeder writes 13 rows
   (`scripts/seed-demo.js:493`).
 - `client/src/App.tsx` still declares the two fields in its `Employee` interface — the roster answers
