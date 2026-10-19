@@ -208,6 +208,16 @@ if [ -f "$HOOK_DST" ]; then
     warn "the deploy copy $DEPLOY_COPY carries NO provenance block — the hook cannot be paired with a revision; reinstall the copies (bash scripts/install-host-tools.sh)"
   fi
 
+  # WHICH REVISION THE LIVE HOOK IS — SEARCHED, not inferred from a short candidate list. A candidate-set
+  # comparison answers "is it the served tip's hook? main's? the deploy's?" and nothing else; on
+  # 2026-10-19 the live hook was a THIRD version (the one the served revision ships), which that test
+  # called "no revision at all". The honest answer is the revision whose bytes these are, and it must hold
+  # at ANY distance — the same words whether the gap is 3 commits or 300, because a check that is blind at
+  # 40 is blind at 400.
+  HOOK_REV_AT=""
+  for _c in $(git -C "$REPO" log --all --format=%H -- scripts/antum-product-guard-hook.sh 2>/dev/null | head -60); do
+    if [ "$(blob_hook_md5 "$_c")" = "$A" ]; then HOOK_REV_AT="$_c"; break; fi
+  done
   # A FAIL here would block the very movement that repairs the pairing (a full movement installs the hook
   # from the tip at step 1b/6b), so every pair verdict below is a WARN that names both halves.
   if [ -n "$B_DEPLOY" ] && [ "$A" = "$B_DEPLOY" ]; then
@@ -216,8 +226,10 @@ if [ -f "$HOOK_DST" ]; then
     warn "hook installed at $HOOK_DST IS THE SERVED TREE'S (${SERVED_REV:0:12}, $A_METHOD md5 $A) while the deploy copy $DEPLOY_COPY came from ${DREV:0:12} — UNPAIRED: that deploy writes server/deploy-in-progress and this hook does not read it. Fix: the next step 6b, or now: bash scripts/install-host-tools.sh --hook-rev $DREV"
   elif [ -n "$B_MAIN" ] && [ "$A" = "$B_MAIN" ]; then
     warn "hook installed at $HOOK_DST: $A_METHOD md5 $A == origin/main's hook, but the deploy copy's revision is ${DREV:-<none: no provenance>} — check the pairing (they must be one revision)"
+  elif [ -n "$HOOK_REV_AT" ]; then
+    warn "hook installed at $HOOK_DST: $A_METHOD md5 $A IS the hook at $(git -C "$REPO" rev-parse --short "$HOOK_REV_AT") ($(git -C "$REPO" log -1 --format=%cs "$HOOK_REV_AT")) — which is not the deploy copy's revision ${DREV:-<none: no provenance>}: UNPAIRED, so the marker that deploy writes has no reader. Fix: step 6b, or bash scripts/install-host-tools.sh --hook-rev ${DREV:-<deploy revision unknown>}"
   elif [ -n "$B_SERVED" ] || [ -n "$B_MAIN" ] || [ -n "$B_DEPLOY" ]; then
-    warn "hook installed at $HOOK_DST matches NO revision this repository has ($A_METHOD md5 $A; served ${SERVED_REV:0:12} -> $B_SERVED, main -> $B_MAIN${DREV:+, deploy ${DREV:0:12} -> $B_DEPLOY}) — it cannot be attributed, so no pair can be checked"
+    warn "hook installed at $HOOK_DST matches NO revision in this clone's history of that file ($A_METHOD md5 $A) — it cannot be attributed, so no pair can be checked"
   else
     warn "hook installed (whole-file $A_FILE) but no candidate revision's hook could be read from $REPO — REFUSING to attribute it (step 6b installs from the deploy's revision)"
   fi
@@ -230,6 +242,8 @@ if [ -f "$HOOK_DST" ]; then
   # hook is behind main's is exactly how this host lost the #203 stand-down.
   for _rev in "${SERVED_REV:-}" "${DREV:-}"; do
     [ -n "$_rev" ] || continue
+    if [ -n "${_seen:-}" ] && [ "$_rev" = "$_seen" ]; then continue; fi
+    _seen="$_rev"
     _m=$(blob_hook_md5 "$_rev")
     [ -n "$_m" ] || continue
     if [ "$_m" = "$B_MAIN" ]; then

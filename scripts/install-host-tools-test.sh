@@ -158,9 +158,13 @@ echo "== (g) the deploy routes both host-touching steps through the installer ==
 check "[ \"\$(grep -c 'install-host-tools.sh' '$DEPLOY')\" -ge 2 ]" "(g) the deploy names the installer on both steps"
 check "grep -q '1b\\. refresh the operator-facing host tooling' '$DEPLOY'" "(g) step 1b refreshes straight after the reset"
 check "grep -q 'ONE install path' '$DEPLOY'" "(g) 6b documents a single install path"
-check "grep -q 'FALLBACK, named so the next reader' '$DEPLOY'" "(g) the raw hook install is labelled a fallback"
+# Re-grounded 2026-10-19: the label is now the marker pair that bounds the fallback unit (the wording
+# around it changed when 6b began reading its own revision). The invariant is unchanged: the raw install
+# is labelled a fallback, the label precedes it, and the label says which revision it takes the hook from.
+check "grep -q '>>> ANTUM FALLBACK HOOK SOURCE' '$DEPLOY'" "(g) the raw hook install is labelled a fallback"
+check "grep -q 'FALLBACK INSTALLS FROM THE DEPLOY.S REVISION' '$DEPLOY'" "(g) and the label states where the hook must come from"
 RAW=$(grep -n 'install -m 0644' "$DEPLOY" | head -1 | cut -d: -f1)
-FB=$(grep -n 'FALLBACK, named so the next reader' "$DEPLOY" | head -1 | cut -d: -f1)
+FB=$(grep -n '>>> ANTUM FALLBACK HOOK SOURCE' "$DEPLOY" | head -1 | cut -d: -f1)
 check "[ -n '$RAW' ] && [ -n '$FB' ] && [ '$FB' -lt '$RAW' ]" "(g) and it appears only after that label, never as the primary path"
 W=$(grep -n 'deploy marker written' "$DEPLOY" | head -1 | cut -d: -f1)
 R=$(grep -n "WD_PAT='scripts/keep-alive" "$DEPLOY" | head -1 | cut -d: -f1)
