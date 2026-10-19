@@ -33,7 +33,13 @@ echo
 echo "== RED: the preflight on that layout (it must NAME the revision the live hook is) =="
 ANTUM_REPO="$PWD" ANTUM_DEPLOY_COPY="$DEPLOY_COPY" ANTUM_HOOK_DST="$S/live-hook.sh" \
   timeout 300 bash scripts/cutover-preflight.sh > "$S/red.log" 2>&1
-echo "  preflight exit=$? (not a FAIL: a FAIL here would block the movement that repairs the pair)"
+RC=$?
+echo "  preflight exit=$RC — ATTRIBUTED, not asserted: the FAIL lines driving it are"
+grep -E '^ +FAIL' "$S/red.log" | sed 's/^/    /' | head -6
+echo "    none of the above is a hook line: a FAIL there would block the movement that repairs the pair."
+echo "    After a movement the gate's own pre-cutover expectations (the deployed tree's HEAD, the served"
+echo "    asset name) are stale by design — they compare against the state that has already been replaced."
+echo "  hook lines marked FAIL, red run: $(grep -cE '^ +FAIL.*hook' "$S/red.log") (must be 0)"
 grep -i 'hook' "$S/red.log" | sed 's/^/  /'
 echo
 
@@ -43,7 +49,11 @@ ANTUM_HOOK_REV="$TIP" ANTUM_HOOK_DST="$S/hook-paired.sh" ANTUM_HOST_TOOLS_DIR="$
 echo "  installer exit=$? · $(grep -m1 'hook source' "$S/install2.log")"
 ANTUM_REPO="$PWD" ANTUM_DEPLOY_COPY="$DEPLOY_COPY" ANTUM_HOOK_DST="$S/hook-paired.sh" \
   timeout 300 bash scripts/cutover-preflight.sh > "$S/green.log" 2>&1
-echo "  preflight exit=$?"
+RC=$?
+echo "  preflight exit=$RC — ATTRIBUTED: its FAIL lines are"
+grep -E '^ +FAIL' "$S/green.log" | sed 's/^/    /' | head -6
+echo "    (again, no hook line among them — the exit is the host-state expectations, not the pair)"
+echo "  hook lines marked FAIL, green run: $(grep -cE '^ +FAIL.*hook' "$S/green.log") (must be 0)"
 grep -i 'hook' "$S/green.log" | sed 's/^/  /'
 echo
 

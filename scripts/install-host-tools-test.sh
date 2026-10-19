@@ -202,5 +202,40 @@ check "grep -q \"the deploy copy's revision\" '$PREFLIGHT'" "(i) and the preflig
 check "grep -q 'NO READER' '$PREFLIGHT'" "(i) and warns when the live hook has no marker reader"
 
 echo
+echo "== (j) behavioural: the preflight REDDENS on an unpaired pair and PASSES on a paired one =="
+# Section (i) greps the preflight's SOURCE for strings — that proves shape, not behaviour, and a shape
+# check cannot tell a WARN that fires from a WARN that cannot. These runs drive the real preflight off-host
+# against scratch destinations: an OLD hook installed raw (the host's state before the 2026-10-19 movement)
+# must WARN, and a hook installed from the deploy copy's revision must PASS. Only the HOOK lines are
+# asserted: the preflight's exit also carries its own pre-cutover expectations (tree HEAD, the served asset
+# name), which are stale by design once a movement has run — see prove.sh, which prints and names them.
+REPO_DIR="${REPO:-$PWD}"
+OLDEST=$(git -C "$REPO_DIR" log --format=%H -- scripts/antum-product-guard-hook.sh | tail -1)
+git -C "$REPO_DIR" show "$OLDEST:scripts/antum-product-guard-hook.sh" > "$DST/hook-old.sh" 2>/dev/null
+ANTUM_REPO="$REPO_DIR" ANTUM_HOOK_DST="$DST/hook-old.sh" ANTUM_DEPLOY_COPY="$DST/deploy-main.sh" \
+  timeout 300 bash "$PREFLIGHT" > "$ROOT/preflight-unpaired.log" 2>&1
+check "grep -q 'UNPAIRED' '$ROOT/preflight-unpaired.log'" "(j) an older hook against the deploy copy REDDENS, naming the mismatch"
+check "grep -q 'NO READER here' '$ROOT/preflight-unpaired.log'" "(j) and says the marker it writes has no reader there"
+check "grep -q 'IS the hook at' '$ROOT/preflight-unpaired.log'" "(j) naming the revision the live hook is, not a distance"
+ANTUM_HOOK_REV="$SRC_SHA" ANTUM_HOOK_DST="$DST/hook-paired.sh" ANTUM_HOST_TOOLS_DIR="$DST/paired-tools" \
+  ANTUM_HOST_TOOLS_BACKUP="$BK" ANTUM_REPO="$REPO_DIR" bash "$INSTALLER" > "$ROOT/paired-install.log" 2>&1
+ANTUM_REPO="$REPO_DIR" ANTUM_HOOK_DST="$DST/hook-paired.sh" ANTUM_DEPLOY_COPY="$DST/deploy-main.sh" \
+  timeout 300 bash "$PREFLIGHT" > "$ROOT/preflight-paired.log" 2>&1
+check "grep -q 'PAIRED with the deploy that writes the marker' '$ROOT/preflight-paired.log'" "(j) a hook from the deploy's revision PAIRS"
+check "! grep -q 'UNPAIRED' '$ROOT/preflight-paired.log'" "(j) and that same check stays quiet there"
+check "grep -q 'has a reader here' '$ROOT/preflight-paired.log'" "(j) and reports the marker having a reader"
+
+echo
+echo "  SCOPE, stated rather than implied: the (i) checks that grep the preflight's text are SHAPE only —"
+echo "  they cannot tell whether a WARN fires. Behaviour is exercised above, in (j), off-host, and recorded"
+echo "  in full (red and green, with the exact lines) in docs/evidence/hook-pairing-2026-10-19/."
+# The count DEPLOY.md states must be THIS run's total, or it is a number nobody checks. This check is
+# itself one of the checks it counts, hence the +1: the total a reader sees in the RESULT line below.
+TOTAL=$((PASS + FAIL + 1))
+DOC=$(grep -oE '\([0-9][0-9]* checks' "$REPO_DIR/DEPLOY.md" | tr -dc '0-9' | head -1)
+check "[ -n '$DOC' ] && [ '$DOC' = '$TOTAL' ]" "(k) the total this suite reports ($TOTAL) is the number DEPLOY.md states (${DOC:-none})"
+echo
+
+echo
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

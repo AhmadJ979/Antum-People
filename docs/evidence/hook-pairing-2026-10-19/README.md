@@ -65,7 +65,11 @@ The "today" layout is rebuilt from git, not read off the host.
 ```
 
 * `guard-deploy-marker-test.sh` — **RESULT: 22 passed, 0 failed** (the marker order write < reap < remove is untouched)
-* `install-host-tools-test.sh` — **RESULT: 64 passed, 0 failed**; section (i) is new (the pairing: the revision is named, the
+* What the checks can see: section (i)'s greps are **shape** assertions — they prove the preflight's text
+  contains the strings, not that the WARN fires. Section **(j)** drives the real preflight off-host, red
+  then green, and section **(k)** asserts this suite's own printed total against `DEPLOY.md`'s sentence, so
+  a stale count reddens in a run instead of reaching a reader. Section (i) says so in the suite's output.
+* `install-host-tools-test.sh` — **RESULT: 71 passed, 0 failed**; sections (i), (j) and (k) are new (the pairing: the revision is named, the
   body is that revision's hook, an unresolvable revision falls back with the reason, the preflight's
   overrides exist), and section (g)'s two checks were re-grounded on the fallback's marker — the invariant
   is unchanged, the wording around it moved.
@@ -82,6 +86,15 @@ No movement, no fetch/reset/build/seed on the deployed tree, no restart, no re-a
 nothing sourced from the hook, nothing under `client/`. The live hook was **not** rewritten to prove a
 point.
 
-**Not movement-blocking**: the coming movement ships from a frozen tip and self-heals the pair at step 1b.
-Until either the movement or a host-tool refresh runs, the host still carries the unpaired hook — but the
-preflight now says so out loud, and names the revision, instead of printing green.
+**The host, as measured — and a correction to what an earlier version of this file said.** Before the
+movement (10:13Z) the host carried the SERVED tree's hook (`ca4f9583…`, 0 marker mentions) against a deploy
+copy that writes the marker. **That is history.** The movement's step-1 refresh paired the two halves:
+measured **2026-10-19T10:41:02Z** — live hook md5 `3f7684d1`, 7,522 B, **3** marker mentions, provenance
+`source-revision: a5aa0e62f229…`, `live hook == e19a98a's hook: no` — and re-measured **10:50Z**, when this
+check reported PAIRED on that same revision. The earlier paragraph here printed the pre-movement reading as
+the current state; **a stale reading presented as current is the defect, not the distance.**
+
+What genuinely remains is narrower, and it is about the operator copies, not the pair: they were installed
+from the frozen tip `a5aa0e6`, which predates this work (`/home/team/shared/deploy-main.sh` has no
+`--hook-rev` and no `ANTUM_DEPLOY_COPY`), so the host's OWN preflight is still the blind one until the
+documented one-line refresh runs. The pair itself is paired.

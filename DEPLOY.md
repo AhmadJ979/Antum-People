@@ -109,9 +109,13 @@ bash -c 'cd /home/team/shared/probable-octo-sniffle && git fetch origin main && 
 That shape is deliberate: it reads the blobs out of the fetched commit, so it never resets the deployed
 tree — a reset without a build would leave the tree's server code newer than the bundle it serves.
 
-`scripts/install-host-tools-test.sh` proves all of it off the host (54 checks: bodies, provenance,
+`scripts/install-host-tools-test.sh` proves all of it off the host (71 checks: bodies, provenance,
 idempotence, the red direction of `--verify`, the refusal of a file that does not parse, and that the live
 copies are untouched by the test itself).
+
+**The count is asserted, not remembered:** the suite compares its own printed total against
+this sentence and reddens on a drift, so a stale number fails a run instead of reaching a
+reader. The pre-pairing subtotal was 54 — history, not this claim.
 
 ## Secrets Rotation Procedure
 ### 1. JWT Secret Rotation
