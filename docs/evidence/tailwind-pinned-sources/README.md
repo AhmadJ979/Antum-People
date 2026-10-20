@@ -88,6 +88,16 @@ An incidental second proof: `index.css`'s own comment quotes `.collapse{visibili
 and it is **not** a scanned source — so the narrowed build contains no `.collapse`, although the
 stylesheet's own text now contains the token. The stylesheet does not scan itself.
 
+**Re-run later, and only A moves — which is the hazard, measured.** Re-run on a later tree (the fix PR),
+branches **B** (`cb54e616…`, `index-BK_EwcpZ.css`) and **C** (`a00392d8…`, `index-ovttDLAW.css`) reproduce
+**byte-identically**: pinned builds depend on markup, so they do not care how the tree's prose changes.
+**A** does move — 35,826 → 35,844 B — and `leafdiff.py` shows the whole difference is **one added leaf
+rule, `.grow{flex-grow:1}`**, from the word `grow` sitting in prose (`git grep -nw grow` finds it in six
+tracked files, including the guard test's own comment). That is exactly the mechanism this branch exists to
+expose: under automatic detection a sentence in a *test file* ships a CSS rule. A's figure is therefore a
+property of the tree it was measured on, not a constant — the committed `control-A-hazard.css` is that first
+run, and it is kept as recorded rather than regenerated.
+
 ## The residual risk, guarded rather than stated (`client/src/tailwindSources.test.js`)
 
 The cost of pinning: a utility that exists **only** as a string in an excluded file stops being emitted,
@@ -138,3 +148,18 @@ python3 docs/evidence/tailwind-pinned-sources/guard-control.py                # 
 
 The scripts assert their own preconditions (the old/new stylesheet states, that the planted word is
 unique to the plant) and record the build's tail and exit code beside each figure.
+
+**The two control scripts work on any host.** Each derives the repository root from **its own location**
+(three levels up from `docs/evidence/tailwind-pinned-sources/`), so there is nothing to configure and a
+reviewer's checkout is measured rather than the author's. `--repo <dir>` names a different checkout and is
+**refused** if that directory has no `client/src/index.css` — a control that silently measured the wrong
+tree would be a false green. `--out <dir>` aims the transcript; the default is a fresh temp directory whose
+path is printed, so a re-run cannot overwrite this pack by accident. To re-derive the committed files in
+place, pass `--out docs/evidence/tailwind-pinned-sources` and `git diff` the result.
+
+Two notes on the recorded output. `guard-control.txt` ends with a `M …guard-control.py` line because the
+run that produced it was taken while the plant fix was still uncommitted; on a clean tree that line is
+empty. And **the first merged form of these two scripts took the repo root from a hardcoded absolute path**
+(and wrote to a scratch directory that had to exist), so they could only ever run on the author's machine —
+that is the defect this correction fixes, and the transcript content above is path-independent, which is
+why it is unchanged by the fix.
