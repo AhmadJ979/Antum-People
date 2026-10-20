@@ -83,7 +83,28 @@ changed after the tree I first measured at. It did not touch `App.tsx`, so no nu
 the point: **this document carries citations, so it names its tree** (`9796d6b`), and that is the recommendation in
 section 3 applied to itself. A document that quotes a revision can survive a merge; a document that does not, cannot.
 
-### 1.5 The class is wider than this file
+### 1.5 The merge that carried the instrument also removed two index rows
+
+While this row was in review, the owner merged `main` into this branch (merge commit `9aa76b1`, 2026-10-20T13:50:29+04:00,
+parents `d8a67a9` and `5017d39`). The merge result carries **fewer lines in `design-concepts/README.md` than either
+parent** — 47 at `d8a67a9`, 46 at `5017d39`, **45 at `9aa76b1`** — and `git diff d8a67a9 9aa76b1 -- design-concepts/README.md`
+shows two rows **removed with nothing inserted in their place**: the index row for `LAYER3-IDENTITY.md` (re-grounded and
+merged an hour earlier as `#257`) and this file's own row. Both parents had inserted into the same table.
+
+Two things follow, and both bear on the instrument question:
+
+- **A line-number checker could not have caught this.** No citation was involved — a register lost two entries. The
+  instrument that reddens on it has the same shape as the citation checker and is just as cheap: **every
+  `design-concepts/*.md` has exactly one index row**, counted from the citing artefact's own filename. *Presence is not
+  citability, and an absent row cannot be found by a reader searching for it.*
+- **A merge is a resolution, and a resolution can take neither side.** Git does not conflict on two inserts into one
+  table; here the resolution dropped **both** rather than duplicating them. The check is mechanical: after any merge,
+  count the rows — **one row, not two, and not zero.**
+
+Both rows were restored in the commit that carries this paragraph, **byte-identical to their parent revisions**, and
+`git diff 5017d39 HEAD -- design-concepts/README.md` is the proof: an addition only, no removal.
+
+### 1.6 The class is wider than this file
 
 `#257`'s checker run found the same defect in **40 further citations** across five sibling `design-concepts/`
 documents, all moved by the same merge: `LAYER2-PREBOARDING-UI.md` (19), `LAYER2-P2-1-IMPLEMENTATION-REVIEW.md` (9),
