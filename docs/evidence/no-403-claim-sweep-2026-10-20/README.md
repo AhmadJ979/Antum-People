@@ -102,3 +102,43 @@ written (`1f471ef` → `7a4e00a` → `58d8417`), so the citations in this record
 
 That is the rule this whole record argues for: **a line citation is a measurement, and a measurement has a
 revision.** Where a number is quoted here, the tree it was read at is named beside it.
+
+## 7. The same defect, a fourth time — and the instrument that now catches it
+
+**`check-doc-citations.py`** (this directory) fails when an `App.tsx:<n>` citation in `design-concepts/` does not
+land on the content it names. It reads the expectation **out of the document it judges** — the backticked symbols
+on the citing line are what that citation claims — so no table here can go stale on its own.
+
+**Red, on the document as it merged.** The doc that landed as PR #255 was measured on `7a4e00a`; **PR #254 merged
+at 09:37:41, one minute before it merged at 09:38:21**, and moved `client/src/App.tsx` again. Judged against the
+tree #254 left behind:
+
+```
+python3 check-doc-citations.py 1155913 ab7e9c3     # rc=1 (reddens)  2 ok, 51 FAILING, 31 unchecked
+```
+
+**`design-concepts/LAYER3-IDENTITY.md` is re-grounded here onto `ab7e9c3`** (`App.tsx` **2,539 lines**): identity
+card `:1212`–`1213` → **`:1222`–`:1223`**, `Sign Out` `:1198` → **`:1208`**, identity block `:1202`/`:1215`, the
+`recorded by` prints `:2107`/`:2162`, the `checklistNotice` banner `:2393`–`:2394`, the login card opens `:356`,
+`ml-3` `:416`, `mr-2` `:369`. **The checker reports no failure naming that file.**
+
+**Green is not yet achievable repo-wide, and that is a finding, not a caveat.** On the same tree the checker
+reports **48 FAILING** citations in *other* `design-concepts/` documents — `.md` files whose citations #254 moved
+just as it moved mine:
+
+- `design-concepts/LAYER2-PREBOARDING-UI.md` — **21** stale citation(s)
+- `design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md` — **9** stale citation(s)
+- `design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md` — **6** stale citation(s)
+- `design-concepts/CLIENT-STATES.md` — **4** stale citation(s)
+- `design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md` — **3** stale citation(s)
+- `design-concepts/LAYER3-IDENTITY.md` — **3** stale citation(s)
+- `design-concepts/README.md` — **2** stale citation(s)
+
+That is the row this instrument was asked for, doing its job on the first run: the false sentence could not keep
+reappearing in a sibling file because nobody checked the siblings. **Re-grounding those documents is a separate
+row** (their citations are stale, not false; the fix is measurement, not wording), and until it is done the
+checker is expected to exit 1 — the red is the truth about the tree.
+
+**And this record's own §6 is now false.** It said all ten `App.tsx` anchors still land at `58d8417`. They did, at
+`58d8417`. #254 moved them. **A statement about a tree is only true of the tree it names** — which is why every
+number in this file is now followed by its revision.
