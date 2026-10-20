@@ -187,6 +187,18 @@ app.post('/api/users', async (req, res) => {
     const id = generateId();
     const password_hash = await auth.hashPassword(password);
     await db.query(`INSERT INTO users (id, username, password_hash, role) VALUES (${db.escapeString(id)}, ${db.escapeString(name)}, ${db.escapeString(password_hash)}, ${db.escapeString(role)})`);
+    // Layer 3, slice 2 (prerequisite 3): creating an account is now attributable. Before this the
+    // route wrote no audit row at all, so nothing said WHO made an account — and the two employee
+    // write paths (the CREATE and UPDATE handlers below) write the literal 'system' into this same
+    // field, which is a false name in a column that exists to hold a person's. This route does not
+    // follow them: the actor is
+    // the authenticated caller. `performed_by` is NOT NULL-guarded into a placeholder — the gate
+    // (`users:write`) runs before this handler, so `req.user.username` is the real signer, and the
+    // `|| null` is the same honest fallback the pre-boarding paths use rather than a fake name.
+    const actor = (req.user && req.user.username) || null;
+    // The password is NOT recorded: `new_values` carries what was created, never the credential.
+    await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, new_values, timestamp)
+      VALUES (${db.escapeString(generateId())}, ${db.escapeString(actor)}, 'user', ${db.escapeString(id)}, 'CREATE', ${db.escapeString(JSON.stringify({ username: name, role }))}, CURRENT_TIMESTAMP)`);
     res.status(201).json({ id, username: name, role });
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' });

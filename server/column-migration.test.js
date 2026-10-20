@@ -161,3 +161,78 @@ describe('a live database gains the P2-4 columns at boot', () => {
     assert.ok(listed.every((entry) => entry.split('.')[1] !== undefined));
   });
 });
+
+/**
+ * Layer 3, slice 2 (prerequisite 1) — `users.employee_id`, the account → person link.
+ *
+ * The fixture is a database as it existed BEFORE this change: today's schema, with exactly this one
+ * column dropped. That is what the live host holds, so the properties asserted here are the ones the
+ * next boot of a live product depends on — and two of them are deliberate about NOT guessing:
+ * a pre-existing account (the single `admin` row, and any account made since) keeps **NULL**, because
+ * NULL is the truth about it: not tied to a person yet.
+ */
+describe('a live database gains users.employee_id at boot (slice 2, prerequisite 1)', () => {
+  const OLD2_DB = path.join(os.tmpdir(), `antum-colmig-predb-${randomUUID()}.db`);
+
+  function openAsBeforeSlice2() {
+    for (const suffix of ['', '-wal', '-shm', '-journal']) {
+      try { fs.unlinkSync(OLD2_DB + suffix); } catch { /* not created */ }
+    }
+    const handle = new DatabaseSync(OLD2_DB);
+    handle.exec(SCHEMA);
+    handle.exec('ALTER TABLE users DROP COLUMN employee_id'); // the column this change adds
+    return handle;
+  }
+
+  test('the migration is what puts the column on a users table that already exists', () => {
+    const handle = openAsBeforeSlice2();
+    const before = columnsOf(handle, 'users');
+    assert.ok(before.length > 0, 'the table exists — this is a database that predates the change');
+    assert.ok(!before.includes('employee_id'), 'the old table has no employee_id');
+
+    // An account as the old schema held it: no link column, and none invented for it.
+    handle.prepare("INSERT INTO users (id, username, password_hash, role) VALUES ('old-admin', 'admin', 'x', 'admin')").run();
+
+    const added = db.applyColumnMigrations(handle);
+    assert.deepStrictEqual(added, ['users.employee_id'], 'exactly this one column is added');
+    assert.ok(columnsOf(handle, 'users').includes('employee_id'));
+
+    // The pre-existing row survives, and its link is NULL — no backfill, no guess.
+    const row = handle.prepare("SELECT id, username, role, employee_id FROM users WHERE id = 'old-admin'").get();
+    assert.strictEqual(row.username, 'admin', 'the row is the one that was there');
+    assert.strictEqual(row.role, 'admin', 'its role is untouched');
+    assert.strictEqual(row.employee_id, null, 'and NOTHING is guessed into the new column for it');
+    handle.close();
+  });
+
+  test('running it again adds nothing — the second boot is a no-op', () => {
+    const handle = openAsBeforeSlice2();
+    assert.deepStrictEqual(db.applyColumnMigrations(handle), ['users.employee_id']);
+    assert.deepStrictEqual(db.applyColumnMigrations(handle), [], 'a boot after the upgrade changes nothing');
+    handle.close();
+  });
+
+  test('a migrated database and a fresh one agree on the users columns, by name', () => {
+    const migrated = openAsBeforeSlice2();
+    db.applyColumnMigrations(migrated);
+    const fresh = new DatabaseSync(path.join(os.tmpdir(), `antum-colmig-fresh2-${randomUUID()}.db`));
+    fresh.exec(SCHEMA);
+    assert.deepStrictEqual([...columnsOf(migrated, 'users')].sort(), [...columnsOf(fresh, 'users')].sort(),
+      'a fresh database cannot silently outrun a migrated one');
+    assert.ok(columnsOf(migrated, 'users').includes('employee_id'));
+    assert.ok(columnsOf(fresh, 'users').includes('employee_id'));
+    migrated.close();
+    fresh.close();
+  });
+
+  test('the module that runs at boot lists this column too', () => {
+    const listed = db.COLUMN_MIGRATIONS.map((migration) => `${migration.table}.${migration.column}`);
+    assert.ok(listed.includes('users.employee_id'), 'db.js must carry the migration a live boot needs');
+  });
+
+  after(() => {
+    for (const suffix of ['', '-wal', '-shm', '-journal']) {
+      try { fs.unlinkSync(OLD2_DB + suffix); } catch { /* not created */ }
+    }
+  });
+});

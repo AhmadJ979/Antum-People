@@ -169,6 +169,40 @@ describe('accounts: plural rows through an admin-authenticated path', () => {
     assert.ok(!('password_hash' in r.json[0]), 'the account list carries no password material');
   });
 
+  // Slice 2, prerequisite 3: before this the route wrote no audit row, so creating an account was
+  // unattributable. These two cases are a pair on purpose — the second is the anti-vacuous control
+  // for the first: if a REFUSED creation also wrote a row, the first case would prove nothing.
+  const userAuditRows = () => {
+    const db = new DatabaseSync(SCRATCH_DB);
+    const rows = db.prepare("SELECT * FROM audit_logs WHERE entity_type = 'user'").all();
+    db.close();
+    return rows;
+  };
+
+  test('creating an account writes an audit row naming the REAL actor, never a placeholder', async () => {
+    const created = await api('POST', '/api/users', { token: adminToken, body: { username: 'slice2-audited', password: 'audited-account-password', role: 'admin' } });
+    assert.strictEqual(created.status, 201);
+    const rows = userAuditRows().filter((row) => row.entity_id === created.json.id);
+    assert.strictEqual(rows.length, 1, 'exactly one audit row for the account that was created');
+    assert.strictEqual(rows[0].action, 'CREATE');
+    assert.strictEqual(rows[0].performed_by, ADMIN_NAME, 'the row names the authenticated signer');
+    assert.notStrictEqual(rows[0].performed_by, 'system',
+      'and never the literal the two employee write paths put in this column');
+    // The row says what was created — and carries no credential material.
+    assert.deepStrictEqual(JSON.parse(rows[0].new_values), { username: 'slice2-audited', role: 'admin' });
+    assert.ok(!JSON.stringify(rows[0]).includes('audited-account-password'), 'the password is not in the row');
+    assert.ok(!JSON.stringify(rows[0]).includes('$2'), 'and neither is the hash');
+  });
+
+  test('a REFUSED creation writes no audit row — so the case above is not a vacuous green', async () => {
+    const before = userAuditRows().length;
+    const refused = await api('POST', '/api/users', { token: adminToken, body: { username: ADMIN_NAME, password: 'another-password-here', role: 'admin' } });
+    assert.strictEqual(refused.status, 409);
+    const forbidden = await api('POST', '/api/users', { token: noRoleToken, body: { username: 'slice2-refused', password: 'long-enough-password', role: 'admin' } });
+    assert.strictEqual(forbidden.status, 403);
+    assert.strictEqual(userAuditRows().length, before, 'a 409 and a 403 leave the log exactly as it was');
+  });
+
   test('a duplicate username is refused 409 rather than shadowing the first account', async () => {
     const r = await api('POST', '/api/users', { token: adminToken, body: { username: ADMIN_NAME, password: 'another-password-here', role: 'admin' } });
     assert.strictEqual(r.status, 409);
@@ -247,8 +281,57 @@ describe('the policy table itself', () => {
   test('the resource for a route is looked up by method and path, not by a guess', () => {
     assert.strictEqual(access.resourceFor('GET', '/api/employees'), 'employees:read');
     assert.strictEqual(access.resourceFor('PUT', '/api/onboarding-tasks/abc'), 'onboarding:write');
-    assert.strictEqual(access.resourceFor('GET', '/api/preboarding/cases/abc/workspace'), 'preboarding:read');
+    assert.strictEqual(access.resourceFor('GET', '/api/preboarding/cases/abc/workspace'), 'preboarding:read:own');
     assert.strictEqual(access.resourceFor('GET', '/api/nothing-declares-this'), null);
+  });
+});
+
+describe('the pre-boarding read split (slice 2, prerequisite 2)', () => {
+  // WHY: `preboarding:read` was ONE cell over SEVEN routes, so a grant for a person's own case would
+  // have carried the company-wide list, the roll-up and the flag watch. The access ruling gives a
+  // person their own record and denies those three for ever (docs/access-model.md §1.1, §3.2), so the
+  // resource is split. The cells stay [admin]: this makes the ruling WRITABLE, it widens nobody.
+  const routesFor = (resource) =>
+    access.ROUTES.filter(([, , r]) => r === resource).map(([method, pattern]) => `${method} ${pattern}`);
+
+  test('the company-wide reads and the own-case reads are different resources', () => {
+    // The three that span the company — the ruling denies these to the own-record reader.
+    assert.strictEqual(access.resourceFor('GET', '/api/preboarding/cases'), 'preboarding:read');
+    assert.strictEqual(access.resourceFor('GET', '/api/preboarding/checklist/overview'), 'preboarding:read');
+    assert.strictEqual(access.resourceFor('GET', '/api/preboarding/flag-watch'), 'preboarding:read');
+    // The own-case shape: the case, its checklist, its workspace, its package.
+    for (const path of ['/api/preboarding/cases/abc', '/api/preboarding/cases/abc/checklist',
+      '/api/preboarding/cases/abc/workspace', '/api/preboarding/cases/abc/package']) {
+      assert.strictEqual(access.resourceFor('GET', path), 'preboarding:read:own', path);
+    }
+  });
+
+  test('the two cells cover disjoint route sets — an own grant cannot carry the company-wide reads', () => {
+    // Enumerated from ROUTES, not retyped, so a route moved back into the coarse cell reddens this.
+    const companyWide = routesFor('preboarding:read').sort();
+    const own = routesFor('preboarding:read:own');
+    assert.deepStrictEqual(companyWide,
+      ['GET /preboarding/cases', 'GET /preboarding/checklist/overview', 'GET /preboarding/flag-watch'],
+      'the company-wide cell is the list, the roll-up and the flag watch — and nothing else');
+    assert.deepStrictEqual(own.sort(),
+      ['GET /preboarding/cases/:id', 'GET /preboarding/cases/:id/checklist',
+        'GET /preboarding/cases/:id/package', 'GET /preboarding/cases/:id/workspace'],
+      'the own cell is the four single-case reads');
+    for (const route of own) {
+      assert.ok(companyWide.indexOf(route) === -1, `${route} must not also be a company-wide read`);
+    }
+  });
+
+  test('both cells still allow admin only, so the split widened nobody', () => {
+    assert.deepStrictEqual(access.POLICY['preboarding:read'], ['admin']);
+    assert.deepStrictEqual(access.POLICY['preboarding:read:own'], ['admin']);
+    // And the split is a split, not a rename: the company-wide cell still exists under its old name.
+    assert.ok(Object.prototype.hasOwnProperty.call(access.POLICY, 'preboarding:read'));
+  });
+
+  test('the write side is untouched by this change — preboarding:write still covers five routes', () => {
+    // Stated as a check because the row scoped it out: the read split must not have moved a write.
+    assert.strictEqual(routesFor('preboarding:write').length, 5);
   });
 });
 

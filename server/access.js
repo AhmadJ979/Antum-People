@@ -54,7 +54,17 @@ const POLICY = Object.freeze({
   'compliance:templates': [ROLES.ADMIN],
   'analytics:read': [ROLES.ADMIN],
   'exit:write': [ROLES.ADMIN],
+  // Layer 3, slice 2: `preboarding:read` was ONE cell over SEVEN routes, so a grant for a person's
+  // own case would have carried the company-wide list, the roll-up and the flag watch with it —
+  // which the access ruling denies for ever (docs/access-model.md §1.1 and §3.2: the reader of
+  // their own record is the data subject). It is now two cells, so the ruling is EXPRESSIBLE:
+  //   * `preboarding:read` — the company-wide reads: the list, the roll-up, the flag watch;
+  //   * `preboarding:read:own` — the single-case reads: the case, its checklist, its workspace, its
+  //     package, which are the shape an own-record grant needs.
+  // BOTH cells stay `[ROLES.ADMIN]`, and that is the point of this change: it makes the ruling
+  // writable, it widens nobody. Nothing is granted here that was not granted before.
   'preboarding:read': [ROLES.ADMIN],
+  'preboarding:read:own': [ROLES.ADMIN],
   'preboarding:write': [ROLES.ADMIN],
   'users:read': [ROLES.ADMIN],
   'users:write': [ROLES.ADMIN],
@@ -90,14 +100,17 @@ const ROUTES = Object.freeze([
   ['GET', '/analytics/dashboard', 'analytics:read'],
   ['POST', '/exit-interviews', 'exit:write'],
   // pre-boarding — the specific paths before the case-collection ones
+  // The company-wide reads (the list, the roll-up, the flag watch) stay in `preboarding:read`.
   ['GET', '/preboarding/checklist/overview', 'preboarding:read'],
   ['GET', '/preboarding/flag-watch', 'preboarding:read'],
   ['GET', '/preboarding/cases', 'preboarding:read'],
   ['POST', '/preboarding/cases', 'preboarding:write'],
-  ['GET', '/preboarding/cases/:id', 'preboarding:read'],
-  ['GET', '/preboarding/cases/:id/checklist', 'preboarding:read'],
-  ['GET', '/preboarding/cases/:id/workspace', 'preboarding:read'],
-  ['GET', '/preboarding/cases/:id/package', 'preboarding:read'],
+  // The single-case reads are the own-record shape, so they name their own resource — a grant for
+  // one person's case cannot carry the three above. Still [ADMIN] here (see POLICY).
+  ['GET', '/preboarding/cases/:id', 'preboarding:read:own'],
+  ['GET', '/preboarding/cases/:id/checklist', 'preboarding:read:own'],
+  ['GET', '/preboarding/cases/:id/workspace', 'preboarding:read:own'],
+  ['GET', '/preboarding/cases/:id/package', 'preboarding:read:own'],
   ['POST', '/preboarding/cases/:id/items/:itemKey/status', 'preboarding:write'],
   ['POST', '/preboarding/cases/:id/reminders', 'preboarding:write'],
   ['POST', '/preboarding/cases/:id/notice-acknowledgements', 'preboarding:write'],

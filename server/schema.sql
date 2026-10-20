@@ -164,12 +164,26 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   timestamp TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Layer 3, slice 2 (prerequisite 1): `employee_id` is the account → person link, and it is the column
+-- the access ruling needed: without it the product cannot tell which `employees` row a signed-in person
+-- IS, so "an employee may read their own pre-boarding record" (docs/access-model.md §2.2, §3.2) could not
+-- be expressed at all. NULL means the account is not tied to an employee row yet — exactly what the single
+-- `admin` row is, and it is deliberately NOT backfilled with a guess.
+-- Declared LAST on purpose: ALTER TABLE ADD COLUMN appends, so a fresh database and a migrated one then
+-- read the same by name (server/column-migration.test.js holds that). A database that predates this gains
+-- the column from COLUMN_MIGRATIONS in server/db.js, the way `completed_by` did.
+--
+-- NOTE, measured: the column list below carries NO inline comment. SQLite's ALTER TABLE ... DROP COLUMN
+-- re-parses the table's stored CREATE TABLE text, and a `--` comment inside the list makes it fail with
+-- "error in table users after drop column: incomplete input" — which is how this was found (the slice-2
+-- migration test drops this column to build a pre-change database).
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   username TEXT UNIQUE,
   password_hash TEXT,
   role TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  employee_id TEXT
 );
 -- Layer 2 — Pre-boarding Intelligence (P2-1).
 -- One row per ACCEPTED JOB OFFER. offer_reference is UNIQUE, and that constraint is what
