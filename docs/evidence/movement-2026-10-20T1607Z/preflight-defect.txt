@@ -1,0 +1,23 @@
+DEFECT FOUND 2026-10-20T16:08Z, before the movement, and recorded rather than used.
+
+What I ran: ANTUM_EXPECT_SERVED=2b14a94 ANTUM_EXPECT_ASSET=index-C9vf7pQB.js \
+            ANTUM_MEASURED_TIP=2b14a94 bash /home/team/shared/cutover-preflight.sh   -> exit 0 (PASS)
+
+What it then printed as the after-state:
+    assets/index-BG0peuOK.js   274242 B   md5 f65f15c109e76e86cd8b8abe7102f748
+    assets/index-pNSrK3wr.css   35365 B   md5 eda548202468a7e0293053981037a594
+
+What this tree actually builds and what the host actually serves right now:
+    assets/index-C9vf7pQB.js   277790 B   md5 e6ff5da3fd614ddcfe2c0beaa68164f4
+    assets/index-BK_EwcpZ.css   35306 B   md5 cb54e6164a8e741ed807bac94577efcd
+
+Cause: MEASURED_TIP is env-overridable (cutover-preflight.sh:85) but the build record beside it is NOT —
+MEASURED_ASSET / MEASURED_ASSET_BYTES / MEASURED_ASSET_MD5 / MEASURED_CSS* are hardcoded, last measured
+2026-10-17 at 8fb4390. Overriding the tip alone therefore re-points the gate at a tip while keeping another
+tip's bytes: the run goes green carrying a number that was never measured. The gate is only half-overridable,
+so the override defeats it instead of reddening it.
+
+Not used. The true after-state for this movement is carried from the tip whose build is measured (2b14a94:
+client/ proven byte-identical to the shipping tip 58acdac by `git diff --name-only 2b14a94 origin/main --
+client/` = empty; its build was taken twice, byte-identical to the served bytes), and the movement's own
+step-2 build at 58acdac is compared against it below.

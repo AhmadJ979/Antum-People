@@ -1,0 +1,20 @@
+    the hook at 2b14a94c3a62 (=deploy copy) IS origin/main's
+--- the rollback target exists and is the bytes we think ---
+  PASS  rollback bundle asset index-Cc1GodRa.js md5 9cdfbe5da81f6acf38fdb10de8a5e6fd
+  PASS  rollback bundle server/index.js md5 7467cec01c90cc3a1fb0156999c1997a
+  WARN  deployed tree's server/index.js md5 c67fca1a66958517647b8f6463e50aa2 != the rollback bundle's 7467cec01c90cc3a1fb0156999c1997a — expected after a cutover: the tree carries the newer code
+--- the shipped tree's own content and the after-state expectation, derived at run time ---
+  PASS  step 1's gate string present in the shipped tree (2 hits)
+  FAIL  the shipped commit 58acdac82f71 is 145 commit(s) past the measured d0422f4 and client/ CHANGED (client/package.json client/src/App.tsx client/src/httpStatus.js client/src/httpStatus.test.js client/src/index.css client/src/panelResults.js client/src/panelResults.test.js client/src/tailwindSources.test.js client/tsconfig.app.json ) — the expected bundle hash is unknown, so this package cannot state the after-state. Re-measure the build (scratch worktree + df sampling) and update ANTUM_MEASURED_TIP; conscious override: ANTUM_ALLOW_MOVED_TIP=1
+--- step 3/4's inputs ---
+  PASS  demo credential file present
+  PASS  bcryptjs present in the deployed tree (step 3 hashes the credential)
+  PASS  restart env: JWT_SECRET=present ENCRYPTION_KEY=present 
+
+--- after the movement, expect (derived from this run) ---
+    commit  58acdac82f7182142370a0d65ea383996ec73f0f
+    assets/ <unknown>
+    public GET / -> 200 with the served HTML naming that asset, the listener on 3000 ours, the guard verified from its lock
+    the two retired routes answer 404 (GET /api/employees/:id, GET /api/compliance/report)
+
+=== PREFLIGHT FAIL — 3 precondition(s) do not hold; do not start the movement ===

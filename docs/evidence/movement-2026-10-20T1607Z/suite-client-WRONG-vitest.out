@@ -1,0 +1,41 @@
+npm warn exec The following package was not found and will be installed: vitest@5.0.5
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Startup Error [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯⎯[39m
+Error: Failed to load custom Reporter from basic
+    at loadCustomReporterModule (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:9896:9)
+    at async file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:9912:23
+    ... 3 lines matching cause stack trace ...
+    at async createVitest (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:13395:3)
+    at async prepareVitest (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:13787:14)
+    at async startVitest (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:13705:14)
+    at async start (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cac.CLrZKo1g.js:2368:15)
+    at async CAC.run (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cac.CLrZKo1g.js:2344:2) {
+  [cause]: Error: Failed to load url basic (resolved id: basic). Does the file exist?
+      at reviveInvokeError (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/module-runner.js:556:14)
+      at Object.invoke (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/module-runner.js:572:33)
+      at async ServerModuleRunner.getModuleInformation (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/module-runner.js:1228:7)
+      at async ServerModuleRunner.import (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/module-runner.js:1149:23)
+      at async loadCustomReporterModule (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:9894:26)
+      at async file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:9912:23
+      at async Promise.all (index 0)
+      at async Vitest._attachProjectServers (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:12445:20)
+      at async Vitest._start (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:12290:3)
+      at async createVitest (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:13395:3) {
+    code: 'ERR_LOAD_URL',
+    runnerError: Error: RunnerError
+        at reviveInvokeError (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/module-runner.js:557:64)
+        at Object.invoke (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/module-runner.js:572:33)
+        at async ServerModuleRunner.getModuleInformation (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/module-runner.js:1228:7)
+        at async ServerModuleRunner.import (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vite/dist/node/module-runner.js:1149:23)
+        at async loadCustomReporterModule (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:9894:26)
+        at async file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:9912:23
+        at async Promise.all (index 0)
+        at async Vitest._attachProjectServers (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:12445:20)
+        at async Vitest._start (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:12290:3)
+        at async createVitest (file:///home/agent-lead/.npm/_npx/69c381f8ad94b576/node_modules/vitest/dist/chunks/cli-api.De07GUeT.js:13395:3)
+  }
+}
+
+
+
+client suite exit=1

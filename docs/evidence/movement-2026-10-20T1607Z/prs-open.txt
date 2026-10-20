@@ -1,0 +1,15 @@
+7 open PR(s):
+  #274  evidence/movement-2026-10-20T1511Z             docs(evidence): file the 15:11Z movement's evidence, and corre
+        head 2a087f0fc479  mergeable_state=None
+  #273  fix/guard-test-default-pre-fix                 Derive the role-vs-shape test default from the pre-fix revisio
+        head c4d7d856b98f  mergeable_state=None
+  #271  docs/merge-result-5356715                      docs(evidence): the merged result of #270 at main 5356715
+        head 92f16401cd15  mergeable_state=None
+  #269  fix/evidence-scripts-path-independent          Make the pack’s control scripts run on any host, not only the 
+        head 929a2d7999fd  mergeable_state=None
+  #265  docs/tracker-round-54-v2                       Round 54 continued: the day's second movement, and the guard f
+        head c3a347e5c781  mergeable_state=None
+  #262  docs/access-model-citation-coverage            docs(access-model): the checker enforces 3 of this page's 49 c
+        head 6cf57ed27bf8  mergeable_state=None
+  #260  docs/stylesheet-control-evidence               The pack cited a control log that was never committed — and th
+        head cbe5e79a6b67  mergeable_state=None

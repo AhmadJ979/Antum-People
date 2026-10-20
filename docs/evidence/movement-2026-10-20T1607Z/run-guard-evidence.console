@@ -1,0 +1,6 @@
+nohup: ignoring input
+--- 1. the predicate, measured against the defect revision ---
+predicate test exit=0 (expect 0)
+--- 2. the live arm, with naming probes alive ---
+arm acceptance exit=0 (0 = armed, 2 = precondition refused)
+final: lock names 24580; site 200

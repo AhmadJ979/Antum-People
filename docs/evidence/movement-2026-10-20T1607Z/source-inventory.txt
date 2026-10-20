@@ -1,0 +1,48 @@
+Every file in the host source directory, with its md5, at the moment this pack was filed.
+Source: /home/team/shared/movements/2026-10-20T1607Z/
+Filed by agent-product-designer under row d9a3d818. Carrier rule: every source file except the
+two plan snapshots; nothing is omitted quietly.
+
+41 source file(s): 39 carried into this pack, 2 excluded.
+
+f2d76054d07f2e0c50cab62c6050707f  MOVEMENT.md  carried (md5 verified identical in the pack AFTER the copy)
+21fc19c317057b3113ddbc6f0fc7123b  board-counts.txt  carried (md5 verified identical in the pack AFTER the copy)
+ca83432953211773ae14e91a5160e0c3  board-now.txt  carried (md5 verified identical in the pack AFTER the copy)
+e4335277637ac3f32ac82307a9f56049  board-open.txt  carried (md5 verified identical in the pack AFTER the copy)
+7ec369d5a306efe2b8002d8e6c42a378  get-prs.sh  carried (md5 verified identical in the pack AFTER the copy)
+eebb581c0005595665c69194955f5d6e  guard-acceptance.console  carried (md5 verified identical in the pack AFTER the copy)
+b0091eedb4b8c4f853ae3087014f8ee0  guard-acceptance.out  carried (md5 verified identical in the pack AFTER the copy)
+85ddb9e5c388951f7b4f3bb21a46f8a3  guard-acceptance.sh  carried (md5 verified identical in the pack AFTER the copy)
+976633e9a9cdb72418e9cfb37fc77681  guard-acceptance2.out  carried (md5 verified identical in the pack AFTER the copy)
+7a3ef746b545502462d1cb27144b9f63  guard-acceptance2.sh  carried (md5 verified identical in the pack AFTER the copy)
+c04492bdf0a0821966f2a1d21b454f8c  guard-evidence.out  carried (md5 verified identical in the pack AFTER the copy)
+e348db91145974f68f2fe31b09d73aa4  guard-predicate-test.out  carried (md5 verified identical in the pack AFTER the copy)
+1436be38d104832334d9ddedccbadc0d  movement.log  carried (md5 verified identical in the pack AFTER the copy)
+16bfaa3b96e3ad8f535aafe3a1b38534  plan-current.json  excluded - the same snapshot as JSON (5 lines)
+179fc2cc0f4cf2d6e0491733cf981904  plan-current.md  excluded - a snapshot of the plan document (82 lines); the plan is a live document outside this repository, so a copy here would drift and could be mistaken for it
+7a458899071e9203a1127a8f2e1096e6  pr-review.txt  carried (md5 verified identical in the pack AFTER the copy)
+91d77bb526738a1b9c060810d59fe8de  preflight-defect.txt  carried (md5 verified identical in the pack AFTER the copy)
+795681c2d827579b99847c2183888d6e  preflight-full.txt  carried (md5 verified identical in the pack AFTER the copy)
+b9a258b547dd5fa4f8d66e7600125d43  preflight-recut.txt  carried (md5 verified identical in the pack AFTER the copy)
+5421aa1bf022b03aac0f473e29903e2e  preflight-reddened.txt  carried (md5 verified identical in the pack AFTER the copy)
+1c9dd9d4274df31d1933b10204fcae88  preflight.txt  carried (md5 verified identical in the pack AFTER the copy)
+971ea38a3f494fa9788c558ce02eecb4  prs-open.json  carried (md5 verified identical in the pack AFTER the copy)
+433a5fc708e1aca264dc6fe32d7517cc  prs-open.status  carried (md5 verified identical in the pack AFTER the copy)
+1af5b34c72c2bdf7e7ef0dcaede1d6f5  prs-open.txt  carried (md5 verified identical in the pack AFTER the copy)
+7c69e3896f1aea6608b5e751124b4603  remote-main.txt  carried (md5 verified identical in the pack AFTER the copy)
+e58fba696fb8805b7aa3ba6a07849d68  retired-routes.out  carried (md5 verified identical in the pack AFTER the copy)
+be4c9a7142bf298d2b6c747bab94367a  review-prs.sh  carried (md5 verified identical in the pack AFTER the copy)
+6cba85cf455d64916865eabb23302705  run-client-suite.sh  carried (md5 verified identical in the pack AFTER the copy)
+12f603a0a78bda304f1bee27047b6c36  run-guard-evidence.console  carried (md5 verified identical in the pack AFTER the copy)
+ebe6201d6b8f87c16e12adb97a79a7e9  run-guard-evidence.sh  carried (md5 verified identical in the pack AFTER the copy)
+0290de12e05e818a69dcf35c470d090e  run-verify.console  carried (md5 verified identical in the pack AFTER the copy)
+6c8bc93c2e41671953b98c3df90702a7  run-verify.sh  carried (md5 verified identical in the pack AFTER the copy)
+01218028e356f34c5f0345ead0eeb5f1  snapshot-state.sh  carried (md5 verified identical in the pack AFTER the copy)
+9cca30aa81b598eb2f49c1816fef387b  suite-client-WRONG-vitest.out  carried (md5 verified identical in the pack AFTER the copy)
+7f531e310202b73582d1f511f5591346  suite-client.out  carried (md5 verified identical in the pack AFTER the copy)
+5b089fd32c90e6852b1735dc9de83b07  suite-server.out  carried (md5 verified identical in the pack AFTER the copy)
+614089aee974fb3e7a273239b740a913  task-results.txt  carried (md5 verified identical in the pack AFTER the copy)
+3c774c64a9f4fe3d604be152fe35d6f8  verify-live.console  carried (md5 verified identical in the pack AFTER the copy)
+45b3f17ebaafdfdfa9ae49ce36f48a33  verify-live.console2  carried (md5 verified identical in the pack AFTER the copy)
+45b3f17ebaafdfdfa9ae49ce36f48a33  verify-live.out  carried (md5 verified identical in the pack AFTER the copy)
+e3c33594c97172190f119b8b8e5c0968  verify-live.sh  carried (md5 verified identical in the pack AFTER the copy)

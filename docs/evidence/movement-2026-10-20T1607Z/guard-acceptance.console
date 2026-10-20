@@ -1,0 +1,22 @@
+nohup: ignoring input
+16:12:14Z === BEFORE ===
+16:12:14Z lock names pid 24580; role-loops: 24580 ; pgrep mentions: 1
+16:12:14Z public: 200 <title>Antum People
+16:12:15Z === DECOY ALIVE (pid 27809, cannot guard anything) ===
+16:12:15Z decoy argv: sleep 240 
+16:12:15Z the decoy names the path, so the OLD predicate counts it: 0 ; role-loops still: 24580 
+16:12:15Z === REAPING the armed guard by the PID its own lock names (24580) - never pkill -f ===
+16:12:16Z guard 24580 gone: yes
+16:12:16Z its own exit line: 2026-10-20T16:12:15+00:00 EXIT: killed by SIGTERM (loop pid 24580)
+16:12:16Z === ARMING while the decoy is alive (the arm the defect refused) ===
+16:12:18Z === RESULT ===
+16:12:18Z ARMED: pid 27964, argv bash scripts/keep-alive.sh 
+16:12:18Z role-loops now: 27964  (expect exactly 27964)
+16:12:18Z refusals after this arm: 0
+16:12:18Z guard's own start lines: 44
+16:12:18Z decoy still alive and untouched: check
+16:12:18Z public: 200 <title>Antum People
+16:12:20Z === AFTER THE DECOY DIES ===
+16:12:20Z role-loops: 27964 ; lock names 27964
+16:12:20Z public: 200
+16:12:20Z DONE

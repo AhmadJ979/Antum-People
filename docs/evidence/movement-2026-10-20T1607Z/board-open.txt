@@ -1,0 +1,92 @@
+[
+  {
+    "id": "fdef095a-ac4f-41db-8e15-169225797c08",
+    "status": "backlog",
+    "assigned_to": null,
+    "substr (tasks.title, 1, 70)": "[P2-6] Pre-boarding portal and documents read in EN/AR, and no persona"
+  },
+  {
+    "id": "d73f8760-bb73-465a-bff3-4439804e453e",
+    "status": "backlog",
+    "assigned_to": null,
+    "substr (tasks.title, 1, 70)": "[P3-1] Every new hire on probation carries a 30/60/90 timeline derived"
+  },
+  {
+    "id": "69dbf57d-a7c8-4989-bdf7-b148e5686a25",
+    "status": "backlog",
+    "assigned_to": null,
+    "substr (tasks.title, 1, 70)": "[P3-2] A milestone cannot be marked complete without a submitted manag"
+  },
+  {
+    "id": "bb60c7a3-18e0-4a84-90ce-907f37ef25ac",
+    "status": "backlog",
+    "assigned_to": null,
+    "substr (tasks.title, 1, 70)": "[P3-3] A milestone that passes its deadline without completion escalat"
+  },
+  {
+    "id": "8bb962e5-2403-4db8-bd52-23c749675bc8",
+    "status": "backlog",
+    "assigned_to": null,
+    "substr (tasks.title, 1, 70)": "[P3-4] An exit decision on probation cannot be recorded without the re"
+  },
+  {
+    "id": "051870f5-bef0-43c9-972a-1a9fac153ba2",
+    "status": "backlog",
+    "assigned_to": null,
+    "substr (tasks.title, 1, 70)": "[P4-1] A replacement cost figure appears automatically on a terminatio"
+  },
+  {
+    "id": "e027f4a8-8f28-4371-9b49-38c1ea69a5f8",
+    "status": "backlog",
+    "assigned_to": null,
+    "substr (tasks.title, 1, 70)": "[P4-2] A Manpower Budget Efficiency Score shows the share of manpower "
+  },
+  {
+    "id": "72e7ee01-b122-44b4-9171-659f80dd309a",
+    "status": "backlog",
+    "assigned_to": null,
+    "substr (tasks.title, 1, 70)": "[P4-3] A 12-month EOSB liability forecast from current tenure trajecto"
+  },
+  {
+    "id": "0d68c00a-c984-48af-b994-72ead6de071c",
+    "status": "backlog",
+    "assigned_to": null,
+    "substr (tasks.title, 1, 70)": "[L-2] KSA returns to the active surface once counsel confirms the KSA "
+  },
+  {
+    "id": "045a6ddf-dea8-48eb-b4d4-68be4f0b7db2",
+    "status": "backlog",
+    "assigned_to": null,
+    "substr (tasks.title, 1, 70)": "[PDPL] The notice's qualification purpose row + its matching category "
+  },
+  {
+    "id": "3619b741-e79d-4ae6-8a8c-708f92b46987",
+    "status": "backlog",
+    "assigned_to": null,
+    "substr (tasks.title, 1, 70)": "[Decision 21] Dispose of the six callerless routes in the inventory (§"
+  },
+  {
+    "id": "2f6f0f3e-9a54-44dc-9c8f-40050edeed6f",
+    "status": "backlog",
+    "assigned_to": null,
+    "substr (tasks.title, 1, 70)": "IFZA registration — the gate on contracts, the DPA, document storage, "
+  },
+  {
+    "id": "9d1e0746-2b1f-47b6-95d7-d73c4bee370f",
+    "status": "review",
+    "assigned_to": "agent-product-designer",
+    "substr (tasks.title, 1, 70)": "File the 15:11Z movement's evidence in the repository, and fold in the"
+  },
+  {
+    "id": "33943cd4-d2ca-4675-8794-669a5cf7f0e4",
+    "status": "in-progress",
+    "assigned_to": "agent-product-designer",
+    "substr (tasks.title, 1, 70)": "Hold a deletion PR for the STALE-EXCEPTION that #262 creates, and prov"
+  },
+  {
+    "id": "bedb1a89-6ab8-45a9-9f55-2dbf7e014682",
+    "status": "in-progress",
+    "assigned_to": "agent-senior-software-engineer",
+    "substr (tasks.title, 1, 70)": "The guard test fails on its own merge result: pin the defect revision,"
+  }
+]
