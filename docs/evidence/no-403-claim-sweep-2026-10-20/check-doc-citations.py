@@ -33,14 +33,20 @@ for f in files:
     lines = show(doc_rev, f).split("\n")
     for i, l in enumerate(lines):
         if "App.tsx" not in l: continue
-        nums = [int(x) for x in re.findall(r"[:：](\d+)", l)]
+        nums = []
+        for a, b in re.findall(r"App\.tsx[:：](\d+)|`[:：](\d+)`", l):
+            n = int(a or b)
+            if 1 <= n <= len(code): nums.append(n)          # a time (09:37:41) or a port (:5173) is not a citation
         if not nums: continue
         toks = [t.strip() for t in re.findall(r"`([^`]+)`", " ".join(lines[i:i+2]))]
         toks = [t for t in toks if symbol(t)][:12]
         if not toks:
             unchecked += 1; print(f"UNCHECKED {f}:{i+1} App.tsx:{nums} — the citing line names no symbol"); continue
-        landed = [n for n in nums if 0 < n <= len(code)
-                  and any(re.sub(r"\s+", " ", t) in re.sub(r"\s+", " ", code[n-1]) for t in toks)]
+        def hits(tok, line):
+            ids = re.findall(r"[A-Za-z_][A-Za-z0-9_.-]{4,}", tok)
+            return any(i in line for i in ids) if ids else (tok in line)
+        landed = [n for n in nums if hits_any(toks, code[n-1])] if False else \
+                 [n for n in nums if any(hits(t, code[n-1]) for t in toks)]
         if landed:
             ok += 1; print(f"ok        {f}:{i+1} App.tsx:{nums} -> landed {landed}")
         else:

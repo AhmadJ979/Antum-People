@@ -1,0 +1,85 @@
+FAIL      design-concepts/CLIENT-STATES.md:62 App.tsx:[1283, 1302] expects one of ['role="alert"'] — :1283 is 'className="bg-teal-600 text-white hover:bg-teal-700 text-xs font-bold '
+UNCHECKED design-concepts/CLIENT-STATES.md:84 App.tsx:[363, 364] — the citing line names no symbol
+UNCHECKED design-concepts/CLIENT-STATES.md:86 App.tsx:[378, 8] — the citing line names no symbol
+FAIL      design-concepts/CLIENT-STATES.md:111 App.tsx:[572] expects one of ['setRefusal(REFUSAL_NOTICE)'] — :572 is 'onSessionInvalid: handleLogout,'
+UNCHECKED design-concepts/CLIENT-STATES.md:171 App.tsx:[10] — the citing line names no symbol
+UNCHECKED design-concepts/CLIENT-STATES.md:215 App.tsx:[594, 598, 997] — the citing line names no symbol
+FAIL      design-concepts/CLIENT-STATES.md:242 App.tsx:[113, 624, 743] expects one of ['No data yet'] — :113 is ''
+UNCHECKED design-concepts/CLIENT-STATES.md:282 App.tsx:[1911] — the citing line names no symbol
+FAIL      design-concepts/CLIENT-STATES.md:310 App.tsx:[1284] expects one of ['bg-amber-50 border-amber-200 text-amber-900'] — :1284 is '>'
+FAIL      design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:18 App.tsx:[1902, 1910] expects one of ['1 CASES · NOTICE NOT SHOWN', '1 CASE · NOTICE NOT SHOWN', 'N CASES …', 'Not collectible in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1).'] — :1902 is '<div className={`mt-4 p-3 rounded-xl text-xs font-medium border ${offe'
+FAIL      design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:19 App.tsx:[2122, 2125, 2123] expects one of ['Not collectible in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1).', '… recorded by scratch-admin · basis Legal obligation', 'recorded by the signed-in account (scratch-admin)'] — :2122 is '</div>'
+FAIL      design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:20 App.tsx:[2062, 2117] expects one of ['… recorded by scratch-admin · basis Legal obligation', 'recorded by the signed-in account (scratch-admin)', 'title="Open the notice first — this records that it was shown, and the notice has to be openable from here for that to mean anything"'] — :2062 is '))}'
+FAIL      design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:21 App.tsx:[2080, 2086, 2081, 2082, 2084] expects one of ['title="Open the notice first — this records that it was shown, and the notice has to be openable from here for that to mean anything"', 'shown on 2026-10-12T06:49:44.731Z', "toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})", '8 October 2026'] — :2080 is '{!detail ? ('
+FAIL      design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:22 App.tsx:[2061, 2117] expects one of ['shown on 2026-10-12T06:49:44.731Z', "toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})", '8 October 2026', 'server/preboarding-flag.js:191'] — :2061 is '</span>'
+ok        design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:23 App.tsx:[203, 1895] -> landed [203]
+UNCHECKED design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:19 App.tsx:[628, 632] — the citing line names no symbol
+FAIL      design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:20 App.tsx:[1184, 1321] expects one of ['POST /api/preboarding/cases'] — :1184 is '});'
+FAIL      design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:21 App.tsx:[1212, 1274, 378] expects one of ['POST /api/preboarding/cases', 'GET /api/preboarding/cases'] — :1212 is '</button>'
+FAIL      design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:22 App.tsx:[1282, 1318, 355] expects one of ['GET /api/preboarding/cases'] — :1282 is 'onClick={() => setShowAddModal(true)}'
+UNCHECKED design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:28 App.tsx:[631] — the citing line names no symbol
+FAIL      design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:31 App.tsx:[1200, 1201] expects one of ['Cases open'] — :1200 is '<div>'
+FAIL      design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:39 App.tsx:[1210] expects one of ["'AE'"] — :1210 is '<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="'
+UNCHECKED design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:41 App.tsx:[1256, 1261] — the citing line names no symbol
+UNCHECKED design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:45 App.tsx:[660] — the citing line names no symbol
+UNCHECKED design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:54 App.tsx:[355] — the citing line names no symbol
+FAIL      design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:79 App.tsx:[439] expects one of ['?jurisdiction=${jurisdiction}&status=open'] — :439 is ''
+UNCHECKED design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:97 App.tsx:[1200] — the citing line names no symbol
+UNCHECKED design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:103 App.tsx:[439, 437] — the citing line names no symbol
+FAIL      design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:111 App.tsx:[657] expects one of ['{activeTab} Panel', 'Pre-boarding'] — :657 is '// count and its "Cases open" label still agree. There is no fallback '
+FAIL      design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:112 App.tsx:[631] expects one of ['Pre-boarding'] — :631 is '} catch (err) {'
+FAIL      design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:119 App.tsx:[115] expects one of ['NAV_ITEMS'] — :115 is '// out. Every figure here is computed by the server; the client render'
+UNCHECKED design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:126 App.tsx:[663] — the citing line names no symbol
+UNCHECKED design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:147 App.tsx:[397] — the citing line names no symbol
+FAIL      design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md:38 App.tsx:[439, 437] expects one of ['?jurisdiction=${jurisdiction}&status=open', 'NAV_ITEMS'] — :439 is ''
+FAIL      design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md:39 App.tsx:[115, 124] expects one of ['NAV_ITEMS', 'Start: <date> · <n> d', 'Verified: n/m', 'Mark received'] — :115 is '// out. Every figure here is computed by the server; the client render'
+FAIL      design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md:40 App.tsx:[1413, 1497, 1525, 1546, 1640, 1596, 1589] expects one of ['Start: <date> · <n> d', 'Verified: n/m', 'Mark received', 'Send back'] — :1413 is '<span className="text-xs text-slate-400 uppercase">SA</span>'
+ok        design-concepts/LAYER2-PREBOARDING-UI.md:75 App.tsx:[265, 271, 274, 436] -> landed [271]
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:78 App.tsx:[1184, 1321, 1765, 2356] expects one of ['interface Task', 'id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone'] — :1184 is '});'
+ok        design-concepts/LAYER2-PREBOARDING-UI.md:79 App.tsx:[34, 44] -> landed [34, 44]
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:91 App.tsx:[660, 721, 723, 738, 775, 812, 1061, 1067, 1073, 1088, 1104, 1116, 1145] — the citing line names no symbol
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:95 App.tsx:[955, 966] expects one of ['flex items-start space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-teal-200 transition', 'mt-1 h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500 cursor-pointer', 'line-through text-slate-400', 'text-slate-800 text-sm font-bold'] — :955 is '});'
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:96 App.tsx:[975, 976] expects one of ['bg-slate-900 text-white p-6 rounded-xl shadow-lg', 'font-bold text-teal-400 text-sm tracking-widest uppercase', 'text-[10px] font-bold text-slate-400 uppercase tracking-widest'] — :975 is "setChecklistNotice({ kind: 'error', text: 'The record could not be wri"
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:97 App.tsx:[980, 987, 1214, 1264] expects one of ['text-[10px] font-bold text-slate-400 uppercase tracking-widest', 'py-12 text-center text-slate-400 text-sm italic'] — :980 is 'try {'
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:98 App.tsx:[969, 1291, 1293] expects one of ['py-12 text-center text-slate-400 text-sm italic'] — :969 is ": 'This case already records the notice as shown for every document it"
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:108 App.tsx:[631] — the citing line names no symbol
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:109 App.tsx:[1184, 1321] — the citing line names no symbol
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:196 App.tsx:[1303, 1305] expects one of ['preboarding_cases.jurisdiction', 'employees.start_date'] — :1303 is 'onClick={() => setRefusal(null)}'
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:416 App.tsx:[1690, 1696, 1699] expects one of ['{row.flag.chip}', '... | grep -n "relDays(row.flag)"'] — :1690 is '</p>'
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:420 App.tsx:[1624, 1605, 1605, 1624, 157, 197, 1602, 1696] expects one of ['165  0'] — :1624 is 'className="w-full text-left p-3 bg-slate-800 hover:bg-slate-700 rounde'
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:455 App.tsx:[1581, 1696] expects one of ['{row.flag.chip}'] — :1581 is '))}'
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:593 App.tsx:[2069, 2070] — the citing line names no symbol
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:601 App.tsx:[981, 982] expects one of ['✓ Recorded <date>', '✗ Missing / required'] — :981 is 'const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${cas'
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:627 App.tsx:[790, 793] expects one of ['lawful_basis'] — :790 is "const query = view === WORKSPACE_VIEW_ALL ? '' : `?function=${encodeUR"
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:683 App.tsx:[2129, 2146] expects one of ['Mark received', 'Send back'] — :2129 is ": 'Records, in the product, that the signed-in user showed the notice'"
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:726 App.tsx:[1879] — the citing line names no symbol
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:765 App.tsx:[2069, 2070] — the citing line names no symbol
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:795 App.tsx:[1183] expects one of ['toLocaleString(undefined, …)', 'ar-AE'] — :1183 is "new_salary: ''"
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:798 App.tsx:[1970, 1972, 1974] expects one of ['due 2026-10-09 (D-3) · in 2 d', 'Day 49'] — :1970 is 'const detail = caseChecklist[row.case_id];'
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:800 App.tsx:[1461] expects one of ['Math.ceil((Date.now() − start_date) / 24h)', 'space-x-*'] — :1461 is '</div>'
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:862 App.tsx:[1970] — the citing line names no symbol
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:1107 App.tsx:[1184, 1321] — the citing line names no symbol
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:1110 App.tsx:[1581, 1696] expects one of ['{row.flag.chip}'] — :1581 is '))}'
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:1191 App.tsx:[981, 982] — the citing line names no symbol
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:1192 App.tsx:[1863, 1864, 1407, 1408] — the citing line names no symbol
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:1193 App.tsx:[1970, 1972, 1974] expects one of ['preboarding_consents', 'consent_records'] — :1970 is 'const detail = caseChecklist[row.case_id];'
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:1196 App.tsx:[790, 793] expects one of ['server/preboarding-flag.js:43'] — :790 is "const query = view === WORKSPACE_VIEW_ALL ? '' : `?function=${encodeUR"
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:1276 App.tsx:[1884, 1897, 2129, 2146, 1980, 1991] — the citing line names no symbol
+ok        design-concepts/LAYER2-PREBOARDING-UI.md:1329 App.tsx:[115, 125, 272, 265, 265, 271, 274, 436] -> landed [272]
+ok        design-concepts/LAYER2-PREBOARDING-UI.md:1330 App.tsx:[32, 41, 34, 34, 44] -> landed [41]
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:1340 App.tsx:[1397, 1650, 1397] — the citing line names no symbol
+FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:1342 App.tsx:[1635, 1765, 2356, 1765] expects one of ["{activeTab === 'preboarding' && (", ')}'] — :1635 is '</button>'
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:1352 App.tsx:[1183, 1970, 1461] — the citing line names no symbol
+UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:1410 App.tsx:[1765, 2356] — the citing line names no symbol
+FAIL      design-concepts/LAYER3-IDENTITY.md:37 App.tsx:[356, 317] expects one of ['Sign In', 'Sign Out'] — :356 is '<div className="max-w-md w-full p-8 bg-white rounded-2xl shadow-2xl">'
+ok        design-concepts/LAYER3-IDENTITY.md:38 App.tsx:[1208, 1215] -> landed [1208]
+ok        design-concepts/LAYER3-IDENTITY.md:39 App.tsx:[2107, 2162] -> landed [2107, 2162]
+UNCHECKED design-concepts/LAYER3-IDENTITY.md:46 App.tsx:[1222, 1212, 1196] — the citing line names no symbol
+UNCHECKED design-concepts/LAYER3-IDENTITY.md:71 App.tsx:[1215] — the citing line names no symbol
+ok        design-concepts/LAYER3-IDENTITY.md:83 App.tsx:[1208] -> landed [1208]
+ok        design-concepts/LAYER3-IDENTITY.md:86 App.tsx:[1223] -> landed [1223]
+ok        design-concepts/LAYER3-IDENTITY.md:207 App.tsx:[1202, 1202, 1215, 356, 347, 416, 369] -> landed [1202, 1202, 1215, 416, 369]
+FAIL      design-concepts/README.md:17 App.tsx:[1222, 1212, 1195] expects one of ['access_role'] — :1222 is '<div className="text-xs font-bold text-white truncate">{user?.username'
+ok        design-concepts/README.md:27 App.tsx:[594, 598, 997, 1000] -> landed [594]
+
+doc da8a761 vs code da8a761: 11 ok, 42 FAILING, 30 unchecked

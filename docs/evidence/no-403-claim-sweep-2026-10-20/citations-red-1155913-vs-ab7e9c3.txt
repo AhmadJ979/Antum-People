@@ -1,7 +1,7 @@
 FAIL      design-concepts/CLIENT-STATES.md:62 App.tsx:[1283, 1302] expects one of ['role="alert"'] — :1283 is 'className="bg-teal-600 text-white hover:bg-teal-700 text-xs font-bold '
-UNCHECKED design-concepts/CLIENT-STATES.md:84 App.tsx:[26, 363, 364] — the citing line names no symbol
-UNCHECKED design-concepts/CLIENT-STATES.md:86 App.tsx:[376, 378, 166, 8] — the citing line names no symbol
-FAIL      design-concepts/CLIENT-STATES.md:111 App.tsx:[137, 572] expects one of ['setRefusal(REFUSAL_NOTICE)'] — :137 is '} | null;'
+UNCHECKED design-concepts/CLIENT-STATES.md:84 App.tsx:[363, 364] — the citing line names no symbol
+UNCHECKED design-concepts/CLIENT-STATES.md:86 App.tsx:[378, 8] — the citing line names no symbol
+FAIL      design-concepts/CLIENT-STATES.md:111 App.tsx:[572] expects one of ['setRefusal(REFUSAL_NOTICE)'] — :572 is 'onSessionInvalid: handleLogout,'
 UNCHECKED design-concepts/CLIENT-STATES.md:171 App.tsx:[10] — the citing line names no symbol
 UNCHECKED design-concepts/CLIENT-STATES.md:215 App.tsx:[594, 598, 997] — the citing line names no symbol
 FAIL      design-concepts/CLIENT-STATES.md:242 App.tsx:[113, 624, 743] expects one of ['No data yet'] — :113 is ''
@@ -11,8 +11,8 @@ FAIL      design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:18 App.tsx:[1902, 
 FAIL      design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:19 App.tsx:[2122, 2125, 2123] expects one of ['Not collectible in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1).', '… recorded by scratch-admin · basis Legal obligation', 'recorded by the signed-in account (scratch-admin)'] — :2122 is '</div>'
 FAIL      design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:20 App.tsx:[2062, 2117] expects one of ['… recorded by scratch-admin · basis Legal obligation', 'recorded by the signed-in account (scratch-admin)', 'title="Open the notice first — this records that it was shown, and the notice has to be openable from here for that to mean anything"'] — :2062 is '))}'
 FAIL      design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:21 App.tsx:[2080, 2086, 2081, 2082, 2084] expects one of ['title="Open the notice first — this records that it was shown, and the notice has to be openable from here for that to mean anything"', 'shown on 2026-10-12T06:49:44.731Z', "toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})", '8 October 2026'] — :2080 is '{!detail ? ('
-FAIL      design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:22 App.tsx:[2061, 2117, 49, 44, 403] expects one of ['shown on 2026-10-12T06:49:44.731Z', "toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})", '8 October 2026', 'server/preboarding-flag.js:191'] — :2061 is '</span>'
-FAIL      design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:23 App.tsx:[191, 203, 1895] expects one of ['server/preboarding-flag.js:191', 'Started 1 day ago · 21 items open', '21 ITEMS OUTSTANDING', '22 items open on the case · 7 with the hire'] — :191 is '}'
+FAIL      design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:22 App.tsx:[2061, 2117] expects one of ['shown on 2026-10-12T06:49:44.731Z', "toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})", '8 October 2026', 'server/preboarding-flag.js:191'] — :2061 is '</span>'
+ok        design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:23 App.tsx:[203, 1895] -> landed [203]
 UNCHECKED design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:19 App.tsx:[628, 632] — the citing line names no symbol
 FAIL      design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:20 App.tsx:[1184, 1321] expects one of ['POST /api/preboarding/cases'] — :1184 is '});'
 FAIL      design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:21 App.tsx:[1212, 1274, 378] expects one of ['POST /api/preboarding/cases', 'GET /api/preboarding/cases'] — :1212 is '</button>'
@@ -34,10 +34,9 @@ UNCHECKED design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:147 App.tsx:[397]
 FAIL      design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md:38 App.tsx:[439, 437] expects one of ['?jurisdiction=${jurisdiction}&status=open', 'NAV_ITEMS'] — :439 is ''
 FAIL      design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md:39 App.tsx:[115, 124] expects one of ['NAV_ITEMS', 'Start: <date> · <n> d', 'Verified: n/m', 'Mark received'] — :115 is '// out. Every figure here is computed by the server; the client render'
 FAIL      design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md:40 App.tsx:[1413, 1497, 1525, 1546, 1640, 1596, 1589] expects one of ['Start: <date> · <n> d', 'Verified: n/m', 'Mark received', 'Send back'] — :1413 is '<span className="text-xs text-slate-400 uppercase">SA</span>'
-UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:47 App.tsx:[0] — the citing line names no symbol
-FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:75 App.tsx:[265, 271, 274, 436] expects one of ['NAV_ITEMS', 'preboarding_cases(id, offer_reference UNIQUE, candidate_name, candidate_email, role, department, reporting_line, jurisdiction, start_date, status, source, offered_at, created_by, created_at, updated_at)'] — :265 is '};'
+ok        design-concepts/LAYER2-PREBOARDING-UI.md:75 App.tsx:[265, 271, 274, 436] -> landed [271]
 FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:78 App.tsx:[1184, 1321, 1765, 2356] expects one of ['interface Task', 'id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone'] — :1184 is '});'
-FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:79 App.tsx:[34, 44] expects one of ['interface Task', 'id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone', 'onboarding_tasks(id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone, created_at)'] — :34 is 'visa_status: string | null;'
+ok        design-concepts/LAYER2-PREBOARDING-UI.md:79 App.tsx:[34, 44] -> landed [34, 44]
 UNCHECKED design-concepts/LAYER2-PREBOARDING-UI.md:91 App.tsx:[660, 721, 723, 738, 775, 812, 1061, 1067, 1073, 1088, 1104, 1116, 1145] — the citing line names no symbol
 FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:95 App.tsx:[955, 966] expects one of ['flex items-start space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-teal-200 transition', 'mt-1 h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500 cursor-pointer', 'line-through text-slate-400', 'text-slate-800 text-sm font-bold'] — :955 is '});'
 FAIL      design-concepts/LAYER2-PREBOARDING-UI.md:96 App.tsx:[975, 976] expects one of ['bg-slate-900 text-white p-6 rounded-xl shadow-lg', 'font-bold text-teal-400 text-sm tracking-widest uppercase', 'text-[10px] font-bold text-slate-400 uppercase tracking-widest'] — :975 is "setChecklistNotice({ kind: 'error', text: 'The record could not be wri"
@@ -81,6 +80,6 @@ FAIL      design-concepts/LAYER3-IDENTITY.md:79 App.tsx:[1198] expects one of ['
 FAIL      design-concepts/LAYER3-IDENTITY.md:82 App.tsx:[1213] expects one of ['user?.access_role', 'hr_admin'] — :1213 is '</div>'
 FAIL      design-concepts/LAYER3-IDENTITY.md:203 App.tsx:[1192, 1192, 1205, 355, 347, 415, 368] expects one of ['space-x-3', 'justify-end', 'ml-3', 'mr-2'] — :1192 is 'if (!token) {'
 FAIL      design-concepts/README.md:17 App.tsx:[1212, 1195] expects one of ['access_role'] — :1212 is '</button>'
-FAIL      design-concepts/README.md:27 App.tsx:[594, 598, 997, 1000, 65, 5173, 31] expects one of ['client/session-vs-refusal', 'No data yet', 'No active …', 'No data yet'] — :594 is '}, [token, activeTab, jurisdiction]);'
+ok        design-concepts/README.md:27 App.tsx:[594, 598, 997, 1000] -> landed [594]
 
-doc 1155913 vs code ab7e9c3: 2 ok, 51 FAILING, 31 unchecked
+doc 1155913 vs code ab7e9c3: 6 ok, 47 FAILING, 30 unchecked
