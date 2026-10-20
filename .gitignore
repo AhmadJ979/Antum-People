@@ -7,3 +7,6 @@ build/
 # Runtime state written by the guard and its host hook — never committed
 server/keep-alive.lock
 server/keep-alive.out
+
+# Evidence packs must not be silently dropped by the log ignore rule.
+!docs/evidence/**/*.log

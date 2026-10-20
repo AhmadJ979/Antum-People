@@ -1,0 +1,34 @@
+# The control behind docs/evidence/stylesheet-30-bytes/README.md — regenerated as a self-contained record.
+# Tree: worktree at ea6a531 (the revision that served index-CK8SfGWm.css). Built with: npx vite build
+# (tsc -b is not involved: the stylesheet comes from vite + @tailwindcss/vite).
+
+$ git -C /home/agent-senior-software-engineer/wt/ea6 rev-parse --short HEAD
+ea6a531
+
+# 1) BASELINE — the tree untouched:
+dist/assets/index-CK8SfGWm.css   35.77 kB │ gzip:  6.92 kB
+dist/assets/index-B9iywLcl.js   276.20 kB │ gzip: 76.99 kB
+   emitted: index-CK8SfGWm.css 35775 B  md5=8ec48273f4bd7e4f37c55e2cc6ae2f1d
+
+# 2) THE ONE EDIT — append a single line to client/src/httpStatus.js, nothing else:
+   $ printf '\n// collapse\n' >> client/src/httpStatus.js
+ client/src/httpStatus.js | 2 ++
+ 1 file changed, 2 insertions(+)
+   $ grep -n collapse client/src/httpStatus.js | tail -1
+144:// collapse
+
+# 3) REBUILD:
+dist/assets/index-DvmxiaxC.css   35.80 kB │ gzip:  6.93 kB
+dist/assets/index-CRGdjEGs.js   276.20 kB │ gzip: 76.99 kB
+   emitted: index-DvmxiaxC.css 35805 B  md5=3709a147a167307b5f46c2ecbc3e0431
+
+# The served stylesheet at 7a4e00a:
+   index-DvmxiaxC.css 35805 B  md5=3709a147a167307b5f46c2ecbc3e0431
+# => the word alone reproduces the served bytes exactly: SUFFICIENT.
+
+# 4) What moved, and what did not — the JS chunk, both builds:
+#    baseline:            index-B9iywLcl.js  276206 B  md5=fd270c84cb2b34a2df5372a6e93505c8
+#    with one comment:    index-CRGdjEGs.js  276206 B  md5=fd270c84cb2b34a2df5372a6e93505c8
+#    => the emitted JS BYTES are identical (comments are stripped), but the emitted FILENAME
+#       still moves. A comment-only change therefore moves filenames and the stylesheet while
+#       changing no JS byte — which is exactly the shape of the 09:30 cutover the row was about.
