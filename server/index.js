@@ -125,7 +125,11 @@ app.post('/api/login', rateLimitLogin, async (req, res) => {
     loginFailures.delete(req.ip);
 
     const token = auth.generateToken(user);
-    res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+    // Layer 3, slice 2: the field is `access_role`, the permission — not `role` (§2.4). The name it
+    // collided with is `employees.role`, a job title, and the roster already returns that one to the
+    // same client (see the analytics payload below): one word for two things is the hazard, so the
+    // permission is spelled out wherever it is the permission.
+    res.json({ token, user: { id: user.id, username: user.username, access_role: user.access_role } });
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -152,17 +156,69 @@ const generateId = () => {
 };
 
 // -------------------------------------------------------------
+// THE SCOPE CHECKS (Layer 3, slice 2) — the per-row half of the policy
+// -------------------------------------------------------------
+// The gate in server/access.js answers "may this ROLE use this resource". It cannot answer "may THIS
+// caller touch THIS row", because that is a question about data. The RULE still lives there
+// (`scopeFor` + `scopedAllows`); what lives here is the lookup that feeds it, and the refusal shape is
+// the gate's own — 403 with no body, so a scoped caller learns nothing about a row they may not see.
+
+const refuse = (res) => res.status(403).end();
+
+/** The employees row this account is tied to, or null when the account is tied to none. */
+async function callerEmployeeId(req) {
+  const rows = await db.query(`SELECT employee_id FROM users WHERE id = ${db.escapeString(req.user.id)}`);
+  return rows.length ? (rows[0].employee_id || null) : null;
+}
+
+/**
+ * The relation between the signed-in account and one employees row (access.RELATION).
+ *
+ * `unknown` covers the honest cases: the account carries no `employee_id` (today's single `admin`
+ * row), or the row asked for does not exist. Neither is a relation, and no scope permits on it.
+ */
+async function relationTo(req, employeeId) {
+  if (!employeeId) return access.RELATION.UNKNOWN;
+  const me = await callerEmployeeId(req);
+  if (!me) return access.RELATION.UNKNOWN;
+  if (me === employeeId) return access.RELATION.SELF;
+  const reports = await db.query(
+    `SELECT id FROM employees WHERE id = ${db.escapeString(employeeId)} AND manager_id = ${db.escapeString(me)}`
+  );
+  return reports.length ? access.RELATION.REPORT : access.RELATION.OTHER;
+}
+
+/**
+ * May this caller reach this employee's row? True only when the policy states how far their role
+ * reaches AND the row is inside it. `SCOPE.ALL` short-circuits (HR reads the company, as before);
+ * an unstated scope (`null`) is refused rather than widened.
+ */
+async function scopeAllowsTarget(req, employeeId) {
+  if (req.accessScope === access.SCOPE.ALL) return true;
+  if (!req.accessScope) return false;
+  return access.scopedAllows(req.accessScope, await relationTo(req, employeeId));
+}
+
+/** The actor of a write, or null when the token names none. A write must name a person (§5.2 rule 1). */
+const actorOf = (req) => (req.user && req.user.username) || null;
+
+// -------------------------------------------------------------
 // ACCOUNTS (Layer 3, slice 1) — plural accounts through an admin-authenticated path
 // -------------------------------------------------------------
 // Chosen shape: HTTP, admin-authenticated (POST /api/users) rather than a hand-written SQL insert.
 // WHO may create an account is the same question, and the same file, as every other resource: the
-// policy table in server/access.js ('users:write' -> admin today). It refuses a username that
+// policy table in server/access.js ('users:write' -> hr_admin today). It refuses a username that
 // already exists (409), a password shorter than 12 characters (400), and a role this product does
 // not know (400) — a user whose role matches no policy cell could log in and do nothing.
+// Layer 3, slice 2 adds the one field the scope checks need: `employee_id`, the account → person link
+// (docs/access-model.md §2.2). Without it a `manager` account resolves to nobody's manager and an
+// `employee` account to nobody, which is safe but useless; with it, a role's reach can be resolved.
+// The link is refused if it names no employee, and refused if that employee already has an account.
 
 app.get('/api/users', async (req, res) => {
   try {
-    const users = await db.query('SELECT id, username, role, created_at FROM users ORDER BY created_at');
+    // `access_role` is the renamed column (§2.4); the payload still carries no password material.
+    const users = await db.query('SELECT id, username, access_role, created_at FROM users ORDER BY created_at');
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' });
@@ -171,7 +227,7 @@ app.get('/api/users', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
   try {
-    const { username, password, role } = req.body || {};
+    const { username, password, access_role: accessRole, employee_id: employeeId } = req.body || {};
     if (!username || typeof username !== 'string' || !username.trim()) {
       return res.status(400).json({ error: 'username is required' });
     }
@@ -179,27 +235,40 @@ app.post('/api/users', async (req, res) => {
     if (typeof password !== 'string' || password.length < 12) {
       return res.status(400).json({ error: 'password must be at least 12 characters' });
     }
-    if (!access.isKnownRole(role)) {
+    if (!access.isKnownRole(accessRole)) {
       return res.status(400).json({ error: 'unknown role', known_roles: access.ROLE_LIST });
     }
     const existing = await db.query(`SELECT id FROM users WHERE username = ${db.escapeString(name)}`);
     if (existing.length) return res.status(409).json({ error: 'that username already exists' });
+
+    // The account → person link, when one is given. Three refusals, each naming what is wrong: the
+    // employee must exist, must not already have an account, and a link that is absent stays NULL
+    // (the honest state of an account that is not tied to a person yet — today's single admin row).
+    let linkedEmployee = null;
+    if (employeeId !== undefined && employeeId !== null && String(employeeId).trim() !== '') {
+      linkedEmployee = String(employeeId).trim();
+      const employee = await db.query(`SELECT id FROM employees WHERE id = ${db.escapeString(linkedEmployee)}`);
+      if (!employee.length) return res.status(400).json({ error: 'employee_id does not name an employee' });
+      const alreadyLinked = await db.query(`SELECT id FROM users WHERE employee_id = ${db.escapeString(linkedEmployee)}`);
+      if (alreadyLinked.length) return res.status(409).json({ error: 'that employee already has an account' });
+    }
+
     const id = generateId();
     const password_hash = await auth.hashPassword(password);
-    await db.query(`INSERT INTO users (id, username, password_hash, role) VALUES (${db.escapeString(id)}, ${db.escapeString(name)}, ${db.escapeString(password_hash)}, ${db.escapeString(role)})`);
+    await db.query(`INSERT INTO users (id, username, password_hash, access_role, employee_id) VALUES (${db.escapeString(id)}, ${db.escapeString(name)}, ${db.escapeString(password_hash)}, ${db.escapeString(accessRole)}, ${db.escapeString(linkedEmployee)})`);
     // Layer 3, slice 2 (prerequisite 3): creating an account is now attributable. Before this the
     // route wrote no audit row at all, so nothing said WHO made an account — and the two employee
-    // write paths (the CREATE and UPDATE handlers below) write the literal 'system' into this same
-    // field, which is a false name in a column that exists to hold a person's. This route does not
-    // follow them: the actor is
-    // the authenticated caller. `performed_by` is NOT NULL-guarded into a placeholder — the gate
-    // (`users:write`) runs before this handler, so `req.user.username` is the real signer, and the
-    // `|| null` is the same honest fallback the pre-boarding paths use rather than a fake name.
-    const actor = (req.user && req.user.username) || null;
+    // write paths (the CREATE and UPDATE handlers below) wrote the literal 'system' into this same
+    // field, which was a false name in a column that exists to hold a person's. This slice fixes
+    // those two as well, so `'system'` no longer appears in any audit row on a write path.
+    // The actor is the authenticated caller: the gate (`users:write`) runs before this handler, so
+    // `req.user.username` is the real signer, and the `|| null` is the same honest fallback the
+    // pre-boarding paths use rather than a fake name.
+    const actor = actorOf(req);
     // The password is NOT recorded: `new_values` carries what was created, never the credential.
     await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, new_values, timestamp)
-      VALUES (${db.escapeString(generateId())}, ${db.escapeString(actor)}, 'user', ${db.escapeString(id)}, 'CREATE', ${db.escapeString(JSON.stringify({ username: name, role }))}, CURRENT_TIMESTAMP)`);
-    res.status(201).json({ id, username: name, role });
+      VALUES (${db.escapeString(generateId())}, ${db.escapeString(actor)}, 'user', ${db.escapeString(id)}, 'CREATE', ${db.escapeString(JSON.stringify({ username: name, access_role: accessRole, employee_id: linkedEmployee }))}, CURRENT_TIMESTAMP)`);
+    res.status(201).json({ id, username: name, access_role: accessRole, employee_id: linkedEmployee });
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -215,17 +284,42 @@ app.get('/api/employees', async (req, res) => {
     // 2026-10-02). ?jurisdiction=AE|SA filters the roster by data_residency_country;
     // omitting it (or any other value) returns everyone, unfiltered — nothing is
     // deleted or hidden at the data layer, only at the query the UI happens to send.
+    // Layer 3, slice 2 (the same point, sharpened): a FILTER is not an access control, and this
+    // route is where that claim was always about to be tested. The row scope below is the control.
+    const conditions = [];
     const jurisdiction = (req.query.jurisdiction || '').toUpperCase();
-    const sql = (jurisdiction === 'AE' || jurisdiction === 'SA')
-      ? `SELECT * FROM employees WHERE data_residency_country = ${db.escapeString(jurisdiction)} ORDER BY start_date DESC`
-      : `SELECT * FROM employees ORDER BY start_date DESC`;
-    const employees = await db.query(sql);
-    const decrypted = employees.map(emp => ({
-      ...emp,
-      national_id_value: auth.decrypt(emp.national_id_value),
-      national_id_iqama: auth.decrypt(emp.national_id_iqama)
-    }));
-    res.json(decrypted);
+    if (jurisdiction === 'AE' || jurisdiction === 'SA') {
+      conditions.push(`data_residency_country = ${db.escapeString(jurisdiction)}`);
+    }
+    // §3.1/§6.1: a manager reads their own reporting line and NOT the company. The line is resolved
+    // from `employees.manager_id` against the caller's own `users.employee_id`, so an account with no
+    // link has no reports — an empty roster, which is the truth about it, not the company's.
+    if (req.accessScope === access.SCOPE.REPORTS) {
+      const me = await callerEmployeeId(req);
+      if (!me) return res.json([]);
+      conditions.push(`manager_id = ${db.escapeString(me)}`);
+    }
+    const where = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : '';
+    const employees = await db.query(`SELECT * FROM employees${where} ORDER BY start_date DESC`);
+
+    // The field half of the cell. `null` means the policy does not say which columns this role may
+    // see, and the honest answer to that is to serve none of them rather than all (§3.1: the roster
+    // decrypts both national-ID columns, so "encrypted at rest" discloses nothing if everyone's read
+    // decrypts them; and a manager must not see a report's pay — §4).
+    const removed = access.fieldsRemovedFor('employees:read', req.user.access_role);
+    if (removed === null) return refuse(res);
+    const project = (emp) => {
+      const row = {};
+      for (const key of Object.keys(emp)) {
+        if (removed.indexOf(key) === -1) row[key] = emp[key];
+      }
+      // Decrypt ONLY what this role is being served: a column that is removed is never decrypted,
+      // so no role's response passes through the plaintext on its way out.
+      if (removed.indexOf('national_id_value') === -1) row.national_id_value = auth.decrypt(row.national_id_value);
+      if (removed.indexOf('national_id_iqama') === -1) row.national_id_iqama = auth.decrypt(row.national_id_iqama);
+      return row;
+    };
+    res.json(employees.map(project));
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error" });
   }
@@ -242,7 +336,13 @@ app.get('/api/employees', async (req, res) => {
 app.post('/api/employees', async (req, res) => {
   try {
     const data = req.body;
-    
+
+    // §5.2 rule 1: every write names the signed-in actor, and an unnamed one is REFUSED rather than
+    // recorded (rule 3). This path used to write the literal 'system' into `performed_by` — a field
+    // that exists to hold a person's name, holding a false one, which is worse than a blank.
+    const actor = actorOf(req);
+    if (!actor) return res.status(400).json({ error: 'a named actor is required to create an employee' });
+
     if (!data.data_residency_country) {
       return res.status(400).json({ error: 'data_residency_country is required' });
     }
@@ -285,7 +385,7 @@ app.post('/api/employees', async (req, res) => {
 
     const auditData = { ...data, national_id_value: encryptedNationalId, national_id_iqama: encryptedIqama };
     await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, new_values, timestamp)
-      VALUES (${db.escapeString(generateId())}, 'system', 'employee', ${db.escapeString(id)}, 'CREATE', ${db.escapeString(JSON.stringify(auditData))}, CURRENT_TIMESTAMP)`);
+      VALUES (${db.escapeString(generateId())}, ${db.escapeString(actor)}, 'employee', ${db.escapeString(id)}, 'CREATE', ${db.escapeString(JSON.stringify(auditData))}, CURRENT_TIMESTAMP)`);
 
     const tasks = compliance.generateTasks(id, country === 'SA' || country === 'KSA' ? 'KSA' : 'UAE', 'onboarding');
     for (const task of tasks) {
@@ -304,6 +404,12 @@ app.put('/api/employees/:id', async (req, res) => {
   try {
     const data = req.body;
     const empId = req.params.id;
+
+    // §5.2 rule 1/3, exactly as on the CREATE path above: the actor is signed in and named, or the
+    // write does not happen. This path used to attribute every edit to the literal 'system'.
+    const actor = actorOf(req);
+    if (!actor) return res.status(400).json({ error: 'a named actor is required to update an employee' });
+
     const existing = await db.query(`SELECT * FROM employees WHERE id = ${db.escapeString(empId)}`);
     if (existing.length === 0) return res.status(404).json({ error: 'Employee not found' });
     const emp = existing[0];
@@ -353,7 +459,7 @@ app.put('/api/employees/:id', async (req, res) => {
       if (auditNewValues.national_id_iqama) auditNewValues.national_id_iqama = auth.encrypt(auditNewValues.national_id_iqama);
 
       await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, old_values, new_values, timestamp)
-        VALUES (${db.escapeString(generateId())}, 'system', 'employee', ${db.escapeString(empId)}, 'UPDATE', ${db.escapeString(JSON.stringify(emp))}, ${db.escapeString(JSON.stringify(auditNewValues))}, CURRENT_TIMESTAMP)`);
+        VALUES (${db.escapeString(generateId())}, ${db.escapeString(actor)}, 'employee', ${db.escapeString(empId)}, 'UPDATE', ${db.escapeString(JSON.stringify(emp))}, ${db.escapeString(JSON.stringify(auditNewValues))}, CURRENT_TIMESTAMP)`);
 
       if (data.status === 'offboarding' && emp.status !== 'offboarding') {
         const tasks = compliance.generateTasks(empId, (data.data_residency_country || emp.data_residency_country) === 'SA' ? 'KSA' : 'UAE', 'offboarding');
@@ -372,6 +478,10 @@ app.put('/api/employees/:id', async (req, res) => {
 });
 
 app.get('/api/employees/:id/onboarding', async (req, res) => {
+  // §3.1: HR reads anyone's; a manager their reports'; an `employee` their OWN row only — this is the
+  // cell the ruling's `⊘ scoped (own)` becomes now that `users.employee_id` can say which row is
+  // theirs. A caller outside their scope is refused with the gate's own shape: 403, no body.
+  if (!(await scopeAllowsTarget(req, req.params.id))) return refuse(res);
   const tasks = await db.query(`SELECT * FROM onboarding_tasks WHERE employee_id = ${db.escapeString(req.params.id)}`);
   res.json(tasks);
 });
@@ -380,10 +490,22 @@ app.get('/api/employees/:id/onboarding', async (req, res) => {
 // name, while the pre-boarding side already refuses an unnamed actor with 400 — this makes the two
 // sides agree: completing without a named actor is refused, and the name is the signed-in user's
 // (never 'system', never a placeholder).
+//
+// Layer 3, slice 2 adds the OTHER half of the same question (§6.4): requiring an actor names WHO
+// ticked it, not THAT THEY WERE ENTITLED TO. The route takes a task id and no employee id, so the
+// task is resolved first and its employee checked against the caller's scope — HR may tick any, a
+// manager only their reports', and an `employee` never (§6.4: the view is read-only, so the write
+// stays refused for them by the policy cell). A task that resolves to nothing is refused rather than
+// answered "Task updated" — the route does not report a change it did not make.
 app.put('/api/onboarding-tasks/:id', async (req, res) => {
   try {
     const { status } = req.body || {};
-    const actor = (req.user && req.user.username) || null;
+    const actor = actorOf(req);
+    if (req.accessScope !== access.SCOPE.ALL) {
+      const task = await db.query(`SELECT employee_id FROM onboarding_tasks WHERE id = ${db.escapeString(req.params.id)}`);
+      if (!task.length) return refuse(res);
+      if (!(await scopeAllowsTarget(req, task[0].employee_id))) return refuse(res);
+    }
     if (status === 'completed' && !actor) {
       return res.status(400).json({ error: 'a named actor is required to complete a task' });
     }
@@ -397,6 +519,9 @@ app.put('/api/onboarding-tasks/:id', async (req, res) => {
 });
 
 app.get('/api/employees/:id/offboarding', async (req, res) => {
+  // §3.1: HR reads anyone's, an `employee` their own, and a manager is NOT in this cell at all — the
+  // reporting line does not carry an exit view.
+  if (!(await scopeAllowsTarget(req, req.params.id))) return refuse(res);
   const tasks = await db.query(`SELECT * FROM offboarding_tasks WHERE employee_id = ${db.escapeString(req.params.id)}`);
   res.json(tasks);
 });
@@ -408,7 +533,7 @@ app.get('/api/employees/:id/offboarding', async (req, res) => {
 app.put('/api/offboarding-tasks/:id', async (req, res) => {
   try {
     const { status } = req.body || {};
-    const actor = (req.user && req.user.username) || null;
+    const actor = actorOf(req);
     if (status === 'completed' && !actor) {
       return res.status(400).json({ error: 'a named actor is required to complete a task' });
     }
@@ -455,6 +580,15 @@ app.get('/api/compliance/notice', async (req, res) => {
 app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) => {
   try {
     const { templateName, employeeId } = req.params;
+
+    // §6.2: the response is a document ABOUT A NAMED PERSON'S MONEY, in a form that looks official.
+    // The cell admits HR and finance; this is finance's own limit within it — the settlement
+    // statement and not the contracts or the notices. A role the table does not cover is refused,
+    // so `templatesAllowedFor` returning `undefined` is a refusal and never "all of them".
+    const allowedTemplates = access.templatesAllowedFor(req.user.access_role);
+    if (allowedTemplates === undefined) return refuse(res);
+    if (allowedTemplates !== access.ALL_TEMPLATES && allowedTemplates.indexOf(templateName) === -1) return refuse(res);
+
     const employees = await db.query(`SELECT * FROM employees WHERE id = ${db.escapeString(employeeId)}`);
     if (employees.length === 0) return res.status(404).json({ error: 'Employee not found' });
     const emp = employees[0];
@@ -687,8 +821,14 @@ app.post('/api/exit-interviews', async (req, res) => {
 // two callers of one function, not two implementations.
 app.post('/api/preboarding/cases', async (req, res) => {
   try {
+    // §5.2 rule 3: an unnamed actor is REFUSED, not defaulted to 'system'. The `|| 'system'` that
+    // stood here was the same false-name class the two employee paths carried: `actor` is used for
+    // the case's `created_by` and for its audit row, so a 'system' here says a mechanism opened a
+    // case that a person opened, and the pre-boarding record's whole value is that it names them.
+    const actor = actorOf(req);
+    if (!actor) return res.status(400).json({ error: 'a named actor is required to record an offer acceptance' });
     const { case: createdCase, created } = await preboarding.recordOfferAcceptance(req.body, {
-      actor: (req.user && req.user.username) || 'system',
+      actor,
       source: 'intake_form',
     });
     // 201 when this acceptance opened the case, 200 when the offer already had one:
@@ -786,13 +926,17 @@ app.get('/api/preboarding/cases/:id/workspace', async (req, res) => {
 
 app.post('/api/preboarding/cases/:id/items/:itemKey/status', async (req, res) => {
   try {
+    // §5.2 rule 3: the actor is refused when unnamed, never defaulted — this row's `last_actor` is
+    // read by the workspace track as who moved the line, so 'system' would be a false name there too.
+    const actor = actorOf(req);
+    if (!actor) return res.status(400).json({ error: 'a named actor is required to move a checklist item' });
     const item = await preboardingItems.setItemStatus({
       case_id: req.params.id,
       item_key: req.params.itemKey,
       status: req.body && req.body.status,
       document_reference: req.body && req.body.document_reference,
       note: req.body && req.body.note,
-      actor: (req.user && req.user.username) || 'system',
+      actor,
     });
     res.json({ item });
   } catch (err) {
@@ -802,11 +946,13 @@ app.post('/api/preboarding/cases/:id/items/:itemKey/status', async (req, res) =>
 
 app.post('/api/preboarding/cases/:id/reminders', async (req, res) => {
   try {
+    const actor = actorOf(req);
+    if (!actor) return res.status(400).json({ error: 'a named actor is required to record a reminder' });
     const result = await preboardingItems.recordReminder({
       case_id: req.params.id,
       item_keys: (req.body && req.body.item_keys) || null,
       note: req.body && req.body.note,
-      actor: (req.user && req.user.username) || 'system',
+      actor,
     });
     res.status(201).json(result);
   } catch (err) {

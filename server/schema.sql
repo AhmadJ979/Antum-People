@@ -169,6 +169,12 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 -- IS, so "an employee may read their own pre-boarding record" (docs/access-model.md §2.2, §3.2) could not
 -- be expressed at all. NULL means the account is not tied to an employee row yet — exactly what the single
 -- `admin` row is, and it is deliberately NOT backfilled with a guess.
+-- Layer 3, slice 2: `access_role` is the permission. It was `role` until this slice, and the name it
+-- collided with is `employees.role` — the person's JOB TITLE (`server/schema.sql:9`), which is what an
+-- access check written against the wrong column would gate on (docs/access-model.md §2.4). The rename
+-- rides this slice because this slice derives `manager` from `employees.manager_id` and so holds both
+-- columns in one function. A live database is renamed at boot by RENAMES in server/db.js, value and all
+-- (`admin` → `hr_admin`); a fresh one is created with the new name here, so the two paths agree.
 -- Declared LAST on purpose: ALTER TABLE ADD COLUMN appends, so a fresh database and a migrated one then
 -- read the same by name (server/column-migration.test.js holds that). A database that predates this gains
 -- the column from COLUMN_MIGRATIONS in server/db.js, the way `completed_by` did.
@@ -176,12 +182,13 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 -- NOTE, measured: the column list below carries NO inline comment. SQLite's ALTER TABLE ... DROP COLUMN
 -- re-parses the table's stored CREATE TABLE text, and a `--` comment inside the list makes it fail with
 -- "error in table users after drop column: incomplete input" — which is how this was found (the slice-2
--- migration test drops this column to build a pre-change database).
+-- migration test drops this column to build a pre-change database). RENAME COLUMN, measured 2026-10-20
+-- against a copy of the live database, tolerates the same comment; DROP COLUMN is the strict one.
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   username TEXT UNIQUE,
   password_hash TEXT,
-  role TEXT,
+  access_role TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   employee_id TEXT
 );

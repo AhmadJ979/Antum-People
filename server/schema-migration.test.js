@@ -87,7 +87,7 @@ describe('schema.sql migrates a database that already has rows', () => {
       VALUES ('off-1','existing-1','Existing offboarding task','written before the change','pending')`);
     handle.exec(`INSERT INTO audit_logs (id, entity_type, entity_id, action, performed_by)
       VALUES ('audit-1','employee','existing-1','CREATE','system')`);
-    handle.exec(`INSERT INTO users (id, username, password_hash, role) VALUES ('user-1','admin','hash-value','admin')`);
+    handle.exec(`INSERT INTO users (id, username, password_hash, access_role) VALUES ('user-1','admin','hash-value','hr_admin')`);
 
     const before = counts(handle);
 
@@ -105,6 +105,9 @@ describe('schema.sql migrates a database that already has rows', () => {
 
     const employee = handle.prepare("SELECT * FROM employees WHERE id='existing-1'").get();
     assert.strictEqual(employee.role, 'Analyst');
+    // The account that was already there keeps its value, under the name this slice gave it: the
+    // rename is a migration of the column, and this row is what "no row is lost" means for `users`.
+    assert.strictEqual(handle.prepare("SELECT access_role FROM users WHERE id='user-1'").get().access_role, 'hr_admin');
     assert.strictEqual(employee.jurisdiction, 'AE');
     assert.strictEqual(employee.salary, 20000);
     assert.strictEqual(
