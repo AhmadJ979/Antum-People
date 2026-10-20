@@ -1,0 +1,21 @@
+16:10:51Z === BEFORE ===
+16:10:52Z lock names pid 23351; role-loops: 23351 ; pgrep mentions: 1
+16:10:52Z public: 200 <title>Antum People
+16:10:54Z === THE DECOYS, AS THE KERNEL HOLDS THEM - the precondition, asserted ===
+16:10:54Z   pid 24495 argv: bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo exists; sleep 240; : 
+16:10:54Z   pid 24496 argv: sh -c bash -lc 'HOME=/home/agent-lead bash -lc '"'"'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'"'"''; sleep 240; : 
+16:10:54Z precondition established: both decoys name the path with a FLAG in argv[1]; role-loops still 23351 
+16:10:54Z === REAPING the armed guard by the PID its own lock names (23351) - never pkill -f ===
+16:10:55Z guard 23351 gone: yes
+16:10:55Z its own exit line: 2026-10-20T16:10:54+00:00 EXIT: killed by SIGTERM (loop pid 23351)
+16:10:55Z === ARMING while both decoys are alive (the arm the defect refused, six times in 27 s) ===
+16:10:56Z === RESULT ===
+16:10:56Z ARMED FIRST/SUCCESSFUL ATTEMPT: pid 24580, argv bash scripts/keep-alive.sh 
+16:10:56Z role-loops now: 24580  (expect exactly 24580)
+16:10:56Z refusals logged in this window: 0 (expect 0)
+16:10:56Z decoys still alive: 2 of 2; none killed
+16:10:56Z public: 200 <title>Antum People
+16:10:58Z === AFTER THE DECOYS DIE ===
+16:10:58Z role-loops: 24580 ; lock names 24580
+16:10:58Z public: 200
+16:10:58Z DONE

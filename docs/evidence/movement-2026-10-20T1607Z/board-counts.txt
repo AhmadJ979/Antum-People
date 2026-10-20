@@ -1,0 +1,18 @@
+[
+  {
+    "status": "backlog",
+    "COUNT (*)": 12
+  },
+  {
+    "status": "done",
+    "COUNT (*)": 243
+  },
+  {
+    "status": "in-progress",
+    "COUNT (*)": 2
+  },
+  {
+    "status": "review",
+    "COUNT (*)": 1
+  }
+]

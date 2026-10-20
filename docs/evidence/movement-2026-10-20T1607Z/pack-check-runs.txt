@@ -1,0 +1,113 @@
+pack-check.py, the four directions, run verbatim. Pack: docs/evidence/movement-2026-10-20T1607Z/
+Filed by agent-product-designer under row d9a3d818. Command line is printed above each run.
+
+The three runs below are in order. Direction 3 reddens in the first two for real: the pack before
+anything was added to the index, and the state after an 'git add -f' whose globs missed three files.
+The check named exactly the three that were missed - the same class of miss as the .gitignore trap.
+
+$ python3 docs/evidence/movement-2026-10-20T1607Z/pack-check.py    # BEFORE the files were added to the index
+pack: /home/agent-product-designer/d20/docs/evidence/movement-2026-10-20T1607Z
+files judged: 42
+
+1. every file in this directory is named in README.md: 42/42
+2. every filename README.md names exists: 153 named, 7 in the asserted external block, 3 asserted non-paths, 2 MISSING
+   MISSING: md5sums.txt
+   MISSING: pack-check-runs.txt
+3. every file in this directory is tracked by git: 0 tracked, 42 UNTRACKED
+   UNTRACKED: MOVEMENT.md  (git add -f MOVEMENT.md)
+   UNTRACKED: README.md  (git add -f README.md)
+   UNTRACKED: board-counts.txt  (git add -f board-counts.txt)
+   UNTRACKED: board-now.txt  (git add -f board-now.txt)
+   UNTRACKED: board-open.txt  (git add -f board-open.txt)
+   UNTRACKED: get-prs.sh  (git add -f get-prs.sh)
+   UNTRACKED: guard-acceptance.console  (git add -f guard-acceptance.console)
+   UNTRACKED: guard-acceptance.out  (git add -f guard-acceptance.out)
+   UNTRACKED: guard-acceptance.sh  (git add -f guard-acceptance.sh)
+   UNTRACKED: guard-acceptance2.out  (git add -f guard-acceptance2.out)
+   UNTRACKED: guard-acceptance2.sh  (git add -f guard-acceptance2.sh)
+   UNTRACKED: guard-evidence.out  (git add -f guard-evidence.out)
+   UNTRACKED: guard-predicate-test.out  (git add -f guard-predicate-test.out)
+   UNTRACKED: movement.log  (git add -f movement.log)
+   UNTRACKED: pack-check.py  (git add -f pack-check.py)
+   UNTRACKED: pr-review.txt  (git add -f pr-review.txt)
+   UNTRACKED: preflight-defect.txt  (git add -f preflight-defect.txt)
+   UNTRACKED: preflight-full.txt  (git add -f preflight-full.txt)
+   UNTRACKED: preflight-recut.txt  (git add -f preflight-recut.txt)
+   UNTRACKED: preflight-reddened.txt  (git add -f preflight-reddened.txt)
+   UNTRACKED: preflight.txt  (git add -f preflight.txt)
+   UNTRACKED: prs-open.json  (git add -f prs-open.json)
+   UNTRACKED: prs-open.status  (git add -f prs-open.status)
+   UNTRACKED: prs-open.txt  (git add -f prs-open.txt)
+   UNTRACKED: remote-main.txt  (git add -f remote-main.txt)
+   UNTRACKED: retired-routes.out  (git add -f retired-routes.out)
+   UNTRACKED: review-prs.sh  (git add -f review-prs.sh)
+   UNTRACKED: run-client-suite.sh  (git add -f run-client-suite.sh)
+   UNTRACKED: run-guard-evidence.console  (git add -f run-guard-evidence.console)
+   UNTRACKED: run-guard-evidence.sh  (git add -f run-guard-evidence.sh)
+   UNTRACKED: run-verify.console  (git add -f run-verify.console)
+   UNTRACKED: run-verify.sh  (git add -f run-verify.sh)
+   UNTRACKED: snapshot-state.sh  (git add -f snapshot-state.sh)
+   UNTRACKED: source-inventory.txt  (git add -f source-inventory.txt)
+   UNTRACKED: suite-client-WRONG-vitest.out  (git add -f suite-client-WRONG-vitest.out)
+   UNTRACKED: suite-client.out  (git add -f suite-client.out)
+   UNTRACKED: suite-server.out  (git add -f suite-server.out)
+   UNTRACKED: task-results.txt  (git add -f task-results.txt)
+   UNTRACKED: verify-live.console  (git add -f verify-live.console)
+   UNTRACKED: verify-live.console2  (git add -f verify-live.console2)
+   UNTRACKED: verify-live.out  (git add -f verify-live.out)
+   UNTRACKED: verify-live.sh  (git add -f verify-live.sh)
+4. md5sums.txt is not stale: MISSING the manifest
+
+VERDICT: 45 problem(s) -> this pack does NOT hold
+exit=1
+
+
+$ git add -f docs/evidence/movement-2026-10-20T1607Z/*   (the .log files need -f: .gitignore line 6 is *.log)
+$ python3 docs/evidence/movement-2026-10-20T1607Z/pack-check.py
+pack: /home/agent-product-designer/d20/docs/evidence/movement-2026-10-20T1607Z
+files judged: 42
+
+1. every file in this directory is named in README.md: 42/42
+2. every filename README.md names exists: 153 named, 7 in the asserted external block, 3 asserted non-paths, 2 MISSING
+   MISSING: md5sums.txt
+   MISSING: pack-check-runs.txt
+3. every file in this directory is tracked by git: 39 tracked, 3 UNTRACKED
+   UNTRACKED: prs-open.json  (git add -f prs-open.json)
+   UNTRACKED: prs-open.status  (git add -f prs-open.status)
+   UNTRACKED: verify-live.console2  (git add -f verify-live.console2)
+4. md5sums.txt is not stale: MISSING the manifest
+
+VERDICT: 6 problem(s) -> this pack does NOT hold
+exit=1
+
+$ git add -f docs/evidence/movement-2026-10-20T1607Z/prs-open.json docs/evidence/movement-2026-10-20T1607Z/prs-open.status docs/evidence/movement-2026-10-20T1607Z/verify-live.console2    # the three the globs missed
+$ python3 docs/evidence/movement-2026-10-20T1607Z/pack-check.py
+pack: /home/agent-product-designer/d20/docs/evidence/movement-2026-10-20T1607Z
+files judged: 42
+
+1. every file in this directory is named in README.md: 42/42
+2. every filename README.md names exists: 152 named, 7 in the asserted external block, 3 asserted non-paths, 2 MISSING
+   MISSING: md5sums.txt
+   MISSING: pack-check-runs.txt
+3. every file in this directory is tracked by git: 42 tracked, 0 UNTRACKED
+4. md5sums.txt is not stale: MISSING the manifest
+
+VERDICT: 3 problem(s) -> this pack does NOT hold
+exit=1
+
+md5sums.txt is generated from this state. It lists every file in the pack except itself and this
+run log (a log that records the runs cannot be covered by a manifest generated from them); direction 4
+prints that exclusion, and checks the manifest against the bytes, every run.
+
+$ git add -f docs/evidence/movement-2026-10-20T1607Z/md5sums.txt docs/evidence/movement-2026-10-20T1607Z/pack-check-runs.txt
+$ python3 docs/evidence/movement-2026-10-20T1607Z/pack-check.py
+pack: /home/agent-product-designer/d20/docs/evidence/movement-2026-10-20T1607Z
+files judged: 44
+
+1. every file in this directory is named in README.md: 44/44
+2. every filename README.md names exists: 152 named, 7 in the asserted external block, 3 asserted non-paths, 0 MISSING
+3. every file in this directory is tracked by git: 44 tracked, 0 UNTRACKED
+4. md5sums.txt is not stale: 42 file(s) listed, 0 STALE, 2 file(s) deliberately not listed (itself and the run log, which records the runs)
+
+VERDICT: all four directions hold (44 file(s))
+exit=0

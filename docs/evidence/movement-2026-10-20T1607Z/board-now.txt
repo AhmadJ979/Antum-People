@@ -1,0 +1,14 @@
+[
+  {
+    "id": "bedb1a89-6ab8-45a9-9f55-2dbf7e014682",
+    "status": "in-progress",
+    "assigned_to": "agent-senior-software-engineer",
+    "substr (tasks.title, 1, 64)": "The guard test fails on its own merge result: pin the defect rev"
+  },
+  {
+    "id": "9e60797f-e321-45b5-b27b-41ed73e891df",
+    "status": "in-progress",
+    "assigned_to": "agent-senior-software-engineer",
+    "substr (tasks.title, 1, 64)": "The preflight's after-state is half-overridable, and its stated "
+  }
+]

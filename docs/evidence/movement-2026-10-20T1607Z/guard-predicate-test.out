@@ -1,0 +1,24 @@
+# old = 2b14a94  (ed31f5285bab)
+# new = /home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh  (9cc7d9d04071)
+# deploy dir = /home/team/shared/probable-octo-sniffle  port = 3000
+
+=== the decoys, as the kernel holds them (argv of each) ===
+  pid 24258 argv: bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo exists; sleep 90; : 
+  pid 24259 argv: sh -c bash -lc 'HOME=/home/agent-lead bash -lc '"'"'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'"'"''; sleep 90; : 
+
+=== the real loop (lock pid 23351): argv: bash scripts/keep-alive.sh 
+
+=== OLD ===
+  calls pid 23351 a guard: bash scripts/keep-alive.sh
+  calls pid 24258 a guard: bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo exists; sleep 90; :
+  calls pid 24259 a guard: sh -c bash -lc 'HOME=/home/agent-lead bash -lc '"'"'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'"'"''; sleep 90; :
+  -> decoys called guards: 2   real loop called guard: 1
+
+=== NEW ===
+  calls pid 23351 a guard: bash scripts/keep-alive.sh
+  -> decoys called guards: 0   real loop called guard: 1
+
+=== verdict ===
+  ok    OLD counts 2 decoy(s) as duplicate guards - the defect reproduces (the red)
+  ok    NEW counts 0 decoys - a shell running a command that mentions the name is not a loop
+  ok    BOTH count the real loop (pid 23351) - the true positive survives (anti-vacuous)

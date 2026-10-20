@@ -1,0 +1,45 @@
+== /api/employees/demo-emp-omar WITH token ==
+HTTP/1.1 403 Forbidden
+Vary: Origin
+Date: Tue, 20 Oct 2026 16:11:58 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Content-Length: 0
+
+== /api/employees/demo-emp-omar WITHOUT token ==
+HTTP/1.1 401 Unauthorized
+Vary: Origin
+Content-Type: application/json; charset=utf-8
+Content-Length: 41
+ETag: W/"29-rBJHcvvgtZjxYGFuDCR06M6CFDY"
+Date: Tue, 20 Oct 2026 16:11:58 GMT
+== /api/compliance/report WITH token ==
+HTTP/1.1 403 Forbidden
+Vary: Origin
+Date: Tue, 20 Oct 2026 16:11:58 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Content-Length: 0
+
+== /api/compliance/report WITHOUT token ==
+HTTP/1.1 401 Unauthorized
+Vary: Origin
+Content-Type: application/json; charset=utf-8
+Content-Length: 41
+ETag: W/"29-rBJHcvvgtZjxYGFuDCR06M6CFDY"
+Date: Tue, 20 Oct 2026 16:11:58 GMT
+== /api/nonexistent-route-xyz WITH token ==
+HTTP/1.1 403 Forbidden
+Vary: Origin
+Date: Tue, 20 Oct 2026 16:11:58 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Content-Length: 0
+
+== /api/nonexistent-route-xyz WITHOUT token ==
+HTTP/1.1 401 Unauthorized
+Vary: Origin
+Content-Type: application/json; charset=utf-8
+Content-Length: 41
+ETag: W/"29-rBJHcvvgtZjxYGFuDCR06M6CFDY"
+Date: Tue, 20 Oct 2026 16:11:58 GMT

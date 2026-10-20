@@ -1,0 +1,48 @@
+=== pre-cutover preflight 2026-10-20T16:08:14+00:00 ===
+  script: /home/team/shared/cutover-preflight.sh | 25307 B | mtime 2026-10-20 15:11:49 | sha256 63b1be21a2a203f8
+  deployed tree: /home/team/shared/probable-octo-sniffle
+  serving today: 2b14a94  asset index-C9vf7pQB.js
+--- disk: the movement's measured need is ~3.8 MB; a full disk fails a movement silently ---
+  PASS  /home free 2467064 KB (>= 200000 KB)
+  PASS  /home inodes free 7411789610
+--- the shipped commit, resolved against the REMOTE (never a local remote-tracking ref) ---
+  PASS  remote tip origin/main = 58acdac82f71 — 58acdac Merge pull request #272 from AhmadJ979/fix/guard-role-not-shape
+  PASS  clone's origin/main ref matches the remote (58acdac82f7182142370a0d65ea383996ec73f0f)
+  PASS  deployed tree's origin/main ref is current
+--- the tree is where we think it is, and has not already moved ---
+  PASS  deployed tree HEAD = 2b14a94 (the served commit)
+  PASS  deployed tree has an origin remote
+--- the product is the thing answering, not the platform placeholder ---
+  PASS  public GET / -> 200
+  PASS  public HTML names assets/index-C9vf7pQB.js (ours, not the placeholder)
+  PASS  port 3000 held by pid 22861: node index.js
+  PASS  listener cwd is the deployed tree's server/
+  no-token contract: GET /api/employees -> 401 (want 401)
+--- the guard is alive, judged by its own lock and /proc (never by matching a process name) ---
+  PASS  guard alive: pid 27783 (/usr/bin/bash scripts/keep-alive.sh )
+  PASS  lock holders: 1 (only the guard)
+--- the login-shell hook: which revision is it, and does it pair with its deploy ---
+  PASS  hook installed at /etc/profile.d/zz-antum-product-guard.sh: body md5 728bf2cce72b8c6f9a3cf257f3dfc070 == the deploy copy's revision 2b14a94c3a62 — PAIRED with the deploy that writes the marker
+  the marker this deploy writes has a reader here: the live hook mentions deploy-in-progress 3 time(s), the deploy copy's hook 3 time(s)
+    the hook at 58acdac82f71 (=served tree) IS origin/main's
+    the hook at 2b14a94c3a62 (=deploy copy) IS origin/main's
+--- the rollback target exists and is the bytes we think ---
+  PASS  rollback bundle asset index-Cc1GodRa.js md5 9cdfbe5da81f6acf38fdb10de8a5e6fd
+  PASS  rollback bundle server/index.js md5 7467cec01c90cc3a1fb0156999c1997a
+  WARN  deployed tree's server/index.js md5 c67fca1a66958517647b8f6463e50aa2 != the rollback bundle's 7467cec01c90cc3a1fb0156999c1997a — expected after a cutover: the tree carries the newer code
+--- the shipped tree's own content and the after-state expectation, derived at run time ---
+  PASS  step 1's gate string present in the shipped tree (2 hits)
+  WARN  the shipped commit is 6 commit(s) past the measured 2b14a94, but client/ is UNCHANGED (measured) — the built bundle is still index-BG0peuOK.js. The DISK figures and the reset delta were taken on 2b14a94; re-take them if that delta grew.
+--- step 3/4's inputs ---
+  PASS  demo credential file present
+  PASS  bcryptjs present in the deployed tree (step 3 hashes the credential)
+  PASS  restart env: JWT_SECRET=present ENCRYPTION_KEY=present 
+
+--- after the movement, expect (derived from this run) ---
+    commit  58acdac82f7182142370a0d65ea383996ec73f0f
+    assets/index-BG0peuOK.js   274242 B   md5 f65f15c109e76e86cd8b8abe7102f748
+    assets/index-pNSrK3wr.css   35365 B   md5 eda548202468a7e0293053981037a594
+    public GET / -> 200 with the served HTML naming that asset, the listener on 3000 ours, the guard verified from its lock
+    the two retired routes answer 404 (GET /api/employees/:id, GET /api/compliance/report)
+
+=== PREFLIGHT PASS — the movement's preconditions hold (2026-10-20T16:08:15+00:00) ===

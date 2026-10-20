@@ -1,0 +1,64 @@
+===== PR #273 =====
+title: Derive the role-vs-shape test default from the pre-fix revision, not origin/main
+base: main head: fix/guard-test-default-pre-fix
+mergeable: True state: open merged: False
+body: Follow-up to #272 (merged at `58acdac`). **The defect is in the test I shipped there, and it was found by re-running it on `main` after the merge** — the run that counts.
+
+**What was wrong.** `scripts/guard-role-vs-shape-test.sh` defaulted `--old` to `origin/main`. That was correct while the fix lived on a branch, and wrong the moment it merged: `origin/main` then *is* the fixed code, so OLD was compared with itself and the red could not be produced. On `main` (`58acdac`), with no arguments:
+
+```
+# old = origin/main  (9cc7d9d04071)
+# new = .../scripts/keep-alive.sh  (9cc7d9d04071)      <- the same bytes, so nothing to reproduce
+FAIL  the OLD check did not count a decoy - this test is not reproducing the defect, so it cannot say anything about the fix
+DEFAULT-RUN EXIT=1
+```
+
+A control whose **default is the green** reports a defect where there is none — a reader running the new test on `main` would reasonably conclude the guard fix is broken.
+
+**The change** (`scripts/guard-role-vs-shape-test.sh` only, plus one section in the pack README):
+
+- the default `--old` is now **derived**, never hardcoded: the parent of the commit that introduced `is_loop_argv`, found with `git log -S 'is_l
+files changed: 2
+   docs/evidence/guard-role-vs-shape/README.md                +14 -0
+   scripts/guard-role-vs-shape-test.sh                        +31 -4
+===== PR #274 =====
+title: docs(evidence): file the 15:11Z movement's evidence, and correct two merged packs' claims
+base: main head: evidence/movement-2026-10-20T1511Z
+mergeable: True state: open merged: False
+body: Files the 15:11Z movement's evidence in the repository (it lived only on the host), and folds in the two corrections to packs already merged. Docs-only: no `server/`, `client/` or `scripts/` delta, and no served path loads any of these files - no movement is owed.
+
+## 1. The pack: `docs/evidence/movement-2026-10-20T1511Z/`
+
+21 files: the 17 host artefacts, a `README.md` that names every one of them, `md5sums.txt`, `pack-check.py`, `pack-check-runs.txt`. The 17 were copied with `cp -p` and verified **17 of 17 md5-identical** after the copy; `md5sums.txt` lists every file in the pack except itself.
+
+Every figure in the README is traceable to a file in the pack. What it establishes:
+
+- **`2b14a94` deployed 15:11:47 -> 15:12:12Z (25 s)**, tree clean at `origin/main` (`measured-lv.txt` line 28); host tooling idempotent (7 of 7, then "a second run changes no byte").
+- **the two stylesheet states as bytes**: before 35,805 B `3709a147...`, after 35,306 B `cb54e616...`. The after state is confirmed by the host's own response headers; the before file's bytes are in the pack so a reader can check the baseline instead of believing a number.
+- **the bundle: 277,790 B, md5 `e6ff5da3...`, under a
+files changed: 25
+   docs/evidence/design-index-check-2026-10-20/README.md      +14 -0
+   docs/evidence/design-index-check-2026-10-20/merged-at-d15f251.txt +64 -0
+   docs/evidence/movement-2026-10-20T1511Z/README.md          +214 -0
+   docs/evidence/movement-2026-10-20T1511Z/cutover-20261020-151147-build.log +13 -0
+   docs/evidence/movement-2026-10-20T1511Z/cutover-20261020-151147-evidence.txt +106 -0
+   docs/evidence/movement-2026-10-20T1511Z/cutover-20261020-151147-seed.log +30 -0
+   docs/evidence/movement-2026-10-20T1511Z/diag-guard.sh      +13 -0
+   docs/evidence/movement-2026-10-20T1511Z/guard-evidence.sh  +20 -0
+   docs/evidence/movement-2026-10-20T1511Z/md5sums.txt        +26 -0
+   docs/evidence/movement-2026-10-20T1511Z/measured-diag.txt  +76 -0
+   docs/evidence/movement-2026-10-20T1511Z/measured-ge.txt    +43 -0
+   docs/evidence/movement-2026-10-20T1511Z/measured-live-verify.txt +8 -0
+   docs/evidence/movement-2026-10-20T1511Z/measured-lv.txt    +38 -0
+   docs/evidence/movement-2026-10-20T1511Z/measured-lv2.txt   +23 -0
+   docs/evidence/movement-2026-10-20T1511Z/measured-vpb.txt   +13 -0
+   docs/evidence/movement-2026-10-20T1511Z/movement.log       +106 -0
+   docs/evidence/movement-2026-10-20T1511Z/pack-check-runs.txt +52 -0
+   docs/evidence/movement-2026-10-20T1511Z/pack-check.py      +126 -0
+   docs/evidence/movement-2026-10-20T1511Z/served-after-index-BK_EwcpZ.css +2 -0
+   docs/evidence/movement-2026-10-20T1511Z/served-before-35d-served.css +2 -0
+   docs/evidence/movement-2026-10-20T1511Z/verify-live.sh     +61 -0
+   docs/evidence/movement-2026-10-20T1511Z/verify-live2.sh    +62 -0
+   docs/evidence/movement-2026-10-20T1511Z/verify-pb.sh       +52 -0
+   docs/evidence/tailwind-pinned-sources/README.md            +17 -0
+   docs/evidence/tailwind-pinned-sources/pin-removed-build-tails.txt +40 -0
