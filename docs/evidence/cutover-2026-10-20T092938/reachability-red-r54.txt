@@ -1,0 +1,115 @@
+=== the red at the merged tip: what failed, and the rule that failed it, 2026-10-20T09:43Z (Round 54) ===
+=== not ok lines in the WITH-INSTALL log:
+3943:not ok 59 - no client call site names a route the product does not register
+=== the failing test's own block:
+not ok 59 - no client call site names a route the product does not register
+  ---
+  duration_ms: 12.663915
+  type: 'test'
+  location: '/tmp/r54/wt-main/server/reachability.test.js:145:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    a call site and the route table have drifted apart
+    + actual - expected
+    
+    + [
+    +   'GET /api/analytics at client/src/panelResults.js:106'
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: 'GET /api/analytics at client/src/panelResults.js:106'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/r54/wt-main/server/reachability.test.js:147:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+=== where does the second tree's run start?
+1939:# tests 257
+2072:# tests 17
+4043:# tests 257
+4219:# tests 23
+
+--- the scanner's rule (server/reachability.js at ab7e9c3, lines 99-155):
+=== the scan rule and the method inference (reachability.js lines 99-155, main)
+/** Every `/api/...` a non-test file mentions, with the method its own call states. */
+const REQUEST_PRIMITIVE = /\b(curl|wget|http\.request|https?\.get|requests\.(?:get|post|put|delete|patch)|fetch\s*\(|axios[\s.(])/;
+
+/**
+ * One scanner, two predicates — because the question is not "does this string appear" but "what is it
+ * doing here". An /api path appears in two roles:
+ *   - a CALL SITE: a code position that issues a request (fetch/axios/api helper in the client, curl or
+ *     wget in a script)
+ *   - a QUOTATION: prose, a comment, an echo/print describing what was verified
+ * On 2026-10-17 the preflight's own line "the two retired routes answer 404 (...)" counted as a call site
+ * and turned the gate red for a non-defect. Nothing was re-added; the sentence was doing its job.
+ * Scripts are judged on a request primitive within three lines either way of the mention, because a curl
+ * invocation split across lines is still one call. JS/TS keeps the looser treatment: its call idiom
+ * varies across this codebase, and narrowing it there would be a guess that silently loses callers.
+ * A prose mention is COUNTED and PRINTED, never silently dropped — a check that shrinks quietly prints
+ * the same green as one that examined everything.
+ */
+function scanApiMentions(kind) {
+  const sites = [];
+  const callRe = /\/api\/[A-Za-z0-9_\-/${}.]*(?=[?'"`\s,)]|$)/g;
+  for (const { scope, dir } of SCAN_ROOTS) {
+    for (const file of listFiles(dir)) {
+      const rel = path.relative(ROOT, file);
+      if (file.endsWith('.test.js') || SKIP_FILES.has(rel)) continue;
+      const lines = read(file).split('\n');
+      const commented = commentLines(lines, path.extname(file));
+      lines.forEach((line, idx) => {
+        if (commented.has(idx)) return; // a mention in prose is not a caller
+        if (/^\s*app\.(get|post|put|delete|patch)\(\s*'/.test(line)) return;
+        for (const m of line.matchAll(callRe)) {
+          const raw = m[0];
+          // the role test: a path quoted in a shell script issues nothing unless a request primitive is
+          // within reach of it
+          const window = lines.slice(Math.max(0, idx - 3), idx + 4).join('\n');
+          const issues = scope !== 'scripts' || REQUEST_PRIMITIVE.test(window);
+          if (kind === 'prose' ? issues : !issues) continue;
+          let method = null;
+          for (const probe of lines.slice(idx, idx + 4)) {
+            const js = /method:\s*'([A-Za-z]+)'/.exec(probe);
+            const sh = /-X\s+([A-Z]+)/.exec(probe);
+            if (js) { method = js[1].toUpperCase(); break; }
+            if (sh) { method = sh[1].toUpperCase(); break; }
+          }
+          sites.push({
+            file: rel, line: idx + 1, raw, scope,
+            method: method || 'GET', stated: Boolean(method),
+            canon: canonPath(raw), dynamic: raw.includes('${'),
+          });
+        }
+      });
+    }
+  }
+  return sites;
+}
+
+--- panelResults.js issues no request; its four /api literals are matchers:
+=== sizes of my run logs
+-rw-r--r-- 1 root root 120619 Oct 20 09:41 /tmp/r54/suite-no-install-r54.txt
+-rw-r--r-- 1 root root   1807 Oct 20 09:41 /tmp/r54/suite-r54.txt
+-rw-r--r-- 1 root root 155720 Oct 20 09:40 /tmp/r54/suite-with-install-r54.txt
+=== the four /api lines in panelResults.js (main)
+106:  if (url.indexOf('/api/analytics') !== -1) return 'the dashboard figures';
+107:  if (url.indexOf('/api/employees/') !== -1 && url.indexOf('/onboarding') !== -1) return 'the onboarding tasks';
+108:  if (url.indexOf('/api/employees/') !== -1 && url.indexOf('/offboarding') !== -1) return 'the offboarding tasks';
+109:  if (url.indexOf('/api/employees') !== -1) return 'the roster';
+=== boundaries in the raw with-install log
+1939:# tests 257
+2072:# tests 17
+3943:not ok 59 - no client call site names a route the product does not register
+4043:# tests 257
+4219:# tests 23
+=== line 106 of panelResults.js
+  if (url.indexOf('/api/analytics') !== -1) return 'the dashboard figures';

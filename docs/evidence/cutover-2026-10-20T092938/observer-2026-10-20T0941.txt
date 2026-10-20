@@ -1,0 +1,31 @@
+=== observe-serve-pair, ONE run + --status, 2026-10-20T09:41:04Z (Round 54) ===
+=== observe-serve-pair: ONE run, then --status (not a loop)
+=== observe-serve-pair 2026-10-20T09:41:04Z ===
+  script: /home/team/shared/observe-serve-pair.sh | 19925 B | sha256 42b0a4910bd24753
+  url:    https://b974147c03228029e277d1cbe6646fe6.ctonew.app
+  tree:   /home/team/shared/probable-octo-sniffle
+  LIVENESS: 2026-10-20T09:14:29Z → PASS · 26 min since the last recorded run
+  derived: 2 asset(s) from /home/team/shared/probable-octo-sniffle/client/dist (the artifact this tree serves)
+            assets/index-CRGdjEGs.js  276206 B  md5 fd270c84cb2b34a2df5372a6e93505c8
+            assets/index-DvmxiaxC.css  35805 B  md5 3709a147a167307b5f46c2ecbc3e0431
+            tree HEAD: 7a4e00a
+  measured: GET / → 200 | title: Antum People | page bytes: 799
+            the page names: assets/index-CRGdjEGs.js assets/index-DvmxiaxC.css 
+            assets/index-CRGdjEGs.js → 200, 276206 B, md5 fd270c84cb2b34a2df5372a6e93505c8
+            expected:            276206 B, md5 fd270c84cb2b34a2df5372a6e93505c8
+            assets/index-DvmxiaxC.css → 200, 35805 B, md5 3709a147a167307b5f46c2ecbc3e0431
+            expected:            35805 B, md5 3709a147a167307b5f46c2ecbc3e0431
+
+PAIR HOLDS (exit 0) — the page at https://b974147c03228029e277d1cbe6646fe6.ctonew.app names our asset(s) and the bytes match the served tree's artifact
+  measured off the URL: assets/index-CRGdjEGs.js 276206 B md5 fd270c84cb2b34a2df5372a6e93505c8
+exit=0
+
+--- status:
+=== observe-serve-pair --status 2026-10-20T09:41:04Z ===
+  record: /home/team/shared/observer/runs.jsonl
+  runs recorded: 4 (keeping the most recent 2000)
+  last run:      2026-10-20T09:41:04Z → PASS
+  age:           0 min ago
+  no alert file: /home/team/shared/observer/PAIR-BROKEN.txt (the last recorded run held, or none has failed)
+  loop:          no lock file — no loop is armed; only a movement step or a person runs this now
+exit=0

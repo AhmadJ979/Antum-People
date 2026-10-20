@@ -1,0 +1,42 @@
+=== ROUND 54 CONTROLS, REDONE — and the reason the first attempt was wrong (measured)
+--- baseline: an UNMODIFIED copy of the edited index, placed OUTSIDE the repository (/tmp)
+index checked: /tmp/r54/ctrl-base.md
+ids quoted in index: 51
+quoted ids NOT on the board: ['2c37f2da-1fa1-4b1c-8117-c639c5880658', '62d7142b-955a-433e-8f42-1c07a5d67ee3', '86c3927d-b6c3-4da2-9ecf-df2b9e4ee20b', '91f44175-4204-4a20-976a-b1318578da7b', '9dc454df-b5cb-4d1c-aeba-b67cf795db4e', 'd6931bae-666a-4d90-ad59-09b64c588cda', 'e09c6873-dac3-4573-b3c5-b69328a2f829']
+...of which EXPECTED (recorded removals): ['2c37f2da-1fa1-4b1c-8117-c639c5880658', '62d7142b-955a-433e-8f42-1c07a5d67ee3', '86c3927d-b6c3-4da2-9ecf-df2b9e4ee20b', '91f44175-4204-4a20-976a-b1318578da7b', '9dc454df-b5cb-4d1c-aeba-b67cf795db4e', 'd6931bae-666a-4d90-ad59-09b64c588cda', 'e09c6873-dac3-4573-b3c5-b69328a2f829']
+...of which UNEXPECTED (must be empty): []
+short-form refs checked: 62
+short refs that do NOT resolve to exactly one board row: []
+bare backticked 8-hex tokens: 115
+  ...resolving to exactly one board row: 105
+  ...resolving to a git object (sha): 0
+  ...NEITHER (typos) - must be empty: ['06eaf3c5', '580ec7ea', '5f885399', 'c71e893d']
+00e1963c-cbbe-4900-a9af-81d711b2eb3f  [P2-3] A new hire receives and acknowledges the pre-reading package be  [done]
+   rc=1
+   => the same copy that reads rc 0 at its own path in the repository reads rc 1 in /tmp: the checker resolves
+      tokens against the tree the index sits in, so a control outside the repository tests the path, not the edit.
+
+--- the controls, INSIDE the repository (throwaway copies at the repository root, removed after the run)
+--- control a:
+   copy differs from the edited index by cmp: yes
+   rc=1
+  ...resolving to exactly one board row: 104
+  ...resolving to a git object (sha): 4
+  ...NEITHER (typos) - must be empty: ['2f39da0d']
+00e1963c-cbbe-4900-a9af-81d711b2eb3f  [P2-3] A new hire receives and acknowledges the pre-reading package be  [done]
+--- control b:
+   copy differs from the edited index by cmp: yes
+   rc=0
+  ...resolving to exactly one board row: 105
+  ...resolving to a git object (sha): 4
+  ...NEITHER (typos) - must be empty: []
+00e1963c-cbbe-4900-a9af-81d711b2eb3f  [P2-3] A new hire receives and acknowledges the pre-reading package be  [done]
+--- control c:
+   copy differs from the edited index by cmp: yes
+   rc=0
+  ...resolving to exactly one board row: 105
+  ...resolving to a git object (sha): 4
+  ...NEITHER (typos) - must be empty: []
+00e1963c-cbbe-4900-a9af-81d711b2eb3f  [P2-3] A new hire receives and acknowledges the pre-reading package be  [done]
+--- the control copies are removed:
+ls: cannot access '.ctrl-*.md': No such file or directory
