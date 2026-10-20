@@ -1,0 +1,4 @@
+PENDING_CELLS {"preboarding:read":{"manager":"a manager's own reports' hires — no column joins a pre-boarding case to an employees row"},"preboarding:read:own":{"employee":"the caller's own case — users.employee_id names the person, and nothing joins that person to their case","manager":"the caller's reports' hires — the same missing case → person link"}}
+COUNSEL_PENDING {"preboarding:read":{"manager":"§8 item 4 — whether a manager may see a candidate's contact details before the start date"},"preboarding:read:own":{"employee":"§8 item 5 — whether the workspace track (lines worked by other functions) belongs on the person's own view at all"},"analytics:read":{"manager":"§8 item 3 — the minimum cohort size before an aggregate becomes a disclosure; §6.3's honest default is to refuse a manager rather than answer this by guessing"}}
+unpolicied []
+unknownRoles []
