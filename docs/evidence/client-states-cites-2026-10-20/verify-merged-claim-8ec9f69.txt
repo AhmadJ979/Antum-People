@@ -1,0 +1,30 @@
+# REFUTATION of a sentence MERGED into main — the merged document own count, re-run at both revisions.
+# The two sentences, as merged (PR #244, 8ec9f69): "The client contains no 403 handling at all"
+#   and, in its section 2, "There is no `403` branch anywhere."
+# Reproduce: python3 verify-merged-claim.py   (rc 0 iff the sentence HELD at ee4bbdf and is FALSE at 8ec9f69)
+
+CLIENT-STATES.md's own count, re-run.  REV_OLD=ee4bbdf  REV_NEW=8ec9f69
+
+=== ee4bbdf
+    git grep -c '401' -- client/  ->  1 file(s); 1 in source, 0 not
+        ee4bbdf:client/src/App.tsx:19
+    git grep -c '403' -- client/  ->  1 file(s); 0 in source, 1 not
+        ee4bbdf:client/src/assets/react.svg:1
+
+    => 403 in source at ee4bbdf: 0  (the sentence HELD here)
+
+=== 8ec9f69
+    git grep -c '401' -- client/  ->  3 file(s); 3 in source, 0 not
+        8ec9f69:client/src/App.tsx:21
+        8ec9f69:client/src/httpStatus.js:9
+        8ec9f69:client/src/httpStatus.test.js:6
+    git grep -c '403' -- client/  ->  4 file(s); 3 in source, 1 not
+        8ec9f69:client/src/App.tsx:2
+        8ec9f69:client/src/assets/react.svg:1
+        8ec9f69:client/src/httpStatus.js:12
+        8ec9f69:client/src/httpStatus.test.js:11
+
+    => 403 in source at 8ec9f69: 3  (the sentence is FALSE here)
+
+
+VERDICT: the sentence HELD at ee4bbdf and is FALSE at 8ec9f69
