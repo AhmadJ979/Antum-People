@@ -1,0 +1,5 @@
+branch:   fix/preflight-record-and-serving-today
+head:     ff1244b883a24cbba277fcdc02b077db0b8c71b0 (the commit that carries this pack)
+base:     868354d ... origin/main at pack time: ce7bf16
+script:   ee1e009aa78ba8e7 sha256-16, 36451 B
+deployed: 58acdac (the tree the host serves)
