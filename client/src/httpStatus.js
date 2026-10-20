@@ -1,28 +1,48 @@
 /**
  * Session vs refusal — one classification, for every authenticated call in the app.
  *
- * WHY THIS EXISTS (row d2328d67). After Layer 3 slice 2 shipped, two different answers arrive on the
- * same status code, and the client treated only 401:
+ * WHY THIS EXISTS (row d2328d67, re-grounded by row 74008b67). After Layer 3 slice 2 shipped,
+ * answers with DIFFERENT meanings arrive on the same status code, and the client treated only 401.
  *
- *   * `401` — the token is missing/not presented (`server/index.js` refuses the route).
- *   * `403` **with a JSON body** — `{"error":"Invalid or expired token"}` (`server/auth.js:31`). This
- *     is a dead session: it is what every browser holding a pre-cutover token now receives, because
- *     the claim moved from `role` to `access_role`.
- *   * `403` **with an EMPTY body** — a refusal by the policy gate (`server/index.js:166`,
- *     `refuse = (res) => res.status(403).end()`). The emptiness is deliberate: a scoped caller must
- *     learn nothing about what exists. A VALID session produced this, and the caller is still a
- *     signed-in person who simply may not reach that resource.
+ * EVERY 403 THE SERVER CAN EMIT, by emission site — five sites, three shapes. Measured at 8ec9f69 by
+ * `grep -rn "403" server/*.js` minus comments (an independent count reported five producers, two of
+ * them body-carrying; that count and this one are THE SAME SET, counted by site rather than by shape):
  *
- * The two 403s therefore demand OPPOSITE actions — throw the session away, or keep it and say no —
- * and before this module the client did neither: the 401 branch never fired, the body was parsed as
- * data, and screens rendered as empty. To a viewer that is indistinguishable from "the product lost
- * the data", which is why it matters now rather than cosmetically.
+ *   1. `server/auth.js:31` — `403` + `{"error":"Invalid or expired token"}`. A session existed and is
+ *      over. This is what every browser holding a pre-cutover token receives, because the claim moved
+ *      from `role` to `access_role`.
+ *   2. `server/index.js:65` — the Origin gate: `403` + `{"error":"Forbidden"}`. **A refusal, and the
+ *      session is fine** — reachable when a browser presents an unlisted, non-same-origin `Origin`
+ *      (the decision order is at `index.js:35-41`).
+ *   3. `server/index.js:166` — `refuse = (res) => res.status(403).end()`.
+ *   4. `server/access.js:376` — `res.status(403).end()`.
+ *   5. `server/access.js:378` — `res.status(403).end()`.
+ *      Sites 3-5 are ONE shape: the policy gate's refusal, its emptiness deliberate so a scoped
+ *      caller learns nothing about what exists. A VALID session produced them.
  *
- * THE RULE, stated so it can be argued with: a 403 carrying ANY body is treated as a dead session,
- * and only an empty one as a refusal. Where the split is ambiguous, signing out is the recoverable
- * mistake — a signed-out user signs back in, while a user stuck on a refusal they cannot clear is
- * not recoverable from the UI. The body is read from a CLONE, so the caller's own `res.json()` still
- * works.
+ * Five producers therefore carry TWO meanings across two body-carrying answers, and any rule phrased
+ * "403 with a body means the session expired" is FALSE as stated. The rule below is stated over the
+ * shapes this module actually decides, and each shape names where it comes from:
+ *
+ *   * `401` — dead session. Unchanged by this row, and the `Bearer null` sentinel is unchanged too.
+ *   * `403` + ANY body → SESSION_INVALID → sign out. BOTH body-carrying sites take this branch
+ *     (`auth.js:31` and the Origin gate). For the Origin gate that signs out a user whose session was
+ *     fine, and that is a DELIBERATE tie-break, not an oversight: signing out is the recoverable
+ *     mistake (a signed-out user signs back in), while a user stuck behind a refusal they cannot
+ *     clear cannot recover from the UI at all. It is also the case least likely to reach a person —
+ *     a page refused by the Origin gate usually could not load its own bundle either, so there is no
+ *     working screen to blank (`index.js:31-33`).
+ *   * `403` + EMPTY body → REFUSAL → notice in place, session kept. Sites 3-5.
+ *
+ * WHAT THIS MODULE DOES NOT DECIDE (it is the owner's, and it is stated rather than implemented):
+ * `design-concepts/CLIENT-STATES.md` §3 argues the honest fix is one line on the server — let
+ * `auth.js:31` answer `401`, so that every remaining 403 means exactly one thing ("refused") and no
+ * inference is needed at all. That is a change to what the server puts on the wire, so it belongs to
+ * the owner. Until they rule, the tie-break above stands here and is asserted by its own test
+ * (`a 403 carrying a body that is NOT the session error — the Origin gate — takes the sign-out branch`),
+ * so it is a decision on the record instead of a default nobody looked at.
+ *
+ * The body is read from a CLONE, so the caller's own `res.json()` still works.
  *
  * This module is plain ES module JavaScript with no DOM and no React: `client/src/httpStatus.test.js`
  * drives it under `node --test` with fabricated responses, so both branches — and the fact that a
