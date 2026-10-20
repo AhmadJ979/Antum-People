@@ -1,0 +1,19 @@
+# AFTER the fix — a root that does not exist is refused: an empty scan would print the same green.
+# command: node scripts/reachability-report.js --extra-root /nonexistent-root-xyz
+# exit=2
+# --- stdout ---
+
+# --- stderr ---
+reachability-report: --extra-root /nonexistent-root-xyz is not a directory — an empty scan would print the same green
+
+Usage: node scripts/reachability-report.js [--extra-root <dir>]...
+
+  --extra-root <dir>   also scan <dir> as client source (repeatable). Reproduces the anti-vacuous
+                       control from a shell: plant a file with a real call to an unregistered route
+                       and require this report to find it.
+  -h, --help           print this and exit 0.
+
+Exit 0 = nothing new; exit 1 = a NEW un-operable element exists that no decision owns;
+exit 2 = the invocation itself was wrong, and NO report was printed.
+Refusing to print a report for an invocation this script did not understand:
+an ignored flag looks exactly like a clean pass (row 422a77db).
