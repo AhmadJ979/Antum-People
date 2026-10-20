@@ -40,6 +40,36 @@ describe('classifyHttpStatus — the pure rule', () => {
     assert.strictEqual(classifyHttpStatus(403, '   \n'), REFUSAL);
   });
 
+  test('a 403 carrying a body that is NOT the session error — the Origin gate — takes the sign-out branch', async () => {
+    // Row 74008b67. `server/index.js:65` emits 403 + {"error":"Forbidden"} for an unlisted,
+    // non-same-origin Origin. The session behind it is FINE — and under the shipped rule it still
+    // signs out. That is the tie-break, and this test is where it is asserted instead of implied by
+    // a phrase ("403 with a body") that does not name the CORS shape at all.
+    const mod = await import('./httpStatus.js');
+
+    assert.strictEqual(mod.classifyHttpStatus(403, '{"error":"Forbidden"}'), mod.SESSION_INVALID,
+      'the Origin gate is NOT the session error, and it takes the session branch deliberately');
+    assert.strictEqual(mod.actionFor(mod.SESSION_INVALID), 'sign-out');
+
+    // It is the SAME branch the dead-session body takes — that sameness IS the ambiguity:
+    assert.strictEqual(
+      mod.classifyHttpStatus(403, '{"error":"Forbidden"}'),
+      mod.classifyHttpStatus(403, '{"error":"Invalid or expired token"}'),
+      'two body-carrying 403s with different meanings collapse to one branch here');
+
+    // And the gate's own shape (three sites: index.js:166, access.js:376, access.js:378) stays the
+    // OTHER branch, so naming the third shape did not widen the refusal:
+    assert.strictEqual(mod.classifyHttpStatus(403, ''), mod.REFUSAL);
+    assert.strictEqual(mod.classifyHttpStatus(403, '   '), mod.REFUSAL,
+      'whitespace is still nothing: an empty answer is the gate\'s shape');
+    assert.strictEqual(mod.actionFor(mod.REFUSAL), 'refusal-notice');
+
+    // The alternative — classifying the CORS 403 as a refusal-in-place — is a DECISION FOR THE OWNER
+    // (design-concepts/CLIENT-STATES.md §3 proposes letting auth.js:31 answer 401 instead, which would
+    // remove the ambiguity rather than re-classify it). Until they rule, this tie-break stands, and
+    // the recoverable direction is why: a signed-out user signs back in.
+  });
+
   test('a 403 that carried a body is a dead session, not a refusal', () => {
     assert.strictEqual(classifyHttpStatus(403, '{"error":"Invalid or expired token"}'), SESSION_INVALID);
     assert.strictEqual(classifyHttpStatus(403, 'gateway said no'), SESSION_INVALID);
