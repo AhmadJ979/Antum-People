@@ -1,0 +1,80 @@
+# Merge result — PR #270, verified at `main` = `5356715`
+
+PR #270 **merged** by the owner 2026-10-20T16:01:29Z. Merge commit `5356715`; parents
+`2b14a94` (main at the time) and `111726a` (the branch tip — its 3 commits, no strays
+carried; `git merge-base --is-ancestor 111726a origin/main` holds).
+
+This file exists because the merge result is the evidence, not the branch: everything below
+was measured on a **worktree of `5356715`**, with `server/node_modules` linked.
+
+## 1. Every file arrived byte-exact
+
+| path | on `origin/main` | on the branch tip | |
+|---|---|---|---|
+| `scripts/check-all.py` | `1ec8fd54` | `1ec8fd54` | SAME |
+| `scripts/check-design-concepts-index.py` | `43df8c2c` | `43df8c2c` | SAME |
+| `server/check-all-classifier.test.js` | `53f6e6c5` | `53f6e6c5` | SAME |
+| `docs/evidence/no-403-claim-sweep-2026-10-20/check-doc-citations.py` | `8bdab0b4` | `8bdab0b4` | SAME |
+| `docs/evidence/one-entry-point-2026-10-20/runs.txt` | `0250eeaf` | `0250eeaf` | SAME |
+
+## 2. The merged tree judges itself — same figures as the branch
+
+```
+[OK           ] design-concepts-index    tree=5356715   exit=0   0.0s
+                 said : OK: all 17 documents carry exactly one index row, no row is stray, and the README's own exclusion is asserted.
+[OK           ] index-ids                tree=5356715   exit=0   0.4s
+[RED-KNOWN    ] doc-citations            tree=5356715   exit=1   0.2s
+                 said : doc 5356715303c8 vs code 5356715303c8: 11 ok, 43 FAILING, 30 unchecked   [tree 5356715]
+[OK           ] reachability-report      tree=5356715   exit=0   0.1s
+[OK           ] suite                    tree=5356715   exit=0   6.2s
+                 said : server suite: tests 276, suites 51, pass 276, fail 0
+[RED-KNOWN    ] access-model             tree=5356715   exit=1   0.3s
+                 said : 128/137 checks hold against origin/main   (ran=137, fails=9)
+totals: 6 check(s) run, 5 skipped
+VERDICT: no check is unexpectedly red. 2 check(s) are red in a state that is RECORDED as the defect state (doc-citations, access-model)
+exit=0
+```
+
+The two RED-KNOWNs are the same two states the branch declared, at the same figures — so the
+merge neither hid nor introduced a red. `doc-citations` re-grounding and #262 remain the two
+things that end them (and the declarations must then be DELETED: STALE-EXCEPTION fires if they lie).
+
+## 3. No served path loads the new files — re-checked at the merge tip
+
+`grep -rn 'check-all|check-doc-citations|check-design-concepts-index|check-index-ids'` over
+`server/`, `client/src/`, `src/`, `package.json`, excluding `*.test.js`: **nothing**.
+=> **#270 owes no movement.** No Python script is loaded by the served Node process.
+
+## 4. What a movement *would* carry, and whose it is (measured, not assumed)
+
+`git diff --stat 9796d6b..5356715 -- server client scripts` names 10 paths. Last commit touching
+each one **outside** this PR:
+
+| path | last commit |
+|---|---|
+| `client/src/index.css` | `a8165da` Pin Tailwind's scanned sources (row 022ff68b, #268) |
+| `client/src/tailwindSources.test.js` | `a8165da` (#268) |
+| `scripts/reachability-report.js` | `1077921` the report ignored its own arguments (row 422a77db) |
+| `server/design-concepts-index.test.js` | `8306421` make the inventory check a GATE (#267) |
+| `server/reachability-report-cli.test.js` | `1077921` |
+| `server/reachability.js` | `1077921` — **a served file**, +62 lines |
+| `server/reachability.test.js` | `ede765b` the reachability checker read a string's shape as its role (#261) |
+
+So the movement is owed by `client/` (#268/022ff68b) and `server/reachability.js` (#261's work),
+not by this PR. That matches the plan's "next movement carries 022ff68b" — recorded here so the
+operator reading the host's figures has the baseline they were measured against.
+
+## 5. The disagreement I am recording rather than acting on
+
+The follow-up asked for a new commit **on the same branch**. That branch is merged: a commit there
+lands on no ancestor of `main`, changes nothing served, and cannot alter the merge result it would
+purport to describe. So this record lands on a fresh branch off `main`, where ancestry can place it.
+A merge result is not editable after the fact; only a new commit can speak about it.
+
+## 6. Still open from the evidence, unchanged
+
+- a red check's **tail is bounded at 8 lines** (`runs.txt` section 9) — for `index-ids` the naming
+  line sits just above the bound and is reached through the printed full command. A per-check
+  "decisive line" selector is the better shape and is not in this change.
+- `.gitignore` does not match the `server/node_modules` symlink; `git add -A` would commit it.
+- the dead `if False else` branch in `check-doc-citations.py`, named and left alone.
