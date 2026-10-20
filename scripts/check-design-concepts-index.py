@@ -41,9 +41,14 @@ WHERE IT LIVES, AND WHO RUNS IT (named, because a control nobody can reach is a 
 
 IT RUNS BARE
   python3 scripts/check-design-concepts-index.py
-  No argument is required: the operator's form is the bare one. (`check-doc-citations.py`
-  cannot run bare - `argv[1]` raises IndexError as merged - which is the measured reason
-  this check takes its root from its own location instead of from a flag.)
+  No argument is required: the operator's form is the bare one. This check takes its root
+  from its own location rather than from a flag because `check-doc-citations.py` did not run
+  bare when this one was written - `argv[1]` raised IndexError as merged.
+  THAT SENTENCE IS NO LONGER TRUE, and it is corrected rather than deleted: on 2026-10-20
+  that checker was given a bare form, a named tree and a refusal (exit 2) for a tree it
+  cannot read - the same class of fix, four levels down in its own evidence directory.
+  One entry point now runs every check the team owns, and says which home each has:
+      python3 scripts/check-all.py
 
   --root DIR   measure another tree (used to falsify: the same bytes must redden on a
                doctored copy). Default: the repository containing this script.
