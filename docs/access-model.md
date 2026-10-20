@@ -197,8 +197,8 @@ exists and is already exercised on the task routes.
 **What the own-view projection must strip** — the routes carry HR's working surface, so a raw response handed to
 `employee` would leak colleague identifiers and internal notes:
 
-- **`note`, `last_actor`, and every actor username** on `preboarding_items` (`server/preboarding-items.js:497`,
-  `:501`; insert paths `:372`, `:588`);
+- **`note`, `last_actor`, and every actor username** on `preboarding_items` (`server/preboarding-items.js:517`,
+  `:521`; insert paths `:389`, `:609`);
 - **owner names on the workspace track** — show the **function** ("with IT"), never a person;
 - **`preboarding_reminders`** — what HR chased and when is not the person's record;
 - **`created_by`** on the case (`schema.sql:213`) — an HR username;
@@ -282,7 +282,7 @@ proves the rule** — there the reader *is* the data subject, so the same access
 | Write path | Actor column gets | Where |
 |---|---|---|
 | Pre-boarding case, item status, reminders | `actorOf(req)` — `(req.user && req.user.username) \|\| null` (`index.js:203`) | `:828`, `:931` |
-| Notice / package acknowledgement | the same — `recordedBy` (`:979`, package `:1054`) — and **an unnamed actor is REFUSED (400)**: the refusal is the module's, `preboarding-items.js:343-347`, mapped back as `err.status` (`:1061`) | `:976` (package `:1047`); constraint `recorded_by TEXT NOT NULL` (`schema.sql:334`) |
+| Notice / package acknowledgement | the same — `recordedBy` (`:979`, package `:1054`) — and **an unnamed actor is REFUSED (400)**: the refusal is the module's, `preboarding-items.js:360-364`, mapped back as `err.status` (`:1061`) | `:976` (package `:1047`); constraint `recorded_by TEXT NOT NULL` (`schema.sql:334`) |
 | `POST /api/employees`, `PUT /api/employees/:id` | **Changed by #239: the signed-in actor**, replacing the literal `'system'` | `:343`→`:387-388`, `:410`→`:461-462` |
 | The checklist tick `PUT /api/onboarding-tasks/:id` | `completed_by`, with **400 when the actor is unnamed** (#223) | `:503`; column `schema.sql:50` |
 | `POST /api/users` | **the authenticated caller** (#236), password never recorded | `:267`→`:269-270` |
@@ -457,7 +457,35 @@ number:** **25** (§8 item 9 — a manager cannot read their own onboarding task
    document, **123/124, exit 1** against the previous document bytes — the new check reddens on the document that
    prompted it, which is the only way to know it is load-bearing.
 
-### 10.2 Amended 2026-10-20 against `ee4bbdf` (the same afternoon — the checker learned to read its own subject)
+### 10.2 Amended 2026-10-20 against `be8e99d` (two citations moved under this document — re-grounded, not adjusted)
+
+**The pre-boarding module's own `'system'` fallback was retired at the source, and every citation below it moved.**
+`requireActor` (`preboarding-items.js:198`) now throws a 400 where the write happens, applied at `:421` and `:573`;
+the plan filed that fallback as a defect and the fix is real — the pattern `actor || 'system'` matched **5 lines
+across 2 files** before it and **0** after. Nothing this document *says* about those lines changed. The lines
+underneath them did:
+
+| cited in this document | was pointing at | now points at |
+|---|---|---|
+| §5.1 `preboarding-items.js:343-347` | the `recorded_by` read and its refusal | **`:360-364`** |
+| §3.2 `:497` | `note =` in the item update | **`:517`** |
+| §3.2 `:501` | `last_actor =` in the item update | **`:521`** |
+| §3.2 `:372` (insert path) | the `note` value on insert | **`:389`** |
+| §3.2 `:588` (insert path) | the `note` value on the reminder insert | **`:609`** |
+
+The shifts are **+17, +20, +21, +20 and +20**: a re-ground is a measurement, not arithmetic, and any one offset
+carried across the file would have put four of these five on a line that holds something else.
+
+**The blind spot this exposed is closed in the checker.** Its `[doc citation]` family enforced one citation
+(`index.js:829`), so a citation to a file that MOVED passed silently while the checker's own tree claims for that
+same file reddened — the instrument could see the tree move and not the document. It now enforces one citation per
+site here, so the next move reddens on the document instead of being caught by hand.
+
+**And one count quoted above has been overtaken by that same work:** §10.1 records the checker reading `124/124`
+for this document when it was written; with the citation checks and the retired-fallback claim added, it reads
+**125/125** here. A number quoted in an amendment is a measurement at the time it is written.
+
+### 10.3 Amended 2026-10-20 against `ee4bbdf` (the same afternoon — the checker learned to read its own subject)
 
 **This amendment changes the CHECKER, and records two defects this document carried that its own check could not
 see.** All three findings came from sweeping past the brief, and the first two are in this file.
@@ -500,7 +528,7 @@ not made, or a legal basis counsel has not confirmed all pass it untouched. **Th
 section quoted "103/103" as verification of this document. It was a statement about the tree alone, and it was
 true of a document asserting the opposite of the code.**
 
-### 10.3 Amended 2026-10-20 against `ca681dd` (the enforcement slice, PR #239)
+### 10.4 Amended 2026-10-20 against `ca681dd` (the enforcement slice, PR #239)
 
 **A verifier, not a reading.** I re-ran the landed checker (`shared/verify-access-model.py`) against the new
 `main` first: **20 of 94 claims still held, exit 1.** The 74 failures were the worklist, and four of them were
@@ -545,7 +573,7 @@ right. Where this document and the code disagree the code runs, and the disagree
 wrong — one such defect was found here (§3.2), and §8 item 9 asks the owner to settle it. Docs only: `client/` 0,
 `server/` 0, **no movement owed**.
 
-### 10.4 Amended 2026-10-20 against `b4f479a` (slice-2 prerequisites, PR #236)
+### 10.5 Amended 2026-10-20 against `b4f479a` (slice-2 prerequisites, PR #236)
 
 Re-grounded by measurement, 94/94 claims: the resource count 15 → 16; the split of the coarse cell into
 `preboarding:read` (3) and `preboarding:read:own` (4), disjoint, both `[admin]`; `users.employee_id` present,
@@ -555,7 +583,7 @@ to hold rather than a constraint the database held.** Found by sweeping rather t
 recorded as open. **The negative control that made it a measurement: the same document judged against the merge
 before slice 2 reddens at 31/94.**
 
-### 10.5 Amended 2026-10-19 against `e2a4b4b` (slice 1, PR #223)
+### 10.6 Amended 2026-10-19 against `e2a4b4b` (slice 1, PR #223)
 
 The ruling the designer's own-view surface needed — **option (a), with a bound**: a person may read their own
 pre-boarding record; the list, the roll-up and the flag watch stay `✖` at every horizon. The distinction the
