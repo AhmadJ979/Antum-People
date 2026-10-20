@@ -1,0 +1,31 @@
+# guard control - each assertion is reddened alone, then reverted
+
+=== GREEN (no plant) ===
+  exit: 0
+  # pass 26
+  # fail 0
+  failing tests: (none)
+
+=== RED 1 === class attribute outside the declared sources
+  planted in: client/src/httpStatus.js <- // className="p-4" (planted: valid JS, so ONLY the intended assertion reddens)
+  exit: 1
+  # pass 25
+  # fail 1
+  not ok 6 - every class-carrying file is inside the declared sources, or states why it is not markup
+
+=== RED 2 === quoted class-name list outside the declared sources
+  planted in: client/src/panelResults.js <- const tone = 'bg-amber-50 border-amber-200';
+  exit: 1
+  # pass 25
+  # fail 1
+  not ok 7 - no class-name list hides outside the declared sources
+
+=== RED 3 === automatic source detection switched back on
+  changed in: client/src/index.css  <- source(none) removed
+  exit: 1
+  # pass 25
+  # fail 1
+  not ok 5 - automatic source detection is off, and the declared sources still name the markup
+
+# working tree after the control (only the intended changes):
+M docs/evidence/tailwind-pinned-sources/guard-control.py

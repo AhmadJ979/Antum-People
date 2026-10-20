@@ -1,0 +1,4 @@
+=== AFTER (css=/tmp/tw/after.css) ===
+files scanned for markup: 3 | tokens found: 2249 (311 unique)
+tokens with NO rule in this CSS: 5
+  client/src/App.tsx: animate-in, fade-in, prose, prose-slate, slide-in-from-bottom-4
