@@ -7,8 +7,8 @@ once and the tree moved three times under it.**
 
 | revision | blob | md5 | state |
 |---|---|---|---|
-| as **merged** — PR #244, `8ec9f69` | `567bfd49a63b00ded44cf7bc22ea3953ce534b08` | `e8234aafab2c22f92896c4b2191d721f` | **on `main`** until this correction lands; carries the refuted sentences |
-| this revision | `669bed7fca0685b2e72faa435198db048c5edf27` | `ab66c6080a520bbfbe1262c1a6c77dce` | measured at `0e401cf`, corrected at `8ec9f69`; §5a and §5c added after the lead measured the pair-rejection at `ea6a531` and I re-verified it there and at `8ec9f69` |
+| as **merged** — PR #244, `8ec9f69` | `567bfd49a63b00ded44cf7bc22ea3953ce534b08` | `e8234aafab2c22f92896c4b2191d721f` | **was on `main`** from PR #244 until PR #246 merged (`1f471ef`); carries the refuted sentences |
+| this revision | `60d7d064a68b54fdf20c80c4a28525cb96b4194d` | `c1aedfa4016aab718df2d097575ccd36` | measured at `0e401cf`, corrected at `8ec9f69`; §5a and §5c added after the lead measured the pair-rejection at `ea6a531` and I re-verified it there and at `8ec9f69`; **merged as PR #246, `1f471ef`, 2026-10-20T09:21:41Z** |
 
 This file states the second row's hashes because **a file cannot carry the hash of the bytes a reader is
 currently holding** — the value above was taken from the frozen blob *before* this README was written, and
@@ -29,7 +29,9 @@ nothing in the document was edited afterwards.
    is at `App.tsx:594`/`:598` and `:997`/`:1000` at `ea6a531` **and** `8ec9f69`. Specified in §5a; the notice's
    wording (the lead's second point) is set in §5c.
 5. **The draft itself merged as PR #244 at `8ec9f69`**, one second before its withdrawal could land. `main`
-   therefore carries the refuted sentences today, in the file this revision replaces.
+   therefore **carried** the refuted sentences from that merge until this correction landed as **PR #246**
+   (`1f471ef`, 2026-10-20T09:21:41Z). **That merge is the end of the window; the sentence is past tense here for
+   the reason the whole directory exists** — a claim about a tree is true of a revision, and `main` moved.
 
 ## The files
 

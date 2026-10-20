@@ -13,10 +13,12 @@ correction rather than a proposal:
    same 72-claim checker re-run at each holds **72/72**, control **71/72**. So every number here is valid at
    the current `main`, not only at the revision it was first read from.
 3. **The draft itself merged** — as **PR #244**, at **`8ec9f69`**, one second before its withdrawal could
-   land. So **`main` carries the refuted sentences today**, in the file this revision replaces:
+   land. So **`main` carried the refuted sentences** from that merge until this correction landed — as
+   **PR #246**, `1f471ef`, 2026-10-20T09:21:41Z. That window is the whole life of the false text on `main`,
+   and it is stated here rather than in the present tense, because **this file's own merge is what ended it**:
    *"The client contains no 403 handling at all"* and, in its §2, *"There is no `403` branch anywhere."*
-   They are not annotated here; they are **removed**, and the measurement that refutes them is filed beside
-   this document. The merged text is blob `567bfd49a63b00ded44cf7bc22ea3953ce534b08`, md5
+   The sentences are not annotated; they are **removed**, and the measurement that refutes them is filed beside
+   this document, runnable at both revisions. The merged text is blob `567bfd49a63b00ded44cf7bc22ea3953ce534b08`, md5
    `e8234aafab2c22f92896c4b2191d721f`; this revision's own hash is recorded in the evidence directory's
    README, because a file cannot state the hash of the bytes a reader is currently holding.
    *The rule is the one the access model used for a rename it had recorded as deferred: the fact moved, so the
