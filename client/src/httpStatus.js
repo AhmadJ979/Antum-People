@@ -42,6 +42,27 @@
  * (`a 403 carrying a body that is NOT the session error — the Origin gate — takes the sign-out branch`),
  * so it is a decision on the record instead of a default nobody looked at.
  *
+ * RECONCILED AGAIN against `design-concepts/CLIENT-STATES.md` §4, which measures the same five sites and
+ * finds the empty ones, like this module, indistinguishable TO THE CLIENT: sites 3-5 are one client-visible
+ * shape but THREE different server-side meanings — `access.js:376` (the resource is unnamed, or nobody may
+ * use it), `access.js:378` (the caller's `access_role` is not in the resource's list) and `index.js:166`
+ * (the per-row scope refusal). The client must not try to tell them apart, and their emptiness is
+ * load-bearing (`access.js:19`: "a refusal is `403` with no body — the caller is told nothing about what
+ * exists"). So the two counts never disagreed about the SET — five producers, three client-visible shapes —
+ * and the useful part is that neither count alone is the whole truth: the site count hides that two of the
+ * five carry different meanings, and the shape count hides that three sites have three meanings the client
+ * must collapse.
+ *
+ * THE CORS 403'S REACH, stated so the tie-break is not over-sold: for the served product the Origin gate's
+ * same-host branch (`index.js:60`) lets the app's own pages through, so that path is dead there; it is LIVE
+ * for a foreign origin — exactly the scratch topology with the client on `:5173` and the API on `:3000`
+ * (`App.tsx:11`). That is where the sign-out can repeat instead of happening once, and it is the strongest
+ * argument for the server-side option rather than for a fourth branch in this file.
+ *
+ * IF `auth.js:31` IS MOVED TO `401` (the designer's option A, the owner's to rule on), that is a change to
+ * what the server PUTS ON THE WIRE — a served behaviour change owing a movement, not a docs fix — and these
+ * two branches would then need no inference at all: every remaining 403 would mean "refused".
+ *
  * The body is read from a CLONE, so the caller's own `res.json()` still works.
  *
  * This module is plain ES module JavaScript with no DOM and no React: `client/src/httpStatus.test.js`
