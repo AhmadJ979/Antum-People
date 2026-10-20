@@ -1,0 +1,19 @@
+=== observe-serve-pair 2026-10-20T05:26:09Z ===
+  script: scripts/observe-serve-pair.sh | 19556 B | sha256 59cfd8f59f25a2ba
+  url:    https://b974147c03228029e277d1cbe6646fe6.ctonew.app
+  tree:   /home/team/shared/probable-octo-sniffle
+  LIVENESS: <no earlier run in this record>
+            the observer has not recorded a run here before; a gap before this line was NOT observed
+  derived: 2 asset(s) from /home/team/shared/probable-octo-sniffle/client/dist (the artifact this tree serves)
+            assets/index-BG0peuOK.js  274242 B  md5 f65f15c109e76e86cd8b8abe7102f748
+            assets/index-pNSrK3wr.css  35365 B  md5 eda548202468a7e0293053981037a594
+            tree HEAD: cf3dad3
+  measured: GET / → 200 | title: Antum People | page bytes: 799
+            the page names: assets/index-BG0peuOK.js assets/index-pNSrK3wr.css 
+            assets/index-BG0peuOK.js → 200, 274242 B, md5 f65f15c109e76e86cd8b8abe7102f748
+            expected:            274242 B, md5 f65f15c109e76e86cd8b8abe7102f748
+            assets/index-pNSrK3wr.css → 200, 35365 B, md5 eda548202468a7e0293053981037a594
+            expected:            35365 B, md5 eda548202468a7e0293053981037a594
+
+PAIR HOLDS (exit 0) — the page at https://b974147c03228029e277d1cbe6646fe6.ctonew.app names our asset(s) and the bytes match the served tree's artifact
+  measured off the URL: assets/index-BG0peuOK.js 274242 B md5 f65f15c109e76e86cd8b8abe7102f748

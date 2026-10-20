@@ -95,6 +95,15 @@ seeded (decision 17 …)`.
   empty, and the pair below is asserted only by the hand measurements in this file. Closing that gap is one
   command from the deployed tree — `bash scripts/observe-serve-pair.sh` — and it is the operator's step, so
   this record states the gap instead of quietly completing it.
+
+  > **ANNOTATED 2026-10-20, after this record was written — the measurement above is left exactly as it stood,
+  > because it was true when it was taken.** The gap was closed the same day: the operator ran
+  > `bash scripts/observe-serve-pair.sh` from the deployed tree at **2026-10-20T05:26:09Z** — exit 0,
+  > `PAIR HOLDS` — and `/home/team/shared/observer/` now exists with its first line. **That run supersedes the
+  > "still empty" clause above and nothing else here changes**; it is filed at
+  > **`docs/evidence/observer-2026-10-20-0526/`**. The served-surface figures in this record are unchanged by
+  > it, and agree with it to the byte.
+
 - **The three probe readings are the movement's, not mine, and carry no timestamp of their own.**
   `overview-AE.json`, `employees.json` and `settlement-served.json` have mtimes **05:15:21–05:15:22Z**, i.e.
   inside the run and after the step-4 restart; their capture command is not recorded inside them. Their
