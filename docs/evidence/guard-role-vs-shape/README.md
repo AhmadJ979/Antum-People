@@ -46,3 +46,17 @@ protects the port`. That is what the true-positive control is for.
 
 Re-run: `bash scripts/guard-role-vs-shape-test.sh` (add `--keep` to leave the decoys up for inspection).
 It never signals, starts or stops a guard.
+
+## Post-merge correction to this test's default (found by re-running it on `main`)
+
+The merged form defaulted `--old` to `origin/main`. That was right while the fix was on a branch and
+wrong the moment it merged: on `main` (`58acdac`) a **no-argument run FAILED** —
+
+    FAIL  the OLD check did not count a decoy - this test is not reproducing the defect ...
+
+because OLD was `origin/main`, i.e. the fixed code compared with itself (both sides md5 `9cc7d9d0…`).
+A control whose default is the green reports a defect where there is none, so the default is now
+**derived**: the parent of the commit that introduced `is_loop_argv` (never hardcoded), and the run
+**refuses with exit 2** if the named OLD already carries the fix, instead of printing a FAIL that reads
+like the fix is broken. Re-measured after the change, with no arguments, on the merged tree: exit 0 —
+OLD counts 2 decoys, NEW counts 0, both count the real armed loop.
