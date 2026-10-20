@@ -21,14 +21,19 @@
 #   guard can be verified. Every attempt and outcome goes to server/guard-hook.log. See the
 #   KNOWN HARD LIMIT note for what a restart does and does not bring back.
 #
-# CHECKING STATUS:
+# CHECKING STATUS (the guard count is a ROLE, not a string):
 #   tail -f /home/team/shared/probable-octo-sniffle/server/keep-alive.log
-#   pgrep -af keep-alive.sh
 #   ls -l /home/team/shared/probable-octo-sniffle/server/keep-alive.lock   (first line = loop PID)
+#   bash scripts/guard-role-vs-shape-test.sh    (counts real loops, and proves it can redden)
+#   Do NOT count guards with `pgrep -af keep-alive.sh`: it lists every process that merely
+#   MENTIONS the name - an editor, a probe, the login shell the platform opens to wake an agent,
+#   this file's own text - and reading those as guards is exactly what refused six re-arms on
+#   2026-10-20 (see is_loop_argv). A loop's /proc/PID/cmdline is `<interpreter> <script>`.
 #
 # STOPPING / RECLAIMING:
 #   kill "$(head -n 1 /home/team/shared/probable-octo-sniffle/server/keep-alive.lock)"
-#   or: pkill -f keep-alive.sh
+#   Never `pkill -f keep-alive.sh`: it matches anything that mentions the name, including the
+#   shell you are typing in. Signal the PID the lock names, and check it is a loop first.
 #   The lock is flock()ed on fd 9, which is released automatically when the loop dies.
 #   On contention the loop says who really holds the lock (`lsof -t` on the lock file) and
 #   whether the PID recorded in the file is alive, retries ANTUM_LOCK_ATTEMPTS times
@@ -211,6 +216,49 @@ ancestor_pids() {
     done
 }
 
+# True when /proc/$1/cmdline IS this loop's shape: an interpreter whose own script argument is a
+# keep-alive.sh. The ROLE, not the string's shape.
+#
+# WHY THIS EXISTS - the refusal of 2026-10-20, six times in 27 s, product served by nothing:
+#   the candidate test was "argv[0] is an interpreter AND the string keep-alive.sh appears later
+#   in the command line". Both of these were counted as duplicate guards:
+#     27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME"; test -f
+#           "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\'''
+#     27195 bash -lc 'cd "$HOME" 2>/dev/null; test -f ".../scripts/keep-alive.sh" && echo "exists"'
+#   - the host's own session-bootstrap shell, and transient probes like it. They are shells
+#   running a COMMAND that mentions the path; they cannot guard anything.
+#   The distinguishing fact is positional: a loop is `bash <script>`, so the script path is the
+#   interpreter's FIRST ARGUMENT, and that argument is never a flag. `bash -lc '...'` puts a FLAG
+#   there. Measured both ways by scripts/guard-role-vs-shape-test.sh against live pids.
+is_loop_argv() {
+    local pid="$1" line interp="" arg="" seen=0 argv oldifs="$IFS"
+    # /proc/<pid>/cmdline is NUL-separated ARGV ITEMS, not lines. Reading it raw makes the whole
+    # command line one item, argv[1] is never seen, and a real loop is MISSED - the test caught
+    # that in the first draft of this function.
+    argv="$(tr '\0' '\n' 2>/dev/null < "/proc/$pid/cmdline")"
+    [ -n "$argv" ] || return 1
+    IFS=$'\n'
+    for line in $argv; do
+        case "${line##*/}" in
+            setsid|nohup|env|time|nice|stdbuf|exec) continue ;;   # wrappers, not the command itself
+        esac
+        if [ -z "$interp" ]; then
+            case "$line" in *=*) continue ;;                      # env-style VAR=value before the command
+            esac
+            case "${line##*/}" in
+                bash|sh|dash|ash|ksh|zsh) interp="$line"; continue ;;
+                *) IFS="$oldifs"; return 1 ;;                     # not an interpreter invocation at all
+            esac
+        fi
+        arg="$line"; seen=1; break
+    done
+    IFS="$oldifs"
+    [ "$seen" = 1 ] || return 1
+    case "$arg" in -*) return 1 ;; esac                           # a FLAG sits here: `-c`, `-lc`, `-l`, `-s`
+    case "${arg##*/}" in keep-alive.sh) return 0 ;; esac          # the interpreter's own script argument
+    return 1
+}
+
 live_loops() {
     local pid cmd first ancestors other_token
     ancestors="$(ancestor_pids)"
@@ -229,12 +277,13 @@ live_loops() {
             if [ "$other_token" = "$KEEPALIVE_TOKEN" ]; then continue; fi
             if [ -n "$KEEPALIVE_INHERITED_TOKEN" ] && [ "$other_token" = "$KEEPALIVE_INHERITED_TOKEN" ]; then continue; fi
         fi
+        # The role test: an interpreter running the script, not a shell running a command that
+        # mentions it. `pgrep -f` above is only a candidate net, deliberately wide - it must find
+        # a loop armed by any route; this line is what decides, and this is the fix.
+        is_loop_argv "$pid" || continue
         cmd="$(tr '\0' ' ' 2>/dev/null < "/proc/$pid/cmdline")"
         [ -n "$cmd" ] || continue
-        first="${cmd%% *}"
-        case "${first##*/}" in
-            bash|sh|dash|ash|setsid|nohup|env) printf '%s %s\n' "$pid" "$cmd" ;;
-        esac
+        printf '%s %s\n' "$pid" "$cmd"
     done
 }
 
@@ -260,9 +309,10 @@ handoff_loops() {
         [ "$pid" = "$$" ] && continue
         parent="$(tr '\0' '\n' 2>/dev/null < "/proc/$pid/environ" | sed -n 's/^ANTUM_KEEPALIVE_PARENT=//p')"
         [ -n "$parent" ] && [ "$parent" = "$want" ] || continue
-        cmd="$(tr '\0' ' ' 2>/dev/null < "/proc/$pid/cmdline")"
-        first="${cmd%% *}"
-        case "${first##*/}" in bash|sh|dash|ash|setsid|nohup|env) echo "$pid" ;; esac
+        # Same role test as live_loops: a loop is `bash <script>`, so the script is the
+        # interpreter's first argument. A shell running a command that mentions it is not one.
+        is_loop_argv "$pid" || continue
+        echo "$pid"
     done
 }
 
