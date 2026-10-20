@@ -161,7 +161,11 @@ async function getCase(id) {
  */
 async function recordOfferAcceptance(payload, options = {}) {
   const claim = normaliseOfferAcceptance(payload);
-  const actor = options.actor || 'system';
+  // §5.2 rule 1 at the writer: a case is opened by a person, and `created_by` and the audit row
+  // name them. The route refuses an unnamed actor too; this is the same requirement where the write
+  // is, so a direct caller (the ATS adapter this file is written for) cannot bypass it.
+  const actor = typeof options.actor === 'string' && options.actor.trim() ? options.actor.trim() : null;
+  if (!actor) throw new OfferAcceptanceError('a named actor is required to record an offer acceptance', 400);
   const source = options.source || 'intake_form';
 
   // Replay of the same acceptance: hand back the case that exists, create nothing.

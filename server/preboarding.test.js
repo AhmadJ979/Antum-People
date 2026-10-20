@@ -42,7 +42,7 @@ after(() => {
 
 describe('P2-1 · an accepted offer opens a pre-boarding case', () => {
   test('the case carries start date, role, department, reporting line and jurisdiction', async () => {
-    const { case: createdCase, created } = await preboarding.recordOfferAcceptance(acceptedOffer());
+    const { case: createdCase, created } = await preboarding.recordOfferAcceptance(acceptedOffer(), { actor: 'test-runner', source: 'intake_form' });
 
     assert.strictEqual(created, true, 'a first acceptance opens the case');
     assert.strictEqual(createdCase.start_date, '2026-11-02');
@@ -60,11 +60,40 @@ describe('P2-1 · an accepted offer opens a pre-boarding case', () => {
     assert.strictEqual(reread.reporting_line, 'Head of Finance');
   });
 
+  test('the single case writer refuses an unnamed actor itself — not only the route above it', async () => {
+    // The route refuses an unnamed actor with a 400, which left the module free to default it to the
+    // literal `'system'` — a name nobody used — for any DIRECT caller: the ATS adapter this file is
+    // written for, a script, a test. `created_by` and the audit row both carry that name, so the
+    // default stamped a mechanism where a person belongs. The requirement now sits at the writer.
+    const before = await countCases();
+
+    for (const actor of [undefined, null, '', '   ']) {
+      await assert.rejects(
+        () => preboarding.recordOfferAcceptance(
+          acceptedOffer({ offer_reference: 'OFR-2026-900' }), { actor, source: 'intake_form' }),
+        (err) => err instanceof preboarding.OfferAcceptanceError
+          && err.status === 400 && /named actor is required/.test(err.message),
+        `actor=${JSON.stringify(actor)} must be refused`
+      );
+    }
+    assert.strictEqual(await countCases(), before, 'no case was opened by any of the refusals');
+
+    // The same call with a name still works, and the name is what the case records — so the refusal
+    // is the requirement rather than the writer having stopped.
+    const { case: createdCase } = await preboarding.recordOfferAcceptance(
+      acceptedOffer({ offer_reference: 'OFR-2026-901' }), { actor: 'hr-user', source: 'intake_form' });
+    assert.strictEqual(createdCase.created_by, 'hr-user');
+    const audit = await db.query(
+      `SELECT performed_by FROM audit_logs WHERE entity_id = ${db.escapeString(createdCase.id)}`);
+    assert.ok(audit.length >= 1, 'the case was audited');
+    assert.ok(audit.every((row) => row.performed_by === 'hr-user'), 'and every row names the person who acted');
+  });
+
   test('no case can exist without a start date — the write is refused and nothing is stored', async () => {
     const before = await countCases();
 
     await assert.rejects(
-      () => preboarding.recordOfferAcceptance(acceptedOffer({ offer_reference: 'OFR-NO-DATE', start_date: '' })),
+      () => preboarding.recordOfferAcceptance(acceptedOffer({ offer_reference: 'OFR-NO-DATE', start_date: '' }), { actor: 'test-runner', source: 'intake_form' }),
       (err) => err instanceof preboarding.OfferAcceptanceError && err.status === 400 && /start_date is required/.test(err.message)
     );
 
@@ -77,7 +106,7 @@ describe('P2-1 · an accepted offer opens a pre-boarding case', () => {
 
   test('a malformed start date is refused as well — the invariant is a date, not a non-empty string', async () => {
     await assert.rejects(
-      () => preboarding.recordOfferAcceptance(acceptedOffer({ offer_reference: 'OFR-BAD-DATE', start_date: '02/11/2026' })),
+      () => preboarding.recordOfferAcceptance(acceptedOffer({ offer_reference: 'OFR-BAD-DATE', start_date: '02/11/2026' }), { actor: 'test-runner', source: 'intake_form' }),
       (err) => err instanceof preboarding.OfferAcceptanceError && /YYYY-MM-DD/.test(err.message)
     );
   });
@@ -86,7 +115,7 @@ describe('P2-1 · an accepted offer opens a pre-boarding case', () => {
     const first = await db.query(
       "SELECT * FROM preboarding_cases WHERE offer_reference = 'OFR-2026-001'"
     );
-    const replay = await preboarding.recordOfferAcceptance(acceptedOffer());
+    const replay = await preboarding.recordOfferAcceptance(acceptedOffer(), { actor: 'test-runner', source: 'intake_form' });
 
     assert.strictEqual(replay.created, false, 'the second call creates nothing');
     assert.strictEqual(replay.case.id, first[0].id, 'it returns the case that already exists');
@@ -101,7 +130,7 @@ describe('P2-1 · an accepted offer opens a pre-boarding case', () => {
     const before = await countCases();
     const { case: second, created } = await preboarding.recordOfferAcceptance(
       acceptedOffer({ offer_reference: 'OFR-2026-002', role: 'HR Officer' })
-    );
+    , { actor: 'test-runner', source: 'intake_form' });
 
     assert.strictEqual(created, true);
     assert.strictEqual(await countCases(), before + 1);
@@ -113,7 +142,7 @@ describe('P2-1 · an accepted offer opens a pre-boarding case', () => {
   test('jurisdiction is a real field, not UAE-hardcoded: KSA is stored as given', async () => {
     const { case: ksaCase } = await preboarding.recordOfferAcceptance(
       acceptedOffer({ offer_reference: 'OFR-2026-003', jurisdiction: 'SA' })
-    );
+    , { actor: 'test-runner', source: 'intake_form' });
     assert.strictEqual(ksaCase.jurisdiction, 'SA');
 
     const { cases: filtered } = await preboarding.listCases({ jurisdiction: 'AE' });
@@ -151,7 +180,7 @@ describe('P2-1 · an accepted offer opens a pre-boarding case', () => {
 
   test('an unsupported jurisdiction is refused rather than silently defaulted', async () => {
     await assert.rejects(
-      () => preboarding.recordOfferAcceptance(acceptedOffer({ offer_reference: 'OFR-2026-004', jurisdiction: 'QA' })),
+      () => preboarding.recordOfferAcceptance(acceptedOffer({ offer_reference: 'OFR-2026-004', jurisdiction: 'QA' }), { actor: 'test-runner', source: 'intake_form' }),
       (err) => err instanceof preboarding.OfferAcceptanceError && /jurisdiction/.test(err.message)
     );
   });
@@ -162,7 +191,7 @@ describe('P2-1 · an accepted offer opens a pre-boarding case', () => {
       payload[field] = '';
 
       await assert.rejects(
-        () => preboarding.recordOfferAcceptance(payload),
+        () => preboarding.recordOfferAcceptance(payload, { actor: 'test-runner', source: 'intake_form' }),
         (err) => err instanceof preboarding.OfferAcceptanceError && err.message.includes(field),
         `${field} must be required`
       );

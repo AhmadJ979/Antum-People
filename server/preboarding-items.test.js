@@ -104,7 +104,7 @@ describe('P2-2 · every item carries an explicit status', () => {
   test('a status outside the four is refused, and the message names them', async () => {
     const row = await openCase({ offer_reference: 'OFR-2026-104' });
     await assert.rejects(
-      () => items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'collected' }),
+      () => items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'collected' }),
       (err) => err instanceof items.PreboardingItemError
         && err.status === 400
         && /not_started, requested, received, verified/.test(err.message)
@@ -114,7 +114,7 @@ describe('P2-2 · every item carries an explicit status', () => {
   test('an illegal transition is refused with the status the item is actually in', async () => {
     const row = await openCase({ offer_reference: 'OFR-2026-105' });
     await assert.rejects(
-      () => items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'verified' }),
+      () => items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'verified' }),
       (err) => err.status === 409 && /is not_started; it cannot move to verified/.test(err.message)
     );
   });
@@ -133,12 +133,12 @@ describe('P2-2 · every item carries an explicit status', () => {
   test('verified is terminal: nothing moves out of it', async () => {
     const row = await openCase({ offer_reference: 'OFR-2026-107' });
     await showNotice(row.id, 'passport');
-    await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'requested' });
-    await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'received' });
-    await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'verified' });
+    await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'requested' });
+    await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'received' });
+    await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'verified' });
 
     await assert.rejects(
-      () => items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'requested' }),
+      () => items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'requested' }),
       (err) => err.status === 409 && /verified is terminal/.test(err.message)
     );
   });
@@ -146,10 +146,10 @@ describe('P2-2 · every item carries an explicit status', () => {
   test('a rejection sends a received item back to requested and clears the receipt', async () => {
     const row = await openCase({ offer_reference: 'OFR-2026-108' });
     await showNotice(row.id, 'emirates_id');
-    await items.setItemStatus({ case_id: row.id, item_key: 'emirates_id', status: 'requested' });
-    await items.setItemStatus({ case_id: row.id, item_key: 'emirates_id', status: 'received' });
+    await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'emirates_id', status: 'requested' });
+    await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'emirates_id', status: 'received' });
 
-    const back = await items.setItemStatus({
+    const back = await items.setItemStatus({ actor: 'test-runner',
       case_id: row.id, item_key: 'emirates_id', status: 'requested', note: 'unreadable scan',
     });
     assert.strictEqual(back.status, 'requested');
@@ -159,15 +159,15 @@ describe('P2-2 · every item carries an explicit status', () => {
   test('an unknown item, case or an over-long reference is refused', async () => {
     const row = await openCase({ offer_reference: 'OFR-2026-109' });
     await assert.rejects(
-      () => items.setItemStatus({ case_id: row.id, item_key: 'nope', status: 'requested' }),
+      () => items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'nope', status: 'requested' }),
       (err) => err.status === 404
     );
     await assert.rejects(
-      () => items.setItemStatus({ case_id: randomUUID(), item_key: 'passport', status: 'requested' }),
+      () => items.setItemStatus({ actor: 'test-runner', case_id: randomUUID(), item_key: 'passport', status: 'requested' }),
       (err) => err.status === 404 && /case not found/.test(err.message)
     );
     await assert.rejects(
-      () => items.setItemStatus({
+      () => items.setItemStatus({ actor: 'test-runner',
         case_id: row.id, item_key: 'passport', status: 'requested',
         document_reference: 'x'.repeat(121),
       }),
@@ -183,10 +183,10 @@ describe('P2-2 · a document cannot be collected before the privacy notice was s
 
   test('received is refused with 428 while the notice has not been shown for the item', async () => {
     const row = await openCase({ offer_reference: 'OFR-2026-201' });
-    await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'requested' });
+    await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'requested' });
 
     await assert.rejects(
-      () => items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'received' }),
+      () => items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'received' }),
       (err) => err.status === 428
         && /privacy notice has not been shown for Passport copy/.test(err.message)
     );
@@ -199,7 +199,7 @@ describe('P2-2 · a document cannot be collected before the privacy notice was s
   test('verified is gated the same way, not only received', async () => {
     const row = await openCase({ offer_reference: 'OFR-2026-202' });
     await assert.rejects(
-      () => items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'verified' }),
+      () => items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'verified' }),
       (err) => err.status === 409 || err.status === 428
     );
   });
@@ -208,16 +208,16 @@ describe('P2-2 · a document cannot be collected before the privacy notice was s
     const row = await openCase({ offer_reference: 'OFR-2026-203' });
     await showNotice(row.id, 'passport');
 
-    await items.setItemStatus({ case_id: row.id, item_key: 'bank_details', status: 'requested' });
+    await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'bank_details', status: 'requested' });
     await assert.rejects(
-      () => items.setItemStatus({ case_id: row.id, item_key: 'bank_details', status: 'received' }),
+      () => items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'bank_details', status: 'received' }),
       (err) => err.status === 428 && /has not been shown for Bank details/.test(err.message),
       'a case-level record would have opened this item on the passport\'s strength'
     );
 
     // …while the document whose notice WAS shown collects normally, and is time-stamped.
-    await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'requested' });
-    await items.setItemStatus({
+    await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'requested' });
+    await items.setItemStatus({ actor: 'test-runner',
       case_id: row.id, item_key: 'passport', status: 'received',
       document_reference: 'passport-scan.pdf',
     });
@@ -303,11 +303,11 @@ describe('P2-2 · a document cannot be collected before the privacy notice was s
     const row = await openCase({ offer_reference: 'OFR-2026-208' });
     // Asking for a document is not collecting it: the gate sits on collection, so this succeeds —
     // which is exactly why the screen has to say the item cannot be collected.
-    await items.setItemStatus({
+    await items.setItemStatus({ actor: 'test-runner',
       case_id: row.id, item_key: 'education_certificate', status: 'requested',
     });
     await assert.rejects(
-      () => items.setItemStatus({
+      () => items.setItemStatus({ actor: 'test-runner',
         case_id: row.id, item_key: 'education_certificate', status: 'received',
       }),
       (err) => err.status === 409 && /cannot be collected in this release/.test(err.message),
@@ -322,9 +322,9 @@ describe('P2-2 · a document cannot be collected before the privacy notice was s
     const other = await openCase({ offer_reference: 'OFR-2026-210' });
     await showNotice(shown.id, 'passport');
 
-    await items.setItemStatus({ case_id: other.id, item_key: 'passport', status: 'requested' });
+    await items.setItemStatus({ actor: 'test-runner', case_id: other.id, item_key: 'passport', status: 'requested' });
     await assert.rejects(
-      () => items.setItemStatus({ case_id: other.id, item_key: 'passport', status: 'received' }),
+      () => items.setItemStatus({ actor: 'test-runner', case_id: other.id, item_key: 'passport', status: 'received' }),
       (err) => err.status === 428
     );
   });
@@ -358,7 +358,7 @@ describe('P2-2 · the KSA set is kept, and switched off', () => {
     assert.ok(list.every((item) => item.jurisdiction === 'SA'));
 
     await assert.rejects(
-      () => items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'requested' }),
+      () => items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'requested' }),
       (err) => err.status === 409 && /not active in this release \(UAE-first\)/.test(err.message)
     );
   });
@@ -394,9 +394,9 @@ describe('P2-2 · HR sees the incomplete items from one list', () => {
     const before = (await items.checklistOverview()).cases.find((c) => c.case_id === row.id);
     assert.strictEqual(before.outstanding_count, before.items_total);
 
-    await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'requested' });
-    await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'received' });
-    await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'verified' });
+    await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'requested' });
+    await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'received' });
+    await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: 'passport', status: 'verified' });
 
     const after = (await items.checklistOverview()).cases.find((c) => c.case_id === row.id);
     assert.strictEqual(after.outstanding_count, before.outstanding_count - 1);
@@ -442,8 +442,8 @@ describe('P2-2 · reminders are recorded, not claimed as delivered', () => {
     for (const item of await items.listItems(row.id)) {
       if (!items.isNoticeCollectible(item.item_key)) continue;
       await showNotice(row.id, item.item_key);
-      await items.setItemStatus({ case_id: row.id, item_key: item.item_key, status: 'requested' });
-      await items.setItemStatus({ case_id: row.id, item_key: item.item_key, status: 'received' });
+      await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: item.item_key, status: 'requested' });
+      await items.setItemStatus({ actor: 'test-runner', case_id: row.id, item_key: item.item_key, status: 'received' });
     }
     // The items the notice assigns no basis to cannot be collected by ANY path in this release, so
     // this test writes their statuses directly to reach the state it is about — HR with nothing
@@ -460,21 +460,30 @@ describe('P2-2 · reminders are recorded, not claimed as delivered', () => {
       'nothing is left outstanding, which is the state the refusal is about'
     );
     await assert.rejects(
-      () => items.recordReminder({ case_id: row.id }),
+      () => items.recordReminder({ actor: 'test-runner', case_id: row.id }),
       (err) => err.status === 400 && /nothing to remind about/.test(err.message)
     );
   });
 
   test('a reminder can be aimed at named items, and an unknown key is refused', async () => {
     const row = await openCase({ offer_reference: 'OFR-2026-120' });
-    const { outstanding } = await items.recordReminder({
+    const { outstanding } = await items.recordReminder({ actor: 'test-runner',
       case_id: row.id, item_keys: ['passport', 'emirates_id'],
     });
     assert.deepStrictEqual(outstanding.map((item) => item.item_key).sort(), ['emirates_id', 'passport']);
 
     await assert.rejects(
-      () => items.recordReminder({ case_id: row.id, item_keys: ['not_a_key'] }),
+      () => items.recordReminder({ actor: 'test-runner', case_id: row.id, item_keys: ['not_a_key'] }),
       (err) => err.status === 404
+    );
+
+    // This call — the one this test used to make with NO actor, and which succeeded — is now the
+    // refusal. The property above is unchanged; what changed is that reaching it without naming who
+    // asked is no longer a way in.
+    await assert.rejects(
+      () => items.recordReminder({ case_id: row.id, item_keys: ['passport'] }),
+      (err) => err.status === 400 && /named actor is required/.test(err.message),
+      'the no-actor call this test used to make is refused, not defaulted'
     );
   });
 
@@ -484,6 +493,65 @@ describe('P2-2 · reminders are recorded, not claimed as delivered', () => {
     const summary = (await items.checklistOverview()).cases.find((c) => c.case_id === row.id);
     assert.ok(summary.last_reminder_at);
     assert.strictEqual(typeof summary.last_reminder_count, 'number');
+  });
+
+  test('the MODULE refuses an unnamed actor on every write — the route is the second line, not the only one', async () => {
+    // Row cd77061f left this module's `|| 'system'` in place: over HTTP the routes refuse an unnamed
+    // actor first, so the fallback was unreachable FROM THE ROUTE — and the module, which is the
+    // contract those routes are one caller of, accepted it. A direct caller (the ATS adapter this
+    // module is written for, a script) inherited a name nobody used. The requirement now lives with
+    // the write, so the same four inputs are refused at the writer whether or not a route is above it.
+    const row = await openCase({ offer_reference: 'OFR-2026-240' });
+    const itemBefore = (await items.listItems(row.id)).find((i) => i.item_key === 'passport');
+
+    for (const actor of [undefined, null, '', '   ']) {
+      const shown = JSON.stringify(actor);
+      await assert.rejects(
+        () => items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'requested', actor }),
+        (err) => err.status === 400 && /named actor is required/.test(err.message),
+        `setItemStatus with actor=${shown} must be refused`
+      );
+      await assert.rejects(
+        () => items.recordReminder({ case_id: row.id, actor }),
+        (err) => err.status === 400 && /named actor is required/.test(err.message),
+        `recordReminder with actor=${shown} must be refused`
+      );
+      await assert.rejects(
+        () => preboarding.recordOfferAcceptance(
+          acceptedOffer({ offer_reference: 'OFR-2026-241' }), { actor }),
+        (err) => err.status === 400 && /named actor is required/.test(err.message),
+        `recordOfferAcceptance with actor=${shown} must be refused`
+      );
+    }
+
+    // A refusal that wrote something anyway would be worse than a fallback: nothing moved, nothing
+    // was stamped, and no row exists that says a person acted when none was named.
+    const itemAfter = (await items.listItems(row.id)).find((i) => i.item_key === 'passport');
+    assert.deepStrictEqual(itemAfter, itemBefore, 'the refused item status wrote nothing at all');
+    assert.strictEqual(
+      (await db.query(`SELECT COUNT(*) AS n FROM preboarding_reminders WHERE case_id = ${db.escapeString(row.id)}`))[0].n,
+      0, 'no reminder row was written for this case (the count is scoped to it: earlier tests in this file leave their own rows behind, and a whole-table count would be reading them)'
+    );
+    assert.strictEqual(
+      (await db.query(`SELECT COUNT(*) AS n FROM preboarding_cases WHERE offer_reference = 'OFR-2026-241'`))[0].n,
+      0, 'no case was opened by a refused offer acceptance'
+    );
+    // And the false name cannot have entered the trail by these paths: this file's writers stamp the
+    // actor they were given, and they were given none.
+    assert.strictEqual(
+      (await db.query("SELECT COUNT(*) AS n FROM audit_logs WHERE performed_by = 'system'"))[0].n,
+      0, 'nothing in this database was stamped with the placeholder name'
+    );
+
+    // The companion half: the SAME three calls with a named actor still work, so the refusals above
+    // are the requirement doing its job and not the writers having stopped working.
+    await items.setItemStatus({ case_id: row.id, item_key: 'passport', status: 'requested', actor: 'hr-user' });
+    assert.strictEqual(
+      (await items.listItems(row.id)).find((i) => i.item_key === 'passport').last_actor,
+      'hr-user', 'a named actor is recorded as who moved the line'
+    );
+    const { outstanding } = await items.recordReminder({ case_id: row.id, actor: 'hr-user' });
+    assert.ok(outstanding.length > 0, 'and a named actor can still record a reminder');
   });
 });
 
@@ -537,7 +605,7 @@ describe('P2-2 · what the audit trail records, and what it never records', () =
   test('one case\'s item status never touches another case', async () => {
     const a = await openCase({ offer_reference: 'OFR-2026-123' });
     const b = await openCase({ offer_reference: 'OFR-2026-124' });
-    await items.setItemStatus({ case_id: a.id, item_key: 'passport', status: 'requested' });
+    await items.setItemStatus({ actor: 'test-runner', case_id: a.id, item_key: 'passport', status: 'requested' });
 
     const otherCase = await items.getItem(b.id, 'passport');
     assert.strictEqual(otherCase.status, 'not_started');
