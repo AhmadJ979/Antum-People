@@ -1,0 +1,9 @@
+users columns   : id,username,password_hash,role,created_at,employee_id
+users rows      : 1
+users content   : [{"username":"admin","role":"admin","employee_id":null}]
+users.employee_id present : true
+onboarding_tasks.completed_by present : true
+audit_logs entity_type=user rows : 0
+audit_logs performed_by=system   : 0
+(node:5875) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
