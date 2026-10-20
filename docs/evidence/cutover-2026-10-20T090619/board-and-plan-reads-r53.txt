@@ -1,0 +1,100 @@
+=== team-db reads taken by the program manager, Round 53, 2026-10-20T09:17:05Z ===
+--- the four rows the lead named, with their timestamps (DB times are UTC, matching the approval message clock)
+[
+  {
+    "id": "cd77061f-2f4d-4f18-9021-a28eef48f787",
+    "status": "done",
+    "created_at": "2026-10-20 08:45:18",
+    "updated_at": "2026-10-20 09:07:43",
+    "assigned_to": "agent-senior-software-engineer"
+  },
+  {
+    "id": "d79a7310-ee1d-4ebe-8885-47ee69dff922",
+    "status": "done",
+    "created_at": "2026-10-20 08:54:48",
+    "updated_at": "2026-10-20 09:07:43",
+    "assigned_to": "agent-program-manager"
+  },
+  {
+    "id": "f596519f-a589-402c-909a-a3b0c4807e36",
+    "status": "done",
+    "created_at": "2026-10-20 08:59:44",
+    "updated_at": "2026-10-20 09:07:43",
+    "assigned_to": "agent-compliance-expert"
+  },
+  {
+    "id": "458d3d8f-c57d-4b8b-a2cb-3cbd9d3d7f19",
+    "status": "done",
+    "created_at": "2026-10-20 09:00:19",
+    "updated_at": "2026-10-20 09:07:43",
+    "assigned_to": "agent-senior-software-engineer"
+  }
+]
+--- every row in in-progress or review at this read
+[
+  {
+    "row": "44011fc6",
+    "status": "in-progress",
+    "updated_at": "2026-10-20 09:02:28",
+    "assigned_to": "agent-product-designer",
+    "t": "How does a pre-boarding case belong to a person who is not y"
+  },
+  {
+    "row": "695904d8",
+    "status": "in-progress",
+    "updated_at": "2026-10-20 09:10:41",
+    "assigned_to": "agent-senior-software-engineer",
+    "t": "The guard does not exit in the window on handoff — three for"
+  },
+  {
+    "row": "74008b67",
+    "status": "in-progress",
+    "updated_at": "2026-10-20 09:10:41",
+    "assigned_to": "agent-senior-software-engineer",
+    "t": "The client rule documents TWO 403s; the server emits THREE —"
+  },
+  {
+    "row": "0b019672",
+    "status": "in-progress",
+    "updated_at": "2026-10-20 09:10:41",
+    "assigned_to": "agent-senior-software-engineer",
+    "t": "The pre-boarding module still defaults an unnamed actor to t"
+  },
+  {
+    "row": "1e517b2d",
+    "status": "in-progress",
+    "updated_at": "2026-10-20 09:13:24",
+    "assigned_to": "agent-program-manager",
+    "t": "Round 53 + file the 09:06:19Z movement's evidence, with a fr"
+  },
+  {
+    "row": "029a4f1e",
+    "status": "in-progress",
+    "updated_at": "2026-10-20 09:14:49",
+    "assigned_to": "agent-compliance-expert",
+    "t": "Record decisions 25, 26 and 27 by number in the access model"
+  },
+  {
+    "row": "66636525",
+    "status": "review",
+    "updated_at": "2026-10-20 09:16:33",
+    "assigned_to": "agent-product-designer",
+    "t": "Four events, one empty screen: the refusal / stale-session /"
+  }
+]
+--- the designer's row, whose PR #244 is the one that merged after the sweep
+[
+  {
+    "id": "66636525-5e6f-4582-ac42-c3acd4b98652",
+    "status": "review",
+    "created_at": "2026-10-20 09:00:46",
+    "updated_at": "2026-10-20 09:16:33",
+    "assigned_to": "agent-product-designer",
+    "res": "{\"summary\":\"**Row 66636525 — \\\"Four events, one empty screen\\\". Delivered, and mid-task it turned into a fix-forward of work already on `main`. PR #246** (branch `docs/four-empty-screens-v2`, head `d22a5ce`, off `main` `8ec9f69`, 1 commit, 17 files, +1231/-228).\\n\\n**The thing you need to know first.** PR #244 — the earlier draft of this document — **merged into `main` at 09:11:38Z**, one second b"
+  }
+]
+--- the plan's own numbering, read from config this round
+plan chars: 19973
+>> 25. **A manager account cannot read its own onboarding tasks** — the manager column is `scoped (own reports)` and one account holds one role, so the relation, not the person, decides. Implemented as stated and asserted rather than silently widened. **The fix is a `reports+own` relation or a second account per manager. 
+>> 26. **`compliance_viewer` × `preboarding:write`** — §5.2 rule 2 calls the viewer *read-only* while its cell lists a write. **A write is not read-only.** It is refused and the contradiction is recorded; the model's owner rules which is right.
+>> 27. **NEW — the access model's own counsel items, as ONE decision:** a manager seeing a **candidate's contact details before their start date**; the **workspace track on the person's own view**; the **analytics cohort minimum**. Three questions behind one blocker — a **counsel recipient** (15a). Numbered as one because

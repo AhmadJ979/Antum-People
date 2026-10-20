@@ -1,0 +1,49 @@
+=== live measurements, taken 2026-10-20T09:16:11Z — program manager, for Round 53
+url:  https://b974147c03228029e277d1cbe6646fe6.ctonew.app
+note: the demo credential is read from its own file and never printed (decision 13).
+
+--- 1. unauthenticated reads
+/api/employees           no token -> 401
+/api/users               no token -> 401
+/api/compliance/notice   no token -> 401
+
+--- 2. login with the demo account
+token chars: 215 (expect >100)
+login body, token redacted: {"token":"<redacted>","user":{"id":"demo-admin-id","username":"admin","access_role":"hr_admin"}}
+
+--- 3. the bad-password path
+bad password -> 401 (expect 401)
+
+--- 4. authenticated reads
+/api/employees           token -> 200
+/api/users               token -> 200
+/api/compliance/notice   token -> 200
+
+--- 5. a fabricated token: the dead-session shape the client keys on
+fabricated token -> 403 | body: {"error":"Invalid or expired token"}
+
+--- 6. the login token's own payload (the role the server minted)
+payload: {"id": "demo-admin-id", "username": "admin", "access_role": "hr_admin", "iat": 1792487772, "exp": 1792516572}
+
+--- 7. the pre-boarding flag states as the live API serves them
+overview -> 200, 14851 B
+  totals: {"cases": 3, "items": 21, "items_outstanding": 21, "items_received": 0, "items_verified": 0, "cases_notice_not_shown": 1, "cases_ready": 0, "workspace_lines": 43, "workspace_lines_open": 43, "cases_provisioned": 0}
+  cases: {"start_date": "2026-10-19", "flag": {"open_count": 21, "open_items": [{"item_key": "bank_details", "label": "Bank details (IBAN letter)", "status": "not_started", "owner": null, "owner_known": false}, {"item_key": "educ
+  cases: {"start_date": "2026-10-21", "flag": {"open_count": 21, "open_items": [{"item_key": "bank_details", "label": "Bank details (IBAN letter)", "status": "not_started", "owner": null, "owner_known": false}, {"item_key": "educ
+  cases: {"start_date": "2026-11-03", "flag": {"open_count": 22, "open_items": [{"item_key": "bank_details", "label": "Bank details (IBAN letter)", "status": "not_started", "owner": null, "owner_known": false}, {"item_key": "educ
+Traceback (most recent call last):
+  File "<stdin>", line 13, in <module>
+TypeError: unhashable type: 'dict'
+
+=== C. the two red test files, with their own error text (no install symlinked in this run)
+5:# Error: Cannot find module 'jsonwebtoken'
+32:  code: 'ERR_TEST_FAILURE'
+126:# Error: Command failed: /usr/bin/node /tmp/r53/wt-ea531/scripts/seed-demo.js
+130:# Error: Cannot find module 'uuid'
+221:  code: 'ERR_TEST_FAILURE'
+
+=== D. PR #244 and its row
+PR244 http 200
+  PR244: closed merged True merged_at 2026-10-20T09:11:38Z head 608c35993c title docs(design): one empty screen, four (five) different events — a refusal must be visible as a refusal
+PR242 http 200
+  PR242: closed merged True merged_at 2026-10-20T09:11:01Z merge_commit 7a2bc1870f
