@@ -37,6 +37,9 @@ separate acceptance test, and **the movement that installs a fix cannot be its o
 | `checker-r54-green.txt` | `scripts/check-index-ids.py` on the edited index: rc 0. |
 | `checker-r54-green-after-repair-and-amendment.txt` | the same checker re-run **on the final bytes** — after the duplicated control-location fragment was removed and the push-time amendment was written in. rc 0. The earlier green was on the earlier bytes; both are kept, because the file changed after it. |
 | `checker-r54-controls.txt` | the controls, **including the first attempt that failed for a reason worth keeping**: run from `/tmp`, all three read rc 1 no matter what was changed, because the checker resolves tokens against the tree the index sits in. Redone inside the repository root. |
+| `cutover-20261020-094644-evidence.txt` + `-build.log` + `-seed.log` + `-pb-overview.json` | **the day's SECOND movement** (`9796d6b`, 09:46:44Z -> 09:47:41Z, 57 s, `MOVEMENT_RC=0`, carrying #253 + #254 + #258), filed at the lead's handover so this round files the earlier of two as the earlier of two; copied from `/tmp` with their bytes intact. |
+| `second-movement-and-guard-acceptance.txt` | the second movement read as predicted, and **the guard fix's acceptance test** — step 6's force-kill is the FIFTH instance and the fix's own prediction, while the acceptance line lives in the *guard's* log. |
+| `guard-log-excerpt-acceptance.txt` | the excerpt from the served tree's own `server/keep-alive.out` (not committed as it stands: `.gitignore` names it runtime state): armed 09:47:35 as pid 24780, `EXIT: killed by SIGTERM (loop pid 24780)` 09:48:41, a fresh guard armed 09:48:41. |
 
 ## Three files here carry a `.log` name, and `.gitignore` has `*.log`
 
@@ -74,16 +77,23 @@ md5, computed in this directory after the last file was written:
 367a1ff67c6bb880b6e7600bfbfc596e  board-and-plan-reads-r54.txt
 fcc2450c503d713b6457b12a200247ec  checker-r54-controls.txt
 558f543fe1d61272efc5710f3f41a6fa  checker-r54-green-after-repair-and-amendment.txt
+7ac618cea7c929e4e1aaad6e98223c88  checker-r54-green-after-second-movement.txt
 abc9f9d8cd76fdcc93e2a275bda4216f  checker-r54-green.txt
 27646369daf8db5a071b82838281076a  cutover-20261020-092938-build.log
 5acbe7bd05d23368e951cc3f3582684c  cutover-20261020-092938-evidence.txt
 2ac055b459aa85ab027004b2195645f0  cutover-20261020-092938-pb-overview.json
 08070dbd2a8c8decb784933ac80b3d13  cutover-20261020-092938-seed.log
+e9aaadb554073f402e26e21ec527969d  cutover-20261020-094644-build.log
+cbf79bacf5b0b729a815a27136954a0f  cutover-20261020-094644-evidence.txt
+9c62cf19a339edbec3eff635d39596dc  cutover-20261020-094644-pb-overview.json
+541e852bf49f0ece2c58ecc0cde8874a  cutover-20261020-094644-seed.log
+0da1b9fa59bda94c5cf28e6744a9b5b5  guard-log-excerpt-acceptance.txt
 a21322fc7ea064de2d38462beda23de8  movement-7a4e00a.log
 153cd4fa3f4bf8736295d69a4dfb6ad6  observer-2026-10-20T0941.txt
 793f07de2df552fe269b3733862a18ac  observer-record-line-2026-10-20T0941.jsonl
 3cf5605de524180f600a2fbe1dee079a  program-manager-live-r54.txt
 e54f6f30c10f7cbf4edf54d2d7496d5e  reachability-red-r54.txt
+df8af111f7a47d9cc3b878117c3ab874  second-movement-and-guard-acceptance.txt
 25116e7f58772ae40702092b771e5ef9  suite-client-main-94c6ef0-deployed-install.txt
 75444b5fb54b41bd8c7c6632a05950a4  suite-no-install-r54.txt
 7103b965539fdd857687c2bb47794803  suite-server-main-94c6ef0-deployed-install.txt

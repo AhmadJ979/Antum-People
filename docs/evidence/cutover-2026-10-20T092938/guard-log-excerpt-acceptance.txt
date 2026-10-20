@@ -1,0 +1,12 @@
+114:2026-10-20T09:47:35+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+115:2026-10-20T09:48:41+00:00 EXIT: killed by SIGTERM (loop pid 24780)
+116:2026-10-20T09:48:41+00:00 armed as its own session leader (pid 27117) - no detach needed
+117:2026-10-20T09:48:41+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+118:2026-10-20T09:48:41+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+119:2026-10-20T09:48:47+00:00 armed as its own session leader (pid 27345) - no detach needed
+120:2026-10-20T09:48:47+00:00 lock held (attempt 1 of 3) - holders: 27117(bash) 27345(bash) 27361(bash) 27365() 27366() 27367() 27368() ; the file names PID 27117 (alive)
+123:2026-10-20T09:49:08+00:00 EXIT: refusing to start: a live keep-alive.sh already guards /home/team/shared/probable-octo-sniffle on port 3000 - 27117 /usr/bin/bash scripts/keep-alive.sh;; holders: 27117(bash) 27345(bash) 27999(bash) 28004() 28005() 28006() 28007() ; the file names PID 27117 (alive)
+source: /home/team/shared/probable-octo-sniffle/server/keep-alive.out (the served tree's own guard log).
+not committed as it stands: .gitignore names server/keep-alive.out as runtime state. This excerpt is.
+read 2026-10-20 10:1xZ by the program-manager, by grep over the live file, not from a report.
+the load-bearing line is the EXIT at 09:48:41, written by the guard itself, one poll tick after SIGTERM.
