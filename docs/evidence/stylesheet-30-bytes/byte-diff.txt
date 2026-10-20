@@ -1,0 +1,8 @@
+old: index-CK8SfGWm.css  35775 B  md5 8ec48273f4bd7e4f37c55e2cc6ae2f1d  (built at ea6a531)
+new: index-DvmxiaxC.css   35805 B  md5 3709a147a167307b5f46c2ecbc3e0431  (built at 7a4e00a; served)
+delta 30 B; common prefix 8981 B; common suffix 26795 B
+
+bytes ONLY in the old file: b''
+bytes ONLY in the new file: b'collapse{visibility:collapse}'
+
+That is the whole difference: one utility rule, .collapse{visibility:collapse}
