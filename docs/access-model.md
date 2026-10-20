@@ -82,7 +82,7 @@ it. Both are now out of date, and the true state is more precise than either.**
   `idx_users_employee_id_unique` (`server/db.js:138`, registered in `POST_MIGRATION_INDEXES` at `:134-139`:
   `CREATE UNIQUE INDEX IF NOT EXISTS … ON users (employee_id) WHERE employee_id IS NOT NULL`). It **cannot** live in
   `schema.sql`, which runs *before* the migrations — on a database predating `users.employee_id` the index would
-  name a column that does not exist yet and the boot would fail (`db.js:120-127` says exactly this). A duplicate
+  name a column that does not exist yet and the boot would fail (`db.js:126-128` says exactly this). A duplicate
   already in the data **throws**, a loud boot failure rather than a silently absent constraint — the right way
   round, since two accounts for one person is precisely the state the scope checks cannot resolve. **So "one
   account per person" is a constraint the database now holds; a schema read is not a database read.** What
@@ -126,7 +126,7 @@ now has five roles with `SCOPES` as the mechanism that makes a sixth unnecessary
 **Changed by #239: the rename happened**, exactly where the second version of this document predicted it would —
 in the slice that derives `manager` from `employees.manager_id`, and so is the slice where `users.access_role` and
 `employees.role` sit in one function. The column is `users.access_role` (`schema.sql:191`), the JWT claim is
-`req.user.access_role` (`access.js:378`, `auth.js:91-92`), and `access.js:4` records the rename as this slice's.
+`req.user.access_role` (`access.js:378`, `auth.js:91-92`), and `access.js:67` records the rename as this slice's.
 **What remains true:** the hazard was real while it lasted, the fix is a rename and a migration rather than a
 second name kept alongside (a role value the list does not know is refused), and the gate is written against the
 permission — correct today, as it was before the rename.
@@ -339,7 +339,7 @@ and EOSB into a document. **Refused for `employee` and `manager`**; `finance` re
 ### 6.4 Ticking a step on someone else's record — `PUT /api/onboarding-tasks/:id`
 Requires a named actor (`index.js:503`) and is now **refused for `employee`** (the cell is
 `[hr_admin, manager]`). For a manager, the scope is `reports` — so a manager cannot tick their own step, and the
-code **names that as a deliberate refusal rather than inferring "reports includes self"** (`access.js:192-195`).
+code **names that as a deliberate refusal rather than inferring "reports includes self"** (`access.js:193-196`).
 
 ### 6.5 Ending someone's employment — `POST /api/exit-interviews`
 Writes the interview and sets `employees.status='terminated'` (`index.js:811`; route at `:805`). **`hr_admin` only.** Of everything
@@ -476,17 +476,65 @@ underneath them did:
 The shifts are **+17, +20, +21, +20 and +20**: a re-ground is a measurement, not arithmetic, and any one offset
 carried across the file would have put four of these five on a line that holds something else.
 
-**The blind spot this exposed is closed in the checker.** Its `[doc citation]` family enforced one citation
-(`index.js:829`), so a citation to a file that MOVED passed silently while the checker's own tree claims for that
-same file reddened — the instrument could see the tree move and not the document. It now enforces one citation per
-site here, so the next move reddens on the document instead of being caught by hand.
+**The blind spot this exposed is reduced, not closed — and "one citation per site" was an over-claim.
+Three of the sites it named are closed below, one entry each; eight are not.** The `[doc citation]` family
+enforced one citation (`index.js` `:829`) when this section was first written, so a citation to a file that
+MOVED passed silently while the checker's own tree claims for that same file reddened — the instrument could
+see the tree move and not the document. Measured at `94c6ef0` on 2026-10-20, against the six-entry family
+named below:
+
+| this page cites | count |
+|---|---|
+| distinct `file:line` sites | **48** |
+| compared as citations (the family above) | **6** |
+| pinned only as **tree claims** — redden when the file moves, never compare the number printed here | **34** |
+| in **no check at all** | **8** |
+
+The family holds six entries: `index.js` `:829`, `preboarding-items.js` `:360-364`,
+`preboarding-items.js` `:517`, and the three added with the corrections below — `access.js` `:67`,
+`access.js` `:193-196`, `db.js` `:126-128` — **named in this page's shorthand on purpose**: a family
+row asks whether the cited string appears *anywhere* on the page, so writing one of these here as a
+citation would satisfy the very row it describes. **This list is in shorthand for that reason.** Every
+corrected site is bound by its `[stale text]` row as well, and a shorthand cannot satisfy that. The eight
+still in no check are `auth.js` `:91-92`; `index.js` `:199`, `:291-303`, `:310`, `:503`;
+`preboarding-items.js` `:198`, `:343-347`; `schema.sql` `:50` — in this page's own backticked shorthand, so
+that naming them does not itself invent eight new citations. **The site count fell 49 → 48 in the same
+edit, and that is the count doing its job**: the note at `access.js` `:193-196` was on this page twice
+under two different ranges and one of the two was wrong, so correcting it merged two sites into one. **The partition is a
+function of the family as well as of the page** — the first table here read `3` compared and `11` unchecked
+when the family held three entries, and adding three entries moved those two numbers without a byte of the
+page's citations changing for it.
+
+**Three of the eleven were cited ONE LINE OFF, and each was written that way in the commit that
+re-grounded it — the code has not moved since.** `access.js` `:192-195` began on the `SCOPES` entry line for a
+note that begins at `:193`; `db.js` `:120-127` began on the blank line above a block that begins at `:121`, and
+stopped one line short of the words this page quotes ("the boot would fail", `:128`); and `access.js` `:4`
+named the file's opening paragraph for a rename that is recorded at `:67`. Measured: `git log ce28e99..HEAD
+-- server/access.js` and `git log da4f0c1..HEAD -- server/db.js` are both empty, and each block already sat
+at its present lines in the commit that wrote the citation — so these are not citations that drifted, they
+are citations that never resolved, at three sites nothing compared. Each is corrected here to the line that
+carries the claim, and each correction carries **two** rows in the checker: one that the number now resolves
+(`[doc citation]`) and one that **refuses the old form** (`[stale text]`) — because a family row alone
+cannot bind a site whose cited string also appears, correctly, elsewhere on the page.
+
+The exposure is the **`+1` regime**, not silence: a citation that moved by one line still lands on
+something that reads like what it names, so a reader checking it by eye — or a re-ground done by eye — sees
+nothing wrong. **The eight that remain are not closed here.**
+
+**And the four numbers in that table are now read OUT OF this page and compared with a recount
+(`[partition]`), so editing a citation here moves a check and not only a number.** Nothing re-derived them
+before, which is why the paragraph below exists at all.
 
 **And the count quoted above has been overtaken TWICE by that same work — this paragraph demonstrates its own
 rule.** §10.1 records the checker reading `124/124` for this document when it was written; the retired-fallback
 claim took it to `125/125`; and the two `[doc citation]` entries described just above — the ones that would have
-caught these five moved citations — take it to **127/127**, which is what the instrument reads against this
-document now. This paragraph was first written at `125/125` and corrected here at `127/127`: a number quoted in
+caught these five moved citations — take it to **127/127**, which is what the instrument read against this
+document at that point. This paragraph was first written at `125/125` and corrected here at `127/127`: a number quoted in
 an amendment is a measurement at the time it is written, including in the sentence that says so.
+**Overtaken a third time, by the corrections above:** their three `[doc citation]` rows and the three
+`[stale text]` rows they pair with take it to `133/133`, and the `[partition]` row added under that table
+takes it to **134/134** — which is what the instrument reads against this document now (measured; the run is
+in the PR body).
 
 ### 10.3 Amended 2026-10-20 against `ee4bbdf` (the same afternoon — the checker learned to read its own subject)
 
