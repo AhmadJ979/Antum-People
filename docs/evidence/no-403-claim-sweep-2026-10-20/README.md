@@ -102,3 +102,58 @@ written (`1f471ef` → `7a4e00a` → `58d8417`), so the citations in this record
 
 That is the rule this whole record argues for: **a line citation is a measurement, and a measurement has a
 revision.** Where a number is quoted here, the tree it was read at is named beside it.
+
+## 7. The instrument, and what its first run says — including about itself
+
+**`check-doc-citations.py`** (this directory) fails when an `App.tsx:<n>` citation in `design-concepts/` does not
+land on what it names. It reads the expectation **out of the document it judges**, so no table in this file can
+go stale on its own: the backticked symbols on the citing line are what that citation claims.
+
+**Red, on the document as it merged.** The document that landed as PR #255 was measured on `7a4e00a`; **PR #254
+merged at 09:37:41, one minute before it merged at 09:38:21**, and moved `client/src/App.tsx` again. Judged against
+the tree #254 left:
+
+```
+python3 check-doc-citations.py 1155913 ab7e9c3      # rc=1  ->  6 ok, 47 FAILING, 30 unchecked
+```
+
+**Re-grounded here onto `ab7e9c3`** (`App.tsx` **2,539 lines**) — `LAYER3-IDENTITY.md` and its index row: identity
+card `:1212`–`1213` → **`:1222`–`:1223`**, `Sign Out` `:1198` → **`:1208`**, identity block `:1202`/`:1215`, the
+`recorded by` prints `:2107`/`:2162`, the `checklistNotice` banner `:2393`–`:2394`, the login card opens `:356`,
+`ml-3` `:416`, `mr-2` `:369`. Every one of those numbers was measured, not shifted.
+
+**And the instrument is not yet a gate, which its own run shows.** On *this* branch's tree against *this* branch's
+doc:
+
+```
+python3 check-doc-citations.py da8a761 da8a761             # rc=1  ->  11 ok, 42 FAILING, 30 unchecked
+```
+
+**Two of the 42 are false positives, verified by hand** — the checker fails on a *correct* document, which
+disqualifies it as a gate in that form:
+
+- `LAYER3-IDENTITY.md:37` — the citing line describes a block and names the button text (`Sign In`), which lives a
+  few lines below the cited div. A descriptive token is not a symbol of the cited line.
+- `README.md:17` — a range end written without backticks (`:1222`–`1223`), so only the first number was captured.
+
+The first version also read **times** (`09:37:41`) and **ports** (`:5173`) as line numbers; number extraction now
+accepts only an `App.tsx:<n>` anchor or a backticked `:n`. **The red count is an upper bound, not a defect count.**
+
+**The other 40 are real**, and they are the finding this row existed to produce — sibling documents whose
+citations #254 moved exactly as it moved mine:
+
+- `design-concepts/LAYER2-PREBOARDING-UI.md` — **19**
+- `design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md` — **9**
+- `design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md` — **5**
+- `design-concepts/CLIENT-STATES.md` — **4**
+- `design-concepts/LAYER2-P2-2-IMPLEMENTATION-NOTES.md` — **3**
+- `design-concepts/LAYER3-IDENTITY.md` — **1**
+- `design-concepts/README.md` — **1**
+
+**Re-grounding those is a separate row** (their citations are stale, not false — the fix is measurement, not
+wording). What the instrument is good for *today* is that it would have caught #254's movement across all of them,
+which nothing did.
+
+**And this file's own §6 is now false.** It said all ten `App.tsx` anchors still land at `58d8417`. They did, at
+`58d8417`. #254 moved them. **A statement about a tree is only true of the tree it names** — which is why every
+number above is followed by its revision.
