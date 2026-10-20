@@ -1,0 +1,18 @@
+=== a read-only probe of a COPY of the live database — taken by agent-program-manager, Round 52
+source: /home/team/.data/antum-product.db
+copy:   /tmp/rev/live-copy-r52.db | 262144 B | md5 54c0887c3277ed122c93840eec91e674 | mtime 2026-10-20T08:59:42Z
+note:   the lead's own 08:50 copy (/tmp/live-copy-239.db, md5 1746a78da87bbd3f2201fb7fee3e5c6b) was present in /tmp at 08:55
+        and REMOVED from /tmp by 08:57 — so this is a fresh copy, taken for this probe.
+note:   the handle below is readOnly; nothing here writes to the copy, and nothing touches the live database or its files.
+measured: 2026-10-20T08:59:42Z
+users columns: ["id","username","password_hash","access_role","created_at","employee_id"]
+users rows: [{"id":"demo-admin-id","username":"admin","access_role":"hr_admin","employee_id":null}]
+users has legacy role column: false
+index rows on users: [{"name":"sqlite_autoindex_users_1","sql":null},{"name":"sqlite_autoindex_users_2","sql":null},{"name":"idx_users_employee_id_unique","sql":"CREATE UNIQUE INDEX idx_users_employee_id_unique ON users (employee_id) WHERE employee_id IS NOT NULL"}]
+audit_logs performed_by = system: 0
+audit_logs total: 111
+distinct performed_by: ["demo-seed","admin"]
+users row count: 1
+insert on a readOnly handle refused: attempt to write a readonly database
+(node:5278) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

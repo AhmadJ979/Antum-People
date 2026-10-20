@@ -1,0 +1,8 @@
+employee probed: demo-emp-ahmad
+before: 4 users; 1 linked to it
+1st link refused (unexpected): UNIQUE constraint failed: users.employee_id
+2nd link to demo-emp-ahmad : refused -> UNIQUE constraint failed: users.employee_id
+two unlinked accounts refused (index is not partial): UNIQUE constraint failed: users.username
+after: 4 users
+(node:28234) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
