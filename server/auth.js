@@ -83,8 +83,13 @@ module.exports = {
   hashPassword: (password) => bcrypt.hash(password, 10),
   hashPasswordSync: (password, cost = 10) => bcrypt.hashSync(password, cost),
   comparePassword: (password, hash) => bcrypt.compare(password, hash),
+  // Layer 3, slice 2: the claim is `access_role`, not `role` (docs/access-model.md §2.4). The name it
+  // collided with is `employees.role` — a job title — and this slice is the one that puts the two in
+  // one function (a manager's reports come from `employees.manager_id` while the check reads this
+  // claim), so the rename rides it. A token minted before this deploy carries the old claim and fails
+  // the gate; that is a session ending, not a permission change.
   generateToken: (user) => jwt.sign(
-    { id: user.id, username: user.username, role: user.role },
+    { id: user.id, username: user.username, access_role: user.access_role },
     JWT_SECRET,
     { expiresIn: '8h' }
   )

@@ -17,11 +17,14 @@ async function migrate() {
     }
     const hashedPassword = await auth.hashPassword(adminPassword);
     const id = randomUUID();
-    await db.query(`INSERT INTO users (id, username, password_hash, role) VALUES (
+    // Layer 3, slice 2: `access_role` / `hr_admin` — the column and the role value renamed
+    // (docs/access-model.md §2.4). A database this script creates from scratch gets the new names
+    // directly; an existing one is renamed at boot by server/db.js (RENAMES + VALUE_RENAMES).
+    await db.query(`INSERT INTO users (id, username, password_hash, access_role) VALUES (
       ${db.escapeString(id)}, 
       ${db.escapeString(adminUsername)}, 
       ${db.escapeString(hashedPassword)}, 
-      'admin'
+      'hr_admin'
     )`);
     console.log(`Admin user seeded: ${adminUsername}`);
   } else {

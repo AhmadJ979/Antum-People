@@ -1194,7 +1194,7 @@ export default function App() {
               </div>
               <div className="overflow-hidden">
                 <div className="text-xs font-bold text-white truncate">{user?.username || 'Admin User'}</div>
-                <div className="text-[10px] text-slate-500 font-medium uppercase tracking-tight">{user?.role || 'Administrator'}</div>
+                <div className="text-[10px] text-slate-500 font-medium uppercase tracking-tight">{user?.access_role || 'Administrator'}</div>
               </div>
             </div>
           </div>

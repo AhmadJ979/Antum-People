@@ -675,12 +675,16 @@ async function seed() {
   }
 
   // 8. Users (Deliverable 3: Demo credential stays the lead's)
+  // Layer 3, slice 2: the column is `access_role` and the role it holds is `hr_admin` — the same role
+  // the `admin` account always had, under the name docs/access-model.md §2.1 gives it (§2.4's rename).
+  // The USERNAME is unchanged: `admin` is the credential the owner holds, and decision 13 keeps it out
+  // of shared documents rather than out of the product.
   const adminHash = process.env.DEMO_ADMIN_PASSWORD_HASH;
   if (adminHash) {
     console.log('Upserting demo admin user...');
     await db.query(`
-      INSERT OR REPLACE INTO users (id, username, password_hash, role)
-      VALUES ('demo-admin-id', 'admin', ${db.escapeString(adminHash)}, 'admin')
+      INSERT OR REPLACE INTO users (id, username, password_hash, access_role)
+      VALUES ('demo-admin-id', 'admin', ${db.escapeString(adminHash)}, 'hr_admin')
     `);
   } else {
     console.warn('WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.');
