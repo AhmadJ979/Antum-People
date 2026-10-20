@@ -1,0 +1,218 @@
+# One entry point for every check the team owns — runs, 2026-10-20
+
+Branch `docs/one-entry-point`, committed at **e45fbc6** off `main` (`2b14a94`). Every run below
+was taken at that revision, on a WORKTREE of it (`/tmp/eop`) or in the clone — never in the
+served tree. `server/node_modules` is a symlink to the deployed tree's dependencies, as the
+suite requires (`ln -s /home/team/shared/probable-octo-sniffle/server/node_modules server/node_modules`);
+without it the same tree reads 187/35/185/2 and two failures that are LOAD failures.
+
+## 1. The inventory: every check the team owns, its home, and whether it runs bare
+
+Proven by running each one; `bare` = runs with no arguments, from any working directory.
+
+| check | what it asserts | home | runs bare | at e45fbc6 |
+|---|---|---|---|---|
+| `scripts/check-design-concepts-index.py` | every `design-concepts/*.md` except README carries exactly one index row; no row names a missing document; the README's exclusion is asserted | operator CLI **+ suite gate** (`server/design-concepts-index.test.js`) | yes | **OK** (exit 0) |
+| `scripts/check-index-ids.py` | every id quoted in `roadmap-board-index.md` resolves; no removal is unrecorded; the re-check trigger structure is intact | operator CLI — **no gate**, so this entry point is its only one | yes | **OK** (exit 0) |
+| `docs/evidence/no-403-claim-sweep-2026-10-20/check-doc-citations.py` | every `App.tsx:<n>` citation in `design-concepts/` lands on a symbol the citing line names | operator CLI — **bare form added by this change**; was reachable only by naming a revision | **no → yes** | **RED-KNOWN** (11 ok, 43 FAILING, 30 unchecked) |
+| `scripts/reachability-report.js` | prints callerless routes / unopenable controls / displayed-only values | operator CLI **+ suite gate** (`server/reachability.test.js`, `server/reachability-report-cli.test.js`) | yes | **OK** (exit 0; a report by design) |
+| `server/*.test.js` (16 files) | the suite, incl. the doc/tracker-invariant gates | suite gate — **the movement does NOT run it** (grep: `deploy-main.sh` and `cutover-preflight.sh` contain no `node --test`) | `cd server && node --test` | **OK — 276 / 51 / 276 / 0** |
+| `/home/team/shared/verify-access-model.py` | the 137-check access model against `docs/access-model.md` | **OUTSIDE the repository** — no PR and no movement can carry it | yes (external) | **RED-KNOWN** (128/137, fails 9; the fix is PR #262, open) |
+| `scripts/cutover-preflight.sh` | host-state preconditions for a movement | movement preflight — **the host** | yes, but its precondition is the host, not the tree: in a scratch tree it CORRECTLY reports `PREFLIGHT FAIL — 3 precondition(s) do not hold` (exit 1) | **NOT run** — deliberately, and not wired in |
+| `scripts/{cors-error-contract,guard-deploy-marker,install-host-tools,keep-alive-deploypath,observe-serve-pair}-test.sh` | each proves one host tool does what it claims, off-host | operator CLI, off-host | yes | run with `--full` |
+| `scripts/success-test.sh` | the cutover's four success tests against whatever is serving | operator CLI, **live-facing** | yes (`LABEL` defaults to `unlabelled`) | run with `--live LABEL` |
+
+**Not checks — ACTORS, listed in the entry point's own output and never run by it** (they change
+the host, the live product or the demo data): `deploy-main.sh`, `keep-alive.sh`,
+`restore-product.sh`, `rollback-to-9d2182a.sh`, `install-host-tools.sh`,
+`antum-product-guard-hook.sh`, `seed-demo.js`, `observe-serve-pair.sh`.
+Classification is by READING each file's header: a grep for host-mutating words scores
+`seed-demo.js` **0** while it rewrites the demo database. A hit count does not know a string's role.
+
+## 2. The citation checker: bare, named, non-vacuous — and behaviour unchanged
+
+```
+$ python3 docs/evidence/no-403-claim-sweep-2026-10-20/check-doc-citations.py      # bare, from the repo root
+tree 2b14a94 - doc 2b14a94c3a62 vs code 2b14a94c3a62 - 18 document(s)
+doc 2b14a94c3a62 vs code 2b14a94c3a62: 11 ok, 43 FAILING, 30 unchecked   [tree 2b14a94]
+exit 1
+
+$ cd /tmp && python3 .../check-doc-citations.py     # the working directory does not matter
+doc 2b14a94c3a62 vs code 2b14a94c3a62: 11 ok, 43 FAILING, 30 unchecked   [tree 2b14a94]   (identical)
+
+$ cd /tmp/notgit && python3 check-doc-citations.py  # no git above it: REFUSES
+REFUSED: nothing was checked - repo=(no git working tree above this file) rev=(no revision given) does not resolve.
+exit 2
+```
+
+**As merged, the bare form was `IndexError: list index out of range` on `sys.argv[1]`** (exit 1) —
+the defect this change closes.
+
+**Control that the fix did not change the measurement.** That directory's own README records two
+runs; the fixed script reproduces both exactly, including the FAILING counts:
+
+```
+README:117  python3 check-doc-citations.py 1155913 ab7e9c3   # rc=1 ->  6 ok, 47 FAILING, 30 unchecked
+README:129  python3 check-doc-citations.py da8a761 da8a761   # rc=1 -> 11 ok, 42 FAILING, 30 unchecked
+now:        doc 1155913 vs code ab7e9c3:  6 ok, 47 FAILING, 30 unchecked   [tree 2b14a94]   exit 1
+now:        doc da8a761 vs code da8a761: 11 ok, 42 FAILING, 30 unchecked   [tree 2b14a94]   exit 1
+```
+
+The two admitted FALSE POSITIVES stay recorded where they were recorded, quoted by the entry
+point's own RED-KNOWN line — `README.md:132`, "Two of the 42 are false positives, verified by
+hand". Neither is re-grounded, and nothing here makes them pass.
+
+### The defect in my own first fix, recorded rather than quietly regenerated
+
+The first cut ran git with `-C <this file's own directory>`. `git ls-tree <rev> design-concepts`
+reads its pathspec **relative to the directory git is told to work in**, and the file lives four
+levels down, so it matched nothing and the run printed `0 ok, 0 FAILING, 0 unchecked`, **exit 0** —
+a green over an empty document list, on a tree whose citations it had just failed to read. The
+fix: git runs `-C <repository root>`, and an empty document list is ITSELF a refusal (exit 2).
+Both are in the file's docstring, with the reason.
+
+## 3. The entry point at the branch tip (worktree of `e45fbc6`)
+
+### E1 — the rig cannot judge the suite, and says so instead of reporting green
+```
+$ python3 scripts/check-all.py --only suite        # server/node_modules absent
+                 said : server/node_modules is ABSENT: without it this tree reads 187/35/185/2 (two LOAD failures, 84 tests never run) - a rig report, not a tree report.
+                      : Fix: ln -s /home/team/shared/probable-octo-sniffle/server/node_modules server/node_modules
+totals: 1 check(s) run, 0 skipped   [PARTIAL: --only suite]
+        RIG-INCOMPLETE   1
+VERDICT: 1 check(s) RED and NOT in a declared state -> suite
+exit 1
+```
+
+### E2 — the same run with the link: the suite the merge result is read from
+```
+[OK           ] suite                    tree=e45fbc6   exit=0   6.8s
+                 said : server suite: tests 276, suites 51, pass 276, fail 0
+VERDICT: every check that can be green on this tree is green. exit 0
+```
+276 = the 271 the tree already had, plus the 5 in `server/check-all-classifier.test.js`.
+
+### E3 — REDDENED on the real tree: one index row dropped, and the run NAMES the document
+```
+dropped the row for BRAND-IDENTITY.md
+[BROKEN       ] design-concepts-index    tree=e45fbc6   exit=1   0.0s
+                 said :   want exactly one row each : 17  (README.md excluded, and its exclusion is asserted)
+                      :   ...documents with NO row  : ['BRAND-IDENTITY.md']
+...
+VERDICT: 1 check(s) RED and NOT in a declared state -> design-concepts-index
+exit 1
+```
+The two checks that are red in a RECORDED state (`doc-citations`, `access-model`) print as
+`RED-KNOWN` in the same run and are NOT in that verdict — which is the distinction this task
+exists for. Note the red check's **tail**: its own last line is `FAIL: see the lists above`; the
+line naming the lost document is five lines higher, which is why the entry point prints a tail
+and not a last line (the first cut printed the useless line — measured).
+
+### E4 — restored: the whole default set green except the two recorded states
+```
+[OK] design-concepts-index  [OK] index-ids  [RED-KNOWN] doc-citations  [OK] reachability-report
+[RED-KNOWN] access-model    (+ suite, checked in E2)
+VERDICT: no check is unexpectedly red. 2 check(s) are red in a state that is RECORDED as the defect state (doc-citations, access-model)
+exit 0
+```
+
+## 4. The classifier's own gate — `server/check-all-classifier.test.js`, 5/5
+
+```
+$ cd server && node --test check-all-classifier.test.js
+ok 1 - the entry point and the checks it runs exist (it cannot pass vacuously)
+ok 2 - the classifier self-test passes: every case of the mapping, and which words fail a run
+ok 3 - a doctored copy: GREEN at baseline, then RED naming the lost index row
+ok 4 - a declaration that no longer fires FAILS the run (an exception that lies is worse than none)
+ok 5 - no git above it: the citation checker REFUSES (exit 2) instead of reporting a vacuously clean run
+# tests 5   # pass 5   # fail 0
+```
+`--selftest` reads **13/13 cases**: the 6 mapping cases and the 7 `fails_run` words, asserted
+against the same predicate the verdict uses, so the classifier's documentation and its exit code
+cannot drift apart. The stale-exception control flips one GREEN check to `known-red` in a copy:
+the run must print `[STALE-EXCEPTION]` and exit 1.
+
+## 5. Two traps this file is written around, both measured here
+
+1. **A copy is judged by ITS OWN script.** Running this repository's `check-all.py` with `cwd`
+   set to the copy makes it judge the REAL tree (its root comes from its own `__file__`) and
+   report it green while the doctored copy is never read. The copy's own script must be run — the
+   assertion that caught it is the one demanding the run name the tree it judged.
+2. **A non-git copy legitimately reddens two checks.** `check-index-ids.py`'s own docstring
+   documents its blind spot: ids that resolve as git objects in the repository do not resolve in a
+   copy (exit 1, "the CHECKER'S OWN BLIND SPOT"). So the gate narrows to one check with `--only`
+   rather than reading a copy's whole verdict as if it were the tree's.
+
+## 6. Findings recorded, not fixed here
+
+- **The row's path was stale.** It names `scripts/check-doc-citations.py`; the instrument lives in
+  `docs/evidence/no-403-claim-sweep-2026-10-20/`. It was fixed IN PLACE: four files cite it there
+  (`design-concepts/LAYER3-IDENTITY.md`, that directory's `README.md`, `scripts/check-design-concepts-index.py`),
+  and moving an instrument to tidy it would rename evidence.
+- **`server/node_modules` is not ignored by `.gitignore`** (`git check-ignore` says no: the pattern
+  is `node_modules/`, which matches directories and not a symlink). The operator step this change
+  documents — `ln -s ... server/node_modules` — therefore leaves an untracked symlink that
+  `git add -A` WOULD commit. One line (`node_modules` without the trailing slash) would close it.
+  Not changed here: it is not this task's delta, and the entry point's own header reports untracked
+  paths separately from modified ones so the link cannot make every run claim the tree moved.
+- **`check-index-ids.py` still has no gate.** The entry point is now its only operator-reachable
+  home; a suite gate would need `team-db` and a git object store, which is a separate decision.
+- **A dead branch in `check-doc-citations.py` was left alone** and is recorded here: line
+  `[n for n in nums if hits_any(...)] if False else [...]` names a function that does not exist. It
+  is unreachable (`False`), so behaviour is right and it is not weakened by leaving it — but anyone
+  who flips that flag gets a `NameError`, and "fixing" it silently would be a change this task did
+  not measure.
+
+## 7. Does the movement run any of this? No — and that is stated, not assumed
+
+```
+$ grep -n "node --test\|--test\b" scripts/deploy-main.sh scripts/cutover-preflight.sh
+(nothing)
+$ grep -n "check-\|\.py\b" scripts/cutover-preflight.sh
+(nothing)
+```
+No Python script can be loaded by the served Node process, so this delta owes no movement; every
+path touched is a `scripts/` `.py`, a `server/*.test.js` file, or a `docs/` file — none is
+imported by `server/index.js` or `client/src`. The entry point says in its own output that the
+movement does not run it, and wiring any check into the movement is the lead's ruling, not this
+change's.
+
+## 8. The correction I owe the plan (and the lead)
+
+The plan's KPI line for test-suite determinism was measured GREEN: **271 / 51 / 271 / 0 at
+`2b14a94`** with `server/node_modules` linked — and **both my earlier reports of "2 pre-existing
+failures" and of that KPI being "not reproducible" were my own rig**, whose `server/node_modules`
+was absent (187/35/185/2, two LOAD failures). The rig was the defect, not the tree. Recorded here
+and on the PR rather than quietly dropped.
+
+
+## 9. F — the check with NO gate, REDDENED (added after the lead's review note)
+
+`index-ids.py` had no home at all before this change. Green at baseline, red on an injected id,
+green again on restore - in a worktree of this tip, never the served tree:
+
+```
+$ python3 scripts/check-all.py --only index-ids                     # baseline
+[OK           ] index-ids                tree=f560988   exit=0   0.3s
+VERDICT: every check that can be green on this tree is green. exit 0
+
+$ printf '\n| `deadbeef` | injected by the reddening control - resolves to no board row and no git object |\n' >> roadmap-board-index.md
+$ python3 scripts/check-all.py --only index-ids
+[BROKEN       ] index-ids                tree=f560988   exit=1   0.3s
+VERDICT: 1 check(s) RED and NOT in a declared state -> index-ids      (exit 1)
+
+$ git checkout -- roadmap-board-index.md
+$ python3 scripts/check-all.py --only index-ids
+[OK           ] index-ids                tree=f560988   exit=0   0.3s
+VERDICT: every check that can be green on this tree is green. exit 0
+```
+
+**Honest limitation, measured here:** a red check's tail is bounded at 8 lines (`TAIL_LINES`), and
+for `index-ids` the list NAMING the unresolvable id sits just above that bound - the tail shows the
+check's own closing `FAIL: see the lists above` plus the last counter lines. The run always prints
+how many earlier lines it withheld AND the full command, so nothing is hidden; but the bound is a
+bound, and for this check the decisive line is reached through the printed command rather than in
+the tail. A per-check "decisive line" selector is the better shape and is NOT in this change.
+
+The same bound applies to the design-concepts reddening in section 3, where the naming line happened
+to fall inside 8 lines only because the check prints its lists within 6 lines of the end.
