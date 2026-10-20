@@ -105,7 +105,7 @@ it. Both are now out of date, and the true state is more precise than either.**
 |---|---|---|---|
 | **`✖`** | **denied by policy at every horizon.** No future schema change makes it permitted — the absence IS the mark | a role simply not in a `POLICY` cell (`:91`) | nothing — do not build it |
 | **`⊘`** | **permitted by policy, not yet EXPRESSIBLE** — the ruling says yes and a column is missing | `PENDING_CELLS` (`:155`), which names the missing link; a check asserts such a role is **not** in the cell | build the **empty state** and its sentence; do **not** ship it as a live read |
-| **`⚖`** | **denied for now because counsel owns the question** — neither of the above | `COUNSEL_PENDING` (`:169`), keyed to this document's §8 item numbers | nothing yet; the refusal is provisional and named |
+| **`⚖`** | **denied for now because counsel owns the question** — neither of the above | `COUNSEL_PENDING` (`:169`), keyed to this document's §8 item numbers — items 3, 4 and 5 are **decision 27** | nothing yet; the refusal is provisional and named |
 | **`✔`** | **permitted and ENFORCED** | a role present in the cell | use it |
 
 **Why the distinction is kept in code and not only here:** flattening `✖` into `⊘` would make a permanent refusal
@@ -365,26 +365,28 @@ in §3.3 it is the one where a wrong click is least recoverable.
 
 1. **Counsel:** retention periods per table, and candidate data for hires that never start.
 2. **Counsel:** whether a manager may see a report's pay *band*.
-3. **Counsel — `⚖` in the code:** the minimum cohort size before an aggregate becomes a disclosure. Until
-   answered, a manager's dashboard row is refused (`COUNSEL_PENDING`, `access.js:169`).
-4. **Counsel — `⚖`:** whether a manager may see a candidate's contact details before the start date.
-5. **Counsel — `⚖`:** whether the **workspace track** belongs on an employee's own view, or stays internal.
-6. **Owner — DECISION 23, still open:** does `compliance_viewer` stay in the role set? Dropping it makes the
+3. **Counsel — `⚖` in the code (decision 27 — the block with items 4 and 5):** the minimum cohort size
+   before an aggregate becomes a disclosure. Until answered, a manager's dashboard row is refused
+   (`COUNSEL_PENDING`, `access.js:169`). One thing blocks all three — a **counsel recipient**, decision
+   15a — which is why the plan numbers them as **one decision** rather than three.
+4. **Counsel — `⚖` (decision 27):** whether a manager may see a candidate's contact details before the start date.
+5. **Counsel — `⚖` (decision 27):** whether the **workspace track** belongs on an employee's own view, or stays internal.
+6. **Owner — decision 23, still open:** does `compliance_viewer` stay in the role set? Dropping it makes the
    actor the only reader of their own record. **Not decided here.**
-7. **Owner — DECISION 24, still open:** departmental scoping as a *scope* a role carries rather than new roles.
+7. **Owner — decision 24, still open:** departmental scoping as a *scope* a role carries rather than new roles.
    **Not decided here.**
 8. **Engineer — the prerequisites this document named are BOTH in place** (`users.employee_id`, the read split),
    **and a third is now named by the code**: `preboarding_cases` has no `employee_id`, so no cell can say *which
    case is a person's*. That is a schema decision, and it is the one thing between §3.2's ruling and its
    enforcement. Closed since the last revision: the rename (landed, §2.4), the `'system'` attribution (§5.2).
-9. **Owner — DECISION 25, still open (found by the engineer in #239):** **a `manager` cannot read their OWN
+9. **Owner — decision 25, still open (found by the engineer in #239):** **a `manager` cannot read their OWN
    onboarding tasks.** The matrix gives the manager column `scoped (own reports)` and the employee column
    `scoped (own)`, and one account holds one role — so `reports` excludes the caller. The code refuses to infer
    its way out: "widening `reports` to include the caller would be the kind of inference this file refuses; it is
    raised in the PR body instead" (`access.js:193-196`). *The cost:* a person who manages a team and is also on
    one cannot see their own steps. *The alternative:* widen `reports` to include self, which is a policy change,
    not a fix. **Not decided here.**
-10. **Owner — DECISION 26, still open — and it is a cell THIS DOCUMENT got wrong.** The notice-acknowledgement
+10. **Owner — decision 26, still open — and it is a cell THIS DOCUMENT got wrong.** The notice-acknowledgement
    POST (§3.2) was marked **"✔ (read-only)"** for `compliance_viewer`, a role §2.1 defines as read-only. The code
    refuses the cell and names the contradiction (`access.js:125-127`). *The cost of granting it:* it widens a
    role whose whole definition is "read-only", and §5.2 rule 2 makes the account/holdership surface
@@ -419,6 +421,10 @@ git show origin/main:server/index.js | sed -n '824,830p'
 # the write paths and the retired literal (expect no value occurrence)
 git grep -n "accessScope\|relationTo" origin/main -- server/index.js
 git show origin/main:server/index.js | grep -v '^\s*//' | grep -c "'system'"
+
+# the open owner decisions, by the number the plan cites: 23, 24, 25, 26,
+# and 27, which covers §8 items 3, 4 and 5
+git show origin/main:docs/access-model.md | grep -n 'decision 2[3-7]'
 ```
 
 **The five inert tables.** `analytics_metrics`, `data_subject_requests`, `breach_register`, `eosb_calculations`
@@ -431,7 +437,27 @@ that states its exceptions. The DSAR and breach registers will need a rule when 
 
 ## 10. The amendment — what changed, and why
 
-### 10.1 Amended 2026-10-20 against `ee4bbdf` (the same afternoon — the checker learned to read its own subject)
+### 10.1 Amended 2026-10-20 against `8ec9f69` (the decision numbers — and the case-sensitive search that missed two of them)
+
+**The plan numbers three things this document is the register for, and a reader must be able to cite them here by
+number:** **25** (§8 item 9 — a manager cannot read their own onboarding tasks), **26** (§8 item 10 —
+`compliance_viewer` against the one write), **27** (the counsel block over §8 items 3, 4 and 5).
+
+1. **Decisions 25 and 26 were already recorded — in a case a search for them misses.** §8 items 9 and 10 have
+   carried `DECISION 25` and `DECISION 26` since #239, but the plan writes `decision 25` and `decision 26`, and a
+   case-sensitive search for the plan's form finds neither. Measured before this change, `grep -n 'decision
+   2[3-7]' docs/access-model.md` matched **two** lines and both were *outside* §8. **The numbers were present and
+   the string a reader searches for was not**, so the register now uses the plan's own form and a citation and a
+   search agree. **Nothing was renumbered:** 23, 24, 25 and 26 keep the numbers they had.
+2. **Decision 27 had neither a number nor a site in this file.** It is recorded **on the three items it covers**
+   (3, 4 and 5) rather than as an appendix, with the single blocker named — a **counsel recipient** (decision
+   15a) — because the plan numbers them as one decision precisely so they cannot be actioned apart.
+3. **The checker enforces this now.** A new check in `shared/verify-access-model.py` reads the five open owner decisions
+   out of §8 and fails when one is missing in the plan's own form: **124/124, exit 0** against the tree with this
+   document, **123/124, exit 1** against the previous document bytes — the new check reddens on the document that
+   prompted it, which is the only way to know it is load-bearing.
+
+### 10.2 Amended 2026-10-20 against `ee4bbdf` (the same afternoon — the checker learned to read its own subject)
 
 **This amendment changes the CHECKER, and records two defects this document carried that its own check could not
 see.** All three findings came from sweeping past the brief, and the first two are in this file.
@@ -474,7 +500,7 @@ not made, or a legal basis counsel has not confirmed all pass it untouched. **Th
 section quoted "103/103" as verification of this document. It was a statement about the tree alone, and it was
 true of a document asserting the opposite of the code.**
 
-### 10.2 Amended 2026-10-20 against `ca681dd` (the enforcement slice, PR #239)
+### 10.3 Amended 2026-10-20 against `ca681dd` (the enforcement slice, PR #239)
 
 **A verifier, not a reading.** I re-ran the landed checker (`shared/verify-access-model.py`) against the new
 `main` first: **20 of 94 claims still held, exit 1.** The 74 failures were the worklist, and four of them were
@@ -519,7 +545,7 @@ right. Where this document and the code disagree the code runs, and the disagree
 wrong — one such defect was found here (§3.2), and §8 item 9 asks the owner to settle it. Docs only: `client/` 0,
 `server/` 0, **no movement owed**.
 
-### 10.3 Amended 2026-10-20 against `b4f479a` (slice-2 prerequisites, PR #236)
+### 10.4 Amended 2026-10-20 against `b4f479a` (slice-2 prerequisites, PR #236)
 
 Re-grounded by measurement, 94/94 claims: the resource count 15 → 16; the split of the coarse cell into
 `preboarding:read` (3) and `preboarding:read:own` (4), disjoint, both `[admin]`; `users.employee_id` present,
@@ -529,7 +555,7 @@ to hold rather than a constraint the database held.** Found by sweeping rather t
 recorded as open. **The negative control that made it a measurement: the same document judged against the merge
 before slice 2 reddens at 31/94.**
 
-### 10.4 Amended 2026-10-19 against `e2a4b4b` (slice 1, PR #223)
+### 10.5 Amended 2026-10-19 against `e2a4b4b` (slice 1, PR #223)
 
 The ruling the designer's own-view surface needed — **option (a), with a bound**: a person may read their own
 pre-boarding record; the list, the roll-up and the flag watch stay `✖` at every horizon. The distinction the
