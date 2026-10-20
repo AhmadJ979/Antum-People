@@ -1,6 +1,8 @@
 # Evidence — the three unresolving citations in `docs/access-model.md`, 2026-10-20
 
-Merged by PR #262. Raw runs in `controls-final.txt`; this file says what each one proves.
+This pack rides **PR #262** (open when it was written) and every run in it is against **that branch's tip**,
+not against `main` — `main` still carries all three wrong citations until the PR merges. Raw runs in
+`controls-final.txt`; this file says what each one proves.
 
 ## What was wrong
 
@@ -69,7 +71,7 @@ named list now (`DOC_CITATIONS`) that the enforcing loop and the partition check
 ## Reproducing
 
 ```
-python3 verify-access-model.py                                  # green on the merged page, 137/137
+python3 verify-access-model.py                                  # 137/137 on the page after this PR
 VERIFY_DOC=<old copy> VERIFY_TREE=origin/main python3 verify-access-model.py   # control B/C
 ```
 
