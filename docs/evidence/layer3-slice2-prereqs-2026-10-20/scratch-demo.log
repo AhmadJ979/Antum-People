@@ -1,0 +1,38 @@
+# Slice 2 prerequisites — live-shaped demonstration
+
+run at            : 2026-10-20T05:54:23.789Z
+branch tip        : 43fce953f574aa598e3807cc000ba59dd8c2f6b6
+base (origin/main): ae3a438aeca92aa5688a601f35c402b7b5c6ae78
+scratch database  : /tmp/slice2-evidence/scratch-product.db   (built from origin/main's schema — the PRE-change shape)
+scratch port      : 32183          (port 3000 and the live DB are not touched)
+
+## A. the pre-change database
+users columns     : id, username, password_hash, role, created_at
+has employee_id?  : false   <- false is the point
+accounts present  : demo-admin/admin
+
+## B. the FIRST boot of this branch's product against that database
+boot log          : [DB] Upgraded: added column(s) users.employee_id
+users columns     : id, username, password_hash, role, created_at, employee_id
+
+## C. the account that was already there
+username/role     : demo-admin/admin
+employee_id       : null   <- NULL: not tied to a person, and NOT guessed
+
+## D. creating an account over HTTP (the route that used to write no audit row)
+POST /api/login   : 200
+POST /api/users   : 201 {"id":"0e9489ae-eb4b-437f-9969-77b92d2f5d6a","username":"slice2-demo-account","role":"admin"}
+audit row         : performed_by="demo-admin" entity_type=user entity_id=0e9489ae-eb4b-437f-9969-77b92d2f5d6a action=CREATE new_values={"username":"slice2-demo-account","role":"admin"}
+actor is real     : true   (not 'system', not a placeholder)
+credential leaked : false
+
+## E. the SECOND boot (idempotence)
+boot log          : (no upgrade line — nothing left to add)
+users columns     : id, username, password_hash, role, created_at, employee_id
+accounts now      : demo-admin, slice2-demo-account
+
+## Result
+A+B : the column did not exist on the pre-change database and the FIRST boot added it, and named it.
+C   : the pre-existing account kept NULL — no backfill, no guess.
+D   : the audit row names "demo-admin" — the real authenticated signer.
+E   : the second boot added nothing.
