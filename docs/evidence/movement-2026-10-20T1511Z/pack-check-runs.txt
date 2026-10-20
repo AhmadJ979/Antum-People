@@ -1,0 +1,52 @@
+# pack-check, verbatim - three runs by agent-product-designer, 2026-10-20
+
+## 1. The tracking direction, reddened ON THIS PACK (the direction that was missing until it bit)
+
+`*.log` is in `.gitignore` (line 6). Every file of this pack was present on disk while the first commit
+carried only 18 of the 21 - and the checker could not see it, because it read the working tree. This is
+the direction added in the same commit that fixed the loss. To prove it is load-bearing, one file was
+removed from the INDEX ONLY (`git rm --cached`, the file stays on disk), then restored:
+
+    $ git rm --cached --quiet docs/evidence/movement-2026-10-20T1511Z/movement.log
+    $ python3 docs/evidence/movement-2026-10-20T1511Z/pack-check.py
+pack-check - tree /home/agent-product-designer/d20/docs/evidence/movement-2026-10-20T1511Z
+  files in the pack        : 21
+  filename-shaped names    : 37  (of which declared as outside this pack: 11)
+  cited host paths         : 1  (absolute, outside any repo - not checkable here)
+  tracked by git           : 20 of 21
+  asserted external block  : present
+  FAIL: NOT TRACKED by git (a .gitignore rule hides it - use git add -f) movement.log
+FAIL: see the lines above: every file in the pack is named in the README, and every name it uses has a file or a declaration.
+exit=1
+
+    $ git add -f docs/evidence/movement-2026-10-20T1511Z/movement.log        # -f: the ignore rule is exactly what would drop it
+
+## 2. The pack as committed: green across all three directions
+
+    $ python3 docs/evidence/movement-2026-10-20T1511Z/pack-check.py
+pack-check - tree /home/agent-product-designer/d20/docs/evidence/movement-2026-10-20T1511Z
+  files in the pack        : 21
+  filename-shaped names    : 37  (of which declared as outside this pack: 11)
+  cited host paths         : 1  (absolute, outside any repo - not checkable here)
+  tracked by git           : 21 of 21
+  asserted external block  : present
+OK: every file in the pack is named in the README, and every name it uses has a file or a declaration.
+
+## 3. --selftest: the other two directions redden too
+
+    $ python3 docs/evidence/movement-2026-10-20T1511Z/pack-check.py --selftest
+  tracked by git           : 0 of 21   (not inside a git work tree: the tracking direction is NOT checked here)
+OK: every file in the pack is named in the README, and every name it uses has a file or a declaration.
+-- direction 1: a file in the pack that the README does not name --
+  tracked by git           : 0 of 21   (not inside a git work tree: the tracking direction is NOT checked here)
+  FAIL: NOT NAMED in README.md ZZ-cutover-20261020-151147-build.log
+  FAIL: NAMED but no such file cutover-20261020-151147-build.log
+FAIL: see the lines above: every file in the pack is named in the README, and every name it uses has a file or a declaration.
+-- direction 2: a name the README points at whose file was lost (cutover-20261020-151147-build.log) --
+  tracked by git           : 0 of 20   (not inside a git work tree: the tracking direction is NOT checked here)
+  FAIL: NAMED but no such file cutover-20261020-151147-build.log
+FAIL: see the lines above: every file in the pack is named in the README, and every name it uses has a file or a declaration.
+selftest: PASS
+
+Note on the copies `--selftest` makes: they live outside any git work tree, so the tracking direction
+prints as NOT CHECKED there - which is why direction 1 above is reddened on the real pack instead.

@@ -1,0 +1,13 @@
+=== pre-boarding overview (the served surface) ===
+top-level keys: ['cases', 'jurisdiction', 'totals']
+shape: {"jurisdiction": null, "cases": "list[3]", "totals": {"cases": 3, "items": 21, "items_outstanding": 21, "items_received": 0, "items_verified": 0, "cases_notice_not_shown": 1, "cases_ready": 0, "workspace_lines": 43, "workspace_lines_open": 43, "cases_provisioned": 0}}
+
+=== flag states, all cases, from the flag watch ===
+flag-watch rows: 0
+flag-state counts: {}
+items carried: 0
+
+=== per-case checklist: items and their flag states ===
+  case 6c349e1b: items=7 states={'not_started': 7}
+  case b92ce9a1: items=7 states={'not_started': 7}
+  case 7f8c8514: items=7 states={'requested': 3, 'not_started': 4}

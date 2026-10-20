@@ -1,0 +1,23 @@
+--- A. is 3000 ours? ---
+localhost:3000 -> 200  <title>Antum People</title>
+listeners (ss -ltnp):
+  ss sees none
+process holding it:
+/tmp/verify-live2.sh: line 9: fuser: command not found
+
+--- B. pre-boarding surface: cases, flag states, items ---
+cases: 3
+keys on a case: ['candidate_email', 'candidate_name', 'created_at', 'created_by', 'department', 'id', 'jurisdiction', 'offer_reference', 'offered_at', 'reporting_line', 'role', 'source', 'start_date', 'status', 'updated_at']
+ case 6c349e1b-7c24-43d1-b376-3e61b105dbd7 | state/flag fields: {'status': 'open'}
+ case b92ce9a1-1d31-4dff-91b6-1c9c1dea0a50 | state/flag fields: {'status': 'open'}
+ case 7f8c8514-5f91-44ef-bd10-cc69f01cf1a3 | state/flag fields: {'status': 'open'}
+ case 6c349e1b-7c24-43d1-b376-3e61b105dbd7: items=0 flag-states={}
+ case b92ce9a1-1d31-4dff-91b6-1c9c1dea0a50: items=0 flag-states={}
+ case 7f8c8514-5f91-44ef-bd10-cc69f01cf1a3: items=0 flag-states={}
+
+--- C. the guard's own exit line (acceptance of the code now armed) ---
+guard pid: 26248
+guard-related files: 
+/tmp/verify-live2.sh: line 59: bc: command not found
+exited in  s
+guard processes now: 4

@@ -1,0 +1,64 @@
+# Acceptance re-taken at the merge result d15f251 - and the one sentence it changed
+
+agent-product-designer, 2026-10-20. Scratch worktree at `d15f251`, removed afterwards; the repository's
+own worktree was never touched.
+
+## 1. The merge (measured, not taken on a notice's word)
+
+- API: `#267` `state=closed`, `merged=True`, `merged_at 2026-10-20T14:14:57Z`, merge commit `d15f251`.
+- `origin/main` was `d15f251`, whose parents are `7314f0e 8306421` - a true merge of the reviewed head.
+- `git diff --name-only 7314f0e d15f251` = the four files and nothing else.
+
+Four blobs, as measured then (`git rev-parse d15f251:<p>`): `design-concepts/README.md` `54eb2aa`,
+`scripts/check-design-concepts-index.py` `722983e`, `docs/evidence/design-index-check-2026-10-20/runs.txt`
+`2a4e434`, `server/design-concepts-index.test.js` `2eb5091`.
+
+## 2. The acceptance, re-taken at d15f251 today
+
+    git worktree add --detach /tmp/di267 d15f251 && cd /tmp/di267
+    ln -sfn /home/team/shared/probable-octo-sniffle/server/node_modules server/node_modules
+    python3 scripts/check-design-concepts-index.py
+
+    design-concepts inventory check - tree d15f251
+      documents (*.md)          : 18
+      want exactly one row each : 17  (README.md excluded, and its exclusion is asserted)
+      index rows read           : 20
+      ...documents with NO row  : none
+      ...documents with >1 row  : none
+      ...rows naming no document: none
+      ...rows for README.md     : none  (must be none - the exclusion is asserted, not assumed)
+    OK: all 17 documents carry exactly one index row, no row is stray, and the README's own exclusion is asserted.
+    exit=0
+
+    cd server && node --test design-concepts-index.test.js
+      # tests 3   # pass 3   # fail 0
+
+## 3. The reddening, re-taken at d15f251
+
+Dropping the `BRAND-IDENTITY.md` row from `design-concepts/README.md` in that worktree:
+
+      ...documents with NO row  : ['BRAND-IDENTITY.md']
+      FAIL: see the lists above
+    exit=1
+
+`git checkout -- design-concepts/README.md` then restored it: `exit=0`, the OK line above. So the gate is
+load-bearing at the merge result, not only on the branch.
+
+## 4. What changed since - a correction to this pack's first note
+
+The note filed with #267 said **four blobs identical** on `main`. Re-measured today, `origin/main` is
+`5356715` and the identity holds for **three of the four**:
+
+    SAME 54eb2aac design-concepts/README.md
+    DIFF main=43df8c2c at_d15f251=722983e4 scripts/check-design-concepts-index.py
+    SAME 2a4e4345 docs/evidence/design-index-check-2026-10-20/runs.txt
+    SAME 2eb50911 server/design-concepts-index.test.js
+
+The script moved because a later merge corrected a sentence in its docstring (it claimed the citation
+checker could not run bare; #270 gave that checker a bare form and fixed the claim). So:
+
+- the "four identical" sentence **was a true measurement against a `main` that at 14:16Z was `d15f251`**;
+- it is **not reproducible today** and must not be quoted as if it were current;
+- the acceptance above still holds at `d15f251`, which is what the pack claims. Nothing was regenerated:
+  the original figure and this one are both kept, because a wrong or superseded first measurement is
+  recorded rather than quietly replaced.
