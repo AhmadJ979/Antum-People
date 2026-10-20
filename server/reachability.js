@@ -22,6 +22,16 @@
  *     `workspace`). A call site that composes a *middle* segment at runtime would not be matched.
  *   - It reasons about the client's source, not about what a user sees; a control rendered inside
  *     an unreachable branch of JSX is still "called" here.
+ *   - A mention is a CALL SITE only when a request-shaped call is within three lines of it (see
+ *     `issuesRequest`): a comparison, an object or cache key, a display string or a test fixture is
+ *     not a caller. Those mentions are kept in the PROSE bucket and printed, so a mention that stops
+ *     counting as a caller is still visible to a reader — that is the price of the role test and it
+ *     is paid in public rather than by silence.
+ *   - RESIDUAL BLIND SPOTS, stated rather than implied: a path built into a variable one place and
+ *     passed to a request somewhere far away; a path with a middle segment composed at runtime; a
+ *     helper whose name carries no fetch/request token and was not declared in
+ *     `EXTRA_REQUEST_HELPERS`. Each of these would be reported as PROSE, not as a caller, so the
+ *     report is where a human sees them — the check does not claim to be exhaustive.
  */
 const fs = require('fs');
 const path = require('path');
@@ -100,6 +110,32 @@ function canonPath(p) {
 const REQUEST_PRIMITIVE = /\b(curl|wget|http\.request|https?\.get|requests\.(?:get|post|put|delete|patch)|fetch\s*\(|axios[\s.(])/;
 
 /**
+ * The JS/TS role test — the question the shell scope has always asked, now asked of code too: is this
+ * path *issued*, or merely *written down*? A path is a CALL SITE only when a request-shaped call is
+ * within three lines of it.
+ *
+ * Measured reason (2026-10-20, row ff31a942): `panelLabelOf` compared a url against '/api/analytics'
+ * to pick a human label. That comparison is not a request, but the scanner read any uncommented
+ * `/api/...` in a client file as a caller, so it reddened the merge result of #254 (257/51/256/1) for
+ * a route nobody ever fetches. **A string's shape is not the role it plays** — the same defect as
+ * 2026-10-19's, one level up.
+ *
+ * The call shape is matched as a FAMILY, not a roster: any identifier ending in `fetch` or `Request`,
+ * plus the `fetch(` / `axios` / `http.<verb>(` primitives. A helper whose name carries no such token
+ * goes in `EXTRA_REQUEST_HELPERS`, which an anti-rot test requires to exist in the client tree —
+ * a list nobody checks is a guess, and a guess that silently loses callers is worse than a red check.
+ */
+const EXTRA_REQUEST_HELPERS = [];
+const REQUEST_CALL_FAMILY = /(?:\bfetch\s*\(|\baxios[\s.(]|\bhttps?\.(?:get|post|put|patch|delete)\s*\(|\b[A-Za-z_$][\w$]*[Ff]etch\s*\(|\b[A-Za-z_$][\w$]*[Rr]equest\s*\()/;
+
+/** Does `window` (a few lines of source) issue a request in this scope? */
+function issuesRequest(scope, window) {
+  if (scope === 'scripts') return REQUEST_PRIMITIVE.test(window);
+  if (REQUEST_CALL_FAMILY.test(window)) return true;
+  return EXTRA_REQUEST_HELPERS.some((h) => new RegExp('\\b' + h + '\\s*\\(').test(window));
+}
+
+/**
  * One scanner, two predicates — because the question is not "does this string appear" but "what is it
  * doing here". An /api path appears in two roles:
  *   - a CALL SITE: a code position that issues a request (fetch/axios/api helper in the client, curl or
@@ -113,12 +149,14 @@ const REQUEST_PRIMITIVE = /\b(curl|wget|http\.request|https?\.get|requests\.(?:g
  * A prose mention is COUNTED and PRINTED, never silently dropped — a check that shrinks quietly prints
  * the same green as one that examined everything.
  */
-function scanApiMentions(kind) {
+function scanApiMentions(kind, opts = {}) {
+  const roots = opts.roots || SCAN_ROOTS;
+  const root = opts.root || ROOT;
   const sites = [];
   const callRe = /\/api\/[A-Za-z0-9_\-/${}.]*(?=[?'"`\s,)]|$)/g;
-  for (const { scope, dir } of SCAN_ROOTS) {
+  for (const { scope, dir } of roots) {
     for (const file of listFiles(dir)) {
-      const rel = path.relative(ROOT, file);
+      const rel = path.relative(root, file);
       if (file.endsWith('.test.js') || SKIP_FILES.has(rel)) continue;
       const lines = read(file).split('\n');
       const commented = commentLines(lines, path.extname(file));
@@ -130,7 +168,10 @@ function scanApiMentions(kind) {
           // the role test: a path quoted in a shell script issues nothing unless a request primitive is
           // within reach of it
           const window = lines.slice(Math.max(0, idx - 3), idx + 4).join('\n');
-          const issues = scope !== 'scripts' || REQUEST_PRIMITIVE.test(window);
+          // One role test for every scope: a mention is a caller only when a request is issued
+          // around it. The window is three lines either way — a call split across lines is still one
+          // call — and a mention that fails the test is REPORTED as prose, never dropped.
+          const issues = issuesRequest(scope, window);
           if (kind === 'prose' ? issues : !issues) continue;
           let method = null;
           for (const probe of lines.slice(idx, idx + 4)) {
@@ -151,13 +192,13 @@ function scanApiMentions(kind) {
   return sites;
 }
 
-function parseCallSites() {
-  return scanApiMentions('calls');
+function parseCallSites(opts = {}) {
+  return scanApiMentions('calls', opts);
 }
 
 /** Paths quoted without issuing a request. Reported, never silently discarded. */
-function proseMentions() {
-  return scanApiMentions('prose');
+function proseMentions(opts = {}) {
+  return scanApiMentions('prose', opts);
 }
 
 /**
@@ -351,6 +392,7 @@ function columnWritePaths(column) {
 
 module.exports = {
   ROOT,
+  EXTRA_REQUEST_HELPERS, issuesRequest,
   parseRoutes, parseCallSites, proseMentions, pathMatches, canonPath, classify, unregisteredCallSites,
   routesAfterCatchAll, uiStateReachability, columnWriters, shapesOverlap, listFiles, read,
   parseNoticeBases, requestControlGuard, deadEndItems, routeHasTest, tablesTouchedByRoute,

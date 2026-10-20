@@ -1,0 +1,38 @@
+# RUNS for row ff31a942 — the reachability checker's role test, measured.
+# Scanner module: this branch. "old" = the module as it is on main 9796d6b.
+# Every run states the tree it was pointed at. Nothing here is a summary of a summary: these are the
+# command outputs, re-run after one earlier invocation of mine passed only the client root (which
+# under-counted by leaving scripts/ and server/ unscanned — recorded rather than quietly corrected).
+
+# revision measured: 23989a0 (the #254 merge result, where the label literal exists)
+== RUN 1: OLD scanner on the #254 tree ==
+   call sites: 42 | drift entries: 1
+     GET /api/analytics at client/src/panelResults.js:106
+== RUN 2: NEW scanner on the SAME #254 tree (all three roots) ==
+   call sites: 38 | drift entries: 0
+   the #254 label literal is now PROSE at the same file:line, so it is reported, not dropped:
+     prose: client/src/panelResults.js:106 /api/analytics
+     prose: client/src/panelResults.js:107 /api/employees/
+     prose: client/src/panelResults.js:108 /api/employees/
+     prose: client/src/panelResults.js:109 /api/employees
+
+== RUN 3: every mention that stopped being a call site on the #254 tree ==
+   old 42 -> new 38; lost:
+     client/src/panelResults.js:106 /api/analytics
+     client/src/panelResults.js:107 /api/employees/
+     client/src/panelResults.js:108 /api/employees/
+     client/src/panelResults.js:109 /api/employees
+   gained: 0 (none, if empty above)
+   All four lost entries are the labelling comparisons in client/src/panelResults.js (lines 106-109).
+   No real caller left the set on that tree. On the PRODUCT tree (9796d6b) the sets are identical:
+   call sites 38 before and 38 after, the same 38.
+
+== RUN 4: ANTI-VACUOUS CONTROL — a planted real caller to an unregistered route ==
+   probe file (never inside the product): /tmp/probe/planted.js  ->  authedFetch('/api/definitely-not-registered')
+   call sites: 39 | drift entries: 1
+     GET /api/definitely-not-registered at ../../../../tmp/probe/planted.js:1
+   So a green drift result above is not the check seeing nothing: it can still fail.
+
+== RUN 5: the product tree itself, this branch ==
+   call sites: 38 | prose: 2 | drift: 0
+   (before the role test, same tree, module from 9796d6b: 38 | 2 | 0 — the same set.)

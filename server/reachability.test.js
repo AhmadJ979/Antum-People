@@ -20,6 +20,9 @@
  *   - a value that is *measured* rather than stored (nothing checks whether a displayed number is
  *     right, only whether something that runs produces it);
  *   - a control rendered inside a JSX branch that no state can reach.
+ *   - a mention is a CALL SITE only when a request-shaped call is within three lines of it (row
+ *     ff31a942): a path built into a variable elsewhere, a runtime-composed middle segment, or a
+ *     helper whose name carries no fetch/request token would be reported as PROSE, not as a caller.
  * The measurement lives in `server/reachability.js`; `scripts/reachability-report.js` prints the
  * same thing for a person, so the two can never disagree.
  */
@@ -317,4 +320,114 @@ test('the why/decision agreement rule names what it did not cover', () => {
   // does not decide.
   console.log(`  [why/decision] entries not decided by the rule: ${WHY_DECISION_SKIPS.length}`);
   for (const line of WHY_DECISION_SKIPS) console.log(`    - ${line}`);
+});
+
+/* ------------------------------------------------------------------------------------------------
+ * Row ff31a942 — the role test: a path's SHAPE is not the role it plays.
+ *
+ * The scanner used to count any uncommented `/api/...` in a client file as a CALL SITE. #254's merge
+ * result was therefore RED (257/51/256/1) because `panelLabelOf` compared a url against
+ * '/api/analytics' to choose a human label — a string nobody ever fetches. The client side was fixed
+ * (PR #256) and this check was NOT weakened to make it green; the check's own defect is fixed here.
+ *
+ * Every probe below runs against a throwaway tree in the OS temp directory, so no deliberately broken
+ * call site is ever written into the product, and nothing this file does can leak into a scan of it.
+ * ---------------------------------------------------------------------------------------------- */
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+
+/** Point the scanner at a throwaway tree for the duration of one assertion. */
+function withProbeTree(files, fn) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'reachability-role-'));
+  try {
+    for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src);
+    return fn({ roots: [{ scope: 'client', dir }], root: dir }, dir);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('the role test: a comparison, a map key and a cache key are not call sites', () => {
+  withProbeTree({
+    'labelling.js': [
+      "const PANELS = { '/api/analytics/dashboard': 'figures' };",
+      'export function labelOf(url) {',
+      "  if (url.indexOf('/api/analytics') !== -1) return 'the dashboard figures';",
+      "  return 'that';",
+      '}',
+      "const cacheKey = '/api/employees?jurisdiction=AE';",
+    ].join('\n'),
+  }, (opts) => {
+    assert.deepStrictEqual(r.parseCallSites(opts), [], 'none of these three issues a request');
+    const prose = r.proseMentions(opts).map((p) => p.raw);
+    assert.ok(prose.includes('/api/analytics'), 'the comparison is REPORTED as prose, not dropped');
+    assert.ok(prose.includes('/api/employees'), 'and so is the cache key — a mention never vanishes');
+  });
+});
+
+test('the role test: a request-shaped call is a call site, whatever wraps it', () => {
+  withProbeTree({
+    'calls.js': [
+      'const a = authedFetch(`/api/employees?jurisdiction=AE`);',
+      "fetch('/api/analytics/dashboard');",
+      "apiRequest('/api/compliance/report', { method: 'POST' });",
+      '  const t = await',
+      "    authedFetch('/api/preboarding/cases');",
+    ].join('\n'),
+  }, (opts) => {
+    const sites = r.parseCallSites(opts);
+    assert.deepStrictEqual(sites.map((s) => s.raw).sort(), [
+      '/api/analytics/dashboard', '/api/compliance/report', '/api/employees', '/api/preboarding/cases',
+    ], 'a client helper, fetch(, a request-named helper and a split call are all callers');
+    assert.strictEqual(sites.find((s) => s.raw === '/api/compliance/report').method, 'POST');
+  });
+});
+
+test('ANTI-VACUOUS CONTROL: a planted caller to an unregistered route still reddens the drift check', () => {
+  withProbeTree({
+    'planted.js': "authedFetch('/api/definitely-not-registered');",
+  }, (opts) => {
+    const drift = r.unregisteredCallSites(r.parseRoutes(), r.parseCallSites(opts))
+      .map((s) => `${s.method} ${s.canon}`);
+    assert.deepStrictEqual(drift, ['GET /api/definitely-not-registered'],
+      'without this, "no drift" could mean "the check sees nothing" rather than "nothing is wrong"');
+  });
+});
+
+test('REGRESSION (#254): the label map that reddened that merge result is not a call site', () => {
+  withProbeTree({
+    'panelResults.js': [
+      'export function panelLabelOf(url) {',
+      "  if (typeof url !== 'string') return 'that';",
+      "  if (url.indexOf('/api/analytics') !== -1) return 'the dashboard figures';",
+      "  if (url.indexOf('/api/employees/') !== -1) return 'the onboarding tasks';",
+      "  return 'that';",
+      '}',
+    ].join('\n'),
+  }, (opts) => {
+    const drift = r.unregisteredCallSites(r.parseRoutes(), r.parseCallSites(opts));
+    assert.deepStrictEqual(drift.map((s) => `${s.method} ${s.canon}`), [],
+      'the exact code that reddened 23989a0 must not be read as a route nobody fetches');
+  });
+});
+
+test('the role test did not silence the real client callers', () => {
+  // The anti-vacuous guard for the change itself: no false positives bought with false negatives.
+  // Measured on the product tree at this commit: 38 call sites before and after, the same set.
+  const sites = r.parseCallSites();
+  assert.ok(sites.length >= 30, `call sites found: ${sites.length} — the role test must not empty this set`);
+  assert.ok(sites.some((s) => s.file.endsWith('App.tsx')), 'the client helper calls must still count');
+  console.log(`  [role test] call sites: ${sites.length}, prose mentions: ${r.proseMentions().length}`);
+});
+
+test('every declared extra request helper exists in the client tree', () => {
+  // A roster nobody checks is a guess. While EXTRA_REQUEST_HELPERS is empty this assertion is
+  // vacuous BY DESIGN, and the family rule carries the client — which the test above measures.
+  const clientFiles = r.listFiles(path.join(r.ROOT, 'client', 'src'));
+  assert.ok(clientFiles.length > 0, 'the client tree must be readable for this to mean anything');
+  for (const helper of r.EXTRA_REQUEST_HELPERS) {
+    assert.ok(clientFiles.some((f) => fs.readFileSync(f, 'utf8').includes(`${helper}(`)),
+      `${helper} is declared in EXTRA_REQUEST_HELPERS but appears nowhere in client/src`);
+  }
 });
