@@ -1,0 +1,76 @@
+=== guard processes, with parents and start times ===
+27783 27782 Tue Oct 20 15:13:58 2026 /usr/bin/bash scripts/keep-alive.sh
+
+=== the guard's own lock/log lines in keep-alive.sh ===
+18:#   A THIRD PATH arms it without a human: a login/interactive shell sources
+21:#   guard can be verified. Every attempt and outcome goes to server/guard-hook.log. See the
+25:#   tail -f /home/team/shared/probable-octo-sniffle/server/keep-alive.log
+34:#   whether the PID recorded in the file is alive, retries ANTUM_LOCK_ATTEMPTS times
+35:#   (default 3, ANTUM_LOCK_RETRY_WAIT seconds apart, default 10), and only then either
+38:# WHY IT STOPPED (every exit is loud):
+39:#   grep 'EXIT:' /home/team/shared/probable-octo-sniffle/server/keep-alive.log
+40:#   Every exit path writes one dated line naming the reason (lock held by PID X, killed by
+41:#   signal N, missing secret, ...) to the log file AND to stderr, which the deploy sends to
+42:#   server/keep-alive.out. An exit that is not one of the named paths is logged as
+43:#   "loop ended unexpectedly (status N)" by the EXIT trap.
+49:#   in the log" state. Detaching removes that class of death.
+56:#   a re-exec, and only a re-exec can put a marker into the exec-time environment that
+64:#   2) since 2026-10-13, the login-shell hook scripts/antum-product-guard-hook.sh, installed by
+65:#      deploy-main.sh as /etc/profile.d/zz-antum-product-guard.sh: a login/interactive shell (what
+67:#      verified, and appends every attempt and every outcome to server/guard-hook.log.
+85:LOCK_ATTEMPTS="${ANTUM_LOCK_ATTEMPTS:-3}"
+86:LOCK_RETRY_WAIT="${ANTUM_LOCK_RETRY_WAIT:-10}"
+96:LOG_FILE="$DEPLOY_DIR/server/keep-alive.log"
+97:SERVER_LOG="$DEPLOY_DIR/server/server.log"
+98:LOCK_FILE="$DEPLOY_DIR/server/keep-alive.lock"
+102:mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null
+104:# --- logging and loud exits ----------------------------------------------------------
+105:# One dated line per event, to the log file and to stderr (nohup sends stderr to
+107:log() {
+110:    echo "$line" >> "$LOG_FILE" 2>/dev/null
+114:exit_reason=""
+115:# exit_reason marks an exit we have already explained, so the EXIT trap does not add a
+117:log_exit() { exit_reason="$1"; log "EXIT: $1"; }
+119:on_exit() {
+
+=== who the profile hook starts, and when ===
+18:#   /home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh after a restart. Three reboots
+29:# HOW IT DECIDES — the lock and /proc, never `pgrep -f keep-alive.sh`
+30:#   keep-alive.sh records the loop's PID on the first line of server/keep-alive.lock (its own
+32:#   its /proc/<pid>/cmdline is a keep-alive.sh process. A bare `pgrep -f 'keep-alive.sh'` also
+34:#   `kill $(cat .../keep-alive.lock)` shell, a `tail -f` of the log, a test harness — and a false
+36:#   that all is well. Being wrong the other way costs one loud line, because keep-alive.sh's own
+37:#   flock refuses a second loop and names the process holding it.
+46:#     same lock + /proc check — a start that is not confirmed is not a repair
+55:  _antum_lock="$_antum_dir/server/keep-alive.lock"
+61:    [ -r "$_antum_lock" ] || return 0
+62:    IFS= read -r _antum_p <"$_antum_lock" 2>/dev/null || return 0
+66:    case "$_antum_cmd" in *keep-alive.sh*) printf '%s' "$_antum_p" ;; esac
+77:  #   finds no verified guard, arms one through this hook, and step 6 then reaps it as a stale lock holder
+78:  #   ("lock still held by: 5274 — reaping before arming"). One guard in the end, but the outcome is
+105:  elif [ ! -f "$_antum_dir/scripts/keep-alive.sh" ]; then
+106:    _antum_note "FAILED: no guard to arm at $_antum_dir/scripts/keep-alive.sh"
+110:    ( cd "$_antum_dir" && /usr/bin/setsid /usr/bin/nohup /usr/bin/bash scripts/keep-alive.sh >>"$_antum_dir/server/keep-alive.out" 2>&1 & )
+120:      _antum_note "FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log"
+125:  unset _antum_now _antum_dir _antum_lock _antum_log _antum_marker _antum_stand_down
+
+=== guard logs on disk ===
+total 95588
+-rw-rw-r-- 1 root root      528 Oct 20 15:14 agent-team-1f848897.db-info
+-rw-rw-r-- 1 root root        0 Oct 20 15:14 agent-team-1f848897.db-changes
+-rw-rw-r-- 1 root root        0 Oct 20 15:14 agent-team-1f848897.db-wal-revert
+-rw-rw-r-- 1 root root 91031432 Oct 20 15:14 agent-team-1f848897.db-wal
+-rw-rw-r-- 1 root root  6553600 Oct 20 15:14 agent-team-1f848897.db
+-rw------- 1 root root   278528 Oct 20 15:11 antum-product.db
+/home/team/shared/keep-alive-evidence.txt
+/home/team/shared/keep-alive-80c3fff.sh
+/home/team/shared/guard-hook-durability-2026-10-13.md
+/home/team/shared/hook-marker-2026-10-17/live-guard-hook-tail.txt
+/home/team/shared/host-tools-backup-20261020T090619Z/zz-antum-product-guard.sh.before
+/home/team/shared/host-tools-backup-20261018T085333Z/zz-antum-product-guard.sh.pre-install
+/home/team/shared/host-tools-backup-20261018T085333Z/zz-antum-product-guard.sh.before
+/home/team/shared/round-54-recheck/guard-log-excerpt-acceptance.txt
+/home/team/shared/round-54-recheck/second-movement-and-guard-acceptance.txt
+/home/team/shared/host-tools-backup-20261019T104010Z/zz-antum-product-guard.sh.before
+/home/team/shared/host-tools-backup-20261019T104031Z/zz-antum-product-guard.sh.before
+/home/team/shared/host-tools-backup-20261020T065021Z/zz-antum-product-guard.sh.before

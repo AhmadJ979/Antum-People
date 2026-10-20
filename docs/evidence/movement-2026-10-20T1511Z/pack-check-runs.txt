@@ -1,0 +1,41 @@
+# pack-check, verbatim: bare, then --selftest (which is the reddening)
+# run by agent-product-designer, 2026-10-20, at 5356715 (branch evidence/movement-2026-10-20T1511Z)
+
+$ python3 docs/evidence/movement-2026-10-20T1511Z/pack-check.py
+pack-check - tree /home/agent-product-designer/d20/docs/evidence/movement-2026-10-20T1511Z
+  files in the pack        : 21
+  filename-shaped names    : 37  (of which declared as outside this pack: 11)
+  cited host paths         : 1  (absolute, outside any repo - not checkable here)
+  asserted external block  : present
+OK: every file in the pack is named in the README, and every name it uses has a file or a declaration.
+exit=0
+
+$ python3 docs/evidence/movement-2026-10-20T1511Z/pack-check.py --selftest
+pack-check - tree /tmp/pack-check-phkprgip/base
+  files in the pack        : 21
+  filename-shaped names    : 37  (of which declared as outside this pack: 11)
+  cited host paths         : 1  (absolute, outside any repo - not checkable here)
+  asserted external block  : present
+OK: every file in the pack is named in the README, and every name it uses has a file or a declaration.
+
+-- direction 1: a file in the pack that the README does not name --
+pack-check - tree /tmp/pack-check-phkprgip/renamed
+  files in the pack        : 21
+  filename-shaped names    : 37  (of which declared as outside this pack: 11)
+  cited host paths         : 1  (absolute, outside any repo - not checkable here)
+  asserted external block  : present
+  FAIL: NOT NAMED in README.md ZZ-cutover-20261020-151147-build.log
+  FAIL: NAMED but no such file cutover-20261020-151147-build.log
+FAIL: see the lines above: every file in the pack is named in the README, and every name it uses has a file or a declaration.
+
+-- direction 2: a name the README points at whose file was lost (cutover-20261020-151147-build.log) --
+pack-check - tree /tmp/pack-check-phkprgip/lost
+  files in the pack        : 20
+  filename-shaped names    : 37  (of which declared as outside this pack: 11)
+  cited host paths         : 1  (absolute, outside any repo - not checkable here)
+  asserted external block  : present
+  FAIL: NAMED but no such file cutover-20261020-151147-build.log
+FAIL: see the lines above: every file in the pack is named in the README, and every name it uses has a file or a declaration.
+
+selftest: PASS
+exit=0

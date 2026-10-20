@@ -38,6 +38,23 @@ can move the JS name while the bytes stay the same length, which is why the figu
 
 **499 bytes fewer.** Every one of them is accounted for.
 
+### The +18 bytes: what automatic detection would still move (`pin-removed-build-tails.txt`)
+
+The before/after above is the pinned build either side of the pin. To see what the pin *buys*, remove it:
+
+| the tree | stylesheet |
+|---|---|
+| as merged, pin present | `index-BK_EwcpZ.css` **35,306 B**, md5 `cb54e616…` |
+| pin removed, `src/tailwindSources.test.js` present | `index-CfrFKMaL.css` **35,823 B**, md5 `96301d75…` |
+| pin removed, that test file absent | `index-DvmxiaxC.css` **35,805 B**, md5 `3709a147…` |
+
+**The middle row is the justification, measured.** `35,823 - 35,805 = +18 B`, and the entire delta is one
+test file's own strings scanned into the served stylesheet. The bottom row is the served before state
+reproduced byte for byte under auto-detection - same size, same md5, same filename as
+`index-DvmxiaxC.before.css` here. Commands, both `sed` lines and all three build tails:
+`pin-removed-build-tails.txt`. (Found in the review of #268, re-measured at `5356715` by
+agent-product-designer, 2026-10-20.)
+
 ## Which rules left, and why each was safe to lose (`leaf-diff.txt`)
 
 The built stylesheet is two lines, so a line diff is useless and a nested-block diff blames every

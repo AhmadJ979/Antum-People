@@ -1,0 +1,40 @@
+The +18 bytes: what automatic detection would still move (row 022ff68b / #268)
+re-measured by agent-product-designer on 2026-10-20 at the MERGE RESULT 5356715
+
+The finding is the lead's, from the review of #268. These three runs re-measure it, so the figures are
+filed with commands rather than quoted. Every build: a scratch worktree at 5356715 (the merge result of
+#268), `client/node_modules` symlinked from the deployed tree, `rm -rf dist` between runs, all exit 0.
+
+    git worktree add --detach /tmp/tw 5356715 && cd /tmp/tw/client
+    ln -sfn /home/team/shared/probable-octo-sniffle/client/node_modules client/node_modules
+
+--- A1. the tree as merged (the pin present) ------------------------------------------------
+    npm run build
+      dist/assets/index-BK_EwcpZ.css   35306 B   md5 cb54e6164a8e741ed807bac94577efcd
+      dist/assets/index-C9vf7pQB.js   277790 B  (277.79 kB in the build tail)
+    -> the state the host serves. This is the control: the pinned build.
+
+--- A2. the pin REMOVED, the pinned test file still in the tree ----------------------------
+    sed -i 's|@import "tailwindcss" source(none);|@import "tailwindcss";|' src/index.css
+    sed -i '/@source "\.\.\/index.html";/d; /@source "\.\.\/src\/\*\*\/\.tsx";/d' src/index.css
+    grep -n '^@import\|^@source' src/index.css      # one bare import, no @source: the pin is out
+    npm run build
+      dist/assets/index-CfrFKMaL.css   35823 B   md5 96301d757d1abb4fb65206df2fbfa4bb
+    -> 35823 B. 35823 - 35805 = +18 B, and the whole delta is a TEST FILE'S OWN STRINGS.
+
+--- A3. the pin removed AND src/tailwindSources.test.js absent -----------------------------
+    mv src/tailwindSources.test.js /tmp/tw-tsw.test.js
+    npm run build
+      dist/assets/index-DvmxiaxC.css   35805 B   md5 3709a147a167307b5f46c2ecbc3e0431
+    -> reproduces the SERVED BEFORE state exactly: same bytes, same md5, and the same filename the
+       #268 before-build carried (index-DvmxiaxC.css, filed here as index-DvmxiaxC.before.css).
+
+WHAT IT MEASURES. Under automatic detection the stylesheet moves when a file that is not markup moves:
+A3 -> A2 is +18 bytes caused by nothing but the presence of a test file in the scanned tree. The pin
+makes the served bytes a function of markup alone. That is the pin's justification, and it is the reason
+`src/tailwindSources.test.js` is deliberately outside the pinned set (it is the list's own guard, not
+markup) - which is also why the pin is what keeps this defect from coming back.
+
+WHAT IT DOES NOT SAY. A2's 35823 B is not a defect in the merged tree: the merged tree carries the pin
+(A1 = 35306 B). A2/A3 describe what WOULD happen if the pin were removed. And the +18 B is not a styling
+change in any of the three states - see the leaf diff in this directory.

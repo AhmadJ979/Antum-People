@@ -1,0 +1,43 @@
+=== the lock's own PID, checked against /proc (the hook's method) ===
+lock PID: 27783
+/proc/27783/cmdline: /usr/bin/bash scripts/keep-alive.sh 
+exact-count of guard loops (args must match that command): 1
+
+=== every EXIT line in keep-alive.log (the loud exits) ===
+479:2026-10-20T15:12:06+00:00 EXIT: killed by SIGTERM (loop pid 27117)
+483:2026-10-20T15:13:31+00:00 EXIT: killed by SIGTERM (loop pid 23028)
+487:2026-10-20T15:13:46+00:00 EXIT: killed by SIGTERM (loop pid 26248)
+489:2026-10-20T15:13:46+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';27195 bash -lc HOME=/home/agent-lead bash -lc 'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"';27207 bash -lc HOME=/home/agent-lead bash -lc 'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"';
+491:2026-10-20T15:13:48+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';27195 bash -lc HOME=/home/agent-lead bash -lc 'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"';
+493:2026-10-20T15:13:51+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';27195 bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists";27470 bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists";
+495:2026-10-20T15:13:53+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';27195 bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists";
+497:2026-10-20T15:13:56+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';
+
+=== the last 12 log lines, with times ===
+2026-10-20T15:13:46+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';27195 bash -lc HOME=/home/agent-lead bash -lc 'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"';27207 bash -lc HOME=/home/agent-lead bash -lc 'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"';
+2026-10-20T15:13:48+00:00 armed as its own session leader (pid 27364) - no detach needed
+2026-10-20T15:13:48+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';27195 bash -lc HOME=/home/agent-lead bash -lc 'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"';
+2026-10-20T15:13:51+00:00 armed as its own session leader (pid 27471) - no detach needed
+2026-10-20T15:13:51+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';27195 bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists";27470 bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists";
+2026-10-20T15:13:53+00:00 armed as its own session leader (pid 27582) - no detach needed
+2026-10-20T15:13:53+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';27195 bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists";
+2026-10-20T15:13:56+00:00 armed as its own session leader (pid 27687) - no detach needed
+2026-10-20T15:13:56+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';
+2026-10-20T15:13:58+00:00 armed as its own session leader (pid 27783) - no detach needed
+2026-10-20T15:13:58+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T15:13:58+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+
+=== the hook's own record of arming a guard after my signal ===
+2026-10-20T15:14:26+00:00 hook: guard already running (pid 27783), nothing to do
+2026-10-20T15:14:26+00:00 hook: guard already running (pid 27783), nothing to do
+2026-10-20T15:14:28+00:00 hook: guard already running (pid 27783), nothing to do
+2026-10-20T15:14:28+00:00 hook: guard already running (pid 27783), nothing to do
+2026-10-20T15:14:28+00:00 hook: guard already running (pid 27783), nothing to do
+2026-10-20T15:14:28+00:00 hook: guard already running (pid 27783), nothing to do
+2026-10-20T15:14:28+00:00 hook: guard already running (pid 27783), nothing to do
+2026-10-20T15:14:28+00:00 hook: guard already running (pid 27783), nothing to do
+2026-10-20T15:14:28+00:00 hook: guard already running (pid 27783), nothing to do
+2026-10-20T15:14:28+00:00 hook: guard already running (pid 27783), nothing to do
+
+=== is 3000 still served, after the guard was reaped and re-armed? ===
+public 200  localhost:3000 200

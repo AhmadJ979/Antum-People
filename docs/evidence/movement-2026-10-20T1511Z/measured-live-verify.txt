@@ -1,0 +1,8 @@
+verified 15:13:45Z from https://b974147c03228029e277d1cbe6646fe6.ctonew.app
+root: http=200 bytes=799
+<title>Antum People</title>
+assets/index-BK_EwcpZ.css http=200 bytes=35306 md5=cb54e6164a8e741ed807bac94577efcd
+assets/index-C9vf7pQB.js http=200 bytes=277790 md5=e6ff5da3fd614ddcfe2c0beaa68164f4
+POST /api/login bad-pw: 401
+port3000: 0 listener(s)
+guard: 0 process(es)

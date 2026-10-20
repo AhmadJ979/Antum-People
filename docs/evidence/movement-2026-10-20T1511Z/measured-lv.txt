@@ -1,0 +1,38 @@
+verified 2026-10-20T15:12:45Z from https://b974147c03228029e277d1cbe6646fe6.ctonew.app
+
+--- 1. page ---
+root http=200 bytes=799
+<title>Antum People</title>
+
+--- 2. assets as the browser gets them ---
+assets/index-BK_EwcpZ.css http=200 bytes=35306 md5=cb54e6164a8e741ed807bac94577efcd
+assets/index-C9vf7pQB.js http=200 bytes=277790 md5=e6ff5da3fd614ddcfe2c0beaa68164f4
+
+--- 3. auth surface ---
+bad password  -> 401
+good password -> token: eyJhbGciOiJI… (215 chars)
+no token, roster -> 401
+
+--- 4. the served figures ---
+roster rows: 13
+firstName sample: Omar, Reem, Hassan, Noura
+pre-boarding cases: 3
+flag states: {'open': 3} | items: 0
+
+--- 5. port 3000 and the guard ---
+listeners on 3000: 0
+23028 bash scripts/keep-alive.sh
+guard script on host:  / tree: ed31f5285babe7f265414376cb3d63b8
+
+--- 6. deployed tree ---
+HEAD: 2b14a94  (=origin/main? 2b14a94)  dirty files: 0
+
+--- 7. test suites at the deployed tree ---
+# tests 271
+# suites 51
+# pass 271
+# fail 0
+# tests 26
+# suites 4
+# pass 26
+# fail 0
