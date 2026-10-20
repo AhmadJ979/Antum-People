@@ -58,7 +58,8 @@ Hashes, taken **after** the edits: `design-concepts/LAYER3-IDENTITY.md` blob `54
   that only ever prints is not a check.
 - **A false positive, reported and rejected:** an earlier pattern for `19 lines` (the client's 401-branch count)
   matched `docs/access-model.md:504` inside *"`server/index.js` grew from 939 to **1,119 lines**"*. Rejected, and
-  the pattern dropped rather than kept to look productive.
+  the pattern dropped rather than kept to look productive. **That citation was itself stale by the time `main`
+  moved again** (PR #247 took that sentence to `:530`) — see §6.
 
 ## 4. Two instruments' own bugs, caught by their own asserts — stated because they are the reason to trust §2
 
@@ -87,3 +88,17 @@ Hashes, taken **after** the edits: `design-concepts/LAYER3-IDENTITY.md` blob `54
 | `sweep-output-f5c19ec.txt` | its run **after** the corrections, on the pushed revision: the citations now land |
 | `measure-app-tsx-anchors.py` | the anchor measurement. `python3 measure-app-tsx-anchors.py 7b073f8 7a4e00a` |
 | `anchors-7b073f8-vs-7a4e00a.txt` | its output (and `anchors-7b073f8-vs-1f471ef.txt`, the earlier tree). The run filed as `7bcbd67` was the pre-squash commit of this same tree; `f5c19ec` is the pushed one. |
+
+## 6. This record's own citations, re-verified after `main` moved — twice
+
+The lesson of §2 applies to the artifact that states it. `origin/main` moved **twice** while this branch was being
+written (`1f471ef` → `7a4e00a` → `58d8417`), so the citations in this record were re-checked rather than assumed:
+
+- `git diff --name-only 7a4e00a 58d8417 -- client server` is **empty**, and **all ten `App.tsx:<n>` anchors written
+  into `design-concepts/LAYER3-IDENTITY.md` still land** on the content they name at `58d8417` (Admin User,
+  `access_role`, `Sign Out`, `space-x-3`, `recorded by`, `checklistNotice` ×2, `max-w-md`, `ml-3`, `mr-2`).
+- **One citation in this file *was* stale:** `docs/access-model.md:504`, quoted in §3 above, moved to **`:530`**
+  when PR #247 landed (decisions 25/26/27). It is now stated with its tree rather than as a bare line number.
+
+That is the rule this whole record argues for: **a line citation is a measurement, and a measurement has a
+revision.** Where a number is quoted here, the tree it was read at is named beside it.
