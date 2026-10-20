@@ -184,6 +184,23 @@ class PreboardingItemError extends Error {
   }
 }
 
+/**
+ * The actor requirement, applied where the WRITE happens and not only where it is routed.
+ *
+ * Every writer below stamps the person who acted — `last_actor` on the item, `created_by` on the
+ * reminder, and the audit row — and the workspace track reads `last_actor` back as *who moved the
+ * line*. The routes in index.js refuse an unnamed actor with a 400, so over HTTP this is
+ * unreachable today; but the module is the contract those routes are only one caller of (an ATS
+ * adapter, a script, and the tests are others), and a `|| 'system'` here would stamp a name nobody
+ * used onto a record whose whole value is that it names someone. So the requirement lives with
+ * the write and the fallback string is gone, not merely unreachable.
+ */
+function requireActor(actor, action) {
+  const named = typeof actor === 'string' ? actor.trim() : '';
+  if (!named) throw new PreboardingItemError(`a named actor is required to ${action}`, 400);
+  return named;
+}
+
 function documentSetFor(jurisdiction) {
   return DOCUMENT_SETS[String(jurisdiction || '').toUpperCase()] || null;
 }
@@ -309,10 +326,10 @@ async function getNoticeAcknowledgement(caseId, itemKey) {
  *     copy to fill in.
  *   * `recorded_by` must name a person (400): the record's whole value is that somebody put the
  *     notice in front of the hire, and this release has no hire login, so the only actor pickable
- *     is the person recording on the hire's behalf. The fallback this module uses elsewhere — the
- *     literal `'system'` — is deliberately NOT used here: it is defensible for an audit trail of a
- *     machine action and indefensible for this record. The pre-reading acknowledgement module
- *     already refuses it one file away; this follows that rule rather than the older one.
+ *     is the person recording on the hire's behalf. This module's other writers now carry the same
+ *     requirement (`requireActor`), so the `'system'` fallback it once used is gone from the module
+ *     entirely rather than special-cased here; the pre-reading acknowledgement module next door
+ *     refuses it too, and the routes refuse it with a 400 on every write path.
  *   * the version is not taken from the caller at all: it is read from the notice the server
  *     serves, so a record cannot state a version the hire was never shown.
  *
@@ -399,6 +416,9 @@ async function recordNoticeAcknowledgement(input) {
  * been shown for it. Refusals name what was wrong so the caller can act on them.
  */
 async function setItemStatus(input) {
+  // The first check of all: a write names its actor (§5.2 rule 1), before any lookup or mutation,
+  // so a caller that names nobody changes nothing at all rather than half-changing something.
+  const actor = requireActor(input.actor, 'move a checklist item');
   const { case_id: caseId, item_key: itemKey, status } = input;
 
   const caseRow = await getCaseRow(caseId);
@@ -498,7 +518,7 @@ async function setItemStatus(input) {
       requested_at = ${db.escapeString(requestedAt)},
       received_at = ${db.escapeString(receivedAt)},
       verified_at = ${db.escapeString(verifiedAt)},
-      last_actor = ${db.escapeString(input.actor || 'system')},
+      last_actor = ${db.escapeString(actor)},
       updated_at = CURRENT_TIMESTAMP
     WHERE case_id = ${db.escapeString(caseId)} AND item_key = ${db.escapeString(itemKey)}
   `);
@@ -506,7 +526,7 @@ async function setItemStatus(input) {
   // The audit trail records the transition, never the document: new_values carries keys and
   // statuses only, so a reference or a note cannot leak into a log that is read widely.
   await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, new_values, timestamp)
-    VALUES (${db.escapeString(randomUUID())}, ${db.escapeString(input.actor || 'system')},
+    VALUES (${db.escapeString(randomUUID())}, ${db.escapeString(actor)},
       'preboarding_item', ${db.escapeString(caseId)}, 'STATUS',
       ${db.escapeString(JSON.stringify({ item_key: itemKey, from: item.status, to: status }))},
       CURRENT_TIMESTAMP)`);
@@ -550,6 +570,7 @@ function outstandingOf(items, track = 'employee') {
  * snapshot of what the reminder covered.
  */
 async function recordReminder(input) {
+  const actor = requireActor(input.actor, 'record a reminder');
   const caseId = input.case_id;
   const caseRow = await getCaseRow(caseId);
   if (!caseRow) throw new PreboardingItemError('Pre-boarding case not found', 404);
@@ -586,12 +607,12 @@ async function recordReminder(input) {
       ${db.escapeString(JSON.stringify(outstanding.map((item) => item.item_key)))},
       'in_product',
       ${db.escapeString(input.note || null)},
-      ${db.escapeString(input.actor || 'system')}
+      ${db.escapeString(actor)}
     )
   `);
 
   await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, new_values, timestamp)
-    VALUES (${db.escapeString(randomUUID())}, ${db.escapeString(input.actor || 'system')},
+    VALUES (${db.escapeString(randomUUID())}, ${db.escapeString(actor)},
       'preboarding_reminder', ${db.escapeString(caseId)}, 'REMIND',
       ${db.escapeString(JSON.stringify({ outstanding_count: outstanding.length, channel: 'in_product' }))},
       CURRENT_TIMESTAMP)`);
