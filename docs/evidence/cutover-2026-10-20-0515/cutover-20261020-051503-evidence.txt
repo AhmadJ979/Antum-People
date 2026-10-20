@@ -1,0 +1,103 @@
+=== cutover 2026-10-20T05:15:03+00:00 ===
+  script: /home/team/shared/deploy-main.sh | 26517 B | sha256 b205c1168684142f
+  tree:   /home/team/shared/probable-octo-sniffle   port: 3000   mode: full-movement
+--- 1. fetch and move the tree to origin/main ---
+From https://github.com/AhmadJ979/Antum-People
+ * branch            main       -> FETCH_HEAD
+HEAD is now at cf3dad3 Merge pull request #226 from AhmadJ979/fix/layer3-slice1-reachability
+tree now: cf3dad3 Merge pull request #226 from AhmadJ979/fix/layer3-slice1-reachability
+tree content check OK
+--- 1b. refresh the operator-facing host tooling from the tree we just moved to ---
+=== install-host-tools 2026-10-20T05:15:03+00:00 ===
+  script: /home/team/shared/probable-octo-sniffle/scripts/install-host-tools.sh | 13599 B | sha256 b070d333a4966872
+  repo:   /home/team/shared/probable-octo-sniffle
+  dest:   /home/team/shared   hook: /etc/profile.d/zz-antum-product-guard.sh   mode: install
+  source: the working tree
+  revision: cf3dad3f6aa5879c04877f0d1879bd1b7baac1bb (working-tree)
+
+  backed up: /home/team/shared/deploy-main.sh -> /home/team/shared/host-tools-backup-20261020T051503Z/deploy-main.sh.before
+  INSTALLED /home/team/shared/deploy-main.sh   body md5 2cddb29515ee4ce9d1ba8310088dc4e5
+  backed up: /home/team/shared/cutover-preflight.sh -> /home/team/shared/host-tools-backup-20261020T051503Z/cutover-preflight.sh.before
+  INSTALLED /home/team/shared/cutover-preflight.sh   body md5 5cde6f20cf969370bc7783a8b0e9b5c0
+  backed up: /home/team/shared/restore-product.sh -> /home/team/shared/host-tools-backup-20261020T051503Z/restore-product.sh.before
+  INSTALLED /home/team/shared/restore-product.sh   body md5 8c592edd2ac18ed0c859befced0f63d1
+  backed up: /home/team/shared/rollback-to-9d2182a.sh -> /home/team/shared/host-tools-backup-20261020T051503Z/rollback-to-9d2182a.sh.before
+  INSTALLED /home/team/shared/rollback-to-9d2182a.sh   body md5 605bb77c9e3b119a078cc96f17c263a2
+  backed up: /home/team/shared/success-test.sh -> /home/team/shared/host-tools-backup-20261020T051503Z/success-test.sh.before
+  INSTALLED /home/team/shared/success-test.sh   body md5 da80db2824e8e810fd64db2a913e69bf
+  INSTALLED /home/team/shared/observe-serve-pair.sh   body md5 c01d38acddcaa57f6f064b6ab7a14472
+  hook source: the tree (cf3dad3f6aa5879c04877f0d1879bd1b7baac1bb)
+  INSTALLED /etc/profile.d/zz-antum-product-guard.sh   body md5 728bf2cce72b8c6f9a3cf257f3dfc070
+
+=== RESULT: 7 of 7 copies installed or refreshed from cf3dad3f6aa5; backups: /home/team/shared/host-tools-backup-20261020T051503Z
+--- 2. build the client (must succeed before anything is restarted) ---
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-pNSrK3wr.css   35.36 kB │ gzip:  6.84 kB
+dist/assets/index-BG0peuOK.js   274.24 kB │ gzip: 76.38 kB
+
+[32m✓ built in 346ms[39m
+client build OK
+--- 3. re-seed the demo dataset against the product database ---
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-19) — start date already passed, items still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+Upserting demo admin user...
+Seeding completed successfully.
+seed OK
+--- 4. restart the server on port 3000 (pinned; the host exports PORT=80) ---
+stopping pid 506
+port 3000 held by the product server (pid 1929)
+Node.js v22.23.3
+--- 5. verify the live demo end to end ---
+public status/title: 200 <title>Antum People</title>
+demo login token chars: 201 (expect >100)
+bad-password path: 401 (expect 401)
+roster: 200
+  employees: 13 | first id: demo-emp-omar
+pre-boarding demo state as the live API serves it (expect three distinct flag states):
+  totals: {"cases": 3, "cases_notice_not_shown": 1, "cases_provisioned": 0, "cases_ready": 0, "items": 21, "items_outstanding": 21, "items_received": 0, "items_verified": 0, "workspace_lines": 43, "workspace_lines_open": 43}
+   start 2026-10-19 | started | tone rose | open 21 | lines emp/ws 7 14
+   start 2026-10-21 | inside_48_hours | tone amber | open 21 | lines emp/ws 7 14
+   start 2026-11-03 | clear | tone slate | open 22 | lines emp/ws 7 15
+  distinct flag states: ['clear', 'inside_48_hours', 'started'] (expect 3: clear, inside_48_hours, started)
+KSA offboarding checklist as the live API serves it:
+  tasks: 10
+    1 Hardware Return
+    2 Access Revocation
+    3 Notice Period Verification
+    4 EOSB Calculation (KSA)
+    5 GOSI De-registration
+    6 Iqama Cancellation/Transfer
+    7 Final Exit Visa (or re-entry, if transferring)
+    8 Service Certificate Issuance
+    9 Annual Leave Encashment
+    10 Final Settlement Payment
+consent-date field for the departing employee:
+   ('demo-emp-sarah', 0, None)
+settlement statement: rendered EOSB vs the employee record (must match):
+  record eosb_accrued: 19824.78 | rendered: 19824.78 | match: True
+  unfilled [brackets]: NONE
+  net payable: 32824.78
+--- 6. re-arm the watchdog from the tree we just deployed ---
+deploy marker written: /home/team/shared/probable-octo-sniffle/server/deploy-in-progress (pid 1524)
+WARNING: old watchdog still alive after 30s — forcing it down
+watchdog pid: 2731
+deploy marker removed: /home/team/shared/probable-octo-sniffle/server/deploy-in-progress
+=== install-host-tools 2026-10-20T05:16:02+00:00 ===
+  script: /home/team/shared/probable-octo-sniffle/scripts/install-host-tools.sh | 13599 B | sha256 b070d333a4966872
+  repo:   /home/team/shared/probable-octo-sniffle
+  dest:   /home/team/shared   hook: /etc/profile.d/zz-antum-product-guard.sh   mode: install
+  source: the working tree
+  revision: cf3dad3f6aa5879c04877f0d1879bd1b7baac1bb (working-tree)
+
+  unchanged /home/team/shared/deploy-main.sh   body md5 2cddb29515ee4ce9d1ba8310088dc4e5
+  unchanged /home/team/shared/cutover-preflight.sh   body md5 5cde6f20cf969370bc7783a8b0e9b5c0
+  unchanged /home/team/shared/restore-product.sh   body md5 8c592edd2ac18ed0c859befced0f63d1
+  unchanged /home/team/shared/rollback-to-9d2182a.sh   body md5 605bb77c9e3b119a078cc96f17c263a2
+  unchanged /home/team/shared/success-test.sh   body md5 da80db2824e8e810fd64db2a913e69bf
+  unchanged /home/team/shared/observe-serve-pair.sh   body md5 c01d38acddcaa57f6f064b6ab7a14472
+  hook source: the tree (cf3dad3f6aa5879c04877f0d1879bd1b7baac1bb)
+  unchanged /etc/profile.d/zz-antum-product-guard.sh   body md5 728bf2cce72b8c6f9a3cf257f3dfc070
+
+=== RESULT: nothing to do — all 7 copies already match this source (a second run changes no byte) ===
+deployed commit: cf3dad3 Merge pull request #226 from AhmadJ979/fix/layer3-slice1-reachability
+=== cutover finished 2026-10-20T05:16:02+00:00 — run-stamped evidence: /tmp/cutover-20261020-051503-evidence.txt | build: /tmp/cutover-20261020-051503-build.log | seed: /tmp/cutover-20261020-051503-seed.log ===
