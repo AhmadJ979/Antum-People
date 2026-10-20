@@ -1,0 +1,61 @@
+index checked: /home/agent-program-manager/antum-people/roadmap-board-index.md
+ids quoted in index: 51
+quoted ids NOT on the board: ['2c37f2da-1fa1-4b1c-8117-c639c5880658', '62d7142b-955a-433e-8f42-1c07a5d67ee3', '86c3927d-b6c3-4da2-9ecf-df2b9e4ee20b', '91f44175-4204-4a20-976a-b1318578da7b', '9dc454df-b5cb-4d1c-aeba-b67cf795db4e', 'd6931bae-666a-4d90-ad59-09b64c588cda', 'e09c6873-dac3-4573-b3c5-b69328a2f829']
+...of which EXPECTED (recorded removals): ['2c37f2da-1fa1-4b1c-8117-c639c5880658', '62d7142b-955a-433e-8f42-1c07a5d67ee3', '86c3927d-b6c3-4da2-9ecf-df2b9e4ee20b', '91f44175-4204-4a20-976a-b1318578da7b', '9dc454df-b5cb-4d1c-aeba-b67cf795db4e', 'd6931bae-666a-4d90-ad59-09b64c588cda', 'e09c6873-dac3-4573-b3c5-b69328a2f829']
+...of which UNEXPECTED (must be empty): []
+short-form refs checked: 62
+short refs that do NOT resolve to exactly one board row: []
+bare backticked 8-hex tokens: 115
+  ...resolving to exactly one board row: 105
+  ...resolving to a git object (sha): 4
+  ...NEITHER (typos) - must be empty: []
+00e1963c-cbbe-4900-a9af-81d711b2eb3f  [P2-3] A new hire receives and acknowledges the pre-reading package be  [done]
+02f27cbb-5ddc-4535-b017-4b9174f4d6a2  Round 51 + file the b4f479a movement's evidence into the repo (run-sta  [done]
+04845d58-5a47-4a54-bf0e-cec15ba3fe3d  [L2 spec] One distance rule for the row and the chip, and §5's headlin  [done]
+051870f5-bef0-43c9-972a-1a9fac153ba2  [P4-1] A replacement cost figure appears automatically on a terminatio  [backlog]
+0590850e-6fa2-487f-8590-5f6262f84044  Demo walkthrough: rewrite the script against the surface that now has   [done]
+0bf28d02-4856-41a7-ad4b-f180b5a4d5d6  Drop the unsourced "statutory" qualifier from the two settlement-deadl  [done]
+0d68c00a-c984-48af-b994-72ead6de071c  [L-2] KSA returns to the active surface once counsel confirms the KSA   [backlog]
+10043888-2931-4e96-a000-87ebd8a665eb  Refresh the demo walkthrough and weak-screen audit against the UAE-onl  [done]
+16ad4647-bdf8-4d09-8dc5-6a55fee66558  Layer 3 slice 2 prerequisites: users.employee_id, split preboarding:re  [done]
+198a2562-2021-43da-9e4f-1f9cf8855143  [L2] Record the owner's storage decision in document-store.js (header   [done]
+1b7a3f03-a9a9-4758-b863-7b43218cb4ef  [P2-4] A role-based provisioning checklist is auto-assigned to IT, Adm  [done]
+1e517b2d-292a-4b4f-b32d-df0b76a43e43  Round 53 + file the 09:06:19Z movement's evidence, with a fresh observ  [done]
+217deef0-1658-443b-a5fc-f5f80dbf3bdc  [P2-1] An accepted job offer opens a pre-boarding case with a start da  [done]
+286c0995-a64d-44e3-94d8-d9fa2b303625  [L2 roll-up] Scope the HR roll-up to the header jurisdiction, with its  [done]
+2f6f0f3e-9a54-44dc-9c8f-40050edeed6f  IFZA registration — the gate on contracts, the DPA, document storage,   [backlog]
+347d5ec0-8b8f-4f87-bf4e-13aeee488b4c  Dogfood the Layer 2 intake form in a browser on a scratch instance (P2  [done]
+446ace06-0869-4b68-8b03-f84297753d5f  [P2-2] A new hire completes a document checklist with per-item status   [done]
+569a8d1e-b653-46a1-9251-bb53335de5cc  [P2-5] A red flag fires 48 hours before a start date for every incompl  [done]
+69dbf57d-a7c8-4989-bdf7-b148e5686a25  [P3-2] A milestone cannot be marked complete without a submitted manag  [backlog]
+6e8a100a-bee8-4212-895e-538d8627d3da  Freeze the UAE EOSB resignation tier pending counsel, and mark it unco  [done]
+71d18e54-b2e1-45e2-b41d-5e8b25212d04  Correct three walkthrough figures read off the unfiltered dashboard (1  [done]
+72e7ee01-b122-44b4-9171-659f80dd309a  [P4-3] A 12-month EOSB liability forecast from current tenure trajecto  [backlog]
+83013f88-8c74-4947-bfcc-46f5eb5c421d  Layer 3 slice 2 — RBAC across the read paths (enforce the access model  [done]
+86749e1f-03bf-4745-a13f-897d2a5acac1  [L2 seed] Three demo pre-boarding cases, one per flag state (owner dec  [done]
+8a1898ac-8fb8-42e5-8bc8-a23f62f994fb  Re-ground docs/access-model.md at ca681dd — the rename landed and the   [done]
+8b23baea-315b-4996-a548-54662d39d107  Same standard for UAE: are our cited articles traceable, current and q  [done]
+8bb962e5-2403-4db8-bd52-23c749675bc8  [P3-4] An exit decision on probation cannot be recorded without the re  [backlog]
+a0832dfd-7967-4500-acfb-8bda2cb4d3c4  Close the compliance loop: add the offboarding-deadline questions to b  [done]
+a585f898-c5ad-4bf7-b305-66d5f33b2470  Source or drop the two unsourced "statutory deadline" claims in the ch  [done]
+ae2f9ce1-cb50-4c5c-8b25-29f57e8412b6  Re-ground docs/access-model.md for the merged slice-2 prerequisites (1  [done]
+b2b93295-3785-4f78-879d-d136663b1f12  UAE-first demo surface: UAE figures only on the active flow, KSA kept   [done]
+b8eff92b-f994-4e24-93e4-c3e7007bcc8e  [L2 spec] Record who records an acknowledgement — the pre-reading stri  [done]
+bb60c7a3-18e0-4a84-90ce-907f37ef25ac  [P3-3] A milestone that passes its deadline without completion escalat  [backlog]
+bc89d0bd-7d3a-4c51-9f70-05e076cf4d5c  Accessibility: associate the intake form's labels with their controls   [done]
+c33b0232-ba4f-46d5-bdbc-1f30231c3d96  Turn the KSA pin-cite gap into a document the owner can put in front o  [done]
+cf0533b0-6297-48a7-b2a2-47a69d67709a  Pilot outreach to UAE-only: strip KSA, claim nothing unconfirmed, clai  [done]
+d73f8760-bb73-465a-bff3-4439804e453e  [P3-1] Every new hire on probation carries a 30/60/90 timeline derived  [backlog]
+d79a7310-ee1d-4ebe-8885-47ee69dff922  Round 52 + file the ca681dd movement's evidence (stamp 20261020-084915  [done]
+e027f4a8-8f28-4371-9b49-38c1ea69a5f8  [P4-2] A Manpower Budget Efficiency Score shows the share of manpower   [backlog]
+e11ffe3a-6ed6-4efc-a7b1-54b5598d83ff  Round 54 — file the 09:29:38Z movement's evidence (7a4e00a), including  [review]
+e630277d-7e0d-4ead-ad54-20e1581d8f51  Demo weak spots before walkthroughs: real retention cohorts, a pipelin  [done]
+e70a287f-19da-4d3f-9668-afb2ed4ea6b2  Design spec: the Layer 2 pre-boarding surface HR actually works in (ca  [done]
+ee4f4879-9355-4a71-ad9b-4410a90543d9  [L2 spec] Two citation corrections and the Clear-state body cell — rec  [done]
+fdef095a-ac4f-41db-8e15-169225797c08  [P2-6] Pre-boarding portal and documents read in EN/AR, and no persona  [backlog]
+triggers opening a line in the re-check section: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  ...1..10 all present: OK
+lines opening with '7. ': 1
+  ...and the standing test sits in that line: True
+OK: every quoted id resolves, no removal is unrecorded, and the re-check section's trigger structure is intact
+checker rc=0

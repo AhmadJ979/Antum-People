@@ -1,0 +1,50 @@
+=== The day's SECOND movement — 9796d6b, 09:46:44Z -> 09:47:41Z (57 s) — and the guard fix's acceptance test ===
+Filed 2026-10-20 by the program-manager, at the lead's handover: this round files the earlier of two
+movements as the earlier of two, not as the day's movement. Every figure below was measured this session.
+
+run stamp 20261020-094644. MOVEMENT_RC=0. It carried #253 (scripts/keep-alive.sh, the guard fix),
+#254 (client/src/panelResults.js, the refused-sibling fix) and #258 (docs).
+artifacts filed beside this file: cutover-20261020-094644-evidence.txt (the run's own summary, 101 lines),
+-cutover-20261020-094644-build.log, -cutover-20261020-094644-seed.log, -cutover-20261020-094644-pb-overview.json.
+
+--- STEP 6, READ AS PREDICTED RATHER THAN AS A FAILURE -------------------------------------------
+the movement's own log, lines 82-85:
+    82:  --- 6. re-arm the watchdog from the tree we just deployed ---
+    84:  WARNING: old watchdog still alive after 30s — forcing it down
+    85:  watchdog pid: 24780
+This is the FIFTH force-kill of the day (06:51, 08:50, 09:07, 09:29, 09:47:35) and it is the diagnosed
+handoff defect's own prediction: the guard it reaped had been armed by the PRE-#253 code, so the movement
+that installs a guard fix cannot also be that fix's acceptance test. The warning is not evidence against
+the fix, and it is not evidence for it either.
+
+--- THE ACCEPTANCE TEST, IN THE GUARD'S OWN LOG -------------------------------------------------
+read from the served tree's own log file, /home/team/shared/probable-octo-sniffle/server/keep-alive.out
+(not committed: .gitignore names it; the excerpt is filed as guard-log-excerpt-acceptance.txt):
+    09:47:35  armed as its own session leader (pid 24780)          <- the INSTALLED guard comes up
+    09:47:35  guard starting: port 3000, ... poll 60s, lock ...    <- from the tree just deployed
+    09:48:41  EXIT: killed by SIGTERM (loop pid 24780)             <- its OWN exit line, one poll tick later
+    09:48:41  armed as its own session leader (pid 27117)          <- a fresh guard re-arms after the test
+The old code produced no such line: it absorbed the same signal for the full 60 s and was SIGKILLed.
+The installed tree's scripts/keep-alive.sh is md5 ed31f5285babe7f265414376cb3d63b8 = main's (the lead's
+measurement, and the movement's own log names revision 9796d6b for every host tool it installed).
+A guard that writes its own exit line inside one poll tick, against 60 s of silence before, is the fix
+working — and note WHERE the evidence lives: the acceptance line is in the guard's log, not in the
+movement's log. A reader who reads only the movement's log sees the force-kill and concludes the opposite.
+
+--- THE SERVED SURFACE AT THE MERGE RESULT, MEASURED FROM THE PUBLIC URL THIS SESSION ----------
+index http 200, <title>Antum People</title>, bad password POST -> 401
+  assets/index-CovU_C3n.js   277,790 B  md5 e6ff5da3fd614ddcfe2c0beaa68164f4
+  assets/index-DvmxiaxC.css   35,805 B  md5 3709a147a167307b5f46c2ecbc3e0431
+The JS figure equals what the branch build predicted (the lead's measurement): the prediction and the
+merge result agree. The stylesheet DID NOT MOVE this time, so the 30-byte delta this round's earlier pack
+records belongs to the PREVIOUS movement's reading, and the cause of those 30 bytes is row 2f39da0c's
+subject (Tailwind v4 emitting .collapse from a word in a comment), answered elsewhere.
+served tree: /home/team/shared/probable-octo-sniffle, HEAD 9796d6b, `git status --porcelain` empty.
+
+--- THE ROUND'S SUBJECT MOVED UNDER IT, WHICH IS ITSELF THE FINDING -----------------------------
+this round was created to file the 09:29:38Z movement (7a4e00a). While it was being worked, main moved
+ab7e9c3 -> 94c6ef0 and a SECOND movement (9796d6b) was run by the lead and later superseded in service by
+nothing (9796d6b is still what is served). Both movements are now filed in this one pack, and the index's
+Round 54 block records both, with the served revision named at its own read time. A row whose subject moves
+underneath it is a normal state on this host; what is not acceptable is a round that files the old subject
+as if it were the day's.
