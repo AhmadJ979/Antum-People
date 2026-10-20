@@ -24,6 +24,8 @@ marked **(counsel)**; where it is a cell the code refuses *for now because couns
 | **Changed by #239 — the cells are populated.** The first two versions of this document said every cell was `[admin]` and nothing had widened | `server/access.js:73` (`ROLES` — **five**), `:91` (`POLICY` — **17** resources, most with more than one role) | **access has widened.** There are five roles in the data, and a second account can be created with any of them (`server/index.js:228`) |
 | Scoping is enforced, not just the cell | `access.js:189` (`SCOPES`), `:318` (`scopeFor`), `:326` (`scopedAllows`), `index.js:180` (`relationTo`), consulted at `index.js:199`, `:297`, `:504` | a cell says *which* roles; `SCOPES` says *how far* — `all` / `reports` / `own`, resolved per row |
 | Field rules are enforced | `access.js:213` (`EMPLOYEE_FIELD_GROUPS`), `:224` (`FIELD_RULES`), `:334` (`fieldsRemovedFor`), applied at `index.js:309` | a manager's roster row carries no national ID and no pay; finance's carries no national ID (§4) |
+| **An unstated scope refuses** | `access.js:318-323` (`scopeFor` returns `null`), `:326-331` (`scopedAllows(null, …) === false`) — measured: `scopeFor('onboarding:read','nobody')` → `null`, `scopedAllows('own','other')` → `false` | "how far may this role reach" never falls back to "everywhere" |
+| **One account per person is now a constraint** | `server/db.js:134-139` — `idx_users_employee_id_unique`, a partial unique index created **after** the column migrations | enforced by the database, not by policy (§2.2); a duplicate in the data throws at boot |
 | Every other `.role` in the tree is a **job title** | `employees.role`, `preboarding_cases.role` | not permissions — the naming hazard is §2.4, and **the rename has now landed** |
 
 **Consequence to hold on to:** the product is no longer "one role called admin". It is **five roles with a
@@ -38,7 +40,8 @@ document disagree, **the code is what runs** and the disagreement is a defect in
   scope-bearing resource whose `SCOPES` table does not cover the caller's role. Each is **403 with no body**;
   a missing or bad token stays **401** from `authenticateToken`. A route with no line in `ROUTES` is refused,
   not left open (`:250`), and `unpoliciedRoutes()` (`:351`) must stay empty — a check asserts it, and it is
-  empty. **So a role widens exactly the cells this matrix names.**
+  empty, and `unknownRolesInPolicy()` (`:357`) is empty too — measured: `[]` and `[]`. **So a role widens
+  exactly the cells this matrix names**, and a cell cannot name a role the product does not have.
 - **Changed by #239 — `preboarding:read` is now THREE cells, and each one is an argument.** At `b4f479a` it was
   two; the third was forced by the same reasoning §1.1 made for the first split:
 
@@ -72,9 +75,18 @@ document disagree, **the code is what runs** and the disagreement is a defect in
 it. Both are now out of date, and the true state is more precise than either.**
 
 - **`users.employee_id` exists** (`server/schema.sql:193`): nullable, declared last, deliberately not backfilled —
-  the live `admin` row is NULL and stays NULL. **Uniqueness is still NOT enforced by the schema** (measured: the
-  column is plain `TEXT`; `username` carries `UNIQUE` at `:189`), so "one account per person" remains a policy
-  the product must hold rather than a constraint the database holds.
+  the live `admin` row is NULL and stays NULL. **Changed by #239 — uniqueness IS enforced, but not by
+  `schema.sql`, and where I looked is the lesson.** The column is still plain `TEXT` and `schema.sql` still carries
+  no `UNIQUE` on it — measured — and **that is where the previous revision stopped, which made its conclusion half
+  wrong.** The constraint exists as a partial unique index created **after the column migrations**:
+  `idx_users_employee_id_unique` (`server/db.js:138`, registered in `POST_MIGRATION_INDEXES` at `:134-139`:
+  `CREATE UNIQUE INDEX IF NOT EXISTS … ON users (employee_id) WHERE employee_id IS NOT NULL`). It **cannot** live in
+  `schema.sql`, which runs *before* the migrations — on a database predating `users.employee_id` the index would
+  name a column that does not exist yet and the boot would fail (`db.js:120-127` says exactly this). A duplicate
+  already in the data **throws**, a loud boot failure rather than a silently absent constraint — the right way
+  round, since two accounts for one person is precisely the state the scope checks cannot resolve. **So "one
+  account per person" is a constraint the database now holds; a schema read is not a database read.** What
+  remains a *policy*, deliberately, is the **case→person link** for pre-boarding (below).
 - **It IS read now.** `relationTo()` (`index.js:180`) resolves the caller's relation to a row — `self`, `report`,
   `other`, `unknown` — from the caller's `employee_id` and `employees.manager_id`, and `scopedAllows`
   (`access.js:326`) turns that into a decision. So the own view and the reports view are **live**, not pending.
@@ -254,7 +266,7 @@ proves the rule** — there the reader *is* the data subject, so the same access
 | **The notice acknowledgement, read by the person it concerns** (`item_label`, `acknowledged_at`, `notice_version`, `lawful_basis`, `recorded_by`) | showing a person what was recorded about them | the person themselves, and `hr_admin` / `compliance_viewer` | accountability. **`recorded_by` is permitted on the own view, deliberately:** it names the controller's staff member acting on the reader's own record, so it answers "who do I ask" — unlike the workspace owner names §3.2 strips. **Reversible in one field** |
 | Exit interview (`detailed_feedback`, `satisfaction_score`) | offboarding and reasons analysis | hr_admin; aggregated for anyone else | contract. *(counsel)*: the interview's own promise to the leaver |
 | Account records (`id`, `username`, `access_role`, `created_at`, `employee_id`) | authentication and authorisation | hr_admin; `compliance_viewer` read-only | legitimate interest / accountability. No password material is returned (`index.js:221`). `employee_id` is a link, NULL for the account that predates it |
-| Analytics cohorts | workforce reporting | hr_admin, finance, compliance_viewer — **aggregates only**; small cohorts are ⚖ (§8 item 3) | contract; the small-cohort re-identification question is counsel's |
+| Analytics cohorts | workforce reporting | hr_admin, finance, compliance_viewer — **aggregates only**; small cohorts are ⚖ (§8 item 3) | contract; the small-cohort re-identification question is **(counsel)** |
 | Audit records (`performed_by`, `old_values`, `new_values`) | accountability for changes | compliance_viewer, hr_admin | accountability. `old_values`/`new_values` carry encrypted identifiers; the log is not a decryption back door |
 
 **Data residency.** `employees.data_residency_country` gates a **query filter** on the roster (`index.js:291-303`)
@@ -313,8 +325,7 @@ and EOSB into a document. **Refused for `employee` and `manager`**; `finance` re
 
 ### 6.3 A manager reading company-wide pay through the dashboard — `GET /api/analytics/dashboard`
 `SELECT *` on `employees` (`index.js:659`) plus exit and task rows, reduced to cohort figures. **Refused for
-`manager`** — and the refusal is marked `⚖` rather than settled: the small-cohort threshold is counsel's (§8
-item 3), and the honest default until it is answered is to refuse rather than guess.
+`manager`** — and the refusal is marked `⚖` rather than settled: the small-cohort threshold is **(counsel)** (§8 item 3), and the honest default until it is answered is to refuse rather than guess.
 
 ### 6.4 Ticking a step on someone else's record — `PUT /api/onboarding-tasks/:id`
 Requires a named actor (`index.js:503`) and is now **refused for `employee`** (the cell is
@@ -357,9 +368,19 @@ in §3.3 it is the one where a wrong click is least recoverable.
    **and a third is now named by the code**: `preboarding_cases` has no `employee_id`, so no cell can say *which
    case is a person's*. That is a schema decision, and it is the one thing between §3.2's ruling and its
    enforcement. Closed since the last revision: the rename (landed, §2.4), the `'system'` attribution (§5.2).
-9. **Owner — one cell this document got wrong:** the notice-acknowledgement POST (§3.2). The code refuses it for
-   `compliance_viewer` and flags the contradiction. If a viewer should be able to record an acknowledgement, that
-   is a decision that widens a read-only role — say so explicitly rather than by leaving a contradiction in place.
+9. **Owner — DECISION 25, still open (found by the engineer in #239):** **a `manager` cannot read their OWN
+   onboarding tasks.** The matrix gives the manager column `scoped (own reports)` and the employee column
+   `scoped (own)`, and one account holds one role — so `reports` excludes the caller. The code refuses to infer
+   its way out: "widening `reports` to include the caller would be the kind of inference this file refuses; it is
+   raised in the PR body instead" (`access.js:193-196`). *The cost:* a person who manages a team and is also on
+   one cannot see their own steps. *The alternative:* widen `reports` to include self, which is a policy change,
+   not a fix. **Not decided here.**
+10. **Owner — DECISION 26, still open — and it is a cell THIS DOCUMENT got wrong.** The notice-acknowledgement
+   POST (§3.2) was marked **"✔ (read-only)"** for `compliance_viewer`, a role §2.1 defines as read-only. The code
+   refuses the cell and names the contradiction (`access.js:125-127`). *The cost of granting it:* it widens a
+   role whose whole definition is "read-only", and §5.2 rule 2 makes the account/holdership surface
+   accountability-bearing. *The cost of refusing it:* a viewer cannot record an acknowledgement. **Not decided
+   here** — say so explicitly rather than leaving a contradiction in place.
 
 ---
 
@@ -428,6 +449,16 @@ substantive rather than line drift.
 
 **Every `file:line` was re-derived**; `server/index.js` grew from 939 to 1,119 lines and `schema.sql` from 375,
 moving essentially every citation. §9 carries the commands.
+
+**A correction to this pass, from the lead's brief — and the lesson is about where I looked.** I read
+`schema.sql`, found no `UNIQUE` on `users.employee_id`, and wrote that "one account per person" was a policy
+rather than a constraint. That was **half the story**: the constraint is a partial unique index created **after
+the column migrations** (`db.js:134-139`), precisely because `schema.sql` runs before them and would name a
+column that does not yet exist on an older database. **A schema read is not a database read** — the live schema
+now carries constraints that the schema file cannot state, so §2.2 and §1 carry both. Decisions **25** and
+**26** are added alongside 23 and 24, with their costs, and **not answered**: a `manager` cannot read their own
+onboarding tasks (§8 item 9), and a `compliance_viewer` recording an acknowledgement contradicts the read-only
+role (§8 item 10).
 
 **What this pass does not claim.** It describes the cells as they are enforced; it does not rule that they are
 right. Where this document and the code disagree the code runs, and the disagreement is a defect in whichever is
