@@ -184,3 +184,35 @@ The plan's KPI line for test-suite determinism was measured GREEN: **271 / 51 / 
 failures" and of that KPI being "not reproducible" were my own rig**, whose `server/node_modules`
 was absent (187/35/185/2, two LOAD failures). The rig was the defect, not the tree. Recorded here
 and on the PR rather than quietly dropped.
+
+
+## 9. F — the check with NO gate, REDDENED (added after the lead's review note)
+
+`index-ids.py` had no home at all before this change. Green at baseline, red on an injected id,
+green again on restore - in a worktree of this tip, never the served tree:
+
+```
+$ python3 scripts/check-all.py --only index-ids                     # baseline
+[OK           ] index-ids                tree=f560988   exit=0   0.3s
+VERDICT: every check that can be green on this tree is green. exit 0
+
+$ printf '\n| `deadbeef` | injected by the reddening control - resolves to no board row and no git object |\n' >> roadmap-board-index.md
+$ python3 scripts/check-all.py --only index-ids
+[BROKEN       ] index-ids                tree=f560988   exit=1   0.3s
+VERDICT: 1 check(s) RED and NOT in a declared state -> index-ids      (exit 1)
+
+$ git checkout -- roadmap-board-index.md
+$ python3 scripts/check-all.py --only index-ids
+[OK           ] index-ids                tree=f560988   exit=0   0.3s
+VERDICT: every check that can be green on this tree is green. exit 0
+```
+
+**Honest limitation, measured here:** a red check's tail is bounded at 8 lines (`TAIL_LINES`), and
+for `index-ids` the list NAMING the unresolvable id sits just above that bound - the tail shows the
+check's own closing `FAIL: see the lists above` plus the last counter lines. The run always prints
+how many earlier lines it withheld AND the full command, so nothing is hidden; but the bound is a
+bound, and for this check the decisive line is reached through the printed command rather than in
+the tail. A per-check "decisive line" selector is the better shape and is NOT in this change.
+
+The same bound applies to the design-concepts reddening in section 3, where the naming line happened
+to fall inside 8 lines only because the check prints its lists within 6 lines of the end.
