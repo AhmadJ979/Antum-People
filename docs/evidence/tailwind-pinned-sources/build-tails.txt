@@ -1,0 +1,17 @@
+=== BEFORE build tail (rule 15) ===
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.29 kB
+dist/assets/index-DvmxiaxC.css   35.80 kB │ gzip:  6.93 kB
+dist/assets/index-CovU_C3n.js   277.79 kB │ gzip: 77.44 kB
+
+[32m✓ built in 479ms[39m
+exit=0
+
+=== AFTER build tail (rule 15) ===
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.30 kB
+dist/assets/index-BK_EwcpZ.css   35.30 kB │ gzip:  6.85 kB
+dist/assets/index-C9vf7pQB.js   277.79 kB │ gzip: 77.44 kB
+
+[32m✓ built in 388ms[39m
+exit=0

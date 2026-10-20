@@ -1,1 +1,21 @@
-@import "tailwindcss";
+/*
+ * Tailwind v4 scans RAW TEXT - prose, comments, docstrings and test names included - not only class
+ * attributes. With automatic source detection, a word in a sentence silently adds a rule to the
+ * shipped stylesheet: on 2026-10-20 the phrases in `src/httpStatus.js:54` and
+ * `src/httpStatus.test.js:58` put `.collapse{visibility:collapse}` into the served CSS, moving its
+ * bytes and its hash for a comment. A stylesheet byte-delta is not evidence of a styling change, and
+ * no delta is not evidence of none.
+ *
+ * So the scanned set is PINNED to the files that can carry markup: the emitted utility set now depends
+ * on markup and on nothing else, whoever writes prose where. `source(none)` turns automatic detection
+ * off; the `@source` entries are relative to this file.
+ *
+ * IF YOU ADD A FILE THAT CARRIES CLASS NAMES - a component, a page, a template - ADD IT BELOW, or its
+ * utilities will not be emitted and the element renders unstyled. `src/*.test.js` is deliberately not
+ * scanned: a test name is not markup. `src/tailwindSources.test.js` reddens when a class-named file
+ * exists that this list does not cover, and when automatic detection is switched back on.
+ */
+@import "tailwindcss" source(none);
+
+@source "../index.html";
+@source "../src/**/*.tsx";

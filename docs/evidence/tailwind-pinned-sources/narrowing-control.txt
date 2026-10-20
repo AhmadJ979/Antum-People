@@ -1,0 +1,44 @@
+# narrowing control - planted word: 'columns-3' (occurs nowhere in the tree or in either CSS)
+# each branch: file(s) written, `npm run build` in client/, then dist/assets/index-*.css read back
+
+=== A-hazard === old auto-detection + plant in a TEST file -> rule must APPEAR
+  planted in: client/src/httpStatus.test.js
+  build exit: 0
+  built css: index-Nb0zHQBU.css (35826 B)
+  .columns-3 present: True
+  rule text: .columns-3{columns:3}
+  build tail:
+    dist/index.html                   0.46 kB │ gzip:  0.29 kB
+    dist/assets/index-Nb0zHQBU.css   35.82 kB │ gzip:  6.94 kB
+    dist/assets/index-Dvh-mc78.js   277.79 kB │ gzip: 77.44 kB
+    
+    [32m✓ built in 378ms[39m
+
+=== B-narrowed === pinned sources + plant in a TEST file -> rule must NOT appear
+  planted in: client/src/httpStatus.test.js
+  build exit: 0
+  built css: index-BK_EwcpZ.css (35306 B)
+  .columns-3 present: False
+  rule text: (no such rule)
+  build tail:
+    dist/index.html                   0.46 kB │ gzip:  0.30 kB
+    dist/assets/index-BK_EwcpZ.css   35.30 kB │ gzip:  6.85 kB
+    dist/assets/index-C9vf7pQB.js   277.79 kB │ gzip: 77.44 kB
+    
+    [32m✓ built in 379ms[39m
+
+=== C-alive === pinned sources + plant in a SCANNED file -> rule must APPEAR
+  planted in: client/src/App.tsx
+  build exit: 0
+  built css: index-ovttDLAW.css (35327 B)
+  .columns-3 present: True
+  rule text: .columns-3{columns:3}
+  build tail:
+    dist/index.html                   0.46 kB │ gzip:  0.29 kB
+    dist/assets/index-ovttDLAW.css   35.32 kB │ gzip:  6.86 kB
+    dist/assets/index-C-p22YVT.js   277.79 kB │ gzip: 77.44 kB
+    
+    [32m✓ built in 308ms[39m
+
+# files restored; the working tree holds only client/src/index.css as a change:
+M client/src/index.css
