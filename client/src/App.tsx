@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { createAuthedFetch } from './httpStatus.js';
 
 // Unified API Base URL helper
+// Row d2328d67: what a refusal says. Plain on purpose, and reassuring on purpose — a refusal is not
+// an error, the person is still signed in, and saying so is the difference between "you may not see
+// this" and "the product lost the data".
+const REFUSAL_NOTICE = "You don't have access to that. Nothing was changed, and you are still signed in.";
+
 const API_BASE = window.location.port === '5173' ? 'http://localhost:3000' : '';
 
 interface Employee {
@@ -550,15 +556,25 @@ export default function App() {
     localStorage.removeItem('antum_user');
   };
 
-  const authedFetch = (url: string, options: any = {}) => {
-    return fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        'Authorization': `Bearer ${token}`
-      }
-    });
-  };
+  // Session vs refusal (row d2328d67). Every authenticated call in this file goes through ONE
+  // classification, in `httpStatus.js`, where both branches are tested:
+  //   * a dead session (401, or a 403 carrying the server's error body) -> sign out, as before;
+  //   * a refusal by the policy gate (403 with an EMPTY body — the gate's deliberate shape) -> say so
+  //     in place and KEEP the session, because the person is signed in and simply not allowed there.
+  // Before this, a refusal fell through every call site's 401-only check, its empty body was parsed
+  // as data, and the screen rendered empty — which reads as lost data rather than as a refusal.
+  const [refusal, setRefusal] = useState<string | null>(null);
+
+  const authedFetch = createAuthedFetch({
+    fetchImpl: fetch,
+    getToken: () => token,
+    onSessionInvalid: handleLogout,
+    onRefusal: () => setRefusal(REFUSAL_NOTICE),
+  });
+
+  // A refusal is about the screen you asked for, so moving to another one retires it: the notice
+  // must not outlive the request that raised it and become furniture.
+  useEffect(() => { setRefusal(null); }, [activeTab, jurisdiction]);
 
   useEffect(() => {
     if (token) {
@@ -1261,6 +1277,25 @@ export default function App() {
             </button>
           </div>
         </header>
+
+        {/* Row d2328d67: a refusal is visible AS a refusal. Above the content so it holds for every
+            tab, dismissible because it is about one request, and it never signs anyone out. */}
+        {refusal && (
+          <div role="alert" className="flex items-start justify-between gap-4 px-8 py-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-sm">
+            <div className="flex items-start">
+              <svg className="w-5 h-5 mr-2 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+              </svg>
+              <span className="font-medium">{refusal}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setRefusal(null)}
+              className="text-amber-700 hover:text-amber-900 font-bold leading-none text-base px-1"
+              aria-label="Dismiss this notice"
+            >×</button>
+          </div>
+        )}
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-8">
