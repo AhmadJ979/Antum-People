@@ -103,10 +103,16 @@ export function settlePanels(records) {
 /** What a panel is called to a person, from the url it was asked for. Never shows the url itself. */
 export function panelLabelOf(url) {
   if (typeof url !== 'string') return 'that';
-  if (url.indexOf('/api/analytics') !== -1) return 'the dashboard figures';
-  if (url.indexOf('/api/employees/') !== -1 && url.indexOf('/onboarding') !== -1) return 'the onboarding tasks';
-  if (url.indexOf('/api/employees/') !== -1 && url.indexOf('/offboarding') !== -1) return 'the offboarding tasks';
-  if (url.indexOf('/api/employees') !== -1) return 'the roster';
+  // No route literal lives here on purpose. This module LABELS a panel; it does not call one, and a
+  // client file that spells out an api path is read as a CALL SITE by the reachability check
+  // (`server/reachability.test.js`: "no client call site names a route the product does not register"),
+  // which then reports drift for a string nobody ever fetched. That check's premise is right and stays
+  // as it is; the literal was mine and it is gone. The url's own last path segment is all this needs.
+  const lastSegment = String(url).split('?')[0].split('/').filter(Boolean).pop() || '';
+  if (lastSegment === 'dashboard') return 'the dashboard figures';
+  if (lastSegment === 'onboarding') return 'the onboarding tasks';
+  if (lastSegment === 'offboarding') return 'the offboarding tasks';
+  if (lastSegment === 'employees') return 'the roster';
   return 'that';
 }
 
