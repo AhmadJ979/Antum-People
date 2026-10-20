@@ -530,5 +530,20 @@ while true; do
         fi
     fi
 
-    sleep "$POLL_INTERVAL" 9>&-
+    # The poll wait, written so the loop can be STOOD DOWN inside a deploy's window.
+    #
+    # This was `sleep "$POLL_INTERVAL" 9>&-` — a FOREGROUND sleep — and bash does not run a trap
+    # until the current foreground command finishes. So a SIGTERM arriving just after a poll began
+    # sat unhandled until the sleep returned, up to POLL_INTERVAL later: 60s against the 30s the
+    # deploy waits before it gives up. Every movement on 2026-10-20 (06:51, 08:50, 09:06:19Z) took
+    # the force-kill path ("old watchdog still alive after 30s — forcing it down") for that reason,
+    # always against a guard the previous movement had armed. Waiting on a BACKGROUNDED sleep
+    # instead makes the wait interruptible: the trap runs at once, the loop logs its own exit and
+    # leaves, and the guard is still guarding right up to the moment it is told to stop.
+    #
+    # `9>&-` is unchanged and still needed — fd 9 is the flock; without closing it a child would
+    # hold the lock past the loop's death and refuse every re-arm (PR #59).
+    sleep "$POLL_INTERVAL" 9>&- &
+    poll_sleep=$!
+    wait "$poll_sleep" 2>/dev/null || true
 done
