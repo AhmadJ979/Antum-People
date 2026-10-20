@@ -84,6 +84,6 @@ Hashes, taken **after** the edits: `design-concepts/LAYER3-IDENTITY.md` blob `54
 | `sweep-no-403-claim.py` | the sweep. `python3 sweep-no-403-claim.py <rev>` — denominator, both passes, doc citations |
 | `sweep-output-1f471ef.txt` | its run at `1f471ef` (committed earlier, still valid) |
 | `sweep-output-7a4e00a.txt` | its run at `origin/main` — the class scan this record rests on |
-| `sweep-output-7bcbd67.txt` | its run **after** the corrections: the citations now land |
+| `sweep-output-f5c19ec.txt` | its run **after** the corrections, on the pushed revision: the citations now land |
 | `measure-app-tsx-anchors.py` | the anchor measurement. `python3 measure-app-tsx-anchors.py 7b073f8 7a4e00a` |
-| `anchors-7b073f8-vs-7a4e00a.txt` | its output (and `anchors-7b073f8-vs-1f471ef.txt`, the earlier tree) |
+| `anchors-7b073f8-vs-7a4e00a.txt` | its output (and `anchors-7b073f8-vs-1f471ef.txt`, the earlier tree). The run filed as `7bcbd67` was the pre-squash commit of this same tree; `f5c19ec` is the pushed one. |
