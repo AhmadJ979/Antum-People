@@ -13,6 +13,11 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
+    /* `src/httpStatus.js` is the session-vs-refusal classifier: plain ESM JavaScript, because it is
+       driven by `node --test` (see src/httpStatus.test.js) and a browser is not needed to prove it.
+       allowJs lets `tsc -b` resolve it instead of failing the build with TS7016. `checkJs` stays off:
+       the module's shape is pinned by its tests, not by a hand-written .d.ts that could drift. */
+    "allowJs": true,
     "jsx": "react-jsx",
 
     /* Linting */
