@@ -1,0 +1,22 @@
+App.tsx: 7a4e00a=2529 lines   5017d39=2539 lines   delta=+10
+git diff --name-only 7a4e00a 5017d39 -- client server:
+client/package.json
+client/src/App.tsx
+client/src/httpStatus.js
+client/src/panelResults.js
+client/src/panelResults.test.js
+
+anchor                            7a4e00a      5017d39
+sidebar comment                    [1188]       [1198]
+Sign Out button                    [1198]       [1208]
+identity card, name line           [1212]       [1222]
+identity card, role line           [1213]       [1223]
+recorded-by print #1               [2097]       [2107]
+recorded-by print #2               [2152]       [2162]
+checklistNotice state               [529]        [530]
+checklistNotice banner             [2383]       [2393]
+login heading                       [363]        [364]
+login form                          [375]        [376]
+dismiss button (ml-3)               [415]        [416]
+error icon (mr-2)              [368, 1286]   [369, 1296]
+space-x-3 (brand row)          [1192, 1205]   [1202, 1215]

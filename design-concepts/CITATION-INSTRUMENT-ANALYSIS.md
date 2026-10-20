@@ -24,15 +24,18 @@ directly. Measuring the real merge is strictly better evidence than merging a br
 - **Instrument:** `docs/evidence/no-403-claim-sweep-2026-10-20/measure-app-tsx-anchors.py <old-rev> <new-rev>` —
   my own instrument, built earlier today for exactly this class.
 - **Trees:** `7a4e00a` (the revision `LAYER3-IDENTITY.md`'s citations were re-grounded to in `#255`, and the revision
-  PASS 3 validated 8 of 8 against) → **`b82398a`** (the tree `#254` left) → **re-verified at `main` = `9796d6b`**.
-  The client moved once more between the last two (`client/src/panelResults.js`), but `App.tsx` did **not**, so every
-  number in this file is identical at both trees and is stated here for `9796d6b`.
-- **Filed output:** `docs/evidence/no-403-claim-sweep-2026-10-20/anchors-7a4e00a-vs-9796d6b.txt`, beside the earlier
-  `...-vs-b82398a.txt` (identical in every `App.tsx` anchor, which is itself the check that the file did not move).
+  PASS 3 validated 8 of 8 against) → **`b82398a`** (the tree `#254` left) → **`9796d6b`** → **re-verified at today's
+  `main` = `5017d39`**. Three moves followed the first: `client/src/panelResults.js` (`b82398a` → `9796d6b`), then
+  `#258` and `#257`, the latter merging as `5017d39`. `git diff --name-only 9796d6b 5017d39 -- client server` is
+  **0 paths** — the last move was **docs-only, so no `App.tsx` number moved**. The instrument was re-run at `5017d39`
+  and every one of the 13 anchors is identical to the `9796d6b` run; both runs are filed.
+- **Filed output:** `docs/evidence/no-403-claim-sweep-2026-10-20/anchors-7a4e00a-vs-5017d39.txt` (today's `main`),
+  beside `...-vs-9796d6b.txt` and `...-vs-b82398a.txt` — **identical in every `App.tsx` anchor**, which is itself the
+  check that the file did not move between them.
 
 ```
-App.tsx: 7a4e00a=2529 lines   9796d6b=2539 lines   delta=+10
-git diff --name-only 7a4e00a 9796d6b -- client server:
+App.tsx: 7a4e00a=2529 lines   5017d39=2539 lines   delta=+10
+git diff --name-only 7a4e00a 5017d39 -- client server:
 client/package.json
 client/src/App.tsx
 client/src/httpStatus.js
@@ -42,7 +45,7 @@ client/src/panelResults.test.js
 
 ### 1.2 The anchors, at both trees
 
-| anchor the document cites | `7a4e00a` | `9796d6b` (today's `main`) | shift |
+| anchor the document cites | `7a4e00a` | `5017d39` (today's `main`) | shift |
 |---|---|---|---|
 | sidebar comment | 1188 | 1198 | +10 |
 | Sign Out button | 1198 | 1208 | +10 |
@@ -103,6 +106,15 @@ Two things follow, and both bear on the instrument question:
 
 Both rows were restored in the commit that carries this paragraph, **byte-identical to their parent revisions**, and
 `git diff 5017d39 HEAD -- design-concepts/README.md` is the proof: an addition only, no removal.
+
+**Proved at the merge result, not on the branch.** *No conflict* is not the check: `git merge-tree --write-tree
+origin/main <head>` against `main` is **clean precisely because the change was a pure deletion** — git has nothing to
+conflict about and simply applies the removal. So the merge result is what has to be read, and it was: at the head
+carrying this paragraph the merged tree keeps **both** rows (`grep -c LAYER3-IDENTITY` = 1 and `grep -c ab7e9c3` = 1 in
+the merged `design-concepts/README.md`), where the same command against the un-restored head returned **0** for both.
+That is how the drop was found, and it is also how #257's own re-grounding of that row — `ab7e9c3` — was found to be
+travelling with it: **an older copy arriving second and removing a newer one is this document's subject reached through
+a clean merge.**
 
 ### 1.6 The class is wider than this file
 
