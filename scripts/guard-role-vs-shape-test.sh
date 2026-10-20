@@ -13,7 +13,12 @@
 # This test measures BOTH versions of the predicate against LIVE pids, and it is built so it cannot
 # pass vacuously:
 #
-#   * OLD (the committed script, `--old <ref|file>`, default origin/main) MUST count the decoys.
+#   * OLD (--old <ref|file>, default: THE RECORDED DEFECTIVE REVISION - see below) MUST count the
+#     decoys. The defect side is PINNED, never a moving ref: `origin/main` was a correct default
+#     while the fix lived on a branch, and the moment it merged that ref WAS the fix - measured
+#     2026-10-20, bare run on main 58acdac, both sides md5 9cc7d9d04071, "FAIL the OLD check did not
+#     count a decoy", a FAIL that reads like the fix is broken. A before/after red needs the
+#     RECORDED defective revision, because any ref that moves forward eventually becomes the fix.
 #     If it does not, the test cannot reproduce the defect and FAILS - a green here would be a
 #     statement about the harness, not about the fix.
 #   * NEW (the working tree) must count NO decoy.
@@ -22,7 +27,13 @@
 #     port. This is the anti-vacuous control.
 #
 # Usage: bash scripts/guard-role-vs-shape-test.sh [--old <ref|path>] [--keep]
-#   --old ref|path  the version to call the DEFECT (default origin/main)
+#   --old ref|path  the version to call the DEFECT. Default: the recorded defective revision
+#                   (see DEFECT_REV / DEFECT_MD5 below). Override with another pre-fix revision.
+#
+# Three outcomes, and only three: exit 0 = the red reproduced on OLD and not on NEW, with the live
+# loop still counted by both; exit 1 = one of those assertions genuinely failed; exit 2 = CANNOT
+# JUDGE - the run could not compare anything (same bytes on both sides, or an OLD that already
+# carries the fix, or an OLD that counts no decoy). A cannot-judge is never reported as a FAIL.
 #   --keep          leave the decoy processes running for inspection (they exit on their own else)
 #
 # Read-only with respect to the guard: it never signals, starts or stops a loop.
@@ -30,7 +41,11 @@
 set -u
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-OLD="${OLD_SCRIPT:-origin/main}"
+# The recorded defective revision, and the md5 of scripts/keep-alive.sh at it. Pinned deliberately:
+# the defect side of a before/after red must not move (see the header). Asserted at run time.
+DEFECT_REV="${ANTUM_GUARD_DEFECT_REV:-2b14a94}"
+DEFECT_MD5="ed31f5285babe7f265414376cb3d63b8"
+OLD="${OLD_SCRIPT:-}"
 KEEP=0
 DEPLOY_DIR="${ANTUM_DEPLOY_DIR:-/home/team/shared/probable-octo-sniffle}"
 PORT="${ANTUM_PORT:-3000}"
@@ -46,9 +61,17 @@ while [ $# -gt 0 ]; do
     esac
 done
 
+if [ -z "$OLD" ]; then
+    OLD="$DEFECT_REV"
+    echo "# --old defaulted to the recorded defective revision $DEFECT_REV (keep-alive.sh md5 $DEFECT_MD5)"
+fi
+
 cleanup() {
     [ "$KEEP" = 1 ] && { echo "decoys left running (they exit after ${DECOY_TTL}s): $(cat "$STAGE/decoy.pids" 2>/dev/null | tr '\n' ' ')"; return; }
-    while read -r p; do [ -n "$p" ] && kill "$p" 2>/dev/null; done < "$STAGE/decoy.pids" 2>/dev/null
+    # A refusal before the decoys exist (a pre-fix precondition, exit 2) must clean up silently.
+    if [ -f "$STAGE/decoy.pids" ]; then
+        while read -r p; do [ -n "$p" ] && kill "$p" 2>/dev/null; done < "$STAGE/decoy.pids"
+    fi
     rm -rf "$STAGE"
 }
 trap cleanup EXIT
@@ -69,6 +92,26 @@ else
 fi
 cp "$REPO_DIR/scripts/keep-alive.sh" "$STAGE/new.sh"
 grep -q "^live_loops() {" "$STAGE/old.sh" || { echo "extraction anchor missing in OLD" >&2; exit 2; }
+# The OLD side must genuinely be PRE-fix and genuinely different, or there is nothing to judge.
+# Both cases are CANNOT-JUDGE (exit 2), never a FAIL: a FAIL here reads like the fix is broken.
+old_src_md5="$(md5sum < "$STAGE/old.sh" | cut -c1-32)"
+new_src_md5="$(md5sum < "$STAGE/new.sh" | cut -c1-32)"
+old_ka_md5="$(git -C "$REPO_DIR" show "$OLD:scripts/keep-alive.sh" 2>/dev/null | md5sum | cut -c1-32)"
+if [ "$old_src_md5" = "$new_src_md5" ]; then
+    echo "CANNOT-JUDGE: OLD and NEW are the SAME BYTES (md5 $old_src_md5). The revision named by --old" \
+         "ALREADY CONTAINS THE FIX - there is no before/after here, and this says nothing about the fix." \
+         "Name the recorded defective revision (default $DEFECT_REV) or another pre-fix revision." >&2
+    exit 2
+fi
+if grep -q "is_loop_argv" "$STAGE/old.sh"; then
+    echo "CANNOT-JUDGE: OLD ($OLD, keep-alive.sh md5 $old_ka_md5) already carries the fix" \
+         "(is_loop_argv): there is no defect in it to reproduce. Name a pre-fix revision with --old." >&2
+    exit 2
+fi
+if [ "$old_ka_md5" != "$DEFECT_MD5" ]; then
+    echo "# note: OLD ($OLD) keep-alive.sh md5 is $old_ka_md5, not the recorded defect md5 $DEFECT_MD5 -"
+    echo "#       proceeding only if it reproduces the decoys (checked below)."
+fi
 grep -q "^live_loops() {" "$STAGE/new.sh" || { echo "extraction anchor missing in NEW" >&2; exit 2; }
 echo "# old = $OLD  ($(md5sum < "$STAGE/old.sh" | cut -c1-12))"
 echo "# new = $REPO_DIR/scripts/keep-alive.sh  ($(md5sum < "$STAGE/new.sh" | cut -c1-12))"
@@ -150,8 +193,11 @@ read -r new_decoys new_real < "$STAGE/NEW.verdict"
 echo "=== verdict ==="
 rc=0
 if [ "${old_decoys:-0}" -lt 1 ]; then
-    echo "  FAIL  the OLD check did not count a decoy - this test is not reproducing the defect," \
-         "so it cannot say anything about the fix"; rc=1
+    echo "CANNOT-JUDGE: the OLD side counted no decoy, so this run cannot say anything about the fix." >&2
+    echo "  OLD $OLD keep-alive.sh md5 $old_ka_md5 (recorded defect md5 $DEFECT_MD5)" >&2
+    echo "  If that is the recorded revision, the decoys no longer match the log's shape - re-derive" >&2
+    echo "  them from keep-alive.log. Otherwise name the recorded revision with --old <ref>." >&2
+    rc=2
 else
     echo "  ok    OLD counts ${old_decoys} decoy(s) as duplicate guards - the defect reproduces (the red)"
 fi
