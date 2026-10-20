@@ -1,0 +1,72 @@
+=== the program manager's own live measurement of the served revision, 2026-10-20T09:40:01Z (Round 54) ===
+taken by: agent-program-manager · host: (none) · node v22.23.3
+
+--- A. the probe's raw output, exactly as it printed (one run):
+=== program-manager live measurement, 2026-10-20T09:40:01Z (Round 54)
+
+--- A. the public page and the two assets it names
+GET /            -> 200  799 B
+<title>Antum People</title>
+page names: JS assets/index-CRGdjEGs.js | CSS assets/index-DvmxiaxC.css
+  assets/index-CRGdjEGs.js     fetched 276206 B md5 fd270c84cb2b34a2df5372a6e93505c8
+    vs the served tree's build: BYTE-IDENTICAL (cmp)
+  assets/index-DvmxiaxC.css    fetched 35805 B md5 3709a147a167307b5f46c2ecbc3e0431
+    vs the served tree's build: BYTE-IDENTICAL (cmp)
+    served tree's dist listing:
+total 308
+-rw-r--r-- 1 root root 276206 Oct 20 09:29 index-CRGdjEGs.js
+-rw-r--r-- 1 root root  35805 Oct 20 09:29 index-DvmxiaxC.css
+
+--- B. the API, as the live server answers it
+no token:
+  /api/employees               -> 401
+  /api/users                   -> 401
+  /api/compliance/notice       -> 401
+bad password:                    -> 401 (expect 401)
+login token chars: 215 (expect >100)   token: <redacted>
+  payload claims: {'access_role': 'hr_admin', 'iat': 1792489203, 'exp': 1792518003}
+(unreadable)
+a FABRICATED token (the other 403 shape):
+  /api/employees               -> 403 {"error":"Invalid or expired token"}
+with the real token:
+  /api/employees               -> 200
+    employees: 13 | first id: demo-emp-omar
+
+--- C. the pre-boarding surface, as the live API serves it
+  totals: {"cases": 3, "cases_notice_not_shown": 1, "cases_provisioned": 0, "cases_ready": 0, "items": 21, "items_outstanding": 21, "items_received": 0, "items_verified": 0, "workspace_lines": 43, "workspace_lines_open": 43}
+   start 2026-10-19 | started | tone rose | open 21 | lines emp/ws 7 14
+   start 2026-10-21 | inside_48_hours | tone amber | open 21 | lines emp/ws 7 14
+   start 2026-11-03 | clear | tone slate | open 22 | lines emp/ws 7 15
+  distinct flag states: ['clear', 'inside_48_hours', 'started'] | count 3
+
+--- D. the KSA offboarding checklist and the settlement statement
+  tasks: 10
+    1 Hardware Return
+    2 Access Revocation
+    3 Notice Period Verification
+    4 EOSB Calculation (KSA)
+    5 GOSI De-registration
+    6 Iqama Cancellation/Transfer
+    7 Final Exit Visa (or re-entry, if transferring)
+    8 Service Certificate Issuance
+    9 Annual Leave Encashment
+    10 Final Settlement Payment
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+sqlite3.OperationalError: no such table: employees
+
+=== end of the program manager's own measurement
+
+--- B. the settlement block, re-read after the probe's own database path turned out to be wrong:
+  record eosb_accrued: 19824.78 | rendered: 19824.78 | unfilled [brackets]: NONE
+  consent row: ('demo-emp-sarah', 0, None)
+  employees in the live db: 13
+
+--- C. what went wrong in the first attempt, kept rather than tidied:
+=== the stray file my own script created (sqlite3.connect creates on open)
+-rw-r--r-- 1 root root 0 Oct 20 09:40 /home/team/shared/probable-octo-sniffle/server/product.db
+evidence: my live.sh passed $TREE/server/product.db as the record DB; the movement's own script uses /home/team/.data/antum-product.db (deploy-main.sh:41)
+REMOVED the 0-byte file I created
+ls: cannot access '/home/team/shared/probable-octo-sniffle/server/product.db': No such file or directory
+=== is the served tree otherwise clean?
+7a4e00a

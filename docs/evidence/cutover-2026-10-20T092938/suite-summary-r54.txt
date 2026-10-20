@@ -1,0 +1,71 @@
+=== the suite, four runs, and the install named for each (Round 54) ===
+started 2026-10-20T09:40:44Z · node v22.23.3 · host (none)
+
+=== served @ 7a4e00ac9e72c41f08d6034a7aaeb49289aa2b08
+    server/node_modules -> /home/team/shared/probable-octo-sniffle/server/node_modules
+    package.json identical to the deployed tree's? YES
+    server rc=0
+# tests 257
+# suites 51
+# pass 257
+# fail 0
+    client rc=0
+# tests 17
+# suites 3
+# pass 17
+# fail 0
+FIRSTDONE 2026-10-20T09:40:50Z
+
+=== main @ ab7e9c3eb553a88cfec2b65c3bf17616bdfb7975
+    server/node_modules -> /home/team/shared/probable-octo-sniffle/server/node_modules
+    package.json identical to the deployed tree's? YES
+    server rc=1
+# tests 257
+# suites 51
+# pass 256
+# fail 1
+    client rc=0
+# tests 23
+# suites 4
+# pass 23
+# fail 0
+SUITE2DONE 2026-10-20T09:40:56Z
+
+--- WITHOUT any install (a fresh clone carries none) — the same two trees:
+
+=== served @ 7a4e00ac9e72c41f08d6034a7aaeb49289aa2b08
+    no install present (a fresh clone carries none)
+    server rc=1
+# tests 173
+# suites 35
+# pass 171
+# fail 2
+    client rc=0
+# tests 17
+# suites 3
+# pass 17
+# fail 0
+
+=== main @ ab7e9c3eb553a88cfec2b65c3bf17616bdfb7975
+    no install present (a fresh clone carries none)
+    server rc=1
+# tests 173
+# suites 35
+# pass 170
+# fail 3
+    client rc=0
+# tests 23
+# suites 4
+# pass 23
+# fail 0
+SUITEDONE 2026-10-20T09:41:01Z
+
+--- what the failing files are red for (module resolution, not product behaviour):
+5:# Error: Cannot find module 'jsonwebtoken'
+136:# Error: Cannot find module 'uuid'
+1584:# Error: Cannot find module 'jsonwebtoken'
+1715:# Error: Cannot find module 'uuid'
+
+--- the served tree's own full TAP output (WITH the deployed install) is filed beside this summary as
+    suite-server-served-deployed-install.txt
+DONE 2026-10-20T09:41:01Z

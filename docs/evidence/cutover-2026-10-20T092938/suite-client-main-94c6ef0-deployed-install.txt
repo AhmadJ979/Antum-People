@@ -1,0 +1,176 @@
+TAP version 13
+# Subtest: classifyHttpStatus — the pure rule
+    # Subtest: the gate's refusal is 403 with nothing in it
+    ok 1 - the gate's refusal is 403 with nothing in it
+      ---
+      duration_ms: 0.828106
+      type: 'test'
+      ...
+    # Subtest: whitespace is still nothing — an empty answer stays a refusal
+    ok 2 - whitespace is still nothing — an empty answer stays a refusal
+      ---
+      duration_ms: 0.143968
+      type: 'test'
+      ...
+    # Subtest: a 403 carrying a body that is NOT the session error — the Origin gate — takes the sign-out branch
+    ok 3 - a 403 carrying a body that is NOT the session error — the Origin gate — takes the sign-out branch
+      ---
+      duration_ms: 0.301164
+      type: 'test'
+      ...
+    # Subtest: a 403 that carried a body is a dead session, not a refusal
+    ok 4 - a 403 that carried a body is a dead session, not a refusal
+      ---
+      duration_ms: 0.21445
+      type: 'test'
+      ...
+    # Subtest: 401 is a dead session however it is dressed
+    ok 5 - 401 is a dead session however it is dressed
+      ---
+      duration_ms: 0.127852
+      type: 'test'
+      ...
+    # Subtest: everything else is left alone — 2xx is usable, 404 and 500 belong to caller error handling
+    ok 6 - everything else is left alone — 2xx is usable, 404 and 500 belong to caller error handling
+      ---
+      duration_ms: 0.159152
+      type: 'test'
+      ...
+    1..6
+ok 1 - classifyHttpStatus — the pure rule
+  ---
+  duration_ms: 2.882691
+  type: 'suite'
+  ...
+# Subtest: the anti-vacuous control: a refusal must never be wired to a sign-out
+    # Subtest: REFUSAL maps to a notice in place, and specifically NOT to sign-out
+    ok 1 - REFUSAL maps to a notice in place, and specifically NOT to sign-out
+      ---
+      duration_ms: 0.363707
+      type: 'test'
+      ...
+    # Subtest: a dead session is the only classification that signs anyone out
+    ok 2 - a dead session is the only classification that signs anyone out
+      ---
+      duration_ms: 0.275305
+      type: 'test'
+      ...
+    1..2
+ok 2 - the anti-vacuous control: a refusal must never be wired to a sign-out
+  ---
+  duration_ms: 0.870972
+  type: 'suite'
+  ...
+# Subtest: createAuthedFetch — the wiring, with a fabricated transport
+    # Subtest: a normal answer passes through untouched and neither handler fires
+    ok 1 - a normal answer passes through untouched and neither handler fires
+      ---
+      duration_ms: 46.008053
+      type: 'test'
+      ...
+    # Subtest: 401: the session is ended centrally, and the response still goes back to the caller
+    ok 2 - 401: the session is ended centrally, and the response still goes back to the caller
+      ---
+      duration_ms: 1.3448
+      type: 'test'
+      ...
+    # Subtest: 403 with the dead-session body: sign out, and STOP the caller from using the body as data
+    ok 3 - 403 with the dead-session body: sign out, and STOP the caller from using the body as data
+      ---
+      duration_ms: 0.904619
+      type: 'test'
+      ...
+    # Subtest: 403 from the gate: the notice is raised, the session is KEPT, and the empty body is never parsed
+    ok 4 - 403 from the gate: the notice is raised, the session is KEPT, and the empty body is never parsed
+      ---
+      duration_ms: 0.629171
+      type: 'test'
+      ...
+    # Subtest: a 404 and a 500 are nobody's business here — both are handed back
+    ok 5 - a 404 and a 500 are nobody's business here — both are handed back
+      ---
+      duration_ms: 0.356145
+      type: 'test'
+      ...
+    # Subtest: reading the body to classify it does not eat it — the caller can still parse the response
+    ok 6 - reading the body to classify it does not eat it — the caller can still parse the response
+      ---
+      duration_ms: 0.434046
+      type: 'test'
+      ...
+    # Subtest: the caller's own token reaches the request
+    ok 7 - the caller's own token reaches the request
+      ---
+      duration_ms: 0.306187
+      type: 'test'
+      ...
+    # Subtest: with no token the sentinel still goes out, exactly as before this change
+    ok 8 - with no token the sentinel still goes out, exactly as before this change
+      ---
+      duration_ms: 0.933391
+      type: 'test'
+      ...
+    # Subtest: a caller that supplies its own Authorization header keeps it
+    ok 9 - a caller that supplies its own Authorization header keeps it
+      ---
+      duration_ms: 0.298798
+      type: 'test'
+      ...
+    1..9
+ok 3 - createAuthedFetch — the wiring, with a fabricated transport
+  ---
+  duration_ms: 51.652734
+  type: 'suite'
+  ...
+# Subtest: one screen, several panels: a refused sibling does not blank a granted one
+    # Subtest: the granted roster stays AND the refusal is recorded against its own url
+    ok 1 - the granted roster stays AND the refusal is recorded against its own url
+      ---
+      duration_ms: 3.015703
+      type: 'test'
+      ...
+    # Subtest: CONTROL — under the old one-Promise.all shape the granted roster IS blanked
+    ok 2 - CONTROL — under the old one-Promise.all shape the granted roster IS blanked
+      ---
+      duration_ms: 0.292712
+      type: 'test'
+      ...
+    # Subtest: a panel that never completed is a failure, not a refusal, and blanks only itself
+    ok 3 - a panel that never completed is a failure, not a refusal, and blanks only itself
+      ---
+      duration_ms: 0.377426
+      type: 'test'
+      ...
+    # Subtest: a dead session is re-thrown, never recorded as a panel outcome
+    ok 4 - a dead session is re-thrown, never recorded as a panel outcome
+      ---
+      duration_ms: 0.543669
+      type: 'test'
+      ...
+    # Subtest: the refusal names the panel it belongs to, from the url onRefusal already receives
+    ok 5 - the refusal names the panel it belongs to, from the url onRefusal already receives
+      ---
+      duration_ms: 0.30377
+      type: 'test'
+      ...
+    # Subtest: recordPanel tags by the error class, never by reading the body
+    ok 6 - recordPanel tags by the error class, never by reading the body
+      ---
+      duration_ms: 0.150148
+      type: 'test'
+      ...
+    1..6
+ok 4 - one screen, several panels: a refused sibling does not blank a granted one
+  ---
+  duration_ms: 5.817619
+  type: 'suite'
+  ...
+1..4
+# tests 23
+# suites 4
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 252.537786
