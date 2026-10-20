@@ -297,14 +297,23 @@ employee write paths were this document's longest-standing finding, and #239 clo
    was the finding a reader may have quoted.
 2. **Account creation must be logged — CLOSED by #236** (`index.js:269-270`).
 3. **An unnamed actor is refused, not defaulted** — the acknowledgement convention, carried to the checklist tick
-   by #223 and to the case path at `index.js:824-828`.
+   by #223 and to the case path at `index.js:829`, which is the refusal itself (`if (!actor) return
+   res.status(400)`). **An earlier revision of this line cited `:824-828`** — the rationale comment above the
+   refusal, five lines of prose that end one line before the code that does the refusing. A citation that stops
+   at the comment evidences the *intent*, not the refusal; the corrected line is in §9's check.
 4. **The autonomous actor is a separate, explicit value** — not a fallback. Where a write genuinely has no human
    behind it, the record says which mechanism did it.
 5. **A write to `audit_logs` accompanies every state change**, with `old_values`/`new_values` as the encrypted
    identifiers already are — never a decrypted identifier in the log.
 
 **Closed, so it is not re-litigated:** decision 22's class (a tick recording a date and no name) — #223. The
-account route's silence — #236. The false `'system'` attribution — #239. **Nothing on this page is open.**
+account route's silence — #236. The false `'system'` attribution — #239. **Every logging rule on this page is
+closed; one cell is not.** **Decision 26** (§8 item 10) asks whether a role whose *whole* definition is
+"read-only" (`compliance_viewer`, §2.1) may make **one write** — the notice acknowledgement — and the code refuses
+it today. This page is where that question lands: granting it would add a write to a role this page only ever
+describes as reading, and §8 item 10 rests on rule 2 above as the reason it matters. **Read the page as closed on
+logging and open on that one cell**; the flat "nothing on this page is open" an earlier revision carried was the
+kind of over-claim this document exists to catch.
 
 ---
 
@@ -395,7 +404,7 @@ node -e "const a=require('/tmp/a.js');
   for (const k of ['preboarding:read','preboarding:read:own','preboarding:read:aggregate'])
     console.log(k, JSON.stringify(a.POLICY[k]), (by[k]||[]).length);
   console.log('unpolicied',a.unpoliciedRoutes().length,'| unknown roles',a.unknownRolesInPolicy().length);
-  console.log('cells not admin-only:',Object.entries(a.POLICY).filter(([k,v])=>v.join()!=='admin').map(([k])=>k).length);"
+  console.log('cells not admin-only:',Object.entries(a.POLICY).filter(([k,v])=>['admin'].indexOf(v.join())===-1).map(([k])=>k).length);"  # written with indexOf on purpose: no history-expansion character in the quoted string
 
 # the gate, the scope machinery, and the marks
 git show origin/main:server/access.js | sed -n '91,95p;155,180p;189,210p;318,333p;367,386p'
@@ -405,6 +414,8 @@ git show origin/main:server/schema.sql | sed -n '187,194p'    # users: access_ro
 git show origin/main:server/schema.sql | sed -n '200,203p'    # a case has NO employee_id
 git grep -n "req.user.employee_id" origin/main -- 'server/*.js'   # read now, via relationTo
 
+# §5.2 rule 3 — the refusal is the code, not the comment above it (line 829, not 824-828)
+git show origin/main:server/index.js | sed -n '824,830p'
 # the write paths and the retired literal (expect no value occurrence)
 git grep -n "accessScope\|relationTo" origin/main -- server/index.js
 git show origin/main:server/index.js | grep -v '^\s*//' | grep -c "'system'"
@@ -420,7 +431,50 @@ that states its exceptions. The DSAR and breach registers will need a rule when 
 
 ## 10. The amendment — what changed, and why
 
-### 10.1 Amended 2026-10-20 against `ca681dd` (the enforcement slice, PR #239)
+### 10.1 Amended 2026-10-20 against `ee4bbdf` (the same afternoon — the checker learned to read its own subject)
+
+**This amendment changes the CHECKER, and records two defects this document carried that its own check could not
+see.** All three findings came from sweeping past the brief, and the first two are in this file.
+1. **§5.2 rule 3 cited the rationale comment, not the refusal.** It pointed at a five-line comment block ending
+   *one line before* the `if (!actor)` return that does the refusing — the refusal is `index.js:829`. A citation
+   that stops at the comment evidences the *intent*, not the mechanism. The checker had asserted `:829` as a tree
+   claim all along and still passed the sentence, because **it asserted the tree's lines and never the
+   document's citations to them.** That coupling is now a check (`[doc citation]`); reverting the citation
+   reddens it (two FAILs, exit 1).
+2. **§5.2 closed itself with an over-claim.** The flat sentence "nothing on this page is open" was written
+   before the notice-acknowledgement cell was reclassified — and **decision 26 is open, and it asks whether a
+   role whose whole definition is read-only may make one write**, which is precisely what that page is about.
+   The page now reads **closed on logging, open on that one cell**, with the cost stated; the flat form is
+   checked for by absence, so restoring it reddens.
+3. **The checker's own headline was wrong.** It printed "103/103 claims hold" while **107** checks executed: the
+   denominator was hand arithmetic and the measured-cell list had outgrown it. A count a human maintains by hand
+   drifts silently and *understates* proof. It is now counted, and the summary reads `123/123 (ran=123, fails=0)`.
+
+**Why this belongs in the document and not only in the checker.** The row that produced it was raised on a
+measurement: a copy of this document asserting **all 16 resources**, the admin-only cell state, and the coarse
+cell as two cells, scored the *same* 103/103 against the tree that refutes all three — because the numbers lived
+in the checker's head, and handing it a different document could not change a verdict. **The structural claims
+are now read OUT of the document** — the resource count; the role set from §2.1's own table; each pre-boarding
+cell's route count *and* role list from §1.1; the widened-versus-admin-only state; the ten counsel marks; and the
+§8 items the code keys its marks against — and compared against the measured module. The reddening fixture needs
+no invention; it is already in the repository:
+
+```sh
+git show ca681dd:docs/access-model.md > /tmp/prev.md
+VERIFY_DOC=/tmp/prev.md python3 /home/team/shared/verify-access-model.py
+# -> 112/121, exit 1, and the failures name the drift rather than describing it:
+#    the resource count (16 against 17), the route count on the list cell, the two missing cell
+#    rows (own and aggregate), and the four places the admin-only claim still stood live
+```
+
+**What this document now claims — and what it does not.** `123/123` says **this document matches the tree it is
+measured against**, on the claims a checker can read out of both. It does not say the tree is correct; and a
+claim no checker can parse is not thereby checked — a false sentence with no number in it, a ruling the owner has
+not made, or a legal basis counsel has not confirmed all pass it untouched. **The previous revision of this
+section quoted "103/103" as verification of this document. It was a statement about the tree alone, and it was
+true of a document asserting the opposite of the code.**
+
+### 10.2 Amended 2026-10-20 against `ca681dd` (the enforcement slice, PR #239)
 
 **A verifier, not a reading.** I re-ran the landed checker (`shared/verify-access-model.py`) against the new
 `main` first: **20 of 94 claims still held, exit 1.** The 74 failures were the worklist, and four of them were
@@ -465,7 +519,7 @@ right. Where this document and the code disagree the code runs, and the disagree
 wrong — one such defect was found here (§3.2), and §8 item 9 asks the owner to settle it. Docs only: `client/` 0,
 `server/` 0, **no movement owed**.
 
-### 10.2 Amended 2026-10-20 against `b4f479a` (slice-2 prerequisites, PR #236)
+### 10.3 Amended 2026-10-20 against `b4f479a` (slice-2 prerequisites, PR #236)
 
 Re-grounded by measurement, 94/94 claims: the resource count 15 → 16; the split of the coarse cell into
 `preboarding:read` (3) and `preboarding:read:own` (4), disjoint, both `[admin]`; `users.employee_id` present,
@@ -475,7 +529,7 @@ to hold rather than a constraint the database held.** Found by sweeping rather t
 recorded as open. **The negative control that made it a measurement: the same document judged against the merge
 before slice 2 reddens at 31/94.**
 
-### 10.3 Amended 2026-10-19 against `e2a4b4b` (slice 1, PR #223)
+### 10.4 Amended 2026-10-19 against `e2a4b4b` (slice 1, PR #223)
 
 The ruling the designer's own-view surface needed — **option (a), with a bound**: a person may read their own
 pre-boarding record; the list, the roll-up and the flag watch stay `✖` at every horizon. The distinction the
