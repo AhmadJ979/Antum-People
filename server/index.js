@@ -189,8 +189,9 @@ app.post('/api/users', async (req, res) => {
     await db.query(`INSERT INTO users (id, username, password_hash, role) VALUES (${db.escapeString(id)}, ${db.escapeString(name)}, ${db.escapeString(password_hash)}, ${db.escapeString(role)})`);
     // Layer 3, slice 2 (prerequisite 3): creating an account is now attributable. Before this the
     // route wrote no audit row at all, so nothing said WHO made an account — and the two employee
-    // write paths (`:276`, `:344`) write the literal 'system' into this same field, which is a false
-    // name in a column that exists to hold a person's. This route does not follow them: the actor is
+    // write paths (the CREATE and UPDATE handlers below) write the literal 'system' into this same
+    // field, which is a false name in a column that exists to hold a person's. This route does not
+    // follow them: the actor is
     // the authenticated caller. `performed_by` is NOT NULL-guarded into a placeholder — the gate
     // (`users:write`) runs before this handler, so `req.user.username` is the real signer, and the
     // `|| null` is the same honest fallback the pre-boarding paths use rather than a fake name.
