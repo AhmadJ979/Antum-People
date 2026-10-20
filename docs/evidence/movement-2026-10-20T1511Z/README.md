@@ -19,6 +19,12 @@ file here is named here):
   size and digest are printed on line 2 (`29009 B`, sha256 `dc09ff95269cb503`).
 - deployed commit **`2b14a94`** (merge of #268), and the tree is clean at `origin/main`: `measured-lv.txt`
   line 28 — `HEAD: 2b14a94 (=origin/main? 2b14a94) dirty files: 0`.
+- **a trap this pack hit, named so the next one does not:** `*.log` is in the repository's `.gitignore`
+  (line 6), so `movement.log`, `cutover-20261020-151147-build.log` and `cutover-20261020-151147-seed.log`
+  were **invisible to a plain `git add`**: the working tree looked complete at 21 files while the commit
+  carried 18. They are committed with `git add -f`, and `pack-check.py` now checks tracking as its third
+  direction - a pack can lose a file at the ignore boundary, not only at the copy. Verified after staging:
+  `git ls-files <this directory> | wc -l` = 21 = the files on disk.
 - the host tooling was installed twice, idempotently: 7 of 7 refreshed at 15:11:49, and the second run at
   15:12:12 printed `nothing to do — all 7 copies already match this source (a second run changes no byte)`
   (record lines 34 and 104).
@@ -121,6 +127,11 @@ which this branch corrects.
 - the recovery was the hook's, not the operator's: ten `hook: guard already running (pid 27783), nothing
   to do` lines (`measured-ge.txt` lines 31-40) — a start that had to be retried until it was confirmed.
 - afterwards both paths still answered: `public 200  localhost:3000 200` (`measured-ge.txt` line 43).
+- **this defect was FIXED after the movement, and this section is history, not the host's state now.** PR
+  **#272** (`fix/guard-role-not-shape`, merged 2026-10-20T16:05:51Z, merge commit `58acdac`) makes the
+  duplicate check decide by a process's **role** instead of a string in its command line; its own body
+  cites row `11705f3c` and the same log window, 15:13:46-15:13:56 (read from the API, not from this pack).
+  Everything above is what the host did at 15:13-15:14Z, before that fix landed.
 - **a false count lives in this set, and it is named here rather than quietly dropped.** `measured-lv2.txt`
   line 23 reads `guard processes now: 4`, produced by a `pgrep -f`-style count; the authoritative count is
   **1** (the lock's PID checked against `/proc`). That same file records two gaps in its own instrument
@@ -176,9 +187,11 @@ which this branch corrects.
 
     python3 docs/evidence/movement-2026-10-20T1511Z/pack-check.py
 
-Both directions, computed: every file in this directory is named in this README **and** every
-filename-shaped token in this README exists in this directory (or is an explicitly external path that
-exists in the repository). Exit 0 when both hold.
+Three directions, computed: every file in this directory is named in this README; every filename-shaped
+token in this README exists in this directory (or is an explicitly external path that exists in the
+repository); and - when the pack sits inside a git work tree - every file in it is **tracked**, because a
+`.gitignore` rule hides a file from a plain `git add` while the working tree still looks complete. Exit 0
+when they hold.
 The list that direction is checked against is this README itself - `README.md` is the list, so it is
 exempt from naming itself. Its reddening is recorded in the pull request, and `pack-check.py --selftest`
 re-runs it: a copy with one file renamed exits 1 naming it, and a copy whose README names a file that is

@@ -1,9 +1,10 @@
 # every file in this pack except this manifest, md5sum <file>
 # the 17 host artefacts were copied with `cp -p` from /home/team/shared/movements/2026-10-20T1511Z
 # and verified 17 of 17 identical after the copy (README.md section 1; the sections below it cite them).
-# README.md, pack-check.py and pack-check-runs.txt are agent-product-designer's, 2026-10-20.
+# three of them are *.log and .gitignore hides those from a plain `git add`: they are committed
+# with `git add -f`. README.md, pack-check.py and pack-check-runs.txt are agent-product-designer's.
 # generated after every edit in this branch: regenerate, do not hand-edit.
-e774fbf59cf3ef64845d6de72beeeb03  README.md
+739b00aa78477b22021d59f46fa9fa22  README.md
 4791276718726de8d169ee355914c07a  cutover-20261020-151147-build.log
 a71e483799511fc7c03d128f457e2b90  cutover-20261020-151147-evidence.txt
 370be954ac8d246cca743b25ac741526  cutover-20261020-151147-seed.log
@@ -16,8 +17,8 @@ b68b473bd3b9d4d4350d42376832a109  measured-lv.txt
 7ba499408ed85f71713414fa58ff9564  measured-lv2.txt
 b9a4a4b5d0a5ad46a8e19fc0ecfd9873  measured-vpb.txt
 a71e483799511fc7c03d128f457e2b90  movement.log
-73f266cefe6ad38fa636daa2110f39d5  pack-check-runs.txt
-bd5e4c6555d63976b1d3acd94b61126e  pack-check.py
+e89c6829626bd1240286436b6d7273ff  pack-check-runs.txt
+54248d6055b988157b0b21a6c1d53c7e  pack-check.py
 cb54e6164a8e741ed807bac94577efcd  served-after-index-BK_EwcpZ.css
 3709a147a167307b5f46c2ecbc3e0431  served-before-35d-served.css
 fe43eb032ed6f67f7ce3c250d492f95d  verify-live.sh

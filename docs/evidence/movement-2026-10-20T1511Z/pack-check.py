@@ -5,6 +5,9 @@
   (2) every filename-shaped token inside a backticked span of README.md either
       exists in this pack, or resolves from the repository root, or is declared
       in the README's asserted external-names block
+  (3) if this pack is inside a git work tree: every file in it is TRACKED - a
+      `.gitignore` rule (*.log, for one) hides a file from a plain `git add`, and
+      the working tree looks complete while the commit never carries it
 
 Usage:  python3 pack-check.py [--root <repo root>] [--selftest]
 Exit 0 = both directions hold; 1 = they do not (and what failed is printed).
@@ -34,6 +37,20 @@ def check(d, root):
     block = BLOCK.search(text)
     allowed = set(FILEISH.findall(block.group(1))) if block else set()
     listed, bad = files(d), []
+    tracked, refuse = 0, None
+    if subprocess.run(['git', '-C', d, 'rev-parse', '--is-inside-work-tree'],
+                      capture_output=True).returncode == 0:
+        top = subprocess.run(['git', '-C', d, 'rev-parse', '--show-toplevel'],
+                             capture_output=True, text=True).stdout.strip()
+        for f in listed:
+            rel = os.path.relpath(os.path.join(d, f), top)
+            if subprocess.run(['git', '-C', top, 'ls-files', '--error-unmatch', rel],
+                              capture_output=True).returncode == 0:
+                tracked += 1
+            else:
+                bad.append(('NOT TRACKED by git (a .gitignore rule hides it - use git add -f)', f))
+    else:
+        refuse = 'not inside a git work tree: the tracking direction is NOT checked here'
     for f in listed:
         if f == 'README.md':
             continue
@@ -57,15 +74,16 @@ def check(d, root):
         if os.path.exists(os.path.join(d, os.path.basename(t))):
             continue
         bad.append(('NAMED but no such file', t))
-    return listed, tokens, outside, host, bad, bool(block)
+    return listed, tokens, outside, host, tracked, refuse, bad, bool(block)
 
 
 def show(d, root):
-    listed, tokens, outside, host, bad, has_block = check(d, root)
+    listed, tokens, outside, host, tracked, refuse, bad, has_block = check(d, root)
     print('pack-check - tree %s' % d)
     print('  files in the pack        : %d' % len(listed))
     print('  filename-shaped names    : %d  (of which declared as outside this pack: %d)' % (len(tokens), outside))
     print('  cited host paths         : %d  (absolute, outside any repo - not checkable here)' % host)
+    print('  tracked by git           : %d of %d%s' % (tracked, len(listed), '   (%s)' % refuse if refuse else ''))
     print('  asserted external block  : %s' % ('present' if has_block else 'MISSING'))
     for kind, name in bad:
         print('  FAIL: %s %s' % (kind, name))
