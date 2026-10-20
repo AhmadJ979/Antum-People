@@ -30,6 +30,15 @@ SCOPE, STATED RATHER THAN IMPLIED
   mockups, which the index lists by convention. They are NOT checked here, and this line
   exists so that a green run is not read as covering them.
 
+WHERE IT LIVES, AND WHO RUNS IT (named, because a control nobody can reach is a false green)
+  OPERATOR:  python3 scripts/check-design-concepts-index.py     - bare, no arguments, any tree
+  GATE:      server/design-concepts-index.test.js               - the suite the merge result is read from;
+             it runs this script on the repository AND on a doctored copy, so the reddening is asserted
+             by the gate itself rather than trusted to a reader.
+  NOT ASKED OF THE MOVEMENT: scripts/cutover-preflight.sh does not run it. A design-concepts index row is
+             not a precondition for shipping served bytes, and this team's own rule is that a docs-only
+             delta owes no movement - a docs check that could abort a product deploy would invert that.
+
 IT RUNS BARE
   python3 scripts/check-design-concepts-index.py
   No argument is required: the operator's form is the bare one. (`check-doc-citations.py`
@@ -78,6 +87,9 @@ def main(argv):
             rows.append(m.group(1))
 
     print("design-concepts inventory check - tree %s" % rev)
+    print("  operator form             : python3 scripts/check-design-concepts-index.py   (no arguments needed)")
+    print("  also run as a GATE by     : server/design-concepts-index.test.js, in the suite the merge result is read from")
+    print("  NOT run by                : the movement. A docs register row is not a served precondition; preflight does not")
     print("  documents (*.md)          : %d" % len(docs))
     print("  want exactly one row each : %d  (README.md excluded, and its exclusion is asserted)" % len(expected))
     print("  index rows read           : %d" % len(rows))

@@ -103,3 +103,140 @@ design-concepts inventory check - tree (not a git working tree - the tree this j
 FAIL: see the lists above
 exit: 1
 
+### THE GATE — the suite runs the check, and the check reddens inside the suite
+    file: server/design-concepts-index.test.js   (node --test, from server/)
+$ cd server && node --test design-concepts-index.test.js
+TAP version 13
+# Subtest: the design-concepts index check exists where it says it does (it cannot pass vacuously)
+ok 1 - the design-concepts index check exists where it says it does (it cannot pass vacuously)
+  ---
+  duration_ms: 1.676172
+  type: 'test'
+  ...
+# Subtest: the check is green, and runs BARE - the operator's form, with no arguments
+ok 2 - the check is green, and runs BARE - the operator's form, with no arguments
+  ---
+  duration_ms: 43.747736
+  type: 'test'
+  ...
+# Subtest: the name of the tree is the tree, not a claim: a copy with one row dropped must FAIL, naming the loss
+ok 3 - the name of the tree is the tree, not a claim: a copy with one row dropped must FAIL, naming the loss
+  ---
+  duration_ms: 65.932414
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 195.079232
+exit: 0
+
+### THE GATE REDDENS END-TO-END — a row dropped from the REAL tree (restored immediately after)
+$ # drop LAYER3-IDENTITY.md's row, run the gate, restore
+TAP version 13
+# Subtest: the design-concepts index check exists where it says it does (it cannot pass vacuously)
+ok 1 - the design-concepts index check exists where it says it does (it cannot pass vacuously)
+  ---
+  duration_ms: 2.829961
+  type: 'test'
+  ...
+# Subtest: the check is green, and runs BARE - the operator's form, with no arguments
+not ok 2 - the check is green, and runs BARE - the operator's form, with no arguments
+  ---
+  duration_ms: 36.700869
+  type: 'test'
+  location: '/home/agent-product-designer/d20/server/design-concepts-index.test.js:50:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    the index check is RED on this tree:
+    design-concepts inventory check - tree 5be16da
+      operator form             : python3 scripts/check-design-concepts-index.py   (no arguments needed)
+      also run as a GATE by     : server/design-concepts-index.test.js, in the suite the merge result is read from
+      NOT run by                : the movement. A docs register row is not a served precondition; preflight does not
+      documents (*.md)          : 18
+      want exactly one row each : 17  (README.md excluded, and its exclusion is asserted)
+      index rows read           : 19
+      ...documents with NO row  : ['LAYER3-IDENTITY.md']
+      ...documents with >1 row  : none
+      ...rows naming no document : none
+      ...rows for README.md     : none  (must be none - the exclusion is asserted, not assumed)
+      ...index non-empty        : OK
+    FAIL: see the lists above
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/agent-product-designer/d20/server/design-concepts-index.test.js:52:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: the name of the tree is the tree, not a claim: a copy with one row dropped must FAIL, naming the loss
+ok 3 - the name of the tree is the tree, not a claim: a copy with one row dropped must FAIL, naming the loss
+  ---
+  duration_ms: 71.042267
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 2
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 237.787145
+exit: 1
+### and the gate is GREEN again once the row is back
+$ cd server && node --test design-concepts-index.test.js
+TAP version 13
+# Subtest: the design-concepts index check exists where it says it does (it cannot pass vacuously)
+ok 1 - the design-concepts index check exists where it says it does (it cannot pass vacuously)
+  ---
+  duration_ms: 2.302634
+  type: 'test'
+  ...
+# Subtest: the check is green, and runs BARE - the operator's form, with no arguments
+ok 2 - the check is green, and runs BARE - the operator's form, with no arguments
+  ---
+  duration_ms: 43.984674
+  type: 'test'
+  ...
+# Subtest: the name of the tree is the tree, not a claim: a copy with one row dropped must FAIL, naming the loss
+ok 3 - the name of the tree is the tree, not a claim: a copy with one row dropped must FAIL, naming the loss
+  ---
+  duration_ms: 66.857959
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 207.326301
+exit: 0
+
+### THE GATE DOES NOT CARRY A PRE-EXISTING RED - measured with a control at the untouched tip
+$ cd ~/d20/server && node --test            # my head (adds server/design-concepts-index.test.js)
+   # tests 187  # suites 35  # pass 185  # fail 2   - the two failures: access.test.js, demo-seed.test.js
+$ git worktree add --detach /tmp/ctl-idx origin/main && cd /tmp/ctl-idx/server && node --test
+   # tests 184  # suites 35  # pass 182  # fail 2   - THE SAME TWO, without any of my files
+   => the 2 failures are PRE-EXISTING at origin/main (7314f0e), not introduced here.
+      My change adds exactly 3 tests and all 3 pass (187-184 = 3, 185-182 = 3).
