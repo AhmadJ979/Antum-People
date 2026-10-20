@@ -5,11 +5,15 @@ after it. This file covers the **identity surfaces**: how a person signs in as t
 says who is signed in, what a reader sees when a **record names the person who made it** (decision 22), and
 what an **unnamed-actor refusal** looks like on screen.
 
-- **Re-measured 2026-10-20 onto `origin/main` = `7a4e00a`** (`client/src/App.tsx`, **2,529 lines**). The
+- **Re-measured 2026-10-20 onto `origin/main` = `ab7e9c3`** (`client/src/App.tsx`, **2,539 lines**) — the **third tree in one day**: **PR #254 merged at
+  09:37:41, one minute before this document merged at 09:38:21**, and moved `App.tsx` again (+10 lines). A
+  re-measurement is only as fresh as the tree it is measured against, so this branch ships **`check-doc-citations.py`**
+  (in `docs/evidence/no-403-claim-sweep-2026-10-20/`), which **fails** when an `App.tsx:<n>` citation here does not
+  land on the content it names. Readings: `7a4e00a` 2,529 lines, `7b073f8` 2,494. The
   justification this file used for leaving its citations un-re-dated — that
   `git diff --name-only 7b073f8 origin/main -- client server` was **empty** — **is no longer true**: that diff
-  now lists **19 paths** (`client/src/httpStatus.js` and `client/src/httpStatus.test.js` were added
-  by **PR #241**; `client/src/App.tsx` grew **+35 lines**), so **every citation below was
+  now lists **21 paths** (`client/src/httpStatus.js` and `client/src/httpStatus.test.js` were added
+  by **PR #241**; `client/src/App.tsx` grew **+45 lines**), so **every citation below was
   re-measured and re-numbered**, and the identity card's role field is now `access_role`.
   The instruments and their raw output are filed in `docs/evidence/no-403-claim-sweep-2026-10-20/`.
 - **Measured at `origin/main` = `7b073f8`** (`client/src/App.tsx`, 2,494 lines). The login card, the sidebar
@@ -30,16 +34,16 @@ what an **unnamed-actor refusal** looks like on screen.
 
 | # | Surface | State today | This slice |
 |---|---------|-------------|------------|
-| **S-L1** | Sign-in | `App.tsx:355` (card opens; the block was `:317`–`431` at `7b073f8`) — a username field, a password field, `Sign In`, a recovery note | unchanged in shape; the copy stops implying the account *is* the person |
-| **S-L2** | Who am I / sign out | `App.tsx:1198` (icon-only `Sign Out`), `:1205`–`1216` identity card | the card shows a **person's name and role**, and its two fallbacks are removed |
-| **S-L3** | The named actor on a record | `App.tsx:2097` / `:2152` print `recorded by {recorded_by}`; the checklist tick stores `completed_at` and **no actor** | every record reads as *made by a person*, and says **which kind of person** |
+| **S-L1** | Sign-in | `App.tsx:356` (card opens; the block was `:317`–`431` at `7b073f8`) — a username field, a password field, `Sign In`, a recovery note | unchanged in shape; the copy stops implying the account *is* the person |
+| **S-L2** | Who am I / sign out | `App.tsx:1208` (icon-only `Sign Out`), `:1215`–`1226` identity card | the card shows a **person's name and role**, and its two fallbacks are removed |
+| **S-L3** | The named actor on a record | `App.tsx:2107` / `:2162` print `recorded by {recorded_by}`; the checklist tick stores `completed_at` and **no actor** | every record reads as *made by a person*, and says **which kind of person** |
 | **S-L4** | The unnamed-actor refusal | the server answers **400**; the client shows a generic error banner | the refusal says what is missing and what to do, in the product's words |
 
 ---
 
 ## 2. S-L2 — who am I, and the two fallbacks that must go
 
-**Today, read from the shipped file** (`App.tsx:1212`–`1213` at `7a4e00a`; `:1196`–`1197` at `7b073f8`):
+**Today, read from the shipped file** (`App.tsx:1222`–`1223` at `ab7e9c3`; `:1212`–`1213` at `7a4e00a`; `:1196`–`1197` at `7b073f8`):
 
 ```
 <div className="text-xs font-bold text-white truncate">{user?.username || 'Admin User'}</div>
@@ -64,7 +68,7 @@ Two findings, both worth fixing in this slice because slice 1 is what makes them
 **Proposed card (same classes, same place, no restyle):**
 
 ```
-Placed where the card is today — sidebar, under the brand row (App.tsx:1205 at `7a4e00a`)
+Placed where the card is today — sidebar, under the brand row (App.tsx:1215 at `ab7e9c3`)
   ┌──────────────────────────────────────────────┐
   │  [avatar]  Layla Haddad                      │   ← person's name, when the account carries one
   │            HR · Pre-boarding                 │   ← role, as the access model names it (open)
@@ -76,10 +80,10 @@ Placed where the card is today — sidebar, under the brand row (App.tsx:1205 at
   └──────────────────────────────────────────────┘
 ```
 
-- **Sign out stays one tap and stays icon-only** (`App.tsx:1198`, `title="Sign Out"`). Do not move it, do
+- **Sign out stays one tap and stays icon-only** (`App.tsx:1208`, `title="Sign Out"`). Do not move it, do
   not add a menu: a person must be able to leave the product without hunting, and the button already
   announces itself. Add an accessible name if the icon is ever unlabelled — today it relies on `title`.
-- **The `role` string is the access model's vocabulary, not invented here** (`user?.access_role` at `App.tsx:1213` — the field is no longer named `role`) — and it is no longer
+- **The `role` string is the access model's vocabulary, not invented here** (`user?.access_role` at `App.tsx:1223` — the field is no longer named `role`) — and it is no longer
   `(open)`: `docs/access-model.md` **§2.1** names the five (`hr_admin`, `manager`, `finance`, `employee`,
   `compliance_viewer`). The card displays one of those; it makes no claim about what it permits.
 - **The card must say *which* role it is showing.** The model's **§2.4** records a naming hazard this
@@ -160,7 +164,7 @@ Three rules the design asks for, each traceable to something already decided:
 > name the person who showed the notice, on the hire's behalf"*
 
 **Measured, from the client** (`App.tsx`): failures render into one banner (`checklistNotice`,
-`:2383`–`:2384`) with `data.error` if the server sent one. So the honest sentence **does** reach the screen —
+`:2393`–`:2394`) with `data.error` if the server sent one. So the honest sentence **does** reach the screen —
 the design question is whether it reads correctly and is attributed to the right act.
 
 **Proposed behaviour:**
@@ -200,7 +204,7 @@ No Arabic copy ships with this slice (decision 15(c) is open). The requirement i
 | `dir=` / `lang=` | **0** / **0** | no direction handling exists |
 
 **The two surfaces added here are the ones with the most physical markup in the product**, measured in place:
-the identity block (`App.tsx:1192`–`1205`, `space-x-3` at `:1192` and `:1205`) and the login card (opens `:355`; was `:347`–`431`) use `justify-end`, `ml-3` (the dismiss button, `:415`) and `mr-2` (the error icon, `:368`). Rules for anything
+the identity block (`App.tsx:1202`–`1215`, `space-x-3` at `:1202` and `:1215`) and the login card (opens `:356`; was `:347`–`431`) use `justify-end`, `ml-3` (the dismiss button, `:416`) and `mr-2` (the error icon, `:369`). Rules for anything
 new:
 
 1. **Spacing inside the identity card and any new row goes through `gap-*` on a flex container**, never
