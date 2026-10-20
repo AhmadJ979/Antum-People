@@ -16,6 +16,14 @@
  *   4. a migrated database ends up with exactly the columns a freshly-created one has, so the two
  *      paths cannot diverge and a fresh database must not silently outrun a migrated one.
  *
+ * A fifth property belongs to the constraint rather than to the columns, and it is held as a PAIR of
+ * tests: `idx_users_employee_id_unique` REFUSES a second link to one employee, and — the half that
+ * makes the first mean something — a boot that does not create it ACCEPTS that same second link, and
+ * so does a database from which it was dropped. Without the second half the refusal is consistent
+ * with a fixture that would refuse anything. The pair also records what SQLite will not do: it
+ * cannot CREATE the index over rows that already violate it, so a dropped constraint plus a
+ * duplicate is a state the boot cannot repair on its own.
+ *
  * Runs against its own throwaway databases: `cd server && npm test`. No live data is touched.
  */
 const { test, describe, after } = require('node:test');
@@ -293,6 +301,70 @@ describe('a live database is renamed and linked at boot (Layer 3, slice 2)', () 
     assert.strictEqual(handle.prepare('SELECT COUNT(*) n FROM users WHERE employee_id IS NULL').get().n, 2,
       'an unlinked account is not "the same person" as another unlinked account');
     handle.close();
+  });
+
+  test('WITHOUT the index the duplicate is ACCEPTED — so the refusal above is the index\'s work', () => {
+    // The refusal test above has a hole it cannot see: it asserts that the second link to one
+    // employee throws, which is also what a test would report if the fixture refused EVERY second
+    // row, or if the column were simply absent. This is the missing half — the same fixture, the
+    // same two inserts, with the constraint removed. If the duplicate is then accepted, the
+    // refusal is proved to be idx_users_employee_id_unique and nothing else. Two arms, because
+    // "the index is gone" can be true for two different reasons: the boot never created it, or
+    // someone dropped it. Neither arm may be inferred from the other.
+    const insertLink = (handle) => handle.prepare(
+      "INSERT INTO users (id, username, password_hash, access_role, employee_id) VALUES (?, ?, 'x', 'employee', ?)");
+    const indexExists = (handle) => handle
+      .prepare("SELECT name FROM sqlite_master WHERE type='index' AND name = 'idx_users_employee_id_unique'").get();
+
+    // Arm 1 — a boot that does NOT apply the post-migration index list. This is what proves the
+    // constraint's source: schema.sql cannot carry it (it runs before the column exists on an older
+    // database), so a boot without this step leaves the database unconstrained.
+    const unbooted = openAsBeforeSlice2();
+    const withoutIndexes = {
+      renamed: db.applyRenames(unbooted),
+      values: db.applyValueRenames(unbooted),
+      added: db.applyColumnMigrations(unbooted),
+      indexes: db.applyPostMigrationIndexes(unbooted, []),
+    };
+    assert.deepStrictEqual(withoutIndexes.added, ['users.employee_id'], 'the column is added as usual');
+    assert.deepStrictEqual(withoutIndexes.indexes, [], 'and this boot creates no index');
+    assert.strictEqual(indexExists(unbooted), undefined, 'the constraint really is not there');
+    const link1 = insertLink(unbooted);
+    link1.run('b-1', 'b-1', 'emp-9');
+    link1.run('b-2', 'b-2', 'emp-9'); // the insert the other test asserts throws
+    assert.strictEqual(unbooted.prepare("SELECT COUNT(*) c FROM users WHERE employee_id = 'emp-9'").get().c, 2,
+      'two accounts point at one person: nothing in the fixture refuses it, only the index does');
+    unbooted.close();
+
+    // Arm 2 — a fully migrated database whose index is then dropped by name. Same conclusion, and
+    // it isolates the named index rather than the boot step.
+    const dropped = openAsBeforeSlice2();
+    migrate(dropped);
+    assert.ok(indexExists(dropped), 'the ordinary boot did create it');
+    dropped.exec('DROP INDEX idx_users_employee_id_unique');
+    const link2 = insertLink(dropped);
+    link2.run('c-1', 'c-1', 'emp-10');
+    link2.run('c-2', 'c-2', 'emp-10');
+    assert.strictEqual(dropped.prepare("SELECT COUNT(*) c FROM users WHERE employee_id = 'emp-10'").get().c, 2,
+      'dropping that one index is enough to admit the duplicate');
+    // The way back is NOT silent, and that is the third fact this control holds: SQLite refuses to
+    // CREATE a unique index over rows that already violate it, so the boot step that created it
+    // cannot reinstate it while the duplicate stands. Dropping the constraint is therefore not the
+    // same as never having had it — the duplicate has to be repaired before the constraint returns.
+    assert.throws(() => db.applyPostMigrationIndexes(dropped), /UNIQUE constraint failed: users\.employee_id/,
+      'the boot cannot put the constraint back over a duplicate — the repair comes first');
+    assert.strictEqual(indexExists(dropped), undefined, 'and nothing was created by the failed attempt');
+    dropped.prepare("DELETE FROM users WHERE id = 'c-2'").run();
+    assert.deepStrictEqual(db.applyPostMigrationIndexes(dropped), ['idx_users_employee_id_unique'],
+      'with the duplicate gone the boot creates it again');
+    // And it refuses the insert again — so the acceptance above is the index's absence and not a
+    // changed fixture. The message names the column, so a refusal by some other constraint cannot be
+    // mistaken for this one.
+    assert.throws(() => insertLink(dropped).run('c-3', 'c-3', 'emp-10'), /UNIQUE constraint failed: users\.employee_id/,
+      'the same insert is refused the moment the index is back');
+    assert.strictEqual(dropped.prepare("SELECT COUNT(*) c FROM users WHERE employee_id = 'emp-10'").get().c, 1,
+      'and the refusal added no row');
+    dropped.close();
   });
 
   test('the module that runs at boot lists every step a live database needs', () => {
