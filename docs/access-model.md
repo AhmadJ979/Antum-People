@@ -481,9 +481,12 @@ carried across the file would have put four of these five on a line that holds s
 same file reddened — the instrument could see the tree move and not the document. It now enforces one citation per
 site here, so the next move reddens on the document instead of being caught by hand.
 
-**And one count quoted above has been overtaken by that same work:** §10.1 records the checker reading `124/124`
-for this document when it was written; with the citation checks and the retired-fallback claim added, it reads
-**125/125** here. A number quoted in an amendment is a measurement at the time it is written.
+**And the count quoted above has been overtaken TWICE by that same work — this paragraph demonstrates its own
+rule.** §10.1 records the checker reading `124/124` for this document when it was written; the retired-fallback
+claim took it to `125/125`; and the two `[doc citation]` entries described just above — the ones that would have
+caught these five moved citations — take it to **127/127**, which is what the instrument reads against this
+document now. This paragraph was first written at `125/125` and corrected here at `127/127`: a number quoted in
+an amendment is a measurement at the time it is written, including in the sentence that says so.
 
 ### 10.3 Amended 2026-10-20 against `ee4bbdf` (the same afternoon — the checker learned to read its own subject)
 
