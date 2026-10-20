@@ -476,10 +476,27 @@ underneath them did:
 The shifts are **+17, +20, +21, +20 and +20**: a re-ground is a measurement, not arithmetic, and any one offset
 carried across the file would have put four of these five on a line that holds something else.
 
-**The blind spot this exposed is closed in the checker.** Its `[doc citation]` family enforced one citation
-(`index.js:829`), so a citation to a file that MOVED passed silently while the checker's own tree claims for that
-same file reddened — the instrument could see the tree move and not the document. It now enforces one citation per
-site here, so the next move reddens on the document instead of being caught by hand.
+**The blind spot this exposed is reduced, not closed — and "one citation per site" was an over-claim, corrected
+here by measurement.** Its `[doc citation]` family enforced one citation (`index.js:829`), so a citation to a file
+that MOVED passed silently while the checker's own tree claims for that same file reddened — the instrument could
+see the tree move and not the document. The family holds **3** entries (`index.js:829`,
+`preboarding-items.js:360-364`, `preboarding-items.js:517`), and that is the whole of what compares **this page's**
+numbers against the tree. Measured at `9796d6b` on 2026-10-20:
+
+| this page cites | count |
+|---|---|
+| distinct `file:line` sites | **49** |
+| compared as citations (the family above) | **3** |
+| pinned only as **tree claims** — redden when the file moves, never compare the number printed here | **35** |
+| in **no check at all** | **11** |
+
+The eleven are `access.js` `:4`, `:192-195`; `auth.js` `:91-92`; `db.js` `:120-127`; `index.js` `:199`,
+`:291-303`, `:310`, `:503`; `preboarding-items.js` `:198`, `:343-347`; `schema.sql` `:50` — written in this
+page's own backticked shorthand, so that naming them does not itself invent eleven new citations.
+The exposure is the **+1 regime**, not silence: a citation that moved by one line still lands on something that
+reads like what it names, so a reader checking it by eye — or a re-ground done by eye — sees nothing wrong.
+**Closing it is one entry per site, and it is not done here**: the sentence that promised it is the thing being
+corrected.
 
 **And the count quoted above has been overtaken TWICE by that same work — this paragraph demonstrates its own
 rule.** §10.1 records the checker reading `124/124` for this document when it was written; the retired-fallback
