@@ -1,0 +1,32 @@
+App.tsx: 7b073f8=2494 lines   1f471ef=2529 lines   delta=+35
+git diff --name-only 7b073f8 1f471ef -- client server:
+client/package.json
+client/src/App.tsx
+client/src/httpStatus.js
+client/src/httpStatus.test.js
+client/tsconfig.app.json
+server/access.js
+server/access.test.js
+server/auth.js
+server/column-migration.test.js
+server/db.js
+server/index.js
+server/migrate.js
+server/reachability-register.js
+server/schema-migration.test.js
+server/schema.sql
+
+anchor                            7b073f8      1f471ef
+sidebar comment                    [1172]       [1188]
+Sign Out button                    [1182]       [1198]
+identity card, name line           [1196]       [1212]
+identity card, role line           [1197]       [1213]
+recorded-by print #1               [2062]       [2097]
+recorded-by print #2               [2117]       [2152]
+checklistNotice state               [523]        [529]
+checklistNotice banner             [2348]       [2383]
+login heading                       [357]        [363]
+login form                          [369]        [375]
+dismiss button (ml-3)               [409]        [415]
+error icon (mr-2)                   [362]   [368, 1286]
+space-x-3 (brand row)          [1176, 1189]   [1192, 1205]

@@ -1,0 +1,73 @@
+=== SWEEP for the claim class 'the client has no 403 handling' at f5c19ec
+tracked .md scanned: 113
+of those, mentioning '403' at all: 26
+    cutover-20261009-1234/README.md:66  - `GET /api/preboarding/cases` with **no token** → **401**; with a **foreign `Origin`** → **403**
+    cutover-20261009-1346/README.md:88  - `GET /api/preboarding/cases` with no token → **401**; with a foreign `Origin` → **403**
+    cutover-20261009/README.md:38  | foreign `Origin` on `/api/employees` | **403** |
+    cutover-20261012-0506/README.md:98  **Re-measured by me, uncredentialed, at ~05:20Z:** no token → **401**; foreign `Origin` → **403**;
+    cutover-20261012-0642/README.md:183  foreign `Origin` → `403`; demo token 201 chars; roster `200`, 13 employees.
+    demo-weak-screens.md:129  - **Re-checked 2026-10-08, anonymously, on the live public URL:** a request carrying a **non-allowlisted `Origin` gets a
+    design-concepts/CLIENT-STATES.md:8   earlier draft, cut from `ee4bbdf`, asserted that the client had no 403 handling at all. That was true at
+    design-concepts/LAYER2-INTERFACE-FIXES-PICK-LIST.md:22  | **5** | Timestamps are printed raw | `client/src/App.tsx:2061`, `:2117` | `shown on 2026-10-12T06:49:44.731Z` — storag
+    design-concepts/LAYER3-IDENTITY.md:14   The instruments and their raw output are filed in `docs/evidence/no-403-claim-sweep-2026-10-20/`.
+    design-concepts/README.md:17  | `LAYER3-IDENTITY.md` | **Layer 3 slice 1 — signing in as a real person** (design, ahead of the build). The identity su
+    docs/access-model.md:40   scope-bearing resource whose `SCOPES` table does not cover the caller's role. Each is **403 with no body**;
+    docs/evidence/all-chip-race-2026-10-09/README.md:127   run 3 ticks 11 defect ticks 2 window t 4032 - 5691
+    docs/evidence/client-states-cites-2026-10-20/README.md:19  1. The draft was cut from `ee4bbdf` and asserted the client had no 403 handling at all. **PR #241**
+    docs/evidence/cutover-2026-10-19-1041/README.md:39  Build OK at the measured asset name (`cutover-20261019-104031-build.log`); `seed OK`; roster **13
+    docs/evidence/cutover-2026-10-20T084915/README.md:24  | `movement-239.log` | 7,617 | `f873340314b187490a45e5275c6371f5` | the deploy wrapper's own log for this run |
+    docs/evidence/cutover-2026-10-20T090619/README.md:42   on all three. A **fabricated token → 403 `{"error":"Invalid or expired token"}`** — the dead-session shape the shipped
+    docs/evidence/demo-weak-screens-reground/FINDINGS.md:32  | Health contract (401 / 403 / 200) on both surfaces | curl, no token and non-allowlisted `Origin` | `02-http-pass.txt`,
+    docs/evidence/ksa-contract-divergence-2026-10-12/README.md:29  | repo `ksa-employment-contract.md` | md5 `1c6ad895d403e8caf75606eea8c3db05`, 10758 bytes, 223 lines |
+    docs/evidence/ksa-host-copy-retired-2026-10-13/README.md:57  | its KSA template | md5 `1c6ad895d403e8caf75606eea8c3db05`, 10,758 B, 223 lines — **identical to `origin/main`'s copy**
+    docs/evidence/layer3-slice1-2026-10-19/README.md:24  **Deny is the default, three ways**, and all three answer `403` **with no body** — the caller is told nothing
+    docs/evidence/no-403-claim-sweep-2026-10-20/README.md:1  # Sweep: documents that said the client has no 403 handling — and the one that said the client had not moved
+    docs/evidence/notice-acknowledgement-2026-10-12/README.md:48   authenticated `GET /api/compliance/notice` and the two `POST`s returned the module's own 401/403 rather
+    docs/evidence/p2-4-served-pass/README.md:9  without a token → **401**; the same with `Origin: https://evil.example` → **403**. Posture holds.
+    ksa-contract-divergence-ruling.md:10  Repository copy `templates/ksa-employment-contract.md`, md5 **`1c6ad895d403e8caf75606eea8c3db05`** (223 lines).
+    roadmap-board-index.md:23  *Superseded header, kept as a movement rather than rewritten — read 2026-10-09 14:47 (Round 39): “**taken BEFORE the cut
+    statutory-claims-determination.md:10  **Why nothing could be sourced.** (a) No article is named in any of our materials — the exception is the stale `"Article
+
+=== PASS 1 — the claim WITH the digits: 9 hit(s)
+  design-concepts/CLIENT-STATES.md:8  [no-403-handling]
+      ...hanism this document checks. The earlier draft, cut from `ee4bbdf`, asserted that the client had no 403 handling at all. That was true at `ee4bbdf` and false the moment #241 landed, so the draft was rewritten from scratch against the code that had just shi...
+  design-concepts/CLIENT-STATES.md:17  [no-403-branch]
+      ...his revision replaces: *"The client contains no 403 handling at all"* and, in its §2, *"There is no `403` branch anywhere."* They are not annotated here; they are **removed**, and the measurement that refutes them is filed beside this document. The merged ...
+  design-concepts/CLIENT-STATES.md:17  [no-403-handling]
+      ...carries the refuted sentences today**, in the file this revision replaces: *"The client contains no 403 handling at all"* and, in its §2, *"There is no `403` branch anywhere."* They are not annotated here; they are **removed**, and the measurement that refute...
+  docs/evidence/client-states-cites-2026-10-20/README.md:19  [no-403-handling]
+      ...wards. ## What happened, in order 1. The draft was cut from `ee4bbdf` and asserted the client had no 403 handling at all. **PR #241** (`client/session-vs-refusal`) merged as `0e401cf` while the draft was being written and shipped that handling, so the draft...
+  docs/evidence/client-states-cites-2026-10-20/README.md:56  [no-403-handling]
+      ...and nothing else. **The refutation, in one line.** The merged text concludes *"The client contains no 403 handling at all"* and *"There is no `403` branch anywhere"* from `git grep -c '403' -- client/`, which returned one hit — an SVG path coordinate. Re-run at `8...
+  docs/evidence/client-states-cites-2026-10-20/README.md:57  [no-403-branch]
+      ...one line.** The merged text concludes *"The client contains no 403 handling at all"* and *"There is no `403` branch anywhere"* from `git grep -c '403' -- client/`, which returned one hit — an SVG path coordinate. Re-run at `8ec9f69`: **four files, three of them sou...
+  docs/evidence/no-403-claim-sweep-2026-10-20/README.md:1  [no-403-handling]
+      ...# Sweep: documents that said the client has no 403 handling — and the one that said the client had not moved **Row `a685c1c0`** (*"[DOCS] Sweep every document that still says the client has no 403 handling — ...
+  docs/evidence/no-403-claim-sweep-2026-10-20/README.md:3  [no-403-handling]
+      ...ent had not moved **Row `a685c1c0`** (*"[DOCS] Sweep every document that still says the client has no 403 handling — the false sentence has siblings"*), 2026-10-20. Measured at `origin/main` = **`7a4e00a`**. This branch changes **no `client/` or `server/` path**, ...
+  docs/evidence/no-403-claim-sweep-2026-10-20/README.md:14  [no-403-handling]
+      ...re records, not live claims — `design-concepts/CLIENT-STATES.md:8` (*"…asserted that the client had no 403 handling at all. **That was true at `ee4bbdf` and false the moment #241 landed**"*), `:17` (the two sentences marked **removed**), and `docs/evidence/client-s...
+
+=== PASS 2 — the same claim phrased WITHOUT the digits: 0 hit(s)
+
+=== PASS 3 — `App.tsx:<n>` citations in the two design docs that carry this claim:
+  design-concepts/README.md:17 cites App.tsx:1212 -> at f5c19ec that line is:  <div className="text-xs font-bold text-white truncate">{user?.username || 'Admin User'}</div>
+  design-concepts/README.md:27 cites App.tsx:594 -> at f5c19ec that line is:  const fetchData = async () => {
+  design-concepts/LAYER3-IDENTITY.md:33 cites App.tsx:355 -> at f5c19ec that line is:  <div className="max-w-md w-full p-8 bg-white rounded-2xl shadow-2xl">
+  design-concepts/LAYER3-IDENTITY.md:34 cites App.tsx:1198 -> at f5c19ec that line is:  <button onClick={handleLogout} className="text-slate-500 hover:text-white transition-colors p-1 rou
+  design-concepts/LAYER3-IDENTITY.md:35 cites App.tsx:2097 -> at f5c19ec that line is:  recorded by {ack.recorded_by} · basis {ack.lawful_basis}
+  design-concepts/LAYER3-IDENTITY.md:42 cites App.tsx:1212 -> at f5c19ec that line is:  <div className="text-xs font-bold text-white truncate">{user?.username || 'Admin User'}</div>
+  design-concepts/LAYER3-IDENTITY.md:67 cites App.tsx:1205 -> at f5c19ec that line is:  <div className="flex items-center space-x-3">
+  design-concepts/LAYER3-IDENTITY.md:79 cites App.tsx:1198 -> at f5c19ec that line is:  <button onClick={handleLogout} className="text-slate-500 hover:text-white transition-colors p-1 rou
+  design-concepts/LAYER3-IDENTITY.md:82 cites App.tsx:1213 -> at f5c19ec that line is:  <div className="text-[10px] text-slate-500 font-medium uppercase tracking-tight">{user?.access_role
+  design-concepts/LAYER3-IDENTITY.md:203 cites App.tsx:1192 -> at f5c19ec that line is:  <div className="flex items-center space-x-3">
+  design-concepts/CLIENT-STATES.md:84 cites App.tsx:363 -> at f5c19ec that line is:  <h2 className="text-2xl font-extrabold text-center text-slate-900 mb-2">Antum People</h2>
+  design-concepts/CLIENT-STATES.md:86 cites App.tsx:8 -> at f5c19ec that line is: const REFUSAL_NOTICE = "You don't have access to that. Nothing was changed, and you are still signed
+  design-concepts/CLIENT-STATES.md:111 cites App.tsx:572 -> at f5c19ec that line is:  onRefusal: () => setRefusal(REFUSAL_NOTICE),
+  design-concepts/CLIENT-STATES.md:171 cites App.tsx:10 -> at f5c19ec that line is: const API_BASE = window.location.port === '5173' ? 'http://localhost:3000' : '';
+  design-concepts/CLIENT-STATES.md:215 cites App.tsx:594 -> at f5c19ec that line is:  const fetchData = async () => {
+  design-concepts/CLIENT-STATES.md:242 cites App.tsx:624 -> at f5c19ec that line is:  } catch (err) {
+  design-concepts/CLIENT-STATES.md:282 cites App.tsx:1911 -> at f5c19ec that line is:  {/* One source for this sentence, and it is not the client: the server's own
+  design-concepts/CLIENT-STATES.md:310 cites App.tsx:1284 -> at f5c19ec that line is:  <div role="alert" className="flex items-start justify-between gap-4 px-8 py-3 bg-amber-50 border-b 
+
+=== END. claim-class hits: 9 with digits, 0 without.
