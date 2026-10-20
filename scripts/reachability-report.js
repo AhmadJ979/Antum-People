@@ -16,14 +16,72 @@
  * A report that can quietly drop a category is the defect — worse than one that omits a line — so the
  * check runs before anything else is printed and refuses rather than summarising what it cannot read.
  *
- * Run: `node scripts/reachability-report.js`   (exit 0 = nothing new, exit 1 = a NEW un-operable
- * element exists that no decision owns — the same condition the test fails on)
+ * Run: `node scripts/reachability-report.js [--extra-root <dir>]...`   (exit 0 = nothing new,
+ * exit 1 = a NEW un-operable element exists that no decision owns — the same condition the test fails
+ * on — and exit 2 = the invocation was wrong, in which case NO report is printed)
  */
 const r = require('../server/reachability');
 const register = require('../server/reachability-register');
 const {
   CALLERLESS, DYNAMIC_SITES, UNOPENABLE_CONTROLS, DISPLAYED_VALUES, DEAD_END_ITEMS, RETIRED,
 } = register;
+
+/**
+ * THE INVOCATION IS PART OF THE MEASUREMENT (row 422a77db).
+ *
+ * Until this block existed this script parsed NO argv at all. An operator who ran it with a flag it
+ * does not know — including the one that reproduces its own anti-vacuous control — got a normal report
+ * and **exit 0**: measured, `--extra-root /tmp/probe2` printed "Nothing new" and neither the flag nor
+ * the planted route appeared anywhere in the output. The one script in this repository whose whole job
+ * is to fail loudly produced a false green, silently.
+ *
+ * So: parse first, refuse loudly, exit 2, and never print a report for an invocation the script did
+ * not understand — a report printed for a command nobody asked for is the defect, not a courtesy.
+ * `--extra-root <dir>` is how the control in `server/reachability.test.js` becomes reachable from a
+ * shell: plant a file containing a real call to an unregistered route and require this report to find
+ * it, rather than taking the test runner's word for it.
+ *
+ * A root that does not exist is refused rather than scanned: an empty scan prints the same green as a
+ * clean tree, which is the failure mode this whole row is about.
+ */
+const fs = require('fs');
+const USAGE = `Usage: node scripts/reachability-report.js [--extra-root <dir>]...
+
+  --extra-root <dir>   also scan <dir> as client source (repeatable). Reproduces the anti-vacuous
+                       control from a shell: plant a file with a real call to an unregistered route
+                       and require this report to find it.
+  -h, --help           print this and exit 0.
+
+Exit 0 = nothing new; exit 1 = a NEW un-operable element exists that no decision owns;
+exit 2 = the invocation itself was wrong, and NO report was printed.`;
+function usageFault(message) {
+  console.error(`reachability-report: ${message}`);
+  console.error(`\n${USAGE}`);
+  console.error('Refusing to print a report for an invocation this script did not understand:');
+  console.error('an ignored flag looks exactly like a clean pass (row 422a77db).');
+  process.exit(2);
+}
+const extraRoots = [];
+const argv = process.argv.slice(2);
+for (let i = 0; i < argv.length; i += 1) {
+  const arg = argv[i];
+  if (arg === '-h' || arg === '--help') { console.log(USAGE); process.exit(0); }
+  if (arg === '--extra-root') {
+    const dir = argv[i + 1];
+    if (!dir || dir.startsWith('-')) usageFault('--extra-root needs a directory');
+    if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
+      usageFault(`--extra-root ${dir} is not a directory — an empty scan would print the same green`);
+    }
+    extraRoots.push(dir);
+    i += 1;
+    continue;
+  }
+  usageFault(`unknown argument: ${arg}`);
+}
+const scanOpts = extraRoots.length ? { extraRoots } : {};
+if (extraRoots.length) {
+  console.log(`(also scanning: ${extraRoots.join(', ')} — asked for on the command line)`);
+}
 
 /**
  * Every export of the register, declared here as either a DEFECT CATEGORY (a count in the summary the
@@ -83,7 +141,8 @@ if (missing.length || undeclared.length) {
 }
 
 // ---- the measurements, taken once and used by both the summary and the sections below ----
-const routes = r.classify().filter((x) => x.path.startsWith('/api/'));
+const sites = r.parseCallSites(scanOpts);
+const routes = r.classify(r.parseRoutes(), sites).filter((x) => x.path.startsWith('/api/'));
 const states = r.uiStateReachability();
 const deadEnds = r.deadEndItems();
 
@@ -260,12 +319,12 @@ console.log(dead.length ? dead.map((x) => `  ${key(x)} (index.js:${x.line})`).jo
 for (const x of dead) findings.add(`after-catchall:${key(x)}`);
 
 rule('CLIENT CALLS THAT NAME NO ROUTE', 'drift between the client and the route table');
-const drift = r.unregisteredCallSites();
+const drift = r.unregisteredCallSites(r.parseRoutes(), sites);
 console.log(drift.length
   ? drift.map((s) => `  ${s.method} ${s.canon} at ${s.file}:${s.line}`).join('\n')
   : '  none');
 for (const s of drift) findings.add(`drift:${s.method} ${s.canon} at ${s.file}:${s.line}`);
-const prose = r.proseMentions();
+const prose = r.proseMentions(scanOpts);
 if (prose.length) {
   console.log(`  (${prose.length} quoted mention(s) NOT counted as callers — a path in prose issues no request: ` +
     prose.map((s) => `${s.file}:${s.line}`).join(', ') + ')');

@@ -1,0 +1,160 @@
+# AFTER the fix — the no-flag invocation is unchanged: same sections, same exit code.
+# command: node scripts/reachability-report.js 
+# exit=0
+# --- stdout ---
+
+==============================================================================
+REGISTER SUMMARY
+the four categories the plan and the tracker quote, counted from the register
+==============================================================================
+
+  CALLERLESS            5   routes registered in server/index.js that nothing calls
+    measured: 5 — agrees with the register
+
+  UNOPENABLE_CONTROLS   1   boolean UI state whose setter is never called with true
+    measured: 1 — agrees with the register
+
+  DISPLAYED_VALUES      0   a tile whose value no production path writes
+    measured: not re-derived here — the test measures this set (its rule: a production writer inside a REACHABLE route), this report prints the entries
+
+  DEAD_END_ITEMS        3   an item offered a move the collect gate then refuses
+    measured: 3 — agrees with the register
+
+  raw: {"CALLERLESS":5,"UNOPENABLE_CONTROLS":1,"DISPLAYED_VALUES":0,"DEAD_END_ITEMS":3}
+  (the registers that are NOT in those four counts: DYNAMIC_SITES, RETIRED)
+
+==============================================================================
+ROUTE REACHABILITY
+every route registered in server/index.js, and what can reach it
+==============================================================================
+          REACHABLE(client)  POST /api/login                                      client/src/App.tsx:336, scripts/deploy-main.sh:191
+  [known] NONE               GET /api/users                                       —
+  [known] NONE               POST /api/users                                      —
+          REACHABLE(client)  GET /api/employees                                   client/src/App.tsx:605, client/src/App.tsx:606
+          REACHABLE(client)  POST /api/employees                                  client/src/App.tsx:1057
+          REACHABLE(client)  PUT /api/employees/:id                               client/src/App.tsx:1118, client/src/App.tsx:1138
+          REACHABLE(client)  GET /api/employees/:id/onboarding                    client/src/App.tsx:1010, client/src/App.tsx:1011
+          PLAUSIBLE(dynamic) PUT /api/onboarding-tasks/:id                        dynamic: client/src/App.tsx:1096
+          REACHABLE(client)  GET /api/employees/:id/offboarding                   client/src/App.tsx:1012, client/src/App.tsx:1013
+          PLAUSIBLE(dynamic) PUT /api/offboarding-tasks/:id                       dynamic: client/src/App.tsx:1096
+  [known] NONE               POST /api/compliance/calculate-eosb                  —
+          REACHABLE(client)  GET /api/compliance/notice                           client/src/App.tsx:923
+          REACHABLE(client)  GET /api/compliance/templates/:templateName/:employeeId client/src/App.tsx:1033
+          REACHABLE(client)  GET /api/analytics/dashboard                         client/src/App.tsx:607, client/src/App.tsx:608
+          REACHABLE(client)  POST /api/exit-interviews                            client/src/App.tsx:1159
+          REACHABLE(client)  POST /api/preboarding/cases                          client/src/App.tsx:677
+          REACHABLE(client)  GET /api/preboarding/cases                           client/src/App.tsx:648
+  [known] NONE               GET /api/preboarding/cases/:id                       —
+          REACHABLE(client)  GET /api/preboarding/checklist/overview              client/src/App.tsx:718, scripts/deploy-main.sh:207
+          REACHABLE(client)  GET /api/preboarding/cases/:id/checklist             client/src/App.tsx:736
+          REACHABLE(client)  GET /api/preboarding/cases/:id/workspace             client/src/App.tsx:791
+          REACHABLE(client)  POST /api/preboarding/cases/:id/items/:itemKey/status client/src/App.tsx:892
+          REACHABLE(client)  POST /api/preboarding/cases/:id/reminders            client/src/App.tsx:981
+          REACHABLE(client)  POST /api/preboarding/cases/:id/notice-acknowledgements client/src/App.tsx:951
+          REACHABLE(client)  GET /api/preboarding/cases/:id/package               client/src/App.tsx:764
+          REACHABLE(client)  POST /api/preboarding/cases/:id/package/:itemKey/acknowledgement client/src/App.tsx:847
+  [known] NONE               GET /api/preboarding/flag-watch                      —
+  (27 routes; non-/api handlers such as the SPA catch-all are out of scope)
+
+==============================================================================
+ROUTES WITH NO CALLER
+a defect to wire or to remove — "leave it and say so" must be written down
+==============================================================================
+
+  GET /api/users  (server/index.js:218)
+    registered: yes — decision 11 — the accounts slice ships the route; the surface that calls it is the next slice
+    List the accounts the admin-authenticated account path created. Nothing in the product calls it yet: decision 11 ships the account path over HTTP with no UI on purpose, and client/ was 0 files in that slice, so the surface that calls it is the next one (design #221, design-concepts/LAYER3-IDENTITY.md). Deliberate and decided, not an orphan.
+
+  POST /api/users  (server/index.js:228)
+    registered: yes — decision 11 — the accounts slice ships the route; the surface that calls it is the next slice
+    Create an account, authorized by users:write. Same reason as its sibling GET: decision 11 ships the account path over HTTP while the admin surface that will call it is a later slice (design #221, design-concepts/LAYER3-IDENTITY.md), so no caller exists in the product today.
+
+  POST /api/compliance/calculate-eosb  (server/index.js:549)
+    registered: yes — decision 21 — recommendation: remove (the engine keeps its tests; only the HTTP door goes)
+    A pure EOSB calculator over the request body. The product computes EOSB server-side for the settlement statement, so nothing calls the endpoint form of it.
+
+  GET /api/preboarding/cases/:id  (server/index.js:867)
+    registered: yes — decision 21 — recommendation: remove (the list response already carries the case)
+    Single-case detail. The UI reads the list (GET /api/preboarding/cases) and each sub-resource it actually shows (checklist, workspace, package), never this one.
+
+  GET /api/preboarding/flag-watch  (server/index.js:1067)
+    registered: yes — decision 21 — recommendation: wire it to the operator check, or remove
+    Reports the flag watcher record over HTTP. Nothing calls it — the scheduler reads the module directly (flagWatcher.status()), so this route is a second, unused door to the same value.
+
+==============================================================================
+CONTROLS THAT CANNOT BE OPENED
+boolean UI state whose setter is never called with true
+==============================================================================
+  [known] showExitModal (client/src/App.tsx:468) — setter called 2x, never with true
+          decision 16 (wire it, or leave it and say so) — not yet ruled
+  (6 of 7 boolean states are openable)
+
+==============================================================================
+ITEMS OFFERED A MOVE THEY CAN NEVER COMPLETE
+a no-basis item can be pressed to `requested`, and the collect gate refuses every step after it
+==============================================================================
+
+  [measured] education_certificate
+    The notice has no purpose row for qualifications, so no basis is assigned and the item is not collectible; the Request control offers the move anyway, and the collect gate refuses every step after it.
+    owner: counsel (15(a), question Q1) + a product ruling on the Request control — not yet ruled
+
+  [measured] experience_certificate
+    Same as the education certificate: no notice basis, not collectible, requestable.
+    owner: counsel (15(a), question Q1) + a product ruling on the Request control — not yet ruled
+
+  [measured] emergency_contact
+    The notice assigns no basis and the data is a third person's, not the hire's, so it is not collectible; requestable like the other two.
+    owner: counsel (15(a), question Q5) + a product ruling on the Request control — not yet ruled
+
+  Request control (client/src/App.tsx:2174): NOT guarded — it offers a move the product then refuses
+  Mark received (client/src/App.tsx:2178): disabled unless collectible: true
+  collect gate fires only for collected statuses (COLLECTED_STATUSES.indexOf(status)): true
+
+==============================================================================
+VALUES A TILE DISPLAYS
+does anything that RUNS IN PRODUCTION write it?
+==============================================================================
+  none — no tile in the product displays a value nothing reachable writes.
+
+==============================================================================
+RETIRED ELEMENTS
+removals, re-measured: a retired route that answers again is a finding
+==============================================================================
+  [gone] GET /api/employees/:id                   decision 21 — removed 2026-10-13
+  [gone] POST /api/compliance/consent             decision 17 — removed 2026-10-13
+  [gone] GET /api/compliance/report               decision 21 — removed 2026-10-13
+  [gone] client/src/App.tsx       decision 17 — the employee-record consent tile, which printed a status the product cannot produce
+  [gone] scripts/seed-demo.js     decision 17 — the seeder writing the consent flag as granted onto every employee
+  [gone] server/index.js          decision 17 — the orphan writer’s SQL, which set the flag on the employee record
+
+==============================================================================
+RETIRED COLUMNS
+a retired instrument must not keep a write path (decision 17 fence)
+==============================================================================
+  [fenced] consent_granted
+  [fenced] consent_date
+
+==============================================================================
+DECLARED DYNAMIC CALL SITES
+paths built at runtime — equality cannot prove these, so they are declared
+==============================================================================
+  client/src/App.tsx:1096  /api/${endpoint}/${taskId}
+    covers: PUT /api/onboarding-tasks/:id, PUT /api/offboarding-tasks/:id
+
+==============================================================================
+REGISTRATION ORDER
+a route declared after the SPA catch-all is dead on arrival
+==============================================================================
+  none
+
+==============================================================================
+CLIENT CALLS THAT NAME NO ROUTE
+drift between the client and the route table
+==============================================================================
+  none
+  (2 quoted mention(s) NOT counted as callers — a path in prose issues no request: scripts/cors-error-contract-test.sh:131, scripts/cutover-preflight.sh:319)
+
+Nothing new: every un-operable element on this product is registered with an owner.
+Summary of the four counted categories: {"CALLERLESS":5,"UNOPENABLE_CONTROLS":1,"DISPLAYED_VALUES":0,"DEAD_END_ITEMS":3}
+# --- stderr ---
+

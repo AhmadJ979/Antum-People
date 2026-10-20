@@ -1,0 +1,15 @@
+# AFTER the fix — the usage, on request, exit 0.
+# command: node scripts/reachability-report.js --help
+# exit=0
+# --- stdout ---
+Usage: node scripts/reachability-report.js [--extra-root <dir>]...
+
+  --extra-root <dir>   also scan <dir> as client source (repeatable). Reproduces the anti-vacuous
+                       control from a shell: plant a file with a real call to an unregistered route
+                       and require this report to find it.
+  -h, --help           print this and exit 0.
+
+Exit 0 = nothing new; exit 1 = a NEW un-operable element exists that no decision owns;
+exit 2 = the invocation itself was wrong, and NO report was printed.
+# --- stderr ---
+

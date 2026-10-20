@@ -1,0 +1,47 @@
+=== the tip re-read: origin/main moved while this branch was unlanded (Round 54) ===
+why: the round's own read (09:41Z) named origin/main ab7e9c3; at push time it was 94c6ef0.
+     the re-read is a measurement, not an inference from the merge list.
+
+read 1 — git ls-remote origin refs/heads/main                      09:58:23Z
+  94c6ef0e1ee3a483943048f8b74f168f04ece7c0  refs/heads/main       (was ab7e9c3 at 09:41Z)
+  merges in between, from the log: #257 (5017d39), #258 (9796d6b), #259 (495dc43), #261 (94c6ef0)
+  the reddening commit: 1d55fdc (#256, Remove the route literal my labelling module put in the client)
+  the fixing commit:   ede765b (#261, the reachability checker read a string's shape as its role)
+
+read 2 — does this round's edited file move on main?                09:58:23Z
+  sha256(origin/main:roadmap-board-index.md) = 9d26246156632971400c297d3b8c6697944b7358b8c064ab7901d1278bd69c3b
+  sha256(ab7e9c3:roadmap-board-index.md)     = 9d26246156632971400c297d3b8c6697944b7358b8c064ab7901d1278bd69c3b
+  identical — the tree moved, the edited file did not, so the rebase is a lay-down, not a merge
+  (the index is the only file this branch edits; the rest of the branch is new files)
+
+read 3 — the suite at the new tip, 94c6ef0, run by me           09:59:1xZ
+  tree: /tmp/r54/wt-main, `git checkout --detach 94c6ef0`
+  server/node_modules -> /home/team/shared/probable-octo-sniffle/server/node_modules (the deployed install)
+  client/node_modules -> /home/team/shared/probable-octo-sniffle/client/node_modules (the deployed install)
+  command: cd server && node --test            rc=0
+    # tests 263   # suites 51   # pass 263   # fail 0
+    ok 59 - no client call site names a route the product does not register   <-- the red at ab7e9c3
+  command: cd client && node --test src/*.test.js   rc=0
+    # tests 23    # suites 4    # pass 23    # fail 0
+  the count ROSE 257 -> 263 (+6) between ab7e9c3 and 94c6ef0: the role tests #261 added.
+  THIS IS NOT THE SAME STATE AS ROUND 54'S OWN READ: there, main @ ab7e9c3 was 257/51/256/1 rc 1.
+  The red was real at that tip and is closed at the tip that will carry this document.
+  raw TAP: suite-server-main-94c6ef0-deployed-install.txt, suite-client-main-94c6ef0-deployed-install.txt
+
+read 4 — is a movement owed for 9796d6b..94c6ef0? (the running server's own load set)   09:59Z
+  git diff --stat 9796d6b..94c6ef0 = 15 files:
+    design-concepts/CITATION-INSTRUMENT-ANALYSIS.md, design-concepts/LAYER3-IDENTITY.md,
+    design-concepts/README.md, docs/evidence/no-403-claim-sweep-2026-10-20/{README.md,anchors-*.txt (3),
+    check-doc-citations.py,citations-*.txt (3)}, docs/evidence/reachability-role-test/{README.md,runs.txt},
+    server/reachability.js, server/reachability.test.js
+  the decisive test is the REQUIRE CLOSURE from server/index.js, not a filename's shape:
+    computed by walking relative require() specifiers from server/index.js at 94c6ef0 —
+    closure = 13 files (access, auth, compliance_engine, db, eosb, index, preboarding-flag,
+    preboarding-flag-scheduler, preboarding-items, preboarding-package, preboarding-workspace,
+    preboarding, privacy-notice).   reachability.js is NOT in it.
+  => the delta is docs + a checker module and its test, none of it loaded by the running server:
+     NO movement is owed for 9796d6b..94c6ef0.
+
+read 5 — what is actually served, read from the served tree             09:59:28Z
+  /home/team/shared/probable-octo-sniffle: HEAD 9796d6b, `git status --porcelain` empty
+  and /home/team/shared/deploy-main.sh's provenance header names source-revision 9796d6b, tree-state clean.

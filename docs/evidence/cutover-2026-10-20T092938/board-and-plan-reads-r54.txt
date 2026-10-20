@@ -1,0 +1,143 @@
+=== the board and the plan, as the tracker itself reads, 2026-10-20T09:39Z (Round 54) ===
+=== rows the round names
+[
+  {
+    "id": "9487323f-34f8-47a2-948e-e94284094dba",
+    "t": "Watchdog: make it survive, and make it explain its own exit",
+    "status": "done",
+    "updated_at": "2026-10-06 14:50:39"
+  },
+  {
+    "id": "56d8f82f-dd62-48e4-9146-65f73e2322ba",
+    "t": "[PDPL/Serve] Retire the host copy by disposition, and guard the notice's version consistency",
+    "status": "done",
+    "updated_at": "2026-10-12 06:48:58"
+  },
+  {
+    "id": "86dbed5f-42e3-497d-9f5f-47e60a07e3ec",
+    "t": "[Test integrity, interim] The meta-test: no test file may reach the live product DB without pinning ",
+    "status": "done",
+    "updated_at": "2026-10-12 13:38:17"
+  },
+  {
+    "id": "09a71e34-70e0-46ab-b912-361b0be0dfc5",
+    "t": "Make the guard survive a reboot durably: version the login-shell re-arm hook in the repo and have th",
+    "status": "done",
+    "updated_at": "2026-10-13 06:28:17"
+  },
+  {
+    "id": "adac4e14-1d32-4774-b5c0-0470211d2653",
+    "t": "The guard hook and its deploy are from different revisions — the marker has no reader, and the prefl",
+    "status": "done",
+    "updated_at": "2026-10-19 10:54:12"
+  },
+  {
+    "id": "695904d8-ee36-4f2c-be60-ac6da5b9e0f5",
+    "t": "The guard does not exit in the window on handoff — three for three today, find the cause",
+    "status": "done",
+    "updated_at": "2026-10-20 09:35:33"
+  },
+  {
+    "id": "2f39da0c-cd14-45b4-9828-5b9f8732d7a3",
+    "t": "[BUILD] The served stylesheet moved 30 bytes between two trees with no CSS or component change — nam",
+    "status": "in-progress",
+    "updated_at": "2026-10-20 09:36:28"
+  },
+  {
+    "id": "e11ffe3a-6ed6-4efc-a7b1-54b5598d83ff",
+    "t": "Round 54 — file the 09:29:38Z movement's evidence (7a4e00a), including the fourth forced guard-kill",
+    "status": "in-progress",
+    "updated_at": "2026-10-20 09:38:38"
+  }
+]
+=== every row touched since 09:38 (this task was created then)
+[
+  {
+    "id": "74008b67-24a5-4c75-b3d5-2a1871de824c",
+    "t": "The client rule documents TWO 403s; the server emits THREE — enumerate them, and",
+    "status": "done",
+    "assigned_to": "agent-senior-software-engineer",
+    "updated_at": "2026-10-20 09:31:12"
+  },
+  {
+    "id": "0b019672-b99c-45a0-b37d-7618ad0cc809",
+    "t": "The pre-boarding module still defaults an unnamed actor to the false name 'syste",
+    "status": "done",
+    "assigned_to": "agent-senior-software-engineer",
+    "updated_at": "2026-10-20 09:31:17"
+  },
+  {
+    "id": "1e517b2d-292a-4b4f-b32d-df0b76a43e43",
+    "t": "Round 53 + file the 09:06:19Z movement's evidence, with a fresh observer line",
+    "status": "done",
+    "assigned_to": "agent-program-manager",
+    "updated_at": "2026-10-20 09:31:21"
+  },
+  {
+    "id": "029a4f1e-7ea8-40f4-b81e-9ae571bf3bf3",
+    "t": "Record decisions 25, 26 and 27 by number in the access model, so a citation land",
+    "status": "done",
+    "assigned_to": "agent-compliance-expert",
+    "updated_at": "2026-10-20 09:31:25"
+  },
+  {
+    "id": "695904d8-ee36-4f2c-be60-ac6da5b9e0f5",
+    "t": "The guard does not exit in the window on handoff — three for three today, find t",
+    "status": "done",
+    "assigned_to": "agent-senior-software-engineer",
+    "updated_at": "2026-10-20 09:35:33"
+  },
+  {
+    "id": "bd008d23-5477-494e-acbe-4d37b35d1e3f",
+    "t": "[CLIENT] A refused sibling still blanks a granted screen — one Promise.all rejec",
+    "status": "done",
+    "assigned_to": "agent-senior-software-engineer",
+    "updated_at": "2026-10-20 09:35:38"
+  },
+  {
+    "id": "a685c1c0-49ea-4d45-9cb7-d9abe4604119",
+    "t": "[DOCS] Sweep every document that still says the client has no 403 handling — the",
+    "status": "done",
+    "assigned_to": "agent-product-designer",
+    "updated_at": "2026-10-20 09:35:43"
+  },
+  {
+    "id": "4fc611c9-9f90-497d-aaf3-b6b557862438",
+    "t": "[DOCS] The anchor class recurs: #254 changes App.tsx, so every App.tsx: anchor #",
+    "status": "in-progress",
+    "assigned_to": "agent-product-designer",
+    "updated_at": "2026-10-20 09:36:11"
+  },
+  {
+    "id": "2f39da0c-cd14-45b4-9828-5b9f8732d7a3",
+    "t": "[BUILD] The served stylesheet moved 30 bytes between two trees with no CSS or co",
+    "status": "in-progress",
+    "assigned_to": "agent-senior-software-engineer",
+    "updated_at": "2026-10-20 09:36:28"
+  },
+  {
+    "id": "e11ffe3a-6ed6-4efc-a7b1-54b5598d83ff",
+    "t": "Round 54 — file the 09:29:38Z movement's evidence (7a4e00a), including the fourt",
+    "status": "in-progress",
+    "assigned_to": "agent-program-manager",
+    "updated_at": "2026-10-20 09:38:38"
+  }
+]
+=== the plan in config
+[
+  {
+    "chars": 19368,
+    "head": "# Antum — Antum People\n\n*Revision 132 · 2026-10-20 · **The host is current, and the guard's handoff is diagnosed.** A cu"
+  }
+]
+
+plan chars: 19368
+revision line: *Revision 132 · 2026-10-20 · **The host is current, and the guard's handoff is diagnosed.*
+item 23 : **Does `compliance_viewer` stay in the role set?** Dropping it makes the actor the only reader of their own record. **Still open — and slice 2 shipped
+item 24 : **Departmental scoping** — a *scope* a role carries, not new roles. It decides how many roles the product ever has.
+item 25 : **A manager account cannot read its own onboarding tasks** — the manager column is `scoped (own reports)` and one account holds one role, so the relat
+item 26 : **`compliance_viewer` × `preboarding:write`** — §5.2 rule 2 calls the viewer *read-only* while its cell lists a write. **A write is not read-only.** I
+item 27 : **The access model's own counsel items, as ONE decision:** a manager seeing a **candidate's contact details before their start date**; the **workspace
+item 28 : ABSENT
+occurrences of 'decision 27': 1 | '27': 5
+guard/force-kill line: ["*Revision 132 · 2026-10-20 · **The host is current, and the guard's handoff is diagnosed.** A cutover at 09:30:36Z deployed `7a4e00a` — the server fix from #248 and the client fix from #249 are served. `main` = `58d8417`; the host-vs-main delta is **one document**, so **no movement is owed**. The force-kill that fired four times today was never a window that was too small: the guard slept in the foreground for 60 s against a 30 s wait, so **the wait was the wrong shape, not the wrong size** — fix merged-pending, and the next movement is its acceptance test.*"]

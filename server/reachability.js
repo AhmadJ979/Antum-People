@@ -150,7 +150,11 @@ function issuesRequest(scope, window) {
  * the same green as one that examined everything.
  */
 function scanApiMentions(kind, opts = {}) {
-  const roots = opts.roots || SCAN_ROOTS;
+  // `opts.roots` REPLACES the scanned set (the tests point the scanner at a throwaway tree);
+  // `opts.extraRoots` ADDS to it (the report script's --extra-root, and the anti-vacuous control
+  // reproduced from a shell). They are different questions and must not be one parameter.
+  const extra = (opts.extraRoots || []).map((e) => (typeof e === 'string' ? { scope: 'client', dir: e } : e));
+  const roots = (opts.roots || SCAN_ROOTS).concat(extra);
   const root = opts.root || ROOT;
   const sites = [];
   const callRe = /\/api\/[A-Za-z0-9_\-/${}.]*(?=[?'"`\s,)]|$)/g;

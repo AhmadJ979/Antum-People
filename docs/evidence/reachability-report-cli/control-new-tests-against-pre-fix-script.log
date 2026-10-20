@@ -1,0 +1,130 @@
+TAP version 13
+# Subtest: the report REFUSES an invocation it does not understand, and prints no report
+not ok 1 - the report REFUSES an invocation it does not understand, and prints no report
+  ---
+  duration_ms: 138.891468
+  type: 'test'
+  location: '/tmp/ctrlwt/server/reachability-report-cli.test.js:43:1'
+  failureType: 'testCodeFailure'
+  error: 'args=["--nope"]: a wrong invocation must not exit 0'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 0
+  operator: 'notStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/ctrlwt/server/reachability-report-cli.test.js:47:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: a root that does not exist is refused rather than scanned
+not ok 2 - a root that does not exist is refused rather than scanned
+  ---
+  duration_ms: 175.012844
+  type: 'test'
+  location: '/tmp/ctrlwt/server/reachability-report-cli.test.js:60:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    an unreadable root scans nothing and prints the same green as a clean tree
+    
+    0 !== 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/ctrlwt/server/reachability-report-cli.test.js:62:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: ANTI-VACUOUS CONTROL, OPERATOR-REACHABLE: the planted caller reddens the report
+not ok 3 - ANTI-VACUOUS CONTROL, OPERATOR-REACHABLE: the planted caller reddens the report
+  ---
+  duration_ms: 144.083938
+  type: 'test'
+  location: '/tmp/ctrlwt/server/reachability-report-cli.test.js:66:1'
+  failureType: 'testCodeFailure'
+  error: 'the report says which roots it actually scanned — the flag was HEARD, not assumed'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/tmp/ctrlwt/server/reachability-report-cli.test.js:69:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: the control is load-bearing: without the flag the planted caller is not found
+not ok 4 - the control is load-bearing: without the flag the planted caller is not found
+  ---
+  duration_ms: 282.851483
+  type: 'test'
+  location: '/tmp/ctrlwt/server/reachability-report-cli.test.js:78:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(withFlag.stdout.includes('/api/definitely-not-registered'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/tmp/ctrlwt/server/reachability-report-cli.test.js:82:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: the ordinary invocation still prints the ordinary report, and --help is not a report
+not ok 5 - the ordinary invocation still prints the ordinary report, and --help is not a report
+  ---
+  duration_ms: 234.384111
+  type: 'test'
+  location: '/tmp/ctrlwt/server/reachability-report-cli.test.js:89:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(help.stdout.includes('Usage: node scripts/reachability-report.js'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/tmp/ctrlwt/server/reachability-report-cli.test.js:97:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 0
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1079.695034
