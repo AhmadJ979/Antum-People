@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createAuthedFetch } from './httpStatus.js';
+import { callPanel, settlePanels, refusalNoticeFor } from './panelResults.js';
 
 // Unified API Base URL helper
 // Row d2328d67: what a refusal says. Plain on purpose, and reassuring on purpose — a refusal is not
@@ -569,7 +570,8 @@ export default function App() {
     fetchImpl: fetch,
     getToken: () => token,
     onSessionInvalid: handleLogout,
-    onRefusal: () => setRefusal(REFUSAL_NOTICE),
+    // The url was arriving and being thrown away; it is what lets the notice name the panel.
+    onRefusal: (url: string) => setRefusal(refusalNoticeFor(url, REFUSAL_NOTICE)),
   });
 
   // A refusal is about the screen you asked for, so moving to another one retires it: the notice
@@ -595,31 +597,36 @@ export default function App() {
     if (!token) return;
     setLoading(true);
     try {
-      const [empRes, anaRes] = await Promise.all([
-        authedFetch(`${API_BASE}/api/employees?jurisdiction=${jurisdiction}`),
-        authedFetch(`${API_BASE}/api/analytics/dashboard?jurisdiction=${jurisdiction}`)
-      ]);
-      
-      if (empRes.status === 401 || anaRes.status === 401) {
-        handleLogout();
-        return;
-      }
+      // Each panel is settled ON ITS OWN (row bd008d23). The pair used to be one `Promise.all`, so a
+      // refusal rejected the pair and took the granted roster down with it: a screen whose data was
+      // ALLOWED rendered empty under the notice. A granted panel keeps its data now; a refused one
+      // contributes none and is named in the notice.
+      const settled = settlePanels(await Promise.all([
+        callPanel('employees', `${API_BASE}/api/employees?jurisdiction=${jurisdiction}`,
+          authedFetch(`${API_BASE}/api/employees?jurisdiction=${jurisdiction}`)),
+        callPanel('analytics', `${API_BASE}/api/analytics/dashboard?jurisdiction=${jurisdiction}`,
+          authedFetch(`${API_BASE}/api/analytics/dashboard?jurisdiction=${jurisdiction}`))
+      ]));
 
-      const empData = await empRes.json();
-      const anaData = await anaRes.json();
-      
-      // Defensive checks to prevent .filter crashes
-      const safeEmpData = Array.isArray(empData) ? empData : [];
-      setEmployees(safeEmpData);
-      setAnalytics(anaData && !anaData.error ? anaData : null);
-      
-      // Keep selected employee state fresh
-      if (selectedEmployee) {
-        const updated = safeEmpData.find((e: Employee) => e.id === selectedEmployee.id);
-        if (updated) {
-          setSelectedEmployee(updated);
-          fetchTasks(updated.id);
+      // Defensive checks to prevent .filter crashes — applied only to panels that actually arrived.
+      if (settled.data.employees !== undefined) {
+        const safeEmpData = Array.isArray(settled.data.employees) ? settled.data.employees : [];
+        setEmployees(safeEmpData);
+
+        // Keep selected employee state fresh
+        if (selectedEmployee) {
+          const updated = safeEmpData.find((e: Employee) => e.id === selectedEmployee.id);
+          if (updated) {
+            setSelectedEmployee(updated);
+            fetchTasks(updated.id);
+          }
         }
+      }
+      if (settled.data.analytics !== undefined) {
+        setAnalytics(settled.data.analytics && !settled.data.analytics.error ? settled.data.analytics : null);
+      }
+      if (settled.failures.length) {
+        console.error('Panels that did not complete:', settled.failures.map((f: { url: string }) => f.url));
       }
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -997,21 +1004,24 @@ export default function App() {
   const fetchTasks = async (employeeId: string) => {
     if (!token) return;
     try {
-      const [onRes, offRes] = await Promise.all([
-        authedFetch(`${API_BASE}/api/employees/${employeeId}/onboarding`),
-        authedFetch(`${API_BASE}/api/employees/${employeeId}/offboarding`)
-      ]);
-      
-      if (onRes.status === 401 || offRes.status === 401) {
-        handleLogout();
-        return;
-      }
+      // Same rule as the roster (row bd008d23): each task panel is settled on its own, so a refused
+      // one cannot blank the other. A panel that arrived keeps its tasks on the screen.
+      const settled = settlePanels(await Promise.all([
+        callPanel('onboarding', `${API_BASE}/api/employees/${employeeId}/onboarding`,
+          authedFetch(`${API_BASE}/api/employees/${employeeId}/onboarding`)),
+        callPanel('offboarding', `${API_BASE}/api/employees/${employeeId}/offboarding`,
+          authedFetch(`${API_BASE}/api/employees/${employeeId}/offboarding`))
+      ]));
 
-      const onData = await onRes.json();
-      const offData = await offRes.json();
-      
-      setOnboardingTasks(Array.isArray(onData) ? onData : []);
-      setOffboardingTasks(Array.isArray(offData) ? offData : []);
+      if (settled.data.onboarding !== undefined) {
+        setOnboardingTasks(Array.isArray(settled.data.onboarding) ? settled.data.onboarding : []);
+      }
+      if (settled.data.offboarding !== undefined) {
+        setOffboardingTasks(Array.isArray(settled.data.offboarding) ? settled.data.offboarding : []);
+      }
+      if (settled.failures.length) {
+        console.error('Task panels that did not complete:', settled.failures.map((f: { url: string }) => f.url));
+      }
     } catch (err) {
       console.error('Error fetching tasks:', err);
     }
