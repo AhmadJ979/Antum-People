@@ -154,15 +154,10 @@ CHECKS = [
          cmd=["node", "--test"],
          what="the server suite - the doc/tracker-invariant gates (server/design-concepts-index.test.js, server/privacy-notice.test.js) plus the check-all classifier gate"),
 
-    dict(id="access-model", mode="default", expect="known-red", external=True,
+    dict(id="access-model", mode="default", expect="green", external=True,
          home="OUTSIDE the repository (/home/team/shared/verify-access-model.py) - no PR and no movement can carry it",
          cmd=[PY, ACCESS_MODEL],
-         what="the 137-check access-model instrument against docs/access-model.md, the document the product's access model is delivered in",
-         known_reason=("the delivered page states 49 enforced checks while the module enforces 3 of them - the page and the "
-                       "code disagree. The fix is PR #262, OPEN as of this run (read from the API, not from a notice)."),
-         known_pointer="#262 (open, verified today via the GitHub API); the plan records this as the defect state, not a regression",
-         known_ends_when=("PR #262 merges: the instrument then reads green against main and this declaration must be deleted. "
-                          "An exception that no longer fires is a lie and STALE-EXCEPTION fails the run.")),
+         what="the 137-check access-model instrument against docs/access-model.md, the document the product's access model is delivered in"),
 
     dict(id="cors-error-contract", mode="full", expect="green", home="operator CLI, off-host",
          cmd=["bash", "scripts/cors-error-contract-test.sh"],
