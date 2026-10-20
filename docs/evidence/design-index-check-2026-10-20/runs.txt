@@ -1,0 +1,91 @@
+### the check, green on the tree it judges
+design-concepts inventory check - tree 559c783
+  documents (*.md)          : 18
+  want exactly one row each : 17  (README.md excluded, and its exclusion is asserted)
+  index rows read           : 20
+  ...documents with NO row  : none
+  ...documents with >1 row  : none
+  ...rows naming no document : none
+  ...rows for README.md     : none  (must be none - the exclusion is asserted, not assumed)
+  ...index non-empty        : OK
+OK: all 17 documents carry exactly one index row, no row is stray, and the README's own exclusion is asserted.
+exit: 0
+
+### CONTROL - the unmodified copy, and the same script (a copy must be GREEN, or the reddening below proves nothing)
+design-concepts inventory check - tree (not a git working tree - the tree this judged is UNKNOWN)
+  documents (*.md)          : 18
+  want exactly one row each : 17  (README.md excluded, and its exclusion is asserted)
+  index rows read           : 20
+  ...documents with NO row  : none
+  ...documents with >1 row  : none
+  ...rows naming no document : none
+  ...rows for README.md     : none  (must be none - the exclusion is asserted, not assumed)
+  ...index non-empty        : OK
+OK: all 17 documents carry exactly one index row, no row is stray, and the README's own exclusion is asserted.
+exit: 0
+
+### FALSIFIED (a)
+design-concepts inventory check - tree (not a git working tree - the tree this judged is UNKNOWN)
+  documents (*.md)          : 18
+  want exactly one row each : 17  (README.md excluded, and its exclusion is asserted)
+  index rows read           : 19
+  ...documents with NO row  : ['LAYER3-IDENTITY.md']
+  ...documents with >1 row  : none
+  ...rows naming no document : none
+  ...rows for README.md     : none  (must be none - the exclusion is asserted, not assumed)
+  ...index non-empty        : OK
+FAIL: see the lists above
+exit: 1
+
+### FALSIFIED (b)
+design-concepts inventory check - tree (not a git working tree - the tree this judged is UNKNOWN)
+  documents (*.md)          : 18
+  want exactly one row each : 17  (README.md excluded, and its exclusion is asserted)
+  index rows read           : 21
+  ...documents with NO row  : none
+  ...documents with >1 row  : [('CLIENT-STATES.md', 2)]
+  ...rows naming no document : none
+  ...rows for README.md     : none  (must be none - the exclusion is asserted, not assumed)
+  ...index non-empty        : OK
+FAIL: see the lists above
+exit: 1
+
+### FALSIFIED (c)
+design-concepts inventory check - tree (not a git working tree - the tree this judged is UNKNOWN)
+  documents (*.md)          : 18
+  want exactly one row each : 17  (README.md excluded, and its exclusion is asserted)
+  index rows read           : 0
+  ...documents with NO row  : ['BRAND-IDENTITY.md', 'CITATION-INSTRUMENT-ANALYSIS.md', 'CLIENT-STATES.md', 'COMPLIANCE-AUDIT-UI.md', 'COMPLIANCE-UI.md', 'DASHBOARD-WIREFRAMES.md', 'INTELLIGENCE-DASHBOARD-UI.md', 'INTERACTIVE-CONSENT-SPECS.md', 'LAYER2-CANDIDATE-IDENTITY.md', 'LAYER2-INTERFACE-FIXES-PICK-LIST.md', 'LAYER2-NOTICE-SHOWN-SURFACE-REVIEW.md', 'LAYER2-P2-1-IMPLEMENTATION-REVIEW.md', 'LAYER2-P2-2-IMPLEMENTATION-NOTES.md', 'LAYER2-PREBOARDING-UI.md', 'LAYER3-EMPLOYEE-OWN-VIEW.md', 'LAYER3-IDENTITY.md', 'USER-JOURNEY-MAPS.md']
+  ...documents with >1 row  : none
+  ...rows naming no document : none
+  ...rows for README.md     : none  (must be none - the exclusion is asserted, not assumed)
+  ...index non-empty        : FAIL - an empty index is not a green index
+FAIL: see the lists above
+exit: 1
+
+### FALSIFIED (d)
+design-concepts inventory check - tree (not a git working tree - the tree this judged is UNKNOWN)
+  documents (*.md)          : 18
+  want exactly one row each : 17  (README.md excluded, and its exclusion is asserted)
+  index rows read           : 21
+  ...documents with NO row  : none
+  ...documents with >1 row  : none
+  ...rows naming no document : ['DELETED-DOCUMENT.md']
+  ...rows for README.md     : none  (must be none - the exclusion is asserted, not assumed)
+  ...index non-empty        : OK
+FAIL: see the lists above
+exit: 1
+
+### FALSIFIED (e)
+design-concepts inventory check - tree (not a git working tree - the tree this judged is UNKNOWN)
+  documents (*.md)          : 18
+  want exactly one row each : 17  (README.md excluded, and its exclusion is asserted)
+  index rows read           : 21
+  ...documents with NO row  : none
+  ...documents with >1 row  : none
+  ...rows naming no document : none
+  ...rows for README.md     : ['README.md']  (must be none - the exclusion is asserted, not assumed)
+  ...index non-empty        : OK
+FAIL: see the lists above
+exit: 1
+
