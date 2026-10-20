@@ -1,0 +1,5 @@
+top-level keys: ['cases', 'jurisdiction', 'totals']
+{"start_date": "2026-10-19", "jurisdiction": "AE", "flag.state": "started", "flag.tone": "rose", "flag.open_count": 21, "flag.basis": null}
+{"start_date": "2026-10-21", "jurisdiction": "AE", "flag.state": "inside_48_hours", "flag.tone": "amber", "flag.open_count": 21, "flag.basis": null}
+{"start_date": "2026-11-03", "jurisdiction": "AE", "flag.state": "clear", "flag.tone": "slate", "flag.open_count": 22, "flag.basis": null}
+distinct flag states: ['clear', 'inside_48_hours', 'started']

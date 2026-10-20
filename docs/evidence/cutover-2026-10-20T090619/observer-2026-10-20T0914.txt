@@ -1,0 +1,31 @@
+=== observe-serve-pair, run ONCE by the program manager, 2026-10-20 (Round 53) ===
+=== the bytes below are the run's own stdout, extracted verbatim from the session log
+===   /tmp/r53/m2.txt sections 2 and 3 (one run, then --status). No second run was made.
+=== 2. OBSERVER RUN, one run, host copy
+=== observe-serve-pair 2026-10-20T09:14:28Z ===
+  script: /home/team/shared/observe-serve-pair.sh | 19925 B | sha256 48ea798aa97a9ef6
+  url:    https://b974147c03228029e277d1cbe6646fe6.ctonew.app
+  tree:   /home/team/shared/probable-octo-sniffle
+  LIVENESS: 2026-10-20T08:55:58Z → PASS · 18 min since the last recorded run
+  derived: 2 asset(s) from /home/team/shared/probable-octo-sniffle/client/dist (the artifact this tree serves)
+            assets/index-B9iywLcl.js  276206 B  md5 fd270c84cb2b34a2df5372a6e93505c8
+            assets/index-CK8SfGWm.css  35775 B  md5 8ec48273f4bd7e4f37c55e2cc6ae2f1d
+            tree HEAD: ea6a531
+  measured: GET / → 200 | title: Antum People | page bytes: 799
+            the page names: assets/index-B9iywLcl.js assets/index-CK8SfGWm.css 
+            assets/index-B9iywLcl.js → 200, 276206 B, md5 fd270c84cb2b34a2df5372a6e93505c8
+            expected:            276206 B, md5 fd270c84cb2b34a2df5372a6e93505c8
+            assets/index-CK8SfGWm.css → 200, 35775 B, md5 8ec48273f4bd7e4f37c55e2cc6ae2f1d
+            expected:            35775 B, md5 8ec48273f4bd7e4f37c55e2cc6ae2f1d
+
+PAIR HOLDS (exit 0) — the page at https://b974147c03228029e277d1cbe6646fe6.ctonew.app names our asset(s) and the bytes match the served tree's artifact
+  measured off the URL: assets/index-B9iywLcl.js 276206 B md5 fd270c84cb2b34a2df5372a6e93505c8
+observer rc=0
+=== 3. observer --status
+=== observe-serve-pair --status 2026-10-20T09:14:29Z ===
+  record: /home/team/shared/observer/runs.jsonl
+  runs recorded: 3 (keeping the most recent 2000)
+  last run:      2026-10-20T09:14:29Z → PASS
+  age:           0 min ago
+  no alert file: /home/team/shared/observer/PAIR-BROKEN.txt (the last recorded run held, or none has failed)
+  loop:          no lock file — no loop is armed; only a movement step or a person runs this now

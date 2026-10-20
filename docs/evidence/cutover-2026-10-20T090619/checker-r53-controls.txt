@@ -1,0 +1,37 @@
+=== control 1: a falsified FULL id (present in the file)
+1
+copy differs from the index: yes
+rc=1
+...of which UNEXPECTED (must be empty): ['1e517b2d-292a-4b4f-b32d-df0b76a43e44']
+  ...NEITHER (typos) - must be empty: []
+=== control 2: a falsified SHORT id (present in the file)
+copy differs from the index: yes
+rc=0
+  ...NEITHER (typos) - must be empty: []
+=== the index is back to the checked bytes: 074572fb7eb1e2e149b6158ccc2f1584b3dddb60d0092c0eff807fafad8a58a5
+=== which bare backticked tokens does the checker actually cover?
+     13 `fdef095a`
+     12 `91f44175`
+     12 `045a6ddf`
+     11 `446ace06`
+     11 `198a2562`
+     11 `0d68c00a`
+     10 `948bf491`
+     10 `83c22f60`
+--- and the 7-char git shorts, e.g. 8ec9f69: covered? (regex wants exactly 8)
+4
+=== control 2 (redone against a token the checker covers): falsify 80e9c671
+copy differs from the index: yes
+rc=0
+...of which UNEXPECTED (must be empty): []
+short refs that do NOT resolve to exactly one board row: []
+  ...NEITHER (typos) - must be empty: []
+=== control 2 (third attempt): a STANDALONE 8-hex short id the checker covers
+copy differs from the index: yes
+13
+rc=1
+...of which UNEXPECTED (must be empty): []
+short refs that do NOT resolve to exactly one board row: []
+  ...resolving to exactly one board row: 96
+  ...NEITHER (typos) - must be empty: ['fdef095b']
+=== the index is unchanged: 074572fb7eb1e2e149b6158ccc2f1584b3dddb60d0092c0eff807fafad8a58a5
