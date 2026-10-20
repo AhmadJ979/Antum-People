@@ -65,6 +65,13 @@ const COLUMN_MIGRATIONS = [
   // the two paths end up with the same columns.
   { table: 'onboarding_tasks', column: 'completed_by', ddl: 'TEXT' },
   { table: 'offboarding_tasks', column: 'completed_by', ddl: 'TEXT' },
+  // Layer 3, slice 2 (prerequisite 1): the account → person link. A database that predates this
+  // gets the column here rather than from CREATE TABLE IF NOT EXISTS, which cannot touch a table
+  // that already exists. Additive and nullable with NO default: every existing row keeps NULL,
+  // which is the truth about it — an account not tied to a person yet — so nothing is guessed and
+  // the single live `admin` row is left exactly as it is. Idempotent by construction (the column is
+  // applied only when `PRAGMA table_info` does not list it), so a second boot changes nothing.
+  { table: 'users', column: 'employee_id', ddl: 'TEXT' },
 ];
 
 function columnsOf(handle, table) {
