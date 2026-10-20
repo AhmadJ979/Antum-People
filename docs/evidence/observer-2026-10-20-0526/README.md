@@ -8,6 +8,15 @@ step owed and ran it **themselves**, from the deployed tree (`bash scripts/obser
 **2026-10-20T05:26:09Z**: exit **0**, `PAIR HOLDS`, and the record directory exists with its **first line**.
 This pack is that first run, filed as bytes.
 
+## Dated forward annotation — this run closes the gap that record left open
+*2026-10-20.* This run is the one that **closed the gap recorded as open** in
+**`docs/evidence/cutover-2026-10-20-0515/README.md`** — the merged movement record whose clause
+*"`/home/team/shared/observer/` … still empty"* (and the sentence after it, that the closing command "is the
+operator's step") was **true when it was measured**. That record is **left exactly as merged and carries no
+annotation of its own**: a dated record annotates rather than rewrites itself, so the cross-reference points
+**forward, from here, in this direction only**. This pack supersedes **that clause and nothing else** in it —
+every other figure in the movement record stands, and the two agree byte for byte on the served surface.
+
 **Filed by the senior software engineer on 2026-10-20, byte-exact.** Both files are copies, not
 transcriptions: each filed file's md5 is the md5 of the file it came from, **proven as filed and again on the
 committed blob** (`git show HEAD:<path> | md5sum`).
@@ -87,7 +96,11 @@ distinguishes which copy ran — the **tree's**, which is what DEPLOY.md's step 
 - **A point, not a series.** One run is recorded. As read at 05:27:10Z, `observe-serve-pair.sh --status`
   reported `runs recorded: 1`, `last run 2026-10-20T05:26:09Z → PASS`, and **`loop: no lock file — no loop is
   armed`**. Nothing has watched the URL since this line was written, and nothing is watching now; the
-  observer's stated blind spot ("somebody has to look") is unchanged by its first run.
+  observer's stated blind spot ("somebody has to look") is unchanged by its first run. **The lead ruled on
+  2026-10-20 that a monitor is not owed**: DEPLOY.md's step 6 is a movement-time confirmation ("with the
+  observer, not by hand"), which this one recorded run satisfies, and a background loop added to this box would
+  have to be versioned in `scripts/` and installed by the deploy to exist at all. So none is bolted on here — a
+  standing series, if the availability KPI turns out to need one, is its own row with a versioned installer.
 - **Nothing about which surface the URL *should* show.** The observer asserts that **our build** answers at
   `https://b974147c03228029e277d1cbe6646fe6.ctonew.app`. It is silent on decision 2 — whether that URL ought to
   carry the product or the site — and a `PASS` here is not evidence either way on that choice.
