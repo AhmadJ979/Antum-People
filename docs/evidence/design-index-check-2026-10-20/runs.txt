@@ -89,3 +89,17 @@ design-concepts inventory check - tree (not a git working tree - the tree this j
 FAIL: see the lists above
 exit: 1
 
+### THE DEFECT STATE, MEASURED - the index as it stands on origin/main (559c783), the tree the rows were added to
+    (not a synthetic: the pre-fix index, restored byte-for-byte from git)
+design-concepts inventory check - tree (not a git working tree - the tree this judged is UNKNOWN)
+  documents (*.md)          : 18
+  want exactly one row each : 17  (README.md excluded, and its exclusion is asserted)
+  index rows read           : 14
+  ...documents with NO row  : ['COMPLIANCE-AUDIT-UI.md', 'COMPLIANCE-UI.md', 'INTELLIGENCE-DASHBOARD-UI.md', 'INTERACTIVE-CONSENT-SPECS.md', 'LAYER2-INTERFACE-FIXES-PICK-LIST.md', 'LAYER2-NOTICE-SHOWN-SURFACE-REVIEW.md']
+  ...documents with >1 row  : none
+  ...rows naming no document : none
+  ...rows for README.md     : none  (must be none - the exclusion is asserted, not assumed)
+  ...index non-empty        : OK
+FAIL: see the lists above
+exit: 1
+
