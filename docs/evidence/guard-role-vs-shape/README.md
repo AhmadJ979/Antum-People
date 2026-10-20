@@ -47,16 +47,61 @@ protects the port`. That is what the true-positive control is for.
 Re-run: `bash scripts/guard-role-vs-shape-test.sh` (add `--keep` to leave the decoys up for inspection).
 It never signals, starts or stops a guard.
 
-## Post-merge correction to this test's default (found by re-running it on `main`)
+## Post-merge correction to this test's default (found by re-running it on the merge result)
 
 The merged form defaulted `--old` to `origin/main`. That was right while the fix was on a branch and
-wrong the moment it merged: on `main` (`58acdac`) a **no-argument run FAILED** —
+wrong the moment it merged: on the merge result of #272 (`58acdac`, a descendant of `2b14a94`) a **no-argument run
+FAILED** -
 
     FAIL  the OLD check did not count a decoy - this test is not reproducing the defect ...
 
-because OLD was `origin/main`, i.e. the fixed code compared with itself (both sides md5 `9cc7d9d0…`).
-A control whose default is the green reports a defect where there is none, so the default is now
-**derived**: the parent of the commit that introduced `is_loop_argv` (never hardcoded), and the run
-**refuses with exit 2** if the named OLD already carries the fix, instead of printing a FAIL that reads
-like the fix is broken. Re-measured after the change, with no arguments, on the merged tree: exit 0 —
-OLD counts 2 decoys, NEW counts 0, both count the real armed loop.
+because OLD was `origin/main`, i.e. the fixed code compared with itself (both sides md5 `9cc7d9d0...`).
+A control whose default is the green reports a defect where there is none, so **the defect side is now
+PINNED**, never a moving ref: `OLD` defaults to the recorded defective revision `2b14a94`, whose
+`scripts/keep-alive.sh` md5 is `ed31f5285babe7f265414376cb3d63b8`. A before/after red cannot have a ref
+on the defect side that moves forward - eventually that ref IS the fix.
+
+Same bytes on both sides is now **CANNOT-JUDGE (exit 2)**, naming the md5 and saying the named revision
+already contains the fix - never a `FAIL` that reads like the fix is broken. Same for an `OLD` that
+carries `is_loop_argv`, and for an `OLD` that counts no decoy (exit 2, naming both md5s). Exit codes:
+`0` the red reproduced on OLD and not on NEW with the live loop counted by both; `1` a genuine
+assertion failure; `2` CANNOT-JUDGE.
+
+### The three states, measured (raw, with exit codes)
+
+Run from a foreign cwd (`/`) against a checkout at a different absolute path
+(`/tmp/h3path/antum-people`) - the test assumes neither.
+
+- **Bare, no arguments -> exit 0.** `# --old defaulted to the recorded defective revision 2b14a94
+  (keep-alive.sh md5 ed31f5285babe7f265414376cb3d63b8)`. OLD counts 2 decoys **plus** the live loop
+  (lock pid 27964, argv `bash scripts/keep-alive.sh`); NEW counts 0 decoys **plus** the live loop.
+- **`--old origin/main` -> exit 2**, `CANNOT-JUDGE: OLD and NEW are the SAME BYTES (md5
+  9cc7d9d040718828a7fd1a960ab988c8). The revision named by --old ALREADY CONTAINS THE FIX ...`.
+  Re-measured after `main` moved to `61914f4`: the same verdict.
+- **`--old 2b14a94`, the recorded defect revision named explicitly -> exit 0**, the same three `ok`
+  lines.
+
+The anti-vacuous control survives unchanged: NEW must count **no** decoy *and* both sides must count the
+live loop read from `server/keep-alive.lock` - the control that caught the `/proc/PID/cmdline`
+regression. The two revisions it compares:
+
+| what | value |
+|---|---|
+| recorded defective revision | `2b14a94` |
+| `scripts/keep-alive.sh` there (the defect) | `ed31f5285babe7f265414376cb3d63b8` |
+| `scripts/keep-alive.sh` at `main` (the fix) | `9cc7d9d040718828a7fd1a960ab988c8` |
+
+### Movement: none owed for this delta - shown, not asserted
+
+This is a hand-run test: **no served code path loads it.** `git grep guard-role-vs-shape` finds only
+prose citations in this README and two **comment** lines in `scripts/keep-alive.sh` (`:27`, `:232`); the
+only non-comment, non-markdown hit is the test's own `mktemp` line. No runner globs `scripts/*-test.sh`:
+`scripts/check-all.py` names its script-tests explicitly, and `grep -c guard-role-vs-shape
+scripts/check-all.py` is `0`. Nothing under `/etc/profile.d/`, no cron job and no systemd unit names it.
+A citation is not a load and a comment is not a load, so **no movement is owed**.
+
+*Reachability gap, disclosed not hidden:* the five sibling `*-test.sh` are reachable from
+`scripts/check-all.py`; this one is not. By the team's own maxim - a control the operator cannot reach
+is a false green - that is a gap. It cannot join the fast read-only default set (it spawns decoy
+processes and needs a live guard), so the honest options are the `--full` host-instrument set or an
+explicit "deliberately hand-run" note here. Awaiting a ruling; not silently wired.
