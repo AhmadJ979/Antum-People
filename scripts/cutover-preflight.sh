@@ -8,6 +8,23 @@
 # md5 91f05725…), its REPO default was moved off a personal clone onto the deployed tree (rule 7), and its
 # hook comparison was made to refuse rather than assert a hash it had not measured.
 #
+# 2026-10-20 — THREE RULES ADDED (found running this before the 16:08:51Z movement; evidence
+# /home/team/shared/movements/2026-10-20T1607Z/preflight-defect.txt):
+#   1. THE AFTER-STATE RECORD IS ONE KNOB. The tip was overridable and the six fields beside it were not,
+#      so overriding the tip alone re-pointed the gate while keeping ANOTHER tip's bundle: the run went
+#      green stating assets/index-BG0peuOK.js 274242 B — a bundle that tree had never built. Supplying the
+#      tip without the whole record is now a REFUSAL (exit 1), not a green.
+#   2. WHAT THE HOST SERVES TODAY IS DERIVED, NOT HARDCODED. e19a98a / index-Bh1-0KrL.js were the
+#      2026-10-14 cutover, so the preflight FAILED on every host state after any movement — a gate that can
+#      never be green on the host it certifies. A derived value is a NOTE, never an assertion (asserting a
+#      value against itself is a green that cannot redden); what replaces it is the byte check: the bytes
+#      the public URL serves must BE the deployed tree's own dist file of that name. That is what tells our
+#      product from the platform placeholder on 3000, without naming a bundle in advance.
+#   3. THE RETIRED ROUTES ARE PROVEN IN THE SOURCE, NOT BY PROBING. This package stated they answer 404.
+#      Measured: with a token they answer 403 with Content-Length 0, without one 401 — and a path that was
+#      NEVER registered answers identically, because the deny-by-default /api gate fires before routing.
+#      From outside the two are indistinguishable, so the audit reads the shipped router instead.
+#
 #   Run it immediately before the movement:   bash /home/team/shared/cutover-preflight.sh
 #   Exit 0 means every precondition the movement depends on holds *right now*.
 #   Exit 1 means at least one does not — do not start the movement.
@@ -34,7 +51,14 @@
 # for the restart).
 # Proof it can fail, without touching anything:
 #   ANTUM_EXPECT_SERVED=deadbee bash /home/team/shared/cutover-preflight.sh        -> must exit 1
-#   ANTUM_MEASURED_TIP=9d2182a bash /home/team/shared/cutover-preflight.sh        -> must exit 1 (client/ moved)
+#   ANTUM_EXPECT_ASSET=index-WRONGNOPE.js bash /home/team/shared/cutover-preflight.sh -> must exit 1
+#   ANTUM_DIST_DIR=/tmp/empty bash /home/team/shared/cutover-preflight.sh          -> must exit 1 (the URL
+#                                                                                    serves bytes this tree
+#                                                                                    does not hold)
+#   ANTUM_MEASURED_TIP=9d2182a bash /home/team/shared/cutover-preflight.sh        -> must exit 1 (the record
+#                                                                                    did not move with the tip)
+#   ...plus all six ANTUM_MEASURED_* fields -> the whole record moved, so the tip override is accepted
+#   ANTUM_ROUTE_REF=<a revision that still registered it> bash ...                 -> must exit 1 (audit)
 set -uo pipefail
 
 DEPLOY_DIR="${ANTUM_DEPLOY_DIR:-/home/team/shared/probable-octo-sniffle}"
@@ -44,8 +68,17 @@ DEPLOY_DIR="${ANTUM_DEPLOY_DIR:-/home/team/shared/probable-octo-sniffle}"
 # both. Committed 2026-10-15 with the previous default, /home/agent-senior-software-engineer/antum-people,
 # which would have made a committed tool depend on one member's home directory.
 REPO="${ANTUM_REPO:-$DEPLOY_DIR}"
-EXPECT_SERVED="${ANTUM_EXPECT_SERVED:-e19a98a}"        # the commit the host serves today (cutover 2026-10-14 16:17Z)
-EXPECT_ASSET="${ANTUM_EXPECT_ASSET:-index-Bh1-0KrL.js}"
+# WHAT THE HOST SERVES TODAY — DERIVED AT RUN TIME, never hardcoded (2026-10-20, rule 2 in the header).
+# Empty = derive: EXPECT_SERVED from the deployed tree's own HEAD, EXPECT_ASSET from the HTML the public
+# URL actually serves. A DERIVED value is PRINTED AS A NOTE AND NOT ASSERTED — asserting a value against
+# itself is a green that cannot redden. Set these to assert a specific pair deliberately; then they are
+# asserted and they redden.
+EXPECT_SERVED="${ANTUM_EXPECT_SERVED:-}"
+EXPECT_ASSET="${ANTUM_EXPECT_ASSET:-}"
+# The deployed tree's built client, as the host serves it. Override (rule 14) so the placeholder case can
+# be exercised off-host: a URL serving an asset this dist does not hold is exactly what a foreign server on
+# port 3000 looks like.
+DIST="${ANTUM_DIST_DIR:-$DEPLOY_DIR/client/dist}"
 # The ROLLBACK bundle holds the PRE-cutover bytes and has its own asset name. These were one variable
 # until 2026-10-15, when the served asset changed: reading the bundle through EXPECT_ASSET made the
 # bundle check look for a filename the bundle does not contain.
@@ -75,13 +108,20 @@ IDXJS_MD5=7467cec01c90cc3a1fb0156999c1997a
 #   MIN_FREE_KB stays the hard floor and the reservation stays the conservative number.
 #   If the tip moves again with client/ unchanged, the gate warns and keeps this asset; if client/ moves,
 #   it refuses until this block is re-measured. That refusal is the gate working, not an obstacle.
-MEASURED_TIP="${ANTUM_MEASURED_TIP:-d0422f4}"
-MEASURED_ASSET=index-BG0peuOK.js
-MEASURED_ASSET_BYTES=274242
-MEASURED_ASSET_MD5=f65f15c109e76e86cd8b8abe7102f748
-MEASURED_CSS=index-pNSrK3wr.css
-MEASURED_CSS_BYTES=35365
-MEASURED_CSS_MD5=eda548202468a7e0293053981037a594
+# THE RECORD IS ONE KNOB (2026-10-20, rule 1 in the header). The tip was overridable and these six fields
+# were not: `ANTUM_MEASURED_TIP=2b14a94 preflight` therefore went GREEN stating assets/index-BG0peuOK.js
+# 274242 B, a bundle that tip has never built (the real one is index-C9vf7pQB.js 277790 B, md5 e6ff5da3…,
+# confirmed by the movement's own build and by the bytes the public URL serves). A half-overridable gate is
+# defeated by its own override. Every field is overridable now, and the coherence gate below REFUSES
+# (exit 1) unless the whole record moves together.
+RECORD_TIP_DEFAULT=d0422f4
+MEASURED_TIP="${ANTUM_MEASURED_TIP:-$RECORD_TIP_DEFAULT}"
+MEASURED_ASSET="${ANTUM_MEASURED_ASSET:-index-BG0peuOK.js}"
+MEASURED_ASSET_BYTES="${ANTUM_MEASURED_ASSET_BYTES:-274242}"
+MEASURED_ASSET_MD5="${ANTUM_MEASURED_ASSET_MD5:-f65f15c109e76e86cd8b8abe7102f748}"
+MEASURED_CSS="${ANTUM_MEASURED_CSS:-index-pNSrK3wr.css}"
+MEASURED_CSS_BYTES="${ANTUM_MEASURED_CSS_BYTES:-35365}"
+MEASURED_CSS_MD5="${ANTUM_MEASURED_CSS_MD5:-eda548202468a7e0293053981037a594}"
 MIN_FREE_KB=200000
 # WORKFLOW rule 14: every host value is an override. This one was NOT, and the cost was a check that
 # could not be reddened: pointing it off-host is impossible while it names the live path, so "does this
@@ -98,6 +138,16 @@ no(){   printf '  FAIL  %s\n' "$1"; FAIL=$((FAIL+1)); }
 note() { printf "  %s\n" "$*"; }
 warn(){ printf '  WARN  %s\n' "$1"; }
 
+# A tip is not a measurement, and half a record is not one either. Counted HERE, before anything is read,
+# because a refusal must arrive before a green does.
+REC_SUPPLIED=0; REC_SUPPLIED_N=0; REC_MISSING=""; REC_INCOHERENT=0
+for _f in ANTUM_MEASURED_ASSET ANTUM_MEASURED_ASSET_BYTES ANTUM_MEASURED_ASSET_MD5 ANTUM_MEASURED_CSS ANTUM_MEASURED_CSS_BYTES ANTUM_MEASURED_CSS_MD5; do
+  if [ -n "${!_f:-}" ]; then REC_SUPPLIED_N=$((REC_SUPPLIED_N+1)); else REC_MISSING="$REC_MISSING ${_f#ANTUM_MEASURED_}"; fi
+done
+TIP_OVERRIDDEN=0
+if [ -n "${ANTUM_MEASURED_TIP:-}" ] && [ "$ANTUM_MEASURED_TIP" != "$RECORD_TIP_DEFAULT" ]; then TIP_OVERRIDDEN=1; fi
+[ "$REC_SUPPLIED_N" -eq 6 ] && REC_SUPPLIED=1
+
 echo "=== pre-cutover preflight $(date -Iseconds) ==="
 # WHICH BYTES PRODUCED THIS OUTPUT. A review of this script once reported the fix as missing while the
 # fixed file was on disk (the reviewer's `ls` had the pre-fix mtime/size): the tool now states its own
@@ -105,7 +155,24 @@ echo "=== pre-cutover preflight $(date -Iseconds) ==="
 # the transcript alone. Compare this line, not a remembered size.
 echo "  script: $0 | $(stat -c %s "$0" 2>/dev/null) B | mtime $(stat -c %y "$0" 2>/dev/null | cut -d. -f1) | sha256 $(sha256sum "$0" 2>/dev/null | cut -c1-16)"
 echo "  deployed tree: $DEPLOY_DIR"
-echo "  serving today: $EXPECT_SERVED  asset $EXPECT_ASSET"
+# NB: an APOSTROPHE inside a ${VAR:-word} default breaks this parser (the quote inside the expansion is
+# never closed), so these default words are apostrophe-free on purpose.
+echo "  serving today: ${EXPECT_SERVED:-DERIVED (the deployed tree HEAD)}  asset ${EXPECT_ASSET:-DERIVED (from the served HTML)}"
+
+echo "--- the after-state record: the tip and its bundle move together, or the run refuses ---"
+if [ "$REC_SUPPLIED_N" -eq 0 ] && [ "$TIP_OVERRIDDEN" -eq 0 ]; then
+  ok "record: the tip (${MEASURED_TIP}) and its bundle are the RECORDED measurement, unmodified — $MEASURED_ASSET $MEASURED_ASSET_BYTES B (last measured 2026-10-17)"
+elif [ "$REC_SUPPLIED_N" -ne 6 ]; then
+  REC_INCOHERENT=1
+  no "HALF-OVERRIDDEN RECORD: ${REC_SUPPLIED_N}/6 bundle field(s) supplied, missing:${REC_MISSING:- none} — a tip is not a measurement, and an override that re-points the tip while keeping another tip's bundle makes this run state an after-state nobody measured. Supply the WHOLE record (ANTUM_MEASURED_TIP + ANTUM_MEASURED_ASSET + _ASSET_BYTES + _ASSET_MD5 + _CSS + _CSS_BYTES + _CSS_MD5) or clear it, then re-run"
+else
+  ok "record: the WHOLE record was supplied by this run — tip $MEASURED_TIP, $MEASURED_ASSET $MEASURED_ASSET_BYTES B, $MEASURED_CSS $MEASURED_CSS_BYTES B (it stands or falls with that measurement, not with this gate)"
+fi
+# Shape, so a typo cannot pass as a measurement.
+case "$MEASURED_ASSET_BYTES" in ''|*[!0-9]*) no "record: ANTUM_MEASURED_ASSET_BYTES='$MEASURED_ASSET_BYTES' is not a byte count";; esac
+case "$MEASURED_CSS_BYTES" in ''|*[!0-9]*) no "record: ANTUM_MEASURED_CSS_BYTES='$MEASURED_CSS_BYTES' is not a byte count";; esac
+case "$MEASURED_ASSET_MD5" in ????????*????????*????????*????????) : ;; *) no "record: ANTUM_MEASURED_ASSET_MD5='$MEASURED_ASSET_MD5' is not a 32-hex md5";; esac
+case "$MEASURED_CSS_MD5" in ????????*????????*????????*????????) : ;; *) no "record: ANTUM_MEASURED_CSS_MD5='$MEASURED_CSS_MD5' is not a 32-hex md5";; esac
 
 echo "--- disk: the movement's measured need is ~3.8 MB; a full disk fails a movement silently ---"
 FREE_KB=$(df --output=avail -k /home | tail -1 | tr -d ' ')
@@ -133,14 +200,46 @@ DEPLOY_REF=$(git -C "$DEPLOY_DIR" rev-parse origin/main 2>/dev/null)
 
 echo "--- the tree is where we think it is, and has not already moved ---"
 HEAD=$(git -C "$DEPLOY_DIR" rev-parse --short HEAD 2>/dev/null)
-[ "$HEAD" = "$EXPECT_SERVED" ] && ok "deployed tree HEAD = $HEAD (the served commit)" || no "deployed tree HEAD = ${HEAD:-?}, expected $EXPECT_SERVED"
+# DERIVE-OR-ASSERT (rule 2). With no pinned value there is nothing to compare the tree against — it IS the
+# tree — so the line is a note. Pinning ANTUM_EXPECT_SERVED makes it an assertion again, and it reddens.
+if [ -n "$EXPECT_SERVED" ]; then
+  [ "$HEAD" = "$EXPECT_SERVED" ] && ok "deployed tree HEAD = $HEAD — the commit you pinned as served today" || no "deployed tree HEAD = ${HEAD:-?}, but ANTUM_EXPECT_SERVED names $EXPECT_SERVED"
+else
+  EXPECT_SERVED="$HEAD"
+  note "deployed tree HEAD = ${HEAD:-?} (DERIVED: the tree IS what the host serves — nothing asserted against itself; pin ANTUM_EXPECT_SERVED to assert a specific commit)"
+fi
 git -C "$DEPLOY_DIR" remote get-url origin >/dev/null 2>&1 && ok "deployed tree has an origin remote" || no "deployed tree has no origin remote — the fetch in step 1 cannot run"
 
 echo "--- the product is the thing answering, not the platform placeholder ---"
-PUB_CODE=$(curl -s --noproxy '*' --max-time 25 -o /tmp/preflight-public.html -w '%{http_code}' "$PUBLIC" 2>/dev/null)
-PUB_ASSETS=$(grep -oE 'assets/index-[A-Za-z0-9_-]+\.js' /tmp/preflight-public.html 2>/dev/null | sort -u | head -1)
+# Private temp dir: /tmp/preflight-public.html was a FIXED name, and on a shared /tmp two runs (this tool
+# and the movement's own scripts) can tread on each other's file mid-read.
+TMPD=$(mktemp -d /tmp/preflight-XXXXXX); trap 'rm -rf "$TMPD"' EXIT
+# `Accept-Encoding: identity` so the bytes hashed below are the file's bytes, not a compressed variant.
+PUB_CODE=$(curl -s --noproxy '*' -H 'Accept-Encoding: identity' --max-time 25 -o "$TMPD/public.html" -w '%{http_code}' "$PUBLIC" 2>/dev/null)
+PUB_ASSETS=$(grep -oE 'assets/index-[A-Za-z0-9_-]+\.js' "$TMPD/public.html" 2>/dev/null | sort -u | head -1)
+LIVE_ASSET="${PUB_ASSETS#assets/}"
 [ "$PUB_CODE" = "200" ] && ok "public GET / -> 200" || no "public GET / -> ${PUB_CODE:-none}"
-[ "$PUB_ASSETS" = "assets/$EXPECT_ASSET" ] && ok "public HTML names assets/$EXPECT_ASSET (ours, not the placeholder)" || no "public HTML names '${PUB_ASSETS:-nothing}' — expected assets/$EXPECT_ASSET"
+if [ -z "$LIVE_ASSET" ]; then
+  no "the public HTML names no assets/index-*.js at all — the URL is not serving a built product"
+else
+  if [ -n "$EXPECT_ASSET" ]; then
+    [ "$LIVE_ASSET" = "$EXPECT_ASSET" ] && ok "public HTML names assets/$EXPECT_ASSET — the asset you pinned" || no "public HTML names 'assets/$LIVE_ASSET', but ANTUM_EXPECT_ASSET names $EXPECT_ASSET"
+  else
+    note "public HTML names assets/$LIVE_ASSET (DERIVED from that same HTML — not asserted; the check that can redden is next)"
+  fi
+  # THE NON-VACUOUS FORM (rule 2): the bytes the URL serves must BE this tree's own build of that asset.
+  # A foreign server on 3000 answers 200 with a bundle this tree does not hold, and that is a FAIL here.
+  curl -s --noproxy '*' -H 'Accept-Encoding: identity' --max-time 40 -o "$TMPD/live.js" "$PUBLIC/assets/$LIVE_ASSET" 2>/dev/null
+  LIVE_MD5=$(md5sum "$TMPD/live.js" 2>/dev/null | cut -d' ' -f1)
+  DIST_MD5=$(md5sum "$DIST/assets/$LIVE_ASSET" 2>/dev/null | cut -d' ' -f1)
+  if [ -z "${DIST_MD5:-}" ]; then
+    no "the URL serves assets/$LIVE_ASSET (${LIVE_MD5:-?}) but $DIST holds no such file — the product answering is NOT this tree's build (the platform placeholder on port 3000 looks exactly like this)"
+  elif [ "$LIVE_MD5" = "$DIST_MD5" ]; then
+    ok "the bytes the URL serves ARE $DIST/assets/$LIVE_ASSET (md5 $LIVE_MD5) — the product answering is this tree's own build"
+  else
+    no "the URL serves assets/$LIVE_ASSET md5 ${LIVE_MD5:-?} but this tree's dist file is $DIST_MD5 — what is served and what this tree built disagree"
+  fi
+fi
 LPID=$(lsof -t -i :3000 -sTCP:LISTEN 2>/dev/null | head -1)
 LARGS=$(ps -p "${LPID:-0}" -o args= 2>/dev/null)
 case "$LARGS" in
@@ -282,9 +381,37 @@ elif ! git -C "$REPO" cat-file -e "$SHIPPED^{commit}" 2>/dev/null; then
 else
   N=$(git -C "$REPO" grep -c 'Final Settlement Payment' "$SHIPPED" -- server/compliance_engine.js 2>/dev/null | sed 's/.*://')
   [ "${N:-0}" -ge 1 ] && ok "step 1's gate string present in the shipped tree ($N hits)" || no "step 1's gate string 'Final Settlement Payment' NOT in server/compliance_engine.js at ${SHIPPED:0:12} — the cutover would refuse at step 1"
+  # THE RETIRED ROUTES, AUDITED IN THE SOURCE (2026-10-20, rule 3). This package used to state they answer
+  # 404. Measured on the host (movements/2026-10-20T1607Z/retired-routes.out): with a token, 403 and
+  # Content-Length 0; without one, 401; and /api/nonexistent-route-xyz — never registered at all —
+  # answers IDENTICALLY, because the deny-by-default /api gate fires before routing. A probe therefore
+  # cannot tell a retired route from one that never existed. The router's own bytes can.
+  ROUTE_REF="${ANTUM_ROUTE_REF:-$SHIPPED}"
+  ROUTER=$(git -C "$REPO" show "$ROUTE_REF:server/index.js" 2>/dev/null)
+  POS=$(printf '%s\n' "$ROUTER" | grep -c "app.get('/api/employees',")
+  R1=$(printf '%s\n' "$ROUTER" | grep -c "app.get('/api/employees/:id',")
+  R2=$(printf '%s\n' "$ROUTER" | grep -c "app.get('/api/compliance/report',")
+  if [ "${POS:-0}" -lt 1 ]; then
+    no "the retired-route audit read no router out of ${ROUTE_REF:0:12} (no registered GET /api/employees found) — leave it unjudged: an 'absent' verdict from a file that is not a router is vacuous"
+  else
+    [ "${R1:-0}" -eq 0 ] && ok "retired route absent from ${ROUTE_REF:0:12}'s router: GET /api/employees/:id (0 registrations; the live GET /api/employees is present, so the audit can tell the two apart)" || no "GET /api/employees/:id IS still registered in server/index.js at ${ROUTE_REF:0:12} — the retirement did not hold"
+    [ "${R2:-0}" -eq 0 ] && ok "retired route absent from ${ROUTE_REF:0:12}'s router: GET /api/compliance/report (0 registrations)" || no "GET /api/compliance/report IS still registered in server/index.js at ${ROUTE_REF:0:12} — the retirement did not hold"
+  fi
   if [ "$SHIPPED" = "$(git -C "$REPO" rev-parse "$MEASURED_TIP" 2>/dev/null)" ]; then
     AFTER_ASSET="$MEASURED_ASSET"
-    ok "the shipped commit IS the commit this package measured (${MEASURED_TIP}) — the measured build stands"
+    if [ "$REC_SUPPLIED" -eq 1 ]; then
+      ok "the shipped commit IS the tip the record names (${MEASURED_TIP}) — and this record was SUPPLIED BY THIS RUN, not the recorded default: the numbers below are only as good as that measurement"
+    else
+      ok "the shipped commit IS the commit this package measured (${MEASURED_TIP}) — the measured build stands"
+    fi
+  elif [ "$REC_INCOHERENT" = 1 ]; then
+    # The refusal above has already failed this run. Do NOT also STATE a bundle: the record's tip and its
+    # numbers disagree, so any asset named here is one nobody measured at this tip. Found while writing
+    # this pack - the tip-alone run REFUSED and then still printed the default record's
+    # assets/index-BG0peuOK.js for the overridden tip 2b14a94, whose real bundle is index-C9vf7pQB.js
+    # (the one the host actually served at that tip). A refusal that still names an unmeasured number is
+    # half a refusal.
+    AFTER_ASSET="<undetermined - the record is half-overridden, so nothing is stated here>"
   else
     AHEAD=$(git -C "$REPO" rev-list --count "$MEASURED_TIP..$SHIPPED" 2>/dev/null)
     CLIENT_DIFF=$(git -C "$REPO" diff --name-only "$MEASURED_TIP" "$SHIPPED" -- client/ 2>/dev/null)
@@ -315,8 +442,10 @@ if [ "$AFTER_ASSET" = "$MEASURED_ASSET" ]; then
 else
   echo "    assets/ $AFTER_ASSET"
 fi
-echo "    public GET / -> 200 with the served HTML naming that asset, the listener on 3000 ours, the guard verified from its lock"
-echo "    the two retired routes answer 404 (GET /api/employees/:id, GET /api/compliance/report)"
+echo "    public GET / -> 200 naming an asset whose bytes ARE this tree's dist file, the listener on 3000 ours, the guard verified from its lock"
+echo "    the two retired routes (GET /api/employees/:id, GET /api/compliance/report) ABSENT from the shipped router."
+echo "    They are not probed: from outside they answer 401 without a token and an empty 403 with one — exactly"
+echo "    like a path that was never registered, because the /api gate fires before routing (measured 2026-10-20)."
 echo
 if [ "$FAIL" -eq 0 ]; then echo "=== PREFLIGHT PASS — the movement's preconditions hold ($(date -Iseconds)) ==="; exit 0
 else echo "=== PREFLIGHT FAIL — $FAIL precondition(s) do not hold; do not start the movement ==="; exit 1; fi
