@@ -178,6 +178,16 @@ CHECKS = [
     dict(id="observe-serve-pair", mode="full", expect="green", home="operator CLI, off-host",
          cmd=["bash", "scripts/observe-serve-pair-test.sh"],
          what="the public-URL observer does what it claims, off-host, without touching the live tree"),
+
+    # Wired in 2026-10-20 on the lead's ruling. It spawns two decoy processes in the shape of the
+    # 2026-10-20 keep-alive.log entries and needs a LIVE armed guard (its lock) to be the true-positive
+    # control, so it is a host instrument, not a tree check - hence --full. Exit 2 prints as
+    # CANNOT-JUDGE and FAILS the run (deliberately): when the rig cannot judge - same bytes on both
+    # sides, an OLD that already carries the fix, or no live loop to control against - saying so beats
+    # a green nobody measured. It never signals the guard.
+    dict(id="guard-role-vs-shape", mode="full", expect="green", home="operator CLI, on a host with an armed guard",
+         cmd=["bash", "scripts/guard-role-vs-shape-test.sh"],
+         what="the duplicate-guard check judges a process's ROLE (argv position: interpreter + non-flag first arg) not the SHAPE of a string that merely names keep-alive.sh. Compares the recorded pre-fix revision (2b14a94) against this tree, holds two decoys in the log's own shape, and requires both sides to count the live loop. exit 2 = CANNOT-JUDGE; it never signals, starts or stops a guard"),
 ]
 
 SKIPS = [

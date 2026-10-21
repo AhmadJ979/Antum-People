@@ -30,10 +30,13 @@
 #   --old ref|path  the version to call the DEFECT. Default: the recorded defective revision
 #                   (see DEFECT_REV / DEFECT_MD5 below). Override with another pre-fix revision.
 #
-# Three outcomes, and only three: exit 0 = the red reproduced on OLD and not on NEW, with the live
-# loop still counted by both; exit 1 = one of those assertions genuinely failed; exit 2 = CANNOT
-# JUDGE - the run could not compare anything (same bytes on both sides, or an OLD that already
-# carries the fix, or an OLD that counts no decoy). A cannot-judge is never reported as a FAIL.
+# Four outcomes, and only four: exit 0 = the red reproduced on OLD and not on NEW, with the live loop
+# still counted by both; exit 1 = one of those assertions genuinely failed; exit 2 = CANNOT JUDGE - the
+# run could not compare anything (same bytes on both sides, or an OLD that already carries the fix, or
+# an OLD that counts no decoy, or NO LIVE LOOP on this host to be the true-positive control). A
+# cannot-judge is never reported as a FAIL, and it is NEVER a green either: without the true-positive
+# half the run has not shown the check still protects the port, so it must not exit 0. This is what
+# makes the test wireable into scripts/check-all.py --full, where exit 2 prints as CANNOT-JUDGE.
 #   --keep          leave the decoy processes running for inspection (they exit on their own else)
 #
 # Read-only with respect to the guard: it never signals, starts or stops a loop.
@@ -214,7 +217,14 @@ if [ -n "$REAL" ]; then
              "- the check no longer protects the port"; rc=1
     fi
 else
-    echo "  SKIP  no live loop on this host: the true-positive half was not asserted"
+    # NOT a skip, and NOT a green: the true-positive half is the control that catches a check which
+    # stops protecting the port, so a run without it has judged nothing. Asserted explicitly, because
+    # "SKIP" here printed under an exit 0 - the exact shape of a green the rig cannot judge.
+    echo "CANNOT-JUDGE: no live loop on this host ($DEPLOY_DIR/server/keep-alive.lock names none) - the" >&2
+    echo "  true-positive half could not be asserted, so this run has not shown that the check still" >&2
+    echo "  protects the port. Serialise nothing from it; arm a guard and re-run (or use --old <ref> on a" >&2
+    echo "  host that has one)." >&2
+    rc=2
 fi
 [ "$KEEP" = 1 ] || true
 exit "$rc"
