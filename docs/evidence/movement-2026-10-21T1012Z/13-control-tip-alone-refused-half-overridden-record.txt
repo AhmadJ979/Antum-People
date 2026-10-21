@@ -1,0 +1,54 @@
+=== pre-cutover preflight 2026-10-21T10:14:08+00:00 ===
+  script: /home/team/shared/cutover-preflight.sh | 36819 B | mtime 2026-10-21 10:12:04 | sha256 8f6f5abbf1428f29
+  deployed tree: /home/team/shared/probable-octo-sniffle
+  serving today: DERIVED (the deployed tree HEAD)  asset DERIVED (from the served HTML)
+--- the after-state record: the tip and its bundle move together, or the run refuses ---
+  FAIL  HALF-OVERRIDDEN RECORD: 0/6 bundle field(s) supplied, missing: ASSET ASSET_BYTES ASSET_MD5 CSS CSS_BYTES CSS_MD5 — a tip is not a measurement, and an override that re-points the tip while keeping another tip's bundle makes this run state an after-state nobody measured. Supply the WHOLE record (ANTUM_MEASURED_TIP + ANTUM_MEASURED_ASSET + _ASSET_BYTES + _ASSET_MD5 + _CSS + _CSS_BYTES + _CSS_MD5) or clear it, then re-run
+--- disk: the movement's measured need is ~3.8 MB; a full disk fails a movement silently ---
+  PASS  /home free 2275800 KB (>= 200000 KB)
+  PASS  /home inodes free 7411967576
+--- the shipped commit, resolved against the REMOTE (never a local remote-tracking ref) ---
+  PASS  remote tip origin/main = 7000a70abcd0 — 7000a70 Merge pull request #278 from AhmadJ979/feat/wire-guard-test-into-full
+  PASS  clone's origin/main ref matches the remote (7000a70abcd08f5932f69ef29be3086df1b30d9b)
+  PASS  deployed tree's origin/main ref is current
+--- the tree is where we think it is, and has not already moved ---
+  deployed tree HEAD = 7000a70 (DERIVED: the tree IS what the host serves — nothing asserted against itself; pin ANTUM_EXPECT_SERVED to assert a specific commit)
+  PASS  deployed tree has an origin remote
+--- the product is the thing answering, not the platform placeholder ---
+  PASS  public GET / -> 200
+  public HTML names assets/index-C9vf7pQB.js (DERIVED from that same HTML — not asserted; the check that can redden is next)
+  PASS  the bytes the URL serves ARE /home/team/shared/probable-octo-sniffle/client/dist/assets/index-C9vf7pQB.js (md5 e6ff5da3fd614ddcfe2c0beaa68164f4) — the product answering is this tree's own build
+  PASS  port 3000 held by pid 15458: node index.js
+  PASS  listener cwd is the deployed tree's server/
+  no-token contract: GET /api/employees -> 401 (want 401)
+--- the guard is alive, judged by its own lock and /proc (never by matching a process name) ---
+  PASS  guard alive: pid 15702 (bash scripts/keep-alive.sh )
+  PASS  lock holders: 1 (only the guard)
+--- the login-shell hook: which revision is it, and does it pair with its deploy ---
+  PASS  hook installed at /etc/profile.d/zz-antum-product-guard.sh: body md5 728bf2cce72b8c6f9a3cf257f3dfc070 == the deploy copy's revision 7000a70abcd0 — PAIRED with the deploy that writes the marker
+  the marker this deploy writes has a reader here: the live hook mentions deploy-in-progress 3 time(s), the deploy copy's hook 3 time(s)
+    the hook at 7000a70abcd0 (=served tree) IS origin/main's
+--- the rollback target exists and is the bytes we think ---
+  PASS  rollback bundle asset index-Cc1GodRa.js md5 9cdfbe5da81f6acf38fdb10de8a5e6fd
+  PASS  rollback bundle server/index.js md5 7467cec01c90cc3a1fb0156999c1997a
+  WARN  deployed tree's server/index.js md5 c67fca1a66958517647b8f6463e50aa2 != the rollback bundle's 7467cec01c90cc3a1fb0156999c1997a — expected after a cutover: the tree carries the newer code
+--- the shipped tree's own content and the after-state expectation, derived at run time ---
+  PASS  step 1's gate string present in the shipped tree (2 hits)
+  PASS  retired route absent from 7000a70abcd0's router: GET /api/employees/:id (0 registrations; the live GET /api/employees is present, so the audit can tell the two apart)
+  PASS  retired route absent from 7000a70abcd0's router: GET /api/compliance/report (0 registrations)
+  PASS  the shipped commit IS the commit this package measured (7000a70abcd08f5932f69ef29be3086df1b30d9b) — the measured build stands
+--- step 3/4's inputs ---
+  PASS  demo credential file present
+  PASS  bcryptjs present in the deployed tree (step 3 hashes the credential)
+  PASS  restart env: JWT_SECRET=present ENCRYPTION_KEY=present 
+
+--- after the movement, expect (derived from this run) ---
+    commit  7000a70abcd08f5932f69ef29be3086df1b30d9b
+    assets/index-BG0peuOK.js   274242 B   md5 f65f15c109e76e86cd8b8abe7102f748
+    assets/index-pNSrK3wr.css   35365 B   md5 eda548202468a7e0293053981037a594
+    public GET / -> 200 naming an asset whose bytes ARE this tree's dist file, the listener on 3000 ours, the guard verified from its lock
+    the two retired routes (GET /api/employees/:id, GET /api/compliance/report) ABSENT from the shipped router.
+    They are not probed: from outside they answer 401 without a token and an empty 403 with one — exactly
+    like a path that was never registered, because the /api gate fires before routing (measured 2026-10-20).
+
+=== PREFLIGHT FAIL — 1 precondition(s) do not hold; do not start the movement ===
