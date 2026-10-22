@@ -188,6 +188,17 @@ test('P3-1 stores NO milestone: no table in the schema, no insert in the seeder'
   // Anti-vacuous: the seeder DOES set the hire's own window, so the line above cannot pass because
   // probation was never seeded at all.
   assert.ok(/probation_end_date/.test(seederCode), 'the seeder sets the probation window for the demo hires');
-  // And what the stripper is for: with the comments kept, this same scan finds four of them.
+  // And it must actually WRITE it. This is the assertion the first version of this check lacked, and
+  // the evidence rig found the defect it would have caught: the seeder enumerates its INSERT columns,
+  // so naming `probation_end_date` on the employee object wrote nothing, and the live read came back
+  // "employees: 13 | carrying a probation window: 0" — a field that takes effect nowhere, which reads
+  // exactly like a hire who is not on probation.
+  const insert = /INSERT OR REPLACE INTO employees \(([\s\S]*?)\)\s*VALUES/.exec(seederCode);
+  assert.ok(insert, 'the employees insert parsed (an unparsed insert must not pass this check)');
+  const insertColumns = insert[1].split(',').map((c) => c.trim());
+  assert.ok(insertColumns.length > 5, 'the column list parsed');
+  assert.ok(insertColumns.includes('probation_end_date'),
+    'the window is among the columns the insert actually writes, not only named on the object');
+  // The comments are still there to be ignored by the scan above.
   assert.strictEqual((seeder.match(/\bmilestone\b/gi) || []).length, 4, 'the comments are still there to be ignored');
 });
