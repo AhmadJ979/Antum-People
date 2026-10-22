@@ -22,7 +22,13 @@ tree, and it reddens the moment a record names a bundle this tree *has* with num
 
 ## Measured (transcripts in this directory, run at the merge base `043b752`)
 
-| run | old script (the installed host copy, unchanged bytes `8f6f5abb…`) | new script (`3202c691…`) |
+| run | old script (the **installed host copy**, unchanged since `043b752`: **md5 `d25461de…`**, sha256 `8f6f5abb…`) | new script (the bytes **#284 merged**, i.e. `d395bc3` = `883038a`: **md5 `d8b88e1e…`**, sha256 `3202c691…`) |
+
+**These digests are pinned to the revisions named, NOT to "main".** A later merge rewrote the same
+`scripts/cutover-preflight.sh`: **#285 merged at 2026-10-22T10:22:33Z as `9736422`**, so main now carries
+md5 `fffe9c1f…` / sha256 `7be04f77…`. A reader who measures main cannot reproduce the `d8b88e1e…` above —
+and that is why each digest here names the revision it belongs to. (`043b752` and `3d9e9ec` hold the
+pre-#284 bytes: md5 `158e4a9e…`, sha256 `ee1e009a…`.)
 |---|---|---|
 | whole record, asset md5 forced to zeros | **exit 0 — the gap** | **exit 1**, one FAIL naming `md5 e6ff5da3…` on disk against `0000…` in the record |
 | the same record with the right numbers | — | exit 0, two PASSes: "the record's numbers ARE the bytes this tree holds" |
@@ -43,7 +49,7 @@ the state the host is actually running, not a construction.
 naming it are under `scripts/` (`check-all.py`, `check-design-concepts-index.py`, `install-host-tools.sh`,
 `install-host-tools-test.sh`, `rollback-to-9d2182a.sh`), which is a citation, not a load.
 
-**The installed host copy stays old (`8f6f5abb…`) until the next install/movement.** That is the same
+**The installed host copy stays old (md5 `d25461de…`, sha256 `8f6f5abb…`, i.e. the `043b752` bytes) until the next install/movement.** That is the same
 consequence #277 documented, and it is the reason this evidence pack exists rather than a claim that the
 host is already fixed.
 
