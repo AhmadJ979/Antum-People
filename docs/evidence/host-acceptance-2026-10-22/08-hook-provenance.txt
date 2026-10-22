@@ -1,0 +1,69 @@
+== the hook's own provenance (its header) ==
+# >>> ANTUM HOST-TOOL PROVENANCE (regenerate: scripts/install-host-tools.sh — do not hand-edit)
+# host-tool-of: scripts/antum-product-guard-hook.sh
+# source-revision: 7000a70abcd08f5932f69ef29be3086df1b30d9b (working-tree)
+# source-blob-md5: 728bf2cce72b8c6f9a3cf257f3dfc070
+# tree-state: clean
+# the body below is that blob, byte for byte
+# <<< ANTUM HOST-TOOL PROVENANCE
+# Antum People — the login-shell hook that re-arms the product guard.
+#
+# INSTALLED AS: /etc/profile.d/zz-antum-product-guard.sh  (the zz- prefix loads it LAST)
+# INSTALLED BY: /home/team/shared/deploy-main.sh, which copies this file and asserts the installed
+#               bytes equal this blob. Before 2026-10-13 the only copy was host state in
+#               /etc/profile.d — one lost machine away from gone.
+# COMMITTED MODE: 644 — /etc/profile.d files are *sourced*, not executed.
+#
+# WHY THIS EXISTS
+#   This host has no cron daemon and no systemd, so nothing re-arms
+#   /home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh after a restart. Three reboots
+#   killed the product AND its guard, and each time the public URL answered **200 with the
+#   platform's placeholder** — a silent failure that looks like a healthy site — until someone
+...
+md5 47243c0c15da383801dca39888b61219 bytes 7522
+tree's own copy: md5 728bf2cce72b8c6f9a3cf257f3dfc070 bytes 7147
+
+== does the guard write that path itself? ==
+19:#   /etc/profile.d/zz-antum-product-guard.sh - the repository file scripts/antum-product-guard-hook.sh,
+70:#      deploy-main.sh as /etc/profile.d/zz-antum-product-guard.sh: a login/interactive shell (what
+87:ENV_FILE="${ANTUM_ENV_FILE:-/etc/profile.d/cto-env-vars.sh}"
+
+== watch the hook's mtime across ~20s (does the guard rewrite it each poll?) ==
+2026-10-22 09:07:59.535211115 +0000  7522 bytes  /etc/profile.d/zz-antum-product-guard.sh
+2026-10-22 09:07:59.535211115 +0000  7522 bytes  /etc/profile.d/zz-antum-product-guard.sh
+2026-10-22 09:07:59.535211115 +0000  7522 bytes  /etc/profile.d/zz-antum-product-guard.sh
+
+== keep-alive.log: hook / arming lines ==
+1:2026-10-20T15:13:58+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2:2026-10-20T16:09:12+00:00 EXIT: killed by SIGTERM (loop pid 27783)
+3:2026-10-20T16:09:12+00:00 armed as its own session leader (pid 21352) - no detach needed
+5:2026-10-20T16:09:13+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+6:2026-10-20T16:10:17+00:00 EXIT: killed by SIGTERM (loop pid 21352)
+7:2026-10-20T16:10:18+00:00 armed as its own session leader (pid 23351) - no detach needed
+9:2026-10-20T16:10:18+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+10:2026-10-20T16:10:54+00:00 EXIT: killed by SIGTERM (loop pid 23351)
+11:2026-10-20T16:10:55+00:00 armed as its own session leader (pid 24580) - no detach needed
+13:2026-10-20T16:10:55+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+14:2026-10-20T16:12:15+00:00 EXIT: killed by SIGTERM (loop pid 24580)
+15:2026-10-20T16:12:17+00:00 armed as its own session leader (pid 27964) - no detach needed
+17:2026-10-20T16:12:17+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+18:2026-10-21T10:12:07+00:00 armed as its own session leader (pid 14756) - no detach needed
+20:2026-10-21T10:12:07+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+24:2026-10-21T10:12:23+00:00 EXIT: killed by SIGTERM (loop pid 14756)
+25:2026-10-21T10:12:23+00:00 armed as its own session leader (pid 15702) - no detach needed
+27:2026-10-21T10:12:23+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+28:2026-10-22T09:07:53+00:00 armed as its own session leader (pid 1457) - no detach needed
+30:2026-10-22T09:07:53+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+--- log tail:
+2026-10-21T10:12:07+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-21T10:12:07+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-21T10:12:18+00:00 port 3000 fails the 401 contract, held by 15175(node)  - evicting (port-claim convention)
+2026-10-21T10:12:20+00:00 starting server: port 3000, cwd /home/team/shared/probable-octo-sniffle/server
+2026-10-21T10:12:21+00:00 server answered the 401 contract on port 3000 after 1s
+2026-10-21T10:12:23+00:00 EXIT: killed by SIGTERM (loop pid 14756)
+2026-10-21T10:12:23+00:00 armed as its own session leader (pid 15702) - no detach needed
+2026-10-21T10:12:23+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-21T10:12:23+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-22T09:07:53+00:00 armed as its own session leader (pid 1457) - no detach needed
+2026-10-22T09:07:53+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-22T09:07:53+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock

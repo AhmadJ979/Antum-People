@@ -1,0 +1,31 @@
+== the guard process (lock PID 1457) ==
+lock contents: 1457
+started: Thu Oct 22 09:07:53 2026       00:52     1 bash scripts/keep-alive.sh
+
+== parent chain: what re-armed it ==
+  1457 <- parent 1: /bin/sh /entrypoint.sh 
+    (pid 1:) /bin/sh /entrypoint.sh 
+
+== role-loops: how many processes are actually the guard (argv, not pgrep -f) ==
+  pid 1457 argv: bash scripts/keep-alive.sh 
+  count by argv = 1
+  (pgrep -f keep-alive.sh would say:) 1457 
+
+== the guard's exit path in keep-alive.sh ==
+37:#   The lock is flock()ed on fd 9, which is released automatically when the loop dies.
+44:#   grep 'EXIT:' /home/team/shared/probable-octo-sniffle/server/keep-alive.log
+45:#   Every exit path writes one dated line naming the reason (lock held by PID X, killed by
+48:#   "loop ended unexpectedly (status N)" by the EXIT trap.
+120:# exit_reason marks an exit we have already explained, so the EXIT trap does not add a
+122:log_exit() { exit_reason="$1"; log "EXIT: $1"; }
+127:        log "EXIT: loop ended unexpectedly (status $status) - nothing re-arms this host, so the guard is now down"
+130:trap on_exit EXIT
+133:trap 'on_signal TERM 15' TERM
+134:trap 'on_signal INT 2' INT
+135:trap 'on_signal QUIT 3' QUIT
+138:trap 'log "SIGHUP received (arming session closing) - staying up"' HUP
+174:#     "EXIT: acquired the lock but another keep-alive.sh also guards ... - refusing to run a
+228:#   - the host's own session-bootstrap shell, and transient probes like it. They are shells
+585:    # This was `sleep "$POLL_INTERVAL" 9>&-` — a FOREGROUND sleep — and bash does not run a trap
+586:    # until the current foreground command finishes. So a SIGTERM arriving just after a poll began
+591:    # instead makes the wait interruptible: the trap runs at once, the loop logs its own exit and

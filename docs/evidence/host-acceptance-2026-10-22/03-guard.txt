@@ -1,0 +1,37 @@
+=== 3. THE GUARD — acceptance run 2026-10-22T09:10:18+00:00 ===
+
+--- A. armed state, before anything ---
+lock contents: 1457
+/proc/1457 exists: YES
+argv: bash scripts/keep-alive.sh 
+lock holder (lsof): bash    1457 root    9u   REG   0,29        5 18966738981 /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+role-loops by argv (NOT pgrep -f): 1
+hook: 2026-10-22 09:07:59.535211115 +0000 7522 bytes md5 47243c0c15da383801dca39888b61219
+deploy-in-progress marker: absent
+
+--- B. the guard's OWN exit path: SIGTERM to the lock PID (never a 30 s SIGKILL, never pkill -f) ---
+kill -TERM 1457 at 2026-10-22T09:10:18+00:00
+/proc/1457 after TERM: gone
+the line it printed:
+2026-10-22T09:10:18+00:00 EXIT: killed by SIGTERM (loop pid 1457)
+lock file now: '1457'  (a released lock is not a corpse naming a live PID)
+
+--- C. re-arm through the hook's own route: a login shell ---
+running: bash -l -c 'exit 0'  at 2026-10-22T09:10:18+00:00
+hook log, last 3 lines:
+2026-10-22T09:10:23+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:23+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:26+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+
+--- D. armed again? (lock + /proc + argv) ---
+lock contents: 1457
+/proc/1457 exists: NO
+bash: /proc/1457/cmdline: No such file or directory
+argv: 
+lock holder (lsof): bash    4077 root    9u   REG   0,29        5 18966738981 /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+role-loops by argv: 1
+keep-alive.log tail:
+2026-10-22T09:10:24+00:00 armed as its own session leader (pid 4448) - no detach needed
+2026-10-22T09:10:24+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4077 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:26+00:00 armed as its own session leader (pid 4544) - no detach needed
+2026-10-22T09:10:26+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4077 /usr/bin/bash scripts/keep-alive.sh;

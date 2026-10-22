@@ -1,0 +1,27 @@
+=== 4. the ONE operator-reachable entry point, AT THE DEPLOYED TREE (2026-10-22T09:11:20+00:00) ===
+tree: /home/team/shared/probable-octo-sniffle
+commit: 7000a70abcd08f5932f69ef29be3086df1b30d9b
+EXIT CODE = 0
+
+9:[OK           ] design-concepts-index    tree=7000a70   exit=0   0.0s
+15:[OK           ] index-ids                tree=7000a70   exit=0   0.2s
+21:[RED-KNOWN    ] doc-citations            tree=7000a70   exit=1   0.2s
+30:[OK           ] reachability-report      tree=7000a70   exit=0   0.1s
+36:[SKIP-FLAGGED ] suite                    tree=7000a70   exit=-   0.0s
+41:[OK           ] access-model             tree=7000a70   exit=0   0.2s
+47:[SKIP-FLAGGED ] cors-error-contract      tree=7000a70   exit=-   0.0s
+52:[SKIP-FLAGGED ] guard-deploy-marker      tree=7000a70   exit=-   0.0s
+57:[SKIP-FLAGGED ] install-host-tools       tree=7000a70   exit=-   0.0s
+62:[SKIP-FLAGGED ] keep-alive-deploypath    tree=7000a70   exit=-   0.0s
+67:[SKIP-FLAGGED ] observe-serve-pair       tree=7000a70   exit=-   0.0s
+72:[SKIP-FLAGGED ] guard-role-vs-shape      tree=7000a70   exit=-   0.0s
+109:VERDICT: no check is unexpectedly red. 1 check(s) are red in a state that is RECORDED as the defect state (doc-citations) -
+
+--- full verdict line:
+109:VERDICT: no check is unexpectedly red. 1 check(s) are red in a state that is RECORDED as the defect state (doc-citations) -
+
+=== extra: product identity on the host (not one of the five) ===
+port 3000 holder: node    1381 root   24u  IPv4   3633      0t0  TCP *:3000 (LISTEN)
+GET /api/employees (no token) -> 401  (want 401)
+GET / on 3000 -> 200, names: assets/index-BK_EwcpZ.css assets/index-C9vf7pQB.js 
+public URL /api/employees -> 401
