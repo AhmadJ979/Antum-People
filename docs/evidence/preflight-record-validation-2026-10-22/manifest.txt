@@ -7,4 +7,4 @@ eb8b9a967ea6b0d9f5732272e405cba0  02-gap-the-same-input-against-the-unchanged-in
 1461ed80a71f91bd1132d85e3830f1f4  07-empty-dist-still-reddens.txt
 77f0fe58f4b6bfaf4695dc8687c29af9  08-installer-suite-78-0.txt
 8d870994bcc97dd56bffc2f4bea3a1f2  09-entry-point-at-this-branch.txt
-678be141b8a0847c551c032dcb86e0be  README.md
+c0a613fcb934609a091ced427c615cdf  README.md
