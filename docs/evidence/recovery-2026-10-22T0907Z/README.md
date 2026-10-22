@@ -78,8 +78,36 @@ ancestor of `main`, all 19 files are blob-identical on `main`, the pack's manife
 `main`**, and `git diff 7000a70 origin/main` is those same 19 docs files with **no `server/`, `client/` or
 `scripts/` path among them** — so no movement is owed by it.
 
+## Addendum, 09:12Z: the guard this recovery left was replaced, and that is measured
+
+Everything above is true of **09:08:34Z**. It is no longer the current state, and an artefact that said
+otherwise would be stale, so:
+
+- **at 09:10:18Z the guard this recovery armed (pid 1457) was killed by SIGTERM** — the guard's own log
+  records the fact, and nothing in it records who sent the signal;
+- the lock then went stale, and for about twenty seconds a burst of login-shell hook arming attempts raced:
+  each "armed as its own session leader", then most exiting with *"acquired the lock but another
+  keep-alive.sh also guards … refusing to run a duplicate guard"*. **That refusal is the fix working** — the
+  guard declines to run a duplicate rather than racing the port;
+- **pid 4732 won and is the live guard.** At 09:11Z: lock names 4732, alive, **sole lock holder**, exactly
+  **ONE role-loop** by argv position, and the hook idle: *"guard already running (pid 4732), nothing to do"*.
+  The product still answers `/api/employees` **401** and the public URL still serves
+  `assets/index-C9vf7pQB.js`.
+
+**What the evidence does not say:** which process sent the SIGTERM. No guard test suite ran in that window —
+no scratch tree for one was created today, and the burst's shape is a login-shell burst after the
+replacement, not a rig's. A pattern kill (`pkill -f`) would produce this signature and is the team's
+forbidden move, but this pack does not assert that: it records the kill and the burst, and names the two
+candidates rather than choosing. `04-guard-log-tail-across-the-outage.txt` and
+`05-guard-handover-1457-to-4732.txt` carry the raw lines.
+
+**Consequence for the separate acceptance run (row `57f2f3b8`):** the guard that brief was queued against
+has now died twice (15702, then 1457) and the live one is **4732**. That brief must be re-grounded against
+the lock at the moment it runs, not against a PID written yesterday.
+
 ## Files
 
 `01-…` the recovery's own run-stamped transcript; `02-…` the replacement inventory taken before the
 recovery; `03-…` the post-recovery measurement and the merge check; `04-…` the guard's log across the
-outage (a tail, with the full log left on the host). `manifest.txt` lists every file here except itself.
+outage (a tail, with the full log left on the host); `05-…` the guard handover from 1457 to 4732.
+`manifest.txt` lists every file here except itself.

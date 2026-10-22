@@ -1,0 +1,59 @@
+# The guard handover, 2026-10-22T09:10:18Z -> 09:11:27Z — raw lines from the guard's own log,
+# plus a live reading taken afterwards. Recorded because the recovery above left pid 1457 and
+# the live guard is now 4732: the pack's earlier statements are true of 09:08:34Z only.
+
+## the guard log, 09:10:18 -> 09:10:37 (the kill, the stale lock, the burst)
+2026-10-22T09:10:18+00:00 EXIT: killed by SIGTERM (loop pid 1457)
+2026-10-22T09:10:18+00:00 armed as its own session leader (pid 4056) - no detach needed
+2026-10-22T09:10:18+00:00 armed as its own session leader (pid 4077) - no detach needed
+2026-10-22T09:10:18+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4077 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:18+00:00 lock held (attempt 1 of 3) - holders: 4077(bash) 4112(bash) 4119() 4120() 4121() 4122() ; the file names PID 1457 (DEAD - the file is stale)
+2026-10-22T09:10:21+00:00 armed as its own session leader (pid 4198) - no detach needed
+2026-10-22T09:10:21+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4077 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:22+00:00 armed as its own session leader (pid 4277) - no detach needed
+2026-10-22T09:10:22+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4077 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:23+00:00 armed as its own session leader (pid 4372) - no detach needed
+2026-10-22T09:10:23+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4077 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:24+00:00 armed as its own session leader (pid 4448) - no detach needed
+2026-10-22T09:10:24+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4077 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:26+00:00 armed as its own session leader (pid 4544) - no detach needed
+2026-10-22T09:10:26+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4077 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:27+00:00 armed as its own session leader (pid 4719) - no detach needed
+2026-10-22T09:10:27+00:00 armed as its own session leader (pid 4732) - no detach needed
+2026-10-22T09:10:27+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4077 /usr/bin/bash scripts/keep-alive.sh;4732 /usr/bin/bash scripts/keep-alive.sh;4769 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:27+00:00 lock held (attempt 1 of 3) - holders: 4077(bash) 4719(bash) 4732(bash) 4758(bash) 4759() 4760() 4769(bash) 4775() 4777() 4778() 4780() ; the file names PID 1457 (DEAD - the file is stale)
+2026-10-22T09:10:28+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:29+00:00 armed as its own session leader (pid 4982) - no detach needed
+2026-10-22T09:10:29+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:30+00:00 armed as its own session leader (pid 5058) - no detach needed
+2026-10-22T09:10:30+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:31+00:00 armed as its own session leader (pid 5145) - no detach needed
+2026-10-22T09:10:31+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:32+00:00 armed as its own session leader (pid 5238) - no detach needed
+2026-10-22T09:10:32+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:32+00:00 armed as its own session leader (pid 5313) - no detach needed
+2026-10-22T09:10:32+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:35+00:00 armed as its own session leader (pid 5433) - no detach needed
+2026-10-22T09:10:35+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:36+00:00 armed as its own session leader (pid 5512) - no detach needed
+2026-10-22T09:10:36+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:36+00:00 armed as its own session leader (pid 5585) - no detach needed
+2026-10-22T09:10:36+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:37+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-22T09:10:37+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+
+## live reading at 2026-10-22T09:13:02+00:00
+lock names: 4732  alive: yes
+args: /usr/bin/bash scripts/keep-alive.sh   cwd: /home/team/shared/probable-octo-sniffle
+lock holders: [4732 ]
+1457 alive: no
+role-loops by argv position:
+  pid 4732 /usr/bin/bash scripts/keep-alive.sh
+the hook's own decisions (tail):
+2026-10-22T09:12:57+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:13:02+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:13:02+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:13:02+00:00 hook: guard already running (pid 4732), nothing to do
+product: /api/employees on 3000 -> 401
+public: 200 naming [assets/index-C9vf7pQB.js]
+any guard test scratch tree created today: /tmp/guard1.txt /tmp/guard2.txt /tmp/r8-guard.txt 
