@@ -45,3 +45,8 @@ WHAT THIS PACK DOES NOT ESTABLISH. It is not a re-measurement: it says what the 
 instruments recorded at 2026-10-22T12:46:56+00:00, and what the observer measured
 off the URL afterwards. A reader who needs today's state must re-run `scripts/observe-serve-pair.sh`;
 the served pair is a point in time, never a rate.
+
+VERIFY THIS PACK: run `cd docs/evidence/movement-2026-10-22-1247 && md5sum -c manifest.txt` —
+ALWAYS FROM INSIDE THE PACK. md5sum resolves the manifest's names against the reader's current
+directory, so the same command from the repository root prints FAILED for every line. That is an
+invocation error, not a bad manifest; measured 2026-10-22 in a worktree at the commit.

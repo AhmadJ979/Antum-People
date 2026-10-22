@@ -1,5 +1,5 @@
 76066ddefa2afcc498615edb8861ebfa  ERRATUM.txt
-d68035ae9171ed9882875ec6f7452b36  README.txt
+df5536328ac1507bf79cf6ec1d12559a  README.txt
 ba248be6b422095d3c14180957b84163  client-suite.log
 5082ca8e0634a8fc9ef47076599ea39a  rig-run.txt
 071ce216bb95d57e2e02e6881c95e32e  server-suite.log
