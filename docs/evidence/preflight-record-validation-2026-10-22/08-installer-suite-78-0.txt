@@ -1,0 +1,110 @@
+=== install-host-tools-test 2026-10-22T09:22:13+00:00 ===
+  repo    /home/agent-senior-software-engineer/antum-people
+  scratch /tmp/host-tools-test.BIbTFE
+
+== (a) install from the tree; every installed body equals its source ==
+  PASS  (a) the installer exits 0 against a scratch destination
+  PASS  (a) deploy-main.sh is installed
+  PASS  (a) deploy-main.sh's BODY equals scripts/deploy-main.sh (independent strip)
+  PASS  (a) cutover-preflight.sh is installed
+  PASS  (a) cutover-preflight.sh's BODY equals scripts/cutover-preflight.sh (independent strip)
+  PASS  (a) restore-product.sh is installed
+  PASS  (a) restore-product.sh's BODY equals scripts/restore-product.sh (independent strip)
+  PASS  (a) rollback-to-9d2182a.sh is installed
+  PASS  (a) rollback-to-9d2182a.sh's BODY equals scripts/rollback-to-9d2182a.sh (independent strip)
+  PASS  (a) success-test.sh is installed
+  PASS  (a) success-test.sh's BODY equals scripts/success-test.sh (independent strip)
+  PASS  (a) observe-serve-pair.sh is installed
+  PASS  (a) observe-serve-pair.sh's BODY equals scripts/observe-serve-pair.sh (independent strip)
+  PASS  (a) zz-antum-product-guard.sh is installed
+  PASS  (a) zz-antum-product-guard.sh's BODY equals scripts/antum-product-guard-hook.sh (independent strip)
+  PASS  (a) the log reports seven installs
+  PASS  (a) the operator copies are executable
+  PASS  (a) the hook is 0644 — sourced, not executed (it reads 644)
+
+== (b) the provenance block is derived, not remembered ==
+  PASS  (b) the block names what it is a copy of
+  PASS  (b) and the revision it came from (043b752e8678)
+  PASS  (b) the recorded blob md5 is the source's real md5 (2cddb29515ee4ce9d1ba8310088dc4e5)
+  PASS  (b) it states whether the source tree was clean
+  PASS  (b) a shebang stays on line 1, with the block after it
+  PASS  (b) a file with no shebang gets the block at line 1
+  PASS  (b) the observer copy carries its own provenance too
+
+== (c) idempotence: a second run changes no byte and no mtime ==
+  PASS  (c) the second run exits 0
+  PASS  (c) every copy is byte-identical after the second run
+  PASS  (c) no file was rewritten (mtimes unchanged)
+  PASS  (c) and it says so instead of reporting a fresh install
+  PASS  (c) each copy is reported unchanged
+
+== (d) --verify is green when it matches and RED when a body is mutated ==
+  PASS  (d) verify is green on the installed set
+  PASS  (d) and prints VERIFIED
+  PASS  (d) it compared BODIES, and says so
+  PASS  (d) verify is RED (non-zero) on a mutated body
+  PASS  (d) it reports DRIFTED, not a silent green
+  PASS  (d) and names the file that drifted
+  PASS  (d) the summary says FAILED
+  PASS  (d) a re-install repairs the mutant
+
+== (e) a source that does not parse is refused, and the destination is untouched ==
+  PASS  (e) the installer fails rather than installing it
+  PASS  (e) and says REFUSED
+  PASS  (e) the installed copy is left exactly as it was
+
+== (f) the marker text agrees between the installer and the preflight ==
+  PASS  (f) the installer writes the open marker
+  PASS  (f) the preflight looks for the same open marker
+  PASS  (f) and the same close marker
+  PASS  (f) in both files
+  PASS  (f) the preflight labels which comparison it ran
+  PASS  (f) including the whole-file fallback
+  PASS  (f) and strips the block with the same range the installer writes
+  PASS  (f) the preflight's hook path is an override (rule 14), so the check can redden off-host
+
+== (g) the deploy routes both host-touching steps through the installer ==
+  PASS  (g) the deploy names the installer on both steps
+  PASS  (g) step 1b refreshes straight after the reset
+  PASS  (g) 6b documents a single install path
+  PASS  (g) the raw hook install is labelled a fallback
+  PASS  (g) and the label states where the hook must come from
+  PASS  (g) and it appears only after that label, never as the primary path
+  PASS  (g) and the marker order (write < reap < remove) that guard-deploy-marker-test.sh asserts is untouched
+
+== (h) the live host copies are exactly as they were ==
+  PASS  (h) /home/team/shared *.sh unchanged by this test
+  PASS  (h) the installed login-shell hook unchanged by this test
+
+== (i) the hook pairs with the deploy's revision, and says which ==
+  PASS  (i) installing the hook from a named revision exits 0
+  PASS  (i) the log NAMES the revision it installed from
+  PASS  (i) and the installed body is that revision's hook
+  PASS  (i) an UNRESOLVABLE revision does not crash it
+  PASS  (i) it falls back to the tree, and names that
+  PASS  (i) and says why, rather than guessing silently
+  PASS  (i) the preflight's deploy copy is an override (rule 14), so the pair can be exercised off-host
+  PASS  (i) and the preflight's verdict NAMES the deploy's revision
+  PASS  (i) and warns when the live hook has no marker reader
+
+== (j) behavioural: the preflight REDDENS on an unpaired pair and PASSES on a paired one ==
+  PASS  (j) an older hook against the deploy copy REDDENS, naming the mismatch
+  PASS  (j) and says the marker it writes has no reader there
+  PASS  (j) naming the revision the live hook is, not a distance
+  PASS  (j) a hook from the deploy's revision PAIRS
+  PASS  (j) and that same check stays quiet there
+  PASS  (j) and reports the marker having a reader
+
+== (l) the observer is wired where the movement and an operator will find it ==
+  PASS  (l) DEPLOY.md's post-movement step names the observer (the hand-done URL fetch is now the same assertion)
+  PASS  (l) the installer carries the observer in its TARGETS list
+  PASS  (l) as a 0755 OPERATOR copy — not sourced into every login shell
+  PASS  (l) and the only 0644 target is still the hook
+
+  SCOPE, stated rather than implied: the (i) checks that grep the preflight's text are SHAPE only —
+  they cannot tell whether a WARN fires. Behaviour is exercised above, in (j), off-host, and recorded
+  in full (red and green, with the exact lines) in docs/evidence/hook-pairing-2026-10-19/.
+  PASS  (k) the total this suite reports (78) is the number DEPLOY.md states (78)
+
+
+RESULT: 78 passed, 0 failed

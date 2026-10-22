@@ -58,6 +58,9 @@
 #   ANTUM_MEASURED_TIP=9d2182a bash /home/team/shared/cutover-preflight.sh        -> must exit 1 (the record
 #                                                                                    did not move with the tip)
 #   ...plus all six ANTUM_MEASURED_* fields -> the whole record moved, so the tip override is accepted
+#   the whole record with ANTUM_MEASURED_ASSET_MD5=00000000000000000000000000000000 -> must exit 1 (2026-10-22:
+#     the record's own numbers are checked against the bytes in the dist dir, not only against their shape —
+#     before this, a wrong md5 inside an otherwise correct record was STATED and the run went green)
 #   ANTUM_ROUTE_REF=<a revision that still registered it> bash ...                 -> must exit 1 (audit)
 set -uo pipefail
 
@@ -173,6 +176,31 @@ case "$MEASURED_ASSET_BYTES" in ''|*[!0-9]*) no "record: ANTUM_MEASURED_ASSET_BY
 case "$MEASURED_CSS_BYTES" in ''|*[!0-9]*) no "record: ANTUM_MEASURED_CSS_BYTES='$MEASURED_CSS_BYTES' is not a byte count";; esac
 case "$MEASURED_ASSET_MD5" in ????????*????????*????????*????????) : ;; *) no "record: ANTUM_MEASURED_ASSET_MD5='$MEASURED_ASSET_MD5' is not a 32-hex md5";; esac
 case "$MEASURED_CSS_MD5" in ????????*????????*????????*????????) : ;; *) no "record: ANTUM_MEASURED_CSS_MD5='$MEASURED_CSS_MD5' is not a 32-hex md5";; esac
+# ...and the numbers are checked against BYTES, not just against their own shape (2026-10-22). Until this,
+# the record was STATED and never validated: a run with ANTUM_MEASURED_ASSET_MD5=0000… and everything else
+# correct went green, so a record nobody had measured could reach the after-state as a PASS. The rows this
+# could be compared against are the ones this run already reads for the served-vs-dist check below, so the
+# comparison costs nothing and cannot be vacuous: a mismatch is a FAIL that names both numbers.
+# WHEN THE NAMED BUNDLE IS NOT ON DISK THIS IS A NOTE, NOT A FAIL. A preflight run BEFORE a build
+# legitimately states an after-state that is not built yet — that is what the record is for — and the check
+# that guards the bytes the public URL actually serves is the served-vs-dist one further down. So this adds
+# no failure to a bare run whose record predates the tree, and it reddens the moment the record names a
+# bundle this tree HAS but with numbers that are not its bytes.
+for _rec in "asset:$MEASURED_ASSET:$MEASURED_ASSET_BYTES:$MEASURED_ASSET_MD5" "css:$MEASURED_CSS:$MEASURED_CSS_BYTES:$MEASURED_CSS_MD5"; do
+  _rest="${_rec#*:}"; _name="${_rest%%:*}"; _rest="${_rest#*:}"
+  _bytes="${_rest%%:*}"; _md5="${_rest#*:}"
+  _f="$DIST/assets/$_name"; [ -f "$_f" ] || _f="$DIST/$_name"
+  if [ -f "$_f" ]; then
+    _abytes=$(stat -c %s "$_f" 2>/dev/null); _amd5=$(md5sum < "$_f" 2>/dev/null | cut -d' ' -f1)
+    if [ "$_amd5" = "$_md5" ] && [ "$_abytes" = "$_bytes" ]; then
+      ok "record vs disk: $_name is $_abytes B md5 $_amd5 in $DIST — the record's numbers ARE the bytes this tree holds"
+    else
+      no "record vs disk: the record states $_name $_bytes B md5 $_md5, but $( [ -f "$DIST/assets/$_name" ] && echo "$DIST/assets/$_name" || echo "$DIST/$_name" ) is $_abytes B md5 $_amd5 — the record's own numbers are not the bytes on disk (measured elsewhere, or the dist was rebuilt since). Re-measure and supply the WHOLE record; a record nobody measured must not reach the after-state as a PASS"
+    fi
+  else
+    note "  record vs disk: $_name is not in $DIST — a run BEFORE a build may state an after-state that is not built yet; the served-vs-dist check below is what guards the bytes the URL serves"
+  fi
+done
 
 echo "--- disk: the movement's measured need is ~3.8 MB; a full disk fails a movement silently ---"
 FREE_KB=$(df --output=avail -k /home | tail -1 | tr -d ' ')

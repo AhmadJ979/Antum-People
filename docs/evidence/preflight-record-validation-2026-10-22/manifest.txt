@@ -1,0 +1,10 @@
+ca02f01a3650c2410da4ca03382bf090  01-gap-closed-wrong-asset-md5-now-reddens.txt
+eb8b9a967ea6b0d9f5732272e405cba0  02-gap-the-same-input-against-the-unchanged-installed-copy.txt
+4dacd2a1eed258caf08df00010f0c666  03-the-correct-record-passes-with-the-new-lines.txt
+910cd0ddb44069674a9a8a6a78d2cdae  04-bare-run-before.txt
+01c353e1bb701b38045f2ddf2e4a7476  05-bare-run-after-same-fail-count-two-notes.txt
+115673f77e0543605e691ed803e4bbfb  06-half-overridden-record-still-refused.txt
+1461ed80a71f91bd1132d85e3830f1f4  07-empty-dist-still-reddens.txt
+77f0fe58f4b6bfaf4695dc8687c29af9  08-installer-suite-78-0.txt
+8d870994bcc97dd56bffc2f4bea3a1f2  09-entry-point-at-this-branch.txt
+678be141b8a0847c551c032dcb86e0be  README.md
