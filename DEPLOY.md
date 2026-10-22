@@ -39,12 +39,50 @@ The product uses a private SQLite database, isolated from the team coordination 
   ```
 
 ## Maintenance & Stability
-The site is kept alive by a monitoring loop that restarts the server if port 3000 is empty.
+The **product** server is kept alive by a monitoring loop that restarts it when nothing answers on port 3000
+— corrected 2026-10-22 to name the product; the loop is `scripts/keep-alive.sh`, and the correction is
+recorded in **Port 3000 — who holds it, by owner decision** below.
 - **Keep-Alive Script**: `scripts/keep-alive.sh`.
 - **Log**: `server/keep-alive.log`.
 - **Arming**: `nohup ./scripts/keep-alive.sh &`
 
 **NOTE**: This host does not support systemd or crontab for non-root users. The loop must be manually re-armed after a host restart.
+
+### Port 3000 — who holds it, by owner decision (decision 2, 2026-10-22)
+
+**Ruling:** the product **keeps port 3000**, and the platform's site URLs serving the product is **accepted**.
+Owner decision 2, ruled 2026-10-22; it upholds the 2026-10-09 finding recorded in
+`cutover-20261009/README.md` under *Standing facts from this run*, which listed the same three options and left
+the choice open. **The product is not moved off 3000.**
+
+Read-only measurements on the live host, 2026-10-22 — re-measured for the decision rather than carried from that
+record:
+
+- port 3000 is held by **`node` pid 1381** (started 11:20:23), cwd `.../probable-octo-sniffle/server` — the product;
+- the live URL and the `-dev` URL both answer **HTTP 200**, and both pages name **`assets/index-C9vf7pQB.js`**;
+- the deployed `client/dist/index.html` names the **same** bundle;
+- `GET /api/employees` on the live URL answers **401** — the product's own gate, so the URL is served by the product.
+
+**What an operator does about it.** A foreign process found on 3000 — the supervised `vite dev` for
+`/home/team/shared/site` is the one that appears — is **evicted and the port re-claimed**; that is what the
+movement already does at step 4 (`deploy-main.sh` resets, builds, seeds, restarts, **claims port 3000**, verifies,
+re-arms the guard). Nothing in this ruling asks an operator to free 3000 for the website.
+
+**The line above, corrected 2026-10-22.** It read *"The site is kept alive by a monitoring loop that restarts the
+server if port 3000 is empty"* (written 2026-09-19, when the platform's website was not yet a second web surface
+on the same port). The loop its own bullets name — `scripts/keep-alive.sh`, `server/keep-alive.log` — restarts the
+**product**: that script's header states the health contract ("401 contract on PORT (default 3000). Nothing
+listening -> start the server"), and what it starts is `node index.js` in the product's deploy directory. So the
+loop is the product's guard, not the website's; the website has no serving path while the product holds 3000
+(measured 2026-10-09; no website process was listening on any port when the figures above were taken). The
+sentence above now names the product.
+
+**Open question, not a claim.** The website's own code targets that same port — `site/vite.config.ts:9`,
+`site/serve.ts:18` (`const PORT = 3000`), `site/publish.sh` restarts the site on 3000 — and `site/serve.ts:31-46`
+frees the port before binding by killing whatever is listening on it, under `sudo`
+(`lsof -t -iTCP:3000 -sTCP:LISTEN` → `kill`). **What a publish would do to what either URL serves has not been
+measured.** Publishing is the owner's act; this ruling does not depend on its outcome. It is flagged only because
+3000 is the port the ruling assigns to the product.
 
 ## Verification
 1. **CLI**: `curl -s --noproxy '*' http://127.0.0.1:3000 | grep "Antum People"`
