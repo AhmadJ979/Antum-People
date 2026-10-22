@@ -1,0 +1,84 @@
+# The guard's own log across the outage — the LAST 80 lines, tail only.
+# The full 55 KB log stays on the host at <deploy>/server/keep-alive.log; this tail spans the
+# arm before the replacement (2026-10-21T10:12:23), the silence, and the re-arm (2026-10-22T09:07:53).
+
+2026-10-20T05:15:19+00:00 starting server: port 3000, cwd /home/team/shared/probable-octo-sniffle/server
+2026-10-20T05:15:20+00:00 server answered the 401 contract on port 3000 after 1s
+2026-10-20T05:15:56+00:00 armed as its own session leader (pid 2731) - no detach needed
+2026-10-20T05:15:56+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T05:15:56+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T06:51:10+00:00 armed as its own session leader (pid 4604) - no detach needed
+2026-10-20T06:51:10+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T06:51:10+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T08:50:06+00:00 armed as its own session leader (pid 27453) - no detach needed
+2026-10-20T08:50:06+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T08:50:06+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T09:07:09+00:00 armed as its own session leader (pid 25958) - no detach needed
+2026-10-20T09:07:09+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T09:07:09+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T09:30:29+00:00 armed as its own session leader (pid 28528) - no detach needed
+2026-10-20T09:30:29+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T09:30:29+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T09:47:35+00:00 armed as its own session leader (pid 24780) - no detach needed
+2026-10-20T09:47:35+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T09:47:35+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T09:48:41+00:00 EXIT: killed by SIGTERM (loop pid 24780)
+2026-10-20T09:48:41+00:00 armed as its own session leader (pid 27117) - no detach needed
+2026-10-20T09:48:41+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T09:48:41+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T09:48:47+00:00 armed as its own session leader (pid 27345) - no detach needed
+2026-10-20T09:48:47+00:00 lock held (attempt 1 of 3) - holders: 27117(bash) 27345(bash) 27361(bash) 27365() 27366() 27367() 27368() ; the file names PID 27117 (alive)
+2026-10-20T09:48:57+00:00 lock held (attempt 2 of 3) - holders: 27117(bash) 27345(bash) 27590(bash) 27594() 27595() 27596() 27597() ; the file names PID 27117 (alive)
+2026-10-20T09:49:07+00:00 lock held (attempt 3 of 3) - holders: 27117(bash) 27345(bash) 27879(bash) 27887() 27888() 27889() 27891() ; the file names PID 27117 (alive)
+2026-10-20T09:49:08+00:00 EXIT: refusing to start: a live keep-alive.sh already guards /home/team/shared/probable-octo-sniffle on port 3000 - 27117 /usr/bin/bash scripts/keep-alive.sh;; holders: 27117(bash) 27345(bash) 27999(bash) 28004() 28005() 28006() 28007() ; the file names PID 27117 (alive)
+2026-10-20T15:12:06+00:00 EXIT: killed by SIGTERM (loop pid 27117)
+2026-10-20T15:12:06+00:00 armed as its own session leader (pid 23028) - no detach needed
+2026-10-20T15:12:06+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T15:12:06+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T15:13:31+00:00 EXIT: killed by SIGTERM (loop pid 23028)
+2026-10-20T15:13:31+00:00 armed as its own session leader (pid 26248) - no detach needed
+2026-10-20T15:13:31+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T15:13:31+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T15:13:46+00:00 EXIT: killed by SIGTERM (loop pid 26248)
+2026-10-20T15:13:46+00:00 armed as its own session leader (pid 27208) - no detach needed
+2026-10-20T15:13:46+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';27195 bash -lc HOME=/home/agent-lead bash -lc 'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"';27207 bash -lc HOME=/home/agent-lead bash -lc 'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"';
+2026-10-20T15:13:48+00:00 armed as its own session leader (pid 27364) - no detach needed
+2026-10-20T15:13:48+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';27195 bash -lc HOME=/home/agent-lead bash -lc 'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"';
+2026-10-20T15:13:51+00:00 armed as its own session leader (pid 27471) - no detach needed
+2026-10-20T15:13:51+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';27195 bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists";27470 bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists";
+2026-10-20T15:13:53+00:00 armed as its own session leader (pid 27582) - no detach needed
+2026-10-20T15:13:53+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';27195 bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists";
+2026-10-20T15:13:56+00:00 armed as its own session leader (pid 27687) - no detach needed
+2026-10-20T15:13:56+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 27193 sh -c bash -lc 'HOME=/home/agent-lead bash -lc '\''cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'\''';
+2026-10-20T15:13:58+00:00 armed as its own session leader (pid 27783) - no detach needed
+2026-10-20T15:13:58+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T15:13:58+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T16:09:12+00:00 EXIT: killed by SIGTERM (loop pid 27783)
+2026-10-20T16:09:12+00:00 armed as its own session leader (pid 21352) - no detach needed
+2026-10-20T16:09:13+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T16:09:13+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T16:10:17+00:00 EXIT: killed by SIGTERM (loop pid 21352)
+2026-10-20T16:10:18+00:00 armed as its own session leader (pid 23351) - no detach needed
+2026-10-20T16:10:18+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T16:10:18+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T16:10:54+00:00 EXIT: killed by SIGTERM (loop pid 23351)
+2026-10-20T16:10:55+00:00 armed as its own session leader (pid 24580) - no detach needed
+2026-10-20T16:10:55+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T16:10:55+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-20T16:12:15+00:00 EXIT: killed by SIGTERM (loop pid 24580)
+2026-10-20T16:12:17+00:00 armed as its own session leader (pid 27964) - no detach needed
+2026-10-20T16:12:17+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-20T16:12:17+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-21T10:12:07+00:00 armed as its own session leader (pid 14756) - no detach needed
+2026-10-21T10:12:07+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-21T10:12:07+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-21T10:12:18+00:00 port 3000 fails the 401 contract, held by 15175(node)  - evicting (port-claim convention)
+2026-10-21T10:12:20+00:00 starting server: port 3000, cwd /home/team/shared/probable-octo-sniffle/server
+2026-10-21T10:12:21+00:00 server answered the 401 contract on port 3000 after 1s
+2026-10-21T10:12:23+00:00 EXIT: killed by SIGTERM (loop pid 14756)
+2026-10-21T10:12:23+00:00 armed as its own session leader (pid 15702) - no detach needed
+2026-10-21T10:12:23+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-21T10:12:23+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-22T09:07:53+00:00 armed as its own session leader (pid 1457) - no detach needed
+2026-10-22T09:07:53+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-22T09:07:53+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock

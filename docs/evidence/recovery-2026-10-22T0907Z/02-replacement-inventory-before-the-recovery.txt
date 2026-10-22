@@ -1,0 +1,45 @@
+=== REPLACEMENT INVENTORY 2026-10-22T09:07:10+00:00 ===
+--- who am I, and is the disk sane ---
+uid=0(root) gid=0(root) groups=0(root)
+  Filesystem      Size  Used Avail Use% Mounted on
+  fs0             4.0G  1.9G  2.2G  46% /home
+  overlay         3.1G  7.3M  3.1G   1% /
+                 total        used        free      shared  buff/cache   available
+  Mem:            3932         462        3496           7         190        3470
+  Swap:              0           0           0
+--- the replacement signature: /etc/profile.d ---
+  total 28
+  drwxr-xr-x 1 root root 100 Oct 22 09:06 .
+  drwxr-xr-x 1 root root 400 Oct 22 09:06 ..
+  -rw-r--r-- 1 root root  96 Apr 22  2024 01-locale-fix.sh
+  -rw-r--r-- 1 root root 726 Sep 18  2023 bash_completion.sh
+  -rw-r--r-- 1 root root 121 Oct 22 09:06 cto-env-vars.sh
+  -rw-r--r-- 1 root root 851 Oct 21 19:08 node-memory.sh
+  -rw-r--r-- 1 root root  46 Oct 21 19:10 playwright.sh
+  -rw-r--r-- 1 root root 871 Oct 22 09:06 team-env.sh
+  -rw-r--r-- 1 root root 404 Oct 22 09:06 team-github.sh
+--- processes that should not exist if the host is armed ---
+  pid=448 cwd=/home/team/shared/site :: node /home/team/shared/site/node_modules/.bin/vite dev 
+  (nothing above = product, guard and site all stopped)
+--- port 3000, with lsof (ss does not exist on this host) ---
+  COMMAND PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+  node    448 root   22u  IPv6   1859      0t0  TCP *:3000 (LISTEN)
+  product contract on 3000: 404
+  public URL: HTTP 200 title [<title>My site</title>] names []
+--- the deployed tree and the bundle it would serve ---
+  HEAD: 7000a70 | status []
+  total 308
+  drwxr-sr-x 2 root root     69 Oct 21 10:12 .
+  drwx--S--- 3 root root     94 Oct 21 10:12 ..
+  -rw-r--r-- 1 root root  35306 Oct 21 10:12 index-BK_EwcpZ.css
+  -rw-r--r-- 1 root root 277790 Oct 21 10:12 index-C9vf7pQB.js
+  lock: [15702] (a corpse if /proc has no such pid)
+--- host tools: are the merged copies still installed ---
+  deploy-main.sh body md5 2cddb29515ee
+  cutover-preflight.sh body md5 158e4a9e16b9
+  observe-serve-pair.sh body md5 c01d38acddca
+  restore-product.sh body md5 8c592edd2ac1
+--- my own workspace intact? ---
+  clone present, branch docs/host-recovery-movement-evidence-2026-10-21, HEAD e5bee13 docs(evidence): file the host-recovery movement (2026-10-21T10:12Z)
+  rollback copy: /home/team/shared/rollback-58acdac-dist-20261021-101156 
+INVENTORY-DONE 2026-10-22T09:07:11+00:00

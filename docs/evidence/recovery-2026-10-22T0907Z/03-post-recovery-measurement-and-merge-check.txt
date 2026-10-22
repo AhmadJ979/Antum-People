@@ -1,0 +1,78 @@
+nohup: ignoring input
+=== A. POST-RECOVERY HOST MEASUREMENT 2026-10-22T09:08:34+00:00 ===
+deployed tip   : 7000a70abcd08f5932f69ef29be3086df1b30d9b (7000a70) state=[]
+port 3000      : pid 1381 args=[node index.js] cwd=/home/team/shared/probable-octo-sniffle/server
+product contract: /api/employees on 3000 -> HTTP 401  (401 = the product; the placeholder answers 404)
+port 3001      : pid  answers HTTP 000 (the platform's site dev server, as after 2026-10-21)
+public URL     : HTTP 200 title [<title>Antum People</title>] naming [assets/index-C9vf7pQB.js]
+--- served bytes vs the on-disk bundle (the check that can redden) ---
+  assets/index-C9vf7pQB.js served=e6ff5da3fd614ddcfe2c0beaa68164f4 ondisk=e6ff5da3fd614ddcfe2c0beaa68164f4 size=277790 -> SAME
+  assets/index-BK_EwcpZ.css served=cb54e6164a8e741ed807bac94577efcd ondisk=cb54e6164a8e741ed807bac94577efcd size=35306 -> SAME
+--- the guard: lock+PID, loop count by ROLE, hook ---
+  lock names 1457 alive=yes args=[bash scripts/keep-alive.sh] cwd=/home/team/shared/probable-octo-sniffle
+  lock holders: [1457 ]  (more than one = the fd-9 leak)
+  role-loops (interpreter + non-flag first arg ending keep-alive.sh): 1 [('1457', 'scripts/keep-alive.sh')]
+  hook: 7522 B Oct 22 09:07 body md5 728bf2cce72b
+  marker: absent (correct)
+  guard log tail:
+    2026-10-21T10:12:23+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+    2026-10-22T09:07:53+00:00 armed as its own session leader (pid 1457) - no detach needed
+    2026-10-22T09:07:53+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+    2026-10-22T09:07:53+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+--- the entry point at the deployed tree (NO --full against the host, per your note) ---
+  EXIT=0
+  [OK           ] design-concepts-index    tree=7000a70   exit=0   0.0s
+  [OK           ] index-ids                tree=7000a70   exit=0   0.3s
+  [RED-KNOWN    ] doc-citations            tree=7000a70   exit=1   0.2s
+  [OK           ] reachability-report      tree=7000a70   exit=0   0.1s
+  [SKIP-FLAGGED ] suite                    tree=7000a70   exit=-   0.0s
+  [OK           ] access-model             tree=7000a70   exit=0   0.2s
+  [SKIP-FLAGGED ] cors-error-contract      tree=7000a70   exit=-   0.0s
+  [SKIP-FLAGGED ] guard-deploy-marker      tree=7000a70   exit=-   0.0s
+  [SKIP-FLAGGED ] install-host-tools       tree=7000a70   exit=-   0.0s
+  [SKIP-FLAGGED ] keep-alive-deploypath    tree=7000a70   exit=-   0.0s
+  [SKIP-FLAGGED ] observe-serve-pair       tree=7000a70   exit=-   0.0s
+  [SKIP-FLAGGED ] guard-role-vs-shape      tree=7000a70   exit=-   0.0s
+          OK               4
+          RED-KNOWN        1
+          SKIP-FLAGGED     7
+  
+  VERDICT: no check is unexpectedly red. 1 check(s) are red in a state that is RECORDED as the defect state (doc-citations) -
+           their lines above name where that is recorded and what ends it. exit 0
+
+=== B. PR #279: what the API says vs what the notice says ===
+  state closed | merged True | merged_at 2026-10-22T09:05:44Z | merge_commit_sha 35055f6fb18814c1d323e9850d495151d5347025
+  head e5bee13a082c | changed 19 files
+  reviews: [('APPROVED', "''", 'e5bee13a082c')]
+  issue comments: 0
+  inline comments: 0
+  branch ref on the remote: []
+  origin/main now: 35055f6 Merge pull request #279 from AhmadJ979/docs/host-recovery-movement-evidence-2026-10-21
+  my tip e5bee13 IS in main
+--- every file the PR added, blob-identical on main? ---
+  files checked 19, differing 0
+--- what moved on main since the DEPLOYED tip ---
+  docs/evidence/movement-2026-10-21T1012Z/02-movement-run-stamped-evidence.txt
+  docs/evidence/movement-2026-10-21T1012Z/03-client-build.log
+  docs/evidence/movement-2026-10-21T1012Z/04-demo-reseed.log
+  docs/evidence/movement-2026-10-21T1012Z/05-preconditions-and-pre-movement-host-state.txt
+  docs/evidence/movement-2026-10-21T1012Z/06-host-probe-before-the-movement.txt
+  docs/evidence/movement-2026-10-21T1012Z/07-post-movement-measurement.txt
+  docs/evidence/movement-2026-10-21T1012Z/08-guard-role-vs-shape-under-full-with-a-live-loop.txt
+  docs/evidence/movement-2026-10-21T1012Z/09-check-all-no-suite-at-the-deployed-tree.txt
+  docs/evidence/movement-2026-10-21T1012Z/10-preflight-bare-at-a-repaired-host-refuses-the-stale-record.txt
+  docs/evidence/movement-2026-10-21T1012Z/11-preflight-whole-record-PASS.txt
+  docs/evidence/movement-2026-10-21T1012Z/12-control-empty-dist-the-served-vs-dist-check-reddens.txt
+  docs/evidence/movement-2026-10-21T1012Z/13-control-tip-alone-refused-half-overridden-record.txt
+  docs/evidence/movement-2026-10-21T1012Z/14-WRONG-ON-PURPOSE-ancestor-tip-control-did-NOT-redden.txt
+  docs/evidence/movement-2026-10-21T1012Z/15-WRONG-ON-PURPOSE-record-md5-forced-wrong-did-NOT-redden.txt
+  docs/evidence/movement-2026-10-21T1012Z/16-guard-keep-alive.log
+  docs/evidence/movement-2026-10-21T1012Z/17-pre-movement-rollback-copy-md5s.txt
+  docs/evidence/movement-2026-10-21T1012Z/18-movement-console-capture.txt
+  docs/evidence/movement-2026-10-21T1012Z/README.md
+  docs/evidence/movement-2026-10-21T1012Z/manifest.txt
+  count: 19 | server/client/scripts among them: []
+--- the pack as MAIN carries it: does its manifest still verify ---
+  files: 19
+  manifest OK on main: 18
+DONE 2026-10-22T09:08:38+00:00
