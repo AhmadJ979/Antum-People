@@ -184,3 +184,56 @@ must contain. Both are fixed: the README names itself, and external names are no
 that must be named **and must be absent** here, so a real file of that name would be caught. The third
 failure was real and intended (`0 tracked, 14 UNTRACKED` before `git add`). Both runs are in
 `pack-check-runs.txt`; the final run is exit 0.
+
+## Re-take at 09:18–09:19Z, to the wider scope
+
+The scope asked for a **bare** entry-point run and named the pair observer as the instrument that can
+redden, so all five points were re-taken on the same state, fresh — nothing recalled from the run above
+(`11-retake-pair.txt`, `12-guard-retake.txt`, `13-observer.txt`, `14-entry-point-bare.txt`).
+
+**The state the acceptance was asked to verify had already moved, and that outranks the rest.** The
+lock PID `15702` in the scope is **dead** — it belongs to the machine before the second replacement.
+The guard on this host is a different process entirely, and the reading in force is the one below.
+
+| point | re-take |
+|---|---|
+| served pair, names **from the served HTML** | `GET /` 200, 799 B, md5 `889e7270…`; js **277,790 B `e6ff5da3…`**, css **35,306 B `cb54e616…`** — both **SAME BYTES** (size *and* md5) as the deployed tree's own `client/dist` at `7000a70` |
+| guard armed by lock+PID | lock PID **`4732`** printed; alive; argv `/usr/bin/bash scripts/keep-alive.sh`; **sole** lock holder (`lsof`, one row); **exactly ONE role-loop by argv position** — and `pgrep -f` agreed here (`4732`), which is not the same as trusting it |
+| guard armed AGAIN by its own exit path | `kill -TERM 4732` → **`2026-10-22T09:18:30+00:00 EXIT: killed by SIGTERM (loop pid 4732)`** (its own line — not a SIGKILL). Re-arm through the hook: **`2026-10-22T09:18:31+00:00 hook: guard not running, started it (pid 13046)`** — **one second**, clean. Final state: lock PID **`13046`**, alive, sole holder, **1** role-loop by argv, port 3000 still `node 1381` |
+| entry point, **bare** at the deployed tree | `python3 scripts/check-all.py` → **exit 0**, **OK 5 / RED-KNOWN 1 / SKIP-FLAGGED 6** (suite ran: 276/51/276/0) |
+| revisions | deployed tree **`7000a70`** (clean); this acceptance **binds the deployed tree, not `main`** |
+
+**Refuted, precisely:** the expected `SKIP-FLAGGED 7` is a **`--no-suite`** reading. Bare, the `suite`
+check *runs* and counts `OK`, so the bare counts are **OK 5 / RED-KNOWN 1 / SKIP-FLAGGED 6** — and with
+`--no-suite` they are `OK 4 / RED-KNOWN 1 / SKIP-FLAGGED 7`. Exit code and `RED-KNOWN 1
+(doc-citations)` are confirmed either way; which command was run is what decides the count.
+
+**The pair observer, run as the instrument it is** (`13-observer.txt`): `bash
+/home/team/shared/observe-serve-pair.sh` → **`PAIR HOLDS (exit 0)`**, deriving its expectations *at run
+time from the deployed tree's own dist* (2 assets, sizes and md5s) rather than from a remembered value,
+and agreeing with the derivation above byte for byte. Its own header reports `2857 min since the last
+recorded run` — the observer is a process on the host it observes, not a scheduler.
+
+**`main` moved during this acceptance — because this pack merged.** `origin/main` is now **`043b752`**
+(merge of #281) while the deployed tree is `7000a70`. The acceptance is of the host and the deployed
+tree; a docs-only merge of the evidence itself does not move either.
+
+**One process observation, recorded because it differs between the two re-arms:** the first exercise
+(09:10Z, right after the boot movement) took ~19 s and produced `FAILED to start the guard` three times
+plus eight duplicate spawns; this one took **1 s** with no duplicate at all. The difference is not the
+guard's code changing — it is that the first was driven by many concurrent login shells during a boot
+movement, and this one by a single shell. The hook is racy under *concurrent* shells, and correct under
+one; both outcomes leave exactly one guard.
+
+### Files added by this re-take
+
+| file | what it is |
+|---|---|
+| `11-retake-pair.txt` | the served pair re-derived from the served HTML, vs the deployed tree's `dist` |
+| `12-guard-retake.txt` | lock+PID, sole holder, one role-loop by argv, the TERM line, the re-arm, the final state |
+| `13-observer.txt` | `observe-serve-pair.sh`: `PAIR HOLDS`, exit 0, expectations derived from the tree |
+| `14-entry-point-bare.txt` | the **bare** entry-point run: exit 0, OK 5 / RED-KNOWN 1 / SKIP-FLAGGED 6 |
+| `14-check-all-bare-full-output.txt` | that run's full output |
+
+`pack-check.py` was re-run over the enlarged pack — runs 5 (red: the new files were untracked) and 6
+(green) are appended to `pack-check-runs.txt`.

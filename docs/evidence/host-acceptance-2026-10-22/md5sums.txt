@@ -9,5 +9,10 @@ ec7a7eaff6412d75d0e56cb8f833399e  07-guard-identify.txt
 381faba93bacce6ae1d7a99acb03c157  08-hook-provenance.txt
 fda57cb168100e449fd30cf786d19e53  09-movement-in-flight.txt
 440a859df8542b4462129f7735b09cca  10-guard-settled.txt
-9c88ed8736fd53b959e049edb5015914  README.md
+3af03280096292ac392c00f8359e32b0  11-retake-pair.txt
+c0adacaf61272920f380ac3f7cd71f95  12-guard-retake.txt
+fefb635d41fd636be39fe202e24b61c1  13-observer.txt
+da6382f61a8ac782ca64c9d88d076bbc  14-check-all-bare-full-output.txt
+3b80b136b2875bf3ca89a0bf623ea079  14-entry-point-bare.txt
+535695b3ba077cf21aa7c736322a77fa  README.md
 b3d04ac549cfeb567fb27a07a1db8be2  pack-check.py

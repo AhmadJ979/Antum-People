@@ -1,0 +1,32 @@
+=== 2+3. THE GUARD — re-taken 2026-10-22T09:18:30+00:00 ===
+
+--- 2. armed by lock + PID ---
+lock PID printed: 4732
+alive: YES
+argv:  /usr/bin/bash scripts/keep-alive.sh 
+SOLE lock holder? (lsof on the lock — one row expected):
+COMMAND  PID USER   FD   TYPE DEVICE SIZE/OFF        NODE NAME
+bash    4732 root    9u   REG   0,29        5 18966738981 /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+one role-loop by ARGV POSITION (not pgrep -f):
+  pid 4732: /usr/bin/bash scripts/keep-alive.sh 
+  count = 1   (pgrep -f would say: 4732 )
+
+--- 3. armed AGAIN by its own exit path (SIGTERM = its own path; NOT a SIGKILL) ---
+kill -TERM 4732 at 2026-10-22T09:18:30+00:00
+after TERM: gone
+the line the guard printed:
+2026-10-22T09:18:30+00:00 EXIT: killed by SIGTERM (loop pid 4732)
+re-arming through the hook's own route (a login shell):
+hook log:
+2026-10-22T09:18:33+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:33+00:00 hook: guard already running (pid 13046), nothing to do
+
+--- FINAL STATE (must be exactly one guard, sole lock holder, PID printed) ---
+lock PID printed: 13046
+alive: YES   argv: /usr/bin/bash scripts/keep-alive.sh 
+lock holder:
+COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF        NODE NAME
+bash    13046 root    9u   REG   0,29        6 18966738981 /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+  pid 13046: /usr/bin/bash scripts/keep-alive.sh 
+role-loops by argv = 1
+port 3000: node    1381 root   24u  IPv4   3633      0t0  TCP *:3000 (LISTEN)
