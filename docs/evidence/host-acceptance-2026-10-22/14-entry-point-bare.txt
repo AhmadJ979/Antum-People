@@ -1,0 +1,28 @@
+=== 4. THE ENTRY POINT, BARE (not --no-suite, not --full) at the deployed tree ===
+tree: /home/team/shared/probable-octo-sniffle
+revision: 7000a70abcd08f5932f69ef29be3086df1b30d9b
+$ cd /home/team/shared/probable-octo-sniffle && python3 scripts/check-all.py
+EXIT CODE = 0
+
+counts by verdict:
+  OK = 5
+  RED-KNOWN = 1
+  SKIP-FLAGGED = 6
+
+9:[OK           ] design-concepts-index    tree=7000a70   exit=0   0.0s
+15:[OK           ] index-ids                tree=7000a70   exit=0   0.3s
+21:[RED-KNOWN    ] doc-citations            tree=7000a70   exit=1   0.2s
+30:[OK           ] reachability-report      tree=7000a70   exit=0   0.1s
+36:[OK           ] suite                    tree=7000a70   exit=0   5.5s
+41:[OK           ] access-model             tree=7000a70   exit=0   0.2s
+47:[SKIP-FLAGGED ] cors-error-contract      tree=7000a70   exit=-   0.0s
+52:[SKIP-FLAGGED ] guard-deploy-marker      tree=7000a70   exit=-   0.0s
+57:[SKIP-FLAGGED ] install-host-tools       tree=7000a70   exit=-   0.0s
+62:[SKIP-FLAGGED ] keep-alive-deploypath    tree=7000a70   exit=-   0.0s
+67:[SKIP-FLAGGED ] observe-serve-pair       tree=7000a70   exit=-   0.0s
+72:[SKIP-FLAGGED ] guard-role-vs-shape      tree=7000a70   exit=-   0.0s
+109:VERDICT: no check is unexpectedly red. 1 check(s) are red in a state that is RECORDED as the defect state (doc-citations) -
+
+--- the suite line (bare means it RUNS):
+38:                 what : the server suite - the doc/tracker-invariant gates (server/design-concepts-index.test.js, server/privacy-notice.test.js) plus the check-all classifier gate
+39:                 said : server suite: tests 276, suites 51, pass 276, fail 0

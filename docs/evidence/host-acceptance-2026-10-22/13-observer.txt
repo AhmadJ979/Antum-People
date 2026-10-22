@@ -1,0 +1,153 @@
+=== what re-armed it this time (hook log around the TERM at 09:18:30) ===
+2026-10-20T09:18:20+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:20+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:20+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:20+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:20+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:20+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:20+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:20+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:20+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:20+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:20+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:20+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:21+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:21+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:21+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:21+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:22+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:23+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:23+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:23+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:23+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:25+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:25+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:25+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:25+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:25+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:26+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:26+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:26+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:26+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:28+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:28+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:28+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:28+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:28+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:28+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:29+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:29+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:29+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:30+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:30+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:31+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:31+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:32+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:34+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:34+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:34+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:34+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:34+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:34+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:34+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:34+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:34+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:34+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:35+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:35+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:38+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:38+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:38+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:38+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:38+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:38+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:38+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:38+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:38+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-20T09:18:38+00:00 hook: guard already running (pid 25958), nothing to do
+2026-10-22T09:18:26+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:18:26+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:18:26+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:18:27+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:18:27+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:18:27+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:18:27+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:18:30+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:18:30+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:18:30+00:00 hook: guard already running (pid 4732), nothing to do
+2026-10-22T09:18:30+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:31+00:00 hook: guard not running, started it (pid 13046)
+2026-10-22T09:18:31+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:32+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:32+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:32+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:33+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:33+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:34+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:34+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:35+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:37+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:37+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:37+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:37+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:37+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:37+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:37+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:37+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:37+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:37+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:37+00:00 hook: guard already running (pid 13046), nothing to do
+2026-10-22T09:18:37+00:00 hook: guard already running (pid 13046), nothing to do
+duplicate spawns in that window: 4
+
+=== the pair observer — the instrument that CAN redden (2026-10-22T09:18:47+00:00) ===
+$ bash /home/team/shared/observe-serve-pair.sh
+EXIT = 0
+=== observe-serve-pair 2026-10-22T09:18:47Z ===
+  script: /home/team/shared/observe-serve-pair.sh | 19925 B | sha256 a079c04a3ebbb537
+  url:    https://b974147c03228029e277d1cbe6646fe6.ctonew.app
+  tree:   /home/team/shared/probable-octo-sniffle
+  LIVENESS: 2026-10-20T09:41:04Z → PASS · 2857 min since the last recorded run
+  derived: 2 asset(s) from /home/team/shared/probable-octo-sniffle/client/dist (the artifact this tree serves)
+            assets/index-BK_EwcpZ.css  35306 B  md5 cb54e6164a8e741ed807bac94577efcd
+            assets/index-C9vf7pQB.js  277790 B  md5 e6ff5da3fd614ddcfe2c0beaa68164f4
+            tree HEAD: 7000a70
+  measured: GET / → 200 | title: Antum People | page bytes: 799
+            the page names: assets/index-BK_EwcpZ.css assets/index-C9vf7pQB.js 
+            assets/index-BK_EwcpZ.css → 200, 35306 B, md5 cb54e6164a8e741ed807bac94577efcd
+            expected:            35306 B, md5 cb54e6164a8e741ed807bac94577efcd
+            assets/index-C9vf7pQB.js → 200, 277790 B, md5 e6ff5da3fd614ddcfe2c0beaa68164f4
+            expected:            277790 B, md5 e6ff5da3fd614ddcfe2c0beaa68164f4
+
+PAIR HOLDS (exit 0) — the page at https://b974147c03228029e277d1cbe6646fe6.ctonew.app names our asset(s) and the bytes match the served tree's artifact
+  measured off the URL: assets/index-C9vf7pQB.js 277790 B md5 e6ff5da3fd614ddcfe2c0beaa68164f4

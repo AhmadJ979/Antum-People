@@ -1,0 +1,17 @@
+=== RE-TAKE at 2026-10-22T09:18:03+00:00 — one run, fresh, at the current state ===
+
+--- 5. the revisions measured ---
+deployed tree:     7000a70abcd08f5932f69ef29be3086df1b30d9b  (7000a70 Merge pull request #278 from AhmadJ979/feat/wire-guard-test-into-full)
+deployed clean:    0 path(s) uncommitted
+origin/main:       043b752e86789e7ff4472e78f43a3a5b201f544e  (043b752 Merge pull request #281 from AhmadJ979/docs/host-acceptance-2026-10-22)
+main == deployed:  NO — main is past the deployed tip; this acceptance BINDS THE DEPLOYED TREE, not main
+
+--- 1. the served pair, names taken FROM THE SERVED HTML ---
+GET / -> 200, 799 B, html md5 889e7270d1555c8acf65d23f1cccbd86
+names in the served HTML: JS=assets/index-C9vf7pQB.js  CSS=assets/index-BK_EwcpZ.css
+js  URL index-C9vf7pQB.js: 277790 B e6ff5da3fd614ddcfe2c0beaa68164f4
+js  DIST index-C9vf7pQB.js: 277790 B e6ff5da3fd614ddcfe2c0beaa68164f4
+js  -> SAME BYTES (size and md5 agree)
+css  URL index-BK_EwcpZ.css: 35306 B cb54e6164a8e741ed807bac94577efcd
+css  DIST index-BK_EwcpZ.css: 35306 B cb54e6164a8e741ed807bac94577efcd
+css  -> SAME BYTES (size and md5 agree)
