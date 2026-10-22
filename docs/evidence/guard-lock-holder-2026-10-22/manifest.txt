@@ -8,3 +8,4 @@ b8dd4227e2459918b5663262a1d52964  07-suite-install-host-tools-78-0.txt
 ea20aac3a4dc610445de74f7199d1846  08-live-lock-read-both-ways-and-preflight.txt
 ccb736129be211542bb4c9809a0ef496  09-live-role-vs-shape-control.txt
 d3bb3d78faa5d1117d78c8563e8e6a81  10-the-defect-in-the-host-s-own-logs.txt
+49f5cc038189efee53d95dc1273205c4  README.md
