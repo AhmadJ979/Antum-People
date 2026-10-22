@@ -1,0 +1,5 @@
+build measured at f4314d8 in /tmp/p3merge (clean client build, df sampled every 50ms):
+exit=0 start_free_kb=2522992 min_free_kb=2519824 end_free_kb=2519328 delta_kb=3664 peak_kb=3168 samples=80
+assets: index-Be_ijisC.js 281017 B md5 e83b7a33cb575f9440829916db13a05e
+        index-B7rk1n5J.css 35899 B md5 55737b9e8f16d886249d0d387653967e
+index.html md5 f9e1c692f15b26e4bfce5eff38c54314

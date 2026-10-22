@@ -1,0 +1,17 @@
+=== install-host-tools 2026-10-22T12:47:37+00:00 ===
+  script: /home/team/shared/probable-octo-sniffle/scripts/install-host-tools.sh | 13599 B | sha256 b070d333a4966872
+  repo:   /home/team/shared/probable-octo-sniffle
+  dest:   /home/team/shared   hook: /etc/profile.d/zz-antum-product-guard.sh   mode: verify
+  source: the working tree
+  revision: f4314d85cf44ff2deaa2940a7940ae333454d639 (working-tree)
+
+  OK        /home/team/shared/deploy-main.sh   (body) md5 2cddb29515ee4ce9d1ba8310088dc4e5 == scripts/deploy-main.sh at f4314d85cf44
+  OK        /home/team/shared/cutover-preflight.sh   (body) md5 fffe9c1f9a1f964d2636309ba975e30c == scripts/cutover-preflight.sh at f4314d85cf44
+  OK        /home/team/shared/restore-product.sh   (body) md5 8c592edd2ac18ed0c859befced0f63d1 == scripts/restore-product.sh at f4314d85cf44
+  OK        /home/team/shared/rollback-to-9d2182a.sh   (body) md5 605bb77c9e3b119a078cc96f17c263a2 == scripts/rollback-to-9d2182a.sh at f4314d85cf44
+  OK        /home/team/shared/success-test.sh   (body) md5 da80db2824e8e810fd64db2a913e69bf == scripts/success-test.sh at f4314d85cf44
+  OK        /home/team/shared/observe-serve-pair.sh   (body) md5 c01d38acddcaa57f6f064b6ab7a14472 == scripts/observe-serve-pair.sh at f4314d85cf44
+  hook source: the tree (f4314d85cf44ff2deaa2940a7940ae333454d639)
+  OK        /etc/profile.d/zz-antum-product-guard.sh   (body) md5 bf80c94d9c9b1d3ac5e11373619fffd1 == scripts/antum-product-guard-hook.sh at f4314d85cf44
+
+=== RESULT: VERIFIED — every copy's body equals its repository blob at f4314d85cf44 ===

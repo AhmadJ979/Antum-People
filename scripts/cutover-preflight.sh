@@ -117,14 +117,26 @@ IDXJS_MD5=7467cec01c90cc3a1fb0156999c1997a
 # confirmed by the movement's own build and by the bytes the public URL serves). A half-overridable gate is
 # defeated by its own override. Every field is overridable now, and the coherence gate below REFUSES
 # (exit 1) unless the whole record moves together.
-RECORD_TIP_DEFAULT=d0422f4
+# RE-CUT 2026-10-22 after the movement of 12:46:56Z, which put the host on f4314d8. The record this
+# replaces named d0422f4 and assets/index-BG0peuOK.js 274242 B — a tip this host has not served for
+# several movements — so a bare preflight run was stating an after-state that was three movements stale.
+# THE NUMBERS BELOW WERE MEASURED FROM THE BYTES, NOT COPIED FROM A MESSAGE: md5sum/stat of
+# /home/team/shared/probable-octo-sniffle/client/dist at HEAD f4314d8, and they agree with the
+# movement's own measured record and with what the public URL served (observer, 12:47:42Z).
+# THE RECORD IS CUT FOR THE TIP THE HOST IS ON. The next movement raises the tip, so it must re-cut this
+# block for the tip it is about to publish (or supply the whole record via ANTUM_MEASURED_*), or the
+# record-vs-disk row will (correctly) refuse the numbers as not being that tree's bytes.
+# ONE MOVEMENT LATE, BY DESIGN: the installed copy at /home/team/shared/cutover-preflight.sh still carries
+# the old defaults until a movement's install step copies this file — host tools ride a movement, never a
+# hand-copy.
+RECORD_TIP_DEFAULT=f4314d8
 MEASURED_TIP="${ANTUM_MEASURED_TIP:-$RECORD_TIP_DEFAULT}"
-MEASURED_ASSET="${ANTUM_MEASURED_ASSET:-index-BG0peuOK.js}"
-MEASURED_ASSET_BYTES="${ANTUM_MEASURED_ASSET_BYTES:-274242}"
-MEASURED_ASSET_MD5="${ANTUM_MEASURED_ASSET_MD5:-f65f15c109e76e86cd8b8abe7102f748}"
-MEASURED_CSS="${ANTUM_MEASURED_CSS:-index-pNSrK3wr.css}"
-MEASURED_CSS_BYTES="${ANTUM_MEASURED_CSS_BYTES:-35365}"
-MEASURED_CSS_MD5="${ANTUM_MEASURED_CSS_MD5:-eda548202468a7e0293053981037a594}"
+MEASURED_ASSET="${ANTUM_MEASURED_ASSET:-index-Be_ijisC.js}"
+MEASURED_ASSET_BYTES="${ANTUM_MEASURED_ASSET_BYTES:-281017}"
+MEASURED_ASSET_MD5="${ANTUM_MEASURED_ASSET_MD5:-e83b7a33cb575f9440829916db13a05e}"
+MEASURED_CSS="${ANTUM_MEASURED_CSS:-index-B7rk1n5J.css}"
+MEASURED_CSS_BYTES="${ANTUM_MEASURED_CSS_BYTES:-35899}"
+MEASURED_CSS_MD5="${ANTUM_MEASURED_CSS_MD5:-55737b9e8f16d886249d0d387653967e}"
 MIN_FREE_KB=200000
 # WORKFLOW rule 14: every host value is an override. This one was NOT, and the cost was a check that
 # could not be reddened: pointing it off-host is impossible while it names the live path, so "does this

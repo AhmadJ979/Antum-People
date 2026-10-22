@@ -1,0 +1,13 @@
+f0661e82f8d283dab51038610f771dd7  README.txt
+8cf8bbd11266a78c55c77d88264d5772  build.log
+8e86aa1c3a9b1dffda1814b97102f6b1  deploy-evidence.txt
+897316929176464ebc9ad085f31e7284  failed-count-in-guard-log.txt
+a00387753547ed16a33487899da3db21  hook-notes-after-rearm.log
+d20cd85a66b1a23bd68c7eb48d4293d1  host-tools-verify-after.log
+bbac16413d78e134eece5578aa272528  measured-record.txt
+5e4a8cc28d0aae7157100425549f579a  observer-serve-pair.log
+c4d7971e43f65443b8c9e701c446aaae  preflight-before-record.log
+5f2661f2f8a45d18034b924dc2762bba  preflight-with-measured-record.log
+8e86aa1c3a9b1dffda1814b97102f6b1  run.log
+af5751dda5da682c3a28d83c24af24d3  scratch-build.log
+628c90080f81f5dc0d805db0f1852a7c  seed.log
