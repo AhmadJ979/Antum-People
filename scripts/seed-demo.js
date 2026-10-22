@@ -75,6 +75,12 @@ async function seed() {
       department: 'Finance',
       role: 'Finance Analyst',
       start_date: '2026-08-20',
+      // The hire's probation WINDOW, not a milestone (P3-1, row d73f8760). The seeder may only set
+      // the contract terms — the start date and how long the probation runs — and the three
+      // milestone dates are DERIVED from them on every read (server/probation-timeline.js). No
+      // milestone is stored here or anywhere; `probation-timeline.test.js` asserts this file never
+      // names one. 2026-08-20 + 90 = 2026-11-18, so this hire is mid-probation today.
+      probation_end_date: '2026-11-18',
       salary: 14000,
       basic_salary: 9500,
       recruitment_cost: 6000,
@@ -167,6 +173,11 @@ async function seed() {
       department: 'Customer Support',
       role: 'Support Specialist',
       start_date: '2026-08-05',
+      // P3-1: a 180-day window on purpose — the row's acceptance asks that the framework be
+      // "configurable by probation length (a 90-day and a 180-day probation both produce a sane
+      // milestone set)", and Omar above is the 90-day case. The window is a new FIELD on her record;
+      // her jurisdiction is untouched, and nothing in the KSA surfaces reads this column.
+      probation_end_date: '2027-02-01',
       salary: 11000,
       basic_salary: 8000,
       recruitment_cost: 3000,

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { createAuthedFetch } from './httpStatus.js';
 import { callPanel, settlePanels, refusalNoticeFor } from './panelResults.js';
+// P3-1 -- the probation timeline's vocabulary (labels, chips, date format, summary). The DATES come
+// from the server; nothing in this file computes a milestone from a start date.
+import {
+  milestoneLabel, milestoneChipClass, formatDay, probationSummary, windowLine,
+} from './probationTimeline.js';
 
 // Unified API Base URL helper
 // Row d2328d67: what a refusal says. Plain on purpose, and reassuring on purpose — a refusal is not
@@ -454,6 +459,12 @@ export default function App() {
   // for, and it stays reachable so the KSA surface can still be served and tested.
   const [jurisdiction, setJurisdiction] = useState<'AE' | 'SA'>('AE');
 
+  // P3-1 -- the probation timelines of the active view, and the server's own note naming the one
+  // milestone state that is not yet reachable (nothing records an evaluation until P3-2). Both are
+  // read off the payload; neither is computed here.
+  const [probationTimelines, setProbationTimelines] = useState<any[]>([]);
+  const [probationNote, setProbationNote] = useState<string | null>(null);
+
   // Single source of truth for "who is mid-onboarding": derived from incomplete
   // onboarding tasks server-side, not from an employee status label, so the dashboard
   // card, the transitions list, and the checklist itself can never disagree.
@@ -605,8 +616,19 @@ export default function App() {
         callPanel('employees', `${API_BASE}/api/employees?jurisdiction=${jurisdiction}`,
           authedFetch(`${API_BASE}/api/employees?jurisdiction=${jurisdiction}`)),
         callPanel('analytics', `${API_BASE}/api/analytics/dashboard?jurisdiction=${jurisdiction}`,
-          authedFetch(`${API_BASE}/api/analytics/dashboard?jurisdiction=${jurisdiction}`))
+          authedFetch(`${API_BASE}/api/analytics/dashboard?jurisdiction=${jurisdiction}`)),
+        callPanel('probation', `${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`,
+          authedFetch(`${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`))
       ]));
+
+      // P3-1: settled on its own, like the two above -- a refusal of the probation panel cannot blank
+      // the roster. The server's note travels to the surface with the data rather than being dropped
+      // here, because it is what says which state is missing and why.
+      if (settled.data.probation !== undefined) {
+        const probationPayload = (settled.data.probation || {}) as { timelines?: unknown; note?: unknown };
+        setProbationTimelines(Array.isArray(probationPayload.timelines) ? probationPayload.timelines : []);
+        setProbationNote(typeof probationPayload.note === 'string' ? probationPayload.note : null);
+      }
 
       // Defensive checks to prevent .filter crashes — applied only to panels that actually arrived.
       if (settled.data.employees !== undefined) {
@@ -1494,6 +1516,46 @@ export default function App() {
 
           {activeTab === 'employees' && (
             <div className="space-y-6">
+              {/* P3-1 -- the probation timelines. Every date here was DERIVED by the server from the
+                  hire's own start date and probation window (server/probation-timeline.js); no
+                  milestone is authored per employee and none is stored. This panel formats what
+                  arrived and claims nothing of its own. */}
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-slate-900">Probation timelines</h3>
+                    <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight">
+                      {probationTimelines.length} hire{probationTimelines.length === 1 ? '' : 's'} on probation · 30/60/90 derived from the start date
+                    </p>
+                  </div>
+                  <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded uppercase border border-teal-200">P3-1</span>
+                </div>
+                {probationTimelines.length === 0 ? (
+                  <div className="p-4 text-xs text-slate-500">No hire in this view is on probation today.</div>
+                ) : (
+                  <ul className="divide-y divide-slate-100">
+                    {probationTimelines.map((t: any) => (
+                      <li key={t.employee_id} className="p-4">
+                        <div className="flex items-baseline justify-between gap-4">
+                          <div className="text-sm font-bold text-slate-900">{t.employee_name}</div>
+                          <div className="text-[10px] font-semibold text-slate-500">{windowLine(t)}</div>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          {t.milestones.map((m: any) => (
+                            <span key={m.index} className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-tighter border ${milestoneChipClass(m.state)}`}>
+                              day {m.day} · {milestoneLabel(m.state)} · {formatDay(m.due_date)}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-1 text-[10px] text-slate-500">{probationSummary(t)}</div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {probationNote && (
+                  <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500">{probationNote}</div>
+                )}
+              </div>
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <table className="w-full text-left border-collapse">
                   <thead>
