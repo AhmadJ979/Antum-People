@@ -150,13 +150,32 @@ done
 [ "$decoy_shape_bad" = 0 ] || { echo "  the decoys are not the log's shape; refusing to report a verdict"; exit 2; }
 echo
 
-# --- the real loop, from the lock --------------------------------------------------------------
-REAL=""
-[ -f "$DEPLOY_DIR/server/keep-alive.lock" ] && REAL="$(head -n 1 "$DEPLOY_DIR/server/keep-alive.lock" 2>/dev/null)"
-if [ -n "$REAL" ] && [ -d "/proc/$REAL" ]; then
-    printf '=== the real loop (lock pid %s): argv: ' "$REAL"; tr '\0' ' ' < "/proc/$REAL/cmdline" 2>/dev/null; echo
+# --- the real loop: the lock's FLOCK HOLDER first, then the lock file's PID claim ----------------
+# THE CLAIM LAGS; THE HOLDER CANNOT (2026-10-22). Resolving the real loop from the lock file's first line
+# meant this harness reported CANNOT-JUDGE about a host that HAD a live guard - during the ~19 s window
+# after a kill in which the file still named the dead PID while its successor held the flock (row
+# 8e4be298). The true-positive half of this control is exactly what the window disabled, so it now
+# resolves the holder first and keeps the claim as the fallback (the orphaned-inode case).
+REAL=""; REAL_SIGNAL=""
+LOCKF="$DEPLOY_DIR/server/keep-alive.lock"
+if [ -e "$LOCKF" ]; then
+    # THE FLOCK IS THE FACT, lsof only names it: lsof also lists a candidate loop that merely has the file
+    # open while it retries, and taking that for the real loop asserts the control's own subject.
+    if ! timeout 5 flock -n "$LOCKF" -c true 2>/dev/null; then
+        for p in $(timeout 5 lsof -t "$LOCKF" 2>/dev/null); do
+            [ -d "/proc/$p" ] || continue
+            tr '\0' ' ' < "/proc/$p/cmdline" 2>/dev/null | grep -q 'keep-alive\.sh' && { REAL="$p"; REAL_SIGNAL="flock holder"; break; }
+        done
+    fi
+    if [ -z "$REAL" ]; then
+        p="$(head -n 1 "$LOCKF" 2>/dev/null)"
+        [ -n "$p" ] && [ -d "/proc/$p" ] && REAL="$p" && REAL_SIGNAL="the lock's PID claim"
+    fi
+fi
+if [ -n "$REAL" ]; then
+    printf '=== the real loop (resolved by %s, pid %s): argv: ' "$REAL_SIGNAL" "$REAL"; tr '\0' ' ' < "/proc/$REAL/cmdline" 2>/dev/null; echo
 else
-    echo "=== WARNING: no live loop found via $DEPLOY_DIR/server/keep-alive.lock - the true-positive half cannot be asserted"
+    echo "=== WARNING: no live loop found via $LOCKF (no flock holder, no live PID claim) - the true-positive half cannot be asserted"
     REAL=""
 fi
 echo
@@ -220,8 +239,8 @@ else
     # NOT a skip, and NOT a green: the true-positive half is the control that catches a check which
     # stops protecting the port, so a run without it has judged nothing. Asserted explicitly, because
     # "SKIP" here printed under an exit 0 - the exact shape of a green the rig cannot judge.
-    echo "CANNOT-JUDGE: no live loop on this host ($DEPLOY_DIR/server/keep-alive.lock names none) - the" >&2
-    echo "  true-positive half could not be asserted, so this run has not shown that the check still" >&2
+    echo "CANNOT-JUDGE: no live loop on this host (no flock holder and no live PID claim at" >&2
+    echo "  $LOCKF) - the true-positive half could not be asserted, so this run has not shown that the check still" >&2
     echo "  protects the port. Serialise nothing from it; arm a guard and re-run (or use --old <ref> on a" >&2
     echo "  host that has one)." >&2
     rc=2

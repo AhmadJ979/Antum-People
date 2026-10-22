@@ -1,0 +1,7 @@
+############ CASE 2a — the control: a second guard cannot run ############
+  second candidate's own log lines:
+      2026-10-22T09:42:16+00:00 lock held (attempt 1 of 1) - holders: 1178(bash) 1299(bash) 1480(bash) 1507(bash) 1511() 1512() 1513() 1514() ; the file names PID 999999 (DEAD - the file LAGS the live holder: read the HOLDER, not the file)
+      2026-10-22T09:42:16+00:00 EXIT: refusing to start: a live keep-alive.sh already guards /tmp/guard-holder-rig2/deploy on port 3999 - 1178 bash /tmp/guard-holder-rig2/deploy/scripts/keep-alive.sh;1299 /usr/bin/bash scripts/keep-alive.sh;; holders: 1178(bash) 1299(bash) 1480(bash) 1640(bash) 1644() 1645() 1646() 1647() ; the file names PID 999999 (DEAD - the file LAGS the live holder: read the HOLDER, not the file)
+  loops now: [1178 1299]  (must be exactly A=1178)   flock holder: 1178  file names: 999999
+
+############ CASE 2b — the handover: the flock's FILE is renamed, so a candidate ACQUIRES it and then finds a live guard ############

@@ -1,0 +1,27 @@
+=== the window: a live flock holder with a lock file that names a DEAD pid ===
+=== (this is the host's own state for ~19 s after a kill: 1457 died 09:10:18, its successor 4077 held
+===  the flock, and the file went on naming 1457 until 09:10:37 - see 11- for the host's own log) ===
+
+############ CASE 1 — the window: a live holder, a file naming a DEAD pid ############
+  OLD hook | flock=HELD file names 999999 (dead) -> FAILED lines: 1 | judged running: 0 | armed: 0 | loops after: [1178 1299] | holder after: 1178
+      2026-10-22T09:42:16+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+  NEW hook | flock=HELD file names 999999 (dead) -> FAILED lines: 0 | judged running: 1 | armed: 0 | loops after: [1178 1299] | holder after: 1178
+      2026-10-22T09:42:16+00:00 hook: guard already running (pid 1178), nothing to do
+
+############ CASE 2a — the control: a second guard cannot run ############
+
+=== the same case, first rig run (single guard, same construction) ===
+=== THE WINDOW, BY CONSTRUCTION: a live holder, a file that names a DEAD pid ===
+  (this is the host's own state for ~19 s after a kill: successor holds the flock, the claim is stale)
+  flock holder: 32462  | file names: 999999 (dead: yes)
+
+=== OLD HOOK, run in that window ===
+    2026-10-22T09:39:42+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+    -> FAILED lines: 1   armed candidates: 0   judged-running: 0
+    -> rig loops after this run: 1   flock holder now: 32462 32570 
+=== NEW HOOK, run in that window ===
+    2026-10-22T09:39:42+00:00 hook: guard already running (pid 32462), nothing to do
+    -> FAILED lines: 0   armed candidates: 0   judged-running: 1
+    -> rig loops after this run: 1   flock holder now: 32462 32570 
+
+=== cleanup: stop the rig guard by its FLOCK HOLDER (never pkill -f) ===

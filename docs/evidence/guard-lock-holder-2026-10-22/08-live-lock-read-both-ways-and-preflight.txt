@@ -1,0 +1,19 @@
+=== the LIVE deployed tree, the row's own reading, 2026-10-22T09:44Z ===
+=== LIVE: the deployed tree's lock, read both ways (the row's own reading) ===
+  file's first line (the CLAIM): 13046
+  flock HOLDER (the FACT):       [13046 ]
+  flock probe: HELD
+  processes with the file OPEN:  [13046 ]
+  live loops by argv (not pgrep -f): 1 ['13046']
+
+=== the branch's preflight, its guard section and the hook pairing ===
+--- the guard is alive: the FLOCK HOLDER first, then the lock's own PID claim (never by process name) ---
+  PASS  guard alive (flock holder): pid 13046 (/usr/bin/bash scripts/keep-alive.sh )
+  PASS  processes with the lock file open: 1 (the flock itself is judged above)
+--- the login-shell hook: which revision is it, and does it pair with its deploy ---
+  PASS  hook installed at /etc/profile.d/zz-antum-product-guard.sh: body md5 728bf2cce72b8c6f9a3cf257f3dfc070 == the deploy copy's revision 7000a70abcd0 — PAIRED with the deploy that writes the marker
+  the marker this deploy writes has a reader here: the live hook mentions deploy-in-progress 3 time(s), the deploy copy's hook 3 time(s)
+    the hook at 883038a655cb (=served tree) IS origin/main's
+    the hook at 7000a70abcd0 (=deploy copy) IS origin/main's
+--- the rollback target exists and is the bytes we think ---
+=== FAILs in that whole run: 0 ===

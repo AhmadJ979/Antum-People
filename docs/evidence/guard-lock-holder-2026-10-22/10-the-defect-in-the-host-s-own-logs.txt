@@ -1,0 +1,37 @@
+=== the host's own guard-hook.log around the 09:10:18Z kill (the defect) ===
+2026-10-22T09:10:23+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:23+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:26+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:27+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:28+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:29+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:31+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:32+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:32+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:34+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:35+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:36+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:37+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+=== ...and the hook's three FAILED lines while a guard held the flock ===
+17
+2026-10-20T15:13:51+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-20T15:13:53+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-20T15:13:56+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-20T15:13:58+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+2026-10-22T09:10:23+00:00 hook: FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log
+=== the kill and the re-arm, from the guard's own log ===
+2026-10-22T09:10:18+00:00 EXIT: killed by SIGTERM (loop pid 1457)
+2026-10-22T09:10:18+00:00 armed as its own session leader (pid 4056) - no detach needed
+2026-10-22T09:10:18+00:00 armed as its own session leader (pid 4077) - no detach needed
+2026-10-22T09:10:21+00:00 armed as its own session leader (pid 4198) - no detach needed
+2026-10-22T09:10:22+00:00 armed as its own session leader (pid 4277) - no detach needed
+2026-10-22T09:10:23+00:00 armed as its own session leader (pid 4372) - no detach needed
+2026-10-22T09:10:24+00:00 armed as its own session leader (pid 4448) - no detach needed
+2026-10-22T09:10:26+00:00 armed as its own session leader (pid 4544) - no detach needed
+2026-10-22T09:10:27+00:00 armed as its own session leader (pid 4719) - no detach needed
+2026-10-22T09:10:27+00:00 armed as its own session leader (pid 4732) - no detach needed
+2026-10-22T09:10:29+00:00 armed as its own session leader (pid 4982) - no detach needed
+2026-10-22T09:10:30+00:00 armed as its own session leader (pid 5058) - no detach needed
+=== the lock file through that window, as the earlier recovery recorded it ===
+534:2026-10-22T09:10:18+00:00 lock held (attempt 1 of 3) - holders: 4077(bash) 4112(bash) 4119() 4120() 4121() 4122() ; the file names PID 1457 (DEAD - the file is stale)
+548:2026-10-22T09:10:27+00:00 lock held (attempt 1 of 3) - holders: 4077(bash) 4719(bash) 4732(bash) 4758(bash) 4759() 4760() 4769(bash) 4775() 4777() 4778() 4780() ; the file names PID 1457 (DEAD - the file is stale)
