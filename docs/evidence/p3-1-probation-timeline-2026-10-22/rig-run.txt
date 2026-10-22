@@ -1,0 +1,141 @@
+P3-1 EVIDENCE RUN  2026-10-22T12:35:30Z
+tip=1ef9e9c  before=93de0bd (origin/main)  live host untouched (no movement run)
+
+== live deployment, before and after the run ==
+live / -> 200
+
+== the trees (one per commit; node_modules linked, per the rig skill) ==
+before tree 93de0bd1f33197afca897e4bf4c024246b205a9a node_modules yes
+after tree 1ef9e9c1d43fcfd8ef4d3636392f449598b0af04 node_modules yes
+origin/main = 93de0bd
+merge result tree: ba6f533124ef1ffeb249da379ed4e9ec98be0963
+after worktree tree: ba6f533124ef1ffeb249da379ed4e9ec98be0963
+MERGE RESULT == AFTER TREE: yes (this run is about the tree that will merge)
+
+== seed, throwaway user, boot (rule 14: scratch instances only) ==
+before seed exit 0  30 lines
+before: scratch user written into access_role
+before: employees: 13 | carrying a probation window: 0 | without one: 13
+after seed exit 0  30 lines
+after: scratch user written into access_role
+after: employees: 13 | carrying a probation window: 2 | without one: 11
+after:   demo-emp-omar Omar start=2026-08-20 end=2026-11-18 length=90d status=onboarding
+after:   demo-emp-reem Reem start=2026-08-05 end=2027-02-01 length=180d status=onboarding
+before pid=2148 cwd=/home/agent-senior-software-engineer/scratch-p31b/before/server
+before no-token /api/probation/timelines -> 401 (401 = the health contract)
+after pid=2151 cwd=/home/agent-senior-software-engineer/scratch-p31b/after/server
+after no-token /api/probation/timelines -> 401 (401 = the health contract)
+
+== BEFORE (93de0bd, no P3-1: the route does not exist) ==
+login 200 token issued
+GET /api/probation/timelines
+   -> 403 
+GET /api/probation/timelines?as_of=2026-10-22
+   -> 403 
+GET /api/probation/timelines?jurisdiction=AE&as_of=2026-10-22
+   -> 403 
+GET /api/probation/timelines?jurisdiction=SA&as_of=2026-10-22
+   -> 403 
+GET /api/probation/timelines?as_of=2026-11-19
+   -> 403 
+GET /api/probation/timelines?as_of=2026-08-10
+   -> 403 
+GET /api/probation/timelines?as_of=not-a-date
+   -> 403 
+
+== AFTER (1ef9e9c) ==
+login 200 token issued
+GET /api/probation/timelines
+   -> 200 timelines=2 completions_recorded=false
+   demo-emp-omar "Omar Al-Farsi" window=2026-08-20→2026-11-18 (90d)
+      day 30 due 2026-09-19 overdue
+      day 60 due 2026-10-19 overdue
+      day 90 due 2026-11-18 upcoming
+   demo-emp-reem "Reem Al-Hashemi" window=2026-08-05→2027-02-01 (180d)
+      day 60 due 2026-10-04 overdue
+      day 120 due 2026-12-03 upcoming
+      day 180 due 2027-02-01 upcoming
+   note: A milestone reads `completed` only from a recorded evaluation (P3-2): no submission is stored yet, so every milestone today is upcoming, due or overdue.
+GET /api/probation/timelines?as_of=2026-10-22
+   -> 200 timelines=2 completions_recorded=false
+   demo-emp-omar "Omar Al-Farsi" window=2026-08-20→2026-11-18 (90d)
+      day 30 due 2026-09-19 overdue
+      day 60 due 2026-10-19 overdue
+      day 90 due 2026-11-18 upcoming
+   demo-emp-reem "Reem Al-Hashemi" window=2026-08-05→2027-02-01 (180d)
+      day 60 due 2026-10-04 overdue
+      day 120 due 2026-12-03 upcoming
+      day 180 due 2027-02-01 upcoming
+   note: A milestone reads `completed` only from a recorded evaluation (P3-2): no submission is stored yet, so every milestone today is upcoming, due or overdue.
+GET /api/probation/timelines?jurisdiction=AE&as_of=2026-10-22
+   -> 200 timelines=1 completions_recorded=false
+   demo-emp-omar "Omar Al-Farsi" window=2026-08-20→2026-11-18 (90d)
+      day 30 due 2026-09-19 overdue
+      day 60 due 2026-10-19 overdue
+      day 90 due 2026-11-18 upcoming
+   note: A milestone reads `completed` only from a recorded evaluation (P3-2): no submission is stored yet, so every milestone today is upcoming, due or overdue.
+GET /api/probation/timelines?jurisdiction=SA&as_of=2026-10-22
+   -> 200 timelines=1 completions_recorded=false
+   demo-emp-reem "Reem Al-Hashemi" window=2026-08-05→2027-02-01 (180d)
+      day 60 due 2026-10-04 overdue
+      day 120 due 2026-12-03 upcoming
+      day 180 due 2027-02-01 upcoming
+   note: A milestone reads `completed` only from a recorded evaluation (P3-2): no submission is stored yet, so every milestone today is upcoming, due or overdue.
+GET /api/probation/timelines?as_of=2026-11-19
+   -> 200 timelines=1 completions_recorded=false
+   demo-emp-reem "Reem Al-Hashemi" window=2026-08-05→2027-02-01 (180d)
+      day 60 due 2026-10-04 overdue
+      day 120 due 2026-12-03 upcoming
+      day 180 due 2027-02-01 upcoming
+   note: A milestone reads `completed` only from a recorded evaluation (P3-2): no submission is stored yet, so every milestone today is upcoming, due or overdue.
+GET /api/probation/timelines?as_of=2026-08-10
+   -> 200 timelines=2 completions_recorded=false
+   demo-emp-omar "Omar Al-Farsi" window=2026-08-20→2026-11-18 (90d)
+      day 30 due 2026-09-19 upcoming
+      day 60 due 2026-10-19 upcoming
+      day 90 due 2026-11-18 upcoming
+   demo-emp-reem "Reem Al-Hashemi" window=2026-08-05→2027-02-01 (180d)
+      day 60 due 2026-10-04 upcoming
+      day 120 due 2026-12-03 upcoming
+      day 180 due 2027-02-01 upcoming
+   note: A milestone reads `completed` only from a recorded evaluation (P3-2): no submission is stored yet, so every milestone today is upcoming, due or overdue.
+GET /api/probation/timelines?as_of=not-a-date
+   -> 400 {"error":"as_of must be a date, YYYY-MM-DD"}
+
+== teardown ==
+before kill 2148 cwd /home/agent-senior-software-engineer/scratch-p31b/before/server
+Terminated
+after kill 2151 cwd /home/agent-senior-software-engineer/scratch-p31b/after/server
+Terminated
+listeners left: before=0 after=0
+live / -> 200
+
+== THE SUITES AT THIS TIP (1ef9e9c) ==
+server suite exit 0
+# tests 289
+# suites 51
+# pass 289
+# fail 0
+# skipped 0
+# todo 0
+client suite exit 0
+# tests 33
+# suites 4
+# pass 33
+# fail 0
+tsc -b exit 0
+vite build exit 0
+dist/assets/index-B7rk1n5J.css   35.89 kB │ gzip:  6.94 kB
+dist/assets/index-Be_ijisC.js   281.01 kB │ gzip: 78.27 kB
+[32m✓ built in 253ms[39m
+index.html md5 f9e1c692f15b26e4bfce5eff38c54314
+
+== the pack ==
+manifest:
+d92da1a721aaa0a4524aef3d8683a9ae  README.txt
+4a2140b666383d94e40a03e6ebdb4d9f  rig-run.txt
+ba248be6b422095d3c14180957b84163  client-suite.log
+071ce216bb95d57e2e02e6881c95e32e  server-suite.log
+d41d8cd98f00b204e9800998ecf8427e  tsc-b.log
+2c46155ac561a07cfb0db80a7cdf1393  vite-build.log
+P3-1 EVIDENCE RUN DONE
