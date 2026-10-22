@@ -1,0 +1,54 @@
+=== packs-check run log — every run of pack-check.py against this pack, verbatim ===
+
+--- run 1: the FIRST version of the checker, before `git add` (the "before" run people skip) ---
+$ python3 pack-check.py
+pack: /home/agent-product-designer/d20/docs/evidence/host-acceptance-2026-10-22
+files judged: 14
+1. every file in this directory is named in README.md: 12/14  MISSING: ['README.md', 'pack-check.py']
+2. filenames README.md names that exist: 14 named, 2 absent  ABSENT: ['guard-hook.log', 'index-C9vf7pQB.js']
+3. every file in this directory is tracked by git: 0 tracked, 14 UNTRACKED  -> ['01-index-html.txt', '02-served-vs-dist.txt', '03-guard.txt', '04-check-all-full-output.txt', '04-entry-point.txt', '05-host-state.txt', '06-recon-superseded-hook-absent.txt', '07-guard-identify.txt', '08-hook-provenance.txt', '09-movement-in-flight.txt', '10-guard-settled.txt', 'README.md', 'md5sums.txt', 'pack-check.py']
+4. md5sums.txt is not stale: 13 listed, 0 STALE, 0 unlisted
+VERDICT: 3 direction(s) FAILED
+exit=1
+
+  WHAT THIS RUN IS: direction 3 is SUPPOSED to fail before `git add` (0 tracked) — that is the
+  property that makes it worth running. Directions 1 and 2 failed on defects of the CHECKER, not the
+  pack: it demanded the README name itself, and it read every backticked filename — including host
+  files this pack only quotes (guard-hook.log, index-C9vf7pQB.js) — as a file the pack must contain.
+  Both were fixed in the checker (an asserted EXTERNAL block, and the README now names itself);
+  neither was fixed by editing a fact in the pack.
+
+--- run 2: the fixed checker, still before `git add` (direction 3 must STILL fail) ---
+$ python3 pack-check.py
+pack: /home/agent-product-designer/d20/docs/evidence/host-acceptance-2026-10-22
+files judged: 15
+1. every file in this directory is named in README.md: 15/15
+2. filenames README.md names: 17 named, 2 in the asserted external block, 0 ABSENT
+3. every file in this directory is tracked by git: 0 tracked, 15 UNTRACKED  -> ['01-index-html.txt', '02-served-vs-dist.txt', '03-guard.txt', '04-check-all-full-output.txt', '04-entry-point.txt', '05-host-state.txt', '06-recon-superseded-hook-absent.txt', '07-guard-identify.txt', '08-hook-provenance.txt', '09-movement-in-flight.txt', '10-guard-settled.txt', 'README.md', 'md5sums.txt', 'pack-check-runs.txt', 'pack-check.py']
+4. md5sums.txt is not stale: 13 listed, 2 STALE, 0 unlisted, 0 listed-but-absent; deliberately not listed: ['md5sums.txt', 'pack-check-runs.txt']
+
+VERDICT: 2 direction(s) FAILED
+exit=1
+
+--- run 3: after `git add`, the fixed checker, md5sums regenerated ---
+$ python3 pack-check.py
+pack: /home/agent-product-designer/d20/docs/evidence/host-acceptance-2026-10-22
+files judged: 15
+1. every file in this directory is named in README.md: 15/15
+2. filenames README.md names: 17 named, 2 in the asserted external block, 0 ABSENT
+3. every file in this directory is tracked by git: 15 tracked, 0 UNTRACKED
+4. md5sums.txt is not stale: 13 listed, 0 STALE, 0 unlisted, 0 listed-but-absent; deliberately not listed: ['md5sums.txt', 'pack-check-runs.txt']
+
+VERDICT: all four directions hold (15 file(s))
+exit=0
+
+--- run 4: a re-run AFTER this log recorded runs 1-3 (the log's own growth must not invalidate the pack) ---
+pack: /home/agent-product-designer/d20/docs/evidence/host-acceptance-2026-10-22
+files judged: 15
+1. every file in this directory is named in README.md: 15/15
+2. filenames README.md names: 17 named, 2 in the asserted external block, 0 ABSENT
+3. every file in this directory is tracked by git: 15 tracked, 0 UNTRACKED
+4. md5sums.txt is not stale: 13 listed, 0 STALE, 0 unlisted, 0 listed-but-absent; deliberately not listed: ['md5sums.txt', 'pack-check-runs.txt']
+
+VERDICT: all four directions hold (15 file(s))
+exit=0

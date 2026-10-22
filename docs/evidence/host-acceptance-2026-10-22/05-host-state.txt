@@ -1,0 +1,63 @@
+=== 5. HOST STATE — what stood behind the five points (2026-10-22T09:11:47+00:00) ===
+
+--- this machine is NOT the one the movement ran on ---
+uptime: 337.02 s   (load: 0.00 0.02 0.00)
+boot id: 6a6dd1ef-a855-4db8-b902-633d2e700ba4
+/etc/profile.d (this boot's installers):
+-rw-r--r-- 1 root root   96 Apr 22  2024 01-locale-fix.sh
+-rw-r--r-- 1 root root  726 Sep 18  2023 bash_completion.sh
+-rw-r--r-- 1 root root  121 Oct 22 09:07 cto-env-vars.sh
+-rw-r--r-- 1 root root  851 Oct 21 19:08 node-memory.sh
+-rw-r--r-- 1 root root   46 Oct 21 19:10 playwright.sh
+-rw-r--r-- 1 root root  871 Oct 22 09:06 team-env.sh
+-rw-r--r-- 1 root root  404 Oct 22 09:06 team-github.sh
+-rw-r--r-- 1 root root 7522 Oct 22 09:07 zz-antum-product-guard.sh
+
+--- deployed tree vs main ---
+deployed tree commit: 7000a70abcd08f5932f69ef29be3086df1b30d9b  (7000a70 Merge pull request #278 from AhmadJ979/feat/wire-guard-test-into-full)
+origin/main:          35055f6fb18814c1d323e9850d495151d5347025  (35055f6 Merge pull request #279 from AhmadJ979/docs/host-recovery-movement-evidence-2026-10-21)
+deployed == main: NO — main has moved since the movement
+uncommitted in the deployed tree: 0 path(s)
+
+--- who armed the FIRST guard after this boot, and from where ---
+    1     0 Thu Oct 22 09:06:10 2026 /bin/sh /entrypoint.sh
+ 1380     1 Thu Oct 22 09:07:48 2026 bash /home/team/shared/deploy-main.sh --restart-only
+ 1381  1380 Thu Oct 22 09:07:48 2026 node index.js
+ 4732  4730 Thu Oct 22 09:10:26 2026 /usr/bin/bash scripts/keep-alive.sh
+
+--- the guard's own history across the replacements (keep-alive.log, EXIT + arm lines) ---
+2026-10-22T09:10:30+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:31+00:00 armed as its own session leader (pid 5145) - no detach needed
+2026-10-22T09:10:31+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:32+00:00 armed as its own session leader (pid 5238) - no detach needed
+2026-10-22T09:10:32+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:32+00:00 armed as its own session leader (pid 5313) - no detach needed
+2026-10-22T09:10:32+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:35+00:00 armed as its own session leader (pid 5433) - no detach needed
+2026-10-22T09:10:35+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:36+00:00 armed as its own session leader (pid 5512) - no detach needed
+2026-10-22T09:10:36+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:36+00:00 armed as its own session leader (pid 5585) - no detach needed
+2026-10-22T09:10:36+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /home/team/shared/probable-octo-sniffle on port 3000 - refusing to run a duplicate guard: 4732 /usr/bin/bash scripts/keep-alive.sh;
+2026-10-22T09:10:37+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+
+--- guard-hook.log, first lines today ---
+2026-10-22T09:08:02+00:00 hook: guard already running (pid 1457), nothing to do
+2026-10-22T09:08:02+00:00 hook: guard already running (pid 1457), nothing to do
+2026-10-22T09:08:02+00:00 hook: guard already running (pid 1457), nothing to do
+2026-10-22T09:08:02+00:00 hook: guard already running (pid 1457), nothing to do
+--- guard-hook.log, lines today: 337
+
+--- hook provenance header (what installed it) ---
+# >>> ANTUM HOST-TOOL PROVENANCE (regenerate: scripts/install-host-tools.sh — do not hand-edit)
+# host-tool-of: scripts/antum-product-guard-hook.sh
+# source-revision: 7000a70abcd08f5932f69ef29be3086df1b30d9b (working-tree)
+# source-blob-md5: 728bf2cce72b8c6f9a3cf257f3dfc070
+# tree-state: clean
+# the body below is that blob, byte for byte
+# <<< ANTUM HOST-TOOL PROVENANCE
+# Antum People — the login-shell hook that re-arms the product guard.
+
+--- the void/superseded candidate: my earliest reading ---
+recon57.txt captured at ~09:07:55 said 'HOOK ABSENT'; the hook's Birth is 09:07:59, i.e. FOUR SECONDS LATER.
+hook Birth: 2026-10-22 09:07:59.535211115 +0000

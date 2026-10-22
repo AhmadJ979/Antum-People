@@ -1,0 +1,110 @@
+====================================================================================================
+check-all - every check the team owns, one entry point
+  tree judged   : 7000a70 (no tracked modification)
+  repository    : /home/team/shared/probable-octo-sniffle
+  NOT run by    : the movement. scripts/cutover-preflight.sh runs no checker (grep, this run's evidence).
+                  Wiring a check into the movement is the lead's ruling to make, not this script's.
+====================================================================================================
+
+[OK           ] design-concepts-index    tree=7000a70   exit=0   0.0s
+                 home : operator CLI (bare) + suite gate
+                 what : every design-concepts/*.md except README.md carries exactly ONE index row; no row names a missing document; the README's own exclusion is asserted; the index is not empty
+                 said : OK: all 17 documents carry exactly one index row, no row is stray, and the README's own exclusion is asserted.
+                 ...  : 12 earlier line(s) not shown - full output: /usr/bin/python3 scripts/check-design-concepts-index.py
+
+[OK           ] index-ids                tree=7000a70   exit=0   0.2s
+                 home : operator CLI (bare) - NO gate, which is why this entry point matters
+                 what : every id quoted in roadmap-board-index.md resolves against the board or git, no removal is unrecorded, and the re-check section's trigger structure is intact
+                 said : OK: every quoted id resolves, no removal is unrecorded, and the re-check section's trigger structure is intact
+                 ...  : 59 earlier line(s) not shown - full output: /usr/bin/python3 scripts/check-index-ids.py
+
+[RED-KNOWN    ] doc-citations            tree=7000a70   exit=1   0.2s
+                 home : operator CLI (bare form ADDED 2026-10-20 by this change - it raised IndexError before)
+                 what : every `App.tsx:<n>` citation in design-concepts/ lands on a line carrying one of the symbols the citing line names
+                 said : doc 7000a70abcd0 vs code 7000a70abcd0: 11 ok, 43 FAILING, 30 unchecked   [tree 7000a70]
+                 ...  : 85 earlier line(s) not shown - full output: /usr/bin/python3 docs/evidence/no-403-claim-sweep-2026-10-20/check-doc-citations.py
+                 WHY THIS IS NOT A REGRESSION: the tree is in a RECORDED DEFECT STATE - the App.tsx anchors in design-concepts/ are KNOWN STALE (the #254 -> #255 anchor class), an open defect nobody has re-grounded, and among its FAIL lines are 2 the checker's own authors admitted are FALSE POSITIVES of the checker. Neither is re-grounded or hidden here.
+                 recorded at : docs/evidence/no-403-claim-sweep-2026-10-20/README.md:132 ("Two of the 42 are false positives, verified by hand"); measured at tree 2b14a94: 11 ok, 43 FAILING, 30 unchecked
+                 ends when   : the check reads `0 FAILING` - the anchors re-grounded, a separate task. Then DELETE this declaration: it is a statement about the tree, and STALE-EXCEPTION fails the run when it lies.
+
+[OK           ] reachability-report      tree=7000a70   exit=0   0.1s
+                 home : operator CLI (bare) + suite gate
+                 what : prints callerless routes, unopenable controls and displayed-only values. This check exits 0 by DESIGN - it is a report; the three assertions that can redden live in server/reachability.test.js and server/reachability-report-cli.test.js
+                 said : Summary of the four counted categories: {"CALLERLESS":5,"UNOPENABLE_CONTROLS":1,"DISPLAYED_VALUES":0,"DEAD_END_ITEMS":3}
+                 ...  : 127 earlier line(s) not shown - full output: node scripts/reachability-report.js
+
+[SKIP-FLAGGED ] suite                    tree=7000a70   exit=-   0.0s
+                 home : suite gate (operator form: cd server && node --test); the movement does NOT run it
+                 what : the server suite - the doc/tracker-invariant gates (server/design-concepts-index.test.js, server/privacy-notice.test.js) plus the check-all classifier gate
+                 said : skipped by --no-suite
+
+[OK           ] access-model             tree=7000a70   exit=0   0.2s
+                 home : OUTSIDE the repository (/home/team/shared/verify-access-model.py) - no PR and no movement can carry it
+                 what : the 137-check access-model instrument against docs/access-model.md, the document the product's access model is delivered in
+                 said : 137/137 checks hold against origin/main   (ran=137, fails=0)
+                 ...  : 141 earlier line(s) not shown - full output: /usr/bin/python3 /home/team/shared/verify-access-model.py
+
+[SKIP-FLAGGED ] cors-error-contract      tree=7000a70   exit=-   0.0s
+                 home : operator CLI, off-host
+                 what : the CORS + error-handling contract of server/index.js, booted off-host on its own port with a throwaway database
+                 said : off-host instrument proof - run it with --full
+
+[SKIP-FLAGGED ] guard-deploy-marker      tree=7000a70   exit=-   0.0s
+                 home : operator CLI, off-host
+                 what : the deploy marker behaves as claimed, on a scratch tree with a STUB guard - never the live one
+                 said : off-host instrument proof - run it with --full
+
+[SKIP-FLAGGED ] install-host-tools       tree=7000a70   exit=-   0.0s
+                 home : operator CLI, off-host
+                 what : the host-tooling installer does what it claims, entirely off the host
+                 said : off-host instrument proof - run it with --full
+
+[SKIP-FLAGGED ] keep-alive-deploypath    tree=7000a70   exit=-   0.0s
+                 home : operator CLI, off-host
+                 what : keep-alive.sh's BOTH arming paths - the regression the hardened loop of 2026-10-06 needed
+                 said : off-host instrument proof - run it with --full
+
+[SKIP-FLAGGED ] observe-serve-pair       tree=7000a70   exit=-   0.0s
+                 home : operator CLI, off-host
+                 what : the public-URL observer does what it claims, off-host, without touching the live tree
+                 said : off-host instrument proof - run it with --full
+
+[SKIP-FLAGGED ] guard-role-vs-shape      tree=7000a70   exit=-   0.0s
+                 home : operator CLI, on a host with an armed guard
+                 what : the duplicate-guard check judges a process's ROLE (argv position: interpreter + non-flag first arg) not the SHAPE of a string that merely names keep-alive.sh. Compares the recorded pre-fix revision (2b14a94) against this tree, holds two decoys in the log's own shape, and requires both sides to count the live loop. exit 2 = CANNOT-JUDGE; it never signals, starts or stops a guard
+                 said : off-host instrument proof - run it with --full
+
+----------------------------------------------------------------------------------------------------
+checks NOT run by default, each with its reason and its own command (nothing is omitted quietly):
+  [skip] cutover-preflight    home: movement preflight - THE HOST, and ONLY the host
+         why : its preconditions are HOST state (dependency links in the live tree, the port, the armed guard), not the tree. Run in a scratch tree it CORRECTLY reports FAIL - measured: exit 1, 'PREFLIGHT FAIL - 3 precondition(s) do not hold' - so a red here would say nothing about the tree. DELIBERATELY not wired in: see the header.
+         run : bash scripts/cutover-preflight.sh    (on the host, before a movement)
+  [skip] success-test         home: operator CLI, LIVE-facing
+         why : it judges WHAT IS SERVING, not the tree: the cutover's four success tests against the public URL. Not a tree check.
+         run : bash scripts/success-test.sh LABEL    (or this entry point with --live LABEL)
+  [skip] cors-error-contract  home: operator CLI, off-host - off-host instrument proof, run with --full: bash scripts/cors-error-contract-test.sh
+  [skip] guard-deploy-marker  home: operator CLI, off-host - off-host instrument proof, run with --full: bash scripts/guard-deploy-marker-test.sh
+  [skip] install-host-tools   home: operator CLI, off-host - off-host instrument proof, run with --full: bash scripts/install-host-tools-test.sh
+  [skip] keep-alive-deploypath home: operator CLI, off-host - off-host instrument proof, run with --full: bash scripts/keep-alive-deploypath-test.sh
+  [skip] observe-serve-pair   home: operator CLI, off-host - off-host instrument proof, run with --full: bash scripts/observe-serve-pair-test.sh
+  [skip] guard-role-vs-shape  home: operator CLI, on a host with an armed guard - off-host instrument proof, run with --full: bash scripts/guard-role-vs-shape-test.sh
+  [skip] success-test         home: operator CLI, LIVE-facing - run with --live LABEL: bash scripts/success-test.sh LABEL
+
+ACTORS listed, never run (they change the host, the live product or the demo data - not checks):
+  [actor] scripts/deploy-main.sh               moves the live product to origin/main: fetch, build, re-seed, restart
+  [actor] scripts/keep-alive.sh                the self-healing loop: starts/kills/restarts the product
+  [actor] scripts/restore-product.sh           restart-only recovery (a name for deploy-main.sh --restart-only)
+  [actor] scripts/rollback-to-9d2182a.sh       reverts the host to the pre-cutover commit
+  [actor] scripts/install-host-tools.sh        installs the operator tooling into /home/team/shared
+  [actor] scripts/antum-product-guard-hook.sh  the login-shell hook re-arming the guard (/etc/profile.d/zz-antum-product-guard.sh)
+  [actor] scripts/seed-demo.js                 rewrites the demo database (the labelled sample data every figure is read from)
+  [actor] scripts/observe-serve-pair.sh        probes the LIVE public URL; its off-host proof is scripts/observe-serve-pair-test.sh, listed above
+
+----------------------------------------------------------------------------------------------------
+totals: 5 check(s) run, 7 skipped
+        OK               4
+        RED-KNOWN        1
+        SKIP-FLAGGED     7
+
+VERDICT: no check is unexpectedly red. 1 check(s) are red in a state that is RECORDED as the defect state (doc-citations) -
+         their lines above name where that is recorded and what ends it. exit 0

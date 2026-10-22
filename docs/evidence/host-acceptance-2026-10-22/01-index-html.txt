@@ -1,0 +1,10 @@
+=== acceptance run 2026-10-22T09:08:17+00:00 ===
+host uptime: 127.22 239.56
+df /home: fs0             4.0G  1.9G  2.2G  46% /home
+
+--- 1. the public URL's HTML ---
+http_code=200 bytes=799
+html md5: 889e7270d1555c8acf65d23f1cccbd86  size: 799
+assets named in the HTML:
+assets/index-BK_EwcpZ.css
+assets/index-C9vf7pQB.js

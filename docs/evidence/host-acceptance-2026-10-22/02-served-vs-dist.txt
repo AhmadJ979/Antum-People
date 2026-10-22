@@ -1,0 +1,20 @@
+--- 1b. both assets pulled FROM THE PUBLIC URL ---
+index-C9vf7pQB.js  http=200  bytes=277790  md5=e6ff5da3fd614ddcfe2c0beaa68164f4
+index-BK_EwcpZ.css  http=200  bytes=35306  md5=cb54e6164a8e741ed807bac94577efcd
+
+--- 2. the DEPLOYED TREE's own dist files of those names ---
+deployed tree: /home/team/shared/probable-octo-sniffle
+tree commit: 7000a70abcd08f5932f69ef29be3086df1b30d9b  (7000a70 Merge pull request #278 from AhmadJ979/feat/wire-guard-test-into-full)
+index-C9vf7pQB.js  bytes=277790  md5=e6ff5da3fd614ddcfe2c0beaa68164f4  on-disk=Oct 21 10:12
+index-BK_EwcpZ.css  bytes=35306  md5=cb54e6164a8e741ed807bac94577efcd  on-disk=Oct 21 10:12
+
+--- 2b. equality (the check that can redden) ---
+SAME BYTES  index-C9vf7pQB.js  e6ff5da3fd614ddcfe2c0beaa68164f4
+SAME BYTES  index-BK_EwcpZ.css  cb54e6164a8e741ed807bac94577efcd
+
+--- 2c. dist inventory (what the tree actually built) ---
+total 308
+drwxr-sr-x 2 root root     69 Oct 21 10:12 .
+drwx--S--- 3 root root     94 Oct 21 10:12 ..
+-rw-r--r-- 1 root root  35306 Oct 21 10:12 index-BK_EwcpZ.css
+-rw-r--r-- 1 root root 277790 Oct 21 10:12 index-C9vf7pQB.js

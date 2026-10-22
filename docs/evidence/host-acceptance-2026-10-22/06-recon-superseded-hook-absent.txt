@@ -1,0 +1,23 @@
+== deployed tree ==
+/home/team/shared/probable-octo-sniffle
+7000a70abcd08f5932f69ef29be3086df1b30d9b
+tip vs main: 7000a70 Merge pull request #278 from AhmadJ979/feat/wire-guard-test-into-full
+
+== the public URL the tooling uses ==
+73:DEFAULT_URL="https://b974147c03228029e277d1cbe6646fe6.ctonew.app"
+74:URL="${ANTUM_OBSERVE_URL:-$DEFAULT_URL}"
+99:URL="${URL%/}"
+40:PUBLIC="${ANTUM_PUBLIC:-https://b974147c03228029e277d1cbe6646fe6.ctonew.app}"
+
+== guard: lock + hook ==
+-rw-rw-r-- 1 root root 6 Oct 21 10:12 /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+15702
+HOOK ABSENT
+
+== guard scripts in the tree ==
+-rw-rw-r--  1 root root   238 Sep 22 05:33 antum-keep-alive.service
+-rw-r--r--  1 root root  7147 Oct 19 10:40 antum-product-guard-hook.sh
+-rwxr-xr-x  1 root root  6854 Oct 19 10:40 guard-deploy-marker-test.sh
+-rw-r--r--  1 root root 12878 Oct 21 10:12 guard-role-vs-shape-test.sh
+-rwxr-xr-x  1 root root  7556 Oct  6 10:17 keep-alive-deploypath-test.sh
+-rw-r--r--  1 root root 30760 Oct 20 16:08 keep-alive.sh
