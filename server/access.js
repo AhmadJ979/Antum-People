@@ -284,6 +284,17 @@ const ROUTES = Object.freeze([
   ['POST', '/preboarding/cases/:id/reminders', 'preboarding:write'],
   ['POST', '/preboarding/cases/:id/notice-acknowledgements', 'preboarding:write'],
   ['POST', '/preboarding/cases/:id/package/:itemKey/acknowledgement', 'preboarding:write'],
+  // Layer 3 / P3-1 — the probation timeline (backlog row `d73f8760`).
+  //
+  // Mapped to `employees:read` deliberately, and NOT to a resource of its own. Every date the route
+  // returns is a function of `employees.start_date` and `employees.probation_end_date` — two columns
+  // this resource already lets its holders read — so the timeline discloses nothing the roster does
+  // not, and the route applies the roster's own row scope. A resource of its own would have meant a
+  // new cell in the matrix this file mirrors (docs/access-model.md §3), a document this row does not
+  // own and one a 137-check instrument outside the repository validates. The narrower reading — a
+  // `probation:read` cell, which would also let a hire read their OWN timeline — is raised in the PR
+  // body instead of being taken silently here.
+  ['GET', '/probation/timelines', 'employees:read'],
 ]);
 
 /** `/api/login` and `/api/health` are unauthenticated by design and never reach the gate. */

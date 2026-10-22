@@ -19,3 +19,8 @@
 
 @source "../index.html";
 @source "../src/**/*.tsx";
+/* P3-1 (row `d73f8760`): the probation timeline's chip classes live in a plain module rather than in
+ * a component, so the four state labels and their styling can be asserted without a DOM. It carries
+ * class names, so it is declared here — `tailwindSources.test.js` reddened on it the first time, which
+ * is the check doing its job. */
+@source "../src/probationTimeline.js";
