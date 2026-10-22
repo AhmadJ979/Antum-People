@@ -1,0 +1,43 @@
+nohup: ignoring input
+=== PRE-MOVEMENT PRECONDITIONS (deploy-main.sh's own) 2026-10-21T10:11:56+00:00 ===
+1 content gate at 7000a70 (server/compliance_engine.js holds 'Final Settlement Payment'): 2
+   same file in the deployed tree (58acdac): 2
+2 demo credential file: present
+3 bcryptjs in the deployed node_modules: present
+4 env file secrets (presence only, no values): JWT_SECRET=1 ENCRYPTION_KEY=1 in 121 B Oct 21 10:10
+   also in team-env.sh: JWT_SECRET=0 ENCRYPTION_KEY=0
+5 origin remote: https://github.com/AhmadJ979/Antum-People.git
+6 toolchain: node v22.23.3 npm 10.9.9
+7 remote tip, asked of the remote (not a local ref): 7000a70abcd08f5932f69ef29be3086df1b30d9b
+   deployed tree HEAD: 58acdac82f7182142370a0d65ea383996ec73f0f (58acdac)
+=== ROLLBACK COPY of the bytes currently on disk (client/dist is gitignored) ===
+  cb54e6164a8e741ed807bac94577efcd  ./assets/index-BK_EwcpZ.css
+  e6ff5da3fd614ddcfe2c0beaa68164f4  ./assets/index-C9vf7pQB.js
+  7e840862161341271697daa99a40d76b  ./favicon.svg
+  3b4fcfcf393eca4d264dca4a4663bc37  ./icons.svg
+  805963817801b885554c71a1fd96deb1  ./index.html
+  c67fca1a66958517647b8f6463e50aa2  ./index.js
+  78734634d3e82c8b4174f8cd085733f2  ./md5s.txt
+  rollback copy: /home/team/shared/rollback-58acdac-dist-20261021-101156
+=== CLEANUP of my own scratch worktrees ===
+  removed /tmp/u1-wt/antum-people
+  removed /tmp/u3-wt/antum-people
+  removed /tmp/t2-wt/antum-people
+  removed /tmp/h3path/antum-people
+  removed /tmp/hN/antum-people
+  removed /tmp/tw/postmerge
+  removed /tmp/g272-postmerge
+  removed /tmp/eng022-b/antum-people
+  pruned
+  /home/agent-senior-software-engineer/antum-people  1a057dc [feat/wire-guard-test-into-full]
+=== disk after cleanup ===
+  Filesystem      Size  Used Avail Use% Mounted on
+  fs0             4.0G  1.9G  2.2G  46% /home
+  overlay         3.1G   12M  3.1G   1% /
+=== dist baseline (what the URL serves right now, to be rebuilt by the movement) ===
+  cb54e6164a8e741ed807bac94577efcd  ./assets/index-BK_EwcpZ.css
+  e6ff5da3fd614ddcfe2c0beaa68164f4  ./assets/index-C9vf7pQB.js
+  7e840862161341271697daa99a40d76b  ./favicon.svg
+  3b4fcfcf393eca4d264dca4a4663bc37  ./icons.svg
+  805963817801b885554c71a1fd96deb1  ./index.html
+PREP DONE 20261021-101156

@@ -1,0 +1,62 @@
+nohup: ignoring input
+=== A. deployed tip and tree state (2026-10-21T10:13:01+00:00) ===
+  HEAD: 7000a70abcd08f5932f69ef29be3086df1b30d9b (7000a70)  main tip: 7000a70
+  status: []
+  scripts/check-all.py md5 here: 5033e31f6803a0a62cf1bc241dd46917  (merged blob bc46914b2376…)
+  host preflight body md5: 158e4a9e16b94afec953f47e3e536004  (7000a70 blob 158e4a9e16b94afec953f47e3e536004)
+  host install-host-tools body md5: d41d8cd98f00b204e9800998ecf8427e
+=== B. port 3000 IS the product (contract, not a 200) ===
+  listener pid: 15458  args: node index.js  cwd: /home/team/shared/probable-octo-sniffle/server
+  /api/employees unauthenticated on 127.0.0.1:3000 -> HTTP 401  (product contract = 401; the placeholder answered 404)
+  / -> HTTP 200  title: <title>Antum People</title>
+=== C. the public URL's HTML names our asset, and the served bytes ARE the dist file ===
+  public HTML names: js=[assets/index-C9vf7pQB.js] css=[assets/index-BK_EwcpZ.css]
+  assets/index-C9vf7pQB.js served=e6ff5da3fd614ddcfe2c0beaa68164f4 dist=e6ff5da3fd614ddcfe2c0beaa68164f4 size_on_disk=277790 -> SAME
+  assets/index-BK_EwcpZ.css served=cb54e6164a8e741ed807bac94577efcd dist=cb54e6164a8e741ed807bac94577efcd size_on_disk=35306 -> SAME
+=== D. the guard: lock+PID, ONE role-loop, hook present ===
+  lock names: 15702  alive: yes  args: bash scripts/keep-alive.sh  cwd: /home/team/shared/probable-octo-sniffle
+  lock holders (lsof): [15702 ]
+  role-loop candidates (interpreter + non-flag first arg ending keep-alive.sh): 1
+   pid=15702 interp=bash script=scripts/keep-alive.sh extra=[]
+  for contrast, pgrep -f keep-alive.sh counts: 1 (this counts shells and probes, not loops)
+  hook: -rw-r--r-- 1 root root 7522 Oct 21 10:12 /etc/profile.d/zz-antum-product-guard.sh
+  hook reads the deploy marker: 3 occurrence(s)
+  deploy marker file present now: no (correct: the movement removed it)
+  guard log tail:
+    2026-10-21T10:12:20+00:00 starting server: port 3000, cwd /home/team/shared/probable-octo-sniffle/server
+    2026-10-21T10:12:21+00:00 server answered the 401 contract on port 3000 after 1s
+    2026-10-21T10:12:23+00:00 EXIT: killed by SIGTERM (loop pid 14756)
+    2026-10-21T10:12:23+00:00 armed as its own session leader (pid 15702) - no detach needed
+    2026-10-21T10:12:23+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+    2026-10-21T10:12:23+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+=== E. the MERGED entry point at the deployed tree, --no-suite ===
+  EXIT=0
+  [OK           ] design-concepts-index    tree=7000a70   exit=0   0.0s
+  [OK           ] index-ids                tree=7000a70   exit=0   0.3s
+  [RED-KNOWN    ] doc-citations            tree=7000a70   exit=1   0.2s
+  [OK           ] reachability-report      tree=7000a70   exit=0   0.1s
+  [SKIP-FLAGGED ] suite                    tree=7000a70   exit=-   0.0s
+  [OK           ] access-model             tree=7000a70   exit=0   0.2s
+  [SKIP-FLAGGED ] cors-error-contract      tree=7000a70   exit=-   0.0s
+  [SKIP-FLAGGED ] guard-deploy-marker      tree=7000a70   exit=-   0.0s
+  [SKIP-FLAGGED ] install-host-tools       tree=7000a70   exit=-   0.0s
+  [SKIP-FLAGGED ] keep-alive-deploypath    tree=7000a70   exit=-   0.0s
+  [SKIP-FLAGGED ] observe-serve-pair       tree=7000a70   exit=-   0.0s
+  [SKIP-FLAGGED ] guard-role-vs-shape      tree=7000a70   exit=-   0.0s
+  ----------------------------------------------------------------------------------------------------
+  totals: 5 check(s) run, 7 skipped
+          OK               4
+          RED-KNOWN        1
+          SKIP-FLAGGED     7
+  
+  VERDICT: no check is unexpectedly red. 1 check(s) are red in a state that is RECORDED as the defect state (doc-citations) -
+           their lines above name where that is recorded and what ends it. exit 0
+=== F. the guard role-vs-shape instrument NOW that a live loop exists ===
+  EXIT=0
+  [OK           ] guard-role-vs-shape      tree=7000a70   exit=0   1.2s
+                   what : the duplicate-guard check judges a process's ROLE (argv position: interpreter + non-flag first arg) not the SHAPE of a string that merely names keep-alive.sh. Compares the recorded pre-fix revision (2b14a94) against this tree, holds two decoys in the log's own shape, and requires both sides to count the live loop. exit 2 = CANNOT-JUDGE; it never signals, starts or stops a guard
+                   said :   ok    BOTH count the real loop (pid 15702) - the true positive survives (anti-vacuous)
+  VERDICT: every check that can be green on this tree is green. exit 0
+=== G. the merged preflight's knobs (to supply the record this host measured) ===
+ANTUM_ALLOW_MOVED_TIP ANTUM_DEPLOY_COPY ANTUM_DEPLOY_DIR ANTUM_DIST_DIR ANTUM_EXPECT_ASSET ANTUM_EXPECT_SERVED ANTUM_HOOK_DST ANTUM_MEASURED_ ANTUM_MEASURED_ASSET ANTUM_MEASURED_ASSET_BYTES ANTUM_MEASURED_ASSET_MD ANTUM_MEASURED_CSS ANTUM_MEASURED_CSS_BYTES ANTUM_MEASURED_CSS_MD ANTUM_MEASURED_TIP ANTUM_PUBLIC ANTUM_REPO ANTUM_ROUTE_REF 
+DONE 2026-10-21T10:13:03+00:00

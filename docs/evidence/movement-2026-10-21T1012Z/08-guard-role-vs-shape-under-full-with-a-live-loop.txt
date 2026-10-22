@@ -1,0 +1,20 @@
+====================================================================================================
+check-all - every check the team owns, one entry point
+  tree judged   : 7000a70 (no tracked modification)
+  repository    : /home/team/shared/probable-octo-sniffle
+  NOT run by    : the movement. scripts/cutover-preflight.sh runs no checker (grep, this run's evidence).
+                  Wiring a check into the movement is the lead's ruling to make, not this script's.
+  PARTIAL RUN   : --only guard-role-vs-shape - ONE check of 12. The verdict below covers THIS check alone.
+====================================================================================================
+
+[OK           ] guard-role-vs-shape      tree=7000a70   exit=0   1.2s
+                 home : operator CLI, on a host with an armed guard
+                 what : the duplicate-guard check judges a process's ROLE (argv position: interpreter + non-flag first arg) not the SHAPE of a string that merely names keep-alive.sh. Compares the recorded pre-fix revision (2b14a94) against this tree, holds two decoys in the log's own shape, and requires both sides to count the live loop. exit 2 = CANNOT-JUDGE; it never signals, starts or stops a guard
+                 said :   ok    BOTH count the real loop (pid 15702) - the true positive survives (anti-vacuous)
+                 ...  : 19 earlier line(s) not shown - full output: bash scripts/guard-role-vs-shape-test.sh
+
+----------------------------------------------------------------------------------------------------
+totals: 1 check(s) run, 0 skipped   [PARTIAL: --only guard-role-vs-shape]
+        OK               1
+
+VERDICT: every check that can be green on this tree is green. exit 0
