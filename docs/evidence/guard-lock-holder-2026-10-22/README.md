@@ -34,8 +34,8 @@ So the fix is one rule applied on both sides of the mechanism:
 
 | hook | outcome in the window (holder alive, file naming a dead PID) |
 |---|---|
-| **OLD** (`origin/main` = the installed host hook, `728bf2cc…`) | **`FAILED to start the guard` — 1 line, judged running: 0** |
-| **NEW** (`bf80c94d…`) | **`guard already running (pid 1178), nothing to do` — 0 FAILED lines** |
+| **OLD** (`origin/main` = the installed host hook, md5 `728bf2cc…`) | **`FAILED to start the guard` — 1 line, judged running: 0** |
+| **NEW** (md5 `bf80c94d…`) | **`guard already running (pid 1178), nothing to do` — 0 FAILED lines** |
 
 **The controls, all measured:**
 
