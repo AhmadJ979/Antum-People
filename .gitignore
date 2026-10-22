@@ -9,10 +9,12 @@ server/keep-alive.lock
 server/keep-alive.out
 
 
-# Evidence packs are staged with `git add -f` (see the pack READMEs, and pack-check.py, which FAILS
-# when a pack file is untracked). Until 2026-10-22 a negation here un-ignored every evidence log so a
+# Evidence packs are staged with `git add -f` (see the pack READMEs; a pack that carries a pack-check.py
+# fails when one of its own files is untracked - it is a PER-PACK tool, not one of the scripts/ tools, so
+# it protects only the packs that carry it). Until 2026-10-22 a negation here un-ignored every evidence log so a
 # pack's own log could not be dropped silently - but that is exactly what let `git add -A` sweep
 # ANOTHER member's live log into an unrelated commit (measured 2026-10-21; it cost a force-push).
 # gitignore cannot tell a filed pack log from one still being written, so evidence logs are ignored
 # like every other log and force-added deliberately. The original defect (a pack that CITES a log it
-# never committed) is caught by pack-check.py and by reading the staged list both ways.
+# never committed) is caught by a pack's own pack-check.py where the pack has one, and always by reading
+# the staged list both ways - which is the only check that covers every pack.
