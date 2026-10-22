@@ -1,0 +1,11 @@
+############ CASE 2b — the handover: the flock's FILE is renamed, so a candidate ACQUIRES it and then finds a live guard ############
+  before: the lock path is gone; A=1178 holds the ORPHANED inode's flock: 1178 1299 
+  candidate's log lines:
+      2026-10-22T09:42:20+00:00 EXIT: acquired the lock but another keep-alive.sh also guards /tmp/guard-holder-rig2/deploy on port 3999 - refusing to run a duplicate guard: 1178 bash /tmp/guard-holder-rig2/deploy/scripts/keep-alive.sh;1299 /usr/bin/bash scripts/keep-alive.sh;
+      2026-10-22T09:42:21+00:00 lock held (attempt 2 of 3) - holders: none; the file names PID 1178 (alive)
+      2026-10-22T09:42:31+00:00 lock held (attempt 3 of 3) - holders: none; the file names PID 1178 (alive)
+      2026-10-22T09:42:31+00:00 EXIT: refusing to start: a live keep-alive.sh already guards /tmp/guard-holder-rig2/deploy on port 3999 - 1178 bash /tmp/guard-holder-rig2/deploy/scripts/keep-alive.sh;; holders: none; the file names PID 1178 (alive)
+  NEW lock file names: '1178'   A=1178 alive: yes   loops: [1178]
+  -> the claim is handed to a LIVE loop: yes (pid 1178 is a loop)
+
+############ CASE 3 — an OPENER holding no flock must not stop a re-arm ############

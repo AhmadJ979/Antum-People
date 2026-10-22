@@ -1,0 +1,25 @@
+# --old defaulted to the recorded defective revision 2b14a94 (keep-alive.sh md5 ed31f5285babe7f265414376cb3d63b8)
+# old = 2b14a94  (ed31f5285bab)
+# new = /home/agent-senior-software-engineer/antum-people/scripts/keep-alive.sh  (25fa189fa6e2)
+# deploy dir = /home/team/shared/probable-octo-sniffle  port = 3000
+
+=== the decoys, as the kernel holds them (argv of each) ===
+  pid 6461 argv: bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo exists; sleep 90; : 
+  pid 6462 argv: sh -c bash -lc 'HOME=/home/agent-lead bash -lc '"'"'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'"'"''; sleep 90; : 
+
+=== the real loop (resolved by flock holder, pid 13046): argv: /usr/bin/bash scripts/keep-alive.sh 
+
+=== OLD ===
+  calls pid 6461 a guard: bash -lc cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo exists; sleep 90; :
+  calls pid 6462 a guard: sh -c bash -lc 'HOME=/home/agent-lead bash -lc '"'"'cd "$HOME" 2>/dev/null; test -f "/home/team/shared/probable-octo-sniffle/scripts/keep-alive.sh" && echo "exists"'"'"''; sleep 90; :
+  calls pid 13046 a guard: /usr/bin/bash scripts/keep-alive.sh
+  -> decoys called guards: 2   real loop called guard: 1
+
+=== NEW ===
+  calls pid 13046 a guard: /usr/bin/bash scripts/keep-alive.sh
+  -> decoys called guards: 0   real loop called guard: 1
+
+=== verdict ===
+  ok    OLD counts 2 decoy(s) as duplicate guards - the defect reproduces (the red)
+  ok    NEW counts 0 decoys - a shell running a command that mentions the name is not a loop
+  ok    BOTH count the real loop (pid 13046) - the true positive survives (anti-vacuous)

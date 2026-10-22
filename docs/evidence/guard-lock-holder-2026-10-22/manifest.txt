@@ -1,0 +1,10 @@
+0a983e97f295a8469f86705809290d6b  01-the-window-old-vs-new-hook.txt
+cbafbfdcee9cdcae9170c217fbe572f8  02-control-two-guards-cannot-both-run.txt
+0d7447a03668c2cdb25c0a2d9d3cde09  03-handover-the-claim-goes-to-the-live-guard.txt
+2c770f4507d0af2dde6bc570c1934590  04-an-opener-is-not-a-holder-and-final-state.txt
+5530397dcc3863cb140e01b5e2974ee5  05-suite-keep-alive-deploypath-15-0.txt
+b306130e72f358dcbc16c6b3f98de887  06-suite-guard-deploy-marker-22-0.txt
+b8dd4227e2459918b5663262a1d52964  07-suite-install-host-tools-78-0.txt
+ea20aac3a4dc610445de74f7199d1846  08-live-lock-read-both-ways-and-preflight.txt
+ccb736129be211542bb4c9809a0ef496  09-live-role-vs-shape-control.txt
+d3bb3d78faa5d1117d78c8563e8e6a81  10-the-defect-in-the-host-s-own-logs.txt

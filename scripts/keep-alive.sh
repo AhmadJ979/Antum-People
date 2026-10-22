@@ -23,7 +23,15 @@
 #
 # CHECKING STATUS (the guard count is a ROLE, not a string):
 #   tail -f /home/team/shared/probable-octo-sniffle/server/keep-alive.log
-#   ls -l /home/team/shared/probable-octo-sniffle/server/keep-alive.lock   (first line = loop PID)
+#   lsof -t /home/team/shared/probable-octo-sniffle/server/keep-alive.lock   <- THE FACT: who holds the flock
+#   head -n 1 /home/team/shared/probable-octo-sniffle/server/keep-alive.lock <- A CLAIM the holder writes
+#   READ THE HOLDER, NOT THE FILE (defect measured 2026-10-22). The first line LAGS its holder in both
+#   directions: after a replacement it names the PREVIOUS machine's dead loop, and after a kill it named the
+#   dead PID for ~19 s while a successor already held the flock. In that window a lock+PID reading said "a
+#   dead PID holds the lock" about a guard that was UP, and the login-shell hook logged FAILED to start the
+#   guard three times while one was running. The holder cannot lag - the kernel releases the flock the
+#   instant the process dies. The file is written at flock acquisition and repaired by a candidate that
+#   loses, so it agrees with the holder except on a replacement (nothing can run to repair it then).
 #   bash scripts/guard-role-vs-shape-test.sh    (counts real loops, and proves it can redden)
 #   Do NOT count guards with `pgrep -af keep-alive.sh`: it lists every process that merely
 #   MENTIONS the name - an editor, a probe, the login shell the platform opens to wake an agent,
@@ -31,9 +39,10 @@
 #   2026-10-20 (see is_loop_argv). A loop's /proc/PID/cmdline is `<interpreter> <script>`.
 #
 # STOPPING / RECLAIMING:
-#   kill "$(head -n 1 /home/team/shared/probable-octo-sniffle/server/keep-alive.lock)"
+#   kill "$(lsof -t /home/team/shared/probable-octo-sniffle/server/keep-alive.lock)"    <- the FLOCK HOLDER
 #   Never `pkill -f keep-alive.sh`: it matches anything that mentions the name, including the
-#   shell you are typing in. Signal the PID the lock names, and check it is a loop first.
+#   shell you are typing in. Signal the HOLDER (fall back to the file's first line only if no holder
+#   shows), and check it is a loop first - the file's line lags, the holder cannot.
 #   The lock is flock()ed on fd 9, which is released automatically when the loop dies.
 #   On contention the loop says who really holds the lock (`lsof -t` on the lock file) and
 #   whether the PID recorded in the file is alive, retries ANTUM_LOCK_ATTEMPTS times
@@ -406,12 +415,18 @@ holder_report() {
         out="$out$p($(ps -p "$p" -o comm= 2>/dev/null | tr -d '[:space:]')) "
     done
     [ -n "$out" ] || out="none"
+    # SAY WHICH SIGNAL IS THE FACT (2026-10-22). "holders: none; the file names PID X (DEAD)" is a true
+    # statement about a lock nobody holds. "holders: 4077(bash); the file names PID 1457 (DEAD)" is TRUE
+    # TOO - and it is exactly what was misread as "a dead PID holds the lock" for a guard that was up, so
+    # the lagging case now says so in words, and names where the fact is.
     if [ -z "$recorded" ]; then
         echo "holders: $out; the file names no PID"
     elif kill -0 "$recorded" 2>/dev/null; then
         echo "holders: $out; the file names PID $recorded (alive)"
+    elif [ "$out" != "none" ]; then
+        echo "holders: $out; the file names PID $recorded (DEAD - the file LAGS the live holder: read the HOLDER, not the file)"
     else
-        echo "holders: $out; the file names PID $recorded (DEAD - the file is stale)"
+        echo "holders: none; the file names PID $recorded (DEAD - the file is stale, nothing holds the flock)"
     fi
 }
 
@@ -465,12 +480,40 @@ fi
 # refuse. (This replaces an fd-inode comparison that was fatal on 2026-10-06: stat runs in a
 # child process, the lock fd is not visible to it, so the comparison failed at every start
 # and took the guard down instead of protecting it.)
+#
+# PUBLISH THE PID THE MOMENT WE HOLD THE FLOCK (2026-10-22). This write used to happen AFTER the
+# duplicate scan below, and the scan is the slow part - under a real arm storm it takes seconds.
+# Measured on 2026-10-22: after `kill -TERM` took the guard down at 09:10:18, the file went on naming
+# the dead PID until 09:10:37 while its successor 4077 already held the flock, and for those ~19 s the
+# hook could not verify a guard, armed a candidate per login shell, and logged `FAILED to start the
+# guard` three times while a guard was holding the flock. A reader that trusts the file cannot tell
+# that window from a dead guard - so we (a) make the claim true as early as it can be, and (b) repair
+# it if we turn out to be the duplicate and exit, because a file naming THIS process after it exits
+# would be the same defect with a shorter fuse.
+publish_pid() {  # $1 = the PID to claim; empty = clear the claim rather than name anyone
+    if [ -n "${1:-}" ]; then
+        printf '%s\n' "$1" > "$LOCK_FILE" 2>/dev/null \
+            || log "WARN: could not record PID $1 in $LOCK_FILE (the flock is still held)"
+    else
+        : > "$LOCK_FILE" 2>/dev/null || true
+    fi
+}
+self_pid="$BASHPID"
+publish_pid "$self_pid"
+
 duplicate="$(guarding_loops)"
 if [ -n "$duplicate" ]; then
+    dup_pid="$(echo "$duplicate" | awk 'NR==1{print $1}')"
+    if [ -n "$dup_pid" ] && [ -d "/proc/$dup_pid" ]; then
+        publish_pid "$dup_pid"
+        log "duplicate: handed the lock's PID claim to the live guard $dup_pid (this process exits)"
+    else
+        publish_pid ""
+        log "duplicate: cleared the lock's PID claim - no live guard PID to name (this process exits)"
+    fi
     log_exit "acquired the lock but another keep-alive.sh also guards $DEPLOY_DIR on port $PORT - refusing to run a duplicate guard: $(echo "$duplicate" | tr '\n' ';')"
     exit 1
 fi
-echo $$ > "$LOCK_FILE" 2>/dev/null || log "WARN: could not record loop PID in $LOCK_FILE (lock still held)"
 
 # --- secrets -------------------------------------------------------------------------
 if [ -f "$ENV_FILE" ]; then

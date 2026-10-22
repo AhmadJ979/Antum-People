@@ -1,0 +1,40 @@
+=== keep-alive: deploy-path test 2026-10-22T09:43:10+00:00 ===
+artifact: 883038a Merge pull request #283 from AhmadJ979/docs/host-acceptance-2026-10-22-retake
+sha256:   a065229516c70b8169d24790306422433e06e2f94a00206fd22934a0a6852e27
+tree: /tmp/antum-keepalive-test/tree   ports: 4821 (deploy path), 4822 (self-detach path)
+  bash -n: clean
+--- case 1: arm as deploy-main.sh does (setsid: the loop must NOT need to re-exec) ---
+    2026-10-22T09:43:11+00:00 port 4821 is empty - recovering
+    2026-10-22T09:43:11+00:00 starting server: port 4821, cwd /tmp/antum-keepalive-test/tree/server
+    2026-10-22T09:43:13+00:00 server answered the 401 contract on port 4821 after 1s
+  PASS: deploy path: exactly one guard holds the lock
+  PASS: deploy path: the guard serves the 401 contract on 4821
+  PASS: deploy path: we really took the no-re-exec branch
+  PASS: deploy path: nothing was logged as a duplicate guard
+--- case 2: arm again while a guard is live (must refuse, must not disturb it) ---
+    2026-10-22T09:43:25+00:00 lock held (attempt 2 of 2) - holders: 2865(bash) 3193(bash) 3322(bash) 3326() 3327() 3328() 3329() ; the file names PID 2865 (alive)
+    2026-10-22T09:43:25+00:00 EXIT: refusing to start: a live keep-alive.sh already guards /tmp/antum-keepalive-test/tree on port 4821 - 2865 bash scripts/keep-alive.sh;; holders: 2865(bash) 3193(bash) 3431(bash) 3436() 3437() 3438() 3439() ; the file names PID 2865 (alive)
+    2026-10-22T09:43:26+00:00 EXIT: the detached instance did not come up, but another guard for port 4821 is live (2865 bash scripts/keep-alive.sh;) - this shell is not that guard; read the log above for why it refused
+  PASS: second arm did not become a second guard
+  PASS: the live guard was not disturbed (still pid 2865)
+  PASS: the second arm said why it stood down
+  PASS: the site stayed up through the second arm
+--- case 3: SIGKILL the guard; no lock holder may survive, a re-arm must land ---
+scripts/keep-alive-deploypath-test.sh: line 88:  2865 Killed                  setsid nohup bash scripts/keep-alive.sh >> "$OUT" 2>&1
+  PASS: no process holds the lock after the kill
+    2026-10-22T09:43:31+00:00 armed as its own session leader (pid 3588) - no detach needed
+    2026-10-22T09:43:31+00:00 environment sourced from /tmp/antum-keepalive-test/env.sh
+    2026-10-22T09:43:31+00:00 guard starting: port 4821, deploy dir /tmp/antum-keepalive-test/tree, poll 5s, lock /tmp/antum-keepalive-test/tree/server/keep-alive.lock
+  PASS: the re-arm landed
+  PASS: the recovered guard serves the 401 contract
+  PASS: no child of the guard holds the lock fd (the old fd-9 leak)
+--- case 4: arm with nohup only, so the loop self-detaches and re-execs ---
+scripts/keep-alive-deploypath-test.sh: line 88:  3588 Killed                  setsid nohup bash scripts/keep-alive.sh >> "$OUT" 2>&1
+    2026-10-22T09:43:48+00:00 EXIT: deliberate handoff: detached instance 3846  is up and guards port 4822
+    2026-10-22T09:43:48+00:00 starting server: port 4822, cwd /tmp/antum-keepalive-test/tree/server
+    2026-10-22T09:43:49+00:00 server answered the 401 contract on port 4822 after 1s
+  PASS: self-detach path: exactly one guard holds the lock
+  PASS: self-detach path: the guard serves the 401 contract on 4822
+  PASS: self-detach path: the handoff was logged as a handoff
+
+=== result: 15 passed, 0 failed (full log: /tmp/antum-keepalive-test/test.log) ===

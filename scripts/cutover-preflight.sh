@@ -277,15 +277,50 @@ esac
 [ "$(readlink /proc/${LPID:-0}/cwd 2>/dev/null)" = "$DEPLOY_DIR/server" ] && ok "listener cwd is the deployed tree's server/" || no "listener cwd is $(readlink /proc/${LPID:-0}/cwd 2>/dev/null) — not the deployed tree"
 echo "  no-token contract: GET /api/employees -> $(curl -s --max-time 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/api/employees) (want 401)"
 
-echo "--- the guard is alive, judged by its own lock and /proc (never by matching a process name) ---"
-GPID=$(head -1 "$DEPLOY_DIR/server/keep-alive.lock" 2>/dev/null)
-GCMD=$(tr '\0' ' ' < "/proc/${GPID:-0}/cmdline" 2>/dev/null)
-case "$GCMD" in
-  *keep-alive.sh*) ok "guard alive: pid $GPID ($GCMD)" ;;
-  *) no "no verified guard: lock names '${GPID:-nothing}', /proc cmdline '${GCMD:-none}'" ;;
-esac
-HOLDERS=$(lsof -t "$DEPLOY_DIR/server/keep-alive.lock" 2>/dev/null | wc -l)
-[ "${HOLDERS:-0}" -le 1 ] && ok "lock holders: $HOLDERS (only the guard)" || warn "lock held by $HOLDERS processes — step 6 reaps extra holders, expect a longer window"
+echo "--- the guard is alive: the FLOCK HOLDER first, then the lock's own PID claim (never by process name) ---"
+# THE CLAIM LAGS; THE HOLDER CANNOT (defect measured 2026-10-22, row 8e4be298). This gate used to read
+# only the lock file's first line, which is a claim the guard writes - and the claim lags its holder in
+# both directions: after a replacement it names the previous machine's dead loop, and after a kill it
+# named the dead PID for ~19 s while a successor already held the flock. So for ~19 s this gate said
+# "no verified guard" about a guard that was UP. The holder cannot lag (the kernel drops the flock the
+# instant the process dies), so it is now the first signal; the claim is kept as the fallback for the
+# one case where it is right and the holder is silent (a loop guarding the port from an ORPHANED lock
+# inode, after keep-alive.sh's stale-reclaim renamed the file). Either signal must be a live PID whose
+# /proc cmdline is a keep-alive.sh loop. A disagreement is printed, because it is the evidence.
+G_FILE=$(head -1 "$DEPLOY_DIR/server/keep-alive.lock" 2>/dev/null)
+G_HOLDER=""; G_HOLDER_CMD=""
+# (a) IS THE FLOCK HELD AT ALL - the fact. `lsof` alone cannot answer it: it lists processes that merely
+# have the file OPEN, and a candidate loop in its retry loop is one of those while holding nothing. The
+# non-blocking probe fails immediately when the lock is held and releases it the instant `true` exits, so
+# it cannot steal the lock or disturb the guard.
+GLOCK="$DEPLOY_DIR/server/keep-alive.lock"
+if [ -e "$GLOCK" ] && ! timeout 5 flock -n "$GLOCK" -c true 2>/dev/null; then
+  for p in $(timeout 5 lsof -t "$GLOCK" 2>/dev/null); do
+    c=$(tr '\0' ' ' < "/proc/$p/cmdline" 2>/dev/null)
+    case "$c" in *keep-alive.sh*) G_HOLDER="$p"; G_HOLDER_CMD="$c"; break ;; esac
+  done
+fi
+if [ -n "$G_HOLDER" ]; then
+  ok "guard alive (flock holder): pid $G_HOLDER ($G_HOLDER_CMD)"
+else
+  GCMD=$(tr '\0' ' ' < "/proc/${G_FILE:-0}/cmdline" 2>/dev/null)
+  case "$GCMD" in
+    *keep-alive.sh*) ok "guard alive (lock's PID claim; no holder on this lock file, so it is the orphaned-inode case): pid $G_FILE ($GCMD)" ;;
+    *) no "no verified guard: no flock holder is a keep-alive.sh loop, and the lock's line '${G_FILE:-nothing}' has /proc cmdline '${GCMD:-none}'" ;;
+  esac
+fi
+if [ -n "$G_HOLDER" ] && [ -n "$G_FILE" ] && [ "$G_HOLDER" != "$G_FILE" ]; then
+  if kill -0 "$G_FILE" 2>/dev/null; then
+    warn "the lock's PID claim ($G_FILE) is not the flock holder ($G_HOLDER) and both are alive - a re-arm is mid-flight; read the holder"
+  else
+    warn "the lock's PID claim ($G_FILE) is DEAD while $G_HOLDER holds the flock - the file LAGS its holder (the 2026-10-22 defect). The guard is UP; that line is stale"
+  fi
+fi
+HOLDERS=$(lsof -t "$GLOCK" 2>/dev/null | wc -l)
+# OPENERS, NOT HOLDERS - named as such (2026-10-22): `lsof` cannot tell the flock holder from a candidate
+# that has the file open while it retries, and calling that count "holders" is how a reading ends up
+# asserting more than it measured.
+[ "${HOLDERS:-0}" -le 1 ] && ok "processes with the lock file open: $HOLDERS (the flock itself is judged above)" || warn "the lock file is open in $HOLDERS processes — an armed candidate lingers a few seconds while it retries; step 6 reaps extra openers, expect a longer window"
 
 echo "--- the login-shell hook: which revision is it, and does it pair with its deploy ---"
 if [ -f "$HOOK_DST" ]; then

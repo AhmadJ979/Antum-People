@@ -19,11 +19,15 @@
 #   does when it wakes an agent: after a restart the product returns on the next session rather
 #   than on the next human. It cannot re-arm anything before such a session exists.
 #
-# HOW IT DECIDES — the lock and /proc, never `pgrep -f keep-alive.sh`
-#   keep-alive.sh records the loop's PID on the first line of server/keep-alive.lock (its own
-#   documented status check). This hook believes a guard is running only when that PID is alive AND
-#   its /proc/<pid>/cmdline is a keep-alive.sh process. A bare `pgrep -f 'keep-alive.sh'` also
-#   matches any unrelated command line that merely *mentions* the file — an operator's
+# HOW IT DECIDES — the flock HOLDER first, then the lock's PID claim, both checked in /proc, and never
+# `pgrep -f keep-alive.sh`
+#   keep-alive.sh records its PID on the first line of server/keep-alive.lock AND holds a flock on that
+#   file. THE CLAIM LAGS; THE HOLDER CANNOT (measured 2026-10-22): after a kill, the file named the dead
+#   PID for ~19 s while a successor already held the flock, and this hook - reading only the claim - read
+#   a live guard as down. So the holder is the first signal, the claim is the fallback (a loop can guard
+#   the port while holding an orphaned lock inode after a stale reclaim), and BOTH must show a live PID
+#   whose /proc/<pid>/cmdline is a keep-alive.sh process. A bare `pgrep -f 'keep-alive.sh'` also matches
+#   any unrelated command line that merely *mentions* the file — an operator's
 #   `kill $(cat .../keep-alive.lock)` shell, a `tail -f` of the log, a test harness — and a false
 #   "already running" is the expensive direction: it leaves the product unguarded while reporting
 #   that all is well. Being wrong the other way costs one loud line, because keep-alive.sh's own
@@ -49,8 +53,38 @@ if [ -z "${ANTUM_GUARD_HOOK_RAN:-}" ]; then
   _antum_log="$_antum_dir/server/guard-hook.log"
 
   # The PID of a *verified* live guard, or nothing at all.
+  # TWO SIGNALS, THE HOLDER FIRST (2026-10-22). The file's first line is a CLAIM the guard writes; the
+  # flock's HOLDER is the FACT. The claim LAGS: measured on this host, after `kill -TERM` took a guard
+  # down at 09:10:18Z the file still named the dead PID for ~19 s while its successor already held the
+  # flock - and this hook, reading only the claim, armed a candidate per login shell and logged
+  # `FAILED to start the guard` three times while a guard was UP. The claim also names the PREVIOUS
+  # machine's loop after a replacement, when nothing can run to correct it. The holder cannot lag: the
+  # kernel releases the flock the instant the process dies.
+  # THE UNION IS DELIBERATE - either alone is wrong:
+  #   * holder only -> misses a loop that guards the port while holding an ORPHANED lock inode (the
+  #                    stale-reclaim path renames the lock file, so an older holder keeps its own flock);
+  #   * claim only  -> the ~19 s window above, which is the defect this fixes.
+  # A false "already running" is the expensive direction, so BOTH paths require the PID to be alive AND
+  # its /proc/<pid>/cmdline to be a keep-alive.sh process. Nothing here matches a bare process name.
   _antum_guard_pid() {
     local _antum_p _antum_cmd
+    # 1) THE FACT: is the flock HELD? A non-blocking probe cannot steal it (it fails immediately when the
+    #    lock is held) and it releases the lock the moment `true` exits, so this is safe to run in every
+    #    login shell. `lsof` is NOT this test: it lists processes that merely have the file OPEN, and a
+    #    candidate loop sitting in its retry loop is one of those while holding nothing at all - reading
+    #    that as a guard is exactly the expensive false "already running".
+    if [ -e "$_antum_lock" ]; then
+      if ! /usr/bin/timeout 3 /usr/bin/flock -n "$_antum_lock" -c true 2>/dev/null; then
+        # ...and WHO holds it: lsof names candidates, /proc confirms it is a loop
+        for _antum_p in $(/usr/bin/timeout 3 /usr/bin/lsof -t "$_antum_lock" 2>/dev/null); do
+          case "$_antum_p" in '' | *[!0-9]*) continue ;; esac
+          [ -d "/proc/$_antum_p" ] || continue
+          _antum_cmd=$(/usr/bin/tr '\0' ' ' <"/proc/$_antum_p/cmdline" 2>/dev/null) || continue
+          case "$_antum_cmd" in *keep-alive.sh*) printf '%s' "$_antum_p"; return 0 ;; esac
+        done
+      fi
+    fi
+    # 2) the file's own claim, still verified against /proc
     [ -r "$_antum_lock" ] || return 0
     IFS= read -r _antum_p <"$_antum_lock" 2>/dev/null || return 0
     case "$_antum_p" in '' | *[!0-9]*) return 0 ;; esac
@@ -110,7 +144,7 @@ if [ -z "${ANTUM_GUARD_HOOK_RAN:-}" ]; then
     if [ -n "$_antum_new" ]; then
       _antum_note "guard not running, started it (pid $_antum_new)"
     else
-      _antum_note "FAILED to start the guard — see server/keep-alive.out and server/keep-alive.log"
+      _antum_note "FAILED to start the guard — after 5s neither a live flock holder nor a live PID claim at $_antum_lock; see server/keep-alive.out and server/keep-alive.log"
     fi
     unset _antum_new _antum_try
   fi

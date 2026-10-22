@@ -1,0 +1,16 @@
+############ CASE 3 — an OPENER holding no flock must not stop a re-arm ############
+  opener pid 2268 has the file OPEN; flock at the lock path: FREE; lsof lists: [2268 ]
+  (a pure-lsof test reads that opener as a HOLDER and stands down - leaving the port unguarded)
+  NEW hook | FAILED: 0 | judged running: 0 | armed/verified: 1
+      2026-10-22T09:42:36+00:00 hook: guard not running, started it (pid 2299)
+
+############ FINAL STATE ############
+  flock: HELD  holder: 2299  file names: 2299  claim==holder: yes
+  loops: [2299]  count: 1
+  guard log tail:
+      2026-10-22T09:42:35+00:00 armed as its own session leader (pid 2299) - no detach needed
+      2026-10-22T09:42:35+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+      2026-10-22T09:42:35+00:00 guard starting: port 3999, deploy dir /tmp/guard-holder-rig2/deploy, poll 5s, lock /tmp/guard-holder-rig2/deploy/server/keep-alive.lock
+############ cleanup (by holder + rig cwd only) ############
+  remaining rig loops: [2299]   openers: [2299 ]
+DONE 2026-10-22T09:42:39+00:00
