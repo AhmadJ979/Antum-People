@@ -150,10 +150,6 @@ app.use('/api', (req, res, next) => {
   access.gate(req, res, next);
 });
 
-// P3-1 — the probation timeline's derivation (`server/probation-timeline.js`): the dates are a
-// function of the hire's own record and nothing stores a milestone. The route below is its HTTP face.
-const probationTimeline = require('./probation-timeline.js');
-
 // Helper to generate UUIDs
 const generateId = () => {
   return require('crypto').randomUUID ? require('crypto').randomUUID() : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -528,59 +524,6 @@ app.get('/api/employees/:id/offboarding', async (req, res) => {
   if (!(await scopeAllowsTarget(req, req.params.id))) return refuse(res);
   const tasks = await db.query(`SELECT * FROM offboarding_tasks WHERE employee_id = ${db.escapeString(req.params.id)}`);
   res.json(tasks);
-});
-
-/**
- * P3-1 (row `d73f8760`) — the probation timeline of every hire whose probation is still running.
- *
- * DERIVED ON READ. No milestone row exists in the schema and none is authored per employee: the three
- * dates are a function of `start_date` and the probation window's length, with the negative cases and
- * the proof written down in `server/probation-timeline.js` and its suite. `?as_of=YYYY-MM-DD` reads
- * the same derivation as of another day — the instrument the demo and the evidence rig use to show
- * the same figures twice; a value that is not a date is refused (400) rather than silently ignored,
- * because an instrument that quietly does nothing is the "reading taken with a tool that is not
- * installed" this team has already paid for once.
- *
- * AUTHORIZATION: the resource is `employees:read` (server/access.js) and the ROW scope below is the
- * roster's own — HR the company, a manager their line, finance the company — so this route's audience
- * is exactly the audience of the rows the dates are computed from. Nothing here discloses a column
- * the caller could not already read.
- *
- * A terminated hire is not in the list: their probation is not running, which is the same reading the
- * dashboard's headcount already takes of `status = 'terminated'`.
- */
-app.get('/api/probation/timelines', async (req, res) => {
-  try {
-    const asOf = req.query.as_of;
-    if (asOf !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(asOf))) {
-      return res.status(400).json({ error: 'as_of must be a date, YYYY-MM-DD' });
-    }
-    const unpinned = { timelines: [], completions_recorded: false, note: probationTimeline.COMPLETION_NOTE };
-
-    const conditions = [`status != 'terminated'`];
-    const jurisdiction = (req.query.jurisdiction || '').toUpperCase();
-    if (jurisdiction === 'AE' || jurisdiction === 'SA') {
-      conditions.push(`data_residency_country = ${db.escapeString(jurisdiction)}`);
-    }
-    if (req.accessScope === access.SCOPE.REPORTS || req.accessScope === access.SCOPE.OWN) {
-      const me = await callerEmployeeId(req);
-      // An account tied to no employee has no line and no record: an empty list is the truth about
-      // it, exactly as the roster route reports it.
-      if (!me) return res.json(unpinned);
-      conditions.push(req.accessScope === access.SCOPE.OWN ? `id = ${db.escapeString(me)}` : `manager_id = ${db.escapeString(me)}`);
-    }
-
-    const rows = await db.query(
-      `SELECT id, first_name, last_name, start_date, probation_end_date FROM employees WHERE ${conditions.join(' AND ')}`
-    );
-    const timelines = probationTimeline.timelinesFor(
-      rows.map((row) => ({ ...row, name: `${row.first_name} ${row.last_name}`.trim() })),
-      { now: asOf }
-    );
-    res.json({ timelines, completions_recorded: false, note: probationTimeline.COMPLETION_NOTE });
-  } catch (err) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
 });
 
 // Decision 22: the tick records WHO ticked it. Before this slice the row carried a date and no
@@ -1138,6 +1081,59 @@ flagWatcher.start();
 // -------------------------------------------------------------
 
 app.use(express.static(path.join(__dirname, '../client/dist')));
+
+/**
+ * P3-1 (row `d73f8760`) — the probation timeline of every hire whose probation is still running.
+ *
+ * DERIVED ON READ. No milestone row exists in the schema and none is authored per employee: the three
+ * dates are a function of `start_date` and the probation window's length, with the negative cases and
+ * the proof written down in `server/probation-timeline.js` and its suite. `?as_of=YYYY-MM-DD` reads
+ * the same derivation as of another day — the instrument the demo and the evidence rig use to show
+ * the same figures twice; a value that is not a date is refused (400) rather than silently ignored,
+ * because an instrument that quietly does nothing is the "reading taken with a tool that is not
+ * installed" this team has already paid for once.
+ *
+ * AUTHORIZATION: the resource is `employees:read` (server/access.js) and the ROW scope below is the
+ * roster's own — HR the company, a manager their line, finance the company — so this route's audience
+ * is exactly the audience of the rows the dates are computed from. Nothing here discloses a column
+ * the caller could not already read.
+ *
+ * A terminated hire is not in the list: their probation is not running, which is the same reading the
+ * dashboard's headcount already takes of `status = 'terminated'`.
+ */
+app.get('/api/probation/timelines', async (req, res) => {
+  try {
+    const asOf = req.query.as_of;
+    if (asOf !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(asOf))) {
+      return res.status(400).json({ error: 'as_of must be a date, YYYY-MM-DD' });
+    }
+    const unpinned = { timelines: [], completions_recorded: false, note: probationTimeline.COMPLETION_NOTE };
+
+    const conditions = [`status != 'terminated'`];
+    const jurisdiction = (req.query.jurisdiction || '').toUpperCase();
+    if (jurisdiction === 'AE' || jurisdiction === 'SA') {
+      conditions.push(`data_residency_country = ${db.escapeString(jurisdiction)}`);
+    }
+    if (req.accessScope === access.SCOPE.REPORTS || req.accessScope === access.SCOPE.OWN) {
+      const me = await callerEmployeeId(req);
+      // An account tied to no employee has no line and no record: an empty list is the truth about
+      // it, exactly as the roster route reports it.
+      if (!me) return res.json(unpinned);
+      conditions.push(req.accessScope === access.SCOPE.OWN ? `id = ${db.escapeString(me)}` : `manager_id = ${db.escapeString(me)}`);
+    }
+
+    const rows = await db.query(
+      `SELECT id, first_name, last_name, start_date, probation_end_date FROM employees WHERE ${conditions.join(' AND ')}`
+    );
+    const timelines = probationTimeline.timelinesFor(
+      rows.map((row) => ({ ...row, name: `${row.first_name} ${row.last_name}`.trim() })),
+      { now: asOf }
+    );
+    res.json({ timelines, completions_recorded: false, note: probationTimeline.COMPLETION_NOTE });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) return res.status(404).json({ error: 'API route not found' });
