@@ -295,6 +295,20 @@ const ROUTES = Object.freeze([
   // `probation:read` cell, which would also let a hire read their OWN timeline — is raised in the PR
   // body instead of being taken silently here.
   ['GET', '/probation/timelines', 'employees:read'],
+  // Layer 4 / P4-1 — the replacement cost of a seat (backlog row `051870f5`).
+  //
+  // Mapped to `employees:read`, the resource whose columns the figure is computed from, and NOT to a
+  // resource of its own — the same call P3-1 made for the probation timeline, for the same reason: a
+  // new resource would mean a new cell in the matrix docs/access-model.md mirrors, and that document
+  // is validated by an instrument outside this repository.
+  //
+  // The ROW scope is narrower than the roster's, and deliberately so. The figure prices the role's
+  // own daily salary, so serving it to a manager would hand them a report's pay by arithmetic —
+  // §4's rule that a manager may not see a report's pay. The route therefore reads the company-wide
+  // scope, or a caller's OWN row, and refuses everything else with the gate's own shape. The
+  // alternative (let the manager's `reports` scope through, since the payload carries no salary
+  // column) is raised in the PR body rather than taken silently here.
+  ['GET', '/employees/:id/replacement-cost', 'employees:read'],
 ]);
 
 /** `/api/login` and `/api/health` are unauthenticated by design and never reach the gate. */

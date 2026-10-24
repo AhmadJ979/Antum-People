@@ -1,0 +1,5 @@
+0e391da7c5f03baa966cd0cc385f3b5a  README.md
+40b0553921f809c6e4a0f826bf935dd5  build.txt
+c35b59645ae65767d3ce7986919ea4e0  entry-point.txt
+d145572c7f806e196cd628766047e0be  rig-figures.txt
+ca11531ad5ec019d5592af9e038d7932  suites.txt

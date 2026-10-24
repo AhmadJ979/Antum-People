@@ -150,6 +150,7 @@ Every cell is a decision, and at `ca681dd` every cell below is the code. **`✔`
 | `PUT /api/onboarding-tasks/:id` (`:500`) | ✔ (`all`) | ✔ (`reports`) | ✖ | **✖ (§6.4 — the own view is read-only)** | ✖ |
 | `GET /api/employees/:id/offboarding` (`:521`) | ✔ (`all`) | ✖ | ✖ | **✔ (`own`)** | ✖ |
 | `PUT /api/offboarding-tasks/:id` (`:533`) | ✔ | ✖ | ✖ | ✖ | ✖ |
+| `GET /api/employees/:id/replacement-cost` (`:1085`) | ✔ (`all`) | **✖ — a report's pay by arithmetic (§4)** | ✔ (`all`) | ✔ (`own`) | ✖ |
 | `GET /api/probation/timelines` (`:1104`) | ✔ (`all`) | **✔ scoped `reports`** | ✔ (`all`) | **✖ (§6.1)** | ✖ |
 
 **P3-1's probation timeline is a read over `employees`, and NOT a resource of its own** (`server/access.js`,
@@ -161,6 +162,16 @@ reading — a `probation:read` cell, which would also let a hire read their **ow
 **not** taken: adding a cell is this document's owner's call, and it is raised in PR #287 and again in the
 fix that carries this row. **The route was appended at the end of the route list on purpose**: this file cites
 `file:line` for every route, and inserting in the middle moved 57 of the instrument's checks red.
+
+**P4-1's replacement cost is the one row in this table whose CELL is wider than its route's row
+scope.** `employees:read` lets a manager read their reports' records; the route refuses a manager
+there, because the figure prices the role's own daily salary and serving it would hand them a
+report's pay by arithmetic — the rule §4 states for the roster's field projection, applied to a
+computed field. A payload carrying no salary column is not the same thing as a payload that does
+not disclose pay. The `own` cell is live: a caller whose `users.employee_id` is the row reads it,
+the same reading the §3.1 onboarding cell records. *(Decided by the engineer, 2026-10-22, on this
+document's own §4; the narrower cell is the one this PR ships and the wider one is raised in its
+body rather than taken silently.)*
 
 **National-ID columns never leave the HR boundary.** They are encrypted at rest and the roster's read decrypts
 them (`index.js:329-319`) — encryption at rest discloses nothing if the read decrypts for everyone. #239 closed

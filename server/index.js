@@ -8,6 +8,7 @@ const access = require('./access');
 const eosb = require('./eosb');
 const preboarding = require('./preboarding');
 const preboardingItems = require('./preboarding-items');
+const replacementCost = require('./replacement-cost');
 const privacyNotice = require('./privacy-notice');
 const preboardingWorkspace = require('./preboarding-workspace');
 const preboardingPackage = require('./preboarding-package');
@@ -1073,6 +1074,54 @@ app.get('/api/preboarding/flag-watch', async (req, res) => {
 });
 flagWatcher.start();
 
+// P4-1 — the replacement cost of a seat, read by the roster when a row carries a termination flag.
+//
+// APPENDED AT THE END OF THE ROUTES SECTION, and that placement is the point: docs/access-model.md
+// cites `server/index.js:<line>` for every route (see its §3 matrix), so a route inserted between
+// two existing routes stales every citation below it. P3-1 (row d73f8760) inserted its route
+// mid-file and this repository paid for it — 137/137 checks on the instrument, then 80/137 on the
+// merged tree. A route added here cannot move a citation above it. The §3.1 row for this route is
+// part of the same change; a route without its row is the other half of that same defect.
+app.get('/api/employees/:id/replacement-cost', async (req, res) => {
+  try {
+    // The row scope is narrower than the roster's on purpose: the figure prices the role's daily
+    // salary, so a manager reading a report's would be reading their pay by arithmetic (§4). Read
+    // the company-wide scope, or a caller's own row; refuse everything else.
+    const ownRow = (await callerEmployeeId(req)) === req.params.id;
+    if (req.accessScope !== access.SCOPE.ALL && !ownRow) return refuse(res);
+
+    const rows = await db.query(`SELECT * FROM employees WHERE id = ${db.escapeString(req.params.id)}`);
+    if (!rows.length) return res.status(404).json({ error: 'employee not found' });
+    const employee = rows[0];
+
+    // The replacement is found in the roster — the earliest employee recorded in the same department
+    // and role whose start date is after the departure date — and the payload names both the row it
+    // found and the rule that found it, so a reader can disagree with the derivation rather than
+    // having to trust the number. No replacement is NOT an error: the engine then says the vacancy
+    // window is unknown instead of inventing one.
+    let successor = null;
+    if (employee.end_date && employee.department && employee.role) {
+      const found = await db.query(
+        `SELECT id, start_date FROM employees`
+        + ` WHERE department = ${db.escapeString(employee.department)}`
+        + ` AND role = ${db.escapeString(employee.role)}`
+        + ` AND id <> ${db.escapeString(employee.id)}`
+        + ` AND start_date > ${db.escapeString(employee.end_date)}`
+        + ` ORDER BY start_date ASC LIMIT 1`
+      );
+      if (found.length) successor = found[0];
+    }
+
+    res.json(replacementCost.computeReplacementCost({
+      employee,
+      successor,
+      asOf: new Date().toISOString().slice(0, 10),
+    }));
+  } catch (err) {
+    console.error('[ReplacementCost] Failed to compute:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 // The watcher's route is registered BEFORE the static/SPA catch-all below: that catch-all
 // answers every unknown /api path with a JSON 404, so a route added after it is unreachable.

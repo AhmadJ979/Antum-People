@@ -1,0 +1,26 @@
+=== the instrument on MY tree ===
+OK   [doc→tree] every §8 item the code keys against exists in §8 ([3, 4, 5] ⊆ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+OK   [doc→tree] the document's ```sh blocks carry no `!` (history expansion kills them; found 0)
+OK   [doc id] §8 records every open owner decision the plan numbers, in the plan's own form — missing none (found [23, 24, 25, 26, 27])
+OK   [present] the rename is implemented as a migration (db.js RENAMES)
+OK   [present] the caller's employee_id IS read now (callerEmployeeId)
+OK   [empty] the module's own 'system' fallback is retired (requireActor, :198)
+
+137/137 checks hold against origin/main   (ran=137, fails=0)
+
+=== CONTROL: check-all at unchanged origin/main ===
+----------------------------------------------------------------------------------------------------
+totals: 5 check(s) run, 7 skipped
+        OK               4
+        RED-KNOWN        1
+        SKIP-FLAGGED     7
+
+VERDICT: no check is unexpectedly red. 1 check(s) are red in a state that is RECORDED as the defect state (doc-citations) -
+         their lines above name where that is recorded and what ends it. exit 0
+
+=== and the instrument there ===
+OK   [present] the rename is implemented as a migration (db.js RENAMES)
+OK   [present] the caller's employee_id IS read now (callerEmployeeId)
+OK   [empty] the module's own 'system' fallback is retired (requireActor, :198)
+
+137/137 checks hold against origin/main   (ran=137, fails=0)
