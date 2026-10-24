@@ -151,6 +151,28 @@ async function seed() {
       fully_productive_date: '2023-09-30'
     },
     {
+      // P4-1 (row 051870f5): Sarah's seat is refilled IN THE ROSTER, so the replacement cost can
+      // measure the vacancy window against a RECORDED start date rather than an assumed one. The
+      // rule the engine states — same department and role, earliest start after the departure date —
+      // is satisfied by this row: Marketing / Recruitment Specialist, 2026-09-30 -> 2026-10-12.
+      // Noura's seat is deliberately left unfilled: her flag is the case where the vacancy length is
+      // unknown, and the figure says so instead of guessing. Both behaviours are in the demo.
+      id: 'demo-emp-lina',
+      first_name: 'Lina',
+      last_name: 'Haddad',
+      email: 'lina.haddad@example.com',
+      department: 'Marketing',
+      role: 'Recruitment Specialist',
+      start_date: '2026-10-12',
+      salary: 13500,
+      basic_salary: 9500,
+      recruitment_cost: 4500,
+      data_residency_country: 'AE',
+      status: 'onboarding',
+      probation_end_date: '2027-01-10',
+      fully_productive_date: null
+    },
+    {
       id: 'demo-emp-mohammed',
       first_name: 'Mohammed',
       last_name: 'Al-Sayed',

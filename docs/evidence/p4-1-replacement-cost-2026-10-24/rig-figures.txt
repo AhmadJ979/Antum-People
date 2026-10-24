@@ -1,0 +1,29 @@
+=== fresh DB: 2026-10-24T09:34:03Z tree 9171400 ===
+seed exit: 0  rows upserted: 14
+live 3000: 200
+user ok
+
+--- the seeded rows, straight from the DB (no server involved) ---
+  {"id":"demo-emp-sarah","department":"Marketing","role":"Recruitment Specialist","start_date":"2023-09-12","end_date":"2026-09-30","salary":13000,"total_salary":13000,"recruitment_cost":4000,"fully_productive_date":"2023-09-30","status":"offboarding"}
+  {"id":"demo-emp-lina","department":"Marketing","role":"Recruitment Specialist","start_date":"2026-10-12","end_date":null,"salary":13500,"total_salary":13500,"recruitment_cost":4500,"fully_productive_date":null,"status":"onboarding"}
+  {"id":"demo-emp-noura","department":"Sales","role":"Account Manager","start_date":"2024-04-10","end_date":"2026-10-10","salary":16000,"total_salary":16000,"recruitment_cost":7000,"fully_productive_date":"2024-05-01","status":"offboarding"}
+--- the successor query, run on its own ---
+  rows: [{"id":"demo-emp-lina","start_date":"2026-10-12"}]
+
+--- the route's own payload, first read, nothing mutated ---
+  demo-emp-sarah: calculated SAR 14920 (4/4) | window 2026-09-30 -> {'employee_id': 'demo-emp-lina', 'start_date': '2026-10-12', 'basis': 'the earliest employee recorded in the same department and role with a start date after the departure date'}
+     Recruitment            4000  {"recorded_recruitment_cost": 4000}
+     Vacancy cover          5200  {"daily_salary": 433.33, "departure_date": "2026-09-30", "rate": 1, "rate_key": "vacancy_cover_rate", "replacement_employee_id": "demo-emp-lina", "replacement_start_date": "2026-10-12", "salary_basis": "total_salary", "vacancy_days": 12}
+     Onboarding / ramp      3900  {"daily_salary": 433.33, "fully_productive_date": "2023-09-30", "ramp_days": 18, "rate": 0.5, "rate_key": "ramp_shortfall_rate", "salary_basis": "total_salary", "start_date": "2023-09-12"}
+     Lost productivity      1820  {"daily_salary": 433.33, "departure_date": "2026-09-30", "rate": 0.35, "rate_key": "vacancy_output_shortfall_rate", "replacement_employee_id": "demo-emp-lina", "replacement_start_date": "2026-10-12", "salary_basis": "total_salary", "vacancy_days": 12}
+  demo-emp-noura: partial AED 12600 (2/4) | window 2026-10-10 -> None
+     Recruitment            7000  {"recorded_recruitment_cost": 7000}
+     Vacancy cover          not calculated  no replacement is recorded in this department and role, so the length of the vacancy is un
+     Onboarding / ramp      5600  {"daily_salary": 533.33, "fully_productive_date": "2024-05-01", "ramp_days": 21, "rate": 0.5, "rate_key": "ramp_shortfall_rate", "salary_basis": "total_salary", "start_date": "2024-04-10"}
+     Lost productivity      not calculated  no replacement is recorded in this department and role, so the length of the vacancy is un
+
+--- and the same DB, read by a third process, to see what the server should have seen ---
+  sarah total_salary from a separate process: [{"total_salary":13000}]
+Terminated
+listeners now: 0  live 3000: 200
+diag finished 2026-10-24T09:34:09Z

@@ -1,0 +1,22 @@
+=== server suite ===
+1..114
+# tests 304
+# suites 51
+# pass 304
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5922.451416
+
+=== client: typecheck + build ===
+tsc exit: 0
+[2K
+transforming...✓ 19 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.46 kB │ gzip:  0.30 kB
+dist/assets/index-CSQHlfh4.css   35.93 kB │ gzip:  6.95 kB
+dist/assets/index-CNpLMWLD.js   283.70 kB │ gzip: 78.99 kB
+
+[32m✓ built in 328ms[39m

@@ -274,6 +274,93 @@ interface PreboardingOverview {
 // label. The breadcrumb used to render `${activeTab} Panel`, which printed "Preboarding Panel"
 // for a nav entry labelled "Pre-boarding" — the same defect class as a header that names one
 // jurisdiction while showing another.
+// P4-1 — the replacement cost read. The client renders what the engine returned and computes no
+// part of this figure: one total, four components, and the assumptions the total rests on. The
+// reason a component is missing travels with it, so the surface can say WHY rather than show 0.
+interface ReplacementCostComponent {
+  key: string;
+  label: string;
+  state: 'calculated' | 'not_calculated';
+  value: number | null;
+  reason: string | null;
+  inputs: Record<string, unknown>;
+  basis?: string;
+}
+interface ReplacementCostPayload {
+  model: string;
+  employee_id: string;
+  employee_name: string;
+  currency: string | null;
+  as_of: string | null;
+  trigger: { key: string; label: string; detail: string } | null;
+  window: { departure_date: string | null; replacement: { employee_id: string; start_date: string; basis: string } | null };
+  components: ReplacementCostComponent[];
+  total: {
+    state: 'calculated' | 'partial';
+    value: number;
+    calculated_components: number;
+    components_total: number;
+    not_calculated: string[];
+    note: string;
+  };
+  assumptions: { key: string; label: string; value: number; unit: string; basis: string }[];
+}
+type ReplacementCostReading = { reading: 'loading' | 'ok' | 'refused' | 'failed'; cost: ReplacementCostPayload | null };
+
+// The flag the figure hangs on — the same two readings the server makes in `triggerOf`. There is no
+// performance flag in the schema (no column, no route), so this does not invent one.
+const carriesTerminationFlag = (emp: Employee): boolean =>
+  emp.status === 'offboarding'
+  || emp.status === 'terminated'
+  || Boolean((emp as unknown as { termination_type?: string | null }).termination_type);
+
+const money = (currency: string | null, value: number): string =>
+  `${currency || '—'} ${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+/** The figure, rendered ON the flag: four components individually visible, assumptions beside them. */
+const ReplacementCostOnFlag = ({ state }: { state?: ReplacementCostReading }) => {
+  if (!state || state.reading === 'loading') {
+    return <div className="mt-1 text-[10px] text-slate-400">Replacement cost: reading…</div>;
+  }
+  if (state.reading === 'refused') {
+    return <div className="mt-1 text-[10px] text-amber-700">Replacement cost: refused for this account</div>;
+  }
+  if (state.reading === 'failed' || !state.cost) {
+    return <div className="mt-1 text-[10px] text-amber-700">Replacement cost: could not be read</div>;
+  }
+  const p = state.cost;
+  return (
+    <div className="mt-2 max-w-[15rem] rounded border border-slate-200 bg-slate-50 p-2 text-left">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+        Replacement cost {p.total.state === 'partial' ? '(partial)' : ''}
+      </div>
+      <div className="font-mono text-sm font-bold text-teal-700">{money(p.currency, p.total.value)}</div>
+      <ul className="mt-1 space-y-0.5">
+        {p.components.map(c => (
+          <li key={c.key} className="text-[10px] leading-tight">
+            <span className="font-semibold text-slate-700">{c.label}: </span>
+            {c.state === 'calculated' && c.value !== null
+              ? <span className="font-mono text-slate-700">{money(p.currency, c.value)}</span>
+              : <span className="text-amber-700">not calculated — {c.reason}</span>}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-1 text-[9px] text-slate-500">
+        {p.total.calculated_components} of {p.total.components_total} computed from records
+        {p.window.replacement
+          ? ` · vacancy measured to the replacement's recorded start (${p.window.replacement.start_date})`
+          : ' · no replacement recorded in this role'}
+      </div>
+      <div className="mt-1 text-[9px] text-slate-400">
+        Assumptions, not measurements: {p.assumptions.map(a => `${a.label} ×${a.value}`).join(' · ')}
+      </div>
+      <div className="mt-0.5 text-[9px] text-slate-400">
+        {p.model} · as of {p.as_of}
+      </div>
+    </div>
+  );
+};
+
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Executive Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
   { id: 'employees', label: 'Employee Directory', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
@@ -447,6 +534,9 @@ export default function App() {
   const [user, setUser] = useState<any | null>(JSON.parse(localStorage.getItem('antum_user') || 'null'));
   const [activeTab, setActiveTab] = useState<'dashboard' | 'employees' | 'transitions' | 'analytics' | 'preboarding'>('dashboard');
   const [employees, setEmployees] = useState<Employee[]>([]);
+  // P4-1 — the replacement cost per flagged row. Keyed by employee id; each row is settled ON ITS
+  // OWN (the rule the panels below follow), so a refusal on one row cannot blank another.
+  const [replacementCosts, setReplacementCosts] = useState<Record<string, ReplacementCostReading>>({});
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [onboardingTasks, setOnboardingTasks] = useState<Task[]>([]);
   const [offboardingTasks, setOffboardingTasks] = useState<Task[]>([]);
@@ -604,6 +694,37 @@ export default function App() {
     }
   }, [token, activeTab, jurisdiction]);
 
+  // P4-1 — read the replacement cost for every row carrying a termination flag, automatically:
+  // nobody opens a calculator, and the figure is on the flag itself. A refusal is NAMED on the row
+  // rather than shown as an absent figure, and a 401 is left to `authedFetch`, which owns the
+  // session's end (the classification in src/httpStatus.js).
+  const loadReplacementCosts = (rows: Employee[]) => {
+    const flagged = rows.filter(carriesTerminationFlag);
+    if (!flagged.length) return;
+    setReplacementCosts(prev => {
+      const next = { ...prev };
+      for (const emp of flagged) if (!next[emp.id]) next[emp.id] = { reading: 'loading', cost: null };
+      return next;
+    });
+    for (const emp of flagged) {
+      authedFetch(`${API_BASE}/api/employees/${emp.id}/replacement-cost`)
+        .then(async (res) => {
+          if (res.status === 401) return; // the session's end is authedFetch's call, not this row's
+          if (res.status === 403) {
+            setReplacementCosts(prev => ({ ...prev, [emp.id]: { reading: 'refused', cost: null } }));
+            return;
+          }
+          if (!res.ok) {
+            setReplacementCosts(prev => ({ ...prev, [emp.id]: { reading: 'failed', cost: null } }));
+            return;
+          }
+          const payload = (await res.json()) as ReplacementCostPayload;
+          setReplacementCosts(prev => ({ ...prev, [emp.id]: { reading: 'ok', cost: payload } }));
+        })
+        .catch(() => setReplacementCosts(prev => ({ ...prev, [emp.id]: { reading: 'failed', cost: null } })));
+    }
+  };
+
   const fetchData = async () => {
     if (!token) return;
     setLoading(true);
@@ -634,6 +755,7 @@ export default function App() {
       if (settled.data.employees !== undefined) {
         const safeEmpData = Array.isArray(settled.data.employees) ? settled.data.employees : [];
         setEmployees(safeEmpData);
+        loadReplacementCosts(safeEmpData); // P4-1: the figure appears on the flag without being asked for
 
         // Keep selected employee state fresh
         if (selectedEmployee) {
@@ -1591,6 +1713,10 @@ export default function App() {
                           }`}>
                             {emp.status}
                           </span>
+                          {/* P4-1: the figure sits ON the flag it belongs to, not behind a click. */}
+                          {carriesTerminationFlag(emp) && (
+                            <ReplacementCostOnFlag state={replacementCosts[emp.id]} />
+                          )}
                         </td>
                         <td className="p-4">
                           <div className="text-sm font-bold text-teal-600 font-mono">
