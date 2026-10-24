@@ -55,13 +55,38 @@ Owner decision 2, ruled 2026-10-22; it upholds the 2026-10-09 finding recorded i
 `cutover-20261009/README.md` under *Standing facts from this run*, which listed the same three options and left
 the choice open. **The product is not moved off 3000.**
 
-Read-only measurements on the live host, 2026-10-22 — re-measured for the decision rather than carried from that
-record:
+Read-only measurements on the live host, 2026-10-22, deployed tree **`7000a70`** — re-measured for the decision
+rather than carried from that record. **A bundle name is a fact about a moment, not a constant**, so each name
+below is stated with the moment and the tree it was read from; the dated note after the list carries the
+current pair:
 
 - port 3000 is held by **`node` pid 1381** (started 11:20:23), cwd `.../probable-octo-sniffle/server` — the product;
-- the live URL and the `-dev` URL both answer **HTTP 200**, and both pages name **`assets/index-C9vf7pQB.js`**;
-- the deployed `client/dist/index.html` names the **same** bundle;
+- the live URL and the `-dev` URL both answer **HTTP 200**, and both pages name the bundle the tree served **at
+  that moment** — `assets/index-C9vf7pQB.js`;
+- the deployed `client/dist/index.html` named the **same** bundle at that moment;
 - `GET /api/employees` on the live URL answers **401** — the product's own gate, so the URL is served by the product.
+
+**Dated note — the two later readings (2026-10-23 / 2026-10-24).** On **2026-10-23T15:33Z**, after a machine
+replacement, the URL was **not** the product: **HTTP 200, 2,978 B, `<title>My site</title>`, no `assets/index-*`
+reference at all, and `GET /api/employees` → 404** where the product's gate answers **401**. The product server was
+down (no `node index.js`; `flock -n server/keep-alive.lock -c true` **succeeded**, so no holder; the install hook
+`/etc/profile.d/zz-antum-product-guard.sh` **absent**), and port 3000 was held by the website's own dev server —
+`node /home/team/shared/site/node_modules/.bin/vite dev`, pid 415, started 2026-10-23 15:32:56, parent
+`bun run dev`. (The same page is described elsewhere as the platform's placeholder; what was measured on the host
+is the website's dev server holding 3000 and serving it — either way the URL answered **200**, which is why a
+status alone is not a serving test and the **gate** is.) The recovery at **2026-10-24T09:22:12Z** raised the
+product and re-armed the guard — the guard's log records `armed as its own session leader (pid 5899)`, the lock's
+`flock` probe **held** and its first line (the claim) reads `5899`, and the hook is back at
+`/etc/profile.d/zz-antum-product-guard.sh` (written 09:22) — **without a rebuild**: `client/dist/index.html` is
+still the 12:47Z movement's file (mtime 2026-10-22 12:47).
+**Served pair now, read 2026-10-24T09:25Z on deployed tree `f4314d8`: HTTP 200, 799 B,
+`<title>Antum People</title>`, naming `assets/index-Be_ijisC.js` and `assets/index-B7rk1n5J.css`, with
+`GET /api/employees` → 401.** The recovery's own evidence is a separate record's pack.
+
+**Who measures the pair.** `bash scripts/observe-serve-pair.sh`, run from the deployed tree, asserts it on every
+run — it derives the expected asset names and md5s from `client/dist/` and hashes the bytes it fetches off the URL,
+exiting 0 only if they agree. Read the current pair there; this page names a bundle only with the moment and the
+tree revision it was read from.
 
 **What an operator does about it.** A foreign process found on 3000 — the supervised `vite dev` for
 `/home/team/shared/site` is the one that appears — is **evicted and the port re-claimed**; that is what the
