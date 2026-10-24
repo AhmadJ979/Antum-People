@@ -74,14 +74,24 @@ down (no `node index.js`; `flock -n server/keep-alive.lock -c true` **succeeded*
 `node /home/team/shared/site/node_modules/.bin/vite dev`, pid 415, started 2026-10-23 15:32:56, parent
 `bun run dev`. (The same page is described elsewhere as the platform's placeholder; what was measured on the host
 is the website's dev server holding 3000 and serving it — either way the URL answered **200**, which is why a
-status alone is not a serving test and the **gate** is.) The recovery at **2026-10-24T09:22:12Z** raised the
-product and re-armed the guard — the guard's log records `armed as its own session leader (pid 5899)`, the lock's
-`flock` probe **held** and its first line (the claim) reads `5899`, and the hook is back at
-`/etc/profile.d/zz-antum-product-guard.sh` (written 09:22) — **without a rebuild**: `client/dist/index.html` is
-still the 12:47Z movement's file (mtime 2026-10-22 12:47).
-**Served pair now, read 2026-10-24T09:25Z on deployed tree `f4314d8`: HTTP 200, 799 B,
-`<title>Antum People</title>`, naming `assets/index-Be_ijisC.js` and `assets/index-B7rk1n5J.css`, with
-`GET /api/employees` → 401.** The recovery's own evidence is a separate record's pack.
+status alone is not a serving test and the **gate** is.)
+**The recovery, 2026-10-24T09:21:59Z → 09:22:18Z, exit 0 — the `--restart-only` tier** (its rule and its own trap
+are in *Two tiers: a movement, or `--restart-only`* below; its log is `/tmp/restart-only-20261024T092159Z.log`).
+Its step 4 stopped the process on 3000 and then held the port as the product's: `stopping pid 415`, `port 3000
+held by a foreign process (pid 5691: node /home/team/shared/site/node_modules/.bin/vite dev) — evicting and
+re-claiming`, `port 3000 held by the product server (pid 5820)`. Its step 6 reinstalled the hook from the tree
+(`INSTALLED /etc/profile.d/zz-antum-product-guard.sh`, `RESULT: 1 of 7 copies installed or refreshed`, the other
+copies `unchanged`), and the guard's own log records `armed as its own session leader (pid 5899)` with the lock's
+`flock` probe **held** and its first line (the claim) reading `5899`. **No rebuild**: `client/dist/index.html` is
+still the 12:47Z movement's file (mtime 2026-10-22 12:47), and the run's own closing check reads `OK: the served
+bytes ARE the on-disk shipped bundle — nothing was rebuilt`.
+**Served pair now — deployed tree `f4314d8`, unchanged by the recovery — read 2026-10-24T09:25Z (re-read
+09:28:49Z): HTTP 200, 799 B, `<title>Antum People</title>`, naming `assets/index-Be_ijisC.js` (281,017 B, md5
+`e83b7a33cb575f9440829916db13a05e`) and `assets/index-B7rk1n5J.css` (35,899 B, md5
+`55737b9e8f16d886249d0d387653967e`) — both sizes and md5s **measured on both sides, off the URL and in
+`client/dist/assets/`, and equal** — with `GET /api/employees` → 401.** Read those names and md5s as belonging to
+**`f4314d8`**: they are stale the moment the next movement lands, which is why the tree revision is written beside
+them. The recovery's own evidence is a separate record's pack.
 
 **Who measures the pair.** `bash scripts/observe-serve-pair.sh`, run from the deployed tree, asserts it on every
 run — it derives the expected asset names and md5s from `client/dist/` and hashes the bytes it fetches off the URL,
@@ -153,6 +163,31 @@ bash /home/team/shared/probable-octo-sniffle/scripts/cutover-preflight.sh       
 Run the installer **from a tree**, never from `/home/team/shared`: a self-copy there would be a second,
 quietly stale install path. The preflight names which revision the live hook is and whether it pairs with the
 deploy that writes the marker — see "Host tooling" below.
+
+### Two tiers: a movement, or `--restart-only`
+
+**Measure the state before choosing a tier; the cheap one is often the right one.** `bash deploy-main.sh` runs the
+full movement. With **`--restart-only`** it skips steps 1–3 — `no fetch, no reset, no build, no re-seed` — and
+leaves the tree at the tip it is already on, keeping the bundle already on disk, then does the rest (restart, claim
+3000, verify, re-arm). **That is the correct tier after a replacement when the four things that carry the product
+all survive: the deploy tree's tip, `client/dist`, the host tools, and the product DB.** `/etc/profile.d` does
+**not** survive a replacement — the login-shell hook is gone — so the run must reinstall it; a guard cannot come
+back on its own later.
+
+Measured on this host **2026-10-24**: `--restart-only`, **09:21:59Z → 09:22:18Z, exit 0**, log
+`/tmp/restart-only-20261024T092159Z.log`. Its own lines: `1-3. SKIPPED (--restart-only)` with `the tree stays at
+f4314d8 and keeps the bundle already on disk`; step 4 evicting the foreign process and taking the port
+(`stopping pid 415`, `port 3000 held by a foreign process (pid 5691: node
+/home/team/shared/site/node_modules/.bin/vite dev) — evicting and re-claiming`, then `port 3000 held by the product
+server (pid 5820)`); step 6 `INSTALLED /etc/profile.d/zz-antum-product-guard.sh` from the tree with `RESULT: 1 of
+7 copies installed or refreshed` (the other six `unchanged`); and the closing check
+`assets/index-Be_ijisC.js  served md5 e83b7a33… / on-disk md5 e83b7a33… (both measured now)` →
+`OK: the served bytes ARE the on-disk shipped bundle — nothing was rebuilt`.
+
+**Trap, met on 2026-10-24: do not pipe the run into `tee`/`tail`.** The re-armed guard inherits the pipe's write
+end and holds it open, so **the script finishes while the pipeline never returns** — it looks like a hang after the
+re-arm, with the work already done. Redirect the run's output to a file instead; that is the shape of the
+2026-10-24 log above.
 
 ### The sequence
 
