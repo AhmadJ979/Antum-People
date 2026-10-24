@@ -8,7 +8,6 @@ const access = require('./access');
 const eosb = require('./eosb');
 const preboarding = require('./preboarding');
 const preboardingItems = require('./preboarding-items');
-const replacementCost = require('./replacement-cost');
 const privacyNotice = require('./privacy-notice');
 const preboardingWorkspace = require('./preboarding-workspace');
 const preboardingPackage = require('./preboarding-package');
@@ -1084,6 +1083,9 @@ flagWatcher.start();
 // part of the same change; a route without its row is the other half of that same defect.
 app.get('/api/employees/:id/replacement-cost', async (req, res) => {
   try {
+    // Required here, not at the top of the file: a line added above every route shifts every
+    // `file:line` citation docs/access-model.md carries, which is the defect P3-1 taught us.
+    const replacementCost = require('./replacement-cost');
     // The row scope is narrower than the roster's on purpose: the figure prices the role's daily
     // salary, so a manager reading a report's would be reading their pay by arithmetic (§4). Read
     // the company-wide scope, or a caller's own row; refuse everything else.

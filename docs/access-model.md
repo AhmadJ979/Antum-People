@@ -20,11 +20,11 @@ marked **(counsel)**; where it is a cell the code refuses *for now because couns
 | Fact | Where | What it means |
 |---|---|---|
 | One auth gate | `server/index.js:138-150` — `app.use('/api', …)` skips only `/login` and `/health`, then `authenticateToken`, then `access.gate` | authentication and a deny-by-default authorisation check both run on every `/api` route |
-| **The token carries the role, and the role is read** | `server/auth.js:91-92` (signed) · `server/access.js:389` (`allowed.indexOf(req.user.access_role)`) · `server/index.js:132` (login response) | the claim exists, is signed, and decides every request |
+| **The token carries the role, and the role is read** | `server/auth.js:91-92` (signed) · `server/access.js:403` (`allowed.indexOf(req.user.access_role)`) · `server/index.js:132` (login response) | the claim exists, is signed, and decides every request |
 | **Changed by #239 — the cells are populated.** The first two versions of this document said every cell was `[admin]` and nothing had widened | `server/access.js:73` (`ROLES` — **five**), `:91` (`POLICY` — **17** resources, most with more than one role) | **access has widened.** There are five roles in the data, and a second account can be created with any of them (`server/index.js:228`) |
-| Scoping is enforced, not just the cell | `access.js:189` (`SCOPES`), `:329` (`scopeFor`), `:337` (`scopedAllows`), `index.js:180` (`relationTo`), consulted at `index.js:199`, `:308`, `:504` | a cell says *which* roles; `SCOPES` says *how far* — `all` / `reports` / `own`, resolved per row |
-| Field rules are enforced | `access.js:213` (`EMPLOYEE_FIELD_GROUPS`), `:224` (`FIELD_RULES`), `:345` (`fieldsRemovedFor`), applied at `index.js:309` | a manager's roster row carries no national ID and no pay; finance's carries no national ID (§4) |
-| **An unstated scope refuses** | `access.js:329-323` (`scopeFor` returns `null`), `:337-331` (`scopedAllows(null, …) === false`) — measured: `scopeFor('onboarding:read','nobody')` → `null`, `scopedAllows('own','other')` → `false` | "how far may this role reach" never falls back to "everywhere" |
+| Scoping is enforced, not just the cell | `access.js:189` (`SCOPES`), `:343` (`scopeFor`), `:351` (`scopedAllows`), `index.js:180` (`relationTo`), consulted at `index.js:199`, `:308`, `:504` | a cell says *which* roles; `SCOPES` says *how far* — `all` / `reports` / `own`, resolved per row |
+| Field rules are enforced | `access.js:213` (`EMPLOYEE_FIELD_GROUPS`), `:224` (`FIELD_RULES`), `:359` (`fieldsRemovedFor`), applied at `index.js:309` | a manager's roster row carries no national ID and no pay; finance's carries no national ID (§4) |
+| **An unstated scope refuses** | `access.js:343-323` (`scopeFor` returns `null`), `:337-331` (`scopedAllows(null, …) === false`) — measured: `scopeFor('onboarding:read','nobody')` → `null`, `scopedAllows('own','other')` → `false` | "how far may this role reach" never falls back to "everywhere" |
 | **One account per person is now a constraint** | `server/db.js:134-139` — `idx_users_employee_id_unique`, a partial unique index created **after** the column migrations | enforced by the database, not by policy (§2.2); a duplicate in the data throws at boot |
 | Every other `.role` in the tree is a **job title** | `employees.role`, `preboarding_cases.role` | not permissions — the naming hazard is §2.4, and **the rename has now landed** |
 
@@ -35,7 +35,7 @@ document disagree, **the code is what runs** and the disagreement is a defect in
 
 ### 1.1 The mechanism this matrix fills — and the three cells pre-boarding now needs
 
-- **The gate denies in four ways** (`server/access.js:389-386`): a route whose resource is not in `POLICY`; a
+- **The gate denies in four ways** (`server/access.js:403-386`): a route whose resource is not in `POLICY`; a
   resource whose role list is empty; a caller whose role is not in the list; and a **scope of `null`** — a
   scope-bearing resource whose `SCOPES` table does not cover the caller's role. Each is **403 with no body**;
   a missing or bad token stays **401** from `authenticateToken`. A route with no line in `ROUTES` is refused,
@@ -89,7 +89,7 @@ it. Both are now out of date, and the true state is more precise than either.**
   remains a *policy*, deliberately, is the **case→person link** for pre-boarding (below).
 - **It IS read now.** `relationTo()` (`index.js:180`) resolves the caller's relation to a row — `self`, `report`,
   `other`, `unknown` — from the caller's `employee_id` and `employees.manager_id`, and `scopedAllows`
-  (`access.js:337`) turns that into a decision. So the own view and the reports view are **live**, not pending.
+  (`access.js:351`) turns that into a decision. So the own view and the reports view are **live**, not pending.
 - **Changed by #239 — a THIRD prerequisite is missing, and the code names it rather than hiding it.** The gate's
   `PENDING_CELLS` (`access.js:155`) records that **`preboarding_cases` has no `employee_id`**: a case carries
   `candidate_name`, `candidate_email`, `role`, `department`, `reporting_line` and **no reference to an
@@ -126,7 +126,7 @@ now has five roles with `SCOPES` as the mechanism that makes a sixth unnecessary
 **Changed by #239: the rename happened**, exactly where the second version of this document predicted it would —
 in the slice that derives `manager` from `employees.manager_id`, and so is the slice where `users.access_role` and
 `employees.role` sit in one function. The column is `users.access_role` (`schema.sql:191`), the JWT claim is
-`req.user.access_role` (`access.js:389`, `auth.js:91-92`), and `access.js:67` records the rename as this slice's.
+`req.user.access_role` (`access.js:403`, `auth.js:91-92`), and `access.js:67` records the rename as this slice's.
 **What remains true:** the hazard was real while it lasted, the fix is a rename and a migration rather than a
 second name kept alongside (a role value the list does not know is refused), and the gate is written against the
 permission — correct today, as it was before the rename.
@@ -150,7 +150,7 @@ Every cell is a decision, and at `ca681dd` every cell below is the code. **`✔`
 | `PUT /api/onboarding-tasks/:id` (`:500`) | ✔ (`all`) | ✔ (`reports`) | ✖ | **✖ (§6.4 — the own view is read-only)** | ✖ |
 | `GET /api/employees/:id/offboarding` (`:521`) | ✔ (`all`) | ✖ | ✖ | **✔ (`own`)** | ✖ |
 | `PUT /api/offboarding-tasks/:id` (`:533`) | ✔ | ✖ | ✖ | ✖ | ✖ |
-| `GET /api/employees/:id/replacement-cost` (`:1085`) | ✔ (`all`) | **✖ — a report's pay by arithmetic (§4)** | ✔ (`all`) | ✔ (`own`) | ✖ |
+| `GET /api/employees/:id/replacement-cost` (`:1084`) | ✔ (`all`) | **✖ — a report's pay by arithmetic (§4)** | ✔ (`all`) | ✔ (`own`) | ✖ |
 | `GET /api/probation/timelines` (`:1104`) | ✔ (`all`) | **✔ scoped `reports`** | ✔ (`all`) | **✖ (§6.1)** | ✖ |
 
 **P3-1's probation timeline is a read over `employees`, and NOT a resource of its own** (`server/access.js`,
@@ -180,7 +180,7 @@ this properly: the decrypt happens **only for a column the caller's role is serv
 (`index.js:310`), not "serve everything".
 
 **A scope the table does not cover is a refusal, and that is asserted.** `scopeFor` returns `null` rather than
-falling back to `all` (`access.js:329-323`); the call sites refuse on it. The failure mode this prevents is the
+falling back to `all` (`access.js:343-323`); the call sites refuse on it. The failure mode this prevents is the
 worst one available here: "how far may this role reach" defaulting to "everywhere".
 
 ### 3.2 Pre-boarding — the ruling, and the cell that still waits on a column
@@ -220,7 +220,7 @@ exists and is already exercised on the task routes.
 `employee` would leak colleague identifiers and internal notes:
 
 - **`note`, `last_actor`, and every actor username** on `preboarding_items` (`server/preboarding-items.js:517`,
-  `:521`; insert paths `:389`, `:609`);
+  `:521`; insert paths `:403`, `:609`);
 - **owner names on the workspace track** — show the **function** ("with IT"), never a person;
 - **`preboarding_reminders`** — what HR chased and when is not the person's record;
 - **`created_by`** on the case (`schema.sql:213`) — an HR username;
@@ -492,7 +492,7 @@ underneath them did:
 | §5.1 `preboarding-items.js:343-347` | the `recorded_by` read and its refusal | **`:360-364`** |
 | §3.2 `:497` | `note =` in the item update | **`:517`** |
 | §3.2 `:501` | `last_actor =` in the item update | **`:521`** |
-| §3.2 `:372` (insert path) | the `note` value on insert | **`:389`** |
+| §3.2 `:372` (insert path) | the `note` value on insert | **`:403`** |
 | §3.2 `:588` (insert path) | the `note` value on the reminder insert | **`:609`** |
 
 The shifts are **+17, +20, +21, +20 and +20**: a re-ground is a measurement, not arithmetic, and any one offset
