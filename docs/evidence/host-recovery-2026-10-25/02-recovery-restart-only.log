@@ -1,0 +1,76 @@
+nohup: ignoring input
+deployed tree : 32570478481b34ddb7ab607b96eea7a5e24e1f56  3257047 Merge pull request #292 from AhmadJ979/fix/reground-access-model-after-p4-1
+origin/main   : 32570478481b34ddb7ab607b96eea7a5e24e1f56  3257047 Merge pull request #292 from AhmadJ979/fix/reground-access-model-after-p4-1
+dist present  : Oct 24 11:58  assets: index-CNpLMWLD.js index-CSQHlfh4.css 
+=> no movement is owed: restart-only is the right tier (it cannot change which commit is served)
+
+############ running: bash scripts/deploy-main.sh --restart-only
+=== restart-only recovery 2026-10-25T07:14:59+00:00 ===
+  script: scripts/deploy-main.sh | 28647 B | sha256 363f5e0e46dfc292
+  tree:   /home/team/shared/probable-octo-sniffle   port: 3000   mode: restart-only
+  bundles on disk: 1
+--- 1-3. SKIPPED (--restart-only): no fetch, no reset, no build, no re-seed ---
+         the tree stays at 3257047 and keeps the bundle already on disk
+--- 4. restart the server on port 3000 (pinned; the host exports PORT=80) ---
+stopping pid 587
+port 3000 held by a foreign process (pid 1542: node /home/team/shared/site/node_modules/.bin/vite dev) — evicting and re-claiming
+port 3000 held by the product server (pid 1652)
+[preboarding-flag] ec7ae63a-6c03-4761-81af-b030532a4a5b — This case reached the 48-hour mark while the app was not running (noticed 103.25h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed.
+--- 5. verify the live demo end to end ---
+public status/title: 200 <title>Antum People</title>
+demo login token chars: 215 (expect >100)
+bad-password path: 401 (expect 401)
+roster: 200
+  employees: 14 | first id: demo-emp-lina
+pre-boarding demo state as the live API serves it (expect three distinct flag states):
+  totals: {"cases": 3, "cases_notice_not_shown": 1, "cases_provisioned": 0, "cases_ready": 0, "items": 21, "items_outstanding": 21, "items_received": 0, "items_verified": 0, "workspace_lines": 43, "workspace_lines_open": 43}
+   start 2026-10-23 | started | tone rose | open 21 | lines emp/ws 7 14
+   start 2026-10-25 | started | tone rose | open 21 | lines emp/ws 7 14
+   start 2026-11-07 | clear | tone slate | open 22 | lines emp/ws 7 15
+  distinct flag states: ['clear', 'started'] (expect 3: clear, inside_48_hours, started)
+KSA offboarding checklist as the live API serves it:
+  tasks: 10
+    1 Hardware Return
+    2 Access Revocation
+    3 Notice Period Verification
+    4 EOSB Calculation (KSA)
+    5 GOSI De-registration
+    6 Iqama Cancellation/Transfer
+    7 Final Exit Visa (or re-entry, if transferring)
+    8 Service Certificate Issuance
+    9 Annual Leave Encashment
+    10 Final Settlement Payment
+consent-date field for the departing employee:
+   ('demo-emp-sarah', 0, None)
+settlement statement: rendered EOSB vs the employee record (must match):
+  record eosb_accrued: 19824.78 | rendered: 19824.78 | match: True
+  unfilled [brackets]: NONE
+  net payable: 32824.78
+--- 6. re-arm the watchdog from the tree we just deployed ---
+deploy marker written: /home/team/shared/probable-octo-sniffle/server/deploy-in-progress (pid 1461)
+watchdog pid: 1911
+deploy marker removed: /home/team/shared/probable-octo-sniffle/server/deploy-in-progress
+  deploy copy revision: UNKNOWN (scripts/deploy-main.sh carries no provenance block) — the hook will come from the tree
+=== install-host-tools 2026-10-25T07:15:19+00:00 ===
+  script: /home/team/shared/probable-octo-sniffle/scripts/install-host-tools.sh | 13599 B | sha256 b070d333a4966872
+  repo:   /home/team/shared/probable-octo-sniffle
+  dest:   /home/team/shared   hook: /etc/profile.d/zz-antum-product-guard.sh   mode: install
+  source: the working tree
+  revision: 32570478481b34ddb7ab607b96eea7a5e24e1f56 (working-tree)
+
+  unchanged /home/team/shared/deploy-main.sh   body md5 2cddb29515ee4ce9d1ba8310088dc4e5
+  unchanged /home/team/shared/cutover-preflight.sh   body md5 51cadbcd9ddc937080371d4702a78067
+  unchanged /home/team/shared/restore-product.sh   body md5 8c592edd2ac18ed0c859befced0f63d1
+  unchanged /home/team/shared/rollback-to-9d2182a.sh   body md5 605bb77c9e3b119a078cc96f17c263a2
+  unchanged /home/team/shared/success-test.sh   body md5 da80db2824e8e810fd64db2a913e69bf
+  unchanged /home/team/shared/observe-serve-pair.sh   body md5 c01d38acddcaa57f6f064b6ab7a14472
+  hook source: the tree (32570478481b34ddb7ab607b96eea7a5e24e1f56)
+  INSTALLED /etc/profile.d/zz-antum-product-guard.sh   body md5 bf80c94d9c9b1d3ac5e11373619fffd1
+
+=== RESULT: 1 of 7 copies installed or refreshed from 32570478481b; backups: none
+--- the served bytes vs the on-disk bundle ---
+  assets/index-CNpLMWLD.js  served md5 62f0fae0baf2b71f7607d86f6834dab1 / on-disk md5 62f0fae0baf2b71f7607d86f6834dab1 (both measured now)
+  OK: the served bytes ARE the on-disk shipped bundle — nothing was rebuilt
+deployed commit: 3257047 Merge pull request #292 from AhmadJ979/fix/reground-access-model-after-p4-1
+=== cutover finished 2026-10-25T07:15:19+00:00 — run-stamped evidence: /tmp/cutover-20261025-071459-evidence.txt | build: /tmp/cutover-20261025-071459-build.log | seed: /tmp/cutover-20261025-071459-seed.log ===
+############ exit code: 0

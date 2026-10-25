@@ -1,0 +1,26 @@
+=== THE REPLACEMENT, MEASURED (ledger line appended) ===
+2026-10-24T11:47:40Z  boot_id=751182d1-a093-4699-850f-b4f6a9450d6c  uptime=2658s  boot_wall=2026-10-24T11:03:22Z  guard_pid=5899(1670s)  product_pid=5820(1675s)
+2026-10-24T11:50:46Z  boot_id=751182d1-a093-4699-850f-b4f6a9450d6c  uptime=2844s  boot_wall=2026-10-24T11:03:23Z  guard=1856s  product=1860s
+2026-10-25T07:14:05Z  boot_id=719854c3-ed8b-4541-955d-d0a40fdda66b  uptime=44s  boot_wall=2026-10-25T07:13:22Z  guard_pid=(s)  product_pid=(s)
+
+=== is anything serving / guarding? ===
+guard:   
+product: 
+COMMAND PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+node    587 root   22u  IPv6   3992      0t0  TCP *:3000 (LISTEN)
+node    587 root   25u  IPv6   4050      0t0  TCP 172.16.14.5:3000->172.16.14.6:56448 (ESTABLISHED)
+
+=== host tools and the tree ===
+-rw-r--r-- 1 root root 121 Oct 25 07:13 cto-env-vars.sh
+tree HEAD: 3257047 Merge pull request #292 from AhmadJ979/fix/reground-access-model-after-p4-1
+dist: Oct 24 11:58
+
+=== the public URL ===
+  GET / -> 200, 2978 B
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/src/styles/app.css" data-precedence="defa
+=== the guard log's last lines ===
+2026-10-24T11:58:42+00:00 armed as its own session leader (pid 13964) - no detach needed
+2026-10-24T11:58:42+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-24T11:58:42+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
+2026-10-24T12:12:58+00:00 hook: guard already running (pid 13964), nothing to do
+2026-10-24T12:13:14+00:00 hook: guard already running (pid 13964), nothing to do
