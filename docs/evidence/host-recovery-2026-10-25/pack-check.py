@@ -13,7 +13,14 @@ for n in names:
     if not os.path.isfile(n):
         fail.append(f'{n} is not a file')
 named = set(re.findall(r'`([0-9A-Za-z_.\-]+\.(?:txt|md|log|py))`', readme))
+# A file the README names as ABSENT (lost with /tmp, or survived elsewhere) must be absent HERE.
+# Naming an absence is part of the record; the check verifies the absence rather than demanding the file.
+ABSENT = {'-build.log', '-seed.log'}   # named as lost with /tmp; they must not be here
 for n in sorted(named):
+    if n in ABSENT:
+        if os.path.exists(n):
+            fail.append(f'`{n}` is declared absent but exists in the pack')
+        continue
     if not os.path.exists(n):
         fail.append(f'README names `{n}` but it does not exist here')
 manifest = {}

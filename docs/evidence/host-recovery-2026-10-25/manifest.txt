@@ -2,5 +2,9 @@
 79fa42aa4cc373797355e48beb35e34f  02-recovery-restart-only.log
 7ebaef3979e35a942d3298ce3b964158  03-acceptance.txt
 0fbe8ef99bbfbfe49c0a1dfac930d3cb  04-suspension-2026-10-24.txt
-97e7249e57f9c1fb64eb028b00e6cc24  05-boot-ledger.txt
-17fb973a802ada4fcdd39359785cd740  README.md
+302c164a047999a4f9b6ae969f381716  05-boot-ledger.txt
+764700ccc3dfcbd3a367d40719ddfa87  06-movement-console-2026-10-24-1158.txt
+4805deaa07055f30c71e81efa353e097  07-preflight-record.log
+dde95756ee345f20d8b2b001c835f871  08-checkall-deployed-3257047.out
+ba1e08a52f8d4df3d4d000c5fda271bf  09-recovery-run-evidence-2026-10-25.txt
+9f55b35f92696a74fb4313dde779df81  README.md

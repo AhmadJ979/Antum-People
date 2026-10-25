@@ -71,6 +71,59 @@ served bytes equal to the on-disk bundle with both measured at run time.
   derived from dates and have moved on since the seed. Re-seeding before any demo remains decision 3.
 - No movement was made and none is owed: `docs/` only, and the served bytes were already on disk.
 
+## The movement this pack is filed at (2026-10-24 11:58:26Z -> 11:58:48Z, 22 s, exit 0)
+
+The served tree was moved to **`3257047`** (the merge commit of #292) by the lead's full movement, and this
+pack is filed at that tip. Measured after it: served pair == deployed dist **byte for byte**
+(`assets/index-CNpLMWLD.js` 283,703 B md5 `62f0fae0baf2b71f7607d86f6834dab1`, `assets/index-CSQHlfh4.css`
+35,932 B md5 `2cdb30957b86cca3e6c9df949a0c2c40`), three gate routes **401**, guard flock **HELD** with claim
+== holder == pid **13964**, hook paired, host-tool install **idempotent**, `observe-serve-pair.sh` **PAIR
+HOLDS**. The movement's console and the deployed-tree check run are **06** and **08** here.
+
+**Its preflight refused first, and that refusal is part of the record.** The pinned after-state record
+(`ANTUM_MEASURED_TIP`) was **211 commits stale**, so the preflight could only refuse until the record was
+re-measured: the lead rebuilt the tip in a scratch worktree, sampled peak disk (**2,196 MB free** at the low
+point) and supplied the **whole** record — it is seven fields or nothing, and a tip alone is a refusal. **07**
+is that record.
+
+**One artifact named as absent rather than omitted:** the movement's run-stamped evidence
+(`/tmp/cutover-20261024-115826-evidence.txt` and its `-build.log` / `-seed.log`) was **cleared by the
+2026-10-25T07:13:22Z replacement** - `/tmp` does not survive it. What it contained is re-measured in **03**
+and in this README's acceptance table, from the running host rather than from the log that was lost. This
+recovery's own run-stamped evidence does survive, because it was written *after* that replacement: it is
+**09** here.
+
+## The correction this pack exists to carry (the lead's own plan number was wrong)
+
+The plan said "the machine booted at 10:36:07Z" and, later, "at 11:03:22Z". Both are the **same derivation**
+(`date - uptime`) drifting forward with no boot: measured live on the *same* boot identity `751182d1-...`,
+11:10:24Z gave uptime 2071 s (=> 10:35:53Z) and 11:54:59Z gave uptime 3096.81 s (=> 11:03:22Z) — the derived
+"boot instant" moved **+27.5 min** while nothing restarted. So the derived boot instant is not a boot instant,
+and **the recovered window is the measured 09:45:06 -> 11:09:13Z, not 10:36-10:52**.
+
+## The ledger's rule was wrong, and is fixed and proved here
+
+`/home/team/shared/host-boot-ledger.txt` first said "if boot_wall moves FORWARD ... the host restarted" —
+which calls a suspension a restart, exactly the case it was built to catch. Its header now states the two
+events **separately** (a boot = `boot_id` changes **and** uptime resets; a suspension = `boot_id` unchanged
+and uptime advancing **more slowly** than the wall interval) and quotes this file's own lines as proof of
+each branch: the 2026-10-24 pair (same `boot_id`, uptime 2658 s -> 2844 s, boot_wall sliding 11:03:22Z ->
+11:03:23Z) and the 2026-10-25 line (new `boot_id`, uptime 44 s). **05** is that file as of this pack.
+
+## Every digest names the revision it was measured at
+
+| file | measured at / copied from |
+| --- | --- |
+| `01-pre-recovery-state.txt` | the live host, 2026-10-25 between 07:13:22Z (boot) and 07:14:59Z (recovery) |
+| `02-recovery-restart-only.log` | `deploy-main.sh --restart-only` at tree `3257047`, 07:14:59 -> 07:15:19Z |
+| `03-acceptance.txt` | the live host and the public URL at tree `3257047`, 07:15:53Z |
+| `04-suspension-2026-10-24.txt` | the live host, 2026-10-24 11:45-11:51Z, boot `751182d1-...` |
+| `05-boot-ledger.txt` | `/home/team/shared/host-boot-ledger.txt`, as of 2026-10-25T07:15:53Z |
+| `06-movement-console-2026-10-24-1158.txt` | the lead's movement console, 2026-10-24T12:00Z |
+| `07-preflight-record.log` | the lead's re-measured preflight record, 2026-10-24T12:00Z |
+| `08-checkall-deployed-3257047.out` | `check-all --no-suite` at the deployed tree `3257047`, 2026-10-24T12:00Z |
+| `09-recovery-run-evidence-2026-10-25.txt` | this recovery's own run, tree `3257047`, 07:14:59 -> 07:15:19Z |
+
 ## Files in this pack
 
 - `README.md` — this record.
@@ -81,4 +134,8 @@ served bytes equal to the on-disk bundle with both measured at run time.
 - `04-suspension-2026-10-24.txt` — the measurement that corrected 2026-10-24 from "replacement" to
   "suspension", including the derived-boot-stamp trap.
 - `05-boot-ledger.txt` — the append-only host boot ledger, as of this recovery.
+- `06-movement-console-2026-10-24-1158.txt` — the movement that put `3257047` live, 22 s, exit 0.
+- `07-preflight-record.log` — the re-measured after-state record the preflight demanded.
+- `08-checkall-deployed-3257047.out` — the entry point at the deployed tip.
+- `09-recovery-run-evidence-2026-10-25.txt` — this recovery's own run-stamped evidence.
 - `manifest.txt` — md5 of every file above.

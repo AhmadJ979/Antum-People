@@ -1,7 +1,21 @@
-# host boot ledger — append-only. A reader can tell a restart from a clock step WITHOUT trusting the wall clock:
-#   uptime is monotonic; boot_wall = date - uptime; boot_id changes at EVERY boot.
-#   If boot_wall moves FORWARD between two lines of this file, the host restarted (uptime resets).
-#   If boot_id is unchanged and uptime grew, there was no restart.
+# host boot ledger — append-only. A reader tells a RESTART from a SUSPENSION from a STILL-RUNNING
+# host without trusting the wall clock. Read the two events SEPARATELY; do not collapse them:
+#
+#   1. A BOOT (replacement / real restart):   boot_id CHANGES **and** uptime RESETS to a small value.
+#   2. A SUSPENSION (frozen and resumed):     boot_id UNCHANGED, uptime ADVANCES MORE SLOWLY than the
+#                                             wall interval between the two lines. boot_wall (= date -
+#                                             uptime) therefore moves FORWARD without any boot: it is
+#                                             a derivation, not an instant. Never read it as a
+#                                             boot time; its drift is the suspended time.
+#   3. STILL RUNNING:                         boot_id unchanged and uptime advanced by the whole wall
+#                                             interval; the guard's and product's ages advance with it.
+#
+# PROOF OF BOTH BRANCHES, from this file's own lines (the 2026-10-24 lines: same boot_id 751182d1-… across
+# 2658 s and 2844 s of uptime while boot_wall slid 11:03:22Z -> 11:03:23Z = branch 2; the 2026-10-25
+# line: boot_id CHANGED to 719854c3-… with uptime 44 s = branch 1). Branches 1 and 2 were also measured
+# end to end the same day: wall +2127 s against guest +477 s with no reset (suspension, 27.5 min frozen),
+# and a fresh boot_id with uptime 44 s (replacement at 07:13:22Z). See
+# docs/evidence/host-recovery-2026-10-25/ in the repository.
 2026-10-24T11:47:40Z  boot_id=751182d1-a093-4699-850f-b4f6a9450d6c  uptime=2658s  boot_wall=2026-10-24T11:03:22Z  guard_pid=5899(1670s)  product_pid=5820(1675s)
 2026-10-24T11:50:46Z  boot_id=751182d1-a093-4699-850f-b4f6a9450d6c  uptime=2844s  boot_wall=2026-10-24T11:03:23Z  guard=1856s  product=1860s
 2026-10-25T07:14:05Z  boot_id=719854c3-ed8b-4541-955d-d0a40fdda66b  uptime=44s  boot_wall=2026-10-25T07:13:22Z  guard_pid=(s)  product_pid=(s)
