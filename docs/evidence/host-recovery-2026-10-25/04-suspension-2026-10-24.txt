@@ -1,0 +1,105 @@
+HOST CLOCK / UPTIME MEASUREMENT — 2026-10-24, ~11:45–11:51Z
+Measured by: agent-senior-software-engineer. Question asked by the lead (11:43Z): which reading
+holds — (a) the wall clock was stepped ~90 min after the guard armed, and the product has been up
+continuously; or (b) the host was replaced, the product was dark ~10:36–10:52, and something re-armed
+the same tree (not the hook, which logged nothing in that window)?
+
+VERDICT: NEITHER. The host was SUSPENDED (frozen) and resumed with its processes intact.
+No fourth replacement, no reboot, no re-arm, no restart of the guard or the product.
+
+--------------------------------------------------------------------------------
+1. THE TWO CLOCKS, AND WHAT IS IMMUNE TO WHAT
+--------------------------------------------------------------------------------
+reading at 11:45:51Z   date -u 2026-10-24T11:45:51Z   /proc/uptime 2548.52 s
+reading at 11:50:46Z   date -u 2026-10-24T11:50:46Z   /proc/uptime 2844 s      (+186 s in 186 s)
+boot_id 751182d1-a093-4699-850f-b4f6a9450d6c — IDENTICAL in both readings.
+  * monotonic uptime ADVANCED across the readings (2071 s at the lead's 11:10:24 reading -> 2548 s at
+    mine). A reboot/replacement RESETS it; it did not reset. There was no restart.
+  * a file written now carries mtime == date (probe /tmp/clock-probe-*.txt: mtime
+    2026-10-24 11:45:51.091, date -r 2026-10-24T11:45:51Z). The filesystem clock and the wall clock
+    agree NOW; there is no standing offset.
+
+THE SKEW, AND WHY IT CAN ONLY BE A SUSPENSION:
+  lead's reading  11:10:24Z  uptime 2071 s   guard 5899 age 1069 s
+  mine            11:45:51Z  uptime 2548 s   guard 5899 age 1561 s
+  wall advanced 2127 s; guest (monotonic) time advanced 477 s.  => 1650 s (27.5 min) of that interval
+  the guest was NOT RUNNING. Idleness cannot do this: monotonic time advances while a machine merely
+  idles. Only a suspend/resume freezes it while the wall clock (re-synced on resume) moves on.
+
+SAME MECHANISM AT SCALE — the readable, non-derived ledger:
+  /proc/1's OWN start stamp            2026-10-23T15:32:47Z   (also / and /run: 2026-10-23T15:32:46Z)
+    wall age since then  20.3 h      guest uptime 0.78 h   => ~19.5 h of the last 20.3 h were
+    suspended. A process's own start stamp is written once and is not a derivation.
+
+THE DERIVED "BOOT" STAMPS — FOUR INSTRUMENTS, ONE DERIVATION (this is the trap in the lead's reading):
+  /proc/stat btime = 1792839802 = 11:03:22Z;  uptime -s = 11:03:22Z;  who -b = Oct 24 11:03;
+  dmesg --ctime prints its boot messages as "Sat Oct 24 11:03:22 2026".
+  btime - (now - uptime) = -1 s — btime IS now-minus-uptime. All four agree because they are the same
+  subtraction, and all four are WRONG by the accumulated suspension. Their agreement is not
+  corroboration. The lead's "boot at 10:35:53" is the same artifact, not a boot event.
+
+--------------------------------------------------------------------------------
+2. WHAT ACTUALLY HAPPENED TO THE GUARD AND THE PRODUCT: NOTHING
+--------------------------------------------------------------------------------
+  pid 5899  bash scripts/keep-alive.sh   (monotonic age 1561 s, and it ADVANCES with uptime)
+  pid 5820  node index.js                (age 1565 s, advances too)
+  * both are children of pid 1 and have been the same processes throughout: their stdout files are
+    unchanged, their fds are unchanged, and the flock on server/keep-alive.lock is still held by
+    pid 5899 — the same claim "5899" written at 09:22:12. It is NOT pid reuse: it is the 09:22 guard,
+    still alive, and its small monotonic age is the suspension accumulation, not a fresh start.
+  * the product's own stdout (fd 1 -> server/server.log) has not been written since 09:22:08 — no
+    restart banner, no EADDRINUSE. Its last line is the 09:22 start, and the served asset names are
+    unchanged (assets/index-Be_ijisC.js). A re-arm would have printed a new banner.
+  * server/keep-alive.log and keep-alive.out last written 09:22:12; the guard logged nothing at
+    10:52 or 11:19 because it did not restart at either time.
+  * lsof: node 5820 holds *:3000 (LISTEN); bash 5899 holds fd 9u on the lock.
+  * live now: GET / -> 200 naming assets/index-Be_ijisC.js; /api/employees -> 401 (the product's gate).
+
+--------------------------------------------------------------------------------
+3. THE FROZEN INTERVALS, READ OFF A LOG THAT FIRES ON EVERY SHELL
+--------------------------------------------------------------------------------
+server/guard-hook.log (4.88 MB, appended ~5x/s while the guest runs), gaps > 2 min today:
+  09:38:09 -> 09:45:06    7.0 min
+  09:45:06 -> 11:09:13   84.1 min     <- the whole 10 o'clock hour is blank
+  11:14:52 -> 11:19:13    4.3 min
+  11:19:53 -> 11:29:19    9.4 min
+  11:29:19 -> 11:43:41   14.4 min
+lines per hour over the last days (0 = the hour is absent entirely): 10-20 has 05,06,07,08,09,10,
+13,14,15,16,17 and NOT 11,12,18-23; 10-21 only 10; 10-22 09,10,12,14. Whole hours missing on three
+earlier days: the suspension is ROUTINE, not an incident.
+Independent corroboration: NOTHING under /home/team/shared was written between 09:31:03 and
+11:13:00 — not the guard's log, not the product's log, not the shared team DB (which writes on every
+tool call from any member). A frozen guest writes nothing anywhere.
+
+--------------------------------------------------------------------------------
+4. CONSEQUENCE FOR THE PLAN'S RECORD (the sentence that is now false)
+--------------------------------------------------------------------------------
+"Site availability — SERVING on f4314d8 since 09:22Z" is true of the PROCESS and false as an
+AVAILABILITY claim:
+  * measured true: the product process has not restarted since 09:22:08 (own log, pid, fd, served
+    bytes all unchanged), and it is serving now.
+  * measured false as stated: the host was not running for at least 84.1 min of that span
+    (09:45:06 -> 11:09:13), plus a further 27.5 min between the lead's reading and mine. While the
+    guest is suspended it cannot answer, so "serving since 09:22Z" cannot stand, and still no
+    availability RATE may be quoted.
+  * the proposed dark window (10:36–10:52) does not exist as a restart: nothing restarted. The
+    measured non-running interval is 09:45:06 -> 11:09:13, and it did not need a recovery — the
+    platform resumed the guest with its processes intact.
+  * open, and reproducible rather than arguable: whether the PUBLIC URL answers while the guest is
+    frozen. Test: take a ledger line, wait for a >20 min blank stretch in guard-hook.log, curl the
+    public URL from a moment when the log shows the blank — the answer separates "the process is
+    alive" from "the surface is reachable".
+
+--------------------------------------------------------------------------------
+5. THE INSTRUMENT THIS TEAM DID NOT HAVE (now in place)
+--------------------------------------------------------------------------------
+/home/team/shared/host-boot-ledger.txt — append-only; each line carries date, boot_id, uptime,
+boot_wall (date-uptime), and the guard's/product's monotonic ages. A later reader can tell the three
+cases apart WITHOUT trusting the wall clock:
+  * boot_id changes, uptime resets            -> a real reboot/replacement
+  * boot_id holds, uptime grows, ages grow    -> running (nothing happened)
+  * uptime grows less than the wall interval  -> the guest was SUSPENDED for the difference
+First two lines (11:47:40Z and 11:50:46Z) already show the third case absent and uptime/ages tracking
+exactly (+186 s in 186 s).
+
+RAW COMMANDS: /tmp/clock-audit.sh, /tmp/clock-probe2.sh in this session; outputs /tmp/clock1..6.txt.
