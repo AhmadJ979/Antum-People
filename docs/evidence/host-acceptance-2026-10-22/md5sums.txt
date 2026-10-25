@@ -15,4 +15,4 @@ fefb635d41fd636be39fe202e24b61c1  13-observer.txt
 da6382f61a8ac782ca64c9d88d076bbc  14-check-all-bare-full-output.txt
 3b80b136b2875bf3ca89a0bf623ea079  14-entry-point-bare.txt
 40ad9cba6dac569b68fbb154f69fbd10  README.md
-91c5011dbaa78bfd7670bea1ff84918e  pack-check-runs.txt
+b3d04ac549cfeb567fb27a07a1db8be2  pack-check.py
