@@ -237,3 +237,16 @@ one; both outcomes leave exactly one guard.
 
 `pack-check.py` was re-run over the enlarged pack — runs 5 (red: the new files were untracked) and 6
 (green) are appended to `pack-check-runs.txt`.
+
+## Correction, added 2026-10-25 (the boot instant above is a derivation)
+
+The instant "**09:06:10** on 2026-10-22" above is `date − uptime`, not a clock reading taken at a boot: on
+this host that subtraction **drifts forward by any time the guest spent suspended**, because monotonic
+uptime freezes while the wall clock catches up on resume. Measured 2026-10-25 on a single boot: the same
+subtraction gave 10:35:53Z and then 11:03:22Z, +27.5 min, with `boot_id` unchanged and no boot between.
+
+This pack's **conclusion stands and is not affected** — it does not rest on the instant but on
+`boot_id 6a6dd1ef…`, which differs from the host the movement ran on, and a `boot_id` changes only at a
+real boot. Only the second of those two instruments was load-bearing here; the first should not be quoted
+as a boot time. The rule, the proof of both branches, and the ledger that separates a boot from a
+suspension are in `docs/evidence/host-recovery-2026-10-25/`.
