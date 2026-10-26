@@ -1,0 +1,44 @@
+nohup: ignoring input
+=== 0. ledger line after the second recovery ===
+2026-10-26T07:59:24Z  boot_id=79b369fd-e51c-422f-991d-5ccd3a51705f  uptime=64s  boot_wall=2026-10-26T07:58:21Z  guard_pid=(s)  product_pid=(s)
+2026-10-26T08:00:52Z  boot_id=79b369fd-e51c-422f-991d-5ccd3a51705f  uptime=152s  boot_wall=2026-10-26T07:58:21Z  guard_pid=1994(45s)  product_pid=1820(49s)
+
+=== 1. port ownership ===
+COMMAND  PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+node    1820 root   24u  IPv4   4695      0t0  TCP *:3000 (LISTEN)
+-- the evicted site dev server:
+
+=== 2. the guard: flock is the fact, the lock's first line is the claim ===
+   flock probe exit 1 (1 = HELD, 0 = FREE)
+   claim: 1994   holder: 1994 
+   hook: 10380 B Oct 26 08:00
+   hook log: 2026-10-26T08:00:52+00:00 hook: guard already running (pid 1994), nothing to do
+
+=== 3. the served pair vs the on-disk bundle, both measured now ===
+   GET / -> 200, 799 B
+   the page names: assets/index-CNpLMWLD.js  assets/index-CSQHlfh4.css
+   served assets/index-CNpLMWLD.js -> 200, 283703 B, md5 62f0fae0baf2b71f7607d86f6834dab1
+     on disk 283703 B, md5 62f0fae0baf2b71f7607d86f6834dab1
+   served assets/index-CSQHlfh4.css -> 200, 35932 B, md5 2cdb30957b86cca3e6c9df949a0c2c40
+     on disk 35932 B, md5 2cdb30957b86cca3e6c9df949a0c2c40
+
+=== 4. the gate answers 401 without a token ===
+   /api/employees -> 401
+   /api/probation/timelines -> 401
+   /api/employees/1/replacement-cost -> 401
+
+=== 5. the entry point at the deployed tree ===
+   deployed: e6925cf  e6925cf Merge pull request #294 from AhmadJ979/evidence/host-recovery-
+   origin/main: e74f0ba (served-path delta: '' )
+        RED-KNOWN        1
+        SKIP-FLAGGED     7
+
+VERDICT: no check is unexpectedly red. 1 check(s) are red in a state that is RECORDED as the defect state (doc-citations) -
+         their lines above name where that is recorded and what ends it. exit 0
+
+=== 6. the pair observer ===
+            expected:            35932 B, md5 2cdb30957b86cca3e6c9df949a0c2c40
+
+PAIR HOLDS (exit 0) — the page at https://b974147c03228029e277d1cbe6646fe6.ctonew.app names our asset(s) and the bytes match the served tree's artifact
+  measured off the URL: assets/index-CNpLMWLD.js 283703 B md5 62f0fae0baf2b71f7607d86f6834dab1
+=== acceptance end 2026-10-26T08:00:54Z ===

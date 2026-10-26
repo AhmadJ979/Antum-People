@@ -1,4 +1,4 @@
-# Host recovery, 2026-10-25T07:13:22Z replacement — restart-only recovery, verified
+# Host recovery — the replacement class measured twice (2026-10-25, 2026-10-26), restart-only, verified
 
 Row `b5d5dcd5`. This pack files the host's recovery record. **Its title's premise is corrected by its own
 measurements: nothing was replaced on 2026-10-24.** That day's two "host events" were *suspensions* of the
@@ -123,10 +123,44 @@ each branch: the 2026-10-24 pair (same `boot_id`, uptime 2658 s -> 2844 s, boot_
 | `07-preflight-record.log` | the lead's re-measured preflight record, 2026-10-24T12:00Z |
 | `08-checkall-deployed-3257047.out` | `check-all --no-suite` at the deployed tree `3257047`, 2026-10-24T12:00Z |
 | `09-recovery-run-evidence-2026-10-25.txt` | this recovery's own run, tree `3257047`, 07:14:59 -> 07:15:19Z |
+| `10-second-replacement-pre-state-2026-10-26.txt` | the live host, 2026-10-26 between the boot 07:58:21Z and the recovery 07:59:54Z |
+| `11-recovery-2-2026-10-26-restart-only.log` | `deploy-main.sh --restart-only` at tree `e6925cf`, 07:59:54 -> 08:00:13Z |
+| `12-acceptance-2026-10-26.txt` | the live host and the public URL at tree `e6925cf`, 08:00:52Z |
+
+## The second replacement, 2026-10-26T07:58:21Z — same class, same tier, measured again
+
+The ledger caught it on the first read, by its own two-condition rule: `boot_id` changed
+`719854c3-...` -> `79b369fd-e51c-422f-991d-5ccd3a51705f` **and** `uptime` reset to **64 s**. Nothing of
+ours was running, `/etc/profile.d` held no hook, and the platform's site dev server held **3000** again, so
+the URL answered the marketing site (200, 2,978 B) instead of the product — the third occurrence of that
+port contention, and the second with nobody having published anything. **10** is the host as it was found.
+
+**Tier, decided by measurement again:** the deployed tree was `e6925cf` and `origin/main` was `e74f0ba`
+(#295, docs/workflow only); the **served-path delta was empty**, so no movement was owed for it and
+`--restart-only` could not change which commit is served. Run 07:59:54 -> 08:00:13Z, **exit 0, 19 s**: the
+foreign listener evicted and 3000 re-claimed in the same window, the product restarted (pid 1820), the
+watchdog re-armed (pid 1994), the hook re-installed, and the served bytes equal to the on-disk bundle.
+
+**Accepted at 08:00:52Z (12):** 3000 ours; `flock -n` probe **exit 1 = HELD**, claim **1994** == holder
+**1994**; hook present and logging; served pair == on-disk bundle both measured
+(`index-CNpLMWLD.js` 283,703 B md5 `62f0fae0...`, `index-CSQHlfh4.css` 35,932 B md5 `2cdb3095...`); three
+gate routes **401**; `check-all --no-suite` at the deployed tree **exit 0** (one recorded RED-KNOWN);
+`observe-serve-pair.sh` **PAIR HOLDS**.
+
+**Two honest gaps in this second event.** The evicted site dev server had **not** returned to 3001 when the
+acceptance ran (it is platform-managed; the product holds 3000 regardless). And the host-tool install
+reported **7 of 7 refreshed** this time rather than 1 of 7: nothing was wrong — those scripts carry a
+provenance block naming the revision they were installed from, so a tree that has moved makes them differ
+by design, and each was backed up under `/home/team/shared/host-tools-backup-20261026T080013Z/`.
+
+**Still no monitor.** Three host events in two days, every one noticed by a member: a replacement announces
+itself to nobody but the person who next types a command, and the hook cannot re-arm itself because a
+replacement removes the hook. What exists now is the ledger, which turns "which of these happened?" into a
+one-line reading — not a check that reddens.
 
 ## Files in this pack
 
-- `README.md` — this record.
+- `README.md` — this record, covering both replacements.
 - `01-pre-recovery-state.txt` — the host as the replacement left it, before anything was run.
 - `02-recovery-restart-only.log` — the deploy script's own run log, `--restart-only`, exit 0.
 - `03-acceptance.txt` — the independent acceptance run: 3000 ours, guard flock/claim/holder, served pair vs
@@ -138,4 +172,7 @@ each branch: the 2026-10-24 pair (same `boot_id`, uptime 2658 s -> 2844 s, boot_
 - `07-preflight-record.log` — the re-measured after-state record the preflight demanded.
 - `08-checkall-deployed-3257047.out` — the entry point at the deployed tip.
 - `09-recovery-run-evidence-2026-10-25.txt` — this recovery's own run-stamped evidence.
+- `10-second-replacement-pre-state-2026-10-26.txt` — the host as the 2026-10-26 replacement left it.
+- `11-recovery-2-2026-10-26-restart-only.log` — the second recovery's own log, exit 0, 19 s.
+- `12-acceptance-2026-10-26.txt` — the second acceptance, same five points.
 - `manifest.txt` — md5 of every file above.
