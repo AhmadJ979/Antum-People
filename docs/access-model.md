@@ -153,6 +153,7 @@ Every cell is a decision, and at `ca681dd` every cell below is the code. **`✔`
 | `GET /api/employees/:id/replacement-cost` (`:1084`) | ✔ (`all`) | **✖ — a report's pay by arithmetic (§4)** | ✔ (`all`) | ✔ (`own`) | ✖ |
 | `GET /api/probation/timelines` (`:1104`) | ✔ (`all`) | **✔ scoped `reports`** | ✔ (`all`) | **✖ (§6.1)** | ✖ |
 | `POST /api/employees/:id/probation-evaluations` (`:1257`) | ✔ (`all`) | **✔ scoped `reports`** | ✖ | ✖ | ✖ |
+| `GET /api/probation/escalations` (`:1320`) | ✔ (`all`) | **✖ — the record names the chain ABOVE the report (§3.1's reason, applied in the route)** | ✔ (`all`) | ✖ | ✖ |
 
 **P3-1's probation timeline is a read over `employees`, and NOT a resource of its own** (`server/access.js`,
 the ROUTES entry for `GET /api/probation/timelines`; PR #287). Every date it returns is a function of
@@ -173,6 +174,38 @@ record's premise is that a manager wrote it. The narrower reading — a `probati
 would also let a hire submit their own — is raised in PR #306's body rather than taken silently here.
 The route was appended at the end of the ROUTES list, for the reason the P3-1 paragraph gives: this file
 cites `file:line`, and inserting in the middle moves the instrument's checks.
+**P3-3's escalation read is `employees:read` with the COMPANY-WIDE row scope, and that narrowing is the
+decision** (row `bb60c7a3`; route `index.js:1320`, rule in `server/probation-escalation.js`). What the row
+serves is not the hire's dates — those are on the timeline route, under the roster's own scope — but the
+record of an escalation: *when the system noticed a missed probation milestone, and who it was addressed
+to*. It is addressed to the manager's manager and to HR, never to the direct manager, so serving it under
+`reports` would show a manager the chain the escalation went above them. The route therefore refuses a
+narrower scope with the gate's own shape (403, empty body), and the manager keeps the fact without the
+roll-up: their reports' overdue milestones are on `GET /api/probation/timelines`, which is where the row's
+own §3.1 cell already puts them. Finance reaches the escalation read because finance holds `employees:read`
+at `all` — measured by the P3-3 suite (`server/probation-escalation.test.js`) rather than assumed here. The
+narrower reading — a `probation:escalations` cell held by
+HR alone — is raised in the PR body that carries this row rather than taken silently, exactly as P3-1 and
+P3-2 raised `probation:read` and `probation:write`.
+**The escalation is the one stored thing in the probation chain, and the store is the point.** The milestone
+dates stay derived on read (P3-1) and the completion state stays a submitted evaluation (P3-2); what P3-3
+adds is the ACT, which is not a function of any date: "the system noticed, at this instant, and addressed it
+to these people". A re-derived answer would rewrite history every time somebody changes job, so the
+reporting line is written into the row **as resolved at firing time**. Idempotence — one escalation per
+missed milestone, not one per scheduler tick — is the table's `UNIQUE (employee_id, milestone_index)` and not
+the watcher's memory, because this host restarts: an in-process "already seen" set is gone by the next boot
+and would escalate the same milestone again. The tick is the ONE in-process loop P2-5 built
+(`server/interval-watcher.js`, extracted from `server/preboarding-flag-scheduler.js` when P3-3 arrived, so
+there is still exactly one clock); `channel` is `none` on every row and the payload says in words that the
+product has no mailer, webhook or SMS — an escalation is a record HR can look up, never proof that a message
+reached a person.
+**Why the escalation needs `includeEnded` where the screen does not.** A milestone's deadline is the thirds
+of the window and its end, so the THIRD milestone falls on the probation's own end date — the deadline this
+row is named for. The timeline route deliberately answers "no timeline" for a window that has ended, which
+is right for a screen and fatal here: the day after the end date the missed final milestone would vanish
+before anything could escalate it. The escalation therefore asks for the ended window explicitly, and the
+suite pins both halves — the route still omits the ended hire, and its three missed milestones are in the
+escalation table.
 **P4-1's replacement cost is the one row in this table whose CELL is wider than its route's row
 scope.** `employees:read` lets a manager read their reports' records; the route refuses a manager
 there, because the figure prices the role's own daily salary and serving it would hand them a

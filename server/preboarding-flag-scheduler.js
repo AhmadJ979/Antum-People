@@ -9,6 +9,15 @@
  * OS. The watch therefore runs inside the server process, and it has to survive a restart.
  *
  * ---------------------------------------------------------------------------
+ * WHERE THE LOOP LIVES NOW (P3-3, 2026-10-26)
+ * ---------------------------------------------------------------------------
+ * The timer, the tick, the idempotence set and the catch-up accounting are in
+ * `server/interval-watcher.js` — ONE clock for this product, extracted when P3-3 needed the same
+ * shape rather than a second `setInterval`. This file is now only what is P2-5's own: what counts
+ * as a boundary, how the flag is derived, and the words of the record. Its behavior did not change
+ * in that extraction, and its own suite is the control that says so.
+ *
+ * ---------------------------------------------------------------------------
  * WHAT IT DOES, EXACTLY — AND WHAT IT DOES NOT
  * ---------------------------------------------------------------------------
  * It reads each case on a tick, derives the flag with the one derivation in preboarding-flag.js,
@@ -19,8 +28,10 @@
  *   - does NOT send anything: the product has no mailer, no webhook and no SMS, so a record here
  *     is an in-product observation and never proof that a message reached a person;
  *   - does NOT need the DB to hold a row: records are in memory, capped, and gone on restart —
- *     which is the honest statement of what this is. If a durable record is wanted later, that is
- *     a schema decision and its own row.
+ *     which is the honest statement of what this is. This is the difference between this watcher
+ *     and P3-3's, and it is deliberate: P3-3's escalation is an ACT of the system that HR must be
+ *     able to look up later, so it is written to a table; the flag is re-derivable on every read,
+ *     so storing it would only create a second thing that can disagree with the first.
  *
  * CATCH-UP RULE (the restart-safe part, stated so it can be checked):
  *   - a boundary that falls while the process is up is recorded on the next tick, as met while the
@@ -30,15 +41,10 @@
  *   - a boundary is never silently skipped: it is either met on a tick or caught up late and says
  *     so. Nothing is marked as missed, because a derived flag has nothing to miss — the chip reads
  *     correctly on the next read either way.
- *
- * The same watcher is the shape Layer 3's probation-milestone escalation (P3-3) needs — one
- * clock, one record, no delivery — but P3-3 is not built here and nothing in this file assumes it.
  */
 
 const { deriveFlag, BOUNDARY_HOURS } = require('./preboarding-flag');
-
-const DEFAULT_INTERVAL_MS = 5 * 60 * 1000;
-const MAX_RECORDS = 200;
+const { createIntervalWatcher, DEFAULT_INTERVAL_MS, MAX_RECORDS, isoOf } = require('./interval-watcher');
 
 const CATCH_UP_RULE = [
   `A case enters the flag at ${BOUNDARY_HOURS} hours before 00:00 of its start date.`,
@@ -48,10 +54,6 @@ const CATCH_UP_RULE = [
   'Nothing here is delivered anywhere, and nothing here is read to render the flag.',
 ].join(' ');
 
-function isoOf(ms) {
-  return ms === null || ms === undefined ? null : new Date(ms).toISOString();
-}
-
 /**
  * @param {object} options
  * @param {() => Promise<Array<{case_id: string, offer_reference?: string, start_date: string, items: Array}>>} options.snapshot
@@ -60,124 +62,88 @@ function isoOf(ms) {
  */
 function createFlagWatcher(options = {}) {
   const snapshot = options.snapshot;
-  const intervalMs = options.intervalMs || DEFAULT_INTERVAL_MS;
-  const log = options.log || (() => {});
-  const clock = options.clock || (() => new Date());
 
   if (typeof snapshot !== 'function') {
     throw new Error('createFlagWatcher needs a snapshot() function');
   }
 
-  const startedAt = clock();
-  const seen = new Set();
-  const records = [];
-  let timer = null;
-  let lastScanAt = null;
-  let lastError = null;
-
-  function boundaryOf(caseRow) {
+  const boundaryOf = (caseRow) => {
     if (!caseRow || !caseRow.start_date) return null;
     const ms = Date.parse(`${String(caseRow.start_date).slice(0, 10)}T00:00:00Z`);
     if (Number.isNaN(ms)) return null;
     return ms - BOUNDARY_HOURS * 3600000;
-  }
+  };
 
-  async function tick(at = clock()) {
-    let cases;
-    try {
-      cases = await snapshot();
-    } catch (err) {
-      lastError = err && err.message ? err.message : String(err);
-      throw err;
-    }
-    lastScanAt = at.toISOString();
-    const added = [];
-
-    for (const caseRow of cases || []) {
-      const boundaryMs = boundaryOf(caseRow);
-      if (boundaryMs === null) continue;
-      if (boundaryMs > at.getTime()) continue; // the boundary has not arrived yet
-
+  const watcher = createIntervalWatcher({
+    name: 'preboarding-flag',
+    intervalMs: options.intervalMs,
+    clock: options.clock,
+    log: options.log,
+    catchUpRule: CATCH_UP_RULE,
+    due: async (at) => {
+      const cases = await snapshot();
+      const items = [];
+      for (const caseRow of cases || []) {
+        const boundaryMs = boundaryOf(caseRow);
+        if (boundaryMs === null) continue;
+        if (boundaryMs > at.getTime()) continue; // the boundary has not arrived yet
+        items.push({ key: `${caseRow.case_id}@${isoOf(boundaryMs)}`, due_at: boundaryMs, caseRow });
+      }
+      return items;
+    },
+    onDue: async (item, ctx) => {
+      const caseRow = item.caseRow;
       const flag = deriveFlag(
         {
           start_date: caseRow.start_date,
           items: caseRow.items || [],
           collected_statuses: caseRow.collected_statuses,
         },
-        at
+        ctx.at
       );
-      // Nothing outstanding: the case never raises, so there is nothing to record.
-      if (flag.open_count === 0) continue;
+      // Nothing outstanding: the case never raises, so there is nothing to record. Returning null
+      // leaves the key unmarked, exactly as this watcher behaved before the loop was extracted.
+      if (flag.open_count === 0) return null;
 
-      const key = `${caseRow.case_id}@${isoOf(boundaryMs)}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-
-      const late = boundaryMs < startedAt.getTime();
-      const lateByHours = Math.round(((at.getTime() - boundaryMs) / 3600000) * 100) / 100;
-      const note = late
+      const note = ctx.late
         ? `This case reached the ${BOUNDARY_HOURS}-hour mark while the app was not running`
-          + ` (noticed ${lateByHours}h late). The flag itself is derived and read correctly on the`
+          + ` (noticed ${ctx.lateByHours}h late). The flag itself is derived and read correctly on the`
           + ' first read after restart; nothing is marked missed.'
         : `This case reached the ${BOUNDARY_HOURS}-hour mark while the app was open`
-          + ` (noticed within ${Math.round(intervalMs / 60000)} minute(s) of the boundary).`;
+          + ` (noticed within ${Math.round(ctx.intervalMs / 60000)} minute(s) of the boundary).`;
 
-      const record = {
-        case_id: caseRow.case_id,
-        offer_reference: caseRow.offer_reference || null,
-        boundary_at: isoOf(boundaryMs),
-        detected_at: at.toISOString(),
-        late,
-        late_by_hours: lateByHours,
-        state_at_detection: flag.state,
-        open_count_at_detection: flag.open_count,
-        channel: 'none',
-        note,
+      return {
+        record: {
+          case_id: caseRow.case_id,
+          offer_reference: caseRow.offer_reference || null,
+          boundary_at: isoOf(item.due_at),
+          detected_at: ctx.at.toISOString(),
+          late: ctx.late,
+          late_by_hours: ctx.lateByHours,
+          state_at_detection: flag.state,
+          open_count_at_detection: flag.open_count,
+          channel: 'none',
+          note,
+        },
+        log: `${caseRow.case_id} — ${note}`,
       };
-      records.push(record);
-      if (records.length > MAX_RECORDS) records.shift();
-      added.push(record);
-      log(`[preboarding-flag] ${caseRow.case_id} — ${note}`);
-    }
-
-    return { at: lastScanAt, added, records: records.length };
-  }
-
-  function start() {
-    if (timer) return;
-    const poll = () => {
-      tick().catch((err) => {
-        lastError = err && err.message ? err.message : String(err);
-        log(`[preboarding-flag] scan failed: ${lastError}`);
-      });
-    };
-    poll(); // the first tick IS the catch-up
-    timer = setInterval(poll, intervalMs);
-    if (typeof timer.unref === 'function') timer.unref();
-  }
-
-  function stop() {
-    if (timer) clearInterval(timer);
-    timer = null;
-  }
+    },
+  });
 
   return {
-    start,
-    stop,
-    tick,
-    records,
+    start: watcher.start,
+    stop: watcher.stop,
+    tick: watcher.tick,
+    records: watcher.records,
     catchUpRule: CATCH_UP_RULE,
-    status: () => ({
-      process_started_at: startedAt.toISOString(),
-      last_scan_at: lastScanAt,
-      interval_ms: intervalMs,
-      boundaries_recorded: records.length,
-      boundaries_seen: seen.size,
-      last_error: lastError,
-      delivery: 'none',
-      catch_up_rule: CATCH_UP_RULE,
-      records: records.slice(),
-    }),
+    // The served payload of `GET /api/preboarding/flag-watch` keeps the key names it has served, so
+    // the extraction is invisible to a reader of the route: `boundaries_*` is P2-5's vocabulary for
+    // the loop's generic counters, and renaming them is not this row's change to make. Read PER
+    // CALL, not once at construction — a status snapshot taken at construction would freeze at zero.
+    status: () => {
+      const { records_recorded, keys_seen, ...rest } = watcher.status();
+      return { ...rest, boundaries_recorded: records_recorded, boundaries_seen: keys_seen };
+    },
   };
 }
 

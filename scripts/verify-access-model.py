@@ -216,6 +216,11 @@ DOC_CITATIONS = [
          "§6.4 cites the whole note that names the manager's own-steps refusal"),
         ("db.js:126-128", "server/db.js", "measured reason:",
          "§2.2 cites the clause that says why the unique index cannot live in schema.sql"),
+        # Added 2026-10-26 with P3-3 (row `bb60c7a3`): the §3.1 row for the escalation read. Before this,
+        # that row's citation was compared to nothing — the tree's own route count would redden if the
+        # route vanished, but the document's pointer to it could drift onto any other line in silence.
+        ("index.js:1320", "server/index.js", "app.get('/api/probation/escalations'",
+         "§3.1 cites the P3-3 escalation read route itself, not the comment block above it"),
 ]
 
 def resolve(lines, needle, hint):
@@ -459,7 +464,10 @@ console.log(JSON.stringify(out));
         meas = m
         checks = [
             (m["resources"] == 17, f"17 resources (measured {m['resources']})"),
-            # 29 since 62665dc (PR #306): P3-2 added `POST /api/employees/:id/probation-evaluations`, mapped to
+            # 30 since this tree: P3-3 added `GET /api/probation/escalations`, mapped to the existing
+            # `employees:read` cell (docs/access-model.md §3.1, which carries its row in the same change
+            # — rule 41's count, published as 29 -> 30 rather than moved silently). Before that, 29 since
+            # 62665dc (PR #306): P3-2 added `POST /api/employees/:id/probation-evaluations`, mapped to
             # the existing `onboarding:write` cell (docs/access-model.md §3.1) — the §3.1 row moved with it, which is
             # what this check requires. Before that, 28 since 83a8b5e: P4-1 added GET /api/employees/:id/replacement-cost and
             # P3-1 added `GET /api/probation/timelines`, mapped to the existing `employees:read` cell (docs/access-model.md §3.1). This number IS the route inventory the
@@ -467,7 +475,7 @@ console.log(JSON.stringify(out));
             # which is what happened on 2026-10-22, when PR #287 landed a route and no §3 row, turning
             # this check from green (137/137 at 93de0bd) to red (80/137 at f4314d8) and check-all's
             # verdict to BROKEN. The row now exists and the number moves with it.
-            (m["routes"] == 29, f"29 routes declared (measured {m['routes']})"),
+            (m["routes"] == 30, f"30 routes declared (measured {m['routes']})"),
             (m["roles"] == 5, f"five roles exist (measured {m['roles']})"),
             (m["list"] == 1, f"the list cell covers 1 route (measured {m['list']})"),
             (m["own"] == 4, f"the own cell covers 4 routes (measured {m['own']})"),

@@ -323,6 +323,21 @@ const ROUTES = Object.freeze([
   // alternative (let the manager's `reports` scope through, since the payload carries no salary
   // column) is raised in the PR body rather than taken silently here.
   ['GET', '/employees/:id/replacement-cost', 'employees:read'],
+  // Layer 3 / P3-3 — the probation-milestone escalation records (row `bb60c7a3`).
+  //
+  // Mapped to `employees:read`, the resource the record is derived from and addressed about — the
+  // same call P3-1, P3-2 and P4-1 each made, for the same reason: a `probation:escalations` resource
+  // of its own would mean a new cell in the matrix docs/access-model.md mirrors, and the narrower
+  // reading is raised in this change's body rather than taken silently here.
+  //
+  // The ROW scope is the company-wide one, and that IS the decision: the record names the chain the
+  // escalation fired to — the manager's manager — so serving it under `reports` would show a manager
+  // the chain above them, and the direct manager is precisely who the escalation went past. HR (and
+  // finance, whose `employees:read` scope is also `all`) reads the records; a manager reads their
+  // reports' overdue milestones from `GET /api/probation/timelines` instead, which is the same fact
+  // without the roll-up of who was told. The route applies that restriction; `SCOPES` has no entry
+  // for this resource beyond the roster's, so the narrowing lives in the route and is named in §3.1.
+  ['GET', '/probation/escalations', 'employees:read'],
 ]);
 
 /** `/api/login` and `/api/health` are unauthenticated by design and never reach the gate. */

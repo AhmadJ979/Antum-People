@@ -1281,6 +1281,72 @@ app.post('/api/employees/:id/probation-evaluations', async (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
+// LAYER 3 — P3-3: THE PROBATION-MILESTONE ESCALATION (row `bb60c7a3`)
+// -------------------------------------------------------------
+// Required HERE and not at the top of the file: a line added above every route shifts every
+// `file:line` citation docs/access-model.md carries (the defect P3-1 taught us, re-measured when
+// this was written). Nothing above this point moves.
+//
+// The watch runs on the ONE in-process loop (`server/interval-watcher.js`), the same one P2-5's flag
+// watcher runs on, because this host has no cron and no working systemd and P3-3's row requires the
+// existing scheduler be reused rather than a second one written. Its first tick is the catch-up: a
+// deadline that fell while this process was down is escalated late and says so. What it records is a
+// row in `probation_escalations` — once per missed milestone for good, by the table's UNIQUE key
+// rather than by this process's memory. Nothing is sent anywhere: the product has no delivery
+// channel, and the payload says so in the same words.
+const probationEscalation = require('./probation-escalation');
+const escalationWatcher = probationEscalation.createEscalationWatcher({
+  log: (line) => console.log(line),
+});
+
+/**
+ * P3-3 (row `bb60c7a3`) — the escalation records HR can look up: when an escalation fired, and to
+ * whom. Appended at the end of the route list for the reason the P4-1 route above gives.
+ *
+ * WHAT IS READ IS WHAT WAS WRITTEN. The milestone dates are derived on read (P3-1) and the completion
+ * state is a submitted evaluation (P3-2), but "the system noticed, at this instant, and addressed it
+ * to these people" cannot be derived — so the row holds the reporting line AS IT WAS AT FIRING TIME,
+ * and the payload never re-derives it. `completed_at` is derived on read, because that is a different
+ * question ("was it done anyway?") whose answer may legitimately have changed since.
+ *
+ * AUTHORIZATION: the resource is `employees:read` (server/access.js) and the ROW scope is restricted
+ * in the route to the company-wide one. The record names the chain above the hire — the manager's
+ * MANAGER — so a manager reading their own line would read the escalation that went past them; the
+ * same fact without the roll-up of who was told is on `GET /api/probation/timelines`, which applies
+ * the roster's own scope. A narrower or unstated scope is refused with the gate's own shape (403, no
+ * body), which `client/src/httpStatus.js` classifies as a refusal in place rather than a session end.
+ */
+app.get('/api/probation/escalations', async (req, res) => {
+  try {
+    if (req.accessScope !== access.SCOPE.ALL) return res.status(403).end();
+    const escalations = await probationEscalation.listEscalations({ employee_id: req.query.employee_id });
+    const status = escalationWatcher.status();
+    res.json({
+      escalations,
+      count: escalations.length,
+      // The watch's own state, so a reader can tell "nothing has been missed" from "the watch has
+      // never run": an empty list under a watcher that has not ticked is not the same reading as an
+      // empty list under one that has. `records` is left out — it is this process's in-memory log,
+      // and the table above IS the record.
+      watcher: {
+        process_started_at: status.process_started_at,
+        last_scan_at: status.last_scan_at,
+        interval_ms: status.interval_ms,
+        escalations_recorded_in_this_process: status.records_recorded,
+        last_error: status.last_error,
+        delivery: status.delivery,
+        catch_up_rule: status.catch_up_rule,
+      },
+      note: probationEscalation.NO_DELIVERY_NOTE,
+    });
+  } catch (err) {
+    console.error('[ProbationEscalation] Failed to read the escalation records:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+escalationWatcher.start();
+
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) return res.status(404).json({ error: 'API route not found' });
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
