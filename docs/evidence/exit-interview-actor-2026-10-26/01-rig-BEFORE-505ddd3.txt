@@ -1,0 +1,27 @@
+tree                  : /tmp/rig-xiv/before
+db opened             : /tmp/rig-xiv/before.db
+scratch account in db : 1 (1 proves this is the rig seed+account db, not the live one)
+login                 : 200 hr_admin
+--- 1) no token at all ---
+   -> 401 {"error":"Authentication token required"}
+--- 2) a token that carries NO username (the unnamed-actor case) ---
+subject unnamed          : id=66b8533a-dd9e-41fe-ac46-e0c4dedd4857 created 201, un-flagged 200, flag now: NO FLAG
+   response           : 201 {"id":"822032c5-9537-412e-9aa7-47a0c50f49f5"}
+   employee row       : {"status":"terminated","end_date":"2026-10-20","termination_type":""}
+   audits before/after: 2 / 2 (decision 22 wants a named actor refused 400 before any lookup)
+   interviews before/after: 0 / 1
+   Layer 4 flag now   : status terminated, departure 2026-10-20 (the write it should never have made moved the flag)
+--- 3) the same call with a token that DOES name a person ---
+subject named          : id=47cbcf44-247a-496c-85fe-dfb87f43e648 created 201, un-flagged 200, flag now: NO FLAG
+   response           : 201 {"id":"0cf12a58-8bcd-4de1-a875-b0561606ded9"}
+   employee row       : {"status":"terminated","end_date":"2026-10-21","termination_type":""}
+   audit rows for it  : 2 (1 = the create only, 2 = the termination is attributed)
+      {"performed_by":"scratch","action":"CREATE","entity_type":"employee","new_values":"{\"first_name\":\"Rig\",\"last_name\":\"named\",\"email\":\"rig-nam
+      {"performed_by":"scratch","action":"UPDATE","entity_type":"employee","new_values":"{\"termination_type\":\"\"}"}
+--- 4) an employee who is not on the roster ---
+   -> null NETWORK FAILURE: fetch failed
+   interview rows written for a person not in the roster: 0
+--- 5) a score that is SQL-shaped (raw interpolation would evaluate it) ---
+create shaped FAILED null NETWORK FAILURE: fetch failed
+--- 6) a body with NO satisfaction_score (what the UI sends when the field is empty: NaN) ---
+create malformed FAILED null NETWORK FAILURE: fetch failed

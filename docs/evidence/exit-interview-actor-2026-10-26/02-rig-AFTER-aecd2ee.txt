@@ -1,0 +1,33 @@
+tree                  : /tmp/rig-xiv/after
+db opened             : /tmp/rig-xiv/after.db
+scratch account in db : 1 (1 proves this is the rig seed+account db, not the live one)
+login                 : 200 hr_admin
+--- 1) no token at all ---
+   -> 401 {"error":"Authentication token required"}
+--- 2) a token that carries NO username (the unnamed-actor case) ---
+subject unnamed          : id=911ad434-1946-479e-a818-40315d871169 created 201, un-flagged 200, flag now: NO FLAG
+   response           : 400 {"error":"a named actor is required to record an exit interview"}
+   employee row       : {"status":"onboarding","end_date":null,"termination_type":""}
+   audits before/after: 2 / 2 (decision 22 wants a named actor refused 400 before any lookup)
+   interviews before/after: 0 / 0
+   Layer 4 flag now   : NO FLAG (the write it should never have made moved the flag)
+--- 3) the same call with a token that DOES name a person ---
+subject named          : id=b94f2266-2d70-47f0-82e8-651555722ee1 created 201, un-flagged 200, flag now: NO FLAG
+   response           : 201 {"id":"a50a9d03-7a5b-481c-87ea-7c49cefc02e4"}
+   employee row       : {"status":"terminated","end_date":"2026-10-21","termination_type":""}
+   audit rows for it  : 3 (1 = the create only, 2 = the termination is attributed)
+      {"performed_by":"scratch","action":"CREATE","entity_type":"employee","new_values":"{\"first_name\":\"Rig\",\"last_name\":\"named\",\"email\":\"rig-nam
+      {"performed_by":"scratch","action":"UPDATE","entity_type":"employee","new_values":"{\"termination_type\":\"\"}"}
+      {"performed_by":"scratch","action":"UPDATE","entity_type":"employee","new_values":"{\"status\":\"terminated\",\"end_date\":\"2026-10-21\",\"exit_inter
+--- 4) an employee who is not on the roster ---
+   -> 404 {"error":"Employee not found"}
+   interview rows written for a person not in the roster: 0
+--- 5) a score that is SQL-shaped (raw interpolation would evaluate it) ---
+subject shaped          : id=ac253d4d-c3f1-40fe-af37-8b5b15491071 created 201, un-flagged 200, flag now: NO FLAG
+   response           : 201
+   stored score       : null (the user count is 1; evaluated = 1, NULL = escaped as data)
+--- 6) a body with NO satisfaction_score (what the UI sends when the field is empty: NaN) ---
+subject malformed          : id=503dfd51-2105-43a4-adb6-b9e40216cde1 created 201, un-flagged 200, flag now: NO FLAG
+   response           : 201 {"id":"4a8ddc89-af16-4bd8-90c5-9347203d411b"}
+   server still alive : YES (401)
+   employee row       : {"status":"terminated","end_date":"2026-10-20","termination_type":""}

@@ -1,0 +1,12 @@
+=== FIXED 48e9139 : all six of mine ===
+    ok 1 - an UNNAMED token is refused 400 on every write path, and writes nothing
+    ok 2 - the exit-interview path terminates the row WITH the actor named, and writes the audit row
+    ok 3 - a REFUSED exit interview changes nothing — the control for the case above
+    ok 4 - an exit interview naming an employee who is not on the roster is refused 404, and writes nothing
+    ok 5 - a score that is not a number is stored as NULL, and a SQL-shaped one is data — the server stands
+    ok 6 - no audit row anywhere in this database says 'system'
+ok 1 - every write names a person (§5.2 rules 1 and 3)
+# tests 6
+# pass 6
+# fail 0
+# skipped 0
