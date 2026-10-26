@@ -66,3 +66,7 @@ PACK FAIL - 14 files, 13 manifest lines
   F3-check-all-at-merged-tree.txt is not tracked by git
   S3-suite-at-merged-tree.txt is not tracked by git
 exit=1
+
+--- RUN 10 - after the merge-record commit, the same checker (2026-10-26) ---
+PACK OK - 14 files, 13 manifest lines
+exit=0
