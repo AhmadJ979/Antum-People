@@ -1,0 +1,21 @@
+MEASURED 2026-10-26T10:48:44Z — the P3-1 route on the tree this branch starts from (ec2a29e),
+on the scratch rig at /tmp/rig-xiv/p31tree, port 4741, its own database and its own account.
+
+$ GET /api/probation/timelines   (Bearer: the rig's own hr_admin)
+status=500 bytes=33
+{"error":"Internal Server Error"}
+
+$ GET /api/employees            (SAME token, same server, same moment)
+status=200
+
+WHY: index.js referenced `probationTimeline` and never bound it. Every occurrence at ec2a29e:
+1196:    const unpinned = { timelines: [], completions_recorded: false, note: probationTimeline.COMPLETION_NOTE };
+1214:    const timelines = probationTimeline.timelinesFor(
+1218:    res.json({ timelines, completions_recorded: false, note: probationTimeline.COMPLETION_NOTE });
+
+and there is no require of ./probation-timeline anywhere in that file:
+0
+(0 = none; the one earlier hit is a comment naming the path in prose)
+
+The route's own catch logged NOTHING, which is why no reading ever showed it: see
+server/index.js's `catch (err) { res.status(500).json({ error: 'Internal Server Error' }); }` on that route.

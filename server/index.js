@@ -9,6 +9,17 @@ const eosb = require('./eosb');
 const preboarding = require('./preboarding');
 const preboardingItems = require('./preboarding-items');
 const privacyNotice = require('./privacy-notice');
+// P3-1 and P3-2 — the probation timeline, and the manager's submitted evaluation.
+//
+// `probationTimeline` WAS NEVER BOUND IN THIS FILE until P3-2, and the route below used it: measured
+// 2026-10-26 at ec2a29e (this branch's starting tree), GET /api/probation/timelines answered 500
+// {"error":"Internal Server Error"} while GET /api/employees answered 200 with the same token. The
+// identifier resolved to nothing, the handler's own try/catch swallowed the ReferenceError, and that
+// catch logs nothing — so the panel the client draws from this route was empty and every other check
+// stayed green. P3-1's module and its suite were right; the binding, and the assertion that would have
+// caught it, were missing. `server/probation-evaluations.test.js` now asserts this route's 200 body.
+const probationTimeline = require('./probation-timeline');
+const probationEvaluations = require('./probation-evaluations');
 const preboardingWorkspace = require('./preboarding-workspace');
 const preboardingPackage = require('./preboarding-package');
 const { createFlagWatcher } = require('./preboarding-flag-scheduler');
@@ -1193,7 +1204,7 @@ app.get('/api/probation/timelines', async (req, res) => {
     if (asOf !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(asOf))) {
       return res.status(400).json({ error: 'as_of must be a date, YYYY-MM-DD' });
     }
-    const unpinned = { timelines: [], completions_recorded: false, note: probationTimeline.COMPLETION_NOTE };
+    const unpinned = { timelines: [], completions_recorded: true, note: probationTimeline.COMPLETION_NOTE };
 
     const conditions = [`status != 'terminated'`];
     const jurisdiction = (req.query.jurisdiction || '').toUpperCase();
@@ -1211,12 +1222,61 @@ app.get('/api/probation/timelines', async (req, res) => {
     const rows = await db.query(
       `SELECT id, first_name, last_name, start_date, probation_end_date FROM employees WHERE ${conditions.join(' AND ')}`
     );
+    // P3-2: the submitted evaluations ARE the `completed` state. Read for the whole list in ONE query
+    // rather than one per hire (server/probation-evaluations.js), and filtered by `?as_of` when that is
+    // given — a reading pinned to a past day must not show a milestone completed by a submission made
+    // after it, or the "same figures read twice" instrument would be reading today's state under
+    // yesterday's date.
+    const completionsByEmployee = await probationEvaluations.completionsFor(rows.map((row) => row.id), { asOf });
     const timelines = probationTimeline.timelinesFor(
       rows.map((row) => ({ ...row, name: `${row.first_name} ${row.last_name}`.trim() })),
-      { now: asOf }
+      { now: asOf, completionsByEmployee }
     );
-    res.json({ timelines, completions_recorded: false, note: probationTimeline.COMPLETION_NOTE });
+    res.json({ timelines, completions_recorded: true, note: probationTimeline.COMPLETION_NOTE });
   } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+/**
+ * P3-2 (row `69dbf57d`) — a manager submits the structured evaluation for one milestone. That
+ * submission is the ONLY thing that makes the milestone read `completed`; the rules (empty content, an
+ * index that is not this hire's, a second submission for the same milestone) live in
+ * server/probation-evaluations.js, and this handler is transport: the actor gate, the row scope, the
+ * typed refusal, and nothing else.
+ *
+ * AUTHORIZATION: the resource is `onboarding:write` (server/access.js — HR_ADMIN and MANAGER), and the
+ * ROW scope below is narrower than the role: a caller who is not company-wide may submit only for a
+ * hire whose `manager_id` is their own employee record. A hire cannot submit their own evaluation: the
+ * record's premise is that a manager wrote it. Refused with the gate's own shape (403, no body), which
+ * `client/src/httpStatus.js` classifies as a refusal in place rather than a session ending.
+ *
+ * The actor gate is FIRST and refuses before any lookup (decision 22), so an unnamed token cannot even
+ * learn whether the employee exists.
+ */
+app.post('/api/employees/:id/probation-evaluations', async (req, res) => {
+  try {
+    const actor = actorOf(req);
+    if (!actor) return res.status(400).json({ error: 'a named actor is required to submit a probation evaluation' });
+    const subject = await probationEvaluations.loadSubject(req.params.id);
+    // The row scope, through the codebase's own helper: ALL reaches the company, REPORTS reaches the
+    // caller's own line, an unstated scope reaches nothing. PLUS one refusal the helper cannot express:
+    // nobody submits an evaluation about THEMSELVES - the record's premise is that a manager wrote it -
+    // so SELF is refused even though `scopeAllowsTarget` would allow it.
+    const relation = await relationTo(req, subject.id);
+    if (relation === access.RELATION.SELF || !(await scopeAllowsTarget(req, subject.id))) {
+      return res.status(403).end();
+    }
+    const { evaluation, milestone } = await probationEvaluations.recordEvaluation(subject, req.body, { actor });
+    res.status(201).json({ evaluation, milestone });
+  } catch (err) {
+    if (err instanceof probationEvaluations.ProbationEvaluationError) {
+      const payload = { error: err.message };
+      if (err.known_milestones) payload.known_milestones = err.known_milestones;
+      if (err.recorded_by) { payload.recorded_by = err.recorded_by; payload.recorded_at = err.recorded_at; }
+      return res.status(err.status).json(payload);
+    }
+    console.error('[Probation] Failed to record an evaluation:', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

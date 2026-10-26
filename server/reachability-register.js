@@ -19,6 +19,15 @@
  */
 
 const CALLERLESS = {
+  'POST /api/employees/:id/probation-evaluations': {
+    route: 'server/index.js:1257',
+    why: 'P3-2 ships the submission path over HTTP while the form that will call it is the probation '
+       + 'screen\'s next slice: the route is reachable by path and is exercised end to end by '
+       + 'server/probation-evaluations.test.js, and no click in the product posts to it yet. '
+       + 'Deliberate and tested, not an orphan.',
+    owner: 'decision 21 (leave it and say so) - the submission surface arrives with the P3-3/P3-4 '
+       + 'slices of row `69dbf57d`, and until it does this entry is what says so out loud',
+  },
   'POST /api/compliance/calculate-eosb': {
     route: 'server/index.js:335',
     why: 'A pure EOSB calculator over the request body. The product computes EOSB server-side for the '
