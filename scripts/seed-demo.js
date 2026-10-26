@@ -69,6 +69,7 @@ async function seed() {
     },
     {
       id: 'demo-emp-omar',
+      manager_id: 'demo-emp-salim',
       first_name: 'Omar',
       last_name: 'Al-Farsi',
       email: 'omar.alfarsi@example.com',
@@ -106,6 +107,7 @@ async function seed() {
     },
     {
       id: 'demo-emp-khalid',
+      manager_id: 'demo-emp-fatima',
       first_name: 'Khalid',
       last_name: 'Al-Dosari',
       email: 'khalid.dosari@example.com',
@@ -158,6 +160,7 @@ async function seed() {
       // Noura's seat is deliberately left unfilled: her flag is the case where the vacancy length is
       // unknown, and the figure says so instead of guessing. Both behaviours are in the demo.
       id: 'demo-emp-lina',
+      manager_id: 'demo-emp-fatima',
       first_name: 'Lina',
       last_name: 'Haddad',
       email: 'lina.haddad@example.com',
@@ -189,6 +192,7 @@ async function seed() {
     },
     {
       id: 'demo-emp-reem',
+      manager_id: 'demo-emp-khalid',
       first_name: 'Reem',
       last_name: 'Al-Hashemi',
       email: 'reem.hashemi@example.com',
@@ -240,7 +244,16 @@ async function seed() {
       // cohort as the Yusuf leaver, who stayed past a year. Without this, UAE-only
       // showed a 1-person, 0%-retention cohort, which reads as broken data rather than
       // a real (if small) attrition event.
+      // The reporting lines P3-3's escalation is addressed to. Before this, `manager_id` was NULL on every
+      // seeded employee, so the only escalation the demo could produce was the missing-link case: it read
+      // `manager: null, managers_manager: null, missing: ["manager","managers_manager"]`. Each hire on the
+      // probation track now names a manager, and two of the three chains reach a second person, so a demo
+      // shows a RESOLVED line as well as the honest partial one. Same department where the roster has a
+      // senior (Salim for Finance, Khalid for Support); HR Business Partner for recruitment and above the
+      // two supervisor lines. Nothing else about the roster changes: the count and the D-5/D-3/D-1/D-0
+      // track offsets are owner decisions 4 and 3.
       id: 'demo-emp-salim',
+      manager_id: 'demo-emp-fatima',
       first_name: 'Salim',
       last_name: 'Al-Nuaimi',
       email: 'salim.alnuaimi@example.com',
@@ -311,6 +324,13 @@ async function seed() {
     await db.query("DELETE FROM analytics_metrics WHERE employee_id LIKE 'demo-emp-%'");
     await db.query("DELETE FROM audit_logs WHERE entity_id LIKE 'demo-emp-%' OR entity_id LIKE 'demo-task-%' OR entity_id LIKE 'demo-exit-%'");
     await db.query("DELETE FROM consent_records WHERE employee_id LIKE 'demo-emp-%'");
+    // The escalation and evaluation rows are the demo's own history. The unique key
+    // (employee_id, milestone_index) is what makes the escalation idempotent, so a re-seed that left these
+    // rows would keep the reporting line each one fired with - correct product behaviour, and it would make
+    // the corrected reporting lines invisible in the demo, because the watcher may not re-fire a milestone
+    // it has already recorded. Cleared with the rest of the demo rows, keyed to demo employees only.
+    await db.query("DELETE FROM probation_evaluations WHERE employee_id LIKE 'demo-emp-%'");
+    await db.query("DELETE FROM probation_escalations WHERE employee_id LIKE 'demo-emp-%'");
     await db.query("DELETE FROM employees WHERE id LIKE 'demo-emp-%' OR email LIKE '%@example.com'");
     // Layer 2 demo cases, keyed by their own offer references so the clear cannot reach a case
     // the product created from a real intake submission.
@@ -355,7 +375,7 @@ async function seed() {
         id, first_name, last_name, email, department, role, start_date, end_date,
         status, salary, basic_salary, recruitment_cost, data_residency_country,
         jurisdiction, total_salary, national_id_value,
-        eosb_accrued, fully_productive_date, created_at, updated_at, probation_end_date
+        eosb_accrued, fully_productive_date, created_at, updated_at, probation_end_date, manager_id
       ) VALUES (
         ${db.escapeString(emp.id)}, ${db.escapeString(emp.first_name)}, ${db.escapeString(emp.last_name)},
         ${db.escapeString(emp.email)}, ${db.escapeString(emp.department)}, ${db.escapeString(emp.role)},
@@ -365,7 +385,8 @@ async function seed() {
         ${db.escapeString(jurisdiction)}, ${totalSalary}, ${db.escapeString(auth.encrypt('ID-' + emp.id))},
         ${eosbAccrued},
         ${db.escapeString(emp.fully_productive_date)}, '2026-09-23 09:00:00', '2026-09-23 09:00:00',
-        ${db.escapeString(emp.probation_end_date || null)}
+        ${db.escapeString(emp.probation_end_date || null)},
+        ${db.escapeString(emp.manager_id || null)}
       )
     `;
     await db.query(sql);

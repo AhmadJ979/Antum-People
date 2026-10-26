@@ -85,8 +85,9 @@ const NO_DELIVERY_NOTE =
 
 const CATCH_UP_RULE = [
   'A milestone is overdue when its derived deadline is strictly behind the reading day and no evaluation has been submitted for it.',
-  'A deadline that falls while the process is up is escalated on the next tick ("while the app was open").',
-  'A deadline that fell before this process started is escalated on the first tick, marked late, with how late it was noticed ("while the app was not running").',
+  'A deadline that falls after this escalation watcher started is escalated on the next tick.',
+  'A deadline that fell before this escalation watcher started is escalated on the first tick, marked late, with how long after the deadline it was first seen.',
+  'The note states when the deadline fell relative to THIS process, and when it was first seen. It makes no claim about whether the app was up: the one thing this clock comparison can see is its own start, and a note that invents a cause for the lateness is worse than no note.',
   'A milestone is never silently skipped: it is either escalated on a tick or caught up late and says so.',
   'One escalation per missed milestone, for good: the guarantee is the database\u2019s UNIQUE key, not this process\u2019s memory.',
   'Nothing is delivered anywhere.',
@@ -217,13 +218,20 @@ async function recordEscalation(item, ctx = {}) {
   const late = Boolean(ctx.late);
   const lateByHours = typeof ctx.lateByHours === 'number' ? ctx.lateByHours : null;
 
+  // OBSERVABLE ONLY. `late` is a clock comparison against THIS process's start (server/interval-watcher.js):
+  // the deadline fell before it, or it fell after. Neither branch can say whether the app was up while the
+  // deadline passed — a restart, a redeploy or a first-ever start all look identical from here, and the note
+  // is read by HR as a statement about the product. It stated "while the app was not running" until
+  // 2026-10-26, when three live rows written minutes after a movement said the product had been down while it
+  // had served continuously. Rule in force: an exception that lies is worse than none.
   const note = late
     ? `Milestone ${milestone.index} of ${employee.id}\u2019s probation passed its deadline of `
-      + `${milestone.due_date} with no submitted evaluation, while the app was not running `
-      + `(noticed ${lateByHours}h late).`
+      + `${milestone.due_date} with no submitted evaluation. The deadline fell before this escalation `
+      + `watcher started; it was first seen ${at.toISOString()} (${lateByHours}h after the deadline).`
     : `Milestone ${milestone.index} of ${employee.id}\u2019s probation passed its deadline of `
-      + `${milestone.due_date} with no submitted evaluation, while the app was open (noticed within `
-      + `${Math.round((ctx.intervalMs || DEFAULT_INTERVAL_MS) / 60000)} minute(s) of the next tick).`;
+      + `${milestone.due_date} with no submitted evaluation. The deadline fell after this escalation `
+      + `watcher started, so it was seen within `
+      + `${Math.round((ctx.intervalMs || DEFAULT_INTERVAL_MS) / 60000)} minute(s) of the next tick.`;
 
   const id = randomUUID();
   await db.query(`INSERT OR IGNORE INTO probation_escalations

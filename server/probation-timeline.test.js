@@ -210,6 +210,9 @@ test('P3-1 stores NO milestone: no table in the schema, no insert in the seeder'
   assert.ok(insertColumns.length > 5, 'the column list parsed');
   assert.ok(insertColumns.includes('probation_end_date'),
     'the window is among the columns the insert actually writes, not only named on the object');
-  // The comments are still there to be ignored by the scan above.
-  assert.strictEqual((seeder.match(/\bmilestone\b/gi) || []).length, 4, 'the comments are still there to be ignored');
+  // The comments are still there to be ignored by the scan above. 4 -> 5 on 2026-10-26 (P3-3
+  // follow-ups, row 3e66a47c): the FORCE CLEAR block now clears the demo's own escalation rows, and its
+  // comment names the unique key over (employee_id, milestone_index) to say why. The count is of COMMENT
+  // mentions; the code scan above it stays at zero, which is the thing this test exists to hold.
+  assert.strictEqual((seeder.match(/\bmilestone\b/gi) || []).length, 5, 'the comments are still there to be ignored');
 });

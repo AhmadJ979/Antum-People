@@ -173,8 +173,8 @@ describe('P3-3 · the rule — a deadline strictly behind the reading day, and n
   });
 
   test('the deadline, not somebody noticing: the tick before the deadline writes nothing, the one after writes it', async () => {
-    // The process was already up when this deadline passed, so this is the "while the app was open"
-    // polarity — the control for the catch-up case further down.
+    // The process was already up when this deadline passed, so this is the not-late polarity — the
+    // control for the catch-up case further down.
     const watcher = watcherStartingAt(`${day(-5)}T00:00:00Z`);
     const before = await watcher.tick(new Date(`${TODAY}T12:00:00Z`));
     assert.strictEqual(before.added.filter((r) => r.employee_id === DUE_TODAY).length, 0,
@@ -187,7 +187,11 @@ describe('P3-3 · the rule — a deadline strictly behind the reading day, and n
     assert.strictEqual(fired[0].milestone_index, 1);
     assert.strictEqual(fired[0].milestone_due_date, TODAY, 'the row names the deadline it passed');
     assert.strictEqual(fired[0].late, false, 'it fell due while this process was up');
-    assert.match(fired[0].note, /while the app was open/);
+    assert.match(fired[0].note, /The deadline fell after this escalation watcher started/);
+    assert.match(fired[0].note, /with no submitted evaluation/,
+      'the note still states the fact the escalation is about');
+    assert.doesNotMatch(fired[0].note, /while the app|app was (not )?running|was open/,
+      'and it makes no claim about whether the app was up: this clock comparison can only see its own start');
   });
 
   test('one escalation per missed milestone, naming the milestone and the reporting line', async () => {
@@ -266,7 +270,13 @@ describe('P3-3 · the rule — a deadline strictly behind the reading day, and n
     assert.strictEqual(line.hr.length, 1, 'HR is still addressed, which is the half that exists');
     // A stored row carries SQLite's 1/0; the read side (and every payload built from it) is a boolean.
     assert.strictEqual(fired[0].late, 1, 'this deadline fell before the process that recorded it started');
-    assert.match(fired[0].note, /while the app was not running/);
+    assert.match(fired[0].note, /The deadline fell before this escalation watcher started/);
+    assert.match(fired[0].note, /first seen \d{4}-\d{2}-\d{2}T[0-9:.]+Z/,
+      'the note states when it was first seen — the one fact a late catch-up actually establishes');
+    assert.match(fired[0].note, new RegExp(`\\(${fired[0].late_by_hours}h after the deadline\\)`),
+      'and how long after the deadline that was, matching the row\u2019s own late_by_hours: the arithmetic stays, only the invented cause went');
+    assert.doesNotMatch(fired[0].note, /while the app|app was (not )?running|was open/,
+      'and it does not tell HR the product was down when it was serving');
   });
 
   test('a hire who has left is not on probation and never escalates', async () => {
