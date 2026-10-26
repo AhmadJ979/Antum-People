@@ -20,3 +20,6 @@
 2026-10-24T11:50:46Z  boot_id=751182d1-a093-4699-850f-b4f6a9450d6c  uptime=2844s  boot_wall=2026-10-24T11:03:23Z  guard=1856s  product=1860s
 2026-10-25T07:14:05Z  boot_id=719854c3-ed8b-4541-955d-d0a40fdda66b  uptime=44s  boot_wall=2026-10-25T07:13:22Z  guard_pid=(s)  product_pid=(s)
 2026-10-25T07:15:53Z  boot_id=719854c3-ed8b-4541-955d-d0a40fdda66b  uptime=152s  boot_wall=2026-10-25T07:13:21Z  guard_pid=1911(40s)  product_pid=1652(45s)
+2026-10-26T07:59:24Z  boot_id=79b369fd-e51c-422f-991d-5ccd3a51705f  uptime=64s  boot_wall=2026-10-26T07:58:21Z  guard_pid=(s)  product_pid=(s)
+2026-10-26T08:00:52Z  boot_id=79b369fd-e51c-422f-991d-5ccd3a51705f  uptime=152s  boot_wall=2026-10-26T07:58:21Z  guard_pid=1994(45s)  product_pid=1820(49s)
+2026-10-26T08:01:28Z  boot_id=79b369fd-e51c-422f-991d-5ccd3a51705f  uptime=187s  boot_wall=2026-10-26T07:58:21Z  guard_pid=1994(81s)  product_pid=1820(85s)  [lead: boot_id CHANGED + uptime RESET => replacement, not suspension]

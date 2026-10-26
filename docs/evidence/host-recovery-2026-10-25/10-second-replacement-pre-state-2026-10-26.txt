@@ -1,0 +1,23 @@
+=== the ledger's question: replacement or suspension? ===
+2026-10-25T07:14:05Z  boot_id=719854c3-ed8b-4541-955d-d0a40fdda66b  uptime=44s  boot_wall=2026-10-25T07:13:22Z  guard_pid=(s)  product_pid=(s)
+2026-10-25T07:15:53Z  boot_id=719854c3-ed8b-4541-955d-d0a40fdda66b  uptime=152s  boot_wall=2026-10-25T07:13:21Z  guard_pid=1911(40s)  product_pid=1652(45s)
+2026-10-26T07:59:24Z  boot_id=79b369fd-e51c-422f-991d-5ccd3a51705f  uptime=64s  boot_wall=2026-10-26T07:58:21Z  guard_pid=(s)  product_pid=(s)
+
+=== who runs, who listens ===
+  516      46 node /home/team/shared/site/node_modules/.bin/vite dev
+  534      45 /home/team/shared/site/node_modules/@esbuild/linux-x64/bin/esbuild --service=0.28.1 --ping
+COMMAND PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+node    516 root   22u  IPv6   3198      0t0  TCP *:3000 (LISTEN)
+
+=== the tree, the hook, and any movement in flight ===
+HEAD: e6925cf Merge pull request #294 from AhmadJ979/evidence/host-recovery-2026-10-25  branch: main
+  no deploy marker
+  hook MISSING
+dist: Oct 24 11:58  assets: index-CNpLMWLD.js index-CSQHlfh4.css 
+
+=== the guard hook's tail (did anything try to recover?) ===
+2026-10-25T07:33:02+00:00 hook: guard already running (pid 1911), nothing to do
+2026-10-25T07:34:24+00:00 hook: guard already running (pid 1911), nothing to do
+2026-10-25T07:35:12+00:00 hook: guard already running (pid 1911), nothing to do
+2026-10-25T07:15:13+00:00 environment sourced from /etc/profile.d/cto-env-vars.sh
+2026-10-25T07:15:13+00:00 guard starting: port 3000, deploy dir /home/team/shared/probable-octo-sniffle, poll 60s, lock /home/team/shared/probable-octo-sniffle/server/keep-alive.lock
