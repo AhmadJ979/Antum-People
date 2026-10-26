@@ -75,3 +75,7 @@ exit=0
 PACK FAIL - 15 files, 14 manifest lines
   G-retirement-proof.txt is not tracked by git
 exit=1
+
+--- RUN 12 - after the retirement commit, the same checker (2026-10-26) ---
+PACK OK - 15 files, 14 manifest lines
+exit=0
