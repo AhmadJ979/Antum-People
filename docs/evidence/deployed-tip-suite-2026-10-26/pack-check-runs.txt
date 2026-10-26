@@ -14,3 +14,8 @@ exit=0
 --- RUN 3 - after the README named its own files and the manifest was regenerated ---
 PACK OK - 7 files, 6 manifest lines
 exit=0
+
+--- RUN 4 - at the merged tree 505ddd3, after the duplicate section was removed and the manifest regenerated ---
+PACK FAIL - 7 files, 6 manifest lines
+  README names `WORKFLOW.md` but it does not exist here
+exit=1
