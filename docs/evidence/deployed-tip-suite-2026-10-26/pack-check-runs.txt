@@ -19,3 +19,7 @@ exit=0
 PACK FAIL - 7 files, 6 manifest lines
   README names `WORKFLOW.md` but it does not exist here
 exit=1
+
+--- RUN 5 - after WORKFLOW.md stopped reading as a pack member (same tree, same checker) ---
+PACK OK - 7 files, 6 manifest lines
+exit=0

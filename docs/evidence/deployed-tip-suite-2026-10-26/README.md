@@ -86,7 +86,7 @@ its parent and the same commit message, and its stat is the same three files - s
 twice and **main's copy of this README carried the "Files in this pack" section at lines 64 and 74**. The
 duplicate did not break this pack's own checker (`PACK OK - 7 files, 6 manifest lines`, exit 0, run at the
 merged tree): that checker asks whether every file is named, not how often. It is removed in the commit that
-carries this record - asserted byte-identical first, then removed once, with the manifest regenerated for the
+carries this record (proof: `grep -c "^## Files in this pack"` is **1**, where it read 2) - asserted byte-identical first, then removed once, with the manifest regenerated for the
 new bytes.
 
 **The gates at the new tip are green** - which is the measurement this pack was created to make possible,
@@ -97,7 +97,7 @@ SKIP-FLAGGED 7); and the instrument reads **137/137 against `505ddd33feb06426d0f
 headline and check naming the same tree. `server/node_modules` resolved before the runs.
 
 **The deployed tree is still `2bd2f9d`, clean** - measured, not assumed. Every delta between it and `505ddd3`
-is `docs/` (and `WORKFLOW.md`), so **no movement is owed**: the tree that runs is behind `main` by evidence
+is `docs/` (and the repository-root WORKFLOW.md), so **no movement is owed**: the tree that runs is behind `main` by evidence
 files it does not read.
 
 Both branches were deleted by their mergers again, so this record needed a branch and PR of its own: a merged
