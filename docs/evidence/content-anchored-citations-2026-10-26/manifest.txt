@@ -9,5 +9,6 @@ a65fd2d456b79f7c7cf350695a6b6552  E-gate-test.txt
 d0473d8f754f4ea80a5fa8e95366ef00  F-check-all-no-suite.txt
 34a36891e1f21343a06b7ca8234f5bc3  F2-check-all-no-suite-at-pr-tip.txt
 4f3881611bf2f1baf90b690ca5f3c9e3  F3-check-all-at-merged-tree.txt
-87bd7cbf2c3e82a7a08147d55e8674fb  README.md
+f11827b37cdba2cfb3261a97fe9b0f59  G-retirement-proof.txt
+26068ca22fb29065d040c4f4f67b0cd6  README.md
 3cec4b67d24539817f17639babd94c56  S3-suite-at-merged-tree.txt

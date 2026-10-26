@@ -1,0 +1,21 @@
+====================================================================================================
+check-all - every check the team owns, one entry point
+  tree judged   : ae85d4d (no tracked modification)
+  repository    : /home/team/shared/probable-octo-sniffle
+  NOT run by    : the movement. scripts/cutover-preflight.sh runs no checker (grep, this run's evidence).
+                  Wiring a check into the movement is the lead's ruling to make, not this script's.
+  PARTIAL RUN   : --only access-model - ONE check of 12. The verdict below covers THIS check alone.
+====================================================================================================
+
+[OK           ] access-model             tree=ae85d4d   exit=0   0.2s
+                 home : IN the repository (scripts/verify-access-model.py) - a PR carries it; run by this entry point and by server/access-model-instrument.test.js
+                 what : the 137-check access-model instrument against docs/access-model.md, the document the product's access model is delivered in
+                 said : 137/137 checks hold against ae85d4d2dafd6b4476f60bcf91bcc34b09d84d44   (ran=137, fails=0, hints stale=0)
+                 ...  : 141 earlier line(s) not shown - full output: /usr/bin/python3 /home/team/shared/probable-octo-sniffle/scripts/verify-access-model.py
+
+----------------------------------------------------------------------------------------------------
+totals: 1 check(s) run, 0 skipped   [PARTIAL: --only access-model]
+        OK               1
+
+VERDICT: every check that can be green on this tree is green. exit 0
+deployed check-all --only access-model: exit=0
