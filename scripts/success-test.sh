@@ -13,11 +13,26 @@
 #
 # Same tests as 2026-10-14 16:18, with one deliberate change: measured on the PUBLIC URL (what a
 # client reaches) rather than on 127.0.0.1:3000, plus the listener-identity and served-asset checks
-# the cutover record used. A minted short-lived token is used for the 404 half (rule 10 keeps the
+# the cutover record used. A minted short-lived token is used for the gated half (rule 10 keeps the
 # demo password lead-managed; rule 26 keeps a credentialed sign-in off the live product). The token
 # is minted in a subshell from the host env file, never echoed, never written to an artifact.
+#
+# CORRECTED 2026-10-26 (P3-3 follow-ups). The token carried `{id, username, role:"admin"}`, and `role` is
+# not what the gate reads (`req.user.access_role`) and `admin` is not a role (`hr_admin|manager|finance|
+# employee|compliance_viewer`). Measured on the live product: every gated path answered 403 - including
+# the line labelled "must be 200 or the 404s mean nothing", which printed and carried on, because nothing
+# here asserted. Two changes: the mint carries `access_role:"hr_admin"`, and THE CONTROL IS ASSERTED - a
+# run whose control is not 200 sets FAILED, says so in the transcript and exits 1. A control the operator
+# cannot reach is a false green.
+# TEST 3's subject is re-scoped for the same reason: "the two retired routes answer 404 with a token" is
+# no longer observable at this revision. An unregistered path is refused by the gate BEFORE routing, so
+# `/api/compliance/report` and `/api/employees/<id>` answer 403 with an empty body even with a valid
+# token (measured 2026-10-26). TEST 3 now reads the pair that IS observable: the control on a registered
+# route, the router answering a registered route for an id that does not exist, and the gate's refusal of
+# an unregistered one - with and without a token. Nothing here is a route census.
 # Bodies are never dumped whole; codes and byte counts only.
 set -u
+FAILED=0
 L="${1:-unlabelled}"
 E="${ANTUM_EVIDENCE_DIR:-/home/team/shared/cutover-$(date -u +%Y-%m-%d)}"
 D="${ANTUM_DEPLOY_DIR:-/home/team/shared/probable-octo-sniffle}"
@@ -65,17 +80,27 @@ mkdir -p "$E"
     echo "  started: $(ps -o lstart= -p $LPID)"
   fi
   echo
-  echo "TEST 3 — the two retired routes answer 404 WITH a token (401 without one proves nothing)"
+  echo "TEST 3 — the gate runs ahead of the router: a token the gate accepts reads a REGISTERED route,"
+  echo "         and an UNREGISTERED path is refused 403 by the gate — never a 404 from the router"
+  # The claim the gate reads is `access_role` (server/access.js); `role` is ignored. The probe identity is
+  # not a person and this script writes nothing: every request below is a GET.
   TOK=$( ( set -a; . /etc/profile.d/cto-env-vars.sh >/dev/null 2>&1; set +a; \
-     node -e 'const jwt=require("/home/team/shared/probable-octo-sniffle/server/node_modules/jsonwebtoken");process.stdout.write(jwt.sign({id:"restore-probe",username:"restore-probe",role:"admin"},process.env.JWT_SECRET,{expiresIn:"10m"}))' ) 2>/dev/null )
-  echo "  token minted: $([ -n "${TOK:-}" ] && echo "yes (${#TOK} chars, value not recorded)" || echo NO)"
-  echo "  positive control (must be 200 or the 404s mean nothing):"
-  echo "    with token GET /api/employees -> $(g -o /tmp/st-tk -w '%{http_code}' --max-time 20 -H "Authorization: Bearer ${TOK:-x}" "$B/api/employees")  ($(wc -c < /tmp/st-tk) B)"
-  echo "    with token GET /api/analytics/dashboard -> $(g -o /tmp/st-tk2 -w '%{http_code}' --max-time 20 -H "Authorization: Bearer ${TOK:-x}" "$B/api/analytics/dashboard")  ($(wc -c < /tmp/st-tk2) B)"
-  echo "  the retired routes:"
+     node -e 'const jwt=require("/home/team/shared/probable-octo-sniffle/server/node_modules/jsonwebtoken");process.stdout.write(jwt.sign({id:"restore-probe",username:"restore-probe",access_role:"hr_admin"},process.env.JWT_SECRET,{expiresIn:"10m"}))' ) 2>/dev/null )
+  echo "  token minted: $([ -n "${TOK:-}" ] && echo "yes (${#TOK} chars, value not recorded)" || echo NO)  claim: access_role=hr_admin"
+  ctl=$(g -o /tmp/st-tk -w '%{http_code}' --max-time 20 -H "Authorization: Bearer ${TOK:-x}" "$B/api/employees")
+  echo "  CONTROL — with token GET /api/employees -> $ctl  ($(wc -c < /tmp/st-tk) B)   [must be 200]"
+  if [ "$ctl" != "200" ]; then
+    FAILED=1
+    echo "  *** CONTROL FAILED: a token the gate should accept was refused ($ctl). Check that the minted"
+    echo "      claim is the one the gate reads (access_role, not role) and that the host env file carries"
+    echo "      the LIVE server's JWT_SECRET. Every gated reading below is meaningless until this is 200."
+  fi
+  echo "  the token reaches the router — a REGISTERED route, for an id that does not exist:"
+  echo "    with token GET /api/employees/no-such-employee/onboarding -> $(g -o /tmp/st-miss -w '%{http_code}' --max-time 20 -H "Authorization: Bearer ${TOK:-x}" "$B/api/employees/no-such-employee/onboarding")  ($(wc -c < /tmp/st-miss) B)"
+  echo "  UNREGISTERED paths (the router has /api/employees/:id/onboarding, not these), with a valid token:"
   echo "    with token GET /api/compliance/report -> $(g -o /tmp/st-r -w '%{http_code}' --max-time 20 -H "Authorization: Bearer ${TOK:-x}" "$B/api/compliance/report")  ($(wc -c < /tmp/st-r) B)"
   echo "    with token GET /api/employees/demo-emp-sarah -> $(g -o /tmp/st-e -w '%{http_code}' --max-time 20 -H "Authorization: Bearer ${TOK:-x}" "$B/api/employees/demo-emp-sarah")  ($(wc -c < /tmp/st-e) B)"
-  echo "  beside them, with NO token (the auth gate runs ahead of routing):"
+  echo "  and the same two with NO token (the gate answers before the router is consulted):"
   echo "    no token GET /api/compliance/report -> $(g -o /dev/null -w '%{http_code}' --max-time 15 "$B/api/compliance/report")"
   echo "    no token GET /api/employees/demo-emp-sarah -> $(g -o /dev/null -w '%{http_code}' --max-time 15 "$B/api/employees/demo-emp-sarah")"
   echo
@@ -93,7 +118,18 @@ mkdir -p "$E"
   echo "  /proc check: $(for p in $(pgrep -f 'scripts/keep-alive[.]sh'); do echo "pid $p -> $(tr '\0' ' ' < /proc/$p/cmdline)"; done)"
   echo "  hook installed: $([ -f /etc/profile.d/zz-antum-product-guard.sh ] && echo "YES md5 $(md5sum < /etc/profile.d/zz-antum-product-guard.sh | cut -d' ' -f1)" || echo NO)"
   echo "  hook source in tree: $(md5sum < "$D/scripts/antum-product-guard-hook.sh" | cut -d' ' -f1)"
+  echo
+  if [ "$FAILED" = "0" ]; then
+    echo "RESULT: OK — the control read 200; TEST 3's gate pair read as the gate runs."
+  else
+    echo "RESULT: FAILED — see the CONTROL line above. The gated readings in this file are not readings."
+  fi
 } > "$OUT" 2>&1
 unset TOK_TOK TOK 2>/dev/null
-echo "wrote $OUT"
+if [ "$FAILED" = "0" ]; then
+  echo "wrote $OUT"
+else
+  echo "wrote $OUT  — RESULT: FAILED (exit 1)"
+  exit 1
+fi
 
