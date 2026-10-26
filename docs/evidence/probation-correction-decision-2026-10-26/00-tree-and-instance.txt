@@ -1,0 +1,16 @@
+TREE=/tmp/r78/main
+PRODUCT_DB_PATH=/tmp/r78/rig/corr.db
+tree HEAD: 0afe5ac949b092ac08dc63541ccf0cfdd9aab209
+origin/main: 0afe5ac949b092ac08dc63541ccf0cfdd9aab209
+server/node_modules -> /home/team/shared/probable-octo-sniffle/server/node_modules
+express: present
+JWT_SECRET len: 44  ENCRYPTION_KEY len: 32
+seed exit: 0
+--- seed.log tail ---
+Upserting Layer 2 pre-boarding demo cases...
+- Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-11-09) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started; notice shown for 0/4 collectible ()
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-27) — inside 48 hours with every item still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-25) — start date already passed, items still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+-rw-r--r-- 1 root root 270336 Oct 26 15:20 /tmp/r78/rig/corr.db

@@ -1,0 +1,11 @@
+DB opened: /tmp/r78/rig/corr.db
+(node:7492) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+probation_evaluations rows: 2
+   {"id":"fbc4fd54-e9b4-43c5-a4c3-1344887f2615","employee_id":"demo-emp-ahmad","milestone_index":1,"content":"A1-original: performance on track, one coaching note.","submitted_by":"scratch-hr","submitted_at":"2026-10-26T15:21:58.870Z"}
+   {"id":"da398fbc-a637-4c35-8d6d-290ab455dcda","employee_id":"demo-emp-ahmad","milestone_index":2,"content":"m2 submitted BEFORE its due date","submitted_by":"scratch-hr","submitted_at":"2026-10-26T15:21:58.903Z"}
+audit_logs rows for probation_evaluations: 2
+   {"performed_by":"scratch-hr","entity_type":"probation_evaluations","action":"CREATE","new_values":"{\"employee_id\":\"demo-emp-ahmad\",\"milestone_index\":1,\"milestone_due_date\":\"2026-10-16\",\"milestone_day\":30,\"submitted_by\":\"scratch-hr\",\"submitted_at\":\"2026-10-26T15:21:58.870Z\"}"}
+   {"performed_by":"scratch-hr","entity_type":"probation_evaluations","action":"CREATE","new_values":"{\"employee_id\":\"demo-emp-ahmad\",\"milestone_index\":2,\"milestone_due_date\":\"2026-11-15\",\"milestone_day\":60,\"submitted_by\":\"scratch-hr\",\"submitted_at\":\"2026-10-26T15:21:58.903Z\"}"}
+probation_escalations rows: 7
+probation_evaluations columns: id,employee_id,milestone_index,milestone_due_date,milestone_day,content,submitted_by,submitted_at,created_at

@@ -1,0 +1,28 @@
+# Falsification of this pack's own checker — 2026-10-26
+
+A checker that cannot redden proves nothing, so it was falsified: a copy of the spec with four
+figures changed was placed beside a copy of this pack, and the checker was run on it.
+
+## RUN 1 — the FIRST version of check-pack.py, on a falsified spec: it stayed GREEN
+It compared hard-coded literals against the transcripts and never read the spec, so the spec could
+say anything at all. Falsified copy: 409,181B -> 409,191B; dump md5 91a83713 -> 91a8371e;
+19 -> 20 tables -> 19 -> 21; 30 routes -> 31.
+
+PASS  (all 29 checks)
+
+## RUN 2 — the rewritten checker on the SAME falsified copy: 4 of 28 redden, each naming the claim,
+## what the spec says and what the transcript measured
+
+FAIL  the 409 status and size the spec quotes are the ones measured   <- spec=('409', '191') measured=('409', '181')
+FAIL  the table delta the spec quotes is the one measured   <- spec=('19', '21') measured=('19', '20')
+FAIL  the dump md5 prefixes the spec quotes are the ones measured   <- spec=('91a8371e', '05bdba7c') measured=('91a83713', '05bdba7c')
+FAIL  the registered-route count the spec quotes is the one measured   <- spec=31 measured=30
+4 CHECK(S) FAILED (of 28)
+
+## RUN 3 — the same checker on the real spec in this tree (authoritative run: 06-pack-check-run.txt)
+
+ALL CHECKS PASS (of 28)
+exit code: 0
+
+The rule this file records: a claim must be read OUT OF THE DOCUMENT IT JUDGES. A checker that
+reads its claims from the pack judges the pack against itself.
