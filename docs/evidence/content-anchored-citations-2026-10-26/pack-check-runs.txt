@@ -1,0 +1,61 @@
+pack-check.py, its own runs - oldest first. Kept because a checker that has only ever returned green is
+not evidence, and because this one's first run failed on my own conventions.
+
+--- RUN 1 - the checker as first written, before the pack was committed (bash pack-write.sh, 2026-10-26) ---
+PACK FAIL - 9 files, 8 manifest lines
+  README.md exists but is NOT named in README.md
+  manifest.txt exists but is NOT named in README.md
+  README names `check-all.py` but it does not exist here
+  A-branch-tip.txt is not tracked by git
+  ... (one such line for every pack file: nothing is tracked before the commit that adds it)
+  manifest.txt is not tracked by git
+Two real defects of my own, and one artefact of running the checker before the commit:
+  * the naming rule demanded that README.md name itself, which the convention wants and the first draft
+    did not do;
+  * the "a bare filename must exist here" rule read `scripts/check-all.py` as a pack file, inventing a
+    missing `check-all.py` - it now judges bare filenames only;
+  * the git direction can only pass after the pack is committed, so this run was taken too early.
+
+--- RUN 2 - after the pack commit, the same checker (2026-10-26) ---
+PACK FAIL - 9 files, 8 manifest lines
+  README names `check-all.py` but it does not exist here
+
+--- RUN 3 - after the fix and the regenerated manifest (2026-10-26) ---
+PACK OK - 9 files, 8 manifest lines
+exit=0
+
+--- RUN 4 - the CONTROL: one byte of A-branch-tip.txt flipped (md5 99857ab6a71d741ad7287db18d0b71fb -> df119beb6b88ef3409ce42bd4517f08b) ---
+PACK FAIL - 9 files, 8 manifest lines
+  STALE manifest: A-branch-tip.txt is df119beb6b88ef3409ce42bd4517f08b, manifest says 99857ab6a71d741ad7287db18d0b71fb
+exit=1
+--- RUN 5 - MISLABELLED IN PLACE, not deleted: this run was taken thinking the file had been restored.
+    It had not - `git -C /tmp/wt-instr checkout -- A-branch-tip.txt` ran from inside the pack directory
+    and the pathspec did not resolve, so the byte stayed flipped and this output is the same FAIL as
+    RUN 4. Kept for what it actually measured; RUN 6 is the real restore. ---
+PACK FAIL - 9 files, 8 manifest lines
+  STALE manifest: A-branch-tip.txt is df119beb6b88ef3409ce42bd4517f08b, manifest says 99857ab6a71d741ad7287db18d0b71fb
+exit=1
+--- RUN 6 - the restore that worked (cp from the bytes the manifest was computed from), same checker ---
+PACK OK - 9 files, 8 manifest lines
+exit=0
+
+--- RUN 7 - after the tip moved to 9f23e0d and E2/F2 were filed (2026-10-26) ---
+PACK FAIL - 11 files, 10 manifest lines
+  A-branch-tip.txt exists but is NOT named in README.md
+  B-shifted-this-instrument.txt exists but is NOT named in README.md
+  C-shifted-previous-instrument.txt exists but is NOT named in README.md
+  D-symbol-gone.txt exists but is NOT named in README.md
+  E-gate-test.txt exists but is NOT named in README.md
+  E1-gate-test-first-run-reddened.txt exists but is NOT named in README.md
+  E2-gate-test-at-pr-tip.txt exists but is NOT named in README.md
+  F-check-all-no-suite.txt exists but is NOT named in README.md
+  F2-check-all-no-suite-at-pr-tip.txt exists but is NOT named in README.md
+  README.md exists but is NOT named in README.md
+  manifest.txt exists but is NOT named in README.md
+  E2-gate-test-at-pr-tip.txt is not tracked by git
+  F2-check-all-no-suite-at-pr-tip.txt is not tracked by git
+exit=1
+
+--- RUN 8 - after the README was rewritten cleanly and the manifest regenerated (2026-10-26) ---
+PACK OK - 11 files, 10 manifest lines
+exit=0
