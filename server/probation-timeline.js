@@ -121,8 +121,9 @@ function milestoneOffsets(lengthDays) {
  * @param {object} [options]
  * @param {Date|string} [options.now]  the day the states are read against (default: today)
  * @param {object} [options.completions]  `{ [milestoneIndex]: { completed_at, completed_by } }` —
- *        a RECORDED evaluation, P3-2's shape. Empty today, and the reason `completed` is expressible
- *        but unreachable from the route until P3-2 stores one.
+ *        a RECORDED, SUBMITTED evaluation (P3-2). Empty for a hire nobody has evaluated, and the
+ *        reason `completed` is a state this module can express without storing anything itself: the
+ *        route reads the submissions and hands them in.
  * @returns {null | {start_date, end_date, length_days, milestones: Array}}
  */
 function milestonesFor(employee, options = {}) {
@@ -167,9 +168,17 @@ function stateFor(due, today) {
  * everyone else is that they are not in it.
  */
 function timelinesFor(employees, options = {}) {
+  // P3-2: the recorded evaluations arrive as ONE map keyed by employee id (`options.completionsByEmployee`),
+  // because the route reads the whole roster in a single query. Each hire is handed ITS OWN map here, so
+  // the single-hire shape `milestonesFor` documents stays exactly what it was and the shaping lives in
+  // one place instead of being copied into the route.
+  const byEmployee = options.completionsByEmployee || {};
   return (employees || [])
     .map((employee) => {
-      const timeline = milestonesFor(employee, options);
+      const timeline = milestonesFor(employee, {
+        ...options,
+        completions: byEmployee[employee.id] || options.completions || {},
+      });
       return timeline && { employee_id: employee.id, employee_name: employee.name, ...timeline };
     })
     .filter(Boolean);
@@ -182,7 +191,7 @@ function timelinesFor(employees, options = {}) {
  * conclude the framework has only three states.
  */
 const COMPLETION_NOTE =
-  'A milestone reads `completed` only from a recorded evaluation (P3-2): no submission is stored yet, '
-  + 'so every milestone today is upcoming, due or overdue.';
+  'A milestone reads `completed` only from a submitted evaluation (P3-2): the record names the manager '
+  + 'who submitted it and the moment they did. A milestone with no submission stays upcoming, due or overdue.';
 
 module.exports = { STATES, COMPLETION_NOTE, probationWindow, milestoneOffsets, milestonesFor, timelinesFor };

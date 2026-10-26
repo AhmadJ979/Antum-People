@@ -373,3 +373,30 @@ CREATE TABLE IF NOT EXISTS preboarding_acknowledgements (
 CREATE INDEX IF NOT EXISTS idx_preboarding_ack_case ON preboarding_acknowledgements (case_id);
 CREATE INDEX IF NOT EXISTS idx_preboarding_items_case ON preboarding_items (case_id);
 CREATE INDEX IF NOT EXISTS idx_preboarding_reminders_case ON preboarding_reminders (case_id);
+
+-- Layer 3 / P3-2 (row `69dbf57d`) — the manager's submitted evaluation, the ONE thing that makes a
+-- probation milestone read `completed`.
+--
+-- Append-only in the sense that matters for attribution: no route updates `submitted_by` or
+-- `submitted_at` once written, so the name on the record is the name of the person who submitted it.
+-- UNIQUE (employee_id, milestone_index) makes one milestone carry one evaluation — a second submission
+-- is refused rather than silently overwriting the first, which would destroy exactly the attribution
+-- the row exists for. A correction needs a decision (see server/probation-evaluations.js), not a
+-- second convention invented here.
+--
+-- `milestone_due_date` and `milestone_day` are copied in at submission time ON PURPOSE: the milestone
+-- is derived on read, so a later re-derivation (a changed probation window) must not silently move the
+-- record of what the manager was evaluating.
+CREATE TABLE IF NOT EXISTS probation_evaluations (
+  id TEXT PRIMARY KEY,
+  employee_id TEXT NOT NULL,
+  milestone_index INTEGER NOT NULL,
+  milestone_due_date TEXT NOT NULL,
+  milestone_day INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  submitted_by TEXT NOT NULL,
+  submitted_at TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (employee_id, milestone_index)
+);
+CREATE INDEX IF NOT EXISTS idx_probation_evaluations_employee ON probation_evaluations (employee_id);

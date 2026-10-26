@@ -295,6 +295,20 @@ const ROUTES = Object.freeze([
   // `probation:read` cell, which would also let a hire read their OWN timeline — is raised in the PR
   // body instead of being taken silently here.
   ['GET', '/probation/timelines', 'employees:read'],
+  // Layer 3 / P3-2 — the manager's SUBMITTED evaluation (backlog row `69dbf57d`).
+  //
+  // Mapped to `onboarding:write` — HR_ADMIN and MANAGER — and NOT to a resource of its own, the same
+  // call P3-1 made for the read above: a new cell would mean a new resource in the matrix
+  // docs/access-model.md (§3) mirrors, and that document is validated by a 137-check instrument outside
+  // this file. What that buys is the right audience: the manager's own input about a hire is what an
+  // evaluation IS, and HR keeps the company-wide half.
+  //
+  // The ROW scope is applied in the route and is NARROWER than the role: a caller who is not
+  // company-wide may submit only for a hire whose `manager_id` is their own record, so a manager cannot
+  // write into another manager's line, and a hire cannot submit their own evaluation — the record's
+  // premise is that a MANAGER wrote it. The narrower reading — a `probation:write` cell, which would
+  // also let a hire submit their own — is raised in the PR body rather than taken silently here.
+  ['POST', '/employees/:id/probation-evaluations', 'onboarding:write'],
   // Layer 4 / P4-1 — the replacement cost of a seat (backlog row `051870f5`).
   //
   // Mapped to `employees:read`, the resource whose columns the figure is computed from, and NOT to a

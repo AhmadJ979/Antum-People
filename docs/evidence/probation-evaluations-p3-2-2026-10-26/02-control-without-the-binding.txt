@@ -1,0 +1,145 @@
+TAP version 13
+# (node:19983) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P3-2 — a milestone is completed only by a submitted evaluation
+    # Subtest: the route answers 200 with completions_recorded true, and no milestone is completed yet
+    not ok 1 - the route answers 200 with completions_recorded true, and no milestone is completed yet
+      ---
+      duration_ms: 6.80009
+      type: 'test'
+      location: '/tmp/wt-p32/server/probation-evaluations.test.js:160:3'
+      failureType: 'testCodeFailure'
+      error: |-
+        GET /api/probation/timelines must answer 200 (got 500: {"error":"Internal Server Error"})
+        
+        500 !== 200
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 200
+      actual: 500
+      operator: 'strictEqual'
+      stack: |-
+        timelines (/tmp/wt-p32/server/probation-evaluations.test.js:105:10)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (/tmp/wt-p32/server/probation-evaluations.test.js:161:21)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Promise.all (index 0)
+        async Suite.run (node:internal/test_runner/test:1442:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: an empty submission is refused 400 — in all three shapes — and records nothing at all
+    ok 2 - an empty submission is refused 400 — in all three shapes — and records nothing at all
+      ---
+      duration_ms: 88.848164
+      type: 'test'
+      ...
+    # Subtest: an UNNAMED token is refused 400, BEFORE any lookup — an unknown employee does not become a 404
+    ok 3 - an UNNAMED token is refused 400, BEFORE any lookup — an unknown employee does not become a 404
+      ---
+      duration_ms: 5.888101
+      type: 'test'
+      ...
+    # Subtest: an employee who does not exist is 404 once the caller IS named
+    ok 4 - an employee who does not exist is 404 once the caller IS named
+      ---
+      duration_ms: 3.09405
+      type: 'test'
+      ...
+    # Subtest: a milestone index this hire does not have is 400, and the valid set comes back
+    ok 5 - a milestone index this hire does not have is 400, and the valid set comes back
+      ---
+      duration_ms: 6.44192
+      type: 'test'
+      ...
+    # Subtest: a hire with no probation window has no milestone to evaluate: 400
+    ok 6 - a hire with no probation window has no milestone to evaluate: 400
+      ---
+      duration_ms: 2.403453
+      type: 'test'
+      ...
+    # Subtest: the submission lands: named manager, time-stamped, one audit row — and it completes THAT milestone
+    not ok 7 - the submission lands: named manager, time-stamped, one audit row — and it completes THAT milestone
+      ---
+      duration_ms: 7.443554
+      type: 'test'
+      location: '/tmp/wt-p32/server/probation-evaluations.test.js:206:3'
+      failureType: 'testCodeFailure'
+      error: |-
+        GET /api/probation/timelines must answer 200 (got 500: {"error":"Internal Server Error"})
+        
+        500 !== 200
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 200
+      actual: 500
+      operator: 'strictEqual'
+      stack: |-
+        timelines (/tmp/wt-p32/server/probation-evaluations.test.js:105:10)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (/tmp/wt-p32/server/probation-evaluations.test.js:223:21)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: a second submission for the same milestone is refused 409, and the first record is untouched
+    ok 8 - a second submission for the same milestone is refused 409, and the first record is untouched
+      ---
+      duration_ms: 4.470864
+      type: 'test'
+      ...
+    # Subtest: a reading pinned BEFORE the submission does not show it as completed
+    not ok 9 - a reading pinned BEFORE the submission does not show it as completed
+      ---
+      duration_ms: 3.023506
+      type: 'test'
+      location: '/tmp/wt-p32/server/probation-evaluations.test.js:248:3'
+      failureType: 'testCodeFailure'
+      error: |-
+        GET /api/probation/timelines must answer 200 (got 500: {"error":"Internal Server Error"})
+        
+        500 !== 200
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 200
+      actual: 500
+      operator: 'strictEqual'
+      stack: |-
+        timelines (/tmp/wt-p32/server/probation-evaluations.test.js:105:10)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (/tmp/wt-p32/server/probation-evaluations.test.js:249:21)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: a manager may submit for their own line — and cannot write into another manager’s
+    ok 10 - a manager may submit for their own line — and cannot write into another manager’s
+      ---
+      duration_ms: 7.5204
+      type: 'test'
+      ...
+    # Subtest: a hire cannot submit an evaluation about themselves: 403, nothing recorded
+    ok 11 - a hire cannot submit an evaluation about themselves: 403, nothing recorded
+      ---
+      duration_ms: 81.492344
+      type: 'test'
+      ...
+    1..11
+not ok 1 - P3-2 — a milestone is completed only by a submitted evaluation
+  ---
+  duration_ms: 1164.083609
+  type: 'suite'
+  location: '/tmp/wt-p32/server/probation-evaluations.test.js:159:1'
+  failureType: 'subtestsFailed'
+  error: '3 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 11
+# suites 1
+# pass 8
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1383.462266
