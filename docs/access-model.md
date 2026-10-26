@@ -474,7 +474,7 @@ number:** **25** (§8 item 9 — a manager cannot read their own onboarding task
 2. **Decision 27 had neither a number nor a site in this file.** It is recorded **on the three items it covers**
    (3, 4 and 5) rather than as an appendix, with the single blocker named — a **counsel recipient** (decision
    15a) — because the plan numbers them as one decision precisely so they cannot be actioned apart.
-3. **The checker enforces this now.** A new check in `shared/verify-access-model.py` reads the five open owner decisions
+3. **The checker enforces this now.** A new check in `scripts/verify-access-model.py` reads the five open owner decisions
    out of §8 and fails when one is missing in the plan's own form: **124/124, exit 0** against the tree with this
    document, **123/124, exit 1** against the previous document bytes — the new check reddens on the document that
    prompted it, which is the only way to know it is load-bearing.
@@ -593,7 +593,7 @@ no invention; it is already in the repository:
 
 ```sh
 git show ca681dd:docs/access-model.md > /tmp/prev.md
-VERIFY_DOC=/tmp/prev.md python3 /home/team/shared/verify-access-model.py
+VERIFY_DOC=/tmp/prev.md python3 scripts/verify-access-model.py
 # -> 112/121, exit 1, and the failures name the drift rather than describing it:
 #    the resource count (16 against 17), the route count on the list cell, the two missing cell
 #    rows (own and aggregate), and the four places the admin-only claim still stood live
@@ -608,7 +608,7 @@ true of a document asserting the opposite of the code.**
 
 ### 10.4 Amended 2026-10-20 against `ca681dd` (the enforcement slice, PR #239)
 
-**A verifier, not a reading.** I re-ran the landed checker (`shared/verify-access-model.py`) against the new
+**A verifier, not a reading.** I re-ran the landed checker (`scripts/verify-access-model.py`) against the new
 `main` first: **20 of 94 claims still held, exit 1.** The 74 failures were the worklist, and four of them were
 substantive rather than line drift.
 

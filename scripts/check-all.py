@@ -62,7 +62,9 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 CITE = "docs/evidence/no-403-claim-sweep-2026-10-20/check-doc-citations.py"
-ACCESS_MODEL = "/home/team/shared/verify-access-model.py"
+# IN the repository since 2026-10-26 (was /home/team/shared/verify-access-model.py, which no PR
+# could carry). Resolved from this file, so the operator form works from any working directory.
+ACCESS_MODEL = os.path.join(HERE, "verify-access-model.py")
 PY = sys.executable or "python3"
 TAIL_LINES = 8          # how much of a RED check's own output is shown (see the header)
 
@@ -154,9 +156,13 @@ CHECKS = [
          cmd=["node", "--test"],
          what="the server suite - the doc/tracker-invariant gates (server/design-concepts-index.test.js, server/privacy-notice.test.js) plus the check-all classifier gate"),
 
-    dict(id="access-model", mode="default", expect="green", external=True,
-         home="OUTSIDE the repository (/home/team/shared/verify-access-model.py) - no PR and no movement can carry it",
-         cmd=[PY, ACCESS_MODEL],
+    dict(id="access-model", mode="default", expect="green",
+         home="IN the repository (scripts/verify-access-model.py) - a PR carries it; run by this entry point and by server/access-model-instrument.test.js",
+         # VERIFY_TREE=@HEAD: judge THE TREE THIS RUN NAMES, not origin/main. This is the defect
+         # recorded as 9148dee9 - the headline named the tree it judged while this check judged a
+         # different one, so a branch green said nothing about the branch. @HEAD is substituted at
+         # run time with the full sha of the tree under judgement (see the run loop).
+         cmd=[PY, ACCESS_MODEL], env={"VERIFY_TREE": "@HEAD"},
          what="the 137-check access-model instrument against docs/access-model.md, the document the product's access model is delivered in"),
 
     dict(id="cors-error-contract", mode="full", expect="green", home="operator CLI, off-host",
@@ -242,6 +248,9 @@ def main(argv):
         return selftest()
 
     tree = git("rev-parse", "--short", "HEAD") or "UNKNOWN"
+    # the FULL sha of the same tree, handed to any check that judges a revision, so the check and
+    # the headline cannot name different trees (9148dee9)
+    tree_full = git("rev-parse", "HEAD") or "origin/main"
     # Untracked paths are reported separately from modified ones: the rig's own dependency
     # link (server/node_modules) is untracked BY DESIGN and must not make every run claim
     # the tree's bytes moved. A tracked modification is the signal that matters.
@@ -294,7 +303,12 @@ def main(argv):
         t0 = time.time()
         out = ""
         try:
-            p = subprocess.run(c["cmd"], cwd=cwd, capture_output=True, text=True,
+            env = None
+            if c.get("env"):
+                env = dict(os.environ)
+                for _k, _v in c["env"].items():
+                    env[_k] = tree_full if _v == "@HEAD" else _v
+            p = subprocess.run(c["cmd"], cwd=cwd, capture_output=True, text=True, env=env,
                                timeout=1800 if c.get("suite") else 600)
             code = p.returncode
             out = p.stdout + "\n" + p.stderr
