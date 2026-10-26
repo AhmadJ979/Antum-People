@@ -47,6 +47,13 @@ mkdir -p "$E"
 {
   echo "=== success test: $L ==="
   echo "taken: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  # A transcript has to say WHICH COPY of this script produced it and which tree it measured: a label is
+  # free text, and on 2026-10-26 one run was filed under a label naming a revision while its bytes were
+  # the next commit's script (md5 65d234eb..., 51c3b3b's blob, label "...-72f2272"). Neither name was a
+  # lie by itself; the file just could not tell a reader which was which.
+  echo "script: $0  md5 $(md5sum < "$0" | cut -d' ' -f1)"
+  echo "deployed tree: $D at $(git -C "$D" rev-parse --short HEAD 2>/dev/null || echo 'unknown (not a git tree)')"
+  echo "tree dirty: $(git -C "$D" status --porcelain 2>/dev/null | grep -vc 'node_modules' || echo 0) non-node_modules change(s)"
   echo
   echo "TEST 1 — the served HTML names OUR asset, with its measured size and md5"
   code=$(g -o /tmp/st-page -w '%{http_code}' --max-time 25 "$B/")
