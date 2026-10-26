@@ -221,6 +221,15 @@ DOC_CITATIONS = [
         # route vanished, but the document's pointer to it could drift onto any other line in silence.
         ("index.js:1320", "server/index.js", "app.get('/api/probation/escalations'",
          "§3.1 cites the P3-3 escalation read route itself, not the comment block above it"),
+        # Added 2026-10-26 with the re-ground in §10.7. The ROUTES append moved every line below it by +15;
+        # these three sites were covered by a tree claim alone, so this page could drift onto any other line
+        # and only the tree would redden. One entry per site, the citation string verbatim as the page carries it.
+        ("access.js:372-323", "server/access.js", "function scopeFor",
+         "§2.1's scope-refusal row cites `scopeFor`, the function that returns null"),
+        ("access.js:380", "server/access.js", "function scopedAllows",
+         "§4 cites `scopedAllows` where a scope becomes a decision"),
+        ("access.js:432", "server/access.js", "allowed.indexOf(req.user.access_role)",
+         "§2.1, §4 and §9 cite the gate's role read itself"),
 ]
 
 def resolve(lines, needle, hint):
