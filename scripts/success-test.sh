@@ -57,7 +57,20 @@ mkdir -p "$E"
     g -o /tmp/st-asset -w '  asset fetched: %{http_code}, %{size_download} B\n' --max-time 30 "$B/$asset"
     echo "  asset md5: $(md5sum < /tmp/st-asset | cut -d' ' -f1)"
     echo "  on-disk bundle: $(wc -c < "$D/client/dist/$asset" 2>/dev/null) B  md5 $(md5sum < "$D/client/dist/$asset" 2>/dev/null | cut -d' ' -f1)"
-    echo "  SAME BYTES AS THE CUTOVER: $([ "$(md5sum < /tmp/st-asset | cut -d' ' -f1)" = "91f05725a25c2b7b1f4328f1a5a110d5" ] && echo YES || echo 'NO — THIS IS NOT THE CUTOVER ASSET')"
+    # Decision 2: the served bytes ARE the deployed tree's bytes. That is the check this line makes now.
+  # It used to compare against a frozen md5 of the 2026-10-15 cutover asset, which no client change can
+  # ever match again - so it read "NO - THIS IS NOT THE CUTOVER ASSET" on every run since, a permanent
+  # alarm that informed nobody. The old hash is kept only as a labelled historical note.
+  served=$(md5sum < /tmp/st-asset | cut -d' ' -f1)
+  disk=$(md5sum < "$D/client/dist/$asset" 2>/dev/null | cut -d' ' -f1)
+  if [ -n "$disk" ] && [ "$served" = "$disk" ]; then
+    echo "  SERVED == DEPLOYED TREE: YES (both $served)"
+  else
+    FAILED=1
+    echo "  *** SERVED != DEPLOYED TREE: served $served, on disk ${disk:-NO FILE}. Decision 2 is broken:"
+    echo "      either the deployment is not the tree this script was pointed at, or the build is stale."
+  fi
+  echo "  (historical: the 2026-10-15 cutover asset was md5 91f05725a25c2b7b1f4328f1a5a110d5 - not a live check)"
   fi
   echo
   echo "TEST 2 — the listener on port 3000 is OURS (not the platform's placeholder)"
@@ -84,9 +97,16 @@ mkdir -p "$E"
   echo "         and an UNREGISTERED path is refused 403 by the gate — never a 404 from the router"
   # The claim the gate reads is `access_role` (server/access.js); `role` is ignored. The probe identity is
   # not a person and this script writes nothing: every request below is a GET.
-  TOK=$( ( set -a; . /etc/profile.d/cto-env-vars.sh >/dev/null 2>&1; set +a; \
-     node -e 'const jwt=require("/home/team/shared/probable-octo-sniffle/server/node_modules/jsonwebtoken");process.stdout.write(jwt.sign({id:"restore-probe",username:"restore-probe",access_role:"hr_admin"},process.env.JWT_SECRET,{expiresIn:"10m"}))' ) 2>/dev/null )
-  echo "  token minted: $([ -n "${TOK:-}" ] && echo "yes (${#TOK} chars, value not recorded)" || echo NO)  claim: access_role=hr_admin"
+  # The mint prints the claim set it actually signed, TAB-separated from the token, so the label below
+  # cannot disagree with the token: a hand-typed "claim: access_role=..." was printed even by a copy of
+  # this script whose mint carried `role:"admin"` (the 2026-10-26 mutation control), which is a label
+  # lying about the value beside it. The token itself is never echoed.
+  MINT=$( ( set -a; . /etc/profile.d/cto-env-vars.sh >/dev/null 2>&1; set +a; \
+     node -e 'const c={id:"restore-probe",username:"restore-probe",access_role:"hr_admin"};const jwt=require("/home/team/shared/probable-octo-sniffle/server/node_modules/jsonwebtoken");process.stdout.write(JSON.stringify(c)+"\t"+jwt.sign(c,process.env.JWT_SECRET,{expiresIn:"10m"}))' ) 2>/dev/null )
+  CLAIMS=${MINT%%$'\t'*}
+  TOK=${MINT#*$'\t'}
+  [ "$TOK" = "$MINT" ] && TOK=""
+  echo "  token minted: $([ -n "${TOK:-}" ] && echo "yes (${#TOK} chars, value not recorded)" || echo NO)  claim signed: ${CLAIMS:-NONE}"
   ctl=$(g -o /tmp/st-tk -w '%{http_code}' --max-time 20 -H "Authorization: Bearer ${TOK:-x}" "$B/api/employees")
   echo "  CONTROL — with token GET /api/employees -> $ctl  ($(wc -c < /tmp/st-tk) B)   [must be 200]"
   if [ "$ctl" != "200" ]; then
