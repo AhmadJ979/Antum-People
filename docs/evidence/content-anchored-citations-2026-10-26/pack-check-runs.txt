@@ -38,3 +38,24 @@ exit=1
 --- RUN 6 - the restore that worked (cp from the bytes the manifest was computed from), same checker ---
 PACK OK - 9 files, 8 manifest lines
 exit=0
+
+--- RUN 7 - after the tip moved to 9f23e0d and E2/F2 were filed (2026-10-26) ---
+PACK FAIL - 11 files, 10 manifest lines
+  A-branch-tip.txt exists but is NOT named in README.md
+  B-shifted-this-instrument.txt exists but is NOT named in README.md
+  C-shifted-previous-instrument.txt exists but is NOT named in README.md
+  D-symbol-gone.txt exists but is NOT named in README.md
+  E-gate-test.txt exists but is NOT named in README.md
+  E1-gate-test-first-run-reddened.txt exists but is NOT named in README.md
+  E2-gate-test-at-pr-tip.txt exists but is NOT named in README.md
+  F-check-all-no-suite.txt exists but is NOT named in README.md
+  F2-check-all-no-suite-at-pr-tip.txt exists but is NOT named in README.md
+  README.md exists but is NOT named in README.md
+  manifest.txt exists but is NOT named in README.md
+  E2-gate-test-at-pr-tip.txt is not tracked by git
+  F2-check-all-no-suite-at-pr-tip.txt is not tracked by git
+exit=1
+
+--- RUN 8 - after the README was rewritten cleanly and the manifest regenerated (2026-10-26) ---
+PACK OK - 11 files, 10 manifest lines
+exit=0
