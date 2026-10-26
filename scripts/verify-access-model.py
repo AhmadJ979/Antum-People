@@ -31,6 +31,9 @@ Usage:
     VERIFY_DOC=<path> python3 verify-access-model.py   # judge another copy of the doc
 
 Exit 0 only if every claim holds. Prints one OK/FAIL line per claim plus a summary.
+operator form : python3 scripts/verify-access-model.py  (bare; root derived from this file's own location)
+also run as a GATE by : server/access-model-instrument.test.js (the suite) and scripts/check-all.py
+NOT run by : the movement (scripts/cutover-preflight.sh) - a scripts/docs check must not abort a deploy
 
 **Since 2026-10-26 a LINE NUMBER IS A HINT, never the assertion (rows becc12ff / 39a63c38).**
 Every claim resolves its SYMBOL in the file at the tree under judgement and asserts it is there;

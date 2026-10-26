@@ -67,8 +67,12 @@ function synthTree(file, transform, label) {
 test('the instrument lives in the repository, and the entry point points at it', () => {
   assert.ok(fs.existsSync(INSTRUMENT), 'scripts/verify-access-model.py is missing - the instrument is host state again');
   const ca = fs.readFileSync(CHECK_ALL, 'utf8');
-  assert.ok(!ca.includes('/home/team/shared/verify-access-model.py'),
-    'check-all still names the host copy: a change to the instrument could not ride a PR');
+  // CODE only, not prose. check-all's own history note names the old host path in a comment, and the
+  // first run of this very test reddened on it - a scan that cannot tell a comment from a line of code
+  // reports on text, not behaviour. The regression it must catch is the CONSTANT coming back.
+  const caCode = ca.split('\n').filter((l) => !l.trim().startsWith('#')).join('\n');
+  assert.ok(!caCode.includes('/home/team/shared/verify-access-model.py'),
+    'check-all still names the host copy in code: a change to the instrument could not ride a PR');
   assert.match(ca, /ACCESS_MODEL = os\.path\.join\(HERE, "verify-access-model\.py"\)/,
     'check-all must resolve the instrument from its own directory, so the path it names is the path that runs');
   assert.match(ca, /env=\{"VERIFY_TREE": "@HEAD"\}/,
