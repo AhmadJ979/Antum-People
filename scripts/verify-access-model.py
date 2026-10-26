@@ -31,13 +31,24 @@ Usage:
     VERIFY_DOC=<path> python3 verify-access-model.py   # judge another copy of the doc
 
 Exit 0 only if every claim holds. Prints one OK/FAIL line per claim plus a summary.
+
+**Since 2026-10-26 a LINE NUMBER IS A HINT, never the assertion (rows becc12ff / 39a63c38).**
+Every claim resolves its SYMBOL in the file at the tree under judgement and asserts it is there;
+the recorded line only picks between occurrences, and is reported when it is out of date rather
+than enforced. Before this, a merge that inserted lines near the top of a served file reddened
+every claim below it, and three separate re-grounds were spent re-typing numbers a machine could
+follow. What can still redden: a symbol that is gone or renamed, an ambiguous resolution, and a
+document that no longer cites the site at all. What cannot: a line that merely moved. The controls
+are in docs/evidence/content-anchored-citations-2026-10-26/ - including the one that MUST redden
+(a renamed symbol) and the one that MUST NOT (the same file with lines inserted above it).
 """
 import os, re, subprocess, sys, json, tempfile
 
 DOC = os.environ.get("VERIFY_DOC", "docs/access-model.md")
 TREE = os.environ.get("VERIFY_TREE", "origin/main")
 
-# Every claim: (file, line, substring that must be on that line, label).
+# Every claim: (file, line HINT, substring that must RESOLVE in that file, label).
+# The hint is not the assertion - see `resolve()` below.
 # These are the *content* assertions; the structural ones live in check_module() below.
 CLAIMS = [
     ("server/index.js", 138, "Protect all /api routes except login", "gate comment"),
@@ -164,6 +175,26 @@ DOC_CITATIONS = [
          "§2.2 cites the clause that says why the unique index cannot live in schema.sql"),
 ]
 
+def resolve(lines, needle, hint):
+    """Where does `needle` live in this file? -> (line or None, all hits, ambiguous).
+
+    THE ASSERTION IS RESOLUTION, NOT THE LINE NUMBER. `hint` is the line the record was written
+    against; it is used to choose between several occurrences (the same string legitimately appears
+    many times - `INSERT INTO audit_logs`, `access_role`, `SELECT * FROM employees`), and never to
+    decide whether the claim holds. Returns None when the symbol is absent (a real defect) or when two
+    hits are equidistant from the hint and no honest choice exists (ambiguous, also a FAIL).
+    """
+    hits = [i + 1 for i, l in enumerate(lines) if needle in l]
+    if not hits:
+        return None, [], False
+    if hint in hits:
+        return hint, hits, False
+    best = min(hits, key=lambda h: (abs(h - hint), h))
+    tied = [h for h in hits if abs(h - hint) == abs(best - hint)]
+    if len(tied) > 1:
+        return None, hits, True
+    return best, hits, False
+
 def main():
     print(f"verify-access-model.py")
     print(f"  document      : {DOC}")
@@ -192,19 +223,32 @@ def main():
         return 1
     doc = open(DOC, encoding="utf-8").read()
 
-    # --- 1. content claims -------------------------------------------------
+    # --- 1. content claims, resolved by content -------------------------------------
+    # Each claim asserts its SYMBOL is in the file at the tree under judgement. The recorded line is a
+    # hint that chooses between occurrences and is reported when stale - it is never the assertion, so a
+    # merge that inserts lines above a block can no longer redden every claim below it.
     cache = {}
-    for path, line, needle, label in CLAIMS:
+    stale_hints = []
+    for path, hint, needle, label in CLAIMS:
         if path not in cache:
             cache[path] = git_show(path)
         lines = cache[path]
         if lines is None:
             P(False, label, f"{path}: not in {TREE}")
             continue
-        got = lines[line - 1] if line <= len(lines) else "<past end of file>"
-        hit = needle in got
-        P(hit, label, f"{path}:{line}",
-          note="" if hit else f"wanted {needle!r}; got: {got.strip()[:100]}")
+        got, hits, ambiguous = resolve(lines, needle, hint)
+        if ambiguous:
+            P(False, label, f"{path}: {needle!r} occurs at {hits}, equidistant from the hint {hint}",
+              note="name the occurrence unambiguously - the hint cannot choose between two equal distances")
+            continue
+        if got is None:
+            on_hint = lines[hint - 1].strip()[:100] if hint <= len(lines) else "<past end of file>"
+            P(False, label, f"{path}: {needle!r} is NOT in the file at {TREE} (hint {hint})",
+              note=f"the symbol this claim names is gone or renamed; the hinted line reads: {on_hint}")
+            continue
+        P(True, label, f"{path}:{got}" + ("" if got == hint else f"  (hint {hint} is stale)"))
+        if got != hint:
+            stale_hints.append((path, hint, got, label))
 
     # --- 2. the document must not carry the stale figures it moved away from.
     # Plain substring checks on purpose: these needles contain `**` and backticks, and a regex
@@ -251,15 +295,26 @@ def main():
     # `:829`: the checker asserted the TREE's lines but never what the DOCUMENT cites, so a citation
     # could drift onto the rationale comment and every tree claim still passed. A check that cannot
     # redden on a document's cross-reference passes a document whose citations have gone stale.
+    doc_hints = []
     for cited, fpath, needle, label in DOC_CITATIONS:
         src = git_show(fpath) or []
-        n = int(cited.split(":")[1].split("-")[0])
-        got = src[n - 1].strip() if n <= len(src) else "<past end of file>"
+        hint = int(cited.split(":")[1].split("-")[0])
         if cited not in doc:
             P(False, "doc citation", f"{cited} appears nowhere in the document — {label}")
+            continue
+        got, _hits, ambiguous = resolve(src, needle, hint)
+        if ambiguous:
+            P(False, "doc citation", f"{cited}: {needle!r} occurs equidistant from the cited line "
+                                     f"{hint} — {label}", note="the citation cannot choose between them")
+        elif got is None:
+            P(False, "doc citation", f"{cited} — {label}",
+              note=f"{needle!r} is NOT in {fpath} at {TREE}; the cited line reads: "
+                   f"{src[hint - 1].strip()[:100] if hint <= len(src) else '<past end of file>'}")
         else:
-            P(needle in got, "doc citation", f"{cited} — {label}",
-              note=f"line reads: {got[:100]}")
+            P(True, "doc citation", f"{cited} — {label}"
+              + ("" if got == hint else f"  (cited line {hint} is stale; resolves at :{got})"))
+            if got != hint:
+                doc_hints.append((cited, got, label))
 
     # --- 2c. §10.2's coverage table, RECOUNTED rather than believed. ------------------------------
     # The table printed four numbers and nothing re-derived them; the two paragraphs under it exist
@@ -489,7 +544,20 @@ console.log(JSON.stringify(out));
         P(ok, tag, label, note=r.stdout.strip()[:200] or "(nothing)")
 
     print()
-    print(f"{ran - fails}/{ran} checks hold against {TREE}   (ran={ran}, fails={fails})")
+    if stale_hints or doc_hints:
+        worst = max([abs(g - h) for _p, h, g, _l in stale_hints] +
+                    [abs(g - int(c.split(":")[1].split("-")[0])) for c, g, _l in doc_hints])
+        print(f"HINT DRIFT - {len(stale_hints)} of {len(CLAIMS)} claim hints and {len(doc_hints)} of "
+              f"{len(DOC_CITATIONS)} doc citations no longer name the line the symbol is on (worst {worst} "
+              f"lines). NOT a verdict: a line number is a hint, the assertion is that the symbol resolves.")
+        for path, hint, got, label in stale_hints:
+            print(f"    {path}: hint {hint} -> resolves at {got}   [{label}]")
+        for cited, got, label in doc_hints:
+            print(f"    cited {cited} -> resolves at :{got}   [{label}]")
+        print("    Re-grounding these is a documentation act, not a fix; nothing is wrong with the tree.")
+    print()
+    print(f"{ran - fails}/{ran} checks hold against {TREE}   (ran={ran}, fails={fails}, "
+          f"hints stale={len(stale_hints) + len(doc_hints)})")
     return 1 if fails else 0
 
 if __name__ == "__main__":
