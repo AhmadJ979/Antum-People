@@ -171,7 +171,7 @@ completed without it. `onboarding:write` is held by hr_admin (`all`) and manager
 route applies the `reports` scope to the hire the evaluation is *about*: a manager may submit only for a
 hire whose `manager_id` is their own record, and a hire cannot submit their own evaluation — the
 record's premise is that a manager wrote it. The narrower reading — a `probation:write` cell, which
-would also let a hire submit their own — is raised in PR #306's body rather than taken silently here.
+would also let a hire submit their own, and which this route **refuses outright** rather than leaving unlisted — is raised in PR #306's body rather than taken silently here.
 The route was appended at the end of the ROUTES list, for the reason the P3-1 paragraph gives: this file
 cites `file:line`, and inserting in the middle moves the instrument's checks.
 **P3-3's escalation read is `employees:read` with the COMPANY-WIDE row scope, and that narrowing is the
@@ -457,6 +457,9 @@ in §3.3 it is the one where a wrong click is least recoverable.
    role whose whole definition is "read-only", and §5.2 rule 2 makes the account/holdership surface
    accountability-bearing. *The cost of refusing it:* a viewer cannot record an acknowledgement. **Not decided
    here** — say so explicitly rather than leaving a contradiction in place.
+
+11. **Owner — the `probation:read` cell (P3-1, raised in PR #287).** The probation timeline route rides `employees:read`, so its audience is exactly the audience of the rows its dates are computed from (the ROUTES entry for `GET /api/probation/timelines` in `server/access.js`). A `probation:read` cell would also let a hire read their **own** timeline — deliberately **not taken**, because adding a cell is this document's owner's call and not the engineer's. It is a **candidate for decision 27's counsel set** (a hire reading their own probation dates), and it is recorded here so that a re-grounding pass cannot quietly close it.
+12. **Owner — the `probation:write` cell (P3-2, raised in PR #306).** The evaluation route rides `onboarding:write` — HR_ADMIN company-wide (`all`), MANAGER scoped to the hire's **own** manager (`reports`) — and its ROW scope is narrower than its cell: company-wide, or the hire's own manager, with `own` **refused outright** rather than left unlisted. A `probation:write` cell would let a hire submit their own evaluation; **not taken**, on the same reasoning as item 11 (the record's premise is that a manager wrote it, and adding a cell is the owner's call). It is a **candidate for decision 27's counsel set**, and it is recorded here for the same reason.
 
 ---
 
