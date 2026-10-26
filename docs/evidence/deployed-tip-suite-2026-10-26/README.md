@@ -71,15 +71,37 @@ above names: `01-suite-at-2bd2f9d.txt`, `02-suite-at-ae85d4d.txt`,
 The checker and its run log are deliberately **not** in the manifest: they are about the pack rather than
 part of it, and a file that records every run never has a stable md5.
 
-## Files in this pack
+## Merge record - #299, #301 and #302, and the gates at `505ddd3`
 
-`README.md` (this record), `manifest.txt` (the md5 of every frozen file), `pack-check.py` (the four
-directions checked) and `pack-check-runs.txt` (the log of its own runs), beside the five raw runs the table
-above names: `01-suite-at-2bd2f9d.txt`, `02-suite-at-ae85d4d.txt`,
-`03-doc-invariant-gates-at-2bd2f9d.txt`, `04-entry-point-at-2bd2f9d.txt`, `05-instrument-at-2bd2f9d.txt`.
+All three merged, in this order; `origin/main` is now `505ddd33feb06426d0f1479fdee54aab7f7121e4`.
 
-The checker and its run log are deliberately **not** in the manifest: they are about the pack rather than
-part of it, and a file that records every run never has a stable md5.
+| PR | merged from | what the merged tree carries |
+|---|---|---|
+| #299 (`evidence/merge-record-298`) | `f1d97fd` | the retirement record for the instrument's host copy |
+| #301 (this pack) | `568fcb46` | a **child of my head** `fe2d26f`, carrying the same change a second time |
+| #302 (the termination-flag finding) | my head `26c320d` | **byte-identical to what was reviewed** |
+
+**#301's merge parent is not my head, and that is stated rather than smoothed.** `568fcb46` has `fe2d26f` as
+its parent and the same commit message, and its stat is the same three files - so the same fix was applied
+twice and **main's copy of this README carried the "Files in this pack" section at lines 64 and 74**. The
+duplicate did not break this pack's own checker (`PACK OK - 7 files, 6 manifest lines`, exit 0, run at the
+merged tree): that checker asks whether every file is named, not how often. It is removed in the commit that
+carries this record (proof: `grep -c "^## Files in this pack"` is **1**, where it read 2) - asserted byte-identical first, then removed once, with the manifest regenerated for the
+new bytes.
+
+**The gates at the new tip are green** - which is the measurement this pack was created to make possible,
+since new files under `docs/` are exactly what those gates see. At `505ddd3`:
+`server/design-concepts-index.test.js` + `server/privacy-notice.test.js` read **13 tests / 13 pass / 0 fail,
+exit 0**; the entry point `check-all --no-suite` reads **exit 0** (OK 4, RED-KNOWN 1 = `doc-citations`,
+SKIP-FLAGGED 7); and the instrument reads **137/137 against `505ddd33feb06426d0f1479fdee54aab7f7121e4`** -
+headline and check naming the same tree. `server/node_modules` resolved before the runs.
+
+**The deployed tree is still `2bd2f9d`, clean** - measured, not assumed. Every delta between it and `505ddd3`
+is `docs/` (and the repository-root WORKFLOW.md), so **no movement is owed**: the tree that runs is behind `main` by evidence
+files it does not read.
+
+Both branches were deleted by their mergers again, so this record needed a branch and PR of its own: a merged
+PR reads no later commit, and re-pushing a deleted name creates a ref no PR carries.
 
 ## What this pack does not prove
 
