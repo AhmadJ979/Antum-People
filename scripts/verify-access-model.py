@@ -26,11 +26,14 @@ found`). Section 3b asserts the document's ```sh blocks are `!`-free so a future
 reintroduce it. Never write `!` inside double quotes in a printed command.
 
 Usage:
-    python3 verify-access-model.py                     # judge origin/main
-    VERIFY_TREE=<rev> python3 verify-access-model.py   # judge another tree
+    python3 verify-access-model.py                     # judge the working tree HEAD, its own doc
+    VERIFY_TREE=<rev> python3 verify-access-model.py   # judge another tree (pin ITS doc too, below)
     VERIFY_DOC=<path> python3 verify-access-model.py   # judge another copy of the doc
 
 Exit 0 only if every claim holds. Prints one OK/FAIL line per claim plus a summary.
+Exit 1 = a claim FAILED.  Exit 2 = CANNOT-JUDGE: the document judged is not the document at the
+tree judged (a HYBRID run), or the revision does not resolve. The headline always names the
+resolved sha the content came from, never a ref name.
 operator form : python3 scripts/verify-access-model.py  (bare; root derived from this file's own location)
 also run as a GATE by : server/access-model-instrument.test.js (the suite) and scripts/check-all.py
 NOT run by : the movement (scripts/cutover-preflight.sh) - a scripts/docs check must not abort a deploy
@@ -45,10 +48,47 @@ document that no longer cites the site at all. What cannot: a line that merely m
 are in docs/evidence/content-anchored-citations-2026-10-26/ - including the one that MUST redden
 (a renamed symbol) and the one that MUST NOT (the same file with lines inserted above it).
 """
-import os, re, subprocess, sys, json, tempfile
+import os, re, subprocess, sys, json, tempfile, hashlib
 
-DOC = os.environ.get("VERIFY_DOC", "docs/access-model.md")
-TREE = os.environ.get("VERIFY_TREE", "origin/main")
+SUBJECT_DOC = "docs/access-model.md"   # the repo path of the document this checker judges
+DOC = os.environ.get("VERIFY_DOC", SUBJECT_DOC)
+_VERIFY_TREE = os.environ.get("VERIFY_TREE") or None
+
+
+def resolve_rev(ref):
+    """A REF is not evidence - resolve it to the sha the content actually comes from.
+
+    A ref can move between the run and the reading (`origin/main` did, twice, on 2026-10-26), and a
+    headline that names a ref does not say which bytes were judged. Accepts a commit or a tree sha.
+
+    `@HEAD` is NOT a git revision - `rev-parse`, `git log` and `git grep` all reject it ("fatal:
+    invalid object name '@HEAD'"). It is the marker scripts/check-all.py passes, meaning "the tree this
+    run names", so read it that way. Measured on 2026-10-26: without this, the operator entry point's
+    model check judged NOTHING - 13/111 checks with 98 FAILs, every one of them "not in @HEAD", which
+    check-all could only report as one red check. The string was asserted by a test; that it WORKED
+    was asserted by nothing.
+    """
+    if ref.startswith('@'):
+        ref = ref[1:] or 'HEAD'
+    for spec in (ref + "^{commit}", ref + "^{tree}"):
+        r = subprocess.run(["git", "rev-parse", "--verify", "--quiet", spec],
+                           capture_output=True, text=True)
+        if r.returncode == 0 and r.stdout.strip():
+            return r.stdout.strip()
+    return None
+
+
+# THE HYBRID DEFECT (row 7daa1d44). This checker reads the CODE from a revision (`git show <TREE>:...`)
+# and the DOCUMENT from the working copy. When those are two different revisions - any branch that
+# changes `server/` and the doc together, which #306 was - one run judges one tree's code against
+# another tree's document and prints ONE clean headline. It defaulted to `origin/main` while reading
+# the document beside itself, so a run inside a branch was a hybrid even when it looked right (it was
+# right only because the code content happened to be identical on both sides). The default is now the
+# working tree's own HEAD, and a run whose document is not the document at the judged revision is
+# REFUSED (exit 2, CANNOT-JUDGE) rather than reported. `VERIFY_TREE=<rev>` still judges another tree -
+# pin that tree's own document with `VERIFY_DOC` and the pair is honest again.
+TREE_REF = _VERIFY_TREE or "HEAD"
+TREE = resolve_rev(TREE_REF)
 
 # Every claim: (file, line HINT, substring that must RESOLVE in that file, label).
 # The hint is not the assertion - see `resolve()` below.
@@ -199,6 +239,13 @@ def resolve(lines, needle, hint):
     return best, hits, False
 
 def main():
+    # A revision that does not resolve must fail CLOSED, before the header is printed: `git show` cannot
+    # resolve it, so every claim below would "fail" for the wrong reason and the run would print a
+    # verdict about a tree it never read. (Measured 2026-10-26: the operator entry point's check passed
+    # `@HEAD`, which is not a git revision at all - 13/111 with 98 FAILs, each saying "not in @HEAD".)
+    if TREE is None:
+        print(f"CANNOT-JUDGE: VERIFY_TREE={TREE_REF!r} resolves to no commit and no tree in this repository.")
+        return 2
     print(f"verify-access-model.py")
     print(f"  document      : {DOC}")
     print(f"  tree measured : {TREE}")
@@ -224,7 +271,25 @@ def main():
     if not os.path.exists(DOC):
         print(f"FAIL: document not found at {DOC}")
         return 1
-    doc = open(DOC, encoding="utf-8").read()
+    judged_bytes = open(DOC, "rb").read()
+    doc = judged_bytes.decode("utf-8")
+
+    # --- 0. the document and the tree must be ONE revision (row 7daa1d44) ---------------------
+    at_rev = subprocess.run(["git", "show", f"{TREE}:{SUBJECT_DOC}"], capture_output=True)
+    if at_rev.returncode != 0:
+        print(f"CANNOT-JUDGE: {SUBJECT_DOC} does not exist at {TREE} - nothing to judge the tree against.")
+        return 2
+    if judged_bytes != at_rev.stdout:
+        print("CANNOT-JUDGE: HYBRID RUN - the document judged is not the document at the tree judged.")
+        print(f"  tree judged     : {TREE}   (VERIFY_TREE={TREE_REF}) - the CODE is read from here")
+        print(f"  document judged : {DOC}   md5 {hashlib.md5(judged_bytes).hexdigest()}")
+        print(f"  document at tree: {TREE}:{SUBJECT_DOC}   md5 "
+              f"{hashlib.md5(at_rev.stdout).hexdigest()}")
+        print("  One headline over that pair would describe two revisions at once. To judge another")
+        print("  tree, pin its own document too:")
+        print(f"    git show {TREE}:{SUBJECT_DOC} > /tmp/doc.md && "
+              f"VERIFY_DOC=/tmp/doc.md VERIFY_TREE={TREE} python3 scripts/verify-access-model.py")
+        return 2
 
     # --- 1. content claims, resolved by content -------------------------------------
     # Each claim asserts its SYMBOL is in the file at the tree under judgement. The recorded line is a
@@ -561,8 +626,10 @@ console.log(JSON.stringify(out));
             print(f"    cited {cited} -> resolves at :{got}   [{label}]")
         print("    Re-grounding these is a documentation act, not a fix; nothing is wrong with the tree.")
     print()
-    print(f"{ran - fails}/{ran} checks hold against {TREE}   (ran={ran}, fails={fails}, "
+    _where = TREE if not _VERIFY_TREE else f"{TREE} (VERIFY_TREE={_VERIFY_TREE})"
+    print(f"{ran - fails}/{ran} checks hold against {_where}   (ran={ran}, fails={fails}, "
           f"hints stale={len(stale_hints) + len(doc_hints)})")
+    print(f"tree is {TREE} - the document it judged is byte-identical to {SUBJECT_DOC} at that tree")
     return 1 if fails else 0
 
 if __name__ == "__main__":

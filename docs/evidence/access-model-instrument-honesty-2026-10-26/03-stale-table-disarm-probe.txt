@@ -1,0 +1,6 @@
+shift 45: base stale=54 (exit 0)  -> +7 stale=54 (exit 0)  old-shape-fires=false
+shift 50: base stale=54 (exit 0)  -> +7 stale=54 (exit 0)  old-shape-fires=false
+shift 55: base stale=54 (exit 0)  -> +7 stale=54 (exit 0)  old-shape-fires=false
+shift 60: base stale=54 (exit 0)  -> +7 stale=53 (exit 0)  old-shape-fires=false
+shift 61: base stale=54 (exit 0)  -> +7 stale=54 (exit 0)  old-shape-fires=false
+shift 70: base stale=54 (exit 0)  -> +7 stale=54 (exit 0)  old-shape-fires=false

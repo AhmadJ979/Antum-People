@@ -1,0 +1,12 @@
+verify-access-model.py
+  document      : docs/access-model.md
+  tree measured : 62665dc79bcf7461d5b77b4598bd3ad885e8c1fe
+  tree is       : 62665dc 2026-10-26 14:55:03 +0400 Merge pull request #306 from AhmadJ979/feat/probation-evaluations-p3-2
+
+CANNOT-JUDGE: HYBRID RUN - the document judged is not the document at the tree judged.
+  tree judged     : 62665dc79bcf7461d5b77b4598bd3ad885e8c1fe   (VERIFY_TREE=62665dc) - the CODE is read from here
+  document judged : docs/access-model.md   md5 46578062617126b55179fe18e9d50d25
+  document at tree: 62665dc79bcf7461d5b77b4598bd3ad885e8c1fe:docs/access-model.md   md5 bb08ea6484529b6fd7f7627735de3671
+  One headline over that pair would describe two revisions at once. To judge another
+  tree, pin its own document too:
+    git show 62665dc79bcf7461d5b77b4598bd3ad885e8c1fe:docs/access-model.md > /tmp/doc.md && VERIFY_DOC=/tmp/doc.md VERIFY_TREE=62665dc79bcf7461d5b77b4598bd3ad885e8c1fe python3 scripts/verify-access-model.py
