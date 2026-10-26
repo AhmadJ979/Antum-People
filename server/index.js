@@ -802,14 +802,49 @@ app.get('/api/analytics/dashboard', async (req, res) => {
   }
 });
 
+// §5.2 rules 1 and 3 (decision 22), on the third path that ends an employment. This route inserts
+// the exit interview and terminates the employee row — the same effect the PUT path reaches two hundred
+// lines above. Until this change it had no actor gate and wrote no audit row, so a row could be ended
+// with NOBODY's name on it (measured 2026-10-26 on a scratch rig: a token carrying no username was
+// answered 201, the row went to status='terminated', and audit_logs for that employee still held only
+// its CREATE row). It matters beyond bookkeeping: `status='terminated'` is one of the records
+// replacement-cost.js reads to raise the Layer 4 flag, so the figure could move unattributably too.
+// A route that ends someone's employment is a write path, and every write path names the person.
 app.post('/api/exit-interviews', async (req, res) => {
-  const data = req.body;
-  const id = generateId();
-  await db.query(`INSERT INTO exit_interviews (id, employee_id, interview_date, departure_reason, detailed_feedback, satisfaction_score)
-    VALUES (${db.escapeString(id)}, ${db.escapeString(data.employee_id)}, ${db.escapeString(data.interview_date)}, 
-    ${db.escapeString(data.departure_reason)}, ${db.escapeString(data.detailed_feedback)}, ${data.satisfaction_score})`);
-  await db.query(`UPDATE employees SET status = 'terminated', end_date = ${db.escapeString(data.interview_date)} WHERE id = ${db.escapeString(data.employee_id)}`);
-  res.status(201).json({ id });
+  try {
+    const data = req.body;
+    // The actor is signed in and named, or nothing is written — before any lookup, as on the other paths.
+    const actor = actorOf(req);
+    if (!actor) return res.status(400).json({ error: 'a named actor is required to record an exit interview' });
+    const empId = data.employee_id;
+    const existing = await db.query(`SELECT * FROM employees WHERE id = ${db.escapeString(empId)}`);
+    if (existing.length === 0) return res.status(404).json({ error: 'Employee not found' });
+    const emp = existing[0];
+    const id = generateId();
+    // `satisfaction_score` was the ONE client value in this file interpolated straight into SQL. An
+    // absent one put the bare word `undefined` in the statement, and the client's own
+    // `parseInt('')` puts `NaN` there: both are a SQL logic error, and with no try/catch on the route
+    // the rejected handler ended the PROCESS — measured 2026-10-26, one malformed request and the
+    // product was gone. Coerced to a finite Number or NULL, as the numeric allow-list in the PUT path
+    // coerces its own; a value that is not a number is stored as NULL, never as SQL.
+    const scoreRaw = data.satisfaction_score;
+    const score = (scoreRaw === null || scoreRaw === undefined || scoreRaw === '') ? null : Number(scoreRaw);
+    const scoreSql = (score === null || !Number.isFinite(score)) ? 'NULL' : String(score);
+    await db.query(`INSERT INTO exit_interviews (id, employee_id, interview_date, departure_reason, detailed_feedback, satisfaction_score)
+      VALUES (${db.escapeString(id)}, ${db.escapeString(empId)}, ${db.escapeString(data.interview_date)},
+      ${db.escapeString(data.departure_reason)}, ${db.escapeString(data.detailed_feedback)}, ${scoreSql})`);
+    await db.query(`UPDATE employees SET status = 'terminated', end_date = ${db.escapeString(data.interview_date)} WHERE id = ${db.escapeString(empId)}`);
+    // The audit row the attributed path writes, for the effect THIS path has: the employee row, action
+    // UPDATE, the before and after values, and the actor's name in the column that holds a person's
+    // name. The interview's id rides in new_values, so the two records are joined by the log rather
+    // than by a second convention invented here.
+    await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, old_values, new_values, timestamp)
+      VALUES (${db.escapeString(generateId())}, ${db.escapeString(actor)}, 'employee', ${db.escapeString(empId)}, 'UPDATE', ${db.escapeString(JSON.stringify(emp))}, ${db.escapeString(JSON.stringify({ status: 'terminated', end_date: data.interview_date, exit_interview_id: id }))}, CURRENT_TIMESTAMP)`);
+    res.status(201).json({ id });
+  } catch (err) {
+    console.error('[ExitInterview] Failed to record an exit interview:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 // -------------------------------------------------------------

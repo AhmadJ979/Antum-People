@@ -1,0 +1,44 @@
+(node:1414) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Antum server listening on port 4731
+[preboarding-flag] 7ea91754-6639-4864-a2ad-3d4043bf117c — This case reached the 48-hour mark while the app was not running (noticed 34.5h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed.
+[preboarding-flag] efc6e763-ddcd-40e5-8843-efae02c1bf90 — This case reached the 48-hour mark while the app was not running (noticed 82.5h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed.
+[DB Error] SQL: INSERT INTO exit_interviews (id, employee_id, interview_date, departure_reason, detailed_feedback, satisfaction_score)
+    VALUES ('6c60286c-2eba-4125-8d38-6dc800826e4a', 'ghost-1793010614610', '2026-10-20', 
+    'resignation', NULL, 3)
+Error: FOREIGN KEY constraint failed
+    at /tmp/rig-xiv/before/server/db.js:262:12
+    at new Promise (<anonymous>)
+    at Object.query (/tmp/rig-xiv/before/server/db.js:251:10)
+    at /tmp/rig-xiv/before/server/index.js:808:12
+    at Layer.handle [as handle_request] (/home/team/shared/probable-octo-sniffle/server/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/team/shared/probable-octo-sniffle/server/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/home/team/shared/probable-octo-sniffle/server/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/home/team/shared/probable-octo-sniffle/server/node_modules/express/lib/router/layer.js:95:5)
+    at /home/team/shared/probable-octo-sniffle/server/node_modules/express/lib/router/index.js:284:15
+    at Function.process_params (/home/team/shared/probable-octo-sniffle/server/node_modules/express/lib/router/index.js:346:12) {
+  code: 'ERR_SQLITE_ERROR',
+  errcode: 787,
+  errstr: 'constraint failed'
+}
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+Error: FOREIGN KEY constraint failed
+    at /tmp/rig-xiv/before/server/db.js:262:12
+    at new Promise (<anonymous>)
+    at Object.query (/tmp/rig-xiv/before/server/db.js:251:10)
+    at /tmp/rig-xiv/before/server/index.js:808:12
+    at Layer.handle [as handle_request] (/home/team/shared/probable-octo-sniffle/server/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/team/shared/probable-octo-sniffle/server/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/home/team/shared/probable-octo-sniffle/server/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/home/team/shared/probable-octo-sniffle/server/node_modules/express/lib/router/layer.js:95:5)
+    at /home/team/shared/probable-octo-sniffle/server/node_modules/express/lib/router/index.js:284:15
+    at Function.process_params (/home/team/shared/probable-octo-sniffle/server/node_modules/express/lib/router/index.js:346:12) {
+  code: 'ERR_SQLITE_ERROR',
+  errcode: 787,
+  errstr: 'constraint failed'
+}
+
+Node.js v22.23.4

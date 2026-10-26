@@ -22,7 +22,9 @@
  *   * the account → person link: refused when it names no employee, refused when that employee already
  *     has an account, and held by the database (the partial unique index), not by the route alone;
  *   * every write path names the signed-in actor: the two employee paths used to write the literal
- *     'system' into a column that holds a person's name, and an unnamed token is now refused (400).
+ *     'system' into a column that holds a person's name, and an unnamed token is now refused (400);
+ *     the exit-interview path — which terminates a row, and so moves the Layer 4 replacement-cost flag —
+ *     wrote no audit row at all until row f2e68a04, so a row could be ended with nobody's name on it.
  *
  * It runs a REAL server on a scratch port against a throwaway database, and it never touches the
  * live service, the live database or the live credential (WORKFLOW rules 5, 10, 14).
@@ -699,6 +701,13 @@ describe('every write names a person (§5.2 rules 1 and 3)', () => {
     assert.strictEqual((await api('POST', '/api/preboarding/cases', { token, body: {} })).status, 400);
     assert.strictEqual((await api('POST', '/api/preboarding/cases/anything/items/passport/status', { token, body: { status: 'requested' } })).status, 400);
     assert.strictEqual((await api('POST', '/api/preboarding/cases/anything/reminders', { token, body: {} })).status, 400);
+    // The third path that ends an employment (row f2e68a04). The employee id is deliberately one that
+    // does not exist, so on a tree WITHOUT the actor gate this call's damage is an orphan interview row
+    // rather than a real person's record terminated by a token that names nobody. The body is otherwise
+    // COMPLETE on purpose: a body that also provoked the old crash would take the server down here and
+    // every later case in this file would read `fetch failed` — the failure would be real but its reason
+    // would be unreadable. The crash has its own case, last, where its signature is the point.
+    assert.strictEqual((await api('POST', '/api/exit-interviews', { token, body: { employee_id: 'unnamed-actor-writes-nothing', interview_date: '2026-10-20', departure_reason: 'resignation', satisfaction_score: 3 } })).status, 400);
 
     assert.strictEqual(rawDb((db) => db.prepare('SELECT COUNT(*) AS n FROM employees').get().n), employeeCountBefore, 'no employee row was written');
     assert.strictEqual(rawDb((db) => db.prepare('SELECT COUNT(*) AS n FROM audit_logs').get().n), auditBefore, 'and no audit row either');
@@ -718,6 +727,104 @@ describe('every write names a person (§5.2 rules 1 and 3)', () => {
     const untouched = rawDb((db) => db.prepare("SELECT completed_by, status FROM onboarding_tasks WHERE id = 'scratch-task-2'").get());
     assert.strictEqual(untouched.completed_by, null, 'nothing was recorded for nobody');
     assert.strictEqual(untouched.status, 'pending');
+  });
+
+  // Row f2e68a04. `POST /api/exit-interviews` inserts the interview and sets status = 'terminated' — the
+  // same effect the PUT path reaches, and one of the records replacement-cost.js reads to raise the
+  // Layer 4 flag. It had no actor gate and wrote no audit row: measured on a scratch rig at 505ddd3, a
+  // token carrying NO username was answered 201, the row went to terminated, and the employee's
+  // audit_logs still held only its CREATE row. The three cases below are a pair plus two consequences
+  // of the same statement, so a future silent removal of any of them fails here.
+  const exitSubject = async () => {
+    const created = await api('POST', '/api/employees', {
+      token: await tokenFor(ADMIN_NAME),
+      body: { first_name: 'Exit', last_name: 'Subject', email: `exit-${randomUUID()}@example.invalid`, start_date: '2026-01-05', data_residency_country: 'AE' },
+    });
+    assert.strictEqual(created.status, 201, `the fixture employee must be creatable (${created.text})`);
+    return created.json.id;
+  };
+  const employeeAudit = (id) => rawDb((db) => db.prepare("SELECT * FROM audit_logs WHERE entity_type = 'employee' AND entity_id = ?").all(id));
+  const interviewsFor = (id) => rawDb((db) => db.prepare('SELECT * FROM exit_interviews WHERE employee_id = ?').all(id));
+
+  test('the exit-interview path terminates the row WITH the actor named, and writes the audit row', async () => {
+    const id = await exitSubject();
+    assert.strictEqual(employeeAudit(id).length, 1, 'the create wrote its own audit row — this is the baseline');
+
+    const r = await api('POST', '/api/exit-interviews', {
+      token: await tokenFor(ADMIN_NAME),
+      body: { employee_id: id, interview_date: '2026-10-20', departure_reason: 'resignation', detailed_feedback: 'the gate', satisfaction_score: 4 },
+    });
+    assert.strictEqual(r.status, 201, r.text);
+
+    const row = rawDb((db) => db.prepare('SELECT status, end_date FROM employees WHERE id = ?').get(id));
+    assert.strictEqual(row.status, 'terminated', 'the interview still ends the employment — the effect is unchanged');
+    assert.strictEqual(row.end_date, '2026-10-20');
+
+    const rows = employeeAudit(id);
+    assert.strictEqual(rows.length, 2, 'the termination writes its own audit row, beside the create');
+    const termination = rows.find((a) => a.action === 'UPDATE');
+    assert.ok(termination, 'an UPDATE row for the employee');
+    assert.strictEqual(termination.performed_by, ADMIN_NAME, 'the column that holds a person’s name holds theirs');
+    assert.notStrictEqual(termination.performed_by, 'system');
+    const before = JSON.parse(termination.old_values);
+    assert.notStrictEqual(before.status, 'terminated', 'the row records what the employee was before the call');
+    const after = JSON.parse(termination.new_values);
+    assert.strictEqual(after.status, 'terminated');
+    assert.strictEqual(after.end_date, '2026-10-20');
+    const interview = interviewsFor(id);
+    assert.strictEqual(interview.length, 1, 'exactly one interview for this employee');
+    assert.strictEqual(after.exit_interview_id, interview[0].id, 'the audit row names the interview this call wrote');
+    assert.strictEqual(interview[0].satisfaction_score, 4, 'and the score is stored as the number it was given');
+  });
+
+  test('a REFUSED exit interview changes nothing — the control for the case above', async () => {
+    const id = await exitSubject();
+    const auditsBefore = employeeAudit(id).length;
+    const r = await api('POST', '/api/exit-interviews', {
+      token: namelessToken(),
+      body: { employee_id: id, interview_date: '2026-10-20', departure_reason: 'resignation', detailed_feedback: 'nobody', satisfaction_score: 4 },
+    });
+    assert.strictEqual(r.status, 400, 'a named actor is required before any lookup');
+    const row = rawDb((db) => db.prepare('SELECT status FROM employees WHERE id = ?').get(id));
+    assert.notStrictEqual(row.status, 'terminated', 'the employment did not end');
+    assert.strictEqual(interviewsFor(id).length, 0, 'no interview row for a call that was refused');
+    assert.strictEqual(employeeAudit(id).length, auditsBefore, 'and the log is exactly as it was');
+  });
+
+  test('an exit interview naming an employee who is not on the roster is refused 404, and writes nothing', async () => {
+    const ghost = `ghost-${randomUUID()}`;
+    const before = rawDb((db) => db.prepare('SELECT COUNT(*) AS n FROM exit_interviews').get().n);
+    const r = await api('POST', '/api/exit-interviews', {
+      token: await tokenFor(ADMIN_NAME),
+      body: { employee_id: ghost, interview_date: '2026-10-20', departure_reason: 'resignation' },
+    });
+    assert.strictEqual(r.status, 404, 'the attributed path refuses an unknown employee the same way');
+    assert.strictEqual(rawDb((db) => db.prepare('SELECT COUNT(*) AS n FROM exit_interviews').get().n), before,
+      'no interview row for a person who is not in the roster — the orphan write is closed');
+  });
+
+  test('a score that is not a number is stored as NULL, and a SQL-shaped one is data — the server stands', async () => {
+    // The shape the UI sends when the field is left empty: `parseInt('')` is NaN. This value used to be
+    // interpolated RAW into the statement, so the request was a SQL logic error and — the route having
+    // no try/catch — the rejected handler ended the process. Both halves are asserted here.
+    const id = await exitSubject();
+    const r = await api('POST', '/api/exit-interviews', {
+      token: await tokenFor(ADMIN_NAME),
+      body: { employee_id: id, interview_date: '2026-10-20', departure_reason: 'resignation', satisfaction_score: '' },
+    });
+    assert.strictEqual(r.status, 201, r.text);
+    const empty = interviewsFor(id)[0];
+    assert.strictEqual(empty.satisfaction_score, null, 'stored as NULL — not the word the string produced, and not the text');
+    assert.strictEqual((await api('GET', '/api/employees', { token: await tokenFor(ADMIN_NAME) })).status, 200, 'and the server survived it');
+
+    const id2 = await exitSubject();
+    const inj = await api('POST', '/api/exit-interviews', {
+      token: await tokenFor(ADMIN_NAME),
+      body: { employee_id: id2, interview_date: '2026-10-20', departure_reason: 'resignation', satisfaction_score: '(SELECT COUNT(*) FROM users)' },
+    });
+    assert.strictEqual(inj.status, 201, inj.text);
+    const shaped = interviewsFor(id2)[0];
+    assert.strictEqual(shaped.satisfaction_score, null, 'an expression is stored as NULL, never evaluated against the database');
   });
 
   test('no audit row anywhere in this database says \'system\'', () => {

@@ -1,0 +1,5 @@
+(node:1503) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Antum server listening on port 4732
+[preboarding-flag] f615ba3c-63a4-4731-8cd1-f0eb93bdca0d — This case reached the 48-hour mark while the app was not running (noticed 34.5h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed.
+[preboarding-flag] 7761d465-e425-4b0b-89cb-601e5e2644d6 — This case reached the 48-hour mark while the app was not running (noticed 82.5h late). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed.

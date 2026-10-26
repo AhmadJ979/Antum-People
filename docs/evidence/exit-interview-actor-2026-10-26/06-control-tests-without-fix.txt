@@ -1,0 +1,25 @@
+=== CONTROL: access.test.js from the FIX, running on 505ddd3 (NO fix) ===
+index.js here is: 505ddd3
+fix present (0 = absent): 0
+    not ok 1 - an UNNAMED token is refused 400 on every write path, and writes nothing
+      error: 'fetch failed'
+      name: 'TypeError'
+    not ok 2 - the exit-interview path terminates the row WITH the actor named, and writes the audit row
+      error: 'fetch failed'
+      name: 'TypeError'
+    not ok 3 - a REFUSED exit interview changes nothing — the control for the case above
+      error: 'fetch failed'
+      name: 'TypeError'
+    not ok 4 - an exit interview naming an employee who is not on the roster is refused 404, and writes nothing
+      error: 'fetch failed'
+      name: 'TypeError'
+    not ok 5 - a score that is not a number is stored as NULL, and a SQL-shaped one is data — the server stands
+      error: 'fetch failed'
+      name: 'TypeError'
+    ok 6 - no audit row anywhere in this database says 'system'
+not ok 1 - every write names a person (§5.2 rules 1 and 3)
+  error: '5 subtests failed'
+# tests 6
+# pass 1
+# fail 5
+# skipped 0
