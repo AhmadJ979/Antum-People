@@ -1,0 +1,30 @@
+MEASURED 2026-10-26T10:52:42Z — the AFTER run at this branch's head (e0e79dc), on a scratch rig:
+tree /tmp/rig-xiv/p32tree (detached worktree of e0e79dc), port 4742, its OWN throwaway database and its OWN account.
+The probe refuses to run unless PRODUCT_DB_PATH is inside /tmp/rig-xiv and the rig's own account is in it.
+
+rig database: /tmp/rig-xiv/p32db.db
+identity proof: the rig's own account is present (COUNT(*) FROM users WHERE username='scratch' = 1)
+(node:28034) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+live product at the same moment: 200
+PASS  the rig account logs in — status=200
+PASS  GET /api/probation/timelines answers 200 (the P3-1 route was a 500 before this branch) — status=200 bytes=1433
+PASS  ...and reports completions_recorded: true — true
+subject: Omar Al-Farsi (demo-emp-omar), milestone 1 due 2026-09-19
+PASS  401 without a token on the submission route
+PASS  an UNNAMED token is refused 400, before any lookup — status=400 {"error":"a named actor is required to submit a probation evaluation"}
+PASS  an empty submission is refused 400 — status=400 {"error":"a submitted evaluation must carry the manager’s own words: content cannot be empty"}
+PASS  ...and neither refusal stored anything — rows=0
+PASS  a named submission lands 201 — status=201 {"evaluation":{"id":"b48ac2dc-785b-4f2d-ae19-60a935bbef85","employee_id":"demo-emp-omar","milestone_index":1,"milestone_due_date":"2026-09-1
+PASS  ...and the record names the manager and carries a timestamp — submitted_by=scratch submitted_at=2026-10-26T10:52:25.141Z
+PASS  ...and one audit row names the actor — {"action":"CREATE","performed_by":"scratch","entity_id":"b48ac2dc-785b-4f2d-ae19-60a935bbef85"}
+PASS  the milestone now reads `completed`, naming the manager and the moment — state=completed completion={"evaluation_id":"b48ac2dc-785b-4f2d-ae19-60a935bbef85","completed_at":"2026-10-26T10:52:25.141Z","completed_by":"scratch","milestone_due_date":"2026-09-19"}
+PASS  ...and only THAT milestone of that hire — completed=1
+PASS  a reading pinned before the submission does NOT show it completed — state=overdue
+PASS  a second submission for the same milestone is refused 409 — status=409 recorded_by=scratch
+PASS  ...and still exactly one row exists
+live product after: 200
+
+=== the guard, proved: the same probe pointed at the LIVE product database ===
+REFUSING: PRODUCT_DB_PATH is not the rig's own — /home/team/.data/antum-product.db
+exit=2
