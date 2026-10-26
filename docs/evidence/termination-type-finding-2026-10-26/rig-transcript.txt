@@ -1,0 +1,83 @@
+=== the permission cells this question turns on (read at the rig's tree) ===
+96:  'employees:write': [ROLES.HR_ADMIN],
+115:  'exit:write': [ROLES.HR_ADMIN],
+256:  ['POST', '/employees', 'employees:write'],
+257:  ['PUT', '/employees/:id', 'employees:write'],
+268:  ['POST', '/exit-interviews', 'exit:write'],
+rig tree: 2bd2f9dd7dfd70b30b95e27753eb02e08eaaf097 (the deployed tree)
+=== seed ===
+[DB] Upgraded: created index(es) idx_users_employee_id_unique
+--- Antum People Coherent Demo Seed v3.1 ---
+Targeting: Product-owned SQLite database
+Upserting demo employees...
+(node:19189) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+- Upserted Ahmad Al-Rashid (AE)
+- Upserted Fatima Al-Zahrani (SA)
+- Upserted Omar Al-Farsi (AE)
+- Upserted Leila Mansour (AE)
+- Upserted Khalid Al-Dosari (SA)
+- Upserted Hassan Al-Mansoori (AE)
+- Upserted Sarah Al-Qasimi (SA)
+- Upserted Lina Haddad (AE)
+- Upserted Mohammed Al-Sayed (AE)
+- Upserted Reem Al-Hashemi (SA)
+- Upserted Noura Al-Suwaidi (AE)
+- Upserted Salim Al-Nuaimi (AE)
+- Upserted Yusuf Hassan (AE)
+- Upserted Sultan Al-Harbi (SA)
+Upserting onboarding tasks...
+Upserting offboarding tasks...
+Upserting exit interviews...
+Upserting audit logs...
+Consent records: none seeded (decision 17 — no instrument, and nothing reads the table).
+Upserting Layer 2 pre-boarding demo cases...
+- Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-11-09) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started; notice shown for 0/4 collectible ()
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-27) — inside 48 hours with every item still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-25) — start date already passed, items still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+seed exit=0  db bytes=233472
+=== two throwaway accounts: one hr_admin, one compliance_viewer ===
+(node:19202) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ok
+accounts exit=0
+=== boot on port 4719 (never 3000) ===
+listener pid=19213 cwd=/tmp/rig-term/server
+no-token health probe: 401
+live product (must be 200): 200
+=== the probe ===
+login hr_admin: token | compliance_viewer: token
+roster 14; active 7; active AND termination_type null 7
+candidate A (PUT target): demo-emp-hassan active | candidate B (exit-interview target): demo-emp-mohammed active
+--- before, on a row the seeder did not flag ---
+A replacement-cost: {"status":200,"body":{"model":"replacement-cost/1","employee_id":"demo-emp-hassan","employee_name":"Hassan Al-Mansoori","role":"Software Developer","department":"Engineering","currency":"AED","as_of":"2026-10-26","trigger":null,"window":{"d
+--- the write the row asks about: termination_type through PUT /api/employees/:id ---
+PUT A {termination_type:"resignation"} as hr_admin: {"status":200,"body":{"message":"Employee updated"},"bytes":30}
+A replacement-cost after: {"status":200,"body":{"model":"replacement-cost/1","employee_id":"demo-emp-hassan","employee_name":"Hassan Al-Mansoori","role":"Software Developer","department":"Engineering","currency":"AED","as_of":"2026-10-26","trigger":{"key":"termination_flag","label":"Termination flag","detail":"status active, termination type resignation, no departure date recorded"},"window":{"departure_date":null,"replacement":null},"components":[{"key":"recruitment","label":"Recruitment","state":"calculated","value":10000,"reason":null,"inputs":{"recorded_recruitment_cost":10000},"basis":"recorded on the employee's own record"},{"key":"vacancy_cover","label":"Vacancy cover","state":"not_calculated","value":null,"re
+--- the gate: the same write without the permission, and without a token ---
+PUT A as compliance_viewer: {"status":403,"body":"","bytes":0}
+PUT A with NO token: {"status":401,"body":{"error":"Authentication token required"},"bytes":41}
+--- POST /api/exit-interviews: the route behind the unreachable modal ---
+POST exit-interviews on B: {"status":201,"body":{"id":"e762b716-33f2-4a9f-9618-1fb8a9296d95"},"bytes":45}
+B replacement-cost after: {"status":200,"body":{"model":"replacement-cost/1","employee_id":"demo-emp-mohammed","employee_name":"Mohammed Al-Sayed","role":"Project Manager","department":"Product","currency":"AED","as_of":"2026-10-26","trigger":{"key":"termination_flag","label":"Termination flag","detail":"status terminated, departure 2026-10-26"},"window":{"departure_date":"2026-10-26","replacement":null},"components":[{"key":"recruitment","label":"Recruitment","state":"calculated","value":9000,"reason":null,"inputs":{"re
+B row after the exit interview: status terminated | termination_type null | end_date 2026-10-26
+IDS demo-emp-hassan demo-emp-mohammed
+probe exit=0
+=== the rows and the audit trail, straight from the rig DB ===
+IDS: demo-emp-hassan demo-emp-mohammed
+(node:19446) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+A row: [{"id":"demo-emp-hassan","status":"active","termination_type":"resignation","end_date":null,"eosb_accrued":7847.32}]
+B row: [{"id":"demo-emp-mohammed","status":"terminated","termination_type":null,"end_date":"2026-10-26"}]
+audit rows for A: [{"performed_by":"scratch-hr","action":"UPDATE","entity_type":"employee","newv":"{\"termination_type\":\"resignation\"}","timestamp":"2026-10-26 10:02:57"}]
+audit rows for B: [{"n":0}]
+audit rows naming anyone, last 3: [{"performed_by":"scratch-hr","entity_type":"employee","action":"UPDATE","timestamp":"2026-10-26 10:02:57"},{"performed_by":"demo-seed","entity_type":"preboarding_case","action":"CREATE","timestamp":"2026-10-26 10:02:52"},{"performed_by":"demo-seed","entity_type":"preboarding_item","action":"STATUS","timestamp":"2026-10-26 10:02:52"}]
+dbcheck exit=0
+=== teardown ===
+killing 19213 (cwd=/tmp/rig-term/server)
+listeners on 4719 after: 0
+live product (must still be 200): 200
+rig tree removed: yes
+DONE
