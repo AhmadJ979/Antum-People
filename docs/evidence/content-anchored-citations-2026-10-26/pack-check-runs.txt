@@ -59,3 +59,23 @@ exit=1
 --- RUN 8 - after the README was rewritten cleanly and the manifest regenerated (2026-10-26) ---
 PACK OK - 11 files, 10 manifest lines
 exit=0
+
+--- RUN 9 - after the merge record and the three merged-tree controls (2026-10-26) ---
+PACK FAIL - 14 files, 13 manifest lines
+  A3-instrument-at-merged-tree.txt is not tracked by git
+  F3-check-all-at-merged-tree.txt is not tracked by git
+  S3-suite-at-merged-tree.txt is not tracked by git
+exit=1
+
+--- RUN 10 - after the merge-record commit, the same checker (2026-10-26) ---
+PACK OK - 14 files, 13 manifest lines
+exit=0
+
+--- RUN 11 - after the retirement proof was filed (2026-10-26) ---
+PACK FAIL - 15 files, 14 manifest lines
+  G-retirement-proof.txt is not tracked by git
+exit=1
+
+--- RUN 12 - after the retirement commit, the same checker (2026-10-26) ---
+PACK OK - 15 files, 14 manifest lines
+exit=0

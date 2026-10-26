@@ -75,6 +75,56 @@ runs rather than overwriting them: `E2-gate-test-at-pr-tip.txt`, `F2-check-all-n
 raw run is named for the revision it was taken at; a run that overwrites another cannot be compared with
 it.
 
+## Merge record - 2026-10-26
+
+**Merged as `1b56834aaa289cfbdca878a284974623ca1e441e`** (parents `f2c7b2b` + `3d2e78c`). **The merger
+deleted the branch**, so this record needed a new branch and its own PR: a merged PR reads no later commit,
+and re-pushing a deleted branch's name creates a ref that no PR carries. That is the second time this pack's
+own work has had to be landed that way.
+
+Measured **at the merged tree**, not carried over from the branch:
+
+| check | at the merged tree | file |
+|---|---|---|
+| the instrument | **`137/137`, exit 0**, hints stale=0 | `A3-instrument-at-merged-tree.txt` |
+| the merged tree's OWN `check-all --no-suite` | **exit 0**, 5 run / 7 skipped, one recorded RED-KNOWN, and its access-model line names `1b56834…` - the headline and the check agree | `F3-check-all-at-merged-tree.txt` |
+| the full suite | **308 tests / 51 suites / 308 pass / 0 fail** | `S3-suite-at-merged-tree.txt` |
+
+Blob equality between the reviewed head `3d2e78c` and the merged tree, so the merge carried exactly what was
+reviewed: `scripts/verify-access-model.py` `8f4a12036a6d`, `scripts/check-all.py` `bc8a27e240dc`,
+`server/access-model-instrument.test.js` `5eeb59c0bbad`, this README `358a79f7b75d`. The instrument's md5 at
+the merged tree is the same `909e998fcb7b2346094bd58608e48aae` every control above was taken against.
+
+### The host copy is still NOT retired - and that is measured, not predicted
+
+The **deployed tree is still `f2c7b2b`**, and its own `scripts/check-all.py:65` still reads
+`ACCESS_MODEL = "/home/team/shared/verify-access-model.py"`. So the change is merged but **not yet in what
+runs**: the deployed entry point still loads the host copy, which therefore stays at its path, unchanged
+(`62c7c2d412171c7c7e880c1daf143912`, mtime 2026-10-24). The retirement becomes due **when the deployed tree
+carries `1b56834`** - then move the host copy aside (never a pointer at that path) and re-check that
+`check-all` reports the access-model check from the repository. Until then, numbers quoted from the shared
+copy are the line-exact ones (control C).
+
+## Retirement executed - 2026-10-26
+
+**The host copy is retired, and the retirement is proved by the entry point rather than by an absence.**
+`/home/team/shared/verify-access-model.py` is gone; the old line-exact instrument sits at
+`/home/team/shared/retired/verify-access-model.py.2026-10-26-retired` (31,274 B, mtime 2026-10-24, md5
+`62c7c2d412171c7c7e880c1daf143912`) - **moved aside, never replaced by a pointer at the path**, which the
+deployed tree would have executed as the instrument.
+
+The condition the pack set was met by the environment, not by me: the deployed tree had moved to
+`ae85d4d`, whose first parent is the #298 merge `1b56834`, and whose own `scripts/check-all.py:67` reads
+`ACCESS_MODEL = os.path.join(HERE, "verify-access-model.py")`. Measured after the move:
+**`python3 scripts/check-all.py --only access-model` in the deployed tree → exit 0**, the access-model
+check judging revision `ae85d4d` and its own output naming the repository's instrument as the one that ran
+(`G-retirement-proof.txt`).
+
+Two things this section corrects rather than repeats: the earlier section above ("the host copy is still
+NOT retired") is the record of the state at the time it was written, and it was **another hand** that moved
+the file - when I went to do it, my `mv` found nothing to move, so what is mine here is the proof, not the
+move. Both facts are stated because a record that quietly changes tense is how a reader stops believing it.
+
 ## A byproduct, said out loud rather than folded in
 
 **`9148dee9` is closed by this change** — `check-all`'s headline named the tree it judged while the
@@ -110,7 +160,9 @@ line-exact behaviour — control C is exactly what it now does on a moved file.
 directions checked), `pack-check-runs.txt` (the log of its own runs), and the nine raw runs the table
 above names: `A-branch-tip.txt`, `B-shifted-this-instrument.txt`, `C-shifted-previous-instrument.txt`,
 `D-symbol-gone.txt`, `E-gate-test.txt`, `E1-gate-test-first-run-reddened.txt`,
-`E2-gate-test-at-pr-tip.txt`, `F-check-all-no-suite.txt`, `F2-check-all-no-suite-at-pr-tip.txt`.
+`E2-gate-test-at-pr-tip.txt`, `F-check-all-no-suite.txt`, `F2-check-all-no-suite-at-pr-tip.txt`,
+`A3-instrument-at-merged-tree.txt`, `F3-check-all-at-merged-tree.txt`, `S3-suite-at-merged-tree.txt`.
+`G-retirement-proof.txt` is filed with them.
 
 The checker and its run log are deliberately **not** in the manifest: they are about the pack, not part of
 it, and a file that records every run can never have a stable md5. `pack-check-runs.txt` holds this pack's
