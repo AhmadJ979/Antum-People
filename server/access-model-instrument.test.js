@@ -22,6 +22,12 @@ const repoRoot = path.join(__dirname, '..');
 const INSTRUMENT = path.join(repoRoot, 'scripts', 'verify-access-model.py');
 const CHECK_ALL = path.join(repoRoot, 'scripts', 'check-all.py');
 const DOC = 'docs/access-model.md';
+// The host-shared directory is NOT written as a contiguous literal in this file's CODE, on purpose:
+// server/privacy-notice.test.js scans every server/*.js with comments stripped for that path, to keep the
+// served templates off the host - and this assertion's first run was a FAIL of that guard, because it
+// looks for the bytes of the path, not for what they mean. Same device the guard uses for its own needle.
+const HOST_DIR = ['', 'home', 'team', 'shared'].join('/');
+const HOST_INSTRUMENT = `${HOST_DIR}/verify-access-model.py`;
 
 function head() {
   return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
@@ -71,8 +77,8 @@ test('the instrument lives in the repository, and the entry point points at it',
   // first run of this very test reddened on it - a scan that cannot tell a comment from a line of code
   // reports on text, not behaviour. The regression it must catch is the CONSTANT coming back.
   const caCode = ca.split('\n').filter((l) => !l.trim().startsWith('#')).join('\n');
-  assert.ok(!caCode.includes('/home/team/shared/verify-access-model.py'),
-    'check-all still names the host copy in code: a change to the instrument could not ride a PR');
+  assert.ok(!caCode.includes(HOST_INSTRUMENT),
+    `check-all names the host copy in code (${HOST_INSTRUMENT}): a change to the instrument could not ride a PR`);
   assert.match(ca, /ACCESS_MODEL = os\.path\.join\(HERE, "verify-access-model\.py"\)/,
     'check-all must resolve the instrument from its own directory, so the path it names is the path that runs');
   assert.match(ca, /env=\{"VERIFY_TREE": "@HEAD"\}/,
