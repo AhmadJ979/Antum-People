@@ -1,0 +1,145 @@
+verify-access-model.py
+  document      : docs/access-model.md
+  tree measured : origin/main
+  tree is       : 62665dc 2026-10-26 14:55:03 +0400 Merge pull request #306 from AhmadJ979/feat/probation-evaluations-p3-2
+
+OK   [gate comment] server/index.js:149
+OK   [gate mount] server/index.js:161
+OK   [login response carries the role] server/index.js:143
+OK   [the role claim in the token] server/auth.js:92
+OK   [the role table] server/access.js:73
+OK   [hr_admin exists] server/access.js:74
+OK   [compliance_viewer exists (five roles)] server/access.js:78
+OK   [the policy table] server/access.js:91
+OK   [roster cell: three roles] server/access.js:95
+OK   [the contradiction this document had, named for its owner] server/access.js:125
+OK   [the not-yet-expressible marks] server/access.js:155
+OK   [the counsel-pending marks] server/access.js:169
+OK   [all / reports / own] server/access.js:182
+OK   [the scope table] server/access.js:189
+OK   [a manager does not include self, asserted] server/access.js:193
+OK   [the field groups] server/access.js:213
+OK   [which role loses which group] server/access.js:224
+OK   [settlement documents only] server/access.js:235
+OK   [the route table] server/access.js:250
+OK   [scopeFor] server/access.js:357
+OK   [scopedAllows] server/access.js:365
+OK   [fieldsRemovedFor] server/access.js:373
+OK   [unpolicied check] server/access.js:390
+OK   [the gate] server/access.js:406
+OK   [the gate reads the role] server/access.js:417
+OK   [login route (public)] server/index.js:116
+OK   [the caller's link] server/index.js:180
+OK   [self / report / other, resolved] server/index.js:191
+OK   [the scope refusal helper] server/index.js:207
+OK   [one actor convention] server/index.js:214
+OK   [accounts list route] server/index.js:229
+OK   [accounts payload, no password hash] server/index.js:231
+OK   [account creation route] server/index.js:239
+OK   [unknown role is refused] server/index.js:249
+OK   [account creation is logged] server/index.js:280
+OK   [roster route] server/index.js:292
+OK   [the manager's line filter] server/index.js:308
+OK   [roster selects the whole row] server/index.js:314
+OK   [the field half of the cell] server/index.js:320
+OK   [decrypts only what is served] server/index.js:329
+OK   [create employee] server/index.js:347
+OK   [unnamed actor refused (400)] server/index.js:355
+OK   [employee create audit] server/index.js:398
+OK   [update employee] server/index.js:414
+OK   [unnamed actor refused (400)] server/index.js:422
+OK   [employee update audit] server/index.js:472
+OK   [onboarding read] server/index.js:491
+OK   [the read is scoped] server/index.js:495
+OK   [the tick route] server/index.js:511
+OK   [the tick refuses an unnamed actor] server/index.js:521
+OK   [offboarding read] server/index.js:532
+OK   [offboarding write] server/index.js:544
+OK   [eosb, stateless] server/index.js:560
+OK   [the notice route] server/index.js:569
+OK   [settlement documents] server/index.js:591
+OK   [which documents a role may render] server/index.js:598
+OK   [templates read one employee] server/index.js:603
+OK   [templates decrypt the national ID] server/index.js:606
+OK   [analytics route] server/index.js:663
+OK   [analytics reads the whole roster] server/index.js:670
+OK   [exit route] server/index.js:824
+OK   [exit terminates employment] server/index.js:847
+OK   [case creation] server/index.js:868
+OK   [case refuses an unnamed actor] server/index.js:875
+OK   [the case LIST] server/index.js:898
+OK   [ONE case] server/index.js:913
+OK   [the roll-up] server/index.js:941
+OK   [checklist] server/index.js:949
+OK   [workspace] server/index.js:962
+OK   [item status] server/index.js:973
+OK   [reminders] server/index.js:993
+OK   [acknowledgement route] server/index.js:1022
+OK   [package] server/index.js:1082
+OK   [package acknowledgement] server/index.js:1093
+OK   [flag watch] server/index.js:1113
+OK   [the module reads the actor] server/preboarding-items.js:360
+OK   [and REFUSES an unnamed one] server/preboarding-items.js:363
+OK   [users table] server/schema.sql:187
+OK   [username is unique] server/schema.sql:189
+OK   [the rename LANDED] server/schema.sql:191
+OK   [employee_id exists, nullable, last] server/schema.sql:193
+OK   [cases table] server/schema.sql:200
+OK   [case created_by] server/schema.sql:213
+OK   [the NOT NULL constraint] server/schema.sql:334
+OK   [constraints that cannot live in schema.sql] server/db.js:134
+OK   [one account per person, as an index] server/db.js:138
+OK   [partial, so NULL links stay legal] server/db.js:138
+OK   [why it is post-migration, not in schema.sql] server/db.js:124
+OK   [stale text] the superseded 15-resource count — survives only inside its own correction
+OK   [stale text] the superseded no-employee_id claim — survives only inside its own correction
+OK   [stale text] the superseded unlogged-account claim — survives only inside its own correction
+OK   [stale text] the citation that stopped at the rationale comment, not the refusal — survives only inside its own correction
+OK   [stale text] the citation that named the file's opening block for the rename — survives only inside its own correction
+OK   [stale text] the citation that started on the blank line above the block — survives only inside its own correction
+OK   [stale text] the citation that started on the SCOPES entry line, not the note — survives only inside its own correction
+OK   [stale text] the flat 'Nothing on this page is open' over-claim is absent (decision 26 is open)
+OK   [doc citation] index.js:875 — §5.2 rule 3 cites the refusal itself, not the comment above it
+OK   [doc citation] preboarding-items.js:360-364 — §5.1 cites the module's own actor read and its refusal
+OK   [doc citation] preboarding-items.js:517 — §3.2 cites where the projection's `note` field is written
+OK   [doc citation] access.js:67 — §2.4 cites where the rename is recorded, not the file's opening block
+OK   [doc citation] access.js:193-196 — §6.4 cites the whole note that names the manager's own-steps refusal
+OK   [doc citation] db.js:126-128 — §2.2 cites the clause that says why the unique index cannot live in schema.sql
+OK   [partition] §10.2's coverage table: distinct file:line sites — printed 47, recounted 47
+OK   [partition] §10.2's coverage table: compared as citations — printed 6, recounted 6
+OK   [partition] §10.2's coverage table: pinned only as tree claims — printed 32, recounted 32
+OK   [partition] §10.2's coverage table: in no check at all — printed 9, recounted 9
+OK   [measure] 17 resources (measured 17)
+OK   [measure] 29 routes declared (measured 29)
+OK   [measure] five roles exist (measured 5)
+OK   [measure] the list cell covers 1 route (measured 1)
+OK   [measure] the own cell covers 4 routes (measured 4)
+OK   [measure] the aggregate cell covers 2 derived reads (measured 2)
+OK   [measure] the three route sets are pairwise disjoint
+OK   [measure] no unpolicied route
+OK   [measure] access HAS widened: 17 cells are not admin-only
+OK   [measure] the own cell still excludes employee (the case link is missing)
+OK   [measure] a manager is refused the dashboard
+OK   [measure] no cell names an unknown role (measured 0)
+OK   [measure] an unstated scope refuses (scopedAllows(null, self) === false)
+OK   [measure] own does not reach another person (scopedAllows(own, other) === false)
+OK   [doc→tree] the document's resource count (17) == measured 17
+OK   [doc→tree] §2.1's role set ['compliance_viewer', 'employee', 'finance', 'hr_admin', 'manager'] == measured ['compliance_viewer', 'employee', 'finance', 'hr_admin', 'manager']
+OK   [doc→tree] §1.1's `preboarding:read` route count (1) == measured 1
+OK   [doc→tree] §1.1's `preboarding:read` cell ['hr_admin'] == measured ['hr_admin']
+OK   [doc→tree] §1.1's `preboarding:read:own` route count (4) == measured 4
+OK   [doc→tree] §1.1's `preboarding:read:own` cell ['hr_admin'] == measured ['hr_admin']
+OK   [doc→tree] §1.1's `preboarding:read:aggregate` route count (2) == measured 2
+OK   [doc→tree] §1.1's `preboarding:read:aggregate` cell ['compliance_viewer', 'hr_admin'] == measured ['compliance_viewer', 'hr_admin']
+OK   [doc→tree] the document says access widened; measured 17 non-admin cell(s)
+OK   [doc→tree] no LIVE claim that every cell is `[admin]` (found 0)
+OK   [doc→tree] the document carries its 10 `*(counsel)*` marks (found 10)
+OK   [doc→tree] every §8 item the code keys against exists in §8 ([3, 4, 5] ⊆ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+OK   [doc→tree] the document's ```sh blocks carry no `!` (history expansion kills them; found 0)
+OK   [doc id] §8 records every open owner decision the plan numbers, in the plan's own form — missing none (found [23, 24, 25, 26, 27])
+OK   [present] the rename is implemented as a migration (db.js RENAMES)
+OK   [present] the caller's employee_id IS read now (callerEmployeeId)
+OK   [empty] the module's own 'system' fallback is retired (requireActor, :198)
+
+
+137/137 checks hold against origin/main   (ran=137, fails=0, hints stale=0)
