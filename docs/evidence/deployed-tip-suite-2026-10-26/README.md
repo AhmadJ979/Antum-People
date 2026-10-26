@@ -71,6 +71,16 @@ above names: `01-suite-at-2bd2f9d.txt`, `02-suite-at-ae85d4d.txt`,
 The checker and its run log are deliberately **not** in the manifest: they are about the pack rather than
 part of it, and a file that records every run never has a stable md5.
 
+## Files in this pack
+
+`README.md` (this record), `manifest.txt` (the md5 of every frozen file), `pack-check.py` (the four
+directions checked) and `pack-check-runs.txt` (the log of its own runs), beside the five raw runs the table
+above names: `01-suite-at-2bd2f9d.txt`, `02-suite-at-ae85d4d.txt`,
+`03-doc-invariant-gates-at-2bd2f9d.txt`, `04-entry-point-at-2bd2f9d.txt`, `05-instrument-at-2bd2f9d.txt`.
+
+The checker and its run log are deliberately **not** in the manifest: they are about the pack rather than
+part of it, and a file that records every run never has a stable md5.
+
 ## What this pack does not prove
 
 - It judges the tree it names and nothing later: these runs read `2bd2f9d` and `ae85d4d`, not whatever

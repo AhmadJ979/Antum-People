@@ -10,3 +10,7 @@ PACK OK - 8 files, 7 manifest lines
 --- RUN 3 - after the README named its own files and the manifest was regenerated ---
 PACK OK - 7 files, 6 manifest lines
 exit=0
+
+--- RUN 3 - after the README named its own files and the manifest was regenerated ---
+PACK OK - 7 files, 6 manifest lines
+exit=0
