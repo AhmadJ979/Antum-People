@@ -361,3 +361,27 @@ completion.
   the citation re-grounding effort is estimated from P3-3's own, not measured for this change.
 - The rig's own roster is the **demo seed**, so its `manager_id`-less shape is the demo's, not a claim about
   a real client's data (defect (b) of row `3e66a47c`).
+
+---
+
+## 11. Re-grounded after #312 — measured on `main` = `8bd3ca0` (2026-10-26)
+
+This document was written against `0afe5ac` and merged as `452188b` (**PR #313**). **Nothing of it was
+touched by any later merge** (an empty `git diff --name-only 452188b..origin/main` over the spec and the
+pack, and every file's blob on `main` is byte-identical to the copy that was submitted). But `#312`
+(`8b4f681`, `fix/p3-3-movement-followups`) **landed under it** between the reading and the merge, and two
+rows of §2 are statements about a tree that has since moved. They are not false — §2 pins its revision —
+but a builder reading this on `main` must not treat them as current, so they are re-grounded here rather
+than left to be misread.
+
+| This document said (a reading at `0afe5ac`) | On `main` = `8bd3ca0` now |
+|---|---|
+| the escalation note printed `…with no submitted evaluation, while the app was not running (noticed 255.35h late)` — defect (a) of row `3e66a47c`, reproduced on the rig | **FIXED by `#312`.** The note now reads *"The deadline fell before this escalation watcher started; it was first seen `<timestamp>` (`<h>`h after the deadline)."*, and the code carries the rule: it is an observation about **this process**, never a claim that the app was down (*"an exception that lies is worse than none"*). **The build must not resurrect the old wording**, and §6's `correction_count` recommendation must not be argued from it. |
+| `0 of 14` seeded employees carry a `manager_id` — so P3-3's chain cannot be demonstrated and a manager sees an empty line | **FIXED in the seed by `#312`**: `scripts/seed-demo.js` now sets reporting lines. §2's row stands as a reading at `0afe5ac`; on today's demo the correction route's row scope **can** be demonstrated for a manager after a re-seed (decision 3 still applies — re-seed the morning of a demo). |
+| registered `/api` routes: **30** | **30**, unchanged — §8's `30 → 31` still holds. |
+| the 409 text and its payload | **unchanged** on `main` — the missing `evaluation_id` that §4b closes is still missing. |
+| the correction path | **still does not exist**: 0 hits for a corrections route in `server/access.js`, 0 for `probation_evaluation_corrections` in `server/schema.sql`. **This document is still the live decision**, and the build is still owed before P3-4. |
+
+2's pack transcripts are dated readings at `0afe5ac` and are left exactly as taken: re-running them on
+`main` would change two of their rows (`00`'s tree, `02`'s escalation note) and the honest record of *what
+was measured when* is worth more than a pack that quietly drifts to match today.
