@@ -1,0 +1,116 @@
+TAP version 13
+# Subtest: the design-concepts index check exists where it says it does (it cannot pass vacuously)
+ok 1 - the design-concepts index check exists where it says it does (it cannot pass vacuously)
+  ---
+  duration_ms: 1.07284
+  type: 'test'
+  ...
+# Subtest: the check is green, and runs BARE - the operator's form, with no arguments
+ok 2 - the check is green, and runs BARE - the operator's form, with no arguments
+  ---
+  duration_ms: 40.512196
+  type: 'test'
+  ...
+# Subtest: the name of the tree is the tree, not a claim: a copy with one row dropped must FAIL, naming the loss
+ok 3 - the name of the tree is the tree, not a claim: a copy with one row dropped must FAIL, naming the loss
+  ---
+  duration_ms: 58.551462
+  type: 'test'
+  ...
+# Subtest: the notice resolves from this repository
+    # Subtest: noticePath() is the repository copy, and it exists
+    ok 1 - noticePath() is the repository copy, and it exists
+      ---
+      duration_ms: 0.761856
+      type: 'test'
+      ...
+    # Subtest: the notice served is the repository copy byte for byte
+    ok 2 - the notice served is the repository copy byte for byte
+      ---
+      duration_ms: 1.226111
+      type: 'test'
+      ...
+    # Subtest: the version is read from the file served, never a literal in code
+    ok 3 - the version is read from the file served, never a literal in code
+      ---
+      duration_ms: 0.62668
+      type: 'test'
+      ...
+    # Subtest: every document the product offers resolves to a file in this repository
+    ok 4 - every document the product offers resolves to a file in this repository
+      ---
+      duration_ms: 0.251005
+      type: 'test'
+      ...
+    # Subtest: a caller cannot walk out of the template directory
+    ok 5 - a caller cannot walk out of the template directory
+      ---
+      duration_ms: 0.151459
+      type: 'test'
+      ...
+    1..5
+ok 4 - the notice resolves from this repository
+  ---
+  duration_ms: 3.886235
+  type: 'suite'
+  ...
+# Subtest: the host-shared directory is not a source any more
+    # Subtest: no module under server/ reads it
+    ok 1 - no module under server/ reads it
+      ---
+      duration_ms: 5.898586
+      type: 'test'
+      ...
+    1..1
+ok 5 - the host-shared directory is not a source any more
+  ---
+  duration_ms: 6.011586
+  type: 'suite'
+  ...
+# Subtest: the served notice states one version in all three places
+    # Subtest: the status line, the version header and the consent row agree
+    ok 1 - the status line, the version header and the consent row agree
+      ---
+      duration_ms: 0.464359
+      type: 'test'
+      ...
+    # Subtest: there is exactly one version header, so a later row cannot shadow it
+    ok 2 - there is exactly one version header, so a later row cannot shadow it
+      ---
+      duration_ms: 0.243321
+      type: 'test'
+      ...
+    1..2
+ok 6 - the served notice states one version in all three places
+  ---
+  duration_ms: 0.965948
+  type: 'suite'
+  ...
+# Subtest: the retired retention qualifier stays out of the content
+    # Subtest: no content line carries it, and its Arabic form is absent entirely
+    ok 1 - no content line carries it, and its Arabic form is absent entirely
+      ---
+      duration_ms: 0.485049
+      type: 'test'
+      ...
+    # Subtest: the version header may quote it, and that quotation is the record, not a defect
+    ok 2 - the version header may quote it, and that quotation is the record, not a defect
+      ---
+      duration_ms: 0.421569
+      type: 'test'
+      ...
+    1..2
+ok 7 - the retired retention qualifier stays out of the content
+  ---
+  duration_ms: 1.003166
+  type: 'suite'
+  ...
+1..7
+# tests 13
+# suites 4
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 268.337668
