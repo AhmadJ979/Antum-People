@@ -394,13 +394,15 @@ console.log(JSON.stringify(out));
         meas = m
         checks = [
             (m["resources"] == 17, f"17 resources (measured {m['resources']})"),
-            # 28 since 83a8b5e: P4-1 added GET /api/employees/:id/replacement-cost, P3-1 added `GET /api/probation/timelines`, mapped to the existing
-            # `employees:read` cell (docs/access-model.md §3.1). This number IS the route inventory the
+            # 29 since 62665dc (PR #306): P3-2 added `POST /api/employees/:id/probation-evaluations`, mapped to
+            # the existing `onboarding:write` cell (docs/access-model.md §3.1) — the §3.1 row moved with it, which is
+            # what this check requires. Before that, 28 since 83a8b5e: P4-1 added GET /api/employees/:id/replacement-cost and
+            # P3-1 added `GET /api/probation/timelines`, mapped to the existing `employees:read` cell (docs/access-model.md §3.1). This number IS the route inventory the
             # model was written for, so a route added without re-grounding the document reddens here —
             # which is what happened on 2026-10-22, when PR #287 landed a route and no §3 row, turning
             # this check from green (137/137 at 93de0bd) to red (80/137 at f4314d8) and check-all's
             # verdict to BROKEN. The row now exists and the number moves with it.
-            (m["routes"] == 28, f"28 routes declared (measured {m['routes']})"),
+            (m["routes"] == 29, f"29 routes declared (measured {m['routes']})"),
             (m["roles"] == 5, f"five roles exist (measured {m['roles']})"),
             (m["list"] == 1, f"the list cell covers 1 route (measured {m['list']})"),
             (m["own"] == 4, f"the own cell covers 4 routes (measured {m['own']})"),

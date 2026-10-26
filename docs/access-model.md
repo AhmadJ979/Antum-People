@@ -152,6 +152,7 @@ Every cell is a decision, and at `ca681dd` every cell below is the code. **`✔`
 | `PUT /api/offboarding-tasks/:id` (`:533`) | ✔ | ✖ | ✖ | ✖ | ✖ |
 | `GET /api/employees/:id/replacement-cost` (`:1084`) | ✔ (`all`) | **✖ — a report's pay by arithmetic (§4)** | ✔ (`all`) | ✔ (`own`) | ✖ |
 | `GET /api/probation/timelines` (`:1104`) | ✔ (`all`) | **✔ scoped `reports`** | ✔ (`all`) | **✖ (§6.1)** | ✖ |
+| `POST /api/employees/:id/probation-evaluations` (`:1257`) | ✔ (`all`) | **✔ scoped `reports`** | ✖ | ✖ | ✖ |
 
 **P3-1's probation timeline is a read over `employees`, and NOT a resource of its own** (`server/access.js`,
 the ROUTES entry for `GET /api/probation/timelines`; PR #287). Every date it returns is a function of
@@ -163,6 +164,15 @@ reading — a `probation:read` cell, which would also let a hire read their **ow
 fix that carries this row. **The route was appended at the end of the route list on purpose**: this file cites
 `file:line` for every route, and inserting in the middle moved 57 of the instrument's checks red.
 
+**P3-2's evaluation is a write on `onboarding:write`, and its ROW scope is narrower than its cell.**
+The route records the manager's submitted input for a probation milestone, and a milestone cannot be
+completed without it. `onboarding:write` is held by hr_admin (`all`) and manager (`reports`), and the
+route applies the `reports` scope to the hire the evaluation is *about*: a manager may submit only for a
+hire whose `manager_id` is their own record, and a hire cannot submit their own evaluation — the
+record's premise is that a manager wrote it. The narrower reading — a `probation:write` cell, which
+would also let a hire submit their own — is raised in PR #306's body rather than taken silently here.
+The route was appended at the end of the ROUTES list, for the reason the P3-1 paragraph gives: this file
+cites `file:line`, and inserting in the middle moves the instrument's checks.
 **P4-1's replacement cost is the one row in this table whose CELL is wider than its route's row
 scope.** `employees:read` lets a manager read their reports' records; the route refuses a manager
 there, because the figure prices the role's own daily salary and serving it would hand them a
