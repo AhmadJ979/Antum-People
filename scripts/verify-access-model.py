@@ -113,12 +113,12 @@ CLAIMS = [
     ("server/access.js", 224, "FIELD_RULES", "which role loses which group"),
     ("server/access.js", 235, "TEMPLATE_SCOPES", "settlement documents only"),
     ("server/access.js", 250, "const ROUTES", "the route table"),
-    ("server/access.js", 357, "function scopeFor", "scopeFor"),
-    ("server/access.js", 365, "function scopedAllows", "scopedAllows"),
-    ("server/access.js", 373, "function fieldsRemovedFor", "fieldsRemovedFor"),
-    ("server/access.js", 390, "function unpoliciedRoutes", "unpolicied check"),
-    ("server/access.js", 406, "function gate", "the gate"),
-    ("server/access.js", 417, "allowed.indexOf(req.user.access_role)", "the gate reads the role"),
+    ("server/access.js", 372, "function scopeFor", "scopeFor"),
+    ("server/access.js", 380, "function scopedAllows", "scopedAllows"),
+    ("server/access.js", 388, "function fieldsRemovedFor", "fieldsRemovedFor"),
+    ("server/access.js", 405, "function unpoliciedRoutes", "unpolicied check"),
+    ("server/access.js", 421, "function gate", "the gate"),
+    ("server/access.js", 432, "allowed.indexOf(req.user.access_role)", "the gate reads the role"),
     ("server/index.js", 116, "app.post('/api/login'", "login route (public)"),
     ("server/index.js", 180, "async function callerEmployeeId", "the caller's link"),
     ("server/index.js", 191, "async function relationTo", "self / report / other, resolved"),
@@ -216,6 +216,20 @@ DOC_CITATIONS = [
          "§6.4 cites the whole note that names the manager's own-steps refusal"),
         ("db.js:126-128", "server/db.js", "measured reason:",
          "§2.2 cites the clause that says why the unique index cannot live in schema.sql"),
+        # Added 2026-10-26 with P3-3 (row `bb60c7a3`): the §3.1 row for the escalation read. Before this,
+        # that row's citation was compared to nothing — the tree's own route count would redden if the
+        # route vanished, but the document's pointer to it could drift onto any other line in silence.
+        ("index.js:1320", "server/index.js", "app.get('/api/probation/escalations'",
+         "§3.1 cites the P3-3 escalation read route itself, not the comment block above it"),
+        # Added 2026-10-26 with the re-ground in §10.7. The ROUTES append moved every line below it by +15;
+        # these three sites were covered by a tree claim alone, so this page could drift onto any other line
+        # and only the tree would redden. One entry per site, the citation string verbatim as the page carries it.
+        ("access.js:372-323", "server/access.js", "function scopeFor",
+         "§2.1's scope-refusal row cites `scopeFor`, the function that returns null"),
+        ("access.js:380", "server/access.js", "function scopedAllows",
+         "§4 cites `scopedAllows` where a scope becomes a decision"),
+        ("access.js:432", "server/access.js", "allowed.indexOf(req.user.access_role)",
+         "§2.1, §4 and §9 cite the gate's role read itself"),
 ]
 
 def resolve(lines, needle, hint):
@@ -459,7 +473,10 @@ console.log(JSON.stringify(out));
         meas = m
         checks = [
             (m["resources"] == 17, f"17 resources (measured {m['resources']})"),
-            # 29 since 62665dc (PR #306): P3-2 added `POST /api/employees/:id/probation-evaluations`, mapped to
+            # 30 since this tree: P3-3 added `GET /api/probation/escalations`, mapped to the existing
+            # `employees:read` cell (docs/access-model.md §3.1, which carries its row in the same change
+            # — rule 41's count, published as 29 -> 30 rather than moved silently). Before that, 29 since
+            # 62665dc (PR #306): P3-2 added `POST /api/employees/:id/probation-evaluations`, mapped to
             # the existing `onboarding:write` cell (docs/access-model.md §3.1) — the §3.1 row moved with it, which is
             # what this check requires. Before that, 28 since 83a8b5e: P4-1 added GET /api/employees/:id/replacement-cost and
             # P3-1 added `GET /api/probation/timelines`, mapped to the existing `employees:read` cell (docs/access-model.md §3.1). This number IS the route inventory the
@@ -467,7 +484,7 @@ console.log(JSON.stringify(out));
             # which is what happened on 2026-10-22, when PR #287 landed a route and no §3 row, turning
             # this check from green (137/137 at 93de0bd) to red (80/137 at f4314d8) and check-all's
             # verdict to BROKEN. The row now exists and the number moves with it.
-            (m["routes"] == 29, f"29 routes declared (measured {m['routes']})"),
+            (m["routes"] == 30, f"30 routes declared (measured {m['routes']})"),
             (m["roles"] == 5, f"five roles exist (measured {m['roles']})"),
             (m["list"] == 1, f"the list cell covers 1 route (measured {m['list']})"),
             (m["own"] == 4, f"the own cell covers 4 routes (measured {m['own']})"),

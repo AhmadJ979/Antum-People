@@ -75,6 +75,12 @@ const STATES = Object.freeze(['upcoming', 'due', 'overdue', 'completed']);
 /** Parse a stored date (`YYYY-MM-DD`, or a timestamp) to UTC midnight, or null when unusable. */
 function toUtcDay(value) {
   if (value === null || value === undefined) return null;
+  // A `Date` IS accepted, because `options.now` is documented as `Date|string` and P3-3 passes one.
+  // It was not, until 2026-10-26: `String(date).slice(0,10)` is "Tue Oct 27", which fails the shape
+  // test below and fell through to TODAY — so a caller reading a pinned day silently read today's.
+  // Measured, not suspected: the P3-3 escalation suite's clock-injected case read the wrong day and
+  // nothing else noticed. The date is read in UTC, the unit every other comparison here uses.
+  if (value instanceof Date) return new Date(`${value.toISOString().slice(0, 10)}T00:00:00Z`);
   const day = String(value).slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
   const ms = Date.parse(`${day}T00:00:00Z`);
@@ -124,6 +130,14 @@ function milestoneOffsets(lengthDays) {
  *        a RECORDED, SUBMITTED evaluation (P3-2). Empty for a hire nobody has evaluated, and the
  *        reason `completed` is a state this module can express without storing anything itself: the
  *        route reads the submissions and hands them in.
+ * @param {boolean} [options.includeEnded]  read a window whose last day is BEHIND us as well, instead
+ *        of answering "no timeline" for it. Default FALSE, so every existing caller — the route, the
+ *        screen — reads exactly what it read before. It exists for the ONE question that is about the
+ *        past: *"did this milestone pass its deadline?"* (P3-3). A window that has ended can only be
+ *        asked that question with this on, and the LAST milestone is the window's own end date — so
+ *        without it, the milestone the probation deadline names would be the one milestone no
+ *        escalation could ever see. That is measured, not assumed: see the P3-3 suite's
+ *        "the final milestone" case, and server/probation-escalation.js.
  * @returns {null | {start_date, end_date, length_days, milestones: Array}}
  */
 function milestonesFor(employee, options = {}) {
@@ -137,7 +151,9 @@ function milestonesFor(employee, options = {}) {
   // A probation whose last day is behind us is over, and the row's acceptance says it produces no
   // timeline. Checked HERE, against the same `today` the states are read with, so "is it over" and
   // "what state is each milestone in" can never be answered against two different days.
-  if (wholeDays(today, toUtcDay(window.end_date)) < 0) return null;
+  // `includeEnded` is the one caller that needs the opposite: a question about whether a deadline was
+  // MISSED is a question about the past, and a window that has ended is where the answer lives.
+  if (!options.includeEnded && wholeDays(today, toUtcDay(window.end_date)) < 0) return null;
 
   const milestones = milestoneOffsets(window.length_days).map((offset, index) => {
     const due = addDays(start, offset);

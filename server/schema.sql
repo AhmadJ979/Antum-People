@@ -400,3 +400,39 @@ CREATE TABLE IF NOT EXISTS probation_evaluations (
   UNIQUE (employee_id, milestone_index)
 );
 CREATE INDEX IF NOT EXISTS idx_probation_evaluations_employee ON probation_evaluations (employee_id);
+
+-- Layer 3 / P3-3 (row `bb60c7a3`) — the escalation that fired when a probation milestone passed its
+-- deadline with no submitted evaluation. This is the ONE stored thing in the probation chain.
+--
+-- The milestone dates are derived on read (P3-1) and the completion state is a submitted evaluation
+-- (P3-2), so neither is stored here again. What cannot be derived is the ACT: "the system noticed, at
+-- this instant, and addressed this to these people". A deadline can be derived any day; WHO was told
+-- and WHEN cannot, and a re-derived answer would quietly rewrite history every time a manager changes
+-- job. So the reporting line is copied in AS RESOLVED AT FIRING TIME, and so is the milestone's own
+-- due date the escalation is about.
+--
+-- `UNIQUE (employee_id, milestone_index)` is the idempotence guarantee, and it is durable on purpose:
+-- an in-process "already seen this one" set is gone on restart, so a host that restarts twice in one
+-- morning would escalate the same missed milestone twice. The unique key makes the second attempt a
+-- no-op that the writer can DETECT (INSERT OR IGNORE, then read the row back and compare ids).
+CREATE TABLE IF NOT EXISTS probation_escalations (
+  id TEXT PRIMARY KEY,
+  employee_id TEXT NOT NULL,
+  employee_name TEXT NOT NULL,
+  milestone_index INTEGER NOT NULL,
+  milestone_day INTEGER NOT NULL,
+  milestone_due_date TEXT NOT NULL,
+  deadline_at TEXT NOT NULL,
+  detected_at TEXT NOT NULL,
+  late INTEGER NOT NULL DEFAULT 0,
+  late_by_hours REAL,
+  reporting_line TEXT NOT NULL,
+  reporting_line_missing TEXT,
+  channel TEXT NOT NULL DEFAULT 'none',
+  fired_by TEXT NOT NULL,
+  note TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (employee_id, milestone_index)
+);
+CREATE INDEX IF NOT EXISTS idx_probation_escalations_employee ON probation_escalations (employee_id);
+CREATE INDEX IF NOT EXISTS idx_probation_escalations_detected ON probation_escalations (detected_at);
