@@ -1,0 +1,48 @@
+TAP version 13
+# Subtest: the instrument lives in the repository, and the entry point points at it
+not ok 1 - the instrument lives in the repository, and the entry point points at it
+  ---
+  duration_ms: 1.375339
+  type: 'test'
+  location: '/tmp/wt-instr/server/access-model-instrument.test.js:67:1'
+  failureType: 'testCodeFailure'
+  error: 'check-all still names the host copy: a change to the instrument could not ride a PR'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/tmp/wt-instr/server/access-model-instrument.test.js:70:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: green at this tree, and the headline names the tree it judged
+ok 2 - green at this tree, and the headline names the tree it judged
+  ---
+  duration_ms: 231.208484
+  type: 'test'
+  ...
+# Subtest: a line that merely MOVED does not redden it - the control that must NOT fire
+ok 3 - a line that merely MOVED does not redden it - the control that must NOT fire
+  ---
+  duration_ms: 524.15937
+  type: 'test'
+  ...
+# Subtest: a symbol that is GONE does redden it, and the denominator stays whole - the control that MUST fire
+ok 4 - a symbol that is GONE does redden it, and the denominator stays whole - the control that MUST fire
+  ---
+  duration_ms: 283.393014
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 3
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1123.2296

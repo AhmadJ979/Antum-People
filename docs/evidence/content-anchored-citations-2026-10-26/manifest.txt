@@ -1,0 +1,8 @@
+99857ab6a71d741ad7287db18d0b71fb  A-branch-tip.txt
+6a5326e908810da780e79519cd81d3d7  B-shifted-this-instrument.txt
+65bca82bb3cf5783c56e50bcfdd2d865  C-shifted-previous-instrument.txt
+87ec6378ab2a36d35bba5671a84f30dd  D-symbol-gone.txt
+a65fd2d456b79f7c7cf350695a6b6552  E-gate-test.txt
+4e0fd433077e07283dc216577b838761  E1-gate-test-first-run-reddened.txt
+d0473d8f754f4ea80a5fa8e95366ef00  F-check-all-no-suite.txt
+e90ae76383c556fc25f3f136209ef6c9  README.md

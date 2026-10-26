@@ -1,0 +1,201 @@
+verify-access-model.py
+  document      : docs/access-model.md
+  tree measured : 052a4ae1c38bd349271015d08c71ac1ce8d0d52e
+  tree is       : 052a4ae 2026-10-26 08:16:15 +0000 synthetic: 7 lines inserted at the top of server/index.js
+
+OK   [gate comment] server/index.js:145  (hint 138 is stale)
+OK   [gate mount] server/index.js:157  (hint 150 is stale)
+OK   [login response carries the role] server/index.js:139  (hint 132 is stale)
+OK   [the role claim in the token] server/auth.js:92
+OK   [the role table] server/access.js:73
+OK   [hr_admin exists] server/access.js:74
+OK   [compliance_viewer exists (five roles)] server/access.js:78
+OK   [the policy table] server/access.js:91
+OK   [roster cell: three roles] server/access.js:95
+OK   [the contradiction this document had, named for its owner] server/access.js:125
+OK   [the not-yet-expressible marks] server/access.js:155
+OK   [the counsel-pending marks] server/access.js:169
+OK   [all / reports / own] server/access.js:182
+OK   [the scope table] server/access.js:189
+OK   [a manager does not include self, asserted] server/access.js:193
+OK   [the field groups] server/access.js:213
+OK   [which role loses which group] server/access.js:224
+OK   [settlement documents only] server/access.js:235
+OK   [the route table] server/access.js:250
+OK   [scopeFor] server/access.js:343
+OK   [scopedAllows] server/access.js:351
+OK   [fieldsRemovedFor] server/access.js:359
+OK   [unpolicied check] server/access.js:376
+OK   [the gate] server/access.js:392
+OK   [the gate reads the role] server/access.js:403
+OK   [login route (public)] server/index.js:112  (hint 105 is stale)
+OK   [the caller's link] server/index.js:176  (hint 169 is stale)
+OK   [self / report / other, resolved] server/index.js:187  (hint 180 is stale)
+OK   [the scope refusal helper] server/index.js:203  (hint 196 is stale)
+OK   [one actor convention] server/index.js:210  (hint 203 is stale)
+OK   [accounts list route] server/index.js:225  (hint 218 is stale)
+OK   [accounts payload, no password hash] server/index.js:227  (hint 221 is stale)
+OK   [account creation route] server/index.js:235  (hint 228 is stale)
+OK   [unknown role is refused] server/index.js:245  (hint 238 is stale)
+OK   [account creation is logged] server/index.js:276  (hint 269 is stale)
+OK   [roster route] server/index.js:288  (hint 281 is stale)
+OK   [the manager's line filter] server/index.js:304  (hint 297 is stale)
+OK   [roster selects the whole row] server/index.js:310  (hint 303 is stale)
+OK   [the field half of the cell] server/index.js:316  (hint 309 is stale)
+OK   [decrypts only what is served] server/index.js:325  (hint 318 is stale)
+OK   [create employee] server/index.js:343  (hint 336 is stale)
+OK   [unnamed actor refused (400)] server/index.js:351  (hint 344 is stale)
+OK   [employee create audit] server/index.js:394  (hint 387 is stale)
+OK   [update employee] server/index.js:410  (hint 403 is stale)
+OK   [unnamed actor refused (400)] server/index.js:418  (hint 411 is stale)
+OK   [employee update audit] server/index.js:468  (hint 461 is stale)
+OK   [onboarding read] server/index.js:487  (hint 480 is stale)
+OK   [the read is scoped] server/index.js:491  (hint 484 is stale)
+OK   [the tick route] server/index.js:507  (hint 500 is stale)
+OK   [the tick refuses an unnamed actor] server/index.js:517  (hint 510 is stale)
+OK   [offboarding read] server/index.js:528  (hint 521 is stale)
+OK   [offboarding write] server/index.js:540  (hint 533 is stale)
+OK   [eosb, stateless] server/index.js:556  (hint 549 is stale)
+OK   [the notice route] server/index.js:565  (hint 558 is stale)
+OK   [settlement documents] server/index.js:587  (hint 580 is stale)
+OK   [which documents a role may render] server/index.js:594  (hint 588 is stale)
+OK   [templates read one employee] server/index.js:599  (hint 592 is stale)
+OK   [templates decrypt the national ID] server/index.js:602  (hint 595 is stale)
+OK   [analytics route] server/index.js:659  (hint 652 is stale)
+OK   [analytics reads the whole roster] server/index.js:666  (hint 659 is stale)
+OK   [exit route] server/index.js:812  (hint 805 is stale)
+OK   [exit terminates employment] server/index.js:818  (hint 811 is stale)
+OK   [case creation] server/index.js:829  (hint 822 is stale)
+OK   [case refuses an unnamed actor] server/index.js:836  (hint 829 is stale)
+OK   [the case LIST] server/index.js:859  (hint 852 is stale)
+OK   [ONE case] server/index.js:874  (hint 867 is stale)
+OK   [the roll-up] server/index.js:902  (hint 895 is stale)
+OK   [checklist] server/index.js:910  (hint 903 is stale)
+OK   [workspace] server/index.js:923  (hint 916 is stale)
+OK   [item status] server/index.js:934  (hint 927 is stale)
+OK   [reminders] server/index.js:954  (hint 947 is stale)
+OK   [acknowledgement route] server/index.js:983  (hint 976 is stale)
+OK   [package] server/index.js:1043  (hint 1036 is stale)
+OK   [package acknowledgement] server/index.js:1054  (hint 1047 is stale)
+OK   [flag watch] server/index.js:1074  (hint 1067 is stale)
+OK   [the module reads the actor] server/preboarding-items.js:360
+OK   [and REFUSES an unnamed one] server/preboarding-items.js:363
+OK   [users table] server/schema.sql:187
+OK   [username is unique] server/schema.sql:189
+OK   [the rename LANDED] server/schema.sql:191
+OK   [employee_id exists, nullable, last] server/schema.sql:193
+OK   [cases table] server/schema.sql:200
+OK   [case created_by] server/schema.sql:213
+OK   [the NOT NULL constraint] server/schema.sql:334
+OK   [constraints that cannot live in schema.sql] server/db.js:134
+OK   [one account per person, as an index] server/db.js:138
+OK   [partial, so NULL links stay legal] server/db.js:138
+OK   [why it is post-migration, not in schema.sql] server/db.js:124
+OK   [stale text] the superseded 15-resource count — survives only inside its own correction
+OK   [stale text] the superseded no-employee_id claim — survives only inside its own correction
+OK   [stale text] the superseded unlogged-account claim — survives only inside its own correction
+OK   [stale text] the citation that stopped at the rationale comment, not the refusal — survives only inside its own correction
+OK   [stale text] the citation that named the file's opening block for the rename — survives only inside its own correction
+OK   [stale text] the citation that started on the blank line above the block — survives only inside its own correction
+OK   [stale text] the citation that started on the SCOPES entry line, not the note — survives only inside its own correction
+OK   [stale text] the flat 'Nothing on this page is open' over-claim is absent (decision 26 is open)
+OK   [doc citation] index.js:829 — §5.2 rule 3 cites the refusal itself, not the comment above it  (cited line 829 is stale; resolves at :836)
+OK   [doc citation] preboarding-items.js:360-364 — §5.1 cites the module's own actor read and its refusal
+OK   [doc citation] preboarding-items.js:517 — §3.2 cites where the projection's `note` field is written
+OK   [doc citation] access.js:67 — §2.4 cites where the rename is recorded, not the file's opening block
+OK   [doc citation] access.js:193-196 — §6.4 cites the whole note that names the manager's own-steps refusal
+OK   [doc citation] db.js:126-128 — §2.2 cites the clause that says why the unique index cannot live in schema.sql
+OK   [partition] §10.2's coverage table: distinct file:line sites — printed 47, recounted 47
+OK   [partition] §10.2's coverage table: compared as citations — printed 6, recounted 6
+OK   [partition] §10.2's coverage table: pinned only as tree claims — printed 31, recounted 31
+OK   [partition] §10.2's coverage table: in no check at all — printed 10, recounted 10
+OK   [measure] 17 resources (measured 17)
+OK   [measure] 28 routes declared (measured 28)
+OK   [measure] five roles exist (measured 5)
+OK   [measure] the list cell covers 1 route (measured 1)
+OK   [measure] the own cell covers 4 routes (measured 4)
+OK   [measure] the aggregate cell covers 2 derived reads (measured 2)
+OK   [measure] the three route sets are pairwise disjoint
+OK   [measure] no unpolicied route
+OK   [measure] access HAS widened: 17 cells are not admin-only
+OK   [measure] the own cell still excludes employee (the case link is missing)
+OK   [measure] a manager is refused the dashboard
+OK   [measure] no cell names an unknown role (measured 0)
+OK   [measure] an unstated scope refuses (scopedAllows(null, self) === false)
+OK   [measure] own does not reach another person (scopedAllows(own, other) === false)
+OK   [doc→tree] the document's resource count (17) == measured 17
+OK   [doc→tree] §2.1's role set ['compliance_viewer', 'employee', 'finance', 'hr_admin', 'manager'] == measured ['compliance_viewer', 'employee', 'finance', 'hr_admin', 'manager']
+OK   [doc→tree] §1.1's `preboarding:read` route count (1) == measured 1
+OK   [doc→tree] §1.1's `preboarding:read` cell ['hr_admin'] == measured ['hr_admin']
+OK   [doc→tree] §1.1's `preboarding:read:own` route count (4) == measured 4
+OK   [doc→tree] §1.1's `preboarding:read:own` cell ['hr_admin'] == measured ['hr_admin']
+OK   [doc→tree] §1.1's `preboarding:read:aggregate` route count (2) == measured 2
+OK   [doc→tree] §1.1's `preboarding:read:aggregate` cell ['compliance_viewer', 'hr_admin'] == measured ['compliance_viewer', 'hr_admin']
+OK   [doc→tree] the document says access widened; measured 17 non-admin cell(s)
+OK   [doc→tree] no LIVE claim that every cell is `[admin]` (found 0)
+OK   [doc→tree] the document carries its 10 `*(counsel)*` marks (found 10)
+OK   [doc→tree] every §8 item the code keys against exists in §8 ([3, 4, 5] ⊆ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+OK   [doc→tree] the document's ```sh blocks carry no `!` (history expansion kills them; found 0)
+OK   [doc id] §8 records every open owner decision the plan numbers, in the plan's own form — missing none (found [23, 24, 25, 26, 27])
+OK   [present] the rename is implemented as a migration (db.js RENAMES)
+OK   [present] the caller's employee_id IS read now (callerEmployeeId)
+OK   [empty] the module's own 'system' fallback is retired (requireActor, :198)
+
+HINT DRIFT - 53 of 88 claim hints and 1 of 6 doc citations no longer name the line the symbol is on (worst 7 lines). NOT a verdict: a line number is a hint, the assertion is that the symbol resolves.
+    server/index.js: hint 138 -> resolves at 145   [gate comment]
+    server/index.js: hint 150 -> resolves at 157   [gate mount]
+    server/index.js: hint 132 -> resolves at 139   [login response carries the role]
+    server/index.js: hint 105 -> resolves at 112   [login route (public)]
+    server/index.js: hint 169 -> resolves at 176   [the caller's link]
+    server/index.js: hint 180 -> resolves at 187   [self / report / other, resolved]
+    server/index.js: hint 196 -> resolves at 203   [the scope refusal helper]
+    server/index.js: hint 203 -> resolves at 210   [one actor convention]
+    server/index.js: hint 218 -> resolves at 225   [accounts list route]
+    server/index.js: hint 221 -> resolves at 227   [accounts payload, no password hash]
+    server/index.js: hint 228 -> resolves at 235   [account creation route]
+    server/index.js: hint 238 -> resolves at 245   [unknown role is refused]
+    server/index.js: hint 269 -> resolves at 276   [account creation is logged]
+    server/index.js: hint 281 -> resolves at 288   [roster route]
+    server/index.js: hint 297 -> resolves at 304   [the manager's line filter]
+    server/index.js: hint 303 -> resolves at 310   [roster selects the whole row]
+    server/index.js: hint 309 -> resolves at 316   [the field half of the cell]
+    server/index.js: hint 318 -> resolves at 325   [decrypts only what is served]
+    server/index.js: hint 336 -> resolves at 343   [create employee]
+    server/index.js: hint 344 -> resolves at 351   [unnamed actor refused (400)]
+    server/index.js: hint 387 -> resolves at 394   [employee create audit]
+    server/index.js: hint 403 -> resolves at 410   [update employee]
+    server/index.js: hint 411 -> resolves at 418   [unnamed actor refused (400)]
+    server/index.js: hint 461 -> resolves at 468   [employee update audit]
+    server/index.js: hint 480 -> resolves at 487   [onboarding read]
+    server/index.js: hint 484 -> resolves at 491   [the read is scoped]
+    server/index.js: hint 500 -> resolves at 507   [the tick route]
+    server/index.js: hint 510 -> resolves at 517   [the tick refuses an unnamed actor]
+    server/index.js: hint 521 -> resolves at 528   [offboarding read]
+    server/index.js: hint 533 -> resolves at 540   [offboarding write]
+    server/index.js: hint 549 -> resolves at 556   [eosb, stateless]
+    server/index.js: hint 558 -> resolves at 565   [the notice route]
+    server/index.js: hint 580 -> resolves at 587   [settlement documents]
+    server/index.js: hint 588 -> resolves at 594   [which documents a role may render]
+    server/index.js: hint 592 -> resolves at 599   [templates read one employee]
+    server/index.js: hint 595 -> resolves at 602   [templates decrypt the national ID]
+    server/index.js: hint 652 -> resolves at 659   [analytics route]
+    server/index.js: hint 659 -> resolves at 666   [analytics reads the whole roster]
+    server/index.js: hint 805 -> resolves at 812   [exit route]
+    server/index.js: hint 811 -> resolves at 818   [exit terminates employment]
+    server/index.js: hint 822 -> resolves at 829   [case creation]
+    server/index.js: hint 829 -> resolves at 836   [case refuses an unnamed actor]
+    server/index.js: hint 852 -> resolves at 859   [the case LIST]
+    server/index.js: hint 867 -> resolves at 874   [ONE case]
+    server/index.js: hint 895 -> resolves at 902   [the roll-up]
+    server/index.js: hint 903 -> resolves at 910   [checklist]
+    server/index.js: hint 916 -> resolves at 923   [workspace]
+    server/index.js: hint 927 -> resolves at 934   [item status]
+    server/index.js: hint 947 -> resolves at 954   [reminders]
+    server/index.js: hint 976 -> resolves at 983   [acknowledgement route]
+    server/index.js: hint 1036 -> resolves at 1043   [package]
+    server/index.js: hint 1047 -> resolves at 1054   [package acknowledgement]
+    server/index.js: hint 1067 -> resolves at 1074   [flag watch]
+    cited index.js:829 -> resolves at :836   [§5.2 rule 3 cites the refusal itself, not the comment above it]
+    Re-grounding these is a documentation act, not a fix; nothing is wrong with the tree.
+
+137/137 checks hold against 052a4ae1c38bd349271015d08c71ac1ce8d0d52e   (ran=137, fails=0, hints stale=54)
