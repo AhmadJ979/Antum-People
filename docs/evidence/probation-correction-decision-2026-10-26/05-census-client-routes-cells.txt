@@ -1,0 +1,60 @@
+CENSUS at origin/main = 0afe5ac949b092ac08dc63541ccf0cfdd9aab209   (worktree /tmp/r78/main, detached)
+date -u: Mon Oct 26 15:25:04 UTC 2026
+
+--- client callers of the evaluation route (grep -rn 'probation-evaluations' client/src) ---
+hits: 0
+
+--- client callers of the escalation route (grep -rn 'escalation' client/src) ---
+hits: 0
+
+--- client caller of the timeline route ---
+client/src/probationTimeline.js:4: * The dates are NOT computed here. `GET /api/probation/timelines` returns each milestone's `day`,
+client/src/App.tsx:741:        callPanel('probation', `${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`,
+client/src/App.tsx:742:          authedFetch(`${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`))
+
+--- registered /api routes in server/access.js ROUTES ---
+count: 30
+297:  ['GET', '/probation/timelines', 'employees:read'],
+311:  ['POST', '/employees/:id/probation-evaluations', 'onboarding:write'],
+340:  ['GET', '/probation/escalations', 'employees:read'],
+
+--- callers of the evaluation module's functions ---
+server/index.js:1230:    const completionsByEmployee = await probationEvaluations.completionsFor(rows.map((row) => row.id), { asOf });
+server/index.js:1261:    const subject = await probationEvaluations.loadSubject(req.params.id);
+server/index.js:1270:    const { evaluation, milestone } = await probationEvaluations.recordEvaluation(subject, req.body, { actor });
+server/index.js:1273:    if (err instanceof probationEvaluations.ProbationEvaluationError) {
+server/probation-escalation.js:190:  const completionsByEmployee = await probationEvaluations.completionsFor(rows.map((row) => row.id));
+
+--- the route's cell ---
+  // Mapped to `onboarding:write` — HR_ADMIN and MANAGER — and NOT to a resource of its own, the same
+  // call P3-1 made for the read above: a new cell would mean a new resource in the matrix
+  // docs/access-model.md (§3) mirrors, and that document is validated by a 137-check instrument outside
+  // this file. What that buys is the right audience: the manager's own input about a hire is what an
+  // evaluation IS, and HR keeps the company-wide half.
+  //
+  // The ROW scope is applied in the route and is NARROWER than the role: a caller who is not
+  // company-wide may submit only for a hire whose `manager_id` is their own record, so a manager cannot
+  // write into another manager's line, and a hire cannot submit their own evaluation — the record's
+  // premise is that a MANAGER wrote it. The narrower reading — a `probation:write` cell, which would
+  // also let a hire submit their own — is raised in the PR body rather than taken silently here.
+  ['POST', '/employees/:id/probation-evaluations', 'onboarding:write'],
+  // Layer 4 / P4-1 — the replacement cost of a seat (backlog row `051870f5`).
+  //
+
+--- reachability register entry for the evaluation route ---
+33:  'POST /api/employees/:id/probation-evaluations': {
+34-    route: 'server/index.js:1257',
+35-    why: 'P3-2 ships the submission path over HTTP while the form that will call it is the probation '
+36-       + 'screen\'s next slice: the route is reachable by path and is exercised end to end by '
+37:       + 'server/probation-evaluations.test.js, and no click in the product posts to it yet. '
+38-       + 'Deliberate and tested, not an orphan.',
+39-    owner: 'decision 21 (leave it and say so) - the submission surface arrives with the P3-3/P3-4 '
+40-       + 'slices of row `69dbf57d`, and until it does this entry is what says so out loud',
+41-  },
+42-  'POST /api/compliance/calculate-eosb': {
+43-    route: 'server/index.js:335',
+44-    why: 'A pure EOSB calculator over the request body. The product computes EOSB server-side for the '
+
+--- the 409 refusal's payload keys, from the rig probe ---
+body: {"error":"milestone 1 already has a submitted evaluation — recorded by scratch-hr at 2026-10-26T15:21:58.870Z","recorded_by":"scratch-hr","recorded_at":"2026-10-26T15:21:58.870Z"}
+

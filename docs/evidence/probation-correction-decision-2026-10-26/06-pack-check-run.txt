@@ -1,0 +1,36 @@
+# pack-check.py — run at Mon Oct 26 15:29:35 UTC 2026 against the spec in this tree (main = 0afe5ac)
+# command: python3 docs/evidence/probation-correction-decision-2026-10-26/check-pack.py .
+# Runs 1 and 2 were the checker's own defects (a hard-coded claim set that never read the spec, then
+# three mis-parsed extraction patterns); this is the run after both were fixed. See 07 for the falsification.
+
+PASS  the tree the spec names is the tree 00 measured
+PASS  the 409 status and size the spec quotes are the ones measured
+PASS  the spec says the 409 payload has no evaluation_id, and the transcript agrees
+PASS  the correction attempt the spec quotes is the one measured
+PASS  the control the spec describes is in the transcript
+PASS  the ended-window refusal the spec quotes is the one measured
+PASS  the not-yet-due acceptance the spec quotes is the one measured
+PASS  the escalation-keeps-its-row claim matches the transcript
+PASS  the manager_id count, the roster size and the window count the spec quotes are the ones measured
+PASS  the two evaluations / two audit rows / none for the 409 claim matches the transcript
+PASS  exactly one evaluation row exists for the milestone whose second submission was refused
+PASS  the table delta the spec quotes is the one measured
+PASS  the dump md5 prefixes the spec quotes are the ones measured
+PASS  the "unchanged by the proposal" claim matches the transcript
+PASS  the control ("the tree's own schema.sql adds nothing") matches the transcript
+PASS  the as_of-before-the-corrections claim matches the transcript
+PASS  the client-caller counts the spec quotes are the ones measured
+PASS  the registered-route count the spec quotes is the one measured
+PASS  the build's route count is the measured one plus one
+PASS  the timeline-route caller and the no-caller fact are in the census the spec cites
+PASS  the escalation-note sentence the spec reproduces is in the transcript
+PASS  the spec keeps: specified, not observed
+PASS  the spec keeps: What was NOT measured
+PASS  the spec keeps: What this document does not decide
+PASS  the spec keeps: The two shapes this decision rejects
+PASS  the spec keeps: A reason is required
+PASS  the section sign survived (the spec cites sections)
+PASS  the pack README names every file in the pack
+
+ALL CHECKS PASS (of 28)
+exit code: 0

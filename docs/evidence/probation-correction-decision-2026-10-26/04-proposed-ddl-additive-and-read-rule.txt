@@ -1,0 +1,31 @@
+=== the copy this runs against ===
+copy of /tmp/r78/rig/corr.db -> /tmp/r78/rig/additive.db
+tables before: 19 | includes probation_evaluation_corrections: false
+probation_evaluations rows: 2  dump md5 91a83713a47dd9846712d59dbc2ee91d
+audit_logs rows: 26  dump md5 05bdba7c64e079923abba01aaaa16942
+
+=== CONTROL: applying the tree's OWN schema.sql to this existing DB changes nothing ===
+tables after schema.sql: 19 | identical list: true
+new correction table present: false   <- expected false: the table is the proposal, not the tree
+probation_evaluations dump unchanged: true  audit_logs unchanged: true
+
+=== the proposed DDL against the same existing database ===
+tables after the proposal: 20 (was 19)
+added: probation_evaluation_corrections
+columns of the new table: id, evaluation_id, employee_id, milestone_index, content, reason, corrected_by, corrected_at, created_at
+indexes: idx_probation_evaluation_corrections_employee, idx_probation_evaluation_corrections_evaluation
+probation_evaluations dump unchanged: true  audit_logs unchanged: true
+second application is a no-op: true
+
+=== the read rule, in SQL, over real evaluations ===
+the evaluation being corrected: {"id":"fbc4fd54-e9b4-43c5-a4c3-1344887f2615","employee_id":"demo-emp-ahmad","milestone_index":1,"content":"A1-original: performance on track, one coaching note."}
+correction rows for this evaluation: 2
+EFFECTIVE content (newest correction wins): {"content":"A1-corrected again: quarter now correct, rating unchanged.","corrected_by":"scratch-manager","corrected_at":"2026-10-26T16:04:00.000Z"}
+EFFECTIVE content as of 2026-10-26 (both are <= that day, so the newest stands): {"content":"A1-corrected again: quarter now correct, rating unchanged.","corrected_by":"scratch-manager","corrected_at":"2026-10-26T16:04:00.000Z"}
+EFFECTIVE content as of 2026-10-25 (before both corrections): null  <- null: the original submission stands as of that day
+the original row is still exactly what the manager submitted: {"content":"A1-original: performance on track, one coaching note.","submitted_by":"scratch-hr","submitted_at":"2026-10-26T15:21:58.870Z"}
+completion state is unchanged by a correction (the milestone still has a submission): true
+
+copy left at /tmp/r78/rig/additive.db (the rig DB /tmp/r78/rig/corr.db was never opened)
+(node:10055) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

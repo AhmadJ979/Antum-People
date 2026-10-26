@@ -1,0 +1,52 @@
+=== tree under test ===
+origin/main = 0afe5ac949b092ac08dc63541ccf0cfdd9aab209 (worktree /tmp/r78/main)
+instance: PORT=4781  PRODUCT_DB_PATH=/tmp/r78/rig/corr.db
+hires: A=demo-emp-ahmad (Ahmad Al-Rashid)  B=demo-emp-fatima (Fatima Al-Zahrani)
+
+=== 1. three rig accounts signed in (hr_admin, manager, employee) ===
+token lengths: hr=220 mgr=221 emp=223
+
+=== 2. the timeline as HR reads it, BEFORE any submission ===
+GET /api/probation/timelines?jurisdiction=AE -> 200, 1431 B
+hire A timeline: {"employee_id":"demo-emp-ahmad","employee_name":"Ahmad Al-Rashid","start_date":"2026-09-16","end_date":"2026-12-15","length_days":90,"milestones":[{"index":1,"day":30,"due_date":"2026-10-16","state":"overdue","completion":null},{"index":2,"day":60,"due_date":"2026-11-15","state":"upcoming","completion":null},{"index":3,"day":90,"due_date":"2026-12-15","state":"upcoming","completion":null}]}
+
+=== 3. the escalation the startup tick wrote for A milestone 1, before any submission ===
+GET /api/probation/escalations -> 200, 6924 B
+A m1 escalation: {"id":"da708548-0496-469d-9a7e-63e578cdf903","employee_id":"demo-emp-ahmad","employee_name":"Ahmad Al-Rashid","milestone_index":1,"milestone_day":30,"milestone_due_date":"2026-10-16","deadline_at":"2026-10-16T00:00:00.000Z","detected_at":"2026-10-26T15:20:50.594Z","late":true,"late_by_hours":255.35,"reporting_line":{"manager":null,"managers_manager":null,"hr":[{"username":"scratch-hr","employee_id":null,"name":null}],"missing":["manager","managers_manager"],"resolved":false},"reporting_line_missing":["manager","managers_manager"],"channel":"none","fired_by":"scheduler:probation-escalation","note":"Milestone 1 of demo-emp-ahmad’s probation passed its deadline of 2026-10-16 with no submitted evaluation, while the app was not running (noticed 255.35h late).","completed_at":null,"completed_by":null,"resolved":false}
+
+=== 4. FIRST submission — hr_admin submits A milestone 1 ===
+POST /api/employees/demo-emp-ahmad/probation-evaluations {milestone_index:1} -> 201, 428 B
+body: {"evaluation":{"id":"fbc4fd54-e9b4-43c5-a4c3-1344887f2615","employee_id":"demo-emp-ahmad","milestone_index":1,"milestone_due_date":"2026-10-16","milestone_day":30,"content":"A1-original: performance on track, one coaching note.","submitted_by":"scratch-hr","submitted_at":"2026-10-26T15:21:58.870Z","created_at":"2026-10-26 15:21:58"},"milestone":{"index":1,"day":30,"due_date":"2026-10-16","state":"overdue","completion":null}}
+evaluation id: fbc4fd54-e9b4-43c5-a4c3-1344887f2615
+
+=== 5. SECOND submission for the SAME milestone — the 409 this row is about ===
+POST (same milestone, different content) -> 409, 181 B
+body: {"error":"milestone 1 already has a submitted evaluation — recorded by scratch-hr at 2026-10-26T15:21:58.870Z","recorded_by":"scratch-hr","recorded_at":"2026-10-26T15:21:58.870Z"}
+
+=== 6. a correction attempt against the route the product does NOT have ===
+POST /api/employees/demo-emp-ahmad/probation-evaluations/fbc4fd54-e9b4-43c5-a4c3-1344887f2615/corrections
+  with a valid hr_admin token -> 403, 0 B, body=""
+  with NO token               -> 401, 41 B, body="{\"error\":\"Authentication token required\"}"
+  CONTROL: POST /api/definitely-not-a-route-xyz with a valid hr_admin token -> 403, 0 B, body=""
+  CONTROL: GET /api/employees/demo-emp-ahmad/probation-evaluations (a read route that does not exist) -> 403, 0 B
+  CONTROL: GET /api/probation/timelines (a route that DOES exist, same method+token) -> 200, 1589 B
+
+=== 7. the timeline AFTER the submission — what a client can read to find the record ===
+milestones: [{"index":1,"day":30,"due_date":"2026-10-16","state":"completed","completion":{"evaluation_id":"fbc4fd54-e9b4-43c5-a4c3-1344887f2615","completed_at":"2026-10-26T15:21:58.870Z","completed_by":"scratch-hr","milestone_due_date":"2026-10-16"}},{"index":2,"day":60,"due_date":"2026-11-15","state":"upcoming","completion":null},{"index":3,"day":90,"due_date":"2026-12-15","state":"upcoming","completion":null}]
+does the timeline payload name the evaluation row a correction would have to point at? YES
+
+=== 8. the window asymmetry: a submission for a hire whose probation has ENDED ===
+POST /api/employees/demo-emp-fatima/probation-evaluations (window ended 2026-09-26) -> 400, 105 B
+body: {"error":"this hire has no probation window that is still running, so there is no milestone to evaluate"}
+
+=== 9. who may write, and with what scope ===
+manager token, not this hire’s manager -> 403, 0 B
+employee token, about an employee -> 403, 0 B
+hr_admin token, EMPTY content -> 400, 96 B, body={"error":"a submitted evaluation must carry the manager’s own words: content cannot be empty"}
+hr_admin token, index 9 -> 400, 233 B, keys=["error","known_milestones"]
+hr_admin token, milestone 2 (not yet due) -> 201  <-- can a submission precede the due date?
+
+=== 10. the escalation after the submission — is it un-fired? ===
+A m1 escalation now: {"id":"da708548-0496-469d-9a7e-63e578cdf903","employee_id":"demo-emp-ahmad","employee_name":"Ahmad Al-Rashid","milestone_index":1,"milestone_day":30,"milestone_due_date":"2026-10-16","deadline_at":"2026-10-16T00:00:00.000Z","detected_at":"2026-10-26T15:20:50.594Z","late":true,"late_by_hours":255.35,"reporting_line":{"manager":null,"managers_manager":null,"hr":[{"username":"scratch-hr","employee_id":null,"name":null}],"missing":["manager","managers_manager"],"resolved":false},"reporting_line_missing":["manager","managers_manager"],"channel":"none","fired_by":"scheduler:probation-escalation","note":"Milestone 1 of demo-emp-ahmad’s probation passed its deadline of 2026-10-16 with no submitted evaluation, while the app was not running (noticed 255.35h late).","completed_at":"2026-10-26T15:21:58.870Z","completed_by":"scratch-hr","resolved":true}
+same escalation row as before the submission? id true, detected_at true
+
