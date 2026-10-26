@@ -122,6 +122,36 @@ words live there, and the row is no longer the immutable thing its own schema co
 
 ---
 
+## 3b. The pick list — the four shapes, on the same axes
+
+A correction is asked for by three readers: HR looking at the record afterwards, an auditor reading the log,
+and whoever builds the next slice. Every axis below is answered for those three. "Immutable" is about the
+**submitted row's bytes and its meaning**, which are not the same thing. Movement is per WORKFLOW: a delta in
+`server/`, `client/` or `scripts/` owes a movement **unless no served path loads it, shown**.
+
+| | **C1 · append-only correction row in its own table** | **C2 · version chain on the evaluation (a superseding submission)** | **C3 · amendment (edit the row; prior text into the audit row)** | **C4 · out of product scope, handled outside the product** |
+|---|---|---|---|---|
+| **HR, afterwards** | The original assessment **and** each correction beside it: who, when, why, newest is effective. Both texts are readable, and `correction_count` says how many. | A list of submissions; the newest is effective. "Who submitted" is the last corrector, so *who was late* is ambiguous without reading the chain. | One record, always current. The previous text exists only in the audit log — HR reading the evaluation cannot see that it ever changed. | The original only. A correction happens by hand in the database, and nothing in the product says it happened. |
+| **Audit row, and who it names** | One `CREATE` row per correction, `performed_by` = the corrector, `entity_type` = the corrections table, with the reason. The submission's own row still names **the submitter**. Two acts, two names, never conflated. | A second `CREATE` naming the corrector; the original's actor is reachable only by following the link. | An `UPDATE` naming the corrector, with the previous values in the log. The **actor of the original is overwritten in the record** and survives only as log text. | Nothing. The corrector is unnamed and the change unaudited — the direct opposite of decision 22. |
+| **First row immutable?** | **Yes** — bytes and meaning; it stays the record of who submitted what, and the 409 still means "a submission exists". | Bytes yes, **meaning no**: it becomes a dead revision, and `UNIQUE (employee_id, milestone_index)` has to be relaxed (a SQLite table rebuild). | **No** — `content` is rewritten; keeping `submitted_by` honest while someone else changed the text is not possible without lying in one field or the other. | Yes, trivially. |
+| **API + UI change** | +1 route (route count 30 → 31); the timeline's `completion` object gains metadata; the P3-4 slice adds the panel. | +1 route; **two readers** must choose a revision (`completionsFor`, the escalation's existence check); the UI must show a history to be honest. | +1 route; reads and UI unchanged. | None. |
+| **Movement owed** | `server/` **yes**. `client/` **no, shown**: the client's only probation read is `client/src/App.tsx:741` and **no client path reads `completion`** (0 hits) — a payload field nobody reads loads no served path. The screen, when it lands with P3-4, owes its own. | `server/` yes; `client/` **yes** — a superseded revision that is not rendered reads as the current one, so the screen must change in the same pass. | `server/` yes; `client/` no. | **No movement at all** — which is exactly why it is cheap and wrong. |
+| **Cost** | Small and measured: the DDL was executed against a copy of a real database (19 → 20 tables; evaluations and audit dumps byte-identical; second application a no-op). One route, one table, three module functions, ~11 tests. | Largest: a table rebuild, two readers rewritten, a UI that must explain revisions. | Smallest of the building options: one route, an `UPDATE`, and an audit row carrying the manager's words. | Zero now, unbounded later. |
+| **Makes impossible later** | Nothing on the record side. It **cannot withdraw a completion** — deliberate: withdrawal is a different decision (spec §9 item 5), and this shape keeps it open. | `submitted_at` as the completion moment, so on-time/late reporting and the escalation chain's premise both become ambiguous. | The submitted words living in the record; and audit-log retention now governs the assessment text itself. | Any audit of a correction, and any answer to "who changed this". |
+
+**Recommendation — C1**, for one reason: it is the only shape in which the **submitter's name and the corrector's
+name are both permanent and separately readable**, while the completion fact (`submitted_at`, existence) and the
+escalation table's idempotence stay exactly as measured at `0afe5ac`.
+
+**The one-line question for the owner** — one sentence, three answers:
+
+> *A manager who got a probation evaluation wrong can either **(A)** have the correction kept as a separate dated
+> row beside the original, naming who changed it and why — with the original never rewritten — or **(B)** have the
+> new submission replace the old one, or **(C)** have the record edited in place with the old text kept only in the
+> audit log: which? (Recommendation: A.)*
+
+---
+
 ## 4. The build
 
 ### (a) Schema — one new table, additive, measured safe
