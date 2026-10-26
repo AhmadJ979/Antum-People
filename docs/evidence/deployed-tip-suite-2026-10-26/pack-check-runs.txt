@@ -1,0 +1,16 @@
+pack-check.py, its own runs - oldest first. A checker that has only ever returned green is not evidence.
+
+--- RUN 1 - before the pack commit (the git-tracked direction cannot pass until the files are committed) ---
+PACK FAIL - 8 files, 7 manifest lines
+  (one "is not tracked by git" line per file, and no other finding)
+
+--- RUN 2 - after the pack commit ---
+PACK OK - 8 files, 7 manifest lines
+
+--- RUN 3 - after the README named its own files and the manifest was regenerated ---
+PACK OK - 7 files, 6 manifest lines
+exit=0
+
+--- RUN 3 - after the README named its own files and the manifest was regenerated ---
+PACK OK - 7 files, 6 manifest lines
+exit=0
