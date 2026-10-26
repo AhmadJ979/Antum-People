@@ -550,8 +550,8 @@ named below:
 
 | this page cites | count |
 |---|---|
-| distinct `file:line` sites | **47** |
-| compared as citations (the family above) | **6** |
+| distinct `file:line` sites | **48** |
+| compared as citations (the family above) | **7** |
 | pinned only as **tree claims** — redden when the file moves, never compare the number printed here | **32** |
 | in **no check at all** | **9** |
 **Re-grounded 2026-10-22 for P3-1** (PR #287): the probation route is a new citation, and inserting it early in
