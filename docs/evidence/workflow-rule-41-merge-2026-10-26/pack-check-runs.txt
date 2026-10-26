@@ -1,0 +1,58 @@
+pack-check.py, its own runs - oldest first. A checker that has only ever returned green is not evidence.
+Every run below was taken with the command `python3 docs/evidence/workflow-rule-41-merge-2026-10-26/pack-check.py`
+from the repository root, on the branch that carries this pack, at the revision named beside it.
+
+--- RUN 1 - the checker's first run, against the DRAFT README and before the pack was committed ---
+PACK FAIL - 10 files, 9 manifest lines
+  FAIL  README.md exists but is NOT named in README.md
+  FAIL  README names `pack-check-runs.txt` but it does not exist here
+  FAIL  STALE claim: the content md5 of 7361aba6:WORKFLOW.md is b72cac87aaae74d6c221366389b4245f, README says fee66c8b191875f8eab1b32a1afe4aca
+  FAIL  (one "is not tracked by git" line per file)
+exit=1
+Three findings, three different truths, and none of them was the tree's fault:
+  * the README did not name itself - the naming direction covers README.md like any other file;
+  * it named the runs log before the runs existed - a file named and absent is a real finding;
+  * the md5 finding was the CHECKER being wrong, not the README: two different md5s were in play (the merged
+    mirror as a file, and the content identity it shares with the live file, which the record's `>` header
+    lines hide). The checker hashed the wrong one. Both are now stated separately in the README and both are
+    asserted, so this disagreement cannot recur silently.
+
+--- RUN 2 - after the pack commit, with the README corrected and both md5s named separately ---
+PACK OK - 10 files, 9 manifest lines
+  note: claims judged against 7361aba6: file blob 755b3b95, file md5 745b2456, shared content md5 fee66c8b, rule 41 x1, rule 40 x1
+  note: NOT CHECKABLE HERE: /home/team/shared/WORKFLOW.md - the live file is outside this repository; the mirror side is checked here and the live side was read in the session that wrote 03
+exit=0
+
+--- RUN 3a - FALSIFICATION A: the record names the commit BEFORE the merge (ec2a29e) instead of the merge ---
+PACK FAIL - 10 files, 9 manifest lines
+  FAIL  STALE manifest: README.md is 4a061dbabe4dad86b436dc1d88120234, manifest says c900b6c2137799d3ae46ec27c775bd02
+  FAIL  README calls the merged blob 755b3b95..., ec2a29e5 holds c0c13d65
+  FAIL  STALE claim: ec2a29e5:WORKFLOW.md is md5 9b4eb2eb46df435aeaff6fe217191163, README says 745b245663ab6b4f1db05b02f1d9017a
+  FAIL  STALE claim: the shared content md5 of ec2a29e5:WORKFLOW.md is f8bf41877ad998612f4ae483571bd3a2, README says fee66c8b191875f8eab1b32a1afe4aca
+  FAIL  rule 41 appears 0 time(s) in ec2a29e5:WORKFLOW.md on the merge result, not once
+exit=1
+Proof that the merge-identity claim is load-bearing: change which revision the record names and the checker
+finds it four ways, including the one a reader would never catch by eye - rule 41 is simply not at that commit.
+
+--- RUN 3b - FALSIFICATION B: a commit whose mirror holds rule 41 TWICE, as a child merge would leave it ---
+PACK FAIL - 10 files, 9 manifest lines
+  FAIL  STALE manifest: README.md is 596e638e72c28b4b510266707e315bfd, manifest says c900b6c2137799d3ae46ec27c775bd02
+  FAIL  README calls the merged blob 755b3b95..., 2a4fb617 holds cd63d9c4
+  FAIL  STALE claim: 2a4fb617:WORKFLOW.md is md5 f6312ccadf47aac9f6b3e35b3d53a679, README says 745b245663ab6b4f1db05b02f1d9017a
+  FAIL  STALE claim: the shared content md5 of 2a4fb617:WORKFLOW.md is 6569e65af73596f64373090416b6b240, README says fee66c8b191875f8eab1b32a1afe4aca
+  FAIL  rule 41 appears 2 time(s) in 2a4fb617:WORKFLOW.md on the merge result, not once
+exit=1
+This is the case rule 41 exists for: a section that landed twice with every naming check still reading OK. The
+duplicate was made on purpose, in a scratch git worktree, and the checker caught it by COUNT, not by eye.
+
+--- RUN 4 - after both falsifications were discarded (worktree removed, README restored) ---
+PACK OK - 10 files, 9 manifest lines
+  note: claims judged against 7361aba6: file blob 755b3b95, file md5 745b2456, shared content md5 fee66c8b, rule 41 x1, rule 40 x1
+  note: NOT CHECKABLE HERE: /home/team/shared/WORKFLOW.md - the live file is outside this repository; the mirror side is checked here and the live side was read in the session that wrote 03
+exit=0
+`git worktree list` afterwards names one worktree, the repository itself, and `git status --short` is empty -
+so the two failing runs above are runs against falsified copies and nothing else.
+
+WHAT THIS LOG DOES NOT CLAIM. The falsifications were made in a scratch worktree at revision 7153bd1, which is
+this pack's commit on its own branch, never on main and never pushed. It does not show the checker running on
+main; the tree that carries the pack is the only tree it has judged so far.

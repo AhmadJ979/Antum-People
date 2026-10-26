@@ -1,0 +1,18 @@
+=== the file that merged: is MY version what landed? measured 2026-10-26T10:41:57Z ===
+$ git rev-parse 0d1f56a:WORKFLOW.md     # my submitted mirror
+755b3b95e46d1f5fdee06f217528471fb88f23a1
+$ git rev-parse origin/main:WORKFLOW.md # main's copy now
+755b3b95e46d1f5fdee06f217528471fb88f23a1
+$ git diff --name-only 0d1f56a origin/main -- WORKFLOW.md
+(empty above = identical)
+
+=== the tree that merged, and the tree the merge was predicted to produce ===
+$ git rev-parse origin/main^{tree}      # the merge result
+94d6bc362f812765012e68721535de38efe38064
+$ (predicted before the merge) git merge-tree --write-tree origin/main 0d1f56a
+94d6bc362f812765012e68721535de38efe38064   # recorded in PR #305's body; identical to the merge result above
+
+=== why the merge tree is not my commit's tree (and why that is not a defect) ===
+my commit's tree: 2f248c5699a00bd1645a22e68cd692f7fb16e52f
+main carried #304 (server/index.js, server/access.test.js, docs/evidence/exit-interview-actor-2026-10-26/)
+so the merge result is main's tree + my one file. The file-level identity above is the assertion that matters.
