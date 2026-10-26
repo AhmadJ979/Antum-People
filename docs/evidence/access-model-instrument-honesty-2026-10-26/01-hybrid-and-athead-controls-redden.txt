@@ -1,0 +1,10 @@
+(a) HYBRID - judged code from 506b1e65, document from the working copy
+    OLD instrument: exit 0 | claims printed 137 | headline: 137/137 checks hold against 506b1e6598efc821c316a7fd0d58560bf62dc60e   (ran=137, fails=0, hints stale=0)
+    NEW instrument: exit 2 | claims printed 0 | refused: CANNOT-JUDGE: HYBRID RUN - the document judged is not the do
+(a2) VERIFY_TREE=@HEAD - what scripts/check-all.py passes
+    OLD instrument: exit 1 | claims printed 111 | 13/111 checks hold against @HEAD   (ran=111, fails=98, hints stale=0)
+    NEW instrument: exit 0 | claims printed 137 | 137/137 checks hold against 6466284f4d9ea403dbf90259ea60cb01eab9f659 (VERIFY_TREE=@HEAD)   (ran=137, fails=0, hints stale=0)
+(b) THE DISARMED CASE - table with no headroom (60 lines staled), then 7 more
+    stale counts: base 54 -> moved 53; the OLD shape needs >: it fires = false
+    NEW per-symbol control on the REAL shift : moved=52 still=35 wrong=0 (0 == it passes)
+    NEW per-symbol control on a NON-shift    : wrong=52 e.g. [gate comment] 0 != 7

@@ -1,0 +1,134 @@
+verify-access-model.py
+  document      : docs/access-model.md
+  tree measured : @HEAD
+  tree is       : 
+
+FAIL [gate comment] server/index.js: not in @HEAD
+FAIL [gate mount] server/index.js: not in @HEAD
+FAIL [login response carries the role] server/index.js: not in @HEAD
+FAIL [the role claim in the token] server/auth.js: not in @HEAD
+FAIL [the role table] server/access.js: not in @HEAD
+FAIL [hr_admin exists] server/access.js: not in @HEAD
+FAIL [compliance_viewer exists (five roles)] server/access.js: not in @HEAD
+FAIL [the policy table] server/access.js: not in @HEAD
+FAIL [roster cell: three roles] server/access.js: not in @HEAD
+FAIL [the contradiction this document had, named for its owner] server/access.js: not in @HEAD
+FAIL [the not-yet-expressible marks] server/access.js: not in @HEAD
+FAIL [the counsel-pending marks] server/access.js: not in @HEAD
+FAIL [all / reports / own] server/access.js: not in @HEAD
+FAIL [the scope table] server/access.js: not in @HEAD
+FAIL [a manager does not include self, asserted] server/access.js: not in @HEAD
+FAIL [the field groups] server/access.js: not in @HEAD
+FAIL [which role loses which group] server/access.js: not in @HEAD
+FAIL [settlement documents only] server/access.js: not in @HEAD
+FAIL [the route table] server/access.js: not in @HEAD
+FAIL [scopeFor] server/access.js: not in @HEAD
+FAIL [scopedAllows] server/access.js: not in @HEAD
+FAIL [fieldsRemovedFor] server/access.js: not in @HEAD
+FAIL [unpolicied check] server/access.js: not in @HEAD
+FAIL [the gate] server/access.js: not in @HEAD
+FAIL [the gate reads the role] server/access.js: not in @HEAD
+FAIL [login route (public)] server/index.js: not in @HEAD
+FAIL [the caller's link] server/index.js: not in @HEAD
+FAIL [self / report / other, resolved] server/index.js: not in @HEAD
+FAIL [the scope refusal helper] server/index.js: not in @HEAD
+FAIL [one actor convention] server/index.js: not in @HEAD
+FAIL [accounts list route] server/index.js: not in @HEAD
+FAIL [accounts payload, no password hash] server/index.js: not in @HEAD
+FAIL [account creation route] server/index.js: not in @HEAD
+FAIL [unknown role is refused] server/index.js: not in @HEAD
+FAIL [account creation is logged] server/index.js: not in @HEAD
+FAIL [roster route] server/index.js: not in @HEAD
+FAIL [the manager's line filter] server/index.js: not in @HEAD
+FAIL [roster selects the whole row] server/index.js: not in @HEAD
+FAIL [the field half of the cell] server/index.js: not in @HEAD
+FAIL [decrypts only what is served] server/index.js: not in @HEAD
+FAIL [create employee] server/index.js: not in @HEAD
+FAIL [unnamed actor refused (400)] server/index.js: not in @HEAD
+FAIL [employee create audit] server/index.js: not in @HEAD
+FAIL [update employee] server/index.js: not in @HEAD
+FAIL [unnamed actor refused (400)] server/index.js: not in @HEAD
+FAIL [employee update audit] server/index.js: not in @HEAD
+FAIL [onboarding read] server/index.js: not in @HEAD
+FAIL [the read is scoped] server/index.js: not in @HEAD
+FAIL [the tick route] server/index.js: not in @HEAD
+FAIL [the tick refuses an unnamed actor] server/index.js: not in @HEAD
+FAIL [offboarding read] server/index.js: not in @HEAD
+FAIL [offboarding write] server/index.js: not in @HEAD
+FAIL [eosb, stateless] server/index.js: not in @HEAD
+FAIL [the notice route] server/index.js: not in @HEAD
+FAIL [settlement documents] server/index.js: not in @HEAD
+FAIL [which documents a role may render] server/index.js: not in @HEAD
+FAIL [templates read one employee] server/index.js: not in @HEAD
+FAIL [templates decrypt the national ID] server/index.js: not in @HEAD
+FAIL [analytics route] server/index.js: not in @HEAD
+FAIL [analytics reads the whole roster] server/index.js: not in @HEAD
+FAIL [exit route] server/index.js: not in @HEAD
+FAIL [exit terminates employment] server/index.js: not in @HEAD
+FAIL [case creation] server/index.js: not in @HEAD
+FAIL [case refuses an unnamed actor] server/index.js: not in @HEAD
+FAIL [the case LIST] server/index.js: not in @HEAD
+FAIL [ONE case] server/index.js: not in @HEAD
+FAIL [the roll-up] server/index.js: not in @HEAD
+FAIL [checklist] server/index.js: not in @HEAD
+FAIL [workspace] server/index.js: not in @HEAD
+FAIL [item status] server/index.js: not in @HEAD
+FAIL [reminders] server/index.js: not in @HEAD
+FAIL [acknowledgement route] server/index.js: not in @HEAD
+FAIL [package] server/index.js: not in @HEAD
+FAIL [package acknowledgement] server/index.js: not in @HEAD
+FAIL [flag watch] server/index.js: not in @HEAD
+FAIL [the module reads the actor] server/preboarding-items.js: not in @HEAD
+FAIL [and REFUSES an unnamed one] server/preboarding-items.js: not in @HEAD
+FAIL [users table] server/schema.sql: not in @HEAD
+FAIL [username is unique] server/schema.sql: not in @HEAD
+FAIL [the rename LANDED] server/schema.sql: not in @HEAD
+FAIL [employee_id exists, nullable, last] server/schema.sql: not in @HEAD
+FAIL [cases table] server/schema.sql: not in @HEAD
+FAIL [case created_by] server/schema.sql: not in @HEAD
+FAIL [the NOT NULL constraint] server/schema.sql: not in @HEAD
+FAIL [constraints that cannot live in schema.sql] server/db.js: not in @HEAD
+FAIL [one account per person, as an index] server/db.js: not in @HEAD
+FAIL [partial, so NULL links stay legal] server/db.js: not in @HEAD
+FAIL [why it is post-migration, not in schema.sql] server/db.js: not in @HEAD
+OK   [stale text] the superseded 15-resource count — survives only inside its own correction
+OK   [stale text] the superseded no-employee_id claim — survives only inside its own correction
+OK   [stale text] the superseded unlogged-account claim — survives only inside its own correction
+OK   [stale text] the citation that stopped at the rationale comment, not the refusal — survives only inside its own correction
+OK   [stale text] the citation that named the file's opening block for the rename — survives only inside its own correction
+OK   [stale text] the citation that started on the blank line above the block — survives only inside its own correction
+OK   [stale text] the citation that started on the SCOPES entry line, not the note — survives only inside its own correction
+OK   [stale text] the flat 'Nothing on this page is open' over-claim is absent (decision 26 is open)
+FAIL [doc citation] index.js:875 — §5.2 rule 3 cites the refusal itself, not the comment above it
+        'a named actor is required to record an offer acceptance' is NOT in server/index.js at @HEAD; the cited line reads: <past end of file>
+FAIL [doc citation] preboarding-items.js:360-364 — §5.1 cites the module's own actor read and its refusal
+        'recorded_by' is NOT in server/preboarding-items.js at @HEAD; the cited line reads: <past end of file>
+FAIL [doc citation] preboarding-items.js:517 — §3.2 cites where the projection's `note` field is written
+        'note = ' is NOT in server/preboarding-items.js at @HEAD; the cited line reads: <past end of file>
+FAIL [doc citation] access.js:67 — §2.4 cites where the rename is recorded, not the file's opening block
+        'the rename that rides this slice' is NOT in server/access.js at @HEAD; the cited line reads: <past end of file>
+FAIL [doc citation] access.js:193-196 — §6.4 cites the whole note that names the manager's own-steps refusal
+        'Note, and asserted' is NOT in server/access.js at @HEAD; the cited line reads: <past end of file>
+FAIL [doc citation] db.js:126-128 — §2.2 cites the clause that says why the unique index cannot live in schema.sql
+        'measured reason:' is NOT in server/db.js at @HEAD; the cited line reads: <past end of file>
+OK   [partition] §10.2's coverage table: distinct file:line sites — printed 47, recounted 47
+OK   [partition] §10.2's coverage table: compared as citations — printed 6, recounted 6
+OK   [partition] §10.2's coverage table: pinned only as tree claims — printed 32, recounted 32
+OK   [partition] §10.2's coverage table: in no check at all — printed 9, recounted 9
+FAIL [structure] could not evaluate the merged module
+        [eval]:3
+const cw  = a.ROUTES.filter(r => r[2] === 'preboarding:read');
+                     ^
+
+TypeError: Cannot read properties of undefined (reading 'filter')
+    at [eval]:3:22
+    at runScriptInT
+FAIL [doc→tree] cannot read the document's structural claims: the merged module did not evaluate
+FAIL [present] the rename is implemented as a migration (db.js RENAMES)
+        (nothing)
+FAIL [present] the caller's employee_id IS read now (callerEmployeeId)
+        (nothing)
+OK   [empty] the module's own 'system' fallback is retired (requireActor, :198)
+
+
+13/111 checks hold against @HEAD   (ran=111, fails=98, hints stale=0)

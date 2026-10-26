@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: the instrument lives in the repository, and the entry point points at it
+ok 1 - the instrument lives in the repository, and the entry point points at it
+  ---
+  duration_ms: 1.157746
+  type: 'test'
+  ...
+# Subtest: green at this tree, and the headline names the tree it judged
+ok 2 - green at this tree, and the headline names the tree it judged
+  ---
+  duration_ms: 284.671644
+  type: 'test'
+  ...
+# Subtest: a line that merely MOVED does not redden it - the control that must NOT fire
+ok 3 - a line that merely MOVED does not redden it - the control that must NOT fire
+  ---
+  duration_ms: 581.545763
+  type: 'test'
+  ...
+# Subtest: a symbol that is GONE does redden it, and the denominator stays whole - the control that MUST fire
+ok 4 - a symbol that is GONE does redden it, and the denominator stays whole - the control that MUST fire
+  ---
+  duration_ms: 290.35387
+  type: 'test'
+  ...
+# Subtest: an operator run with no VERIFY_TREE judges this tree and names its sha
+ok 5 - an operator run with no VERIFY_TREE judges this tree and names its sha
+  ---
+  duration_ms: 237.420316
+  type: 'test'
+  ...
+# Subtest: VERIFY_TREE=@HEAD, which check-all passes, actually judges this tree
+ok 6 - VERIFY_TREE=@HEAD, which check-all passes, actually judges this tree
+  ---
+  duration_ms: 231.704548
+  type: 'test'
+  ...
+# Subtest: a document from another revision than the judged tree is REFUSED - the hybrid that used to score green
+ok 7 - a document from another revision than the judged tree is REFUSED - the hybrid that used to score green
+  ---
+  duration_ms: 130.328471
+  type: 'test'
+  ...
+# Subtest: the MOVED control still fires when the hint table has no headroom
+ok 8 - the MOVED control still fires when the hint table has no headroom
+  ---
+  duration_ms: 593.549318
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2442.436433

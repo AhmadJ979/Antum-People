@@ -51,20 +51,64 @@ function staleCount(out) {
   return Number(m[1]);
 }
 
+// Judge the working tree the way an operator does: no VERIFY_TREE, so the instrument must choose for
+// itself and say which revision it chose.
+function judgeDefault() {
+  const env = { ...process.env, VERIFY_DOC: DOC };
+  delete env.VERIFY_TREE;
+  const r = spawnSync('python3', [INSTRUMENT], { cwd: repoRoot, encoding: 'utf8', env });
+  if (r.error) throw r.error;
+  return { status: r.status, out: `${r.stdout || ''}${r.stderr || ''}` };
+}
+
+// label -> {path, line}: the line each SYMBOL resolved to in this run. The line is a hint, the symbol
+// is the content — so this, not the stale count, is what a control about line movement must read.
+function resolvedLines(out) {
+  const m = new Map();
+  for (const line of out.split('\n')) {
+    const g = line.match(/^(?:OK|FAIL)\s+\[(.+?)\]\s+(server\/[^\s:]+):(\d+)/);
+    if (g) m.set(g[1], { path: g[2], line: Number(g[3]) });
+  }
+  return m;
+}
+
+// What the two runs did per symbol: claims in `file` must resolve exactly `delta` lines lower, and
+// claims elsewhere must NOT move. Independent of how stale the hint table is — which is the whole
+// point (row 7daa1d44: with a fully stale table the count-based shape had no signal at all).
+function shiftReport(baseOut, nowOut, file, delta) {
+  const a = resolvedLines(baseOut);
+  const b = resolvedLines(nowOut);
+  const wrong = [];
+  let moved = 0;
+  let still = 0;
+  for (const [label, av] of a) {
+    const bv = b.get(label);
+    if (!bv) { wrong.push(`[${label}] is missing from the shifted run - a shrunken denominator reads like a green`); continue; }
+    if (av.path === file) {
+      moved += 1;
+      if (bv.line - av.line !== delta) wrong.push(`[${label}] ${av.path} resolved ${bv.line - av.line} lines lower, not ${delta}`);
+    } else {
+      still += 1;
+      if (bv.line !== av.line) wrong.push(`[${label}] ${av.path} moved ${bv.line - av.line} lines although only ${file} was shifted`);
+    }
+  }
+  return { moved, still, wrong, baseSymbols: a.size, nowSymbols: b.size };
+}
+
 // A throwaway commit that is HEAD with one file's bytes replaced. Nothing in the real index or
 // worktree is touched: the index is a temp file and the commit is dangling.
-function synthTree(file, transform, label) {
+function synthTree(file, transform, label, parent = 'HEAD') {
   const idx = path.join(os.tmpdir(), `antum-synth-index-${process.pid}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`);
   const env = { ...process.env, GIT_INDEX_FILE: idx };
   const g = (args, input) => execFileSync('git', args, { cwd: repoRoot, env, encoding: 'utf8', input });
   try {
-    const original = execFileSync('git', ['show', `HEAD:${file}`], { cwd: repoRoot, encoding: 'utf8' });
+    const original = execFileSync('git', ['show', `${parent}:${file}`], { cwd: repoRoot, encoding: 'utf8' });
     const mutated = transform(original);
     assert.notStrictEqual(mutated, original, 'the synthetic mutation changed no byte - the control would prove nothing');
     const blob = g(['hash-object', '-w', '--stdin'], mutated).trim();
-    g(['read-tree', 'HEAD']);
+    g(['read-tree', parent]);
     g(['update-index', '--cacheinfo', `100644,${blob},${file}`]);
-    return g(['commit-tree', g(['write-tree']).trim(), '-p', 'HEAD', '-m', label]).trim();
+    return g(['commit-tree', g(['write-tree']).trim(), '-p', parent, '-m', label]).trim();
   } finally {
     fs.rmSync(idx, { force: true });
   }
@@ -102,8 +146,15 @@ test('a line that merely MOVED does not redden it - the control that must NOT fi
   assert.strictEqual(r.status, 0,
     `seven inserted lines reddened the instrument again - the content anchoring is not load-bearing:\n` +
     r.out.split('\n').filter((l) => l.startsWith('FAIL')).slice(0, 6).join('\n'));
-  assert.ok(staleCount(r.out) > staleCount(base.out),
-    `the shift was not even reported: stale hints ${staleCount(r.out)} vs base ${staleCount(base.out)}`);
+  // Per-SYMBOL, not per-count. `staleCount(shifted) > staleCount(base)` is false whenever the hint
+  // table has no headroom: measured 2026-10-26 with 60 stale hints, a 7-line shift left it at 60 vs 60,
+  // so the control that proves the content anchoring could not fire (row 7daa1d44). What must hold in
+  // ANY table state: every symbol in the shifted file resolves exactly 7 lines lower, and no symbol
+  // outside it moves at all.
+  const rep = shiftReport(base.out, r.out, 'server/index.js', 7);
+  assert.deepStrictEqual(rep.wrong, [], `the shift was not reflected per symbol:\n${rep.wrong.join('\n')}`);
+  assert.ok(rep.moved >= 40, `only ${rep.moved} claims in server/index.js were compared - the anchoring is not load-bearing`);
+  assert.ok(rep.still >= 10, `only ${rep.still} claims outside the shifted file were checked as unmoved`);
 });
 
 test('a symbol that is GONE does redden it, and the denominator stays whole - the control that MUST fire', () => {
@@ -119,4 +170,68 @@ test('a symbol that is GONE does redden it, and the denominator stays whole - th
   assert.strictEqual(ran, printed,
     `the summary claims ran=${ran} but printed ${printed} claim lines - a shrunk denominator reads like a fuller green`);
   assert.ok(ran >= 130, `the run shrank to ${ran} checks; the whole document must still be judged`);
+});
+
+test('an operator run with no VERIFY_TREE judges this tree and names its sha', () => {
+  const r = judgeDefault();
+  assert.strictEqual(r.status, 0, `the default run is not green (exit ${r.status}):\n${r.out.slice(-900)}`);
+  assert.ok(r.out.includes(`checks hold against ${head()}`),
+    `the default run does not name this tree's sha (a ref name is not a revision):\n${r.out.slice(-700)}`);
+});
+
+test('VERIFY_TREE=@HEAD, which check-all passes, actually judges this tree', () => {
+  // The control that was missing: a test asserted check-all PASSES the string "@HEAD", and nothing
+  // asserted that "@HEAD" WORKS. It does not - `git rev-parse`, `git log` and `git grep` all reject it
+  // ("fatal: invalid object name") - so the operator entry point's model check judged nothing: measured
+  // on 2026-10-26, 13/111 checks with 98 FAILs, every one "not in @HEAD". This must redden if the
+  // marker stops resolving again.
+  const r = spawnSync('python3', [INSTRUMENT], {
+    cwd: repoRoot, encoding: 'utf8', env: { ...process.env, VERIFY_TREE: '@HEAD', VERIFY_DOC: DOC },
+  });
+  const out = `${r.stdout || ''}${r.stderr || ''}`;
+  assert.strictEqual(r.status, 0, `@HEAD does not judge this tree (exit ${r.status}):\n${out.slice(-900)}`);
+  assert.ok(!/not in @HEAD/.test(out), '@HEAD was not resolved - claims are reporting "not in @HEAD"');
+  const ran = Number((out.match(/ran=(\d+)/) || [])[1]);
+  assert.ok(ran >= 130, `@HEAD judged only ${ran} checks; resolving the marker must not shrink the run`);
+  assert.ok(out.includes(`checks hold against ${head()}`),
+    `the @HEAD run does not name the resolved sha of this tree:\n${out.slice(-600)}`);
+});
+
+test('a document from another revision than the judged tree is REFUSED - the hybrid that used to score green', () => {
+  // The judged CODE comes from a revision; the judged DOCUMENT comes from beside the script. When those
+  // are two revisions, one headline describes both - and before this it printed that headline happily.
+  const otherDoc = synthTree(DOC,
+    (src) => `${src}\n<!-- synthetic: this document belongs to another revision -->\n`,
+    'synthetic: the document changed, the code did not');
+  const r = judge(otherDoc);
+  assert.strictEqual(r.status, 2,
+    `a hybrid run was not refused (exit ${r.status}) - it must refuse, not report:\n${r.out.slice(-900)}`);
+  assert.match(r.out, /HYBRID/, 'the refusal does not name what it refused');
+  assert.ok(!/checks hold against/.test(r.out), 'a refused run still printed a verdict headline');
+  assert.ok(r.out.includes(otherDoc), 'the refusal does not name the tree it judged');
+});
+
+test('the MOVED control still fires when the hint table has no headroom', () => {
+  // The disarming case this row is about, built on demand: 60 inserted lines stale the whole table,
+  // then 7 more move the symbols again. Under the old count-based shape this scenario had NO signal
+  // (the counts are equal); the per-symbol control fires in any table state.
+  const staleTable = synthTree('server/index.js',
+    (src) => `${Array.from({ length: 60 }, (_, i) => `// staled hint line ${i + 1}`).join('\n')}\n${src}`,
+    'synthetic: 60 lines inserted - the hint table has no headroom');
+  const base = judge(staleTable);
+  const moved = synthTree('server/index.js',
+    (src) => `${Array.from({ length: 7 }, (_, i) => `// moved after the table went stale ${i + 1}`).join('\n')}\n${src}`,
+    'synthetic: 7 lines moved on top of a table with no headroom', staleTable);
+  const r = judge(moved);
+  assert.strictEqual(r.status, 0,
+    `the shifted run is not green (exit ${r.status}):\n${r.out.split('\n').filter((l) => l.startsWith('FAIL')).slice(0, 6).join('\n')}`);
+  const rep = shiftReport(base.out, r.out, 'server/index.js', 7);
+  assert.deepStrictEqual(rep.wrong, [], `the shift was not reflected per symbol:\n${rep.wrong.join('\n')}`);
+  assert.ok(rep.moved >= 40, `only ${rep.moved} claims compared - the control is not load-bearing`);
+  // And the old shape really is disarmed here - the measurement the row asked for. `staleCount(moved) >
+  // staleCount(base)` needs the shift to ADD stale hints; with the table already stale it adds none
+  // (measured at this construction: 54 -> 53, so the old shape had no signal at all).
+  assert.ok(!(staleCount(r.out) > staleCount(base.out)),
+    `the old count shape FIRED here (${staleCount(r.out)} > ${staleCount(base.out)}), so this ` +
+    `construction is not the disarmed one the row describes - re-measure before trusting this test`);
 });
