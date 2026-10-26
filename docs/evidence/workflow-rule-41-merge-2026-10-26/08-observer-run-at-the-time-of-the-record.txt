@@ -1,0 +1,33 @@
+=== one observer run, taken at the time of this record — an OBSERVER reading, NOT a monitor ===
+The team has no monitor (decision 5, open). Rule 40 asks for one observer run per session and forbids
+calling it a monitor. This is that run, filed where it belongs: beside the merge it was taken for.
+
+=== observe-serve-pair 2026-10-26T10:45:54Z ===
+  script: scripts/observe-serve-pair.sh | 19556 B | sha256 59cfd8f59f25a2ba
+  url:    https://b974147c03228029e277d1cbe6646fe6.ctonew.app
+  tree:   /home/team/shared/probable-octo-sniffle
+  LIVENESS: 2026-10-26T10:36:41Z → PASS · 9 min since the last recorded run
+  derived: 2 asset(s) from /home/team/shared/probable-octo-sniffle/client/dist (the artifact this tree serves)
+            assets/index-CNpLMWLD.js  283703 B  md5 62f0fae0baf2b71f7607d86f6834dab1
+            assets/index-CSQHlfh4.css  35932 B  md5 2cdb30957b86cca3e6c9df949a0c2c40
+            tree HEAD: ec2a29e
+  measured: GET / → 200 | title: Antum People | page bytes: 799
+            the page names: assets/index-CNpLMWLD.js assets/index-CSQHlfh4.css 
+            assets/index-CNpLMWLD.js → 200, 283703 B, md5 62f0fae0baf2b71f7607d86f6834dab1
+            expected:            283703 B, md5 62f0fae0baf2b71f7607d86f6834dab1
+            assets/index-CSQHlfh4.css → 200, 35932 B, md5 2cdb30957b86cca3e6c9df949a0c2c40
+            expected:            35932 B, md5 2cdb30957b86cca3e6c9df949a0c2c40
+
+PAIR HOLDS (exit 0) — the page at https://b974147c03228029e277d1cbe6646fe6.ctonew.app names our asset(s) and the bytes match the served tree's artifact
+  measured off the URL: assets/index-CNpLMWLD.js 283703 B md5 62f0fae0baf2b71f7607d86f6834dab1
+
+=== what it adds to this record ===
+  1. the served pair NAMES our assets and their bytes match the served tree's artifact, so the product
+     named by decision 2 was the one serving while this record was written;
+  2. the served tree is ec2a29e — the same revision 07 reads from the deploy directory, measured twice
+     by two different instruments;
+  3. the asset names and md5s are the SAME as the plan's 10:19:23Z reading (index-CNpLMWLD.js,
+     md5 62f0fae0…), so the movement to ec2a29e shipped no new client bytes — consistent with the
+     delta being server-only plus, after this merge, one root markdown file.
+  It does NOT say the port holder is ours, and it is blind behind the login gate (decision 5's own
+  caveats, repeated here rather than dropped).

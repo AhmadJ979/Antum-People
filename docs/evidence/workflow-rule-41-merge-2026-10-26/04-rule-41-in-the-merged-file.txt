@@ -1,0 +1,32 @@
+=== the rule as it stands on main, 2026-10-26T10:43:24Z ===
+Read from the MERGE RESULT (origin/main), not from the branch that was deleted.
+
+$ git show origin/main:WORKFLOW.md | grep -c '^41\.'
+1
+  (1 — the rule is there once. The duplicate this whole record exists because of would read 2.)
+$ git show origin/main:WORKFLOW.md | grep -c '^40\.'
+1
+  (1 — the rule that was already there is still exactly once.)
+
+$ the numbered rules in the live numbering (three lists: Submission Gate, Development Process, Hard Rules)
+1 2 3 4 5 1 2 3 4 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 33 34 35 36 37 38 39 40 41 
+  (the live file skips 31–32 by its own numbering; 41 is the highest rule on main)
+
+$ the mirror's own header sentence naming that range
+> **Last synced: 2026-10-26**, taken from the live file and cut from repo `main` at `343a5f9` (rules 1–30
+> and 33–41 — the live file's own numbering, which skips 31–32 — plus the Submission Gate). To check whether
+> this mirror has drifted, run this from the repository root — it strips the header lines and compares what is
+> left with the live file, ignoring blank-line placement:
+
+$ git show origin/main:WORKFLOW.md | grep '^41\.' | fold -w 120 -s
+41. **A review approves a commit; a merge can land its child — and a duplicated edit is invisible to a checker that 
+only asks whether each file is named.** Before calling a PR reviewed, compare the commit that merged to the commit that 
+was reviewed; bytes no one reviewed are unreviewed, and the pack's own checker is re-run on the merged bytes. When two 
+branches carry the same change, main can hold a section twice with every check still reading OK; assert the region 
+byte-identical before editing it, and publish the count before → after (2 → 1) as the proof.
+
+=== the same rule in the LIVE file (where the line number differs: the mirror carries a 9-line '>' header) ===
+$ grep -n '^41\.' /home/team/shared/WORKFLOW.md
+121:41. **A review approves a commit; a merge can land its child — and a duplicated edit is invisible to a checker that only asks whether each file is named.*
+  line 121 in the live file; the mirror's own raw line 139, and 122 once its 17 '>' header lines are dropped.
+  (the one-line offset between 121 and 122 is a blank-line placement, which 03's `diff -B` ignores.)

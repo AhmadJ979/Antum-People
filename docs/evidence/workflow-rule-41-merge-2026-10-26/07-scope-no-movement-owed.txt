@@ -1,0 +1,42 @@
+=== does THIS merge owe a movement? the scope proof, 2026-10-26T10:45:38Z ===
+
+--- 1. what the merge itself put on main (main-before-the-merge -> the merge result) ---
+$ git diff --name-only ec2a29e 7361aba
+WORKFLOW.md
+$ git diff --stat ec2a29e 7361aba
+ WORKFLOW.md | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+   one file: the repository-root WORKFLOW.md mirror. Nothing under client/, server/ or scripts/.
+
+--- 2. is that file served content? the server's own mounts say no ---
+$ grep -nE 'express\.static|sendFile' server/index.js
+1169:app.use(express.static(path.join(__dirname, '../client/dist')));
+1226:  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+   the only static root is client/dist and the SPA fallback is client/dist/index.html.
+$ (and client/public/ holds: favicon.svg icons.svg )
+   no route and no module reads WORKFLOW.md; the three mentions in server/ are comments citing rules.
+
+--- 3. where the deploy stands, read from the deploy directory this session ---
+$ git -C /home/team/shared/probable-octo-sniffle rev-parse --short HEAD
+ec2a29e
+   ec2a29e Merge pull request #304 from AhmadJ979/fix/exit-interview-actor-2026-10-26
+   the deploy tree is at main~1 — the commit immediately before this merge — so #304's server/ delta
+   (server/index.js, server/access.test.js) IS deployed, and this merge added nothing to it:
+$ git diff --name-only ec2a29e 7361aba -- client server scripts
+   (empty)
+   NOTE for the plan, not a claim of defect: revision 159 records the deployed tree as 505ddd3 at
+   10:19:23Z. It reads ec2a29e now, so a movement has run since that reading. This record does not say
+   which run moved it, or that its own four success tests were the ones taken.
+
+--- 4. the stale mirror copy inside the deploy checkout, named rather than passed over ---
+$ ls -l /home/team/shared/probable-octo-sniffle/WORKFLOW.md
+-rw-r--r-- 1 root root 45047 Oct 26 09:58 /home/team/shared/probable-octo-sniffle/WORKFLOW.md
+$ git -C /home/team/shared/probable-octo-sniffle rev-parse HEAD:WORKFLOW.md   # its blob, not mine
+c0c13d651627f090f937d0a86fdfb312d84fe2fa
+   main's copy is 755b3b95e46d1f5fdee06f217528471fb88f23a1. The checkout lags by this one docs merge;
+   it is not served content, so it owes no movement of its own and catches up on the next one.
+
+=== the rule applied, in its own words ===
+A server/, client/ or scripts/ delta owes a movement unless no served path loads it, shown.
+The delta here is not in those trees at all — it is one root markdown file, whose only mentions in
+served code are comments. NOTHING SERVED MOVED, and no movement is owed for #305.

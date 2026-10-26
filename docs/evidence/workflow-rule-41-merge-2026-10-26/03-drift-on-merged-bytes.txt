@@ -1,0 +1,25 @@
+=== the mirror's own drift check, run on the MERGED bytes — 2026-10-26T10:43:41Z ===
+
+Read from main, not from the branch: the branch is gone, so a check pointed at it proves nothing.
+
+$ git show origin/main:WORKFLOW.md | grep -v '^>' | diff -B - /home/team/shared/WORKFLOW.md
+
+exit=0   lines=0
+
+=== the same check against the mirror main carried BEFORE #305 — the control, which must redden ===
+
+$ git rev-parse origin/main~1:WORKFLOW.md      # = the pre-merge mirror
+c0c13d651627f090f937d0a86fdfb312d84fe2fa
+   (named `c0c13d65` in PR #305's body; the identity above is the same object read from main itself)
+
+$ diff -B <(git show origin/main~1:WORKFLOW.md | grep -v '^>') /home/team/shared/WORKFLOW.md
+121a121
+> 41. **A review approves a commit; a merge can land its child — and a duplicated edit is invisible to a checker tha
+control lines=2
+   (2 lines: the rule-41 hunk. A check that reads 0 on both sides is not a check.)
+
+=== content identity, both sides ===
+live file, md5 of all bytes        : 85a0bae597a04344b0c6507a6fe15cc4   (44516 B)
+live file, md5 of non-blank lines  : fee66c8b191875f8eab1b32a1afe4aca
+mirror on main, no '>' lines, non-blank : fee66c8b191875f8eab1b32a1afe4aca
+   (the two non-blank md5s agree: `fee66c8b` is the content identity both sides of the sync share.)

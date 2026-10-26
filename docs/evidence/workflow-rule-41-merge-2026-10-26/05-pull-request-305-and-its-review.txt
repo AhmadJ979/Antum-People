@@ -1,0 +1,21 @@
+=== the review that this record is about (read from the API in this session) ===
+The fact rule 41 names: a review approves a COMMIT; a merge can land a CHILD of it.
+
+PR #305 — AhmadJ979/Antum-People
+  state               : closed
+  merged              : True
+  merged_at           : 2026-10-26T10:38:44Z
+  merged_by           : AhmadJ979
+  head                : 0d1f56a9f7fda374d7de127a00cebe6c4277b045
+  merge_commit_sha    : 7361aba6bab041cd33cbb17f5029b5c7522bfdb9
+  changed files       : 1   (+3 -2)
+
+reviews: 1
+  - APPROVED by AhmadJ979 at 2026-10-26T10:38:37Z, commit_id 0d1f56a9, body empty
+  (the approval names 0d1f56a9 == the PR head, so here the reviewed commit IS the merged parent;
+   rule 41 records what to do on the day it is not.)
+issue comments: 0
+
+$ git log --format='%h %p %s' -1 origin/main
+7361aba ec2a29e 0d1f56a Merge pull request #305 from AhmadJ979/docs/workflow-rule-41
+  (two parents: ec2a29e = main before the merge, 0d1f56a = the commit that was reviewed and approved)

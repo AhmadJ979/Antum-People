@@ -1,0 +1,21 @@
+=== merge identity, measured 2026-10-26T10:41:56Z ===
+$ git ls-remote origin refs/heads/main
+7361aba6bab041cd33cbb17f5029b5c7522bfdb9	refs/heads/main
+
+$ git log --format='%h %p %s' -1 origin/main
+7361aba ec2a29e 0d1f56a Merge pull request #305 from AhmadJ979/docs/workflow-rule-41
+
+$ git merge-base --is-ancestor 0d1f56a9f7fda374d7de127a00cebe6c4277b045 origin/main && echo YES
+YES
+
+$ git ls-remote origin refs/heads/docs/workflow-rule-41
+(no output above = the branch was deleted on merge)
+
+$ git log --oneline 343a5f9..origin/main   # what landed around this merge
+7361aba Merge pull request #305 from AhmadJ979/docs/workflow-rule-41
+0d1f56a docs(workflow): rule 41 — a review approves a commit; a merge can land its child
+ec2a29e Merge pull request #304 from AhmadJ979/fix/exit-interview-actor-2026-10-26
+165b7db fix(exit-interviews): the path that ends an employment now names its actor
+
+=== author/committer of the merge commit (the credential-free reading of 'merged_by') ===
+author AhmadJ979 <292906869+AhmadJ979@users.noreply.github.com> | committer GitHub <noreply@github.com>
