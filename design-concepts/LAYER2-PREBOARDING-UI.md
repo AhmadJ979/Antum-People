@@ -406,10 +406,16 @@ The flag is a **state, not an event**. On this product there is no mailer, webho
   one. If the owner later wants owners on the employee track, that is his decision and its own row
   (lead ruling, 2026-10-07). *(Corrected 2026-10-09: this bullet read "Owners exist only on the workspace track (P2-4), which does not exist yet" — the track exists now, and the employee track's honesty about having no owner is unchanged.)*
 - **Always:** present-tense state — "5 items open", "start in 48 hours or less", "opens in this view".
-- When an unprompted in-app notice exists (Gate 2's in-process timer), it says what the app did:
-  *"This case reached the 48-hour mark while the app was open"* — and, if the server was down
-  across the boundary, the flag simply reads correctly on the next read with **no** "missed
-  notification" state, because a derived flag has nothing to miss.
+- When an unprompted in-app notice exists (Gate 2's in-process timer), it says what **this watcher**
+  observed and nothing more: *"This case reached the 48-hour mark before this watcher started (first
+  seen …, 34.77h after the mark)"*, or *"…after this watcher started, so it was seen within 5
+  minute(s) of the next tick."* It cannot say whether the app was up — the only instant it compares is
+  its own start — and the flag simply reads correctly on the next read with **no** "missed
+  notification" state, because a derived flag has nothing to miss. *(Corrected 2026-10-26, row
+  `ac5739fa`: this bullet quoted the notice as "This case reached the 48-hour mark while the app was
+  open" / "…while the app was not running". Both asserted something about our availability that the
+  clock comparison cannot establish — a restart, a redeploy and a first-ever start look identical from
+  inside the process. The corrected wording is the one quoted above.)*
 
 **Anchor check — re-read off `origin/main` = `404b29d`, 2026-10-08.** The client anchors this section rests on, each with the grep that finds it, run against the merged file rather than a branch:
 
