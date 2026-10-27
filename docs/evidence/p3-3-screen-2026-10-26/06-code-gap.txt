@@ -1,0 +1,37 @@
+=== CODE EVIDENCE: what the client fetches, and what the escalations route has as a caller ===
+tree under judgement: 8bd3ca025c8a5906805eacd1cb73838f2cafecb2  (the DEPLOYED tree)
+origin/main: 23a3ff3396a70d16680276b5fc389144a41b3e4a  (23a3ff3 Merge pull request #314 from AhmadJ979/docs/probation-correction-reground-post-312)
+
+--- 1. every /api/probation call site in the client, at 8bd3ca0 ---
+8bd3ca0:client/src/App.tsx:741:        callPanel('probation', `${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`,
+8bd3ca0:client/src/App.tsx:742:          authedFetch(`${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`))
+8bd3ca0:client/src/probationTimeline.js:4: * The dates are NOT computed here. `GET /api/probation/timelines` returns each milestone's `day`,
+
+--- 2. does the client mention /api/probation/escalations anywhere? ---
+  NO CLIENT CALLER
+
+--- 3. does the client contain the word 'escalat' at all? ---
+  ZERO occurrences
+
+--- 4. the timelines payload (the only probation call the client makes) - handler keys ---
+18:      if (!me) return res.json(unpinned);
+35:    res.json({ timelines, completions_recorded: true, note: probationTimeline.COMPLETION_NOTE });
+
+--- 5. reporting_line in the client: every occurrence, at 8bd3ca0 ---
+8bd3ca0:client/src/App.tsx:68:  reporting_line: string;
+8bd3ca0:client/src/App.tsx:640:    reporting_line: '',
+8bd3ca0:client/src/App.tsx:838:        setOfferForm({ ...offerForm, offer_reference: '', candidate_name: '', candidate_email: '', role: '', reporting_line: '', start_date: '' });
+8bd3ca0:client/src/App.tsx:2062:                      <input id="intake-reporting-line" type="text" required value={offerForm.reporting_line}
+8bd3ca0:client/src/App.tsx:2063:                        onChange={e => setOfferForm({ ...offerForm, reporting_line: e.target.value })}
+  ^ all five are the offer-intake FORM field (client/src/App.tsx:68 type, :640 init, :838 reset, :2062-2063 the input), never a rendered escalation
+
+--- 6. the escalations route exists and is registered ---
+8bd3ca0:server/access.js:340:  ['GET', '/probation/escalations', 'employees:read'],
+8bd3ca0:server/index.js:1320:app.get('/api/probation/escalations', async (req, res) => {
+8bd3ca0:server/probation-escalation.test.js:370:    const r = await api('GET', '/api/probation/escalations', { token: await tokenFor(HR_ACCOUNT) });
+8bd3ca0:server/probation-escalation.test.js:385:    const r = await api('GET', `/api/probation/escalations?employee_id=${OVERDUE}`, { token: await tokenFor(HR_ACCOUNT) });
+8bd3ca0:server/probation-escalation.test.js:392:    const r = await api('GET', '/api/probation/escalations', { token: await tokenFor(FINANCE_ACCOUNT) });
+
+--- 7. and main is no different in any of this ---
+commits 8bd3ca0..main: 2; paths moved in client/, server/, scripts/: 0
+  at main too: ZERO 'escalat' in the client
