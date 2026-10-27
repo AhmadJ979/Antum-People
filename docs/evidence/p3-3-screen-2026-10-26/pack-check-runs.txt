@@ -1,0 +1,86 @@
+=== RUN A - the pack as filed (exit 0) ===
+$ python3 pack-check.py
+C1          PASS          every file matches md5sums.txt  [11 files]
+C2a         PASS          the panel is on screen (heading 'Probation timelines')
+C2b         PASS          Omar's day-30 milestone reads OVERDUE on screen
+C2c         PASS          Omar's day-60 milestone reads OVERDUE on screen
+C2d         PASS          the word 'escalat' appears on screen ZERO times  [count=0]
+C2e         PASS          no manager-chain name from Fatima/Khalid is on screen  [{"Salim": 1, "Fatima": 0, "Khalid": 0}]
+C3-Salim    PASS          the payload names Salim Al-Nuaimi
+C3-Fatima   PASS          the payload names Fatima Al-Zahrani
+C3-Khalid   PASS          the payload names Khalid Al-Dosari
+C3-missing  PASS          the payload shows the chain resolved with nothing missing
+C4a         PASS          the client has no caller for the escalations route
+C4b         PASS          the client contains no 'escalat' at all
+C4c         PASS          the timelines payload (the only probation call) carries no reporting/escalation field
+C5          PASS          the verdict line is DOES NOT SHOW IT
+C6a         PASS          source tree: `git grep -i escalat client/` returns nothing
+C6b         PASS          source tree: no client reference to the escalations route
+C7a         PASS          the register entry is filed as evidence, naming the route
+C7b         PASS          the register entry names an owner (decision 21) and says the screen does not exist yet
+C7c         PASS          source tree: the route is inside the CALLERLESS block  [4146 chars of block]
+
+19 checks, 0 failed, 0 cannot-judge
+
+=== RUN B - two claims falsified, the copy OUTSIDE the repo (exit 1, and the source checks say CANNOT-JUDGE) ===
+Falsified in a throwaway copy: the panel text gains the line 'ESCALATED TO Salim Al-Nuaimi' and
+escalation_mentions becomes 1; the verdict is changed to 'SHOWS IT'; the register file's owner
+line 'decision 21' is redacted.
+
+$ cp -r <pack> /tmp/falsified && python3 /tmp/falsified/pack-check.py
+C1          FAIL          every file matches md5sums.txt  [04-probation-panel.txt: want 025c4f001bcf8835e858f6ac5fcd3b20 got 94042df9b773f9e76920872d727ab058; 07-register-says-callerless.txt: want c853b5d14b2b9096ba6501f4781e111d got c078ad42668ad557ee2651fd17bfad61; README.md: want 3d4d8ba5c3bb70eddebe735a6cee2875 got dbf73487c3ceda2317ffed33e767f581; pack-check.py: want 3e7182ca844e564e4221d21cb05d9b17 got afb035526acbbd3ba86ab19485dc5616]
+C2a         PASS          the panel is on screen (heading 'Probation timelines')
+C2b         PASS          Omar's day-30 milestone reads OVERDUE on screen
+C2c         PASS          Omar's day-60 milestone reads OVERDUE on screen
+C2d         FAIL          the word 'escalat' appears on screen ZERO times  [count=1]
+C2e         FAIL          no manager-chain name from Fatima/Khalid is on screen  [{"Salim": 2, "Fatima": 1, "Khalid": 0}]
+C3-Salim    PASS          the payload names Salim Al-Nuaimi
+C3-Fatima   PASS          the payload names Fatima Al-Zahrani
+C3-Khalid   PASS          the payload names Khalid Al-Dosari
+C3-missing  PASS          the payload shows the chain resolved with nothing missing
+C4a         PASS          the client has no caller for the escalations route
+C4b         PASS          the client contains no 'escalat' at all
+C4c         PASS          the timelines payload (the only probation call) carries no reporting/escalation field
+C5          FAIL          the verdict line is DOES NOT SHOW IT
+C6a         CANNOT-JUDGE  source tree: `git grep -i escalat client/` returns nothing  [no repository above /tmp/falsified]
+C6b         CANNOT-JUDGE  source tree: no client reference to the escalations route  [no repository above /tmp/falsified]
+C7c         CANNOT-JUDGE  source tree: the route is inside the CALLERLESS block  [no repository above /tmp/falsified]
+C7a         PASS          the register entry is filed as evidence, naming the route
+C7b         FAIL          the register entry names an owner (decision 21) and says the screen does not exist yet
+
+19 checks, 5 failed, 3 cannot-judge
+exit=1
+
+=== RUN C - the SAME falsification, but the copy sits INSIDE the repo (exit 1, no cannot-judge) ===
+This is the run that shows the difference between 'the claim is false' and 'I could not tell'.
+
+$ cp -r /tmp/falsified <repo>/.tmp-fals && python3 <repo>/.tmp-fals/pack-check.py
+C1          FAIL          every file matches md5sums.txt  [04-probation-panel.txt: want 025c4f001bcf8835e858f6ac5fcd3b20 got 94042df9b773f9e76920872d727ab058; 07-register-says-callerless.txt: want c853b5d14b2b9096ba6501f4781e111d got c078ad42668ad557ee2651fd17bfad61; README.md: want 3d4d8ba5c3bb70eddebe735a6cee2875 got dbf73487c3ceda2317ffed33e767f581; pack-check.py: want 3e7182ca844e564e4221d21cb05d9b17 got afb035526acbbd3ba86ab19485dc5616]
+C2a         PASS          the panel is on screen (heading 'Probation timelines')
+C2b         PASS          Omar's day-30 milestone reads OVERDUE on screen
+C2c         PASS          Omar's day-60 milestone reads OVERDUE on screen
+C2d         FAIL          the word 'escalat' appears on screen ZERO times  [count=1]
+C2e         FAIL          no manager-chain name from Fatima/Khalid is on screen  [{"Salim": 2, "Fatima": 1, "Khalid": 0}]
+C3-Salim    PASS          the payload names Salim Al-Nuaimi
+C3-Fatima   PASS          the payload names Fatima Al-Zahrani
+C3-Khalid   PASS          the payload names Khalid Al-Dosari
+C3-missing  PASS          the payload shows the chain resolved with nothing missing
+C4a         PASS          the client has no caller for the escalations route
+C4b         PASS          the client contains no 'escalat' at all
+C4c         PASS          the timelines payload (the only probation call) carries no reporting/escalation field
+C5          FAIL          the verdict line is DOES NOT SHOW IT
+C6a         PASS          source tree: `git grep -i escalat client/` returns nothing
+C6b         PASS          source tree: no client reference to the escalations route
+C7a         PASS          the register entry is filed as evidence, naming the route
+C7b         FAIL          the register entry names an owner (decision 21) and says the screen does not exist yet
+C7c         PASS          source tree: the route is inside the CALLERLESS block  [4146 chars of block]
+
+19 checks, 5 failed, 0 cannot-judge
+exit=1
+
+=== STATE 1 AGAIN, after the runs were recorded (must still be exit 0) ===
+
+19 checks, 0 failed, 0 cannot-judge
+exit=0
+
+Both falsified copies are throwaway; the pack in this directory is unmodified.

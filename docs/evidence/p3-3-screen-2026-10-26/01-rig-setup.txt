@@ -1,0 +1,31 @@
+=== host ===
+now: 2026-10-27T05:49:54Z  boot: 79b369fd  uptime: 13036.51s
+fs0             4.0G  1.9G  2.2G  48% /home
+live deployment (must stay 200): 200
+=== the tree under judgement ===
+deployed tree HEAD: 8bd3ca025c8a5906805eacd1cb73838f2cafecb2
+that is the deployed tree: YES
+=== worktree at 8bd3ca0 ===
+rig HEAD: 8bd3ca025c8a5906805eacd1cb73838f2cafecb2
+=== deps (symlinks to real node_modules) ===
+server/node_modules present (via symlink)
+client/node_modules present (live tree)
+=== the bundle: copied from the deployed tree (byte-identical to the served pair) ===
+  index-CNpLMWLD.js  rig md5 62f0fae0baf2b71f7607d86f6834dab1
+  index-CSQHlfh4.css  rig md5 2cdb30957b86cca3e6c9df949a0c2c40
+=== scratch DB, seeded ===
+- Opened OFR-2026-DEMO-01 (Omar Al-Farsi, AE, start 2026-11-10) — on track — 14 days out, three items requested, none verified; items: 3 requested, 4 not_started; notice shown for 0/4 collectible ()
+- Opened OFR-2026-DEMO-02 (Mariam Al-Kaabi, AE, start 2026-10-28) — inside 48 hours with every item still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-26) — start date already passed, items still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+seeded DB bytes: 270336
+=== its own throwaway credential (never the demo one) ===
+(node:8924) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch user inserted (access_role=hr_admin)
+=== a port of its own ===
+rig up after 4 tries: unauth /api/employees -> 401 (the health contract)
+listener: 8943   cwd: /home/agent-product-designer/rig-8bd3ca0/server
+live deployment after setup (must still be 200): 200
+=== setup done ===

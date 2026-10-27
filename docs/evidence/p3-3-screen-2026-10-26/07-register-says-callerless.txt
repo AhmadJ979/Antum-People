@@ -1,0 +1,25 @@
+=== THE REGISTER - the route is registered CALLERLESS, with an owner, at 8bd3ca0 ===
+(this is what makes the pack's verdict a contradiction in the PLAN, not an undiscovered gap)
+
+  'GET /api/probation/escalations': {
+    route: 'server/index.js:1320',
+    why: 'P3-3 records a missed probation milestone\u2019s escalation in `probation_escalations` and serves '
+       + 'it over HTTP so HR can look up when it fired and to whom. The screen that will list it is the '
+       + 'probation surface\u2019s next slice and does not exist yet, so no click in the product calls this '
+       + 'route; it is exercised end to end by server/probation-escalation.test.js. Deliberate and tested, '
+       + 'not an orphan.',
+    owner: 'decision 21 (leave it and say so) - the listing surface arrives with the probation screen\u2019s '
+       + 'next slice (P3-4 / row `bb60c7a3`\u2019s follow-up), and until it does this entry is what says so '
+       + 'out loud',
+
+--- and at origin/main (23a3ff3) - unchanged? ---
+  occurrences at main: 1
+
+--- the whole CALLERLESS key list at 8bd3ca0, for scope ---
+    'GET /api/probation/escalations': {
+    'POST /api/employees/:id/probation-evaluations': {
+    'POST /api/compliance/calculate-eosb': {
+    'GET /api/preboarding/cases/:id': {
+    'GET /api/preboarding/flag-watch': {
+    'GET /api/users': {
+    'POST /api/users': {

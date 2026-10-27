@@ -1,0 +1,99 @@
+RIG: http://127.0.0.1:4711  (tree 8bd3ca0, bundle = the served bundle)
+credential: the rig's own throwaway user 'scratch' (never the demo credential)
+
+login OK as scratch (access_role hr_admin)
+
+GET /api/probation/escalations ->
+{
+  "escalations": [
+    {
+      "id": "c44bd59b-ee8e-42cd-9aab-c8e8b6e416a0",
+      "employee_id": "demo-emp-omar",
+      "employee_name": "Omar Al-Farsi",
+      "milestone_index": 1,
+      "milestone_day": 30,
+      "milestone_due_date": "2026-09-19",
+      "deadline_at": "2026-09-19T00:00:00.000Z",
+      "detected_at": "2026-10-27T05:49:57.796Z",
+      "late": true,
+      "late_by_hours": 917.83,
+      "reporting_line": {
+        "manager": {
+          "employee_id": "demo-emp-salim",
+          "name": "Salim Al-Nuaimi"
+        },
+        "managers_manager": {
+          "employee_id": "demo-emp-fatima",
+          "name": "Fatima Al-Zahrani"
+        },
+        "hr": [
+          {
+            "username": "scratch",
+            "employee_id": null,
+            "name": null
+          }
+        ],
+        "missing": [],
+        "resolved": true
+      },
+      "reporting_line_missing": [],
+      "channel": "none",
+      "fired_by": "scheduler:probation-escalation",
+      "note": "Milestone 1 of demo-emp-omar\u2019s probation passed its deadline of 2026-09-19 with no submitted evaluation. The deadline fell before this escalation watcher started; it was first seen 2026-10-27T05:49:57.796Z (917.83h after the deadline).",
+      "completed_at": null,
+      "completed_by": null,
+      "resolved": false
+    },
+    {
+      "id": "e17778dd-3684-4b50-b6ca-ddabd2a3cd07",
+      "employee_id": "demo-emp-omar",
+      "employee_name": "Omar Al-Farsi",
+      "milestone_index": 2,
+      "milestone_day": 60,
+      "milestone_due_date": "2026-10-19",
+      "deadline_at": "2026-10-19T00:00:00.000Z",
+      "detected_at": "2026-10-27T05:49:57.796Z",
+      "late": true,
+      "late_by_hours": 197.83,
+      "reporting_line": {
+        "manager": {
+          "employee_id": "demo-emp-salim",
+          "name": "Salim Al-Nuaimi"
+        },
+        "managers_manager": {
+          "employee_id": "demo-emp-fatima",
+          "name": "Fatima Al-Zahrani"
+        },
+        "hr": [
+          {
+            "username": "scratch",
+            "employee_id": null,
+            "name": null
+          }
+        ],
+        "missing": [],
+        "resolved": true
+      },
+      "reporting_line_missing": [],
+      "channel": "none",
+      "fired_by": "scheduler:probation-escalation",
+      "note": "Milestone 2 of demo-emp-omar\u2019s probation passed its deadline of 2026-10-19 with no submitted evaluation. The deadline fell before this escalation watcher started; it was first seen 2026-10-27T05:49:57.796Z (197.83h after the deadline).",
+      "completed_at": null,
+      "completed_by": null,
+      "r
+
+--- the chain in the payload, per row: ---
+  hire=demo-emp-omar milestone=None
+     reporting_line={"manager": {"employee_id": "demo-emp-salim", "name": "Salim Al-Nuaimi"}, "managers_manager": {"employee_id": "demo-emp-fatima", "name": "Fatima Al-Zahrani"}, "hr": [{"username": "scratch", "employee_id": null, "name": null}], "missing": [], "resolved": true}
+     resolved=False missing=None channel=none
+  hire=demo-emp-omar milestone=None
+     reporting_line={"manager": {"employee_id": "demo-emp-salim", "name": "Salim Al-Nuaimi"}, "managers_manager": {"employee_id": "demo-emp-fatima", "name": "Fatima Al-Zahrani"}, "hr": [{"username": "scratch", "employee_id": null, "name": null}], "missing": [], "resolved": true}
+     resolved=False missing=None channel=none
+  hire=demo-emp-reem milestone=None
+     reporting_line={"manager": {"employee_id": "demo-emp-khalid", "name": "Khalid Al-Dosari"}, "managers_manager": {"employee_id": "demo-emp-fatima", "name": "Fatima Al-Zahrani"}, "hr": [{"username": "scratch", "employee_id": null, "name": null}], "missing": [], "resolved": true}
+     resolved=False missing=None channel=none
+
+--- does the TIMELINES payload (what the client actually calls) carry any of it? ---
+timelines payload keys: ['completions_recorded', 'note', 'timelines']
+any 'reporting' or 'escalat' key anywhere in timelines: False
+a timeline row's keys: ['employee_id', 'employee_name', 'end_date', 'length_days', 'milestones', 'start_date']
