@@ -1,0 +1,53 @@
+(node:24526) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+=== exact-date cross-check: is the served series the engine output, per employee? (main = 77be6fb) ===
+window the served series covers: first point 2026-09-30 (a PAST date; today is 2026-10-27), last 2027-06-30 = 9 months ahead, 4 points
+  Q3 2026 2026-09-30: served uae=84667 ksa=82497 combined=167164 | recomputed uae=84667 ksa=82497 combined=167164  MATCH
+  Q4 2026 2026-12-31: served uae=90926 ksa=89802 combined=180728 | recomputed uae=90926 ksa=89802 combined=180728  MATCH
+  Q1 2027 2027-03-31: served uae=133477 ksa=96947 combined=230424 | recomputed uae=133477 ksa=96947 combined=230424  MATCH
+  Q2 2027 2027-06-30: served uae=161494 ksa=104172 combined=265666 | recomputed uae=161494 ksa=104172 combined=265666  MATCH
+  -> the series is the engine, summed over activeEmployees; it is not an interpolation and carries no assumption of its own beyond basis and no-departures.
+
+=== who moves the 12-month number: per-employee delta, tier crossing marked ===
+  demo-emp-leila       AE  tenure 4.657y  today   36946.20  +12m   70658.80  delta   33712.60  crosses 5y
+  demo-emp-hassan      AE  tenure 2.404y  today    7852.52  +12m   22233.90  delta   14381.38  crosses 3y
+  demo-emp-mohammed    AE  tenure 2.697y  today    7236.37  +12m   19835.73  delta   12599.36  crosses 3y
+  demo-emp-noura       AE  tenure 2.546y  today    6535.25  +12m   18200.32  delta   11665.07  crosses 3y
+  demo-emp-ahmad       AE  tenure 2.782y  today    6490.53  +12m   17644.54  delta   11154.01  crosses 3y
+  demo-emp-fatima      SA  tenure 3.466y  today   31195.07  +12m   40188.91  delta    8993.84  
+  demo-emp-khalid      SA  tenure 3.986y  today   31890.49  +12m   39885.01  delta    7994.52  
+  demo-emp-sarah       SA  tenure 3.124y  today   20305.27  +12m   26800.82  delta    6495.55  
+  demo-emp-salim       AE  tenure 3.535y  today   21443.03  +12m   27505.54  delta    6062.51  
+  demo-emp-reem        SA  tenure 0.227y  today    1249.83  +12m    6746.06  delta    5496.23  crosses 1y
+  demo-emp-omar        AE  tenure 0.186y  today       0.00  +12m    2627.83  delta    2627.83  crosses 1y
+  demo-emp-lina        AE  tenure 0.041y  today       0.00  +12m    2306.18  delta    2306.18  crosses 1y
+  TOTAL today 171144.56  +12m 294633.64  delta 123489.08   (basis resignation, no departures)
+  employees crossing a tier inside the window: 8 of 12; their deltas alone sum to 93942.66 = 76.1% of the total 12-month change
+  the same 12-month change on the FULL (termination) basis: NaN <see probe-a for the full-basis totals>
+  (the full-basis figure above is not used; probe-a carries it: today 256568.50 -> +12m 357211.70, delta 100643.20)
+
+=== two served numbers, one person, two answers ===
+  demo-emp-hassan: basic_salary 14000.00, stored eosb_accrued 7854.79
+  headline eosbLiability before: 170576  (sum of STORED eosb_accrued)
+  series Q2 2027 combined before: 265666  (recomputed from basic_salary)
+  -> set his basic_salary to 0 (an accrual basis the engine cannot use; it returns 0, silently):
+     headline eosbLiability after:  170576   (UNCHANGED — it reads the cache, not the engine)
+     series Q2 2027 combined after: 245561   (he drops out of the forecast)
+     one screen, the same person, two answers: 170576 vs 245561
+
+=== the columns the forecast would stand on ===
+  start_date               NOT NULL=1 default=null
+  end_date                 NOT NULL=0 default=null
+  status                   NOT NULL=0 default="'onboarding'"
+  data_residency_country   NOT NULL=0 default=null
+  salary                   NOT NULL=0 default=null
+  basic_salary             NOT NULL=0 default="0.0"
+  eosb_accrued             NOT NULL=0 default="0.0"
+  eosb_paid                NOT NULL=0 default="0.0"
+  termination_type         NOT NULL=0 default=null
+  unpaid_leave_days        NOT NULL=0 default="0"
+  eosb_paid non-zero rows: [{"n":0}]
+  termination_type non-null rows: [{"n":0}]
+
+=== restored ===
+  headline 170576  buckets {"AE":86399.91,"SA":84175.79}  headcount 12

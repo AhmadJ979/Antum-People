@@ -1,0 +1,25 @@
+RIG IDENTITY — P4-3 EOSB forecast measurements, 2026-10-27
+
+TREE=/tmp/r79/tree
+HEAD=77be6fbb5848a49f81069e637e7bf6b8e83de739
+origin/main=77be6fbb5848a49f81069e637e7bf6b8e83de739
+express: present
+seed exit: 0
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-26) — start date already passed, items still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+WARNING: DEMO_ADMIN_PASSWORD_HASH not set. Admin user not created/updated.
+Seeding completed successfully.
+booted after 3 tries (/api/employees -> 401)
+listener: 21557 
+live port 3000 control: 200
+
+== the rig's own database, and its distance from the live one ==
+-rw-r--r-- 1 root root 278528 Oct 27 06:08 /tmp/r79/rig/eosb.db
+live product DB path (not opened by this rig): see PRODUCT_DB_PATH in the deployed service
+
+== live controls at the end of the session ==
+live port 3000 -> 200
+public URL    -> 200
+
+== the rig's tree, cleaned of the doc work ==
+doc for this task lived in a SECOND worktree (/tmp/r79/doc, branch docs/p4-3-eosb-forecast-spec) so the rig tree stayed at 77be6fb with only the node_modules symlink untracked:
+?? server/node_modules
