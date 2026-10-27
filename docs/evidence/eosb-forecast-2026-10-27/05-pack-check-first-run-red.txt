@@ -1,0 +1,43 @@
+checking: /tmp/r79/doc/eosb-liability-forecast-spec.md
+tree this pack is running in: 77be6fb (the spec names 77be6fb)
+transcripts: 01 (3820 B), 02 (7842 B), 03 (3809 B), 04 (4146 B)
+------------------------------------------------------------------------------
+ok    tree identity in the spec                      spec=['77be6fb']    transcript=77be6fb        (01)
+RED   engine blob at main                            spec=[]             transcript=5f29bce85d63   (01)
+RED   headline liability (stored cache)              spec=['170576']     transcript=None           (03)
+ok    sum recomputed, resignation basis              spec=['171144.56']  transcript=171144.56      (02)
+ok    sum recomputed, full entitlement               spec=['256568.50']  transcript=256568.50      (02)
+ok    the basis assumption's money effect            spec=['85423.94']   transcript=85423.94       (02)
+ok    12-month point, resignation basis              spec=['294633.64']  transcript=294633.64      (02)
+ok    12-month point, full basis                     spec=['357211.70']  transcript=357211.70      (02)
+ok    12-month change, resignation basis             spec=['123489.08']  transcript=123489.08      (02)
+ok    12-month change, full basis                    spec=['100643.20']  transcript=100643.20      (02)
+RED   cache vs engine after three more years (stored) spec=['31896.04']   transcript=19824.78       (03)
+ok    cache vs engine after three more years (engine) spec=['71803.09']   transcript=71803.09       (03)
+ok    a country the engine does not know still gets a number spec=['6492.16']    transcript=6492.16        (03)
+ok    unattributed difference (total minus buckets)  spec=['6492.45']    transcript=6492.45        (03)
+RED   series drops the person after the bucket drop  spec=['249542']     transcript=265666         (03)
+ok    two served numbers, one person (series)        spec=['245561']     transcript=245561         (04)
+ok    tier-crossers' share of the 12-month change    spec=['93942.66']   transcript=93942.66       (04)
+RED   largest single mover's delta                   spec=['33712.60']   transcript=None           (04)
+RED   the 5-year step at the boundary                spec=['19895.39']   transcript=30.11          (02)
+RED   UAE 1-year cliff, first employee               spec=['2627.83']    transcript=100643.20      (04)
+ok    KSA crossing the same 1-year mark              spec=['30.11']      transcript=30.11          (02)
+ok    how many cross a tier                          spec=['8of12']      transcript=8of12          (02)
+RED   onboarding+offboarding share of the liability  spec=['28090.35']   transcript=33331.05       (02)
+ok    the two past-dated rows still inside the headline spec=['19824.78', '6415.79'] transcript=19824.78       (02)
+RED   overstatement of the two past-dated rows       the spec no longer contains this claim
+ok    served series = engine at Q2 2027              spec=['265666']     transcript=265666         (04)
+------------------------------------------------------------------------------
+claims verified: 17 / 26   red: 9
+
+RED:
+  - engine blob at main: spec says [], the transcript says 5f29bce85d63
+  - headline liability (stored cache): spec says ['170576'], the transcript says None
+  - cache vs engine after three more years (stored): spec says ['31896.04'], the transcript says 19824.78
+  - series drops the person after the bucket drop: spec says ['249542'], the transcript says 265666
+  - largest single mover's delta: spec says ['33712.60'], the transcript says None
+  - the 5-year step at the boundary: spec says ['19895.39'], the transcript says 30.11
+  - UAE 1-year cliff, first employee: spec says ['2627.83'], the transcript says 100643.20
+  - onboarding+offboarding share of the liability: spec says ['28090.35'], the transcript says 33331.05
+  - overstatement of the two past-dated rows: spec says CLAIM MISSING FROM THE SPEC, the transcript says -

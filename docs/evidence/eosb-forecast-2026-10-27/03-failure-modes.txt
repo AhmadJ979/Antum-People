@@ -1,0 +1,41 @@
+(node:22835) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+=== the served surface, unfiltered vs filtered (main = 77be6fb) ===
+GET /api/analytics/dashboard (no filter) -> 200
+  activeHeadcount 12   eosbLiability 170576   eosbByJurisdiction {"AE":86399.91,"SA":84175.79}
+  series: Q3 2026 uae=84667 ksa=82497 combined=167164 | Q4 2026 uae=90926 ksa=89802 combined=180728 | Q1 2027 uae=133477 ksa=96947 combined=230424 | Q2 2027 uae=161494 ksa=104172 combined=265666
+GET /api/analytics/dashboard?jurisdiction=AE -> 200
+  activeHeadcount 8   eosbLiability 86400   eosbByJurisdiction {"AE":86399.91,"SA":0}
+  series: Q3 2026 uae=84667 ksa=0 combined=84667 | Q4 2026 uae=90926 ksa=0 combined=90926 | Q1 2027 uae=133477 ksa=0 combined=133477 | Q2 2027 uae=161494 ksa=0 combined=161494
+GET /api/analytics/dashboard?jurisdiction=SA -> 200
+  activeHeadcount 4   eosbLiability 84176   eosbByJurisdiction {"AE":0,"SA":84175.79}
+  series: Q3 2026 uae=0 ksa=82497 combined=82497 | Q4 2026 uae=0 ksa=89802 combined=89802 | Q1 2027 uae=0 ksa=96947 combined=96947 | Q2 2027 uae=0 ksa=104172 combined=104172
+
+=== does the served series equal the engine, recomputed per employee? ===
+  Q3 2026 (2026-09-30): served uae=84667 ksa=82497 combined=167164   recomputed uae=84667 ksa=82497 combined=167164
+  Q4 2026 (2026-12-30): served uae=90926 ksa=89802 combined=180728   recomputed uae=90858 ksa=89722 combined=180580
+  Q1 2027 (2027-03-30): served uae=133477 ksa=96947 combined=230424   recomputed uae=133370 ksa=96868 combined=230238
+  Q2 2027 (2027-06-30): served uae=161494 ksa=104172 combined=265666   recomputed uae=161494 ksa=104172 combined=265666
+  note: the served dates come from the hard-coded list in server/index.js; the day above is reconstructed from the quarter label.
+  exact dates as coded: 2026-09-30, 2026-12-31, 2027-03-31, 2027-06-30
+
+=== the three failure modes, demonstrated on the rig DB (seed contains none of them) ===
+--- (1) a known departure already past, still in the liability ---
+  demo-emp-sarah: status offboarding, end_date 2026-09-30 (in the past), stored eosb_accrued 19824.78 -> still inside eosbLiability; recomputed at today (which ignores end_date): 20309.81 vs at her own end_date: 19824.78
+  demo-emp-noura: status offboarding, end_date 2026-10-10 (in the past), stored eosb_accrued 6415.79 -> still inside eosbLiability; recomputed at today (which ignores end_date): 6537.04 vs at her own end_date: 6415.79
+--- (2) a jurisdiction the engine does not know: silently UAE rules, and no bucket ---
+  before: eosbLiability 170576  buckets {"AE":86399.91,"SA":84175.79}  series last combined 265666
+  after (demo-emp-ahmad -> 'XX'): eosbLiability 170576  buckets {"AE":79907.76,"SA":84175.79}  series last combined 249542
+  the engine still returns a number for 'XX' (UAE branch, since isKSA is false): 6492.16
+  buckets now sum to 164083.55 while the total is 170576  -> the difference is unattributed
+--- (3) the accrual basis missing: a silent 0, not a "partial" ---
+  demo-emp-hassan basic_salary -> 0 (AE): engine returns 0.00
+  eosbLiability 170576 (was 170576); the payload says nothing about a component it could not derive
+--- (4) the headline is a CACHE: time alone separates it from the engine ---
+  demo-emp-khalid start_date 2022-11-01 -> 2019-11-01 (three more years of service, no write):
+    stored eosb_accrued 31896.04 -> 31896.04  (unchanged: nothing recomputes it)
+    the engine now returns 71803.09 for her
+    dashboard eosbLiability 170576 -> 170576   (the headline did not move; the series WOULD, because it recomputes)
+
+=== restored: the rig DB is back to its seeded state ===
+  eosbLiability 170576  buckets {"AE":86399.91,"SA":84175.79}  headcount 12

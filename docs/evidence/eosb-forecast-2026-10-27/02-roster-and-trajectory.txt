@@ -1,0 +1,103 @@
+=== identity of the database this process opened ===
+PRODUCT_DB_PATH = /tmp/r79/rig/eosb.db
+(node:22227) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+scratch-* accounts before: 0
+scratch-* accounts after (1 = this rig): 1
+
+=== the roster fields a forecast could stand on (as seeded, 2026-10-27) ===
+employees: 14
+id                   status      ctry  start       end         salary     basic      stored     term_type    unpaid
+demo-emp-ahmad       active      AE    2024-01-15  null        15000.00   10000.00   6492.15    null         0
+demo-emp-fatima      active      SA    2023-05-10  null        18000.00   12000.00   31201.32   null         0
+demo-emp-hassan      active      AE    2024-06-01  null        20000.00   14000.00   7854.79    null         0
+demo-emp-khalid      active      SA    2022-11-01  null        16000.00   11000.00   31896.04   null         0
+demo-emp-leila       active      AE    2022-03-01  null        25000.00   17000.00   36951.71   null         0
+demo-emp-lina        onboarding  AE    2026-10-12  null        13500.00   9500.00    0.00       null         0
+demo-emp-mohammed    active      AE    2024-02-15  null        17000.00   11500.00   7238.23    null         0
+demo-emp-noura       offboarding AE    2024-04-10  2026-10-10  16000.00   11000.00   6415.79    null         0
+demo-emp-omar        onboarding  AE    2026-08-20  null        14000.00   9500.00    0.00       null         0
+demo-emp-reem        onboarding  SA    2026-08-05  null        11000.00   8000.00    1253.65    null         0
+demo-emp-salim       active      AE    2023-04-15  null        19000.00   13000.00   21447.24   null         0
+demo-emp-sarah       offboarding SA    2023-09-12  2026-09-30  13000.00   9000.00    19824.78   null         0
+demo-emp-sultan      terminated  SA    2024-03-05  2024-09-01  14000.00   9500.00    3449.69    null         0
+demo-emp-yusuf       terminated  AE    2023-03-10  2023-08-25  12000.00   8000.00    0.00       null         0
+
+distinct countries: [{"c":"AE","n":9},{"c":"SA","n":5}]
+distinct statuses:  [{"s":"active","n":7},{"s":"offboarding","n":2},{"s":"onboarding","n":3},{"s":"terminated","n":2}]
+distinct termination_type: [{"t":"(null)","n":14}]
+end_date set (non-null): [{"n":4}]
+basic_salary 0 or null: [{"n":0}]
+salary 0 or null: [{"n":0}]
+
+=== what the engine returns today, and what the assumption costs ===
+active employees (status != terminated): 12 of 14
+sum of STORED eosb_accrued (what the dashboard headline adds up): 170575.70
+sum RECOMPUTED today, basis 'resignation' (what the series uses):      171144.56
+sum RECOMPUTED today, basis 'termination' (full entitlement):          256568.50
+the assumption's money effect (full - resignation):                    85423.94
+stored cache vs recomputed ('resignation'):                            -568.86
+
+=== per employee: tenure, stored, and the two bases today ===
+demo-emp-ahmad       2.7817y   stored 6492.15    resign 6490.53    full 19471.59   AE   basic 10000.00
+demo-emp-fatima      3.4661y   stored 31201.32   resign 31195.07   full 31195.07   SA   basic 12000.00
+demo-emp-hassan      2.4038y   stored 7854.79    resign 7852.52    full 23557.56   AE   basic 14000.00
+demo-emp-khalid      3.9863y   stored 31896.04   resign 31890.49   full 31890.49   SA   basic 11000.00
+demo-emp-leila       4.6571y   stored 36951.71   resign 36946.20   full 55419.30   AE   basic 17000.00
+demo-emp-lina        0.0411y   stored 0.00       resign 0.00       full 0.00       AE   basic 9500.00
+demo-emp-mohammed    2.6968y   stored 7238.23    resign 7236.37    full 21709.10   AE   basic 11500.00
+demo-emp-noura       2.5462y   stored 6415.79    resign 6535.25    full 19605.75   AE   basic 11000.00
+demo-emp-omar        0.1862y   stored 0.00       resign 0.00       full 0.00       AE   basic 9500.00
+demo-emp-reem        0.2272y   stored 1253.65    resign 1249.83    full 1249.83    SA   basic 8000.00
+demo-emp-salim       3.5346y   stored 21447.24   resign 21443.03   full 32164.54   AE   basic 13000.00
+demo-emp-sarah       3.1239y   stored 19824.78   resign 20305.27   full 20305.27   SA   basic 9000.00
+
+=== the trajectory a 12-month rule would produce (basis resignation, no departures) ===
+today  2026-10-27   resignation 171144.56     full 256568.50  
++3m    2027-01-27   resignation 191786.68     full 277361.39  
++6m    2027-04-27   resignation 243260.30     full 298494.66  
++9m    2027-07-27   resignation 271119.12     full 320332.18  
++12m   2027-10-27   resignation 294633.64     full 357211.70  
+12-month change on the resignation basis: 123489.08
+12-month change on the full basis:        100643.20
+
+=== who crosses a tenure TIER inside the window (the boundaries are where money moves) ===
+  demo-emp-ahmad       crosses 3y between 2027-01-13 and 2027-01-15  (AE ): 6988.82 -> 14003.19   step 7014.37
+  demo-emp-hassan      crosses 3y between 2027-05-31 and 2027-06-02  (AE ): 9784.35 -> 19604.47   step 9820.12
+  demo-emp-leila       crosses 5y between 2027-02-28 and 2027-03-02  (AE ): 39639.52 -> 59534.91   step 19895.39
+  demo-emp-lina        crosses 1y between 2027-10-11 and 2027-10-13  (AE ): 0.00 -> 2221.22   step 2221.22
+  demo-emp-mohammed    crosses 3y between 2027-02-13 and 2027-02-15  (AE ): 8037.14 -> 16103.67   step 8066.53
+  demo-emp-noura       crosses 3y between 2027-04-09 and 2027-04-11  (AE ): 7687.70 -> 15403.51   step 7715.81
+  demo-emp-omar        crosses 1y between 2027-08-19 and 2027-08-21  (AE ): 0.00 -> 2221.22   step 2221.22
+  demo-emp-reem        crosses 1y between 2027-08-04 and 2027-08-06  (SA ): 5481.18 -> 5511.29   step 30.11
+employees crossing a tier in the window: 8 of 12
+who is nearest, and when: 
+  demo-emp-lina        tenure at +12m 1.040y  next tier 3  (AE)
+  demo-emp-omar        tenure at +12m 1.185y  next tier 3  (AE)
+  demo-emp-reem        tenure at +12m 1.227y  next tier 3  (SA)
+  demo-emp-ahmad       tenure at +12m 3.781y  next tier 5  (AE)
+
+=== departures: who is known to leave, and who is unknown ===
+employees carrying an end_date: 4 -> [{"id":"demo-emp-noura","end_date":"2026-10-10","status":"offboarding"},{"id":"demo-emp-sarah","end_date":"2026-09-30","status":"offboarding"},{"id":"demo-emp-sultan","end_date":"2024-09-01","status":"terminated"},{"id":"demo-emp-yusuf","end_date":"2023-08-25","status":"terminated"}]
+the engine takes an end date as its second argument, so a known departure is expressible:
+  demo-emp-ahmad       at +6m 15306.41   at +12m 17644.54   at a date before the start date 0.00
+  demo-emp-fatima      at +6m 35679.67   at +12m 40188.91   at a date before the start date 0.00
+  demo-emp-hassan      at +6m 9480.26    at +12m 22233.90   at a date before the start date 0.00
+
+=== the cases the engine cannot compute, or computes in silence ===
+UAE-basis employees with no basic_salary (accrual returned as a silent 0, not as "partial"): 0
+employees whose country is neither AE nor SA: 0 []
+KSA employees with neither total nor basic salary (monthlyRate falls back to 0): 0
+
+=== the served surface, read over HTTP as hr_admin ===
+GET /api/analytics/dashboard?jurisdiction=AE -> 200
+activeHeadcount: 8   eosbLiability: 86400
+eosbByJurisdiction: {"AE":86399.91,"SA":0}
+eosbLiabilitySeries (the only forecast-shaped thing the product serves today):
+  {"quarter":"Q3 2026","uae":84667,"ksa":0,"combined":84667}
+  {"quarter":"Q4 2026","uae":90926,"ksa":0,"combined":90926}
+  {"quarter":"Q1 2027","uae":133477,"ksa":0,"combined":133477}
+  {"quarter":"Q2 2027","uae":161494,"ksa":0,"combined":161494}
+series: 4 points, first label Q3 2026, last Q2 2027
+bucket sum vs combined on the last point: uae+ksa = 161494  combined = 161494
+dashboard eosbLiability (stored cache) vs the series recomputed today: 86400 vs 171145
