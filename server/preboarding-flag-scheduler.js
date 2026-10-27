@@ -34,10 +34,13 @@
  *     so storing it would only create a second thing that can disagree with the first.
  *
  * CATCH-UP RULE (the restart-safe part, stated so it can be checked):
- *   - a boundary that falls while the process is up is recorded on the next tick, as met while the
- *     app was open;
- *   - a boundary that fell BEFORE this process started is recorded on the first tick, flagged
- *     `late: true`, with how late it was noticed and the words "while the app was not running";
+ *   - a boundary that falls after this watcher started is recorded on the next tick;
+ *   - a boundary that fell BEFORE this watcher started is recorded on the first tick, flagged
+ *     `late: true`, with when it was first seen and how long after the boundary that was;
+ *   - the note states that relation and the first-seen time, and nothing else: this clock comparison
+ *     can see only its own start, so it makes no claim about whether the app was up. It said "while
+ *     the app was not running" until 2026-10-26 — the same invented cause fixed in
+ *     server/probation-escalation.js, in the other served string an HR reader sees;
  *   - a boundary is never silently skipped: it is either met on a tick or caught up late and says
  *     so. Nothing is marked as missed, because a derived flag has nothing to miss — the chip reads
  *     correctly on the next read either way.
@@ -48,8 +51,9 @@ const { createIntervalWatcher, DEFAULT_INTERVAL_MS, MAX_RECORDS, isoOf } = requi
 
 const CATCH_UP_RULE = [
   `A case enters the flag at ${BOUNDARY_HOURS} hours before 00:00 of its start date.`,
-  'A boundary that falls while the process is up is recorded on the next tick ("while the app was open").',
-  'A boundary that fell before this process started is recorded on the first tick, marked late, with how late it was noticed ("while the app was not running").',
+  'A boundary that falls after this watcher started is recorded on the next tick.',
+  'A boundary that fell before this watcher started is recorded on the first tick, marked late, with when it was first seen and how long after the boundary that was.',
+  'The note states when the boundary fell relative to THIS process and when it was first seen. It makes no claim about whether the app was up: the only thing this clock comparison can see is its own start.',
   'A boundary is never silently skipped. A derived flag has nothing to miss, so no "missed notification" state exists.',
   'Nothing here is delivered anywhere, and nothing here is read to render the flag.',
 ].join(' ');
@@ -105,12 +109,18 @@ function createFlagWatcher(options = {}) {
       // leaves the key unmarked, exactly as this watcher behaved before the loop was extracted.
       if (flag.open_count === 0) return null;
 
+      // OBSERVABLE ONLY, the same rule as server/probation-escalation.js: `late` compares the boundary
+      // instant against THIS process's start (server/interval-watcher.js) and can see nothing else. A
+      // restart, a redeploy or a first-ever start are indistinguishable from here, and this string is
+      // read by HR as a statement about the product. It said "while the app was not running" until
+      // 2026-10-26, when the two log lines recorded on this host crossed that mark while the app had in
+      // fact been serving.
       const note = ctx.late
-        ? `This case reached the ${BOUNDARY_HOURS}-hour mark while the app was not running`
-          + ` (noticed ${ctx.lateByHours}h late). The flag itself is derived and read correctly on the`
-          + ' first read after restart; nothing is marked missed.'
-        : `This case reached the ${BOUNDARY_HOURS}-hour mark while the app was open`
-          + ` (noticed within ${Math.round(ctx.intervalMs / 60000)} minute(s) of the boundary).`;
+        ? `This case reached the ${BOUNDARY_HOURS}-hour mark before this watcher started`
+          + ` (first seen ${isoOf(ctx.at)}, ${ctx.lateByHours}h after the mark). The flag itself is`
+          + ' derived and read correctly on the first read after restart; nothing is marked missed.'
+        : `This case reached the ${BOUNDARY_HOURS}-hour mark after this watcher started, so it was seen`
+          + ` within ${Math.round(ctx.intervalMs / 60000)} minute(s) of the next tick.`;
 
       return {
         record: {

@@ -143,8 +143,12 @@ mkdir -p "$E"
   echo "  guard pids (scripts/keep-alive.sh): $(pgrep -f 'scripts/keep-alive[.]sh' | tr '\n' ' ')"
   echo "  lock file holds: $(cat "$D/server/keep-alive.lock" 2>/dev/null | head -1) (pid named by the guard itself)"
   echo "  /proc check: $(for p in $(pgrep -f 'scripts/keep-alive[.]sh'); do echo "pid $p -> $(tr '\0' ' ' < /proc/$p/cmdline)"; done)"
-  echo "  hook installed: $([ -f /etc/profile.d/zz-antum-product-guard.sh ] && echo "YES md5 $(md5sum < /etc/profile.d/zz-antum-product-guard.sh | cut -d' ' -f1)" || echo NO)"
-  echo "  hook source in tree: $(md5sum < "$D/scripts/antum-product-guard-hook.sh" | cut -d' ' -f1)"
+  # THE TWO MD5s BELOW ARE NOT EXPECTED TO MATCH, and until 2026-10-26 nothing said so: the installed
+  # file is the hook PLUS the provenance block scripts/install-host-tools.sh derives from the tree,
+  # while the line under it is the bare body the install step compares against. Two unlabelled md5s
+  # side by side read as a mismatch to the next operator (row ac5739fa).
+  echo "  hook installed (WHOLE FILE: body + the installer's provenance block): $([ -f /etc/profile.d/zz-antum-product-guard.sh ] && echo "YES md5 $(md5sum < /etc/profile.d/zz-antum-product-guard.sh | cut -d' ' -f1)" || echo NO)"
+  echo "  hook source in tree (BARE BODY the install step compares, not the installed bytes): $(md5sum < "$D/scripts/antum-product-guard-hook.sh" | cut -d' ' -f1)"
   echo
   if [ "$FAILED" = "0" ]; then
     echo "RESULT: OK — the control read 200; TEST 3's gate pair read as the gate runs."

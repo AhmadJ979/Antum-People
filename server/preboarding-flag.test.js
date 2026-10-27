@@ -201,7 +201,7 @@ describe('P2-5 · the in-process watcher records, catches up, and never sends', 
     items: uaeItems().map((item) => ({ ...item, status })),
   });
 
-  test('a boundary met while the process is up is recorded as met while the app was open', async () => {
+  test('a boundary that fell before the watcher started is recorded late, saying only when it was first seen', async () => {
     let clockNow = at('2026-10-31T00:00:30Z');
     const watcher = createFlagWatcher({
       clock: () => clockNow,
@@ -213,7 +213,11 @@ describe('P2-5 · the in-process watcher records, catches up, and never sends', 
     await watcher.tick();
     assert.strictEqual(watcher.records.length, 1);
     assert.strictEqual(watcher.records[0].late, true);
-    assert.match(watcher.records[0].note, /while the app was not running/);
+    assert.match(watcher.records[0].note, /reached the 48-hour mark before this watcher started/);
+    assert.match(watcher.records[0].note, /first seen \d{4}-\d{2}-\d{2}T[0-9:.]+Z/,
+      'the note states when it was first seen - the one fact a late catch-up establishes');
+    assert.doesNotMatch(watcher.records[0].note, /while the app|app was (not )?running|was open/,
+      'and makes no claim about whether the app was up: this clock comparison can only see its own start');
     assert.strictEqual(watcher.records[0].channel, 'none');
     assert.strictEqual(watcher.records[0].state_at_detection, 'inside_48_hours');
     assert.strictEqual(watcher.records[0].open_count_at_detection, 7);
@@ -238,7 +242,11 @@ describe('P2-5 · the in-process watcher records, catches up, and never sends', 
     await watcher.tick();
     assert.strictEqual(watcher.records.length, 1);
     assert.strictEqual(watcher.records[0].late, false);
-    assert.match(watcher.records[0].note, /while the app was open/);
+    assert.match(watcher.records[0].note, /reached the 48-hour mark after this watcher started/);
+    assert.match(watcher.records[0].note, /within 1 minute\(s\) of the next tick/,
+      'and how soon after the tick it was seen - the interval, which is arithmetic');
+    assert.doesNotMatch(watcher.records[0].note, /while the app|app was (not )?running|was open/,
+      'and no availability claim in this polarity either');
   });
 
   test('a case with nothing outstanding is never recorded, and a passed-and-complete case stays complete', async () => {
