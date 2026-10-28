@@ -51,7 +51,7 @@ concurrency:
 
 env:
   # The one place the production URL is written. A canary changes this line and nothing else.
-  UPTIME_URL_DEFAULT: 'https://example.com/'
+  UPTIME_URL_DEFAULT: 'http://192.0.2.1/'
   ATTEMPTS: '3'
   ATTEMPT_TIMEOUT_S: '15'
   RETRY_SLEEP_S: '20'
