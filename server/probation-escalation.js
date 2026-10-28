@@ -321,12 +321,24 @@ function shape(row) {
  * addressed to then), and the evaluation table is joined only to answer a different question: whether
  * the milestone was later completed anyway. That figure is DERIVED on read, so a later submission
  * cannot rewrite the record of what fired — it can only resolve it.
+ *
+ * `correction_count` rides that same join, one subquery and one column, and it exists to stop one
+ * misreading: since the correction path landed (`server/probation-evaluations.js`), the evaluation that
+ * resolved this escalation may since have been corrected, and `resolved: true` alone cannot say whether
+ * the assessment standing behind it is the one that was submitted. `resolved: true` with
+ * `correction_count: 1` is a record that was closed by an evaluation which was then corrected — the
+ * correction does not re-open the escalation, and the escalation row is never rewritten by it. The count
+ * is of rows in `probation_evaluation_corrections` (spec §6, "recommended, not required"); the corrected
+ * TEXT is deliberately not published here or anywhere else — who may read a manager's words is
+ * `docs/access-model.md` §8 item 13, an open owner question.
  */
 async function listEscalations(options = {}) {
   const employeeId = options.employee_id ? String(options.employee_id) : null;
   const clause = employeeId ? ` WHERE e.employee_id = ${db.escapeString(employeeId)}` : '';
   const rows = await db.query(
-    `SELECT e.*, p.submitted_at AS completed_at, p.submitted_by AS completed_by
+    `SELECT e.*, p.submitted_at AS completed_at, p.submitted_by AS completed_by,
+            (SELECT COUNT(*) FROM probation_evaluation_corrections c
+              WHERE c.evaluation_id = p.id) AS correction_count
        FROM probation_escalations e
        LEFT JOIN probation_evaluations p
          ON p.employee_id = e.employee_id AND p.milestone_index = e.milestone_index
@@ -338,6 +350,7 @@ async function listEscalations(options = {}) {
     completed_at: row.completed_at || null,
     completed_by: row.completed_by || null,
     resolved: Boolean(row.completed_at),
+    correction_count: Number(row.correction_count) || 0,
   }));
 }
 
