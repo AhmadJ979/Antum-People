@@ -24,7 +24,7 @@ marked **(counsel)**; where it is a cell the code refuses *for now because couns
 | **Changed by #239 — the cells are populated.** The first two versions of this document said every cell was `[admin]` and nothing had widened | `server/access.js:73` (`ROLES` — **five**), `:91` (`POLICY` — **17** resources, most with more than one role) | **access has widened.** There are five roles in the data, and a second account can be created with any of them (`server/index.js:239`) |
 | Scoping is enforced, not just the cell | `access.js:189` (`SCOPES`), `:357` (`scopeFor`), `:365` (`scopedAllows`), `index.js:191` (`relationTo`), consulted at `index.js:199`, `:308`, `:504` | a cell says *which* roles; `SCOPES` says *how far* — `all` / `reports` / `own`, resolved per row |
 | Field rules are enforced | `access.js:213` (`EMPLOYEE_FIELD_GROUPS`), `:224` (`FIELD_RULES`), `:373` (`fieldsRemovedFor`), applied at `index.js:320` | a manager's roster row carries no national ID and no pay; finance's carries no national ID (§4) |
-| **An unstated scope refuses** | `access.js:372-323` (`scopeFor` returns `null`), `:337-331` (`scopedAllows(null, …) === false`) — measured: `scopeFor('onboarding:read','nobody')` → `null`, `scopedAllows('own','other')` → `false` | "how far may this role reach" never falls back to "everywhere" |
+| **An unstated scope refuses** | `access.js:388` (`scopeFor` returns `null`), `:337-331` (`scopedAllows(null, …) === false`) — measured: `scopeFor('onboarding:read','nobody')` → `null`, `scopedAllows('own','other')` → `false` | "how far may this role reach" never falls back to "everywhere" |
 | **One account per person is now a constraint** | `server/db.js:134-139` — `idx_users_employee_id_unique`, a partial unique index created **after** the column migrations | enforced by the database, not by policy (§2.2); a duplicate in the data throws at boot |
 | Every other `.role` in the tree is a **job title** | `employees.role`, `preboarding_cases.role` | not permissions — the naming hazard is §2.4, and **the rename has now landed** |
 
@@ -89,7 +89,7 @@ it. Both are now out of date, and the true state is more precise than either.**
   remains a *policy*, deliberately, is the **case→person link** for pre-boarding (below).
 - **It IS read now.** `relationTo()` (`index.js:191`) resolves the caller's relation to a row — `self`, `report`,
   `other`, `unknown` — from the caller's `employee_id` and `employees.manager_id`, and `scopedAllows`
-  (`access.js:380`) turns that into a decision. So the own view and the reports view are **live**, not pending.
+  (`access.js:396`) turns that into a decision. So the own view and the reports view are **live**, not pending.
 - **Changed by #239 — a THIRD prerequisite is missing, and the code names it rather than hiding it.** The gate's
   `PENDING_CELLS` (`access.js:155`) records that **`preboarding_cases` has no `employee_id`**: a case carries
   `candidate_name`, `candidate_email`, `role`, `department`, `reporting_line` and **no reference to an
@@ -126,7 +126,7 @@ now has five roles with `SCOPES` as the mechanism that makes a sixth unnecessary
 **Changed by #239: the rename happened**, exactly where the second version of this document predicted it would —
 in the slice that derives `manager` from `employees.manager_id`, and so is the slice where `users.access_role` and
 `employees.role` sit in one function. The column is `users.access_role` (`schema.sql:191`), the JWT claim is
-`req.user.access_role` (`access.js:432`, `auth.js:91-92`), and `access.js:67` records the rename as this slice's.
+`req.user.access_role` (`access.js:448`, `auth.js:91-92`), and `access.js:67` records the rename as this slice's.
 **What remains true:** the hazard was real while it lasted, the fix is a rename and a migration rather than a
 second name kept alongside (a role value the list does not know is refused), and the gate is written against the
 permission — correct today, as it was before the rename.
@@ -175,7 +175,7 @@ would also let a hire submit their own, and which this route **refuses outright*
 The route was appended at the end of the ROUTES list, for the reason the P3-1 paragraph gives: this file
 cites `file:line`, and inserting in the middle moves the instrument's checks.
 **P3-3's escalation read is `employees:read` with the COMPANY-WIDE row scope, and that narrowing is the
-decision** (row `bb60c7a3`; route `index.js:1320`, rule in `server/probation-escalation.js`). What the row
+decision** (row `bb60c7a3`; route `index.js:1325`, rule in `server/probation-escalation.js`). What the row
 serves is not the hire's dates — those are on the timeline route, under the roster's own scope — but the
 record of an escalation: *when the system noticed a missed probation milestone, and who it was addressed
 to*. It is addressed to the manager's manager and to HR, never to the direct manager, so serving it under
@@ -216,6 +216,8 @@ the same reading the §3.1 onboarding cell records. *(Decided by the engineer, 2
 document's own §4; the narrower cell is the one this PR ships and the wider one is raised in its
 body rather than taken silently.)*
 
+**P3-2's follow-up — the CORRECTION — rides the same cell as the submission it corrects, and its ROW scope is the submission's** (owner decision, 2026-10-28: option (A), a separate dated row beside the original, never a rewrite — `probation-correction-path-spec.md` §1, whose §3b calls this shape **C1**). The write is `onboarding:write`: company-wide, or a hire whose `manager_id` is the caller's own record, with `own` **refused outright** — a hire cannot correct the assessment of themselves any more than they can submit it, and the route refuses it before the lookup. **No cell and no route was added**, for the reason P3-1, P3-2, P3-3 and P4-1 each gave: a `probation:correct` cell would mean a new resource in the matrix this document mirrors, and a new cell is the owner's call. **Who may READ the corrected text — or the original — is NOT decided here**, and no route serves an evaluation's `content`: that is §8 item 13, left open deliberately because `content` would otherwise reach FINANCE and the hire's manager. What the screen that already exists does learn is that a record was corrected, by whom and when (`correction_count`, `last_corrected_by`, `last_corrected_at` on the timeline's `completion`) — the fact, never a manager's words. **The route was appended at the end of the route list**, for the reason the P3-1 paragraph gives.
+
 **National-ID columns never leave the HR boundary.** They are encrypted at rest and the roster's read decrypts
 them (`index.js:329-319`) — encryption at rest discloses nothing if the read decrypts for everyone. #239 closed
 this properly: the decrypt happens **only for a column the caller's role is served**, inside the projection
@@ -223,7 +225,7 @@ this properly: the decrypt happens **only for a column the caller's role is serv
 (`index.js:310`), not "serve everything".
 
 **A scope the table does not cover is a refusal, and that is asserted.** `scopeFor` returns `null` rather than
-falling back to `all` (`access.js:372-323`); the call sites refuse on it. The failure mode this prevents is the
+falling back to `all` (`access.js:388`); the call sites refuse on it. The failure mode this prevents is the
 worst one available here: "how far may this role reach" defaulting to "everywhere".
 
 ### 3.2 Pre-boarding — the ruling, and the cell that still waits on a column
@@ -428,7 +430,7 @@ in §3.3 it is the one where a wrong click is least recoverable.
 
 ## 8. Open questions
 
-1. **Counsel:** retention periods per table, and candidate data for hires that never start.
+1. **Counsel:** retention periods per table, and candidate data for hires that never start. `probation_evaluation_corrections` (P3-2 follow-up, added 2026-10-28) is one more table for that list: it holds a manager's corrected words and the reason they changed.
 2. **Counsel:** whether a manager may see a report's pay *band*.
 3. **Counsel — `⚖` in the code (decision 27 — the block with items 4 and 5):** the minimum cohort size
    before an aggregate becomes a disclosure. Until answered, a manager's dashboard row is refused
@@ -460,6 +462,8 @@ in §3.3 it is the one where a wrong click is least recoverable.
 
 11. **Owner — the `probation:read` cell (P3-1, raised in PR #287).** The probation timeline route rides `employees:read`, so its audience is exactly the audience of the rows its dates are computed from (the ROUTES entry for `GET /api/probation/timelines` in `server/access.js`). A `probation:read` cell would also let a hire read their **own** timeline — deliberately **not taken**, because adding a cell is this document's owner's call and not the engineer's. It is a **candidate for decision 27's counsel set** (a hire reading their own probation dates), and it is recorded here so that a re-grounding pass cannot quietly close it.
 12. **Owner — the `probation:write` cell (P3-2, raised in PR #306).** The evaluation route rides `onboarding:write` — HR_ADMIN company-wide (`all`), MANAGER scoped to the hire's **own** manager (`reports`) — and its ROW scope is narrower than its cell: company-wide, or the hire's own manager, with `own` **refused outright** rather than left unlisted. A `probation:write` cell would let a hire submit their own evaluation; **not taken**, on the same reasoning as item 11 (the record's premise is that a manager wrote it, and adding a cell is the owner's call). It is a **candidate for decision 27's counsel set**, and it is recorded here for the same reason.
+
+13. **Owner — the `probation:correct` cell, and who may READ a manager's assessment of a hire.** The correction route (P3-2 follow-up, row `0484e79e`) rides `onboarding:write`, so WHO MAY WRITE is answered by the cell and the route's row scope. **Who may read the text is not**, and this build deliberately does not decide it: no route serves an evaluation's `content` — not the corrected words and not the original — because a read cell would decide whether **FINANCE** (whose `employees:read` scope is `all`) and whether **the hire themselves** may read a manager's assessment of them. The text therefore stays unread on purpose, and the write path is complete and auditable without it: `effectiveEvaluation` is the only function a reader may use to show an assessment, and nothing calls it over HTTP yet. A read cell is the owner's call, exactly as items 11 and 12 say of `probation:read` and `probation:write`, and it is a **candidate for decision 27's set** on the same reasoning. Recorded here so a re-grounding pass cannot quietly close it or mistake it for a decision the engineer took.
 
 ---
 
@@ -730,10 +734,10 @@ left naming lines that now hold something else — a re-ground is a measurement,
 
 | this page cites | was pointing at | now points at |
 |---|---|---|
-| the **token carries the role** row, and the paragraph that repeats it | `allowed.indexOf(req.user.access_role)` at `:417` | **`access.js:432`** |
-| the **unstated scope refuses** row, and the closing paragraph on the same call | `scopeFor` returns `null` at `:357` | **`access.js:372-323`** |
-| the paragraph where `scopedAllows` "turns that into a decision" | `scopedAllows` at `:365` | **`access.js:380`** |
-| **the gate denies in four ways** | the four refusals, cited as a span from `:417` | **`access.js:432-386`** |
+| the **token carries the role** row, and the paragraph that repeats it | `allowed.indexOf(req.user.access_role)` at `:417` | **`access.js:448`** |
+| the **unstated scope refuses** row, and the closing paragraph on the same call | `scopeFor` returns `null` at `:357` | **`access.js:388`** |
+| the paragraph where `scopedAllows` "turns that into a decision" | `scopedAllows` at `:365` | **`access.js:396`** |
+| **the gate denies in four ways** | the four refusals, cited as a span from `:417` | **`access.js:448-402`** |
 
 Each of the three sites is now a `[doc citation]` entry of its own in `scripts/verify-access-model.py`, so the
 next move reddens on this page and not only on the tree claim standing beside it. The checker's six hints moved
@@ -746,3 +750,11 @@ in no check at all). The sites no check compares are still counted there and are
 probation timelines, and it is one of the nine. It is named rather than moved, because moving it would be a guess
 about which line that sentence means.
 
+
+### 10.8 Amended 2026-10-28 with the correction path (row `0484e79e`, owner decision (A))
+
+**The correction route was appended to the END of `ROUTES`, and `server/access.js` grew by 16 lines from that point on; `server/index.js` grew above the escalation route too.** Six of the checker's tree claims into `access.js` and seven into `index.js` went stale, and this page's own citations to the scope helpers moved. A re-ground is a measurement, one site at a time: three `access.js` sites moved by **+16** and the escalation read by **+5**, because two files grew in different places — resolved against the tree, never shifted by an offset carried across a file. In this page's backticked shorthand, so that naming them here invents no new citation: `access.js` `:388` (was `:372-323`), `access.js` `:396` (was `:380`), `access.js` `:448` (was `:432`; its four-refusal span `:448-402`), `index.js` `:1325` (was `:1320`). **§10.7's table keeps the numbers that pass measured**, because they were true of that pass; a reader must not take them for current, which is why they are re-derived here.
+
+**The route count on `server/access.js` `ROUTES` moved 30 → 31**, which `scripts/verify-access-model.py` checks — published as a move rather than adjusted silently (rule 41) — and §3.1 carries the new route's row and the paragraph stating what its cell does and does not decide. **The page gained no new citation site and no new compared-as-citation entry**: the row is written in the shorthand this page's own tables use, so §10.2's four measured numbers stand as they are.
+
+**What this document still does not decide** is §8 item 13: who may READ a manager's assessment. No route serves an evaluation's `content` in this build, so nothing here publishes a manager's words to FINANCE or to the hire.
