@@ -1,0 +1,92 @@
+# mutated file: server/interval-watcher.js
+# mutated md5: 09975bbec67193d0962c6c75339f6507
+# guard: server/watcher-note-detection-claim.test.js
+# command: cd server && node --test watcher-note-detection-claim.test.js
+TAP version 13
+# [DB] Upgraded: created index(es) idx_users_employee_id_unique
+# (node:16469) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the watcher notes: a cadence by design, never a detection latency
+    # Subtest: the escalation note (served by GET /api/probation/escalations) states instants and the limit
+    not ok 1 - the escalation note (served by GET /api/probation/escalations) states instants and the limit
+      ---
+      duration_ms: 4.609695
+      type: 'test'
+      location: '/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:199:3'
+      failureType: 'testCodeFailure'
+      error: 'the note no longer names what the clock comparison cannot see. That limitation is the whole point of the sentence: a cadence stated without it is the detection latency again, in softer words'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+      actual: 'Milestone 1 of wn-hire-deadline-after’s probation passed its deadline of 2026-10-28 with no submitted evaluation. The deadline fell after this escalation watcher started; it was first seen 2026-10-29T12:00:00.000Z. The watcher reads for what has come due every 5 minute(s) by design.'
+      operator: 'match'
+      stack: |-
+        TestContext.<anonymous> (/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:232:12)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Promise.all (index 0)
+        async Suite.run (node:internal/test_runner/test:1442:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: the pre-boarding flag note (served by flagWatcher.status()) states instants and the limit
+    not ok 2 - the pre-boarding flag note (served by flagWatcher.status()) states instants and the limit
+      ---
+      duration_ms: 0.988434
+      type: 'test'
+      location: '/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:245:3'
+      failureType: 'testCodeFailure'
+      error: 'the note no longer names what the clock comparison cannot see'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+      actual: 'This case reached the 48-hour mark after this watcher started; it was first seen 2026-10-31T00:00:01.000Z. The watcher reads for what has come due every 1 minute(s) by design.'
+      operator: 'match'
+      stack: |-
+        TestContext.<anonymous> (/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:276:12)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: the two modules carry the SAME clause, and it is parameterised by the interval
+    ok 3 - the two modules carry the SAME clause, and it is parameterised by the interval
+      ---
+      duration_ms: 0.195849
+      type: 'test'
+      ...
+    # Subtest: the sweep catches the removed clause it is written for — a control on the control
+    ok 4 - the sweep catches the removed clause it is written for — a control on the control
+      ---
+      duration_ms: 0.357784
+      type: 'test'
+      ...
+    # Subtest: no module under server/ carries the removed clause again outside its comments
+    ok 5 - no module under server/ carries the removed clause again outside its comments
+      ---
+      duration_ms: 26.012497
+      type: 'test'
+      ...
+    # Subtest: the corrected comments still quote the removed clause, so this guard has a history
+    ok 6 - the corrected comments still quote the removed clause, so this guard has a history
+      ---
+      duration_ms: 0.294501
+      type: 'test'
+      ...
+    1..6
+not ok 1 - the watcher notes: a cadence by design, never a detection latency
+  ---
+  duration_ms: 33.185036
+  type: 'suite'
+  location: '/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:198:1'
+  failureType: 'subtestsFailed'
+  error: '2 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 6
+# suites 1
+# pass 4
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 127.162236

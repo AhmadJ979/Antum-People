@@ -72,7 +72,7 @@ const db = require('./db');
 const access = require('./access');
 const probationTimeline = require('./probation-timeline');
 const probationEvaluations = require('./probation-evaluations');
-const { createIntervalWatcher, DEFAULT_INTERVAL_MS } = require('./interval-watcher');
+const { createIntervalWatcher, DEFAULT_INTERVAL_MS, cadenceClause } = require('./interval-watcher');
 
 /** The actor every system-fired row carries. A name, never blank, never `'system'`. */
 const FIRED_BY = 'scheduler:probation-escalation';
@@ -224,14 +224,22 @@ async function recordEscalation(item, ctx = {}) {
   // is read by HR as a statement about the product. It stated "while the app was not running" until
   // 2026-10-26, when three live rows written minutes after a movement said the product had been down while it
   // had served continuously. Rule in force: an exception that lies is worse than none.
+  //
+  // Neither branch may state a DETECTION LATENCY either. Until 2026-10-28 this one closed with "…so it was
+  // seen within N minute(s) of the next tick" — a claim about how soon a person would have been told, which
+  // this process cannot establish, because it cannot see whether its own ticks ran on schedule (a suspended
+  // guest, a stall or a lost span is exactly how a tick goes missing on this host). The closing sentence is
+  // `cadenceClause()` from the loop's own module, written once for both watchers: the interval is the
+  // INTENDED cadence, not a measured detection time. What is stated here is the deadline's relation to this
+  // process's start and the instant this process first saw it.
   const note = late
     ? `Milestone ${milestone.index} of ${employee.id}\u2019s probation passed its deadline of `
       + `${milestone.due_date} with no submitted evaluation. The deadline fell before this escalation `
       + `watcher started; it was first seen ${at.toISOString()} (${lateByHours}h after the deadline).`
     : `Milestone ${milestone.index} of ${employee.id}\u2019s probation passed its deadline of `
       + `${milestone.due_date} with no submitted evaluation. The deadline fell after this escalation `
-      + `watcher started, so it was seen within `
-      + `${Math.round((ctx.intervalMs || DEFAULT_INTERVAL_MS) / 60000)} minute(s) of the next tick.`;
+      + `watcher started; it was first seen ${at.toISOString()}. `
+      + `${cadenceClause(ctx.intervalMs || DEFAULT_INTERVAL_MS)}`;
 
   const id = randomUUID();
   await db.query(`INSERT OR IGNORE INTO probation_escalations

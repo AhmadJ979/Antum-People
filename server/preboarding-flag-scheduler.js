@@ -41,13 +41,17 @@
  *     can see only its own start, so it makes no claim about whether the app was up. It said "while
  *     the app was not running" until 2026-10-26 — the same invented cause fixed in
  *     server/probation-escalation.js, in the other served string an HR reader sees;
+ *   - it also names its own cadence as DESIGN INTENT and says what that cannot see, rather than a
+ *     detection latency: until 2026-10-28 the not-late branch closed with "so it was seen within N
+ *     minute(s) of the next tick", and a tick that did not run on schedule cannot be reported by the
+ *     process that missed it. The closing sentence is now `cadenceClause()` from the loop's module;
  *   - a boundary is never silently skipped: it is either met on a tick or caught up late and says
  *     so. Nothing is marked as missed, because a derived flag has nothing to miss — the chip reads
  *     correctly on the next read either way.
  */
 
 const { deriveFlag, BOUNDARY_HOURS } = require('./preboarding-flag');
-const { createIntervalWatcher, DEFAULT_INTERVAL_MS, MAX_RECORDS, isoOf } = require('./interval-watcher');
+const { createIntervalWatcher, DEFAULT_INTERVAL_MS, MAX_RECORDS, isoOf, cadenceClause } = require('./interval-watcher');
 
 const CATCH_UP_RULE = [
   `A case enters the flag at ${BOUNDARY_HOURS} hours before 00:00 of its start date.`,
@@ -114,13 +118,18 @@ function createFlagWatcher(options = {}) {
       // restart, a redeploy or a first-ever start are indistinguishable from here, and this string is
       // read by HR as a statement about the product. It said "while the app was not running" until
       // 2026-10-26, when the two log lines recorded on this host crossed that mark while the app had in
-      // fact been serving.
+      // fact been serving — and it then closed with a DETECTION LATENCY, "so it was seen within N
+      // minute(s) of the next tick", until 2026-10-28. A tick that did not run on schedule cannot be
+      // reported by the process that missed it: the interval is the INTENDED cadence, not a measured
+      // detection time. The closing sentence is now `cadenceClause()` (server/interval-watcher.js),
+      // written once for both watchers; what is stated here is the boundary's relation to this
+      // process's start and the instant this process first saw it.
       const note = ctx.late
         ? `This case reached the ${BOUNDARY_HOURS}-hour mark before this watcher started`
           + ` (first seen ${isoOf(ctx.at)}, ${ctx.lateByHours}h after the mark). The flag itself is`
           + ' derived and read correctly on the first read after restart; nothing is marked missed.'
-        : `This case reached the ${BOUNDARY_HOURS}-hour mark after this watcher started, so it was seen`
-          + ` within ${Math.round(ctx.intervalMs / 60000)} minute(s) of the next tick.`;
+        : `This case reached the ${BOUNDARY_HOURS}-hour mark after this watcher started; it was first`
+          + ` seen ${isoOf(ctx.at)}. ${cadenceClause(ctx.intervalMs)}`;
 
       return {
         record: {

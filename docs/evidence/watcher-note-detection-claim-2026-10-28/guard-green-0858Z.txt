@@ -1,0 +1,56 @@
+TAP version 13
+# [DB] Upgraded: created index(es) idx_users_employee_id_unique
+# (node:16429) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the watcher notes: a cadence by design, never a detection latency
+    # Subtest: the escalation note (served by GET /api/probation/escalations) states instants and the limit
+    ok 1 - the escalation note (served by GET /api/probation/escalations) states instants and the limit
+      ---
+      duration_ms: 4.455318
+      type: 'test'
+      ...
+    # Subtest: the pre-boarding flag note (served by flagWatcher.status()) states instants and the limit
+    ok 2 - the pre-boarding flag note (served by flagWatcher.status()) states instants and the limit
+      ---
+      duration_ms: 1.026002
+      type: 'test'
+      ...
+    # Subtest: the two modules carry the SAME clause, and it is parameterised by the interval
+    ok 3 - the two modules carry the SAME clause, and it is parameterised by the interval
+      ---
+      duration_ms: 0.220764
+      type: 'test'
+      ...
+    # Subtest: the sweep catches the removed clause it is written for — a control on the control
+    ok 4 - the sweep catches the removed clause it is written for — a control on the control
+      ---
+      duration_ms: 0.396497
+      type: 'test'
+      ...
+    # Subtest: no module under server/ carries the removed clause again outside its comments
+    ok 5 - no module under server/ carries the removed clause again outside its comments
+      ---
+      duration_ms: 31.84273
+      type: 'test'
+      ...
+    # Subtest: the corrected comments still quote the removed clause, so this guard has a history
+    ok 6 - the corrected comments still quote the removed clause, so this guard has a history
+      ---
+      duration_ms: 0.29386
+      type: 'test'
+      ...
+    1..6
+ok 1 - the watcher notes: a cadence by design, never a detection latency
+  ---
+  duration_ms: 38.969631
+  type: 'suite'
+  ...
+1..1
+# tests 6
+# suites 1
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 144.184546
