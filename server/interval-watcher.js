@@ -50,6 +50,30 @@ const MAX_RECORDS = 200;
 const isoOf = (ms) => (ms === null || ms === undefined ? null : new Date(ms).toISOString());
 
 /**
+ * The cadence clause — the ONE sentence either watcher's note may carry about its own ticking.
+ *
+ * Both watchers' notes are served to an HR reader as statements about the product, and until
+ * 2026-10-28 each of them closed with a DETECTION LATENCY: *"…so it was seen within N minute(s) of
+ * the next tick."* The process can see that its interval is N minutes. It CANNOT see whether its own
+ * ticks ran on schedule — on this host a suspended guest, a stall or a lost span is exactly how a
+ * tick goes missing, so an interval read as a promise of how fast a person would have been told is
+ * a claim this mechanism cannot establish. The clause therefore states the cadence as DESIGN INTENT,
+ * names that limit, and leaves the recorded instants to the note itself (the deadline/boundary and
+ * the first-seen reading, both already on the record and in the payload). Same rule as the catch-up
+ * clauses above it: state only what the clock comparison can see.
+ *
+ * Written once and imported by both watchers, so the sentence cannot drift apart in the two modules
+ * that serve it, and so `server/watcher-note-detection-claim.test.js` can hold ONE string against
+ * both notes instead of two copies of the same claim against each other.
+ */
+function cadenceClause(intervalMs) {
+  const minutes = Math.round((intervalMs || DEFAULT_INTERVAL_MS) / 60000);
+  return `The watcher reads for what has come due every ${minutes} minute(s) by design; it cannot `
+    + 'see whether its own ticks ran on schedule, so that interval is the intended cadence, not a '
+    + 'measured detection time.';
+}
+
+/**
  * @param {object} options
  * @param {string} options.name            how log lines are prefixed, e.g. `preboarding-flag`
  * @param {number} [options.intervalMs]    the tick period (default 5 minutes)
@@ -149,4 +173,4 @@ function createIntervalWatcher(options = {}) {
   };
 }
 
-module.exports = { createIntervalWatcher, DEFAULT_INTERVAL_MS, MAX_RECORDS, isoOf };
+module.exports = { createIntervalWatcher, DEFAULT_INTERVAL_MS, MAX_RECORDS, isoOf, cadenceClause };

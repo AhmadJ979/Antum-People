@@ -243,8 +243,12 @@ describe('P2-5 · the in-process watcher records, catches up, and never sends', 
     assert.strictEqual(watcher.records.length, 1);
     assert.strictEqual(watcher.records[0].late, false);
     assert.match(watcher.records[0].note, /reached the 48-hour mark after this watcher started/);
-    assert.match(watcher.records[0].note, /within 1 minute\(s\) of the next tick/,
-      'and how soon after the tick it was seen - the interval, which is arithmetic');
+    assert.match(watcher.records[0].note, /first seen \d{4}-\d{2}-\d{2}T[0-9:.]+Z/,
+      'the note states when this process first saw it - an instant it recorded');
+    assert.match(watcher.records[0].note, /every 1 minute\(s\) by design/,
+      'and how often this watcher reads, as design intent - not how fast anybody was told');
+    assert.doesNotMatch(watcher.records[0].note, /within \d+ minute\(s\)/,
+      'and no detection latency: the process can see its interval, not whether its ticks ran on schedule');
     assert.doesNotMatch(watcher.records[0].note, /while the app|app was (not )?running|was open/,
       'and no availability claim in this polarity either');
   });

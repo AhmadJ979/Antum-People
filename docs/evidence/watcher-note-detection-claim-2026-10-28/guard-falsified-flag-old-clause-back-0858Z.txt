@@ -1,0 +1,94 @@
+# mutated file: server/preboarding-flag-scheduler.js
+# mutated md5: bcd113f19758c021cc8a105823cdef73
+# guard: server/watcher-note-detection-claim.test.js
+# command: cd server && node --test watcher-note-detection-claim.test.js
+TAP version 13
+# [DB] Upgraded: created index(es) idx_users_employee_id_unique
+# (node:16456) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the watcher notes: a cadence by design, never a detection latency
+    # Subtest: the escalation note (served by GET /api/probation/escalations) states instants and the limit
+    ok 1 - the escalation note (served by GET /api/probation/escalations) states instants and the limit
+      ---
+      duration_ms: 4.182752
+      type: 'test'
+      ...
+    # Subtest: the pre-boarding flag note (served by flagWatcher.status()) states instants and the limit
+    not ok 2 - the pre-boarding flag note (served by flagWatcher.status()) states instants and the limit
+      ---
+      duration_ms: 1.287273
+      type: 'test'
+      location: '/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:245:3'
+      failureType: 'testCodeFailure'
+      error: 'the served flag note carries /seen within/: it states a DETECTION LATENCY — how soon after the boundary this process noticed. The process can see its interval; it cannot see whether its own ticks ran on schedule. Correct the sentence in server/preboarding-flag-scheduler.js instead of relaxing this check.'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+      actual: 'This case reached the 48-hour mark after this watcher started; it was first seen 2026-10-31T00:00:01.000Z. The watcher reads for what has come due every 1 minute(s) by design; it cannot see whether its own ticks ran on schedule, so that interval is the intended cadence, not a measured detection time. It was seen within 1 minute(s) of the next tick.'
+      operator: 'doesNotMatch'
+      stack: |-
+        TestContext.<anonymous> (/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:282:14)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: the two modules carry the SAME clause, and it is parameterised by the interval
+    ok 3 - the two modules carry the SAME clause, and it is parameterised by the interval
+      ---
+      duration_ms: 0.192467
+      type: 'test'
+      ...
+    # Subtest: the sweep catches the removed clause it is written for — a control on the control
+    ok 4 - the sweep catches the removed clause it is written for — a control on the control
+      ---
+      duration_ms: 0.39125
+      type: 'test'
+      ...
+    # Subtest: no module under server/ carries the removed clause again outside its comments
+    not ok 5 - no module under server/ carries the removed clause again outside its comments
+      ---
+      duration_ms: 12.167137
+      type: 'test'
+      location: '/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:319:3'
+      failureType: 'testCodeFailure'
+      error: 'preboarding-flag-scheduler.js carries /seen within/ outside its comments: states a DETECTION LATENCY — how soon after the boundary this process noticed. The process can see its interval; it cannot see whether its own ticks ran on schedule. The same claim was served from two modules because nothing swept their siblings.'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+      actual: ' const deriveFlag, BOUNDARY_HOURS = require(./preboarding-flag); const createIntervalWatcher, DEFAULT_INTERVAL_MS, MAX_RECORDS, isoOf, cadenceClause = require(./interval-watcher); const CATCH_UP_RULE = [ A case enters the flag at BOUNDARY_HOURS hours before 00:00 of its start date., A boundary that falls after this watcher started is recorded on the next tick., A boundary that fell before this watcher started is recorded on the first tick, marked late, with when it was first seen and how long after the boundary that was., The note states when the boundary fell relative to THIS process and when it was first seen. It makes no claim about whether the app was up: the only thing this clock comparison can see is its own start., A boundary is never silently skipped. A derived flag has nothing to miss, so no missed notification state exists., Nothing here is delivered anywhere, and nothing here is read to render the flag., ].join( ); function createFlagWatcher(options = ) const snapshot = options.snapshot; if (typeof snapshot !== function) throw new Error(createFlagWatcher needs a snapshot() function); const boundaryOf = (caseRow) => if (!caseRow || !caseRow.start_date) return null; const ms = Date.parse( String(caseRow.start_date).slice(0, 10) T00:00:00Z); if (Number.isNaN(ms)) return null; return ms - BOUNDARY_HOURS * 3600000; ; const watcher = createIntervalWatcher( name: preboarding-flag, intervalMs: options.intervalMs, clock: options.clock, log: options.log, catchUpRule: CATCH_UP_RULE, due: async (at) => const cases = await snapshot(); const items = []; for (const caseRow of cases || []) const boundaryMs = boundaryOf(caseRow); if (boundaryMs === null) continue; if (boundaryMs > at.getTime()) continue; items.push( key: caseRow.case_id @ isoOf(boundaryMs) , due_at: boundaryMs, caseRow ); return items; , onDue: async (item, ctx) => const caseRow = item.caseRow; const flag = deriveFlag( start_date: caseRow.start_date, items: caseRow.items || [], collected_statuses: caseRow.collected_statuses, , ctx.at ); if (flag.open_count === 0) return null; const note = ctx.late ? This case reached the BOUNDARY_HOURS -hour mark before this watcher started (first seen isoOf(ctx.at) , ctx.lateByHours h after the mark). The flag itself is derived and read correctly on the first read after restart; nothing is marked missed. : This case reached the BOUNDARY_HOURS -hour mark after this watcher started; it was first seen isoOf(ctx.at) . cadenceClause(ctx.intervalMs) It was seen within Math.round(ctx.intervalMs / 60000) minute(s) of the next tick.; return record: case_id: caseRow.case_id, offer_reference: caseRow.offer_reference || null, boundary_at: isoOf(item.due_at), detected_at: ctx.at.toISOString(), late: ctx.late, late_by_hours: ctx.lateByHours, state_at_detection: flag.state, open_count_at_detection: flag.open_count, channel: none, note, , log: caseRow.case_id — note , ; , ); return start: watcher.start, stop: watcher.stop, tick: watcher.tick, records: watcher.records, catchUpRule: CATCH_UP_RULE, status: () => const records_recorded, keys_seen, ...rest = watcher.status(); return ...rest, boundaries_recorded: records_recorded, boundaries_seen: keys_seen ; , ; module.exports = createFlagWatcher, CATCH_UP_RULE, DEFAULT_INTERVAL_MS, MAX_RECORDS ; '
+      operator: 'doesNotMatch'
+      stack: |-
+        TestContext.<anonymous> (/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:330:16)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        Suite.processPendingSubtests (node:internal/test_runner/test:744:18)
+        Test.postRun (node:internal/test_runner/test:1173:19)
+        Test.run (node:internal/test_runner/test:1101:12)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: the corrected comments still quote the removed clause, so this guard has a history
+    ok 6 - the corrected comments still quote the removed clause, so this guard has a history
+      ---
+      duration_ms: 0.308476
+      type: 'test'
+      ...
+    1..6
+not ok 1 - the watcher notes: a cadence by design, never a detection latency
+  ---
+  duration_ms: 19.275811
+  type: 'suite'
+  location: '/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:198:1'
+  failureType: 'subtestsFailed'
+  error: '2 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 6
+# suites 1
+# pass 4
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 111.153006

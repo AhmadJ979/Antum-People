@@ -408,14 +408,22 @@ The flag is a **state, not an event**. On this product there is no mailer, webho
 - **Always:** present-tense state — "5 items open", "start in 48 hours or less", "opens in this view".
 - When an unprompted in-app notice exists (Gate 2's in-process timer), it says what **this watcher**
   observed and nothing more: *"This case reached the 48-hour mark before this watcher started (first
-  seen …, 34.77h after the mark)"*, or *"…after this watcher started, so it was seen within 5
-  minute(s) of the next tick."* It cannot say whether the app was up — the only instant it compares is
-  its own start — and the flag simply reads correctly on the next read with **no** "missed
-  notification" state, because a derived flag has nothing to miss. *(Corrected 2026-10-26, row
-  `ac5739fa`: this bullet quoted the notice as "This case reached the 48-hour mark while the app was
-  open" / "…while the app was not running". Both asserted something about our availability that the
-  clock comparison cannot establish — a restart, a redeploy and a first-ever start look identical from
-  inside the process. The corrected wording is the one quoted above.)*
+  seen …, 34.77h after the mark)"*, or *"…after this watcher started; it was first seen …"*, and then
+  the one cadence sentence **both** watchers carry, written in the loop's own module: *"The watcher
+  reads for what has come due every 5 minute(s) by design; it cannot see whether its own ticks ran on
+  schedule, so that interval is the intended cadence, not a measured detection time."* It cannot say
+  whether the app was up — the only instant it compares is its own start — and the flag simply reads
+  correctly on the next read with **no** "missed notification" state, because a derived flag has
+  nothing to miss. *(Corrected 2026-10-26, row `ac5739fa`: this bullet quoted the notice as "This case
+  reached the 48-hour mark while the app was open" / "…while the app was not running". Both asserted
+  something about our availability that the clock comparison cannot establish — a restart, a redeploy
+  and a first-ever start look identical from inside the process. **Corrected again 2026-10-28:** it
+  then read "…after this watcher started, so it was seen within 5 minute(s) of the next tick", which
+  promises a **detection latency** that no in-process watcher can establish — it can see that its
+  interval is N minutes, not whether its own ticks ran on schedule, and a suspended guest or a lost
+  span is exactly how a tick goes missing here. The same closing clause was served by the probation
+  escalation note; it is now one sentence in `server/interval-watcher.js` (`cadenceClause()`), and
+  `server/watcher-note-detection-claim.test.js` holds the two served notes against it.)*
 
 **Anchor check — re-read off `origin/main` = `404b29d`, 2026-10-08.** The client anchors this section rests on, each with the grep that finds it, run against the merged file rather than a branch:
 

@@ -1,0 +1,96 @@
+# mutated file: server/probation-escalation.js
+# mutated md5: 084b0a57b30965f155741fb7d1315c4a
+# guard: server/watcher-note-detection-claim.test.js
+# command: cd server && node --test watcher-note-detection-claim.test.js
+TAP version 13
+# [DB] Upgraded: created index(es) idx_users_employee_id_unique
+# (node:16443) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the watcher notes: a cadence by design, never a detection latency
+    # Subtest: the escalation note (served by GET /api/probation/escalations) states instants and the limit
+    not ok 1 - the escalation note (served by GET /api/probation/escalations) states instants and the limit
+      ---
+      duration_ms: 4.796205
+      type: 'test'
+      location: '/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:199:3'
+      failureType: 'testCodeFailure'
+      error: 'the served escalation note carries /seen within/: it states a DETECTION LATENCY — how soon after the boundary this process noticed. The process can see its interval; it cannot see whether its own ticks ran on schedule. Correct the sentence in server/probation-escalation.js instead of relaxing this check.'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+      actual: 'Milestone 1 of wn-hire-deadline-after’s probation passed its deadline of 2026-10-28 with no submitted evaluation. The deadline fell after this escalation watcher started; it was first seen 2026-10-29T12:00:00.000Z. The watcher reads for what has come due every 5 minute(s) by design; it cannot see whether its own ticks ran on schedule, so that interval is the intended cadence, not a measured detection time. It was seen within 5 minute(s) of the next tick.'
+      operator: 'doesNotMatch'
+      stack: |-
+        TestContext.<anonymous> (/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:239:14)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Promise.all (index 0)
+        async Suite.run (node:internal/test_runner/test:1442:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: the pre-boarding flag note (served by flagWatcher.status()) states instants and the limit
+    ok 2 - the pre-boarding flag note (served by flagWatcher.status()) states instants and the limit
+      ---
+      duration_ms: 0.957008
+      type: 'test'
+      ...
+    # Subtest: the two modules carry the SAME clause, and it is parameterised by the interval
+    ok 3 - the two modules carry the SAME clause, and it is parameterised by the interval
+      ---
+      duration_ms: 0.19255
+      type: 'test'
+      ...
+    # Subtest: the sweep catches the removed clause it is written for — a control on the control
+    ok 4 - the sweep catches the removed clause it is written for — a control on the control
+      ---
+      duration_ms: 0.319576
+      type: 'test'
+      ...
+    # Subtest: no module under server/ carries the removed clause again outside its comments
+    not ok 5 - no module under server/ carries the removed clause again outside its comments
+      ---
+      duration_ms: 24.671681
+      type: 'test'
+      location: '/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:319:3'
+      failureType: 'testCodeFailure'
+      error: 'probation-escalation.js carries /seen within/ outside its comments: states a DETECTION LATENCY — how soon after the boundary this process noticed. The process can see its interval; it cannot see whether its own ticks ran on schedule. The same claim was served from two modules because nothing swept their siblings.'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+      actual: 'use strict; const randomUUID = require(node:crypto); const db = require(./db); const access = require(./access); const probationTimeline = require(./probation-timeline); const probationEvaluations = require(./probation-evaluations); const createIntervalWatcher, DEFAULT_INTERVAL_MS, cadenceClause = require(./interval-watcher); const FIRED_BY = scheduler:probation-escalation; const NO_DELIVERY_NOTE = An escalation is an in-product record addressed to the manager\\u2019s manager and to HR. The product has no mailer, no webhook and no SMS, so channel is none on every row and nothing here is proof that a message reached a person.; const CATCH_UP_RULE = [ A milestone is overdue when its derived deadline is strictly behind the reading day and no evaluation has been submitted for it., A deadline that falls after this escalation watcher started is escalated on the next tick., A deadline that fell before this escalation watcher started is escalated on the first tick, marked late, with how long after the deadline it was first seen., The note states when the deadline fell relative to THIS process, and when it was first seen. It makes no claim about whether the app was up: the one thing this clock comparison can see is its own start, and a note that invents a cause for the lateness is worse than no note., A milestone is never silently skipped: it is either escalated on a tick or caught up late and says so., One escalation per missed milestone, for good: the guarantee is the database\\u2019s UNIQUE key, not this process\\u2019s memory., Nothing is delivered anywhere., ].join( ); const DAY_MS = 86400000; const nameOf = (row) => row.first_name || row.last_name || .trim() || row.id; const personOf = (row) => (row ? employee_id: row.id, name: nameOf(row) : null); const midnightOf = (day) => new Date( String(day).slice(0, 10) T00:00:00Z); function readingDay(now) if (now instanceof Date) return new Date( now.toISOString().slice(0, 10) T00:00:00Z); if (typeof now === string && /^\\d 4 -\\d 2 -\\d 2 /.test(now)) return midnightOf(now); return new Date( new Date().toISOString().slice(0, 10) T00:00:00Z); async function hrRecipients() const rows = await db.query( SELECT u.username, u.employee_id, e.first_name, e.last_name FROM users u LEFT JOIN employees e ON e.id = u.employee_id WHERE u.access_role = db.escapeString(access.ROLES.HR_ADMIN) ORDER BY u.username ); return rows.map((row) => ( username: row.username, employee_id: row.employee_id || null, name: row.first_name ? row.first_name row.last_name .trim() : null, )); async function reportingLineFor(employeeId, roster = new Map()) const me = roster.get(employeeId) || null; const manager = me && me.manager_id ? roster.get(me.manager_id) || null : null; let managersManager = null; if (manager && manager.manager_id && manager.manager_id !== employeeId && manager.manager_id !== manager.id) managersManager = roster.get(manager.manager_id) || null; const hr = await hrRecipients(); const missing = []; if (!manager) missing.push(manager); if (!managersManager) missing.push(managers_manager); if (hr.length === 0) missing.push(hr); return manager: personOf(manager), managers_manager: personOf(managersManager), hr, missing, resolved: missing.length === 0, ; function overdueMilestones(employee, options = ) const timeline = probationTimeline.milestonesFor(employee, now: readingDay(options.now), completions: options.completions || , includeEnded: true, ); if (!timeline) return timeline: null, overdue: [] ; return timeline, overdue: timeline.milestones.filter((milestone) => milestone.state === overdue) ; async function pendingEscalations(at = new Date()) const day = readingDay(at); const rows = await db.query( SELECT id, first_name, last_name, manager_id, start_date, probation_end_date FROM employees WHERE status != terminated ); if (rows.length === 0) return []; const rosterRows = await db.query(SELECT id, first_name, last_name, manager_id FROM employees); const roster = new Map(rosterRows.map((row) => [row.id, row])); const completionsByEmployee = await probationEvaluations.completionsFor(rows.map((row) => row.id)); const already = new Set( (await db.query(SELECT employee_id, milestone_index FROM probation_escalations)) .map((row) => row.employee_id @ row.milestone_index ) ); const items = []; for (const row of rows) const overdue = overdueMilestones(row, now: day, completions: completionsByEmployee[row.id] || ); for (const milestone of overdue) const key = row.id @ milestone.index ; if (already.has(key)) continue; items.push( key, due_at: midnightOf(milestone.due_date).getTime(), employee: row, milestone, roster ); return items; async function recordEscalation(item, ctx = ) const employee, milestone = item; const at = ctx.at instanceof Date ? ctx.at : new Date(); const reportingLine = await reportingLineFor(employee.id, item.roster || new Map()); const late = Boolean(ctx.late); const lateByHours = typeof ctx.lateByHours === number ? ctx.lateByHours : null; const note = late ? Milestone milestone.index of employee.id \\u2019s probation passed its deadline of milestone.due_date with no submitted evaluation. The deadline fell before this escalation watcher started; it was first seen at.toISOString() ( lateByHours h after the deadline). : Milestone milestone.index of employee.id \\u2019s probation passed its deadline of milestone.due_date with no submitted evaluation. The deadline fell after this escalation watcher started; it was first seen at.toISOString() . cadenceClause(ctx.intervalMs || DEFAULT_INTERVAL_MS) It was seen within Math.round((ctx.intervalMs || DEFAULT_INTERVAL_MS) / 60000) minute(s) of the next tick.; const id = randomUUID(); await db.query(INSERT OR IGNORE INTO probation_escalations (id, employee_id, employee_name, milestone_index, milestone_day, milestone_due_date, deadline_at, detected_at, late, late_by_hours, reporting_line, reporting_line_missing, channel, fired_by, note) VALUES ( db.escapeString(id) , db.escapeString(employee.id) , db.escapeString(nameOf(employee)) , milestone.index , milestone.day , db.escapeString(milestone.due_date) , db.escapeString( milestone.due_date T00:00:00.000Z) , db.escapeString(at.toISOString()) , late ? 1 : 0 , lateByHours === null ? NULL : lateByHours , db.escapeString(JSON.stringify(reportingLine)) , db.escapeString(JSON.stringify(reportingLine.missing)) , none, db.escapeString(FIRED_BY) , db.escapeString(note) )); const stored = await db.query( SELECT * FROM probation_escalations WHERE employee_id = db.escapeString(employee.id) AND milestone_index = milestone.index ); if (stored.length === 0 || stored[0].id !== id) return null; await db.query(INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, new_values, timestamp) VALUES ( db.escapeString(randomUUID()) , db.escapeString(FIRED_BY) , probation_escalations, db.escapeString(id) , CREATE, db.escapeString(JSON.stringify( employee_id: employee.id, milestone_index: milestone.index, milestone_due_date: milestone.due_date, detected_at: at.toISOString(), late, addressed_to: manager: reportingLine.manager, managers_manager: reportingLine.managers_manager, hr: reportingLine.hr.map((recipient) => recipient.username), , reporting_line_missing: reportingLine.missing, channel: none, )) , CURRENT_TIMESTAMP)); return record: shape(stored[0]), log: employee.id milestone milestone.index (due milestone.due_date ) escalated to reportingLine.managers_manager ? reportingLine.managers_manager.name : no manager\\u2019s manager and reportingLine.hr.length HR account(s) late ? [late] : , ; const parseJson = (value, fallback) => if (value === null || value === undefined || value === ) return fallback; try return JSON.parse(value); catch return fallback; ; function shape(row) return id: row.id, employee_id: row.employee_id, employee_name: row.employee_name, milestone_index: row.milestone_index, milestone_day: row.milestone_day, milestone_due_date: row.milestone_due_date, deadline_at: row.deadline_at, detected_at: row.detected_at, late: Boolean(row.late), late_by_hours: row.late_by_hours === null || row.late_by_hours === undefined ? null : Number(row.late_by_hours), reporting_line: parseJson(row.reporting_line, null), reporting_line_missing: parseJson(row.reporting_line_missing, []), channel: row.channel, fired_by: row.fired_by, note: row.note, ; async function listEscalations(options = ) const employeeId = options.employee_id ? String(options.employee_id) : null; const clause = employeeId ? WHERE e.employee_id = db.escapeString(employeeId) : ; const rows = await db.query( SELECT e.*, p.submitted_at AS completed_at, p.submitted_by AS completed_by FROM probation_escalations e LEFT JOIN probation_evaluations p ON p.employee_id = e.employee_id AND p.milestone_index = e.milestone_index clause ORDER BY e.detected_at DESC, e.employee_id, e.milestone_index ); return rows.map((row) => ( ...shape(row), completed_at: row.completed_at || null, completed_by: row.completed_by || null, resolved: Boolean(row.completed_at), )); function createEscalationWatcher(options = ) return createIntervalWatcher( name: probation-escalation, intervalMs: options.intervalMs, clock: options.clock, log: options.log, catchUpRule: CATCH_UP_RULE, due: (at) => pendingEscalations(at), onDue: (item, ctx) => recordEscalation(item, ctx), ); async function scan(options = ) const at = options.now instanceof Date ? options.now : readingDay(options.now); const watcher = createEscalationWatcher( clock: () => at, intervalMs: options.intervalMs ); const result = await watcher.tick(at); watcher.stop(); return at: result.at, created: result.added ; module.exports = FIRED_BY, NO_DELIVERY_NOTE, CATCH_UP_RULE, DAY_MS, readingDay, hrRecipients, reportingLineFor, overdueMilestones, pendingEscalations, recordEscalation, listEscalations, createEscalationWatcher, scan, ; '
+      operator: 'doesNotMatch'
+      stack: |-
+        TestContext.<anonymous> (/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:330:16)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        Suite.processPendingSubtests (node:internal/test_runner/test:744:18)
+        Test.postRun (node:internal/test_runner/test:1173:19)
+        Test.run (node:internal/test_runner/test:1101:12)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: the corrected comments still quote the removed clause, so this guard has a history
+    ok 6 - the corrected comments still quote the removed clause, so this guard has a history
+      ---
+      duration_ms: 0.345416
+      type: 'test'
+      ...
+    1..6
+not ok 1 - the watcher notes: a cadence by design, never a detection latency
+  ---
+  duration_ms: 32.004421
+  type: 'suite'
+  location: '/home/team/shared/probable-octo-sniffle/server/watcher-note-detection-claim.test.js:198:1'
+  failureType: 'subtestsFailed'
+  error: '2 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 6
+# suites 1
+# pass 4
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 126.615579
