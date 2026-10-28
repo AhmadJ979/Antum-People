@@ -1,0 +1,346 @@
+# Off-host availability check for the public URL — see docs/off-host-uptime-check.md.
+#
+# READ THIS BEFORE EDITING: GitHub disables `schedule` triggers on a repository after 60 days
+# without repository activity, and this check's own issue comments do NOT count as activity —
+# so it needs a periodic commit, or a manual re-enable in the Actions tab, or it silently stops.
+#
+# Why this file exists: on 2026-10-28 a host boot left the platform's site preview holding port
+# 3000, so the public URL answered HTTP 200 with a placeholder page ("My site") for minutes.
+# Nothing off-host noticed; a person found it by luck. This runs on a GitHub-hosted runner —
+# genuinely off this host — and asserts that the URL answers with OUR page, not merely that
+# something answered. A status-only check passes on the placeholder.
+#
+# The three assertions (all required): HTTP 200, the body contains <title>Antum People</title>,
+# the body names an asset matching assets/index-<hash>.js (the PATTERN — never a fixed hash,
+# which would redden on every client build).
+#
+# Canary recipe (do this before trusting a green): change UPTIME_URL_DEFAULT to a URL that
+# answers 200 with the wrong page (https://example.com/) and push a commit touching this file;
+# the run must FAIL on the title assertion and open exactly one `uptime-alert` issue. Then a
+# URL that never answers (http://192.0.2.1/) must FAIL on the status assertion. Then put the
+# production URL back: the green run comments on that issue and closes it.
+
+name: off-host uptime check
+
+on:
+  schedule:
+    # GitHub's shortest supported interval. Scheduled runs can be delayed under load and can be
+    # dropped, so detection is best-effort ~5–15 min, not a guarantee.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL to probe (empty = the live site)'
+        required: false
+        default: ''
+        type: string
+  push:
+    # A commit touching this file produces a run. This is the only way to produce a PRE-MERGE
+    # canary: workflow_dispatch exists only on the default branch. Nothing else triggers this
+    # workflow, so ordinary pushes and merges of other work do not.
+    paths:
+      - '.github/workflows/uptime.yml'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: uptime-probe-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # The one place the production URL is written. A canary changes this line and nothing else.
+  UPTIME_URL_DEFAULT: 'https://example.com/'
+  ATTEMPTS: '3'
+  ATTEMPT_TIMEOUT_S: '15'
+  RETRY_SLEEP_S: '20'
+  EXPECTED_TITLE: '<title>Antum People</title>'
+  ASSET_PATTERN: 'assets/index-[A-Za-z0-9_-]+\.js'
+  ALERT_LABEL: 'uptime-alert'
+
+jobs:
+  probe:
+    name: probe the public URL
+    runs-on: ubuntu-latest
+    # A hang must end as a FAILED run, never as a job that sits until the runner's 6-hour
+    # ceiling. The probe's own budget is 3 x (15 s timeout + 20 s pause) = 105 s; this is the
+    # backstop, not the mechanism.
+    timeout-minutes: 10
+    outputs:
+      url: ${{ steps.probe.outputs.url }}
+      status: ${{ steps.probe.outputs.status }}
+      title: ${{ steps.probe.outputs.title }}
+      asset: ${{ steps.probe.outputs.asset }}
+      assertion: ${{ steps.probe.outputs.assertion }}
+      attempts: ${{ steps.probe.outputs.attempts }}
+      run_url: ${{ steps.probe.outputs.run_url }}
+    steps:
+      - name: Resolve the URL to probe
+        id: target
+        env:
+          INPUT_URL: ${{ github.event.inputs.url }}
+        run: |
+          set -uo pipefail
+          url="${INPUT_URL:-}"
+          if [ -z "$url" ]; then url="$UPTIME_URL_DEFAULT"; fi
+          printf 'url=%s\n' "$url" >> "$GITHUB_OUTPUT"
+          printf 'probing: %s\n' "$url"
+
+      - name: Probe — three assertions, three attempts
+        id: probe
+        env:
+          URL: ${{ steps.target.outputs.url }}
+        run: |
+          set -uo pipefail
+
+          url="$URL"
+          attempts="${ATTEMPTS:-3}"
+          timeout_s="${ATTEMPT_TIMEOUT_S:-15}"
+          retry_sleep="${RETRY_SLEEP_S:-20}"
+          expected_title="$EXPECTED_TITLE"
+          asset_re="$ASSET_PATTERN"
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          status_seen='no HTTP response'
+          title_seen='no <title>'
+          asset_seen='none'
+          failed=''
+          attempts_used=0
+
+          for i in $(seq 1 "$attempts"); do
+            attempts_used="$i"
+            body="$(mktemp)"
+            errf="$(mktemp)"
+
+            code="$(curl -sS -L --connect-timeout "$timeout_s" -m "$timeout_s" \
+                      -o "$body" -w '%{http_code}' "$url" 2>"$errf")"
+            rc=$?
+
+            status_seen='no HTTP response'
+            title_seen='no <title>'
+            asset_seen='none'
+            failed=''
+
+            if [ "$rc" -ne 0 ]; then
+              failed='A: HTTP status 200 (no response received)'
+              status_seen="no HTTP response (curl exit ${rc}: $(tr -d '\r\n' <"$errf" | head -c 200))"
+            elif [ "$code" != '200' ]; then
+              failed='A: HTTP status 200'
+              status_seen="$code"
+            else
+              status_seen='200'
+              found_title="$(grep -o '<title>[^<]*</title>' "$body" 2>/dev/null | head -n1)"
+              if [ -n "${found_title:-}" ]; then title_seen="$found_title"; fi
+              found_asset="$(grep -Eo "$asset_re" "$body" 2>/dev/null | head -n1)"
+              if [ -n "${found_asset:-}" ]; then asset_seen="$found_asset"; fi
+
+              if ! grep -qF -- "$expected_title" "$body"; then
+                failed="B: page title (body must contain ${expected_title})"
+              elif [ -z "${found_asset:-}" ]; then
+                failed='C: asset reference (body must name assets/index-<hash>.js)'
+              fi
+            fi
+
+            # Report the attempt in full, whatever its verdict — a failing run must never
+            # leave the reader guessing what was actually observed.
+            printf 'attempt %s/%s against %s\n' "$i" "$attempts" "$url"
+            printf '  http status   : %s\n' "$status_seen"
+            printf '  title seen    : %s\n' "$title_seen"
+            printf '  asset seen    : %s\n' "$asset_seen"
+            printf '  curl exit code: %s\n' "$rc"
+            if [ -n "$failed" ]; then
+              printf '  FAILED on     : %s\n' "$failed"
+            else
+              printf '  PASS          : all three assertions held\n'
+            fi
+            rm -f "$body" "$errf"
+
+            if [ -z "$failed" ]; then break; fi
+            if [ "$i" -lt "$attempts" ]; then
+              printf 'sleeping %s s before the next attempt\n' "$retry_sleep"
+              sleep "$retry_sleep"
+            fi
+          done
+
+          {
+            printf 'url=%s\n' "$url"
+            printf 'status=%s\n' "$(printf '%s' "$status_seen" | tr -d '\r\n')"
+            printf 'title=%s\n' "$(printf '%s' "$title_seen" | tr -d '\r\n')"
+            printf 'asset=%s\n' "$(printf '%s' "$asset_seen" | tr -d '\r\n')"
+            printf 'assertion=%s\n' "$(printf '%s' "$failed" | tr -d '\r\n')"
+            printf 'attempts=%s\n' "$attempts_used"
+            printf 'run_url=%s\n' "$run_url"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ -n "$failed" ]; then
+            printf '\nRESULT: FAILED after %s attempt(s) — assertion %s\n' "$attempts_used" "$failed"
+            {
+              printf '### uptime check — FAILED\n\n'
+              printf '| what | observed |\n| --- | --- |\n'
+              printf '| URL checked | `%s` |\n' "$url"
+              printf '| HTTP status | %s |\n' "$status_seen"
+              printf '| page title | `%s` |\n' "$title_seen"
+              printf '| asset reference | `%s` |\n' "$asset_seen"
+              printf '| failing assertion | %s |\n' "$failed"
+              printf '| attempts | %s |\n' "$attempts_used"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          printf '\nRESULT: PASS after %s attempt(s)\n' "$attempts_used"
+          {
+            printf '### uptime check — PASS\n\n'
+            printf '| what | observed |\n| --- | --- |\n'
+            printf '| URL checked | `%s` |\n' "$url"
+            printf '| HTTP status | %s |\n' "$status_seen"
+            printf '| page title | `%s` |\n' "$title_seen"
+            printf '| asset reference | `%s` |\n' "$asset_seen"
+            printf '| attempts | %s |\n' "$attempts_used"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment the check is green again, and close the open alert issue
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          STATUS_SEEN: ${{ steps.probe.outputs.status }}
+          TITLE_SEEN: ${{ steps.probe.outputs.title }}
+          ASSET_SEEN: ${{ steps.probe.outputs.asset }}
+          ATTEMPTS: ${{ steps.probe.outputs.attempts }}
+          URL_CHECKED: ${{ steps.probe.outputs.url }}
+          RUN_URL: ${{ steps.probe.outputs.run_url }}
+        run: |
+          set -uo pipefail
+
+          # Find an open alert issue by label OR by title prefix, so a missing label cannot
+          # leave a stale issue open. One issue at most: the first match wins.
+          mine="$(gh issue list --repo "$REPO" --state open --limit 100 \
+                    --json number,title,labels \
+                    --jq '.[] | "\(.number)\t\(.title)\t\([.labels[].name] | join(","))"' 2>/dev/null)"
+          existing=''
+          while IFS=$'\t' read -r num title_txt labels_txt; do
+            [ -z "${num:-}" ] && continue
+            case "$title_txt" in '[uptime]'*) existing="$num"; break ;; esac
+            case ",${labels_txt:-}," in *",${ALERT_LABEL},"*) existing="$num"; break ;; esac
+          done <<< "${mine:-}"
+
+          if [ -z "$existing" ]; then
+            printf 'no open %s issue — nothing to close\n' "$ALERT_LABEL"
+            exit 0
+          fi
+
+          ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          {
+            printf 'The check is green again at %s (UTC, runner clock).\n\n' "$ts"
+            printf '| what | observed |\n| --- | --- |\n'
+            printf '| URL checked | `%s` |\n' "${URL_CHECKED:-(not reported)}"
+            printf '| HTTP status | %s |\n' "${STATUS_SEEN:-(not reported)}"
+            printf '| page title | `%s` |\n' "${TITLE_SEEN:-(not reported)}"
+            printf '| asset reference | `%s` |\n' "${ASSET_SEEN:-(not reported)}"
+            printf '| attempts used | %s |\n' "${ATTEMPTS:-(not reported)}"
+            printf '| run | %s |\n\n' "${RUN_URL:-(not reported)}"
+            printf 'This comment states only what the probe observed. It does not say what happened,\n'
+            printf 'and it cannot: the check sees a response, never the port holder.\n'
+          } > /tmp/recovery.md
+
+          gh issue comment "$existing" --repo "$REPO" --body-file /tmp/recovery.md \
+            || echo '::warning::could not comment on the open alert issue'
+          gh issue close "$existing" --repo "$REPO" \
+            || echo '::warning::could not close the open alert issue'
+          printf 'recovery recorded on issue #%s\n' "$existing"
+
+  alert:
+    name: open or update ONE uptime-alert issue
+    needs: probe
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Open or update one uptime-alert issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          URL_CHECKED: ${{ needs.probe.outputs.url }}
+          STATUS_SEEN: ${{ needs.probe.outputs.status }}
+          TITLE_SEEN: ${{ needs.probe.outputs.title }}
+          ASSET_SEEN: ${{ needs.probe.outputs.asset }}
+          ASSERTION: ${{ needs.probe.outputs.assertion }}
+          ATTEMPTS: ${{ needs.probe.outputs.attempts }}
+          RUN_URL: ${{ needs.probe.outputs.run_url }}
+        run: |
+          set -uo pipefail
+
+          ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          url="${URL_CHECKED:-(not reported by the probe job)}"
+          status="${STATUS_SEEN:-(not reported by the probe job)}"
+          title="${TITLE_SEEN:-(not reported by the probe job)}"
+          asset="${ASSET_SEEN:-(not reported by the probe job)}"
+          assertion="${ASSERTION:-(not reported — the probe job failed before naming an assertion)}"
+          attempts="${ATTEMPTS:-(not reported)}"
+          run="${RUN_URL:-$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID}"
+
+          {
+            printf 'The off-host check did not confirm our page on the public URL.\n\n'
+            printf '| what | observed |\n| --- | --- |\n'
+            printf '| URL checked | `%s` |\n' "$url"
+            printf '| HTTP status | %s |\n' "$status"
+            printf '| page title | `%s` |\n' "$title"
+            printf '| asset reference | `%s` |\n' "$asset"
+            printf '| failing assertion | %s |\n' "$assertion"
+            printf '| attempts used | %s |\n' "$attempts"
+            printf '| workflow run | %s |\n' "$run"
+            printf '| alert written at | %s (UTC, runner clock) |\n\n' "$ts"
+            printf 'Every field above is an observation made from outside this host. **This is not a\n'
+            printf 'cause.** The check cannot see:\n\n'
+            printf -- '- which process is holding port 3000 — that is host-only (`lsof` / `/proc`);\n'
+            printf -- '- anything behind the login gate (roster, records, seed figures);\n'
+            printf -- '- the difference between a paused guest and a product that is not answering:\n'
+            printf '  from outside the host the two look identical.\n\n'
+            printf '**Operator first move — read before touching anything:**\n\n'
+            printf -- '1. `/home/team/shared/host-boot-ledger.txt` — was this a boot or a pause?\n'
+            printf '   A boot has `boot_id` changed *and* uptime reset; a freeze leaves `boot_id` unchanged.\n'
+            printf -- '2. the guard log, `/home/team/shared/probable-octo-sniffle/server/keep-alive.out` —\n'
+            printf '   after a boot it has **no exit line** (a boot gives it nothing to log), and the\n'
+            printf '   product and guard are re-armed only by a login.\n'
+            printf -- '3. the port holder: `lsof -t /home/team/shared/probable-octo-sniffle/server/keep-alive.lock`.\n\n'
+            printf 'Recovery path recorded for this failure mode is `bash /home/team/shared/deploy-main.sh --restart-only`\n'
+            printf '(incident-2026-10-28-port3000-takeover.md).\n\n'
+            printf '_Opened automatically by `.github/workflows/uptime.yml`. On the next green run this\n'
+            printf 'issue is commented and closed — do not open a second one by hand._\n'
+          } > /tmp/alert.md
+
+          title_line="[uptime] FAIL ${ts} — ${assertion}"
+
+          # Dedup: one open alert issue at a time, matched by label OR by title prefix, so a
+          # missing label cannot open a second issue and turn a 40-minute outage into eight.
+          mine="$(gh issue list --repo "$REPO" --state open --limit 100 \
+                    --json number,title,labels \
+                    --jq '.[] | "\(.number)\t\(.title)\t\([.labels[].name] | join(","))"' 2>/dev/null)"
+          existing=''
+          while IFS=$'\t' read -r num title_txt labels_txt; do
+            [ -z "${num:-}" ] && continue
+            case "$title_txt" in '[uptime]'*) existing="$num"; break ;; esac
+            case ",${labels_txt:-}," in *",${ALERT_LABEL},"*) existing="$num"; break ;; esac
+          done <<< "${mine:-}"
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$REPO" --body-file /tmp/alert.md
+            printf 'commented on the already-open issue #%s — no new issue opened\n' "$existing"
+            exit 0
+          fi
+
+          # The label must exist before an issue can carry it; --force creates or updates it.
+          gh label create "$ALERT_LABEL" --repo "$REPO" --color d73a4a \
+            --description 'Off-host uptime check: the public URL did not answer with our page' \
+            --force >/dev/null 2>&1 || echo '::warning::could not create the label'
+
+          if ! gh issue create --repo "$REPO" --title "$title_line" --body-file /tmp/alert.md \
+                 --label "$ALERT_LABEL"; then
+            # An alert that reaches nobody is worse than one without a label.
+            echo '::warning::creating the issue with the label failed — retrying without it'
+            gh issue create --repo "$REPO" --title "$title_line" --body-file /tmp/alert.md
+          fi
