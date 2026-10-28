@@ -1276,6 +1276,9 @@ app.post('/api/employees/:id/probation-evaluations', async (req, res) => {
       const payload = { error: err.message };
       if (err.known_milestones) payload.known_milestones = err.known_milestones;
       if (err.recorded_by) { payload.recorded_by = err.recorded_by; payload.recorded_at = err.recorded_at; }
+      // The 409 names WHICH row already holds the milestone, so a client can address the correction
+      // path instead of re-reading the timeline to find out (spec §4b, §4f).
+      if (err.evaluation_id) { payload.evaluation_id = err.evaluation_id; payload.milestone_index = err.milestone_index; }
       return res.status(err.status).json(payload);
     }
     console.error('[Probation] Failed to record an evaluation:', err);
@@ -1347,6 +1350,58 @@ app.get('/api/probation/escalations', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+/**
+ * P3-2 follow-up (row `0484e79e`) — a CORRECTION to a submitted probation evaluation. Owner decision,
+ * 2026-10-28: option (A), a separate dated row beside the original that names who changed it and why,
+ * with the original never rewritten (`probation-correction-path-spec.md` §1, §3b's C1).
+ *
+ * Transport only, exactly like the submit route above: the actor gate, the row scope, the typed refusal,
+ * and nothing else. The rules — the required reason, the empty content, the evaluation that is not this
+ * hire's — live in server/probation-evaluations.js so a second caller cannot write a correction that
+ * skips them.
+ *
+ * AUTHORIZATION: the resource is `onboarding:write` (server/access.js — HR_ADMIN and MANAGER), and the
+ * ROW scope is the submit route's, character for character: a caller who is not company-wide may correct
+ * only a hire whose `manager_id` is their own employee record, and a hire is refused outright even though
+ * `scopeAllowsTarget` would allow `SELF` — a correction is a manager's act about a hire, never a hire's
+ * edit of their own assessment. Refused with the gate's own shape (403, no body).
+ *
+ * The actor gate is FIRST and refuses before any lookup (decision 22), so an unnamed token cannot learn
+ * whether the employee exists. `milestone_index` is not read from the body: the row being corrected
+ * already carries it, and a second source could disagree with it (spec §4c).
+ *
+ * **This route is the write half only.** No route serves the corrected text or the original text: who may
+ * READ `content` is docs/access-model.md §8 item 13, an open owner question, and it is not decided here.
+ *
+ * Appended AFTER every other route on purpose: this file's line numbers are cited by docs/access-model.md,
+ * and a route inserted above them moves the instrument's checks (the P3-1 lesson, re-measured at P3-3).
+ */
+app.post('/api/employees/:id/probation-evaluations/:evaluation_id/corrections', async (req, res) => {
+  try {
+    const actor = actorOf(req);
+    if (!actor) return res.status(400).json({ error: 'a named actor is required to correct a probation evaluation' });
+    const subject = await probationEvaluations.loadSubject(req.params.id);
+    const relation = await relationTo(req, subject.id);
+    if (relation === access.RELATION.SELF || !(await scopeAllowsTarget(req, subject.id))) {
+      return res.status(403).end();
+    }
+    const body = req.body || {};
+    const { correction, evaluation, effective } = await probationEvaluations.correctEvaluation(
+      subject,
+      { evaluation_id: req.params.evaluation_id, content: body.content, reason: body.reason },
+      { actor },
+    );
+    res.status(201).json({ correction, evaluation, effective });
+  } catch (err) {
+    if (err instanceof probationEvaluations.ProbationEvaluationError) {
+      return res.status(err.status).json({ error: err.message });
+    }
+    console.error('[Probation] Failed to record a correction:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 escalationWatcher.start();
 
 app.get('*', (req, res) => {

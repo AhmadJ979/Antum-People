@@ -381,8 +381,9 @@ CREATE INDEX IF NOT EXISTS idx_preboarding_reminders_case ON preboarding_reminde
 -- `submitted_at` once written, so the name on the record is the name of the person who submitted it.
 -- UNIQUE (employee_id, milestone_index) makes one milestone carry one evaluation — a second submission
 -- is refused rather than silently overwriting the first, which would destroy exactly the attribution
--- the row exists for. A correction needs a decision (see server/probation-evaluations.js), not a
--- second convention invented here.
+-- the row exists for. HOW a correction is recorded was a decision the team owed; it was TAKEN
+-- (owner, 2026-10-28) and the shape it chose is the table below: a separate dated row beside the
+-- original, never a rewrite of it. See `probation-correction-path-spec.md` §1 and §3b (its C1).
 --
 -- `milestone_due_date` and `milestone_day` are copied in at submission time ON PURPOSE: the milestone
 -- is derived on read, so a later re-derivation (a changed probation window) must not silently move the
@@ -400,6 +401,41 @@ CREATE TABLE IF NOT EXISTS probation_evaluations (
   UNIQUE (employee_id, milestone_index)
 );
 CREATE INDEX IF NOT EXISTS idx_probation_evaluations_employee ON probation_evaluations (employee_id);
+
+-- Layer 3 / P3-2 follow-up (row `0484e79e`) — the correction to a SUBMITTED evaluation, decided by the
+-- owner on 2026-10-28 as option (A) / spec C1: `probation-correction-path-spec.md` §4a is this DDL's
+-- source. The submission is never rewritten: this row names it, says what the record now says and WHY,
+-- and names who changed it.
+--
+-- `reason` is NOT NULL on purpose: a correction with corrected words and no reason is an edit wearing a
+-- badge (spec §1.2, §3b) — the reason is the whole difference between a correction and a quiet edit.
+-- No UNIQUE key: more than one correction is allowed and the NEWEST wins (ordered by `corrected_at`),
+-- because a correction is itself an act and destroying one to make room for another would repeat the
+-- defect this table exists to close (spec §1.4).
+--
+-- `employee_id` and `milestone_index` are copied in for the reason `probation_evaluations` copies
+-- `milestone_due_date`: the readers that need this row most (the roster-wide `completionsFor`, a future
+-- escalation join) must not have to resolve through another table, and a copied value cannot drift out
+-- of the row that was written (spec §4a).
+--
+-- `CREATE TABLE IF NOT EXISTS` is what carries a new table into a database that predates it, so NO
+-- migration code is owed: `COLUMN_MIGRATIONS` adds a column to a table that already exists, which this
+-- is not (spec §4a; server/schema-migration.test.js holds the property).
+CREATE TABLE IF NOT EXISTS probation_evaluation_corrections (
+  id TEXT PRIMARY KEY,
+  evaluation_id TEXT NOT NULL,
+  employee_id TEXT NOT NULL,
+  milestone_index INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  corrected_by TEXT NOT NULL,
+  corrected_at TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_probation_evaluation_corrections_evaluation
+  ON probation_evaluation_corrections (evaluation_id);
+CREATE INDEX IF NOT EXISTS idx_probation_evaluation_corrections_employee
+  ON probation_evaluation_corrections (employee_id);
 
 -- Layer 3 / P3-3 (row `bb60c7a3`) — the escalation that fired when a probation milestone passed its
 -- deadline with no submitted evaluation. This is the ONE stored thing in the probation chain.

@@ -338,6 +338,22 @@ const ROUTES = Object.freeze([
   // without the roll-up of who was told. The route applies that restriction; `SCOPES` has no entry
   // for this resource beyond the roster's, so the narrowing lives in the route and is named in §3.1.
   ['GET', '/probation/escalations', 'employees:read'],
+  // Layer 3 / P3-2 follow-up (row `0484e79e`) — the CORRECTION to a submitted probation evaluation.
+  // Owner decision, 2026-10-28: option (A) — a separate dated row beside the original, never a rewrite
+  // (`probation-correction-path-spec.md` §1; its §3b calls this shape C1).
+  //
+  // Mapped to `onboarding:write`, the SAME cell as the submission it corrects, and NOT to a resource of
+  // its own — the same call P3-1, P3-2, P3-3 and P4-1 each made: a `probation:correct` cell would mean a
+  // new resource in the matrix docs/access-model.md (§3) mirrors, and that document is validated by an
+  // instrument outside this file. Who may WRITE is answered by the cell and the row scope.
+  //
+  // The ROW scope is the submit route's, exactly: company-wide, or a hire on the caller's own line
+  // (`reports`), with `own` REFUSED OUTRIGHT — a hire cannot correct the assessment of themselves, for
+  // the same reason they cannot submit it. The write is complete and auditable; **who may READ the
+  // corrected text is deliberately NOT decided here** (no read cell is added, and no route serves
+  // `content`): that is docs/access-model.md §8 item 13, the owner's call, and it is stated in the PR
+  // body rather than taken silently.
+  ['POST', '/employees/:id/probation-evaluations/:evaluation_id/corrections', 'onboarding:write'],
 ]);
 
 /** `/api/login` and `/api/health` are unauthenticated by design and never reach the gate. */
