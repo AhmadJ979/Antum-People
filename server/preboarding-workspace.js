@@ -28,12 +28,17 @@
  *    track's progress bar, the PDPL consent gate (documents, not laptops) and the reminder
  *    (about the hire's documents) all read the `track` column rather than assuming.
  *
- * 4. **A filter is a filter.** "IT and Admin see only their own lines" is P2-4's acceptance
- *    line, and the design review is explicit that it cannot be delivered as an access boundary
- *    while the product has one shared account: `users` carries a `role`, but the surface is
- *    signed in as one admin, so "who is looking" is not knowable at request time. What ships is
- *    the filter, labelled as a filter (`VIEW_LABEL` / `VIEW_NOTE`), and the scope half ships
- *    with per-user accounts at Layer 3.
+ * 4. **A filter is a filter — and the boundary beside it is the gate's, not this one.** "IT and
+ *    Admin see only their own lines" is P2-4's acceptance line, and what ships is the filter,
+ *    labelled as a filter (`VIEW_LABEL` / `VIEW_NOTE`). What that note used to say beside it — that
+ *    the criterion cannot be an access boundary "while the product has one shared account", so
+ *    "who is looking" is not knowable at request time, and that the scope half ships with per-user
+ *    accounts at Layer 3 — is false in the tree it ships in: the surface signs in per user, and the
+ *    route behind this board is behind the policy gate (`preboarding:read:own`, `hr_admin` alone —
+ *    server/access.js `ROUTES`/`POLICY`). So `VIEW_NOTE` is derived from that CELL rather than from
+ *    the design review's assumption, and `server/preboarding-access-claim.test.js` reddens when the
+ *    served sentence and the access model disagree. What is still NOT built is the per-person read:
+ *    nothing in this schema joins a person to their pre-boarding case (`PENDING_CELLS`).
  *
  * ---------------------------------------------------------------------------
  * WHAT THIS CONTENT IS, AND WHAT IT IS NOT
@@ -137,11 +142,27 @@ const WORKSPACE_PROFILES = [
  */
 const WORKSPACE_ACTIVE_JURISDICTIONS = ['AE'];
 
-/** The label the surface must use for the function filter, and the sentence that goes with it. */
+/**
+ * The label the surface must use for the function filter, and the sentence that goes with it.
+ *
+ * The sentence is DERIVED FROM THE ACCESS MODEL, not written from the design review's assumption —
+ * see this file's rule 4. The route that serves this board is `GET /preboarding/cases/:id/workspace`,
+ * mapped in server/access.js `ROUTES` to the resource `preboarding:read:own`, whose cell in `POLICY`
+ * holds `hr_admin` alone, and whose reach is the whole cell: `SCOPES` has no entry for that resource,
+ * so `scopeFor` answers `all` and there is no row-level question to ask. The gate (same file, below
+ * the policy table) refuses every other role with 403 and no body, BEFORE this module runs.
+ *
+ * `server/preboarding-access-claim.test.js` checks this sentence against that table on every run, in
+ * both directions: change the cell without the sentence and it reddens, and so does the reverse.
+ */
 const VIEW_LABEL = 'View by function';
-const VIEW_NOTE = 'This narrows the board to one function. It is a filter, not access control: '
-  + 'everyone signed in can still open any case and see every line. Per-user scoping — "My lines" '
-  + '— ships with per-user accounts at Layer 3.';
+const VIEW_NOTE = 'This narrows the board to one function. It is a filter, not access control: it '
+  + 'changes which lines are drawn, never who may open a case. Opening a case is decided by the '
+  + 'policy gate on the resource preboarding:read:own, whose cell holds hr_admin alone — a signed-in '
+  + 'manager, finance, employee or compliance_viewer is refused before this board is built. Every '
+  + 'caller who reaches it can open every case; a per-person read is not built: nothing joins a '
+  + 'pre-boarding case to a person, and whether this board belongs on that view at all is open '
+  + 'with counsel.';
 
 class PreboardingWorkspaceError extends Error {
   constructor(message, status = 400) {

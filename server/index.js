@@ -955,9 +955,11 @@ app.get('/api/preboarding/cases/:id/checklist', async (req, res) => {
 });
 
 // P2-4 — the workspace track's board for one case. `?function=IT|Admin|HR|Manager` is the
-// "View by function" FILTER (the design review is explicit that it is not an access boundary
-// while the product has one shared account; the payload says so in `view`). Transport only: the
-// catalog, the derivation, the due dates and the refusals all live in preboarding-workspace.js.
+// "View by function" FILTER: it narrows which lines are DRAWN, and it is not an access boundary
+// (the payload says so in `view`). WHO may open a case is a separate decision, and it is the
+// gate's: this route's resource is `preboarding:read:own` (`hr_admin` alone — server/access.js
+// ROUTES/POLICY), enforced before this handler runs. Transport only: the catalog, the derivation,
+// the due dates and the refusals all live in preboarding-workspace.js.
 // A line's status is moved by the existing item route above — one item model, two tracks.
 app.get('/api/preboarding/cases/:id/workspace', async (req, res) => {
   try {
