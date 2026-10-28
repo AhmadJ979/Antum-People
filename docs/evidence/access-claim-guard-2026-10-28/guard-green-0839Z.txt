@@ -1,0 +1,50 @@
+TAP version 13
+# [DB] Upgraded: created index(es) idx_users_employee_id_unique
+# (node:28879) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P2-4 · the served workspace note matches the access model
+    # Subtest: the note in the payload names the cell that governs the route, and every role it knows
+    ok 1 - the note in the payload names the cell that governs the route, and every role it knows
+      ---
+      duration_ms: 6.981332
+      type: 'test'
+      ...
+    # Subtest: every role in the note is CLASSIFIED — naming a role is not the same as placing it
+    ok 2 - every role in the note is CLASSIFIED — naming a role is not the same as placing it
+      ---
+      duration_ms: 3.351994
+      type: 'test'
+      ...
+    # Subtest: no served string or code path in the module carries the removed claim again
+    ok 3 - no served string or code path in the module carries the removed claim again
+      ---
+      duration_ms: 0.480084
+      type: 'test'
+      ...
+    # Subtest: a sibling instance anywhere in server/ reddens this file too, not just the note above
+    ok 4 - a sibling instance anywhere in server/ reddens this file too, not just the note above
+      ---
+      duration_ms: 29.170787
+      type: 'test'
+      ...
+    # Subtest: the corrected comments still carry the quote they correct, so this guard has a history
+    ok 5 - the corrected comments still carry the quote they correct, so this guard has a history
+      ---
+      duration_ms: 0.152049
+      type: 'test'
+      ...
+    1..5
+ok 1 - P2-4 · the served workspace note matches the access model
+  ---
+  duration_ms: 41.092612
+  type: 'suite'
+  ...
+1..1
+# tests 5
+# suites 1
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 125.959095

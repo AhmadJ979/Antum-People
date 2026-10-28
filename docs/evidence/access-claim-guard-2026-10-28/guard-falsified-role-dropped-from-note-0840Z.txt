@@ -1,0 +1,82 @@
+TAP version 13
+# [DB] Upgraded: created index(es) idx_users_employee_id_unique
+# (node:30627) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: P2-4 · the served workspace note matches the access model
+    # Subtest: the note in the payload names the cell that governs the route, and every role it knows
+    not ok 1 - the note in the payload names the cell that governs the route, and every role it knows
+      ---
+      duration_ms: 6.66559
+      type: 'test'
+      location: '/home/agent-senior-software-engineer/antum-people/server/preboarding-access-claim.test.js:175:3'
+      failureType: 'testCodeFailure'
+      error: 'the served note does not name "finance", which the cell for preboarding:read:own REFUSES. A reader cannot tell that role is turned away, so the sentence may be claiming reach for a role the gate refuses.'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+      actual: 'This narrows the board to one function. It is a filter, not access control: it changes which lines are drawn, never who may open a case. Opening a case is decided by the policy gate on the resource preboarding:read:own, whose cell holds hr_admin alone — a signed-in manager, employee or compliance_viewer is refused before this board is built. Every caller who reaches it can open every case; a per-person read is not built: nothing joins a pre-boarding case to a person, and whether this board belongs on that view at all is open with counsel.'
+      operator: 'match'
+      stack: |-
+        TestContext.<anonymous> (/home/agent-senior-software-engineer/antum-people/server/preboarding-access-claim.test.js:201:14)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Promise.all (index 0)
+        async Suite.run (node:internal/test_runner/test:1442:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: every role in the note is CLASSIFIED — naming a role is not the same as placing it
+    not ok 2 - every role in the note is CLASSIFIED — naming a role is not the same as placing it
+      ---
+      duration_ms: 3.075799
+      type: 'test'
+      location: '/home/agent-senior-software-engineer/antum-people/server/preboarding-access-claim.test.js:223:3'
+      failureType: 'testCodeFailure'
+      error: 'no clause in the served note mentions "finance"'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        TestContext.<anonymous> (/home/agent-senior-software-engineer/antum-people/server/preboarding-access-claim.test.js:235:14)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: no served string or code path in the module carries the removed claim again
+    ok 3 - no served string or code path in the module carries the removed claim again
+      ---
+      duration_ms: 0.508118
+      type: 'test'
+      ...
+    # Subtest: a sibling instance anywhere in server/ reddens this file too, not just the note above
+    ok 4 - a sibling instance anywhere in server/ reddens this file too, not just the note above
+      ---
+      duration_ms: 25.325056
+      type: 'test'
+      ...
+    # Subtest: the corrected comments still carry the quote they correct, so this guard has a history
+    ok 5 - the corrected comments still carry the quote they correct, so this guard has a history
+      ---
+      duration_ms: 0.17445
+      type: 'test'
+      ...
+    1..5
+not ok 1 - P2-4 · the served workspace note matches the access model
+  ---
+  duration_ms: 36.735544
+  type: 'suite'
+  location: '/home/agent-senior-software-engineer/antum-people/server/preboarding-access-claim.test.js:174:1'
+  failureType: 'subtestsFailed'
+  error: '2 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 5
+# suites 1
+# pass 3
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 130.611426

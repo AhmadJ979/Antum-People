@@ -11,8 +11,11 @@
  *      → ownership, the derived due date, and that the date moves with the case's start date.
  *   3. "IT and Admin see only their own lines; HR and the manager see the whole board."
  *      → the filter, its counts, and the payload saying out loud that it is not access control.
- *      The scope half cannot be delivered while the product has one shared account; the design
- *      review says so, and this file asserts the honest label rather than the claim.
+ *      The ACCESS half of that criterion is the gate's, not the filter's: the route is behind
+ *      `preboarding:read:own` (`hr_admin` alone, server/access.js), so the served note names that
+ *      cell instead of the shared-account premise this file used to assert. The per-person read
+ *      (a hire opening their own case) is not built; `server/preboarding-access-claim.test.js`
+ *      holds the note against the access model.
  *   4. "Adding a role or a line item is configuration, not a code change per hire."
  *      → catalog integrity, and the derivation being driven by the two exported tables.
  *
@@ -223,10 +226,15 @@ describe('P2-4 · the function filter ("IT and Admin see only their own lines")'
     assert.strictEqual(board.view.label, 'View by function');
     assert.strictEqual(board.view.is_access_control, false);
     assert.match(board.view.note, /filter, not access control/);
-    assert.match(board.view.note, /Layer 3/, 'and points at where the scope lands');
+    assert.match(board.view.note, /preboarding:read:own/,
+      'the note must name the resource that governs this route: the access model, not the filter, '
+      + 'decides who may open a case');
+    assert.doesNotMatch(board.view.note, /Layer 3/,
+      'the scope promise is gone because it was false — the per-user accounts it deferred to have '
+      + 'shipped, and what is missing is the case-to-person join');
     const all = await workspace.workspaceBoard(row.id);
     assert.strictEqual(all.view.mode, 'all', 'unfiltered is its own mode, not a silent default');
-    assert.strictEqual(all.groups.length, 4, 'HR and the manager see the whole board');
+    assert.strictEqual(all.groups.length, 4, 'an unfiltered board carries all four functions\' lines');
   });
 
   test('an unknown function is refused by name, never ignored', async () => {
