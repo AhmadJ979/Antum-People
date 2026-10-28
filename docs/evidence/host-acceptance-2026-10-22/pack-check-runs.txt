@@ -64,3 +64,15 @@ files judged: 20
 
 VERDICT: 1 direction(s) FAILED
 exit=1
+
+--- run 6: after `git add`, the whole enlarged pack ---
+$ python3 pack-check.py
+pack: /home/agent-product-designer/d20/docs/evidence/host-acceptance-2026-10-22
+files judged: 20
+1. every file in this directory is named in README.md: 20/20
+2. filenames README.md names: 23 named, 3 in the asserted external block, 0 ABSENT
+3. every file in this directory is tracked by git: 20 tracked, 0 UNTRACKED
+4. md5sums.txt is not stale: 18 listed, 0 STALE, 0 unlisted, 0 listed-but-absent; deliberately not listed: ['md5sums.txt', 'pack-check-runs.txt']
+
+VERDICT: all four directions hold (20 file(s))
+exit=0
