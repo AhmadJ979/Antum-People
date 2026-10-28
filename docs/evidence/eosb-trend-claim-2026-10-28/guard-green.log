@@ -1,0 +1,258 @@
+
+> antum-people-client@0.0.0 test
+> node --test src/*.test.js
+
+TAP version 13
+# Subtest: the guard reads the analytics source, not an empty or renamed file
+ok 1 - the guard reads the analytics source, not an empty or renamed file
+  ---
+  duration_ms: 2.469709
+  type: 'test'
+  ...
+# Subtest: no rendered string claims a trend in the EOSB forecast, and none names a forecast year
+ok 2 - no rendered string claims a trend in the EOSB forecast, and none names a forecast year
+  ---
+  duration_ms: 0.490075
+  type: 'test'
+  ...
+# Subtest: the card still states what the number is, in the forecast spec's own words
+ok 3 - the card still states what the number is, in the forecast spec's own words
+  ---
+  duration_ms: 0.268311
+  type: 'test'
+  ...
+# Subtest: classifyHttpStatus — the pure rule
+    # Subtest: the gate's refusal is 403 with nothing in it
+    ok 1 - the gate's refusal is 403 with nothing in it
+      ---
+      duration_ms: 0.733623
+      type: 'test'
+      ...
+    # Subtest: whitespace is still nothing — an empty answer stays a refusal
+    ok 2 - whitespace is still nothing — an empty answer stays a refusal
+      ---
+      duration_ms: 0.127035
+      type: 'test'
+      ...
+    # Subtest: a 403 carrying a body that is NOT the session error — the Origin gate — takes the sign-out branch
+    ok 3 - a 403 carrying a body that is NOT the session error — the Origin gate — takes the sign-out branch
+      ---
+      duration_ms: 0.248303
+      type: 'test'
+      ...
+    # Subtest: a 403 that carried a body is a dead session, not a refusal
+    ok 4 - a 403 that carried a body is a dead session, not a refusal
+      ---
+      duration_ms: 0.176646
+      type: 'test'
+      ...
+    # Subtest: 401 is a dead session however it is dressed
+    ok 5 - 401 is a dead session however it is dressed
+      ---
+      duration_ms: 0.109737
+      type: 'test'
+      ...
+    # Subtest: everything else is left alone — 2xx is usable, 404 and 500 belong to caller error handling
+    ok 6 - everything else is left alone — 2xx is usable, 404 and 500 belong to caller error handling
+      ---
+      duration_ms: 0.097548
+      type: 'test'
+      ...
+    1..6
+ok 4 - classifyHttpStatus — the pure rule
+  ---
+  duration_ms: 2.476179
+  type: 'suite'
+  ...
+# Subtest: the anti-vacuous control: a refusal must never be wired to a sign-out
+    # Subtest: REFUSAL maps to a notice in place, and specifically NOT to sign-out
+    ok 1 - REFUSAL maps to a notice in place, and specifically NOT to sign-out
+      ---
+      duration_ms: 0.311937
+      type: 'test'
+      ...
+    # Subtest: a dead session is the only classification that signs anyone out
+    ok 2 - a dead session is the only classification that signs anyone out
+      ---
+      duration_ms: 0.227959
+      type: 'test'
+      ...
+    1..2
+ok 5 - the anti-vacuous control: a refusal must never be wired to a sign-out
+  ---
+  duration_ms: 0.742594
+  type: 'suite'
+  ...
+# Subtest: createAuthedFetch — the wiring, with a fabricated transport
+    # Subtest: a normal answer passes through untouched and neither handler fires
+    ok 1 - a normal answer passes through untouched and neither handler fires
+      ---
+      duration_ms: 21.899841
+      type: 'test'
+      ...
+    # Subtest: 401: the session is ended centrally, and the response still goes back to the caller
+    ok 2 - 401: the session is ended centrally, and the response still goes back to the caller
+      ---
+      duration_ms: 1.305324
+      type: 'test'
+      ...
+    # Subtest: 403 with the dead-session body: sign out, and STOP the caller from using the body as data
+    ok 3 - 403 with the dead-session body: sign out, and STOP the caller from using the body as data
+      ---
+      duration_ms: 0.889143
+      type: 'test'
+      ...
+    # Subtest: 403 from the gate: the notice is raised, the session is KEPT, and the empty body is never parsed
+    ok 4 - 403 from the gate: the notice is raised, the session is KEPT, and the empty body is never parsed
+      ---
+      duration_ms: 0.639559
+      type: 'test'
+      ...
+    # Subtest: a 404 and a 500 are nobody's business here — both are handed back
+    ok 5 - a 404 and a 500 are nobody's business here — both are handed back
+      ---
+      duration_ms: 0.338597
+      type: 'test'
+      ...
+    # Subtest: reading the body to classify it does not eat it — the caller can still parse the response
+    ok 6 - reading the body to classify it does not eat it — the caller can still parse the response
+      ---
+      duration_ms: 0.428599
+      type: 'test'
+      ...
+    # Subtest: the caller's own token reaches the request
+    ok 7 - the caller's own token reaches the request
+      ---
+      duration_ms: 0.297109
+      type: 'test'
+      ...
+    # Subtest: with no token the sentinel still goes out, exactly as before this change
+    ok 8 - with no token the sentinel still goes out, exactly as before this change
+      ---
+      duration_ms: 0.814777
+      type: 'test'
+      ...
+    # Subtest: a caller that supplies its own Authorization header keeps it
+    ok 9 - a caller that supplies its own Authorization header keeps it
+      ---
+      duration_ms: 0.27977
+      type: 'test'
+      ...
+    1..9
+ok 6 - createAuthedFetch — the wiring, with a fabricated transport
+  ---
+  duration_ms: 27.31362
+  type: 'suite'
+  ...
+# Subtest: one screen, several panels: a refused sibling does not blank a granted one
+    # Subtest: the granted roster stays AND the refusal is recorded against its own url
+    ok 1 - the granted roster stays AND the refusal is recorded against its own url
+      ---
+      duration_ms: 2.238211
+      type: 'test'
+      ...
+    # Subtest: CONTROL — under the old one-Promise.all shape the granted roster IS blanked
+    ok 2 - CONTROL — under the old one-Promise.all shape the granted roster IS blanked
+      ---
+      duration_ms: 0.272498
+      type: 'test'
+      ...
+    # Subtest: a panel that never completed is a failure, not a refusal, and blanks only itself
+    ok 3 - a panel that never completed is a failure, not a refusal, and blanks only itself
+      ---
+      duration_ms: 0.330516
+      type: 'test'
+      ...
+    # Subtest: a dead session is re-thrown, never recorded as a panel outcome
+    ok 4 - a dead session is re-thrown, never recorded as a panel outcome
+      ---
+      duration_ms: 0.543798
+      type: 'test'
+      ...
+    # Subtest: the refusal names the panel it belongs to, from the url onRefusal already receives
+    ok 5 - the refusal names the panel it belongs to, from the url onRefusal already receives
+      ---
+      duration_ms: 0.281802
+      type: 'test'
+      ...
+    # Subtest: recordPanel tags by the error class, never by reading the body
+    ok 6 - recordPanel tags by the error class, never by reading the body
+      ---
+      duration_ms: 0.164132
+      type: 'test'
+      ...
+    1..6
+ok 7 - one screen, several panels: a refused sibling does not blank a granted one
+  ---
+  duration_ms: 4.920719
+  type: 'suite'
+  ...
+# Subtest: every state the row names has its own label
+ok 8 - every state the row names has its own label
+  ---
+  duration_ms: 1.195866
+  type: 'test'
+  ...
+# Subtest: an unknown state is labelled Unknown and wears no state colour
+ok 9 - an unknown state is labelled Unknown and wears no state colour
+  ---
+  duration_ms: 0.210116
+  type: 'test'
+  ...
+# Subtest: each of the four states has its own chip styling
+ok 10 - each of the four states has its own chip styling
+  ---
+  duration_ms: 0.140958
+  type: 'test'
+  ...
+# Subtest: a date is formatted the same way on every machine
+ok 11 - a date is formatted the same way on every machine
+  ---
+  duration_ms: 0.933806
+  type: 'test'
+  ...
+# Subtest: the next milestone is the earliest one not yet completed, cleared in order
+ok 12 - the next milestone is the earliest one not yet completed, cleared in order
+  ---
+  duration_ms: 0.299267
+  type: 'test'
+  ...
+# Subtest: the summary names the count, the offsets and what is next — and says nothing for an empty one
+ok 13 - the summary names the count, the offsets and what is next — and says nothing for an empty one
+  ---
+  duration_ms: 0.16289
+  type: 'test'
+  ...
+# Subtest: the window line prints both ends and the length it implies
+ok 14 - the window line prints both ends and the length it implies
+  ---
+  duration_ms: 0.180684
+  type: 'test'
+  ...
+# Subtest: automatic source detection is off, and the declared sources still name the markup
+ok 15 - automatic source detection is off, and the declared sources still name the markup
+  ---
+  duration_ms: 0.987449
+  type: 'test'
+  ...
+# Subtest: every class-carrying file is inside the declared sources, or states why it is not markup
+ok 16 - every class-carrying file is inside the declared sources, or states why it is not markup
+  ---
+  duration_ms: 9.492344
+  type: 'test'
+  ...
+# Subtest: no class-name list hides outside the declared sources
+ok 17 - no class-name list hides outside the declared sources
+  ---
+  duration_ms: 1.745382
+  type: 'test'
+  ...
+1..17
+# tests 36
+# suites 4
+# pass 36
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 343.368962

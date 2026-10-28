@@ -1,0 +1,28 @@
+=== the served bundle, fetched over the public URL, before the change ===
+$ curl -s -o /tmp/served.js -w 'http=%{http_code} bytes=%{size_download}\n' \
+    https://b974147c03228029e277d1cbe6646fe6.ctonew.app/assets/index-CNpLMWLD.js
+http=200 bytes=283703
+$ md5sum /tmp/served.js
+62f0fae0baf2b71f7607d86f6834dab1  /tmp/served.js
+$ grep -c "EOSB liability forecast shows" /tmp/served.js
+1
+
+=== a build of origin/main's client reproduces the served bytes exactly (rig identity, rule 26) ===
+$ (in my clone at origin/main = a8b5625) cd client && npm run build   ->  exit 0
+dist/assets/index-CNpLMWLD.js   283.70 kB      md5 62f0fae0baf2b71f7607d86f6834dab1
+dist/assets/index-CSQHlfh4.css   35.93 kB       md5 2cdb30957b86cca3e6c9df949a0c2c40
+$ md5sum /home/team/shared/probable-octo-sniffle/client/dist/assets/index-CNpLMWLD.js
+62f0fae0baf2b71f7607d86f6834dab1
+(the deployed tree's own dist = the served pair; my build = the same bytes, so the rig is the served tree)
+
+=== after the change ===
+$ cd client && npm run build   ->  exit 0   (see client-build-after.log)
+dist/assets/index-C7z2ZG3I.js   283.68 kB      md5 2d1a032cb986e75168f4f83244b69dc8
+dist/assets/index-CSQHlfh4.css   35.93 kB       md5 2cdb30957b86cca3e6c9df949a0c2c40   (UNCHANGED)
+$ grep -c "trend into 2027" dist/assets/index-C7z2ZG3I.js            -> 0
+$ grep -c "liability forecast shows a" dist/assets/index-C7z2ZG3I.js  -> 0
+$ grep -c "undiscounted projection of accrued EOSB entitlement, engine-computed" dist/assets/index-C7z2ZG3I.js -> 1
+
+The stylesheet's md5 is unmoved: Tailwind v4 scans raw prose, and the new comment in App.tsx sits in a
+scanned file, so this was measured rather than assumed (the trap that moved the CSS for a comment on
+2026-10-20). The only client byte-delta is the JS module.

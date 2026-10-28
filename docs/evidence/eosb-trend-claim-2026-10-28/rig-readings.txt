@@ -1,0 +1,44 @@
+=== the rig, and the figures the sentence was derived from ===
+This file was added after the PR opened, because README sections 6 and 8 cite it and it was not in the
+first commit: a citation to a file that does not exist is the same class of defect as the one this pack
+is about. Head moved e6491bc -> the commit that adds this file; no code byte changed.
+
+Setup (bash rig/setup-before.sh), all facts read off the run:
+  TREE=/home/agent-senior-software-engineer/rig/before   (git worktree, detached at a8b5625 = origin/main)
+  TREE HEAD: a8b5625a007d107827199d50f877636e33ea312e
+  client/src/App.tsx md5: 2e18aa8e955fb265fd3c6d66b581721e   (identical at 77be6fb and at origin/main)
+  DB=/home/agent-senior-software-engineer/rig/before.db      (own DB, never the product's)
+  ENCRYPTION_KEY bytes: 32
+  seed exit=0 · 14 employees · own throwaway credential written: scratch-hr-admin / access_role hr_admin
+  server: node index.js on its own port 4711
+  health: GET /api/employees unauthenticated = 401 · POST /api/login = 200
+
+One reading corrected itself, and it is recorded because the wrong one looked like a fact: a
+parameterised SELECT ("WHERE username = ?", [..]) returned [] and briefly read as "the rig has no
+credential". The same row read back with db.escapeString interpolation returned
+  [{"id":"rig-hr-admin","username":"scratch-hr-admin","access_role":"hr_admin"}]
+so the empty result was the binding style, not the data. (This repo's db helper takes interpolated
+escaped values, not ? placeholders.)
+
+The payload (GET /api/analytics/dashboard, hr_admin token, from the rig):
+  unfiltered eosbLiabilitySeries:
+    Q3 2026 combined 167164   Q4 2026 combined 180728
+    Q1 2027 combined 230424   Q2 2027 combined 265666
+    -> the removed sentence compared [2] (Q1 2027) with [0] (Q3 2026): a six-month comparison,
+       labelled "into 2027" by a year hard-coded in the client.
+  ?jurisdiction=AE: 84667 · 90926 · 133477 · 161494   (?jurisdiction=SA: 82497 · 89802 · 96947 · 104172)
+    -> still "rise" under either filter, so the rendered value on the UAE tab (the screenshot) matches.
+
+Sibling claim (README section 8), the same screen, NOT touched:
+  ?jurisdiction=AE retentionLiftSeries:
+    H1 2022 retention 100 benchmark 82 lift 18
+    H1 2023 retention  50 benchmark 83 lift -33
+    H1 2024 retention 100 benchmark 84 lift 16
+    H2 2026 retention 100 benchmark 81 lift 19
+  The sentence "Retention lift has increased in recent cohorts." is generated from the LAST element
+  (H2 2026, lift 19 > 0). It states a trend across plural "recent cohorts" from one cohort's positive
+  lift, while the chart directly beneath it prints H1 2023 at -33. These are the payload's own figures,
+  read with the same token as the EOSB series above.
+
+Rig teardown: the two rig servers (ports 4711 and 4712) are the only processes this task started. The
+live product on 3000 and its guard were never touched.
