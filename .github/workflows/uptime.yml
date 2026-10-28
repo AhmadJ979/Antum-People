@@ -81,6 +81,10 @@ jobs:
         env:
           INPUT_URL: ${{ github.event.inputs.url }}
         run: |
+          # GitHub runs this block as `bash -e {0}`. The assertions below treat a
+          # non-zero command as a READING (grep that finds nothing is an answer, not an
+          # error), so errexit is turned off explicitly and the verdict is set by hand.
+          set +e
           set -uo pipefail
           url="${INPUT_URL:-}"
           if [ -z "$url" ]; then url="$UPTIME_URL_DEFAULT"; fi
@@ -92,6 +96,10 @@ jobs:
         env:
           URL: ${{ steps.target.outputs.url }}
         run: |
+          # GitHub runs this block as `bash -e {0}`. The assertions below treat a
+          # non-zero command as a READING (grep that finds nothing is an answer, not an
+          # error), so errexit is turned off explicitly and the verdict is set by hand.
+          set +e
           set -uo pipefail
 
           url="$URL"
@@ -130,9 +138,9 @@ jobs:
               status_seen="$code"
             else
               status_seen='200'
-              found_title="$(grep -o '<title>[^<]*</title>' "$body" 2>/dev/null | head -n1)"
+              found_title="$(grep -o '<title>[^<]*</title>' "$body" 2>/dev/null | head -n1 || true)"
               if [ -n "${found_title:-}" ]; then title_seen="$found_title"; fi
-              found_asset="$(grep -Eo "$asset_re" "$body" 2>/dev/null | head -n1)"
+              found_asset="$(grep -Eo "$asset_re" "$body" 2>/dev/null | head -n1 || true)"
               if [ -n "${found_asset:-}" ]; then asset_seen="$found_asset"; fi
 
               if ! grep -qF -- "$expected_title" "$body"; then
@@ -211,6 +219,10 @@ jobs:
           URL_CHECKED: ${{ steps.probe.outputs.url }}
           RUN_URL: ${{ steps.probe.outputs.run_url }}
         run: |
+          # GitHub runs this block as `bash -e {0}`. The assertions below treat a
+          # non-zero command as a READING (grep that finds nothing is an answer, not an
+          # error), so errexit is turned off explicitly and the verdict is set by hand.
+          set +e
           set -uo pipefail
 
           # Find an open alert issue by label OR by title prefix, so a missing label cannot
@@ -272,6 +284,10 @@ jobs:
           ATTEMPTS: ${{ needs.probe.outputs.attempts }}
           RUN_URL: ${{ needs.probe.outputs.run_url }}
         run: |
+          # GitHub runs this block as `bash -e {0}`. The assertions below treat a
+          # non-zero command as a READING (grep that finds nothing is an answer, not an
+          # error), so errexit is turned off explicitly and the verdict is set by hand.
+          set +e
           set -uo pipefail
 
           ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
