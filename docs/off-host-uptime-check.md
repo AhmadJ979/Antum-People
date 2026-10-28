@@ -126,4 +126,24 @@ comment in the workflow file, where the next editor will meet it.
 
 ## Evidence — canaries actually run
 
-*(filled in below from the runs produced by this check's own workflow; see the PR body for the same table)*
+
+Three runs on 2026-10-28, all produced by this workflow on the branch `feat/off-host-uptime-check`, each by the
+`push` on this file's own path. The URL probed is printed by the run itself (`probing: <url>`), which is what
+shows the run came from the workflow rather than from a hand-run check.
+
+| canary | commit | URL probed | run | outcome | which assertion |
+| --- | --- | --- | --- | --- | --- |
+| W — wrong page, status 200 | `57e1235` | `https://example.com/` | [run 40684447620](https://github.com/AhmadJ979/Antum-People/actions/runs/40684447620) | **FAILED**, 3/3 attempts | **B** — `title seen: <title>Example Domain</title>`, `asset seen: none`, status `200` |
+| H — no response (the freeze's shape) | `f2d09fe` | `http://192.0.2.1/` (TEST-NET-1, RFC 5737) | [run 40684839404](https://github.com/AhmadJ979/Antum-People/actions/runs/40684839404) | **FAILED**, job 89 s (budget 105 s) | **A** — `no HTTP response (curl exit 28: Connection timed out after 15002 milliseconds)`, `title seen: no <title>` |
+| GREEN — the production URL | `59942d8` | the live site | [run 40685299643](https://github.com/AhmadJ979/Antum-People/actions/runs/40685299643) | **PASSED** after 1 attempt | all three — `200`, `<title>Antum People</title>`, `assets/index-C7z2ZG3I.js` |
+| (extra) the first attempt, before the fix below | `15592da` | `https://example.com/` | [run 40684215940](https://github.com/AhmadJ979/Antum-People/actions/runs/40684215940) | FAILED in 2 s | **none** — the script aborted on GitHub's `bash -e`; the alert issue said so instead of inventing an assertion (fixed in `57e1235`) |
+
+**The alert path is proved, not assumed.** Run `40684215940` **opened issue #323** and the `uptime-alert` label
+was created by that run (it did not exist before). The two later failing runs **commented on #323 instead of
+opening a second issue**, and the green run **commented on it and closed it** — one issue for four failing
+checks, which is the whole point of the dedup rule. [Issue #323](https://github.com/AhmadJ979/Antum-People/issues/323).
+
+**One defect this found before anyone trusted a green:** GitHub executes `run:` blocks as **`bash -e {0}`**, so
+`found_asset="$(grep -Eo … | head -n1)"` exited the script the moment `grep` matched nothing — errexit, not a
+failed assertion. `set +e` now heads every run block (with that reason in a comment) and the two greps carry
+`|| true`.
