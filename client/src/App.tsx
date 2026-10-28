@@ -1885,8 +1885,22 @@ export default function App() {
                    </div>
                    <div className="p-4 bg-white/10 rounded-xl border border-white/5">
                       <div className="text-rose-300 text-[10px] font-bold uppercase mb-2">Liability Exposure (Illustrative)</div>
+                      {/* Removed 2026-10-28. This card used to read: "EOSB liability forecast shows a
+                          {rise or steady} trend into 2027." - a trend word chosen by comparing point 2 of the
+                          series with point 0, and a year hard-coded in the client. The series behind it is
+                          four hard-coded calendar quarter-ends (server/index.js:773), each point computed with
+                          every employee projected as a resignation and no departure ever modelled, so today
+                          the first point is already in the past and the last is eight months ahead: a
+                          calendar series, not the next twelve months (eosb-liability-forecast-spec.md
+                          sections 2.3 and 7). Four points under those assumptions cannot establish a trend,
+                          and this card is the sentence a buyer reads.
+                          The wording below is that spec's own honest label (section 7, "What this number is
+                          not"), not a new claim: it says what the number is and what it is not, and asserts
+                          no movement at all. P4-3 owns the series, the window, the basis and this screen. Do
+                          not put a trend word back until the series supports one -
+                          client/src/eosbTrendClaim.test.js reddens if it returns. */}
                       <p className="text-xs text-slate-200 leading-relaxed">
-                        EOSB liability forecast shows a {(analytics?.eosbLiabilitySeries?.[2]?.combined ?? 0) > (analytics?.eosbLiabilitySeries?.[0]?.combined ?? 0) ? 'rise' : 'steady'} trend into 2027.
+                        An undiscounted projection of accrued EOSB entitlement, engine-computed - not a statutory or actuarial provision, and not a basis for booking.
                       </p>
                    </div>
                 </div>

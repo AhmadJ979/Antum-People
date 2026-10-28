@@ -1,0 +1,28 @@
+=== the screen, not the source: this claim DOES render, and it renders for a buyer ===
+Rig: own worktree at a8b5625 (origin/main), own DB (rig/before.db, 14 employees), own port 4711, own
+throwaway hr_admin credential. Bundle served by that rig proven byte-identical to the served bundle by
+md5 (62f0fae0baf2b71f7607d86f6834dab1). Signed in on the rig, never on the live product (rule 26).
+
+Reached by a real click on the nav button "Strategic Intelligence" (accessible ref @e9), not by
+element.click():
+
+$ agent-browser eval "JSON.stringify({script:[...document.querySelectorAll('script[src]')].map(s=>s.getAttribute('src')),
+    text:[...document.querySelectorAll('p')].map(p=>p.textContent).filter(t=>/EOSB liability forecast/.test(t))})"
+{"script":["/assets/index-CNpLMWLD.js"],
+ "text":["EOSB liability forecast shows a rise trend into 2027."]}
+
+$ agent-browser eval "JSON.stringify({title:document.title, script:..., screen:document.querySelector('h3')?.textContent,
+    banner:[...document.querySelectorAll('div.bg-teal-900 p')].map(p=>p.textContent)})"
+{"title":"Antum People","script":"/assets/index-CNpLMWLD.js","screen":"Strategic Workforce Intelligence",
+ "banner":["Retention lift has increased in recent cohorts.","Average Time-to-Value is 19.2 days.",
+           "EOSB liability forecast shows a rise trend into 2027."]}
+
+Screenshot: strategic-intelligence-before.png (same session, same breath as the readings above).
+Its identity: page title "Antum People", page script /assets/index-CNpLMWLD.js (283703 B,
+md5 62f0fae0baf2b71f7607d86f6834dab1 — the served bytes), screen heading "Strategic Workforce
+Intelligence", the LIABILITY EXPOSURE (ILLUSTRATIVE) card reading the sentence. Top bar shows
+SAMPLE DEMO DATA and the GCC Intelligence Tier badge.
+
+The pre-paint probe trap: this is a HIT, not a zero-hit probe. The sentence was read off a rendered
+page that names its own bundle, so it is evidence a buyer sees it. (The zero-hit probe of the same
+shape is filed as VOID in screen-after-VOID.txt.)

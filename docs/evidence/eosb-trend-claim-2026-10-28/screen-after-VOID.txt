@@ -1,0 +1,19 @@
+=== VOID: the after-the-change screen pass. Withdrawn as evidence, kept as a record. ===
+What was attempted: close the browser session, open the AFTER rig (port 4712, tree = this branch,
+bundle /assets/index-C7z2ZG3I.js), sign in, click "Strategic Intelligence", read the banner and shoot it.
+
+What actually happened: the login/nav chain did not complete, so the banner selector returned []:
+  {"url":"http://127.0.0.1:4712/","script":"/assets/index-C7z2ZG3I.js","banner":[]}
+and no screenshot was written (the directory is empty apart from this note's account of it).
+
+Why this is VOID and not evidence: the page it read was the login screen of the right rig. A zero-hit
+probe on an unrendered page establishes NOTHING about the sentence — it cannot distinguish "the claim
+is gone" from "the page was never reached". The only fact it establishes is the bundle identity
+(/assets/index-C7z2ZG3I.js), which the build output already gives.
+
+What DOES stand behind the after state: (1) the built module's bytes - the old sentence is absent and
+the honest label present, both counted (bundle-identity.txt); (2) the guard, green on the fixed source
+and red on both falsifications (guard-*.log). What is NOT shown is the after sentence on a screen. If a
+rendered after-state is wanted, re-run this pass against the after-rig with the refs read from a fresh
+snapshot (the refs used were stale after `close --all`), or take it on the deployed tree after the
+movement - where the movement's own acceptance readings already read the served page.

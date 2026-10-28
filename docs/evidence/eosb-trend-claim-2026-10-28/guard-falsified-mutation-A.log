@@ -1,0 +1,2940 @@
+
+> antum-people-client@0.0.0 test
+> node --test src/*.test.js
+
+TAP version 13
+# Subtest: the guard reads the analytics source, not an empty or renamed file
+ok 1 - the guard reads the analytics source, not an empty or renamed file
+  ---
+  duration_ms: 2.493359
+  type: 'test'
+  ...
+# Subtest: no rendered string claims a trend in the EOSB forecast, and none names a forecast year
+not ok 2 - no rendered string claims a trend in the EOSB forecast, and none names a forecast year
+  ---
+  duration_ms: 0.671427
+  type: 'test'
+  location: '/home/agent-senior-software-engineer/antum-people/client/src/eosbTrendClaim.test.js:63:1'
+  failureType: 'testCodeFailure'
+  error: `a hard-coded forecast year with a "trend" claim is back in the client. The series is four calendar quarter-ends computed on a resignation basis with no departures modelled, so a trend claim is not supported by it (eosb-liability-forecast-spec.md section 7). If a trend is now supportable, that is P4-3's series change and this guard must be updated with it, not deleted.`
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    import React, { useState, useEffect } from 'react';
+    import { createAuthedFetch } from './httpStatus.js';
+    import { callPanel, settlePanels, refusalNoticeFor } from './panelResults.js';
+    
+    
+    import {
+      milestoneLabel, milestoneChipClass, formatDay, probationSummary, windowLine,
+    } from './probationTimeline.js';
+    
+    
+    
+    
+    
+    const REFUSAL_NOTICE = "You don't have access to that. Nothing was changed, and you are still signed in.";
+    
+    const API_BASE = window.location.port === '5173' ? 'http://localhost:3000' : '';
+    
+    interface Employee {
+      id: string;
+      first_name: string;
+      last_name: string;
+      email: string;
+      department: string;
+      role: string;
+      manager_id: string;
+      start_date: string;
+      end_date: string | null;
+      status: 'onboarding' | 'active' | 'offboarding' | 'terminated';
+      salary: number;
+      recruitment_cost: number;
+      fully_productive_date: string | null;
+      national_id_type: string | null;
+      national_id_value: string | null;
+      data_residency_country: string | null;
+    
+    
+      consent_granted: number;
+      consent_date: string | null;
+      visa_status: string | null;
+      visa_expiry_date: string | null;
+      basic_salary: number;
+      eosb_accrued: number;
+      eosb_paid: number;
+    }
+    
+    interface Task {
+      id: string;
+      employee_id: string;
+      title: string;
+      description: string;
+      due_date: string;
+      completed_at: string | null;
+      status: 'pending' | 'completed' | 'overdue';
+      category: string;
+      ttv_milestone?: number;
+    }
+    
+    
+    
+    
+    interface PreboardingCase {
+      id: string;
+      offer_reference: string;
+      candidate_name: string;
+      candidate_email: string | null;
+      role: string;
+      department: string;
+      reporting_line: string;
+      jurisdiction: 'AE' | 'SA';
+      start_date: string;
+      status: string;
+      source: string;
+      created_at: string;
+    }
+    
+    interface PreboardingItem {
+      id: string;
+      item_key: string;
+      label: string;
+      category: string;
+      status: 'not_started' | 'requested' | 'received' | 'verified';
+      document_reference: string | null;
+      requested_at: string | null;
+      received_at: string | null;
+      verified_at: string | null;
+    }
+    
+    
+    
+    
+    interface NoticeAcknowledgement {
+      item_key: string;
+      item_label: string;
+      instrument: string;
+      lawful_basis: string;
+      notice_version: string;
+      recorded_by: string;
+      method: string;
+      note: string | null;
+      acknowledged_at: string;
+    }
+    
+    interface NoticeBasis {
+      basis: string | null;
+      collectible: boolean;
+      pending_counsel?: string;
+      reason?: string;
+      notice_line?: number | null;
+    }
+    interface CaseNotice {
+      version: string;
+      instrument: string;
+      acknowledgements: NoticeAcknowledgement[];
+      bases: Record<string, NoticeBasis>;
+    }
+    
+    
+    
+    
+    
+    interface PreboardingPackageItem {
+      item_key: string;
+      label: string;
+      category: string;
+      acknowledgement_required: boolean;
+    
+    
+    
+      delivery: { state: string; reason: string; label: string };
+      reading: { state: string; reason: string; label: string };
+      state: 'acknowledged' | 'not_recorded';
+      state_label: string;
+      acknowledged: boolean;
+      acknowledgement: {
+        recorded_by: string;
+        acknowledged_at: string;
+        method: string;
+        method_label: string;
+        note: string | null;
+      } | null;
+    }
+    interface PreboardingPackage {
+      case_id: string;
+      jurisdiction: string;
+      start_date: string;
+      package_label: string | null;
+      package_available: boolean;
+      package_unavailable_reason: string | null;
+      delivery_channel: string;
+      copy_note: string;
+      as_of: string | null;
+      item_count: number;
+      recorded_count: number;
+      required_total: number;
+      required_recorded: number;
+      missing_required: string[];
+      items: PreboardingPackageItem[];
+    }
+    interface PreboardingChecklistRow {
+      case_id: string;
+    
+      by_track?: {
+        employee: { lines: number; complete: number; open: number; active: boolean };
+        workspace: { lines: number; complete: number; open: number; active: boolean; functions: string[] };
+      };
+      offer_reference: string;
+      candidate_name: string;
+      role: string;
+      department: string;
+      jurisdiction: 'AE' | 'SA';
+      start_date: string;
+      days_to_start: number | null;
+      document_set_active: boolean;
+      checklist_seeded: boolean;
+      items_total: number;
+      by_status: { not_started: number; requested: number; received: number; verified: number };
+      outstanding_count: number;
+      outstanding: { item_key: string; label: string; status: string; required: boolean }[];
+    
+    
+    
+    
+      notice_version: string;
+      notice_recorded: boolean;
+      notice_items_collectible: number;
+      notice_items_acknowledged: number;
+      notice_items_no_basis: number;
+      last_reminder_at: string | null;
+      last_reminder_count: number | null;
+    
+    
+    
+      flag: PreboardingFlag;
+    }
+    
+    
+    
+    interface PreboardingFlag {
+      state: 'clear' | 'inside_48_hours' | 'started' | 'no_start_date';
+      raised: boolean;
+      tone: 'slate' | 'amber' | 'rose';
+      chip: string | null;
+      headline: string;
+      body: string[];
+      open_count: number;
+      open_items: { item_key: string; label: string; status: string; owner: string | null; owner_known: boolean }[];
+      hours_to_start: number | null;
+      days_to_start: number | null;
+      boundary_hours: number;
+      boundary_inclusive: boolean;
+      scope_note: string;
+    }
+    
+    
+    
+    
+    interface WorkspaceLine {
+      item_key: string;
+      label: string;
+      category: string;
+      owner: string;
+      status: string;
+      complete: boolean;
+      due_date: string | null;
+      due_rule: string | null;
+      days_to_due: number | null;
+      overdue: boolean;
+    }
+    interface WorkspaceFunctionCount { function: string; lines: number; complete: number; open: number }
+    interface WorkspaceBoard {
+      case_id: string;
+      jurisdiction: string;
+      start_date: string;
+      track_active: boolean;
+      track_note: string | null;
+      derived_from: { role: string; department: string; profile_keys: string[] };
+      available_functions: WorkspaceFunctionCount[];
+      view: { mode: 'all' | 'function'; function: string | null; label: string; note: string; is_access_control: boolean };
+      groups: { function: string; lines: WorkspaceLine[] }[];
+      totals: { lines: number; complete: number; open: number; overdue: number };
+    }
+    
+    
+    
+    
+    
+    
+    
+    const WORKSPACE_VIEW_ALL = 'all';
+    const workspaceViewKey = (fn: string | null | undefined): string =>
+      (!fn || fn === 'All' ? WORKSPACE_VIEW_ALL : String(fn));
+    
+    const workspaceReadKey = (caseId: string, fn: string) => `${caseId}:${workspaceViewKey(fn)}`;
+    
+    interface PreboardingOverview {
+      jurisdiction: string | null;
+      cases: PreboardingChecklistRow[];
+      totals: {
+        cases: number;
+        items: number;
+        items_outstanding: number;
+        items_received: number;
+        items_verified: number;
+    
+    
+        cases_notice_not_shown: number;
+        cases_ready: number;
+      };
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    interface ReplacementCostComponent {
+      key: string;
+      label: string;
+      state: 'calculated' | 'not_calculated';
+      value: number | null;
+      reason: string | null;
+      inputs: Record<string, unknown>;
+      basis?: string;
+    }
+    interface ReplacementCostPayload {
+      model: string;
+      employee_id: string;
+      employee_name: string;
+      currency: string | null;
+      as_of: string | null;
+      trigger: { key: string; label: string; detail: string } | null;
+      window: { departure_date: string | null; replacement: { employee_id: string; start_date: string; basis: string } | null };
+      components: ReplacementCostComponent[];
+      total: {
+        state: 'calculated' | 'partial';
+        value: number;
+        calculated_components: number;
+        components_total: number;
+        not_calculated: string[];
+        note: string;
+      };
+      assumptions: { key: string; label: string; value: number; unit: string; basis: string }[];
+    }
+    type ReplacementCostReading = { reading: 'loading' | 'ok' | 'refused' | 'failed'; cost: ReplacementCostPayload | null };
+    
+    
+    
+    const carriesTerminationFlag = (emp: Employee): boolean =>
+      emp.status === 'offboarding'
+      || emp.status === 'terminated'
+      || Boolean((emp as unknown as { termination_type?: string | null }).termination_type);
+    
+    const money = (currency: string | null, value: number): string =>
+      `${currency || '—'} ${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    
+    
+    const ReplacementCostOnFlag = ({ state }: { state?: ReplacementCostReading }) => {
+      if (!state || state.reading === 'loading') {
+        return <div className="mt-1 text-[10px] text-slate-400">Replacement cost: reading…</div>;
+      }
+      if (state.reading === 'refused') {
+        return <div className="mt-1 text-[10px] text-amber-700">Replacement cost: refused for this account</div>;
+      }
+      if (state.reading === 'failed' || !state.cost) {
+        return <div className="mt-1 text-[10px] text-amber-700">Replacement cost: could not be read</div>;
+      }
+      const p = state.cost;
+      return (
+        <div className="mt-2 max-w-[15rem] rounded border border-slate-200 bg-slate-50 p-2 text-left">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            Replacement cost {p.total.state === 'partial' ? '(partial)' : ''}
+          </div>
+          <div className="font-mono text-sm font-bold text-teal-700">{money(p.currency, p.total.value)}</div>
+          <ul className="mt-1 space-y-0.5">
+            {p.components.map(c => (
+              <li key={c.key} className="text-[10px] leading-tight">
+                <span className="font-semibold text-slate-700">{c.label}: </span>
+                {c.state === 'calculated' && c.value !== null
+                  ? <span className="font-mono text-slate-700">{money(p.currency, c.value)}</span>
+                  : <span className="text-amber-700">not calculated — {c.reason}</span>}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-1 text-[9px] text-slate-500">
+            {p.total.calculated_components} of {p.total.components_total} computed from records
+            {p.window.replacement
+              ? ` · vacancy measured to the replacement's recorded start (${p.window.replacement.start_date})`
+              : ' · no replacement recorded in this role'}
+          </div>
+          <div className="mt-1 text-[9px] text-slate-400">
+            Assumptions, not measurements: {p.assumptions.map(a => `${a.label} ×${a.value}`).join(' · ')}
+          </div>
+          <div className="mt-0.5 text-[9px] text-slate-400">
+            {p.model} · as of {p.as_of}
+          </div>
+        </div>
+      );
+    };
+    
+    const NAV_ITEMS = [
+      { id: 'dashboard', label: 'Executive Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
+      { id: 'employees', label: 'Employee Directory', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+      { id: 'transitions', label: 'Transitions Hub', icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' },
+      { id: 'preboarding', label: 'Pre-boarding', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+      { id: 'analytics', label: 'Strategic Intelligence', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' }
+    ];
+    
+    
+    const navLabel = (id: string) => (NAV_ITEMS.find(item => item.id === id) || { label: id }).label;
+    
+    
+    
+    
+    
+    
+    
+    const relDays = (flag: PreboardingFlag): string | null => {
+      if (flag.days_to_start === null) return null;
+      if (flag.state === 'inside_48_hours' && flag.hours_to_start !== null)
+        return `${Math.round(flag.hours_to_start * 10) / 10} h before 00:00 on the start date`;
+      if (flag.days_to_start < 0) return `started ${Math.abs(flag.days_to_start)} d ago`;
+      return `${flag.days_to_start} d`;
+    };
+    
+    
+    
+    const ItemButton = ({ label, onClick, disabled, title }: { label: string; onClick: () => void; disabled?: boolean; title?: string }) => (
+      <button onClick={onClick} disabled={disabled} title={title}
+        className="text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">
+        {label}
+      </button>
+    );
+    
+    interface Analytics {
+      activeHeadcount: number;
+      monthlyPayroll: number;
+      eosbLiability: number;
+      attritionRate: number;
+      avgCostPerHireAE: number;
+      avgCostPerHireSA: number;
+      avgTtvDays: number;
+      ttvByDepartment: { department: string; avgDays: number; target: number }[];
+      retentionLiftSeries: { cohort: string; retention: number; benchmark: number; lift: number }[];
+      eosbLiabilitySeries: { quarter: string; uae: number; ksa: number; combined: number }[];
+      eosbByJurisdiction: { AE: number; SA: number };
+      onboardingPipeline: { id: string; first_name: string; last_name: string; role: string; start_date: string }[];
+      exitsByReason: { reason: string; count: number }[];
+      activeSalarySpend: number;
+      totalRecruitingSpend: number;
+    }
+    
+    function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
+      const [username, setUsername] = useState('');
+      const [password, setPassword] = useState('');
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [showRecoveryInfo, setShowRecoveryInfo] = useState(false);
+    
+      const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        try {
+          const res = await fetch(`${API_BASE}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            onLogin(data.token, data.user);
+          } else {
+            setError(data.error || 'Login failed');
+          }
+        } catch (err) {
+          setError('Connection error. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      };
+    
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-900 font-sans">
+          <div className="max-w-md w-full p-8 bg-white rounded-2xl shadow-2xl">
+            <div className="flex justify-center mb-8">
+              <div className="bg-teal-600 p-3 rounded-xl shadow-lg">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+            </div>
+            <h2 className="text-2xl font-extrabold text-center text-slate-900 mb-2">Antum People</h2>
+            <p className="text-slate-500 text-center mb-8 text-sm">HR Onboarding/Offboarding Intelligence Platform</p>
+            
+            {error && (
+              <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 text-sm rounded-lg font-medium flex items-center">
+                 <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                 </svg>
+                 {error}
+              </div>
+            )}
+    
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2" htmlFor="login-username">Username</label>
+                <input id="login-username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition text-slate-900"
+                  placeholder="Enter your username"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2" htmlFor="login-password">Password</label>
+                <input id="login-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition text-slate-900"
+                  placeholder="••••••••"
+                  required
+                />
+                <div className="flex justify-end mt-2">
+                  <button 
+                    type="button"
+                    onClick={() => setShowRecoveryInfo(true)}
+                    className="text-xs text-teal-600 hover:text-teal-700 font-medium hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                {showRecoveryInfo && (
+                  <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 flex items-start justify-between">
+                    
+                    <span>To reset your password, contact your Antum administrator.</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowRecoveryInfo(false)}
+                      className="ml-3 text-slate-400 hover:text-slate-600 font-bold leading-none"
+                      aria-label="Dismiss"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                )}
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold hover:bg-slate-800 focus:ring-4 focus:ring-slate-200 transition shadow-lg disabled:opacity-50"
+              >
+                {loading ? 'Authenticating...' : 'Sign In'}
+              </button>
+            </form>
+            <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+              <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">Enterprise HR Intelligence</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    export default function App() {
+      const [token, setToken] = useState<string | null>(localStorage.getItem('antum_token'));
+      const [user, setUser] = useState<any | null>(JSON.parse(localStorage.getItem('antum_user') || 'null'));
+      const [activeTab, setActiveTab] = useState<'dashboard' | 'employees' | 'transitions' | 'analytics' | 'preboarding'>('dashboard');
+      const [employees, setEmployees] = useState<Employee[]>([]);
+    
+    
+      const [replacementCosts, setReplacementCosts] = useState<Record<string, ReplacementCostReading>>({});
+      const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+      const [onboardingTasks, setOnboardingTasks] = useState<Task[]>([]);
+      const [offboardingTasks, setOffboardingTasks] = useState<Task[]>([]);
+      const [analytics, setAnalytics] = useState<Analytics | null>(null);
+      const [loading, setLoading] = useState(false);
+    
+    
+    
+    
+    
+      const [jurisdiction, setJurisdiction] = useState<'AE' | 'SA'>('AE');
+    
+    
+    
+    
+      const [probationTimelines, setProbationTimelines] = useState<any[]>([]);
+      const [probationNote, setProbationNote] = useState<string | null>(null);
+    
+    
+    
+    
+      const onboardingPipelineIds = new Set((analytics?.onboardingPipeline || []).map(p => p.id));
+    
+    
+      const [showTemplateModal, setShowTemplateModal] = useState(false);
+      const [renderedTemplate, setRenderedTemplate] = useState<{ title: string, content: string } | null>(null);
+    
+    
+      const [showAddModal, setShowAddModal] = useState(false);
+      const [showExitModal, setShowExitModal] = useState(false);
+      const [newEmployee, setNewEmployee] = useState({
+        first_name: '',
+        last_name: '',
+        email: '',
+        department: 'Engineering',
+        role: '',
+        manager_id: '',
+        start_date: new Date().toISOString().split('T')[0],
+        salary: '',
+        recruitment_cost: '',
+        national_id_type: 'Emirates ID',
+        national_id_value: '',
+        data_residency_country: 'AE',
+        visa_status: 'Employment Visa',
+        visa_expiry_date: '',
+        basic_salary: ''
+      });
+    
+      const [exitForm, setExitForm] = useState({
+        departure_reason: 'Compensation',
+        detailed_feedback: '',
+        satisfaction_score: '3',
+        preventable: '0',
+        new_employer: '',
+        new_salary: ''
+      });
+    
+    
+    
+    
+    
+    
+    
+      const [preboardingCases, setPreboardingCases] = useState<PreboardingCase[]>([]);
+    
+    
+      const [checklistOverview, setChecklistOverview] = useState<PreboardingOverview | null>(null);
+      const [openCaseId, setOpenCaseId] = useState<string | null>(null);
+      const [caseChecklist, setCaseChecklist] = useState<Record<string, { items: PreboardingItem[]; notice: CaseNotice | null; document_set_active: boolean }>>({});
+    
+    
+    
+    
+    
+      const [noticeOpened, setNoticeOpened] = useState<Record<string, boolean>>({});
+    
+    
+      const [casePackages, setCasePackages] = useState<Record<string, PreboardingPackage>>({});
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      const [caseWorkspaces, setCaseWorkspaces] = useState<Record<string, Record<string, WorkspaceBoard>>>({});
+      const [workspaceReads, setWorkspaceReads] = useState<Record<string, 'reading' | 'failed'>>({});
+      const [workspaceFunction, setWorkspaceFunction] = useState<string>('All');
+      const [checklistNotice, setChecklistNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+      const [casesLoading, setCasesLoading] = useState(false);
+      const [offerNotice, setOfferNotice] = useState<{ kind: 'ok' | 'existing' | 'error'; text: string } | null>(null);
+      const [offerForm, setOfferForm] = useState({
+        offer_reference: '',
+        candidate_name: '',
+        candidate_email: '',
+        role: '',
+        department: '',
+        reporting_line: '',
+    
+    
+        jurisdiction: 'AE' as 'AE' | 'SA',
+        start_date: ''
+      });
+    
+      const handleLogin = (newToken: string, userData: any) => {
+        setToken(newToken);
+        setUser(userData);
+        localStorage.setItem('antum_token', newToken);
+        localStorage.setItem('antum_user', JSON.stringify(userData));
+      };
+    
+      const handleLogout = () => {
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem('antum_token');
+        localStorage.removeItem('antum_user');
+      };
+    
+    
+    
+    
+    
+    
+    
+    
+      const [refusal, setRefusal] = useState<string | null>(null);
+    
+      const authedFetch = createAuthedFetch({
+        fetchImpl: fetch,
+        getToken: () => token,
+        onSessionInvalid: handleLogout,
+    
+        onRefusal: (url: string) => setRefusal(refusalNoticeFor(url, REFUSAL_NOTICE)),
+      });
+    
+    
+    
+      useEffect(() => { setRefusal(null); }, [activeTab, jurisdiction]);
+    
+      useEffect(() => {
+        if (token) {
+          fetchData();
+        }
+      }, [token, jurisdiction]);
+    
+    
+    
+      useEffect(() => {
+        if (token && activeTab === 'preboarding') {
+          fetchPreboardingCases();
+          fetchChecklistOverview();
+        }
+      }, [token, activeTab, jurisdiction]);
+    
+    
+    
+    
+    
+      const loadReplacementCosts = (rows: Employee[]) => {
+        const flagged = rows.filter(carriesTerminationFlag);
+        if (!flagged.length) return;
+        setReplacementCosts(prev => {
+          const next = { ...prev };
+          for (const emp of flagged) if (!next[emp.id]) next[emp.id] = { reading: 'loading', cost: null };
+          return next;
+        });
+        for (const emp of flagged) {
+          authedFetch(`${API_BASE}/api/employees/${emp.id}/replacement-cost`)
+            .then(async (res) => {
+              if (res.status === 401) return; // the session's end is authedFetch's call, not this row's
+              if (res.status === 403) {
+                setReplacementCosts(prev => ({ ...prev, [emp.id]: { reading: 'refused', cost: null } }));
+                return;
+              }
+              if (!res.ok) {
+                setReplacementCosts(prev => ({ ...prev, [emp.id]: { reading: 'failed', cost: null } }));
+                return;
+              }
+              const payload = (await res.json()) as ReplacementCostPayload;
+              setReplacementCosts(prev => ({ ...prev, [emp.id]: { reading: 'ok', cost: payload } }));
+            })
+            .catch(() => setReplacementCosts(prev => ({ ...prev, [emp.id]: { reading: 'failed', cost: null } })));
+        }
+      };
+    
+      const fetchData = async () => {
+        if (!token) return;
+        setLoading(true);
+        try {
+    
+    
+    
+    
+          const settled = settlePanels(await Promise.all([
+            callPanel('employees', `${API_BASE}/api/employees?jurisdiction=${jurisdiction}`,
+              authedFetch(`${API_BASE}/api/employees?jurisdiction=${jurisdiction}`)),
+            callPanel('analytics', `${API_BASE}/api/analytics/dashboard?jurisdiction=${jurisdiction}`,
+              authedFetch(`${API_BASE}/api/analytics/dashboard?jurisdiction=${jurisdiction}`)),
+            callPanel('probation', `${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`,
+              authedFetch(`${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`))
+          ]));
+    
+    
+    
+    
+          if (settled.data.probation !== undefined) {
+            const probationPayload = (settled.data.probation || {}) as { timelines?: unknown; note?: unknown };
+            setProbationTimelines(Array.isArray(probationPayload.timelines) ? probationPayload.timelines : []);
+            setProbationNote(typeof probationPayload.note === 'string' ? probationPayload.note : null);
+          }
+    
+    
+          if (settled.data.employees !== undefined) {
+            const safeEmpData = Array.isArray(settled.data.employees) ? settled.data.employees : [];
+            setEmployees(safeEmpData);
+            loadReplacementCosts(safeEmpData); // P4-1: the figure appears on the flag without being asked for
+    
+    
+            if (selectedEmployee) {
+              const updated = safeEmpData.find((e: Employee) => e.id === selectedEmployee.id);
+              if (updated) {
+                setSelectedEmployee(updated);
+                fetchTasks(updated.id);
+              }
+            }
+          }
+          if (settled.data.analytics !== undefined) {
+            setAnalytics(settled.data.analytics && !settled.data.analytics.error ? settled.data.analytics : null);
+          }
+          if (settled.failures.length) {
+            console.error('Panels that did not complete:', settled.failures.map((f: { url: string }) => f.url));
+          }
+        } catch (err) {
+          console.error('Error fetching data:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+    
+    
+    
+      const fetchPreboardingCases = async () => {
+        if (!token) return;
+        setCasesLoading(true);
+        try {
+    
+    
+    
+    
+          const res = await authedFetch(`${API_BASE}/api/preboarding/cases?jurisdiction=${jurisdiction}&status=open`);
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          const data = await res.json();
+    
+    
+    
+    
+    
+    
+          setPreboardingCases(data.cases);
+        } catch (err) {
+          console.error('Error fetching pre-boarding cases:', err);
+        } finally {
+          setCasesLoading(false);
+        }
+      };
+    
+    
+    
+      const handleRecordOfferAcceptance = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!offerForm.start_date) {
+          setOfferNotice({ kind: 'error', text: 'A start date is required — a pre-boarding case cannot exist without one.' });
+          return;
+        }
+        try {
+          const res = await authedFetch(`${API_BASE}/api/preboarding/cases`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(offerForm)
+          });
+          const data = await res.json().catch(() => ({}));
+    
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          if (!res.ok) {
+            setOfferNotice({ kind: 'error', text: data.error || `The offer was not recorded (HTTP ${res.status}).` });
+            return;
+          }
+          if (data.created) {
+            setOfferNotice({ kind: 'ok', text: `Pre-boarding case opened for ${data.case.candidate_name} — starts ${data.case.start_date}.` });
+            setOfferForm({ ...offerForm, offer_reference: '', candidate_name: '', candidate_email: '', role: '', reporting_line: '', start_date: '' });
+          } else {
+            setOfferNotice({ kind: 'existing', text: `Offer ${data.case.offer_reference} already had a case — nothing was created twice (case ${data.case.id.slice(0, 8)}…).` });
+          }
+          await fetchPreboardingCases();
+          await fetchChecklistOverview();
+        } catch (err) {
+          console.error('Error recording offer acceptance:', err);
+          setOfferNotice({ kind: 'error', text: 'The offer could not be recorded.' });
+        }
+      };
+    
+    
+    
+    
+      const fetchChecklistOverview = async () => {
+        if (!token) return;
+        setCasesLoading(true);
+        try {
+    
+    
+    
+    
+          const res = await authedFetch(
+            `${API_BASE}/api/preboarding/checklist/overview?jurisdiction=${jurisdiction}`
+          );
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          const data = await res.json();
+          setChecklistOverview(data && Array.isArray(data.cases) ? data : null);
+        } catch (err) {
+          console.error('Error fetching the checklist roll-up:', err);
+        } finally {
+          setCasesLoading(false);
+        }
+      };
+    
+      const fetchCaseChecklist = async (caseId: string) => {
+        if (!token) return;
+        try {
+          const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/checklist`);
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            setChecklistNotice({ kind: 'error', text: data.error || `The checklist could not be read (HTTP ${res.status}).` });
+            return;
+          }
+          setCaseChecklist(prev => ({
+            ...prev,
+            [caseId]: { items: data.items, notice: data.notice || null, document_set_active: data.document_set_active }
+          }));
+        } catch (err) {
+          console.error('Error fetching the case checklist:', err);
+        }
+      };
+    
+      const refreshPreboarding = async () => {
+        await fetchPreboardingCases();
+        await fetchChecklistOverview();
+        if (openCaseId) await fetchCaseChecklist(openCaseId);
+      };
+    
+      const fetchCasePackage = async (caseId: string) => {
+        if (!token) return;
+        try {
+          const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/package`);
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            setChecklistNotice({ kind: 'error', text: data.error || `The pre-reading package could not be read (HTTP ${res.status}).` });
+            return;
+          }
+          setCasePackages(prev => ({ ...prev, [caseId]: data as PreboardingPackage }));
+        } catch (err) {
+          console.error('Error fetching the pre-reading package:', err);
+        }
+      };
+      
+      const fetchCaseWorkspace = async (caseId: string, fn: string = workspaceFunction) => {
+        if (!token) return;
+        const view = workspaceViewKey(fn);
+        const readKey = workspaceReadKey(caseId, fn);
+        setWorkspaceReads(prev => ({ ...prev, [readKey]: 'reading' }));
+        try {
+          const query = view === WORKSPACE_VIEW_ALL ? '' : `?function=${encodeURIComponent(view)}`;
+          const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/workspace${query}`);
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            setWorkspaceReads(prev => ({ ...prev, [readKey]: 'failed' }));
+            setChecklistNotice({ kind: 'error', text: data.error || `The workspace track could not be read (HTTP ${res.status}).` });
+            return;
+          }
+    
+    
+          setCaseWorkspaces(prev => ({ ...prev, [caseId]: { ...(prev[caseId] || {}), [view]: data as WorkspaceBoard } }));
+          setWorkspaceReads(prev => { const next = { ...prev }; delete next[readKey]; return next; });
+        } catch (err) {
+          console.error('Error fetching the workspace track:', err);
+          setWorkspaceReads(prev => ({ ...prev, [readKey]: 'failed' }));
+        }
+      };
+    
+      
+      const handleWorkspaceFunction = async (fn: string) => {
+        setWorkspaceFunction(fn);
+        if (openCaseId) await fetchCaseWorkspace(openCaseId, fn);
+      };
+    
+      
+      const handleWorkspaceStatus = async (caseId: string, itemKey: string,
+        status: 'not_started' | 'requested' | 'received' | 'verified') => {
+        await handleItemStatus(caseId, itemKey, status);
+    
+    
+    
+        setCaseWorkspaces(prev => {
+          const boards = prev[caseId];
+          if (!boards) return prev;
+          const inHand = workspaceViewKey(workspaceFunction);
+          return { ...prev, [caseId]: boards[inHand] ? { [inHand]: boards[inHand] } : {} };
+        });
+        await fetchCaseWorkspace(caseId);
+      };
+    
+      
+      const handleRecordAcknowledgement = async (caseId: string, itemKey: string, label: string) => {
+        try {
+          const res = await authedFetch(
+            `${API_BASE}/api/preboarding/cases/${caseId}/package/${itemKey}/acknowledgement`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }
+          );
+          const data = await res.json().catch(() => ({}));
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          if (!res.ok) {
+            setChecklistNotice({ kind: 'error', text: data.error || `The acknowledgement was not recorded (HTTP ${res.status}).` });
+            return;
+          }
+          if (data.package) setCasePackages(prev => ({ ...prev, [caseId]: data.package as PreboardingPackage }));
+          setChecklistNotice({
+            kind: 'ok',
+            text: data.created === false
+              ? `${label}: already recorded — the first record stands, and its timestamp was not rewritten.`
+              : `${label}: acknowledgement recorded in the product, by the signed-in user on the hire's behalf — an in-product record, not an electronic signature.`,
+          });
+        } catch (err) {
+          console.error('Error recording an acknowledgement:', err);
+        }
+      };
+      const toggleCase = async (caseId: string) => {
+        if (openCaseId === caseId) {
+          setOpenCaseId(null);
+          return;
+        }
+        setChecklistNotice(null);
+    
+    
+    
+    
+    
+    
+    
+        setWorkspaceFunction('All');
+        setOpenCaseId(caseId);
+        if (!caseChecklist[caseId]) await fetchCaseChecklist(caseId);
+        if (!casePackages[caseId]) await fetchCasePackage(caseId);
+        if (!caseWorkspaces[caseId]?.[WORKSPACE_VIEW_ALL]) await fetchCaseWorkspace(caseId, 'All');
+      };
+    
+      const handleItemStatus = async (caseId: string, itemKey: string, status: PreboardingItem['status']) => {
+        try {
+          const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/items/${itemKey}/status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          if (!res.ok) {
+            setChecklistNotice({ kind: 'error', text: data.error || `The item was not moved (HTTP ${res.status}).` });
+            return;
+          }
+          setChecklistNotice({ kind: 'ok', text: `${data.item.label} is now ${data.item.status.replace('_', ' ')}.` });
+          await fetchCaseChecklist(caseId);
+          await fetchChecklistOverview();
+        } catch (err) {
+          console.error('Error moving a checklist item:', err);
+          setChecklistNotice({ kind: 'error', text: 'The item could not be moved.' });
+        }
+      };
+    
+      
+      const handleViewNotice = async (caseId: string) => {
+        try {
+          const res = await authedFetch(`${API_BASE}/api/compliance/notice`);
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            setChecklistNotice({ kind: 'error', text: data.error || `The privacy notice could not be read (HTTP ${res.status}).` });
+            return;
+          }
+          setRenderedTemplate({ title: `Privacy Notice ${data.version} — the notice shown to the hire`, content: data.content });
+          setShowTemplateModal(true);
+          setNoticeOpened(prev => ({ ...prev, [caseId]: true }));
+        } catch (err) {
+          console.error('Error reading the privacy notice:', err);
+          setChecklistNotice({ kind: 'error', text: 'The privacy notice could not be read.' });
+        }
+      };
+    
+      
+      const handleRecordNoticeShown = async (caseId: string) => {
+        try {
+          const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/notice-acknowledgements`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          if (!res.ok) {
+            setChecklistNotice({ kind: 'error', text: data.error || `The record was not written (HTTP ${res.status}).` });
+            return;
+          }
+          setChecklistNotice({
+            kind: 'ok',
+            text: data.created > 0
+              ? `Recorded that the notice (${data.notice_version}) was shown, for ${data.created} of ${data.considered} document(s) that can be collected — one row per document, each with that document's own basis.`
+              : 'This case already records the notice as shown for every document it can be recorded for; nothing was written twice.'
+          });
+          await fetchCaseChecklist(caseId);
+          await fetchChecklistOverview();
+        } catch (err) {
+          console.error('Error recording that the notice was shown:', err);
+          setChecklistNotice({ kind: 'error', text: 'The record could not be written.' });
+        }
+      };
+    
+      const handleRemind = async (caseId: string) => {
+        try {
+          const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/reminders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          if (!res.ok) {
+            setChecklistNotice({ kind: 'error', text: data.error || `The reminder was not recorded (HTTP ${res.status}).` });
+            return;
+          }
+          setChecklistNotice({ kind: 'ok', text: `Reminder recorded against ${data.reminder.outstanding_count} outstanding item(s) — recorded in the product, not sent: there is no delivery channel yet.` });
+          await fetchCaseChecklist(caseId);
+          await fetchChecklistOverview();
+        } catch (err) {
+          console.error('Error recording a reminder:', err);
+          setChecklistNotice({ kind: 'error', text: 'The reminder could not be recorded.' });
+        }
+      };
+    
+      const fetchTasks = async (employeeId: string) => {
+        if (!token) return;
+        try {
+    
+    
+          const settled = settlePanels(await Promise.all([
+            callPanel('onboarding', `${API_BASE}/api/employees/${employeeId}/onboarding`,
+              authedFetch(`${API_BASE}/api/employees/${employeeId}/onboarding`)),
+            callPanel('offboarding', `${API_BASE}/api/employees/${employeeId}/offboarding`,
+              authedFetch(`${API_BASE}/api/employees/${employeeId}/offboarding`))
+          ]));
+    
+          if (settled.data.onboarding !== undefined) {
+            setOnboardingTasks(Array.isArray(settled.data.onboarding) ? settled.data.onboarding : []);
+          }
+          if (settled.data.offboarding !== undefined) {
+            setOffboardingTasks(Array.isArray(settled.data.offboarding) ? settled.data.offboarding : []);
+          }
+          if (settled.failures.length) {
+            console.error('Task panels that did not complete:', settled.failures.map((f: { url: string }) => f.url));
+          }
+        } catch (err) {
+          console.error('Error fetching tasks:', err);
+        }
+      };
+    
+      const fetchTemplate = async (templateName: string, title: string) => {
+        if (!selectedEmployee || !token) return;
+        try {
+          const res = await authedFetch(`${API_BASE}/api/compliance/templates/${templateName}/${selectedEmployee.id}`);
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          const data = await res.json();
+          if (res.ok) {
+            setRenderedTemplate({ title, content: data.content });
+            setShowTemplateModal(true);
+          }
+        } catch (err) {
+          console.error('Error fetching template:', err);
+        }
+      };
+    
+      const handleSelectEmployee = (emp: Employee) => {
+        setSelectedEmployee(emp);
+        fetchTasks(emp.id);
+      };
+    
+      const handleCreateEmployee = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!token) return;
+        try {
+          const res = await authedFetch(`${API_BASE}/api/employees`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newEmployee)
+          });
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          if (res.ok) {
+            setShowAddModal(false);
+            setNewEmployee({
+              first_name: '',
+              last_name: '',
+              email: '',
+              department: 'Engineering',
+              role: '',
+              manager_id: '',
+              start_date: new Date().toISOString().split('T')[0],
+              salary: '',
+              recruitment_cost: '',
+              national_id_type: 'Emirates ID',
+              national_id_value: '',
+              data_residency_country: 'AE',
+              visa_status: 'Employment Visa',
+              visa_expiry_date: '',
+              basic_salary: ''
+            });
+            await fetchData();
+          }
+        } catch (err) {
+          console.error('Error creating employee:', err);
+        }
+      };
+    
+      const handleUpdateTask = async (taskId: string, type: 'onboarding' | 'offboarding', status: 'pending' | 'completed') => {
+        if (!token) return;
+        try {
+          const endpoint = type === 'onboarding' ? 'onboarding-tasks' : 'offboarding-tasks';
+          const res = await authedFetch(`${API_BASE}/api/${endpoint}/${taskId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+          });
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          if (res.ok && selectedEmployee) {
+            await fetchTasks(selectedEmployee.id);
+            await fetchData();
+          }
+        } catch (err) {
+          console.error('Error updating task:', err);
+        }
+      };
+    
+      const handleMarkProductive = async () => {
+        if (!selectedEmployee || !token) return;
+        const productiveDate = new Date().toISOString().split('T')[0];
+        try {
+          const res = await authedFetch(`${API_BASE}/api/employees/${selectedEmployee.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fully_productive_date: productiveDate, status: 'active' })
+          });
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          if (res.ok) {
+            await fetchData();
+          }
+        } catch (err) {
+          console.error('Error updating productivity date:', err);
+        }
+      };
+    
+      const handleTransitionToOffboarding = async () => {
+        if (!selectedEmployee || !token) return;
+        try {
+          const res = await authedFetch(`${API_BASE}/api/employees/${selectedEmployee.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'offboarding', end_date: new Date().toISOString().split('T')[0] })
+          });
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          if (res.ok) {
+            await fetchData();
+          }
+        } catch (err) {
+          console.error('Error initiating offboarding:', err);
+        }
+      };
+    
+      const handleExitSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedEmployee || !token) return;
+        try {
+          const res = await authedFetch(`${API_BASE}/api/exit-interviews`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              employee_id: selectedEmployee.id,
+              interview_date: new Date().toISOString().split('T')[0],
+              ...exitForm,
+              satisfaction_score: parseInt(exitForm.satisfaction_score),
+              preventable: parseInt(exitForm.preventable),
+              new_salary: parseFloat(exitForm.new_salary) || 0
+            })
+          });
+          if (res.status === 401) {
+            handleLogout();
+            return;
+          }
+          if (res.ok) {
+            setShowExitModal(false);
+            setExitForm({
+              departure_reason: 'Compensation',
+              detailed_feedback: '',
+              satisfaction_score: '3',
+              preventable: '0',
+              new_employer: '',
+              new_salary: ''
+            });
+            await fetchData();
+          }
+        } catch (err) {
+          console.error('Error submitting exit interview:', err);
+        }
+      };
+    
+      if (!token) {
+        return <Login onLogin={handleLogin} />;
+      }
+    
+      return (
+        <div className="flex h-screen bg-slate-50 text-slate-800 font-sans">
+          
+          <aside className="w-64 bg-slate-900 text-white flex flex-col justify-between shadow-lg">
+            <div>
+              <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <svg className="w-8 h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span className="text-xl font-bold tracking-wider">Antum</span>
+                </div>
+                <button onClick={handleLogout} className="text-slate-500 hover:text-white transition-colors p-1 rounded-md hover:bg-slate-800" title="Sign Out">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              </div>
+              <div className="px-6 py-4 border-b border-slate-800/50">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="overflow-hidden">
+                    <div className="text-xs font-bold text-white truncate">{user?.username || 'Admin User'}</div>
+                    <div className="text-[10px] text-slate-500 font-medium uppercase tracking-tight">{user?.access_role || 'Administrator'}</div>
+                  </div>
+                </div>
+              </div>
+              <nav className="p-4 space-y-2">
+                {NAV_ITEMS.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => { setActiveTab(item.id as any); }}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition text-left ${activeTab === item.id ? 'bg-teal-600 text-white font-medium shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
+                    </svg>
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </nav>
+            </div>
+            <div className="p-4 border-t border-slate-800 bg-slate-950/40 text-slate-500 text-xs text-center font-mono">
+              Antum People v1.0
+            </div>
+          </aside>
+    
+          
+          <main className="flex-1 flex flex-col overflow-hidden">
+            
+            <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm">
+              <div className="flex items-center space-x-2 text-slate-500">
+                <span className="font-semibold text-slate-800">{navLabel(activeTab)}</span>
+                <span>/</span>
+                <span className="text-xs font-mono text-teal-500">GCC Intelligence Tier</span>
+                <span className="ml-4 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded uppercase border border-amber-200">Sample Demo Data</span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 text-xs font-bold" title="Active demo surface is UAE-first; KSA stays reachable here for testing the Phase 2 surface.">
+                  <button
+                    onClick={() => setJurisdiction('AE')}
+                    className={`px-3 py-1 rounded-md transition ${jurisdiction === 'AE' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    🇦🇪 UAE
+                  </button>
+                  <button
+                    onClick={() => setJurisdiction('SA')}
+                    className={`px-3 py-1 rounded-md transition ${jurisdiction === 'SA' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    🇸🇦 KSA
+                  </button>
+                </div>
+                <button 
+                  onClick={() => fetchData()} 
+                  className="flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-semibold text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition"
+                >
+                  <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18" />
+                  </svg>
+                  <span>{loading ? 'Syncing...' : 'Refresh Hub'}</span>
+                </button>
+                <button 
+                  onClick={() => setShowAddModal(true)}
+                  className="bg-teal-600 text-white hover:bg-teal-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition flex items-center space-x-1"
+                >
+                  <span className="text-sm">+</span>
+                  <span>Hire Employee</span>
+                </button>
+              </div>
+            </header>
+    
+            
+            {refusal && (
+              <div role="alert" className="flex items-start justify-between gap-4 px-8 py-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-sm">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 mr-2 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-medium">{refusal}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setRefusal(null)}
+                  className="text-amber-700 hover:text-amber-900 font-bold leading-none text-base px-1"
+                  aria-label="Dismiss this notice"
+                >×</button>
+              </div>
+            )}
+    
+            
+            <div className="flex-1 overflow-y-auto p-8">
+              {activeTab === 'dashboard' && (
+                <div className="space-y-8">
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <div className="flex items-center justify-between text-slate-400 mb-3">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Retention Lift (1-yr)</span>
+                        <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="text-3xl font-extrabold text-slate-900">
+                        {(analytics?.retentionLiftSeries?.length ?? 0) > 0 ? (
+                          <>
+                            {(analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) > 0 ? '+' : ''}
+                            {(analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0)}%
+                          </>
+                        ) : (
+                          <span className="text-sm font-medium text-slate-400 italic">No data yet</span>
+                        )}
+                      </div>
+                      <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
+                        <span className="mr-1">ℹ️</span> Illustrative
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-1">Illustrative Benchmark</p>
+                    </div>
+    
+                    
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <div className="flex items-center justify-between text-slate-400 mb-3">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Time-to-Value</span>
+                        <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="text-3xl font-extrabold text-slate-900">
+                        {analytics?.avgTtvDays ? `${analytics.avgTtvDays} d` : <span className="text-sm font-medium text-slate-400 italic">No data yet</span>}
+                      </div>
+                      <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
+                        <span className="mr-1">ℹ️</span> Illustrative
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-1">target: 15 days</p>
+                    </div>
+    
+                    
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <div className="flex items-center justify-between text-slate-400 mb-3">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cost-per-Hire</span>
+                        <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="text-3xl font-extrabold text-slate-900 leading-tight">
+                        {analytics ? (
+                          <div className="space-y-1">
+                            {analytics.avgCostPerHireAE > 0 && (
+                              <div className="flex items-baseline space-x-2">
+                                <span className="text-xs text-slate-400 uppercase">AE</span>
+                                <span>{analytics.avgCostPerHireAE.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">AED</span></span>
+                              </div>
+                            )}
+                            {analytics.avgCostPerHireSA > 0 && (
+                              <div className="flex items-baseline space-x-2">
+                                <span className="text-xs text-slate-400 uppercase">SA</span>
+                                <span>{analytics.avgCostPerHireSA.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">SAR</span></span>
+                              </div>
+                            )}
+                            {!analytics.avgCostPerHireAE && !analytics.avgCostPerHireSA && (
+                              <span className="text-sm font-medium text-slate-400 italic">No data yet</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm font-medium text-slate-400 italic">No data yet</span>
+                        )}
+                      </div>
+                      <div className="text-[10px] font-semibold text-emerald-600 mt-2 flex items-center">
+                        <span className="mr-1">ℹ️</span> Illustrative Benchmark
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-1">recruitment + onboarding</p>
+                    </div>
+    
+                    
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <div className="flex items-center justify-between text-slate-400 mb-3">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">EOSB Liability</span>
+                        <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                      </div>
+                      <div className="text-3xl font-extrabold text-slate-900 leading-tight">
+                        {analytics ? (
+                          <div className="space-y-1">
+                            {analytics.eosbByJurisdiction.AE > 0 && (
+                              <div className="flex items-baseline space-x-2">
+                                <span className="text-xs text-slate-400 uppercase">AE</span>
+                                <span>{analytics.eosbByJurisdiction.AE.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">AED</span></span>
+                              </div>
+                            )}
+                            {analytics.eosbByJurisdiction.SA > 0 && (
+                              <div className="flex items-baseline space-x-2">
+                                <span className="text-xs text-slate-400 uppercase">SA</span>
+                                <span>{analytics.eosbByJurisdiction.SA.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">SAR</span></span>
+                              </div>
+                            )}
+                            {!analytics.eosbByJurisdiction.AE && !analytics.eosbByJurisdiction.SA && (
+                              <span className="text-sm font-medium text-slate-400 italic">No data yet</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm font-medium text-slate-400 italic">No data yet</span>
+                        )}
+                      </div>
+                      <div className="text-[10px] font-semibold text-rose-600 mt-2 flex items-center">
+                        <span className="mr-1">ℹ️</span> Illustrative Total
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        Accrued to date across regions
+                      </p>
+                    </div>
+                  </div>
+    
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <h3 className="font-bold text-slate-900 mb-4 flex justify-between items-center">
+                        <span>Onboarding Pipeline</span>
+                        <button onClick={() => setActiveTab('transitions')} className="text-xs text-teal-600 hover:underline">View All &rarr;</button>
+                      </h3>
+                      <div className="space-y-3">
+                        {(analytics?.onboardingPipeline || []).slice(0, 3).map(emp => (
+                          <div key={emp.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-xs">
+                                {emp.first_name[0]}{emp.last_name[0]}
+                              </div>
+                              <div>
+                                <div className="text-sm font-bold text-slate-800">{emp.first_name} {emp.last_name}</div>
+                                <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{emp.role}</div>
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-1 bg-white border border-slate-200 rounded text-slate-600">
+                              Started {emp.start_date}
+                            </span>
+                          </div>
+                        ))}
+                        {(analytics?.onboardingPipeline || []).length === 0 && (
+                          <div className="py-8 text-center text-slate-400 text-sm italic">No active onboardings.</div>
+                        )}
+                      </div>
+                    </div>
+    
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <h3 className="font-bold text-slate-900 mb-4 flex justify-between items-center">
+                        <span>Offboarding Pipeline</span>
+                        <button onClick={() => setActiveTab('transitions')} className="text-xs text-amber-600 hover:underline">View All &rarr;</button>
+                      </h3>
+                      <div className="space-y-3">
+                        {employees.filter(e => e.status === 'offboarding').slice(0, 3).map(emp => (
+                          <div key={emp.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-xs">
+                                {emp.first_name[0]}{emp.last_name[0]}
+                              </div>
+                              <div>
+                                <div className="text-sm font-bold text-slate-800">{emp.first_name} {emp.last_name}</div>
+                                <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{emp.role}</div>
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-1 bg-white border border-slate-200 rounded text-amber-600">
+                              Exit {emp.end_date || 'Pending'}
+                            </span>
+                          </div>
+                        ))}
+                        {employees.filter(e => e.status === 'offboarding').length === 0 && (
+                          <div className="py-8 text-center text-slate-400 text-sm italic">No active offboardings.</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+    
+              {activeTab === 'employees' && (
+                <div className="space-y-6">
+                  
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                      <div>
+                        <h3 className="font-bold text-slate-900">Probation timelines</h3>
+                        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight">
+                          {probationTimelines.length} hire{probationTimelines.length === 1 ? '' : 's'} on probation · 30/60/90 derived from the start date
+                        </p>
+                      </div>
+                      <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded uppercase border border-teal-200">P3-1</span>
+                    </div>
+                    {probationTimelines.length === 0 ? (
+                      <div className="p-4 text-xs text-slate-500">No hire in this view is on probation today.</div>
+                    ) : (
+                      <ul className="divide-y divide-slate-100">
+                        {probationTimelines.map((t: any) => (
+                          <li key={t.employee_id} className="p-4">
+                            <div className="flex items-baseline justify-between gap-4">
+                              <div className="text-sm font-bold text-slate-900">{t.employee_name}</div>
+                              <div className="text-[10px] font-semibold text-slate-500">{windowLine(t)}</div>
+                            </div>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              {t.milestones.map((m: any) => (
+                                <span key={m.index} className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-tighter border ${milestoneChipClass(m.state)}`}>
+                                  day {m.day} · {milestoneLabel(m.state)} · {formatDay(m.due_date)}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="mt-1 text-[10px] text-slate-500">{probationSummary(t)}</div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {probationNote && (
+                      <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500">{probationNote}</div>
+                    )}
+                  </div>
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                          <th className="p-4">Name & Region</th>
+                          <th className="p-4">Department / Role</th>
+                          <th className="p-4">Status</th>
+                          <th className="p-4">Gratuity Accrued</th>
+                          <th className="p-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {employees.map(emp => (
+                          <tr 
+                            key={emp.id} 
+                            onClick={() => handleSelectEmployee(emp)}
+                            className={`border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition ${selectedEmployee?.id === emp.id ? 'bg-teal-50/50' : ''}`}
+                          >
+                            <td className="p-4">
+                              <div className="font-bold text-slate-900">{emp.first_name} {emp.last_name}</div>
+                              <div className="text-[10px] text-slate-400 font-semibold">{emp.data_residency_country === 'SA' ? '🇸🇦 SAUDI ARABIA' : '🇦🇪 UAE'}</div>
+                            </td>
+                            <td className="p-4">
+                              <div className="text-sm font-semibold">{emp.role}</div>
+                              <div className="text-[10px] text-slate-500 uppercase tracking-tight">{emp.department}</div>
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-tighter ${
+                                emp.status === 'active' ? 'bg-emerald-100 text-emerald-800' :
+                                emp.status === 'onboarding' ? 'bg-blue-100 text-blue-800' :
+                                emp.status === 'offboarding' ? 'bg-amber-100 text-amber-800' :
+                                'bg-slate-100 text-slate-600'
+                              }`}>
+                                {emp.status}
+                              </span>
+                              
+                              {carriesTerminationFlag(emp) && (
+                                <ReplacementCostOnFlag state={replacementCosts[emp.id]} />
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <div className="text-sm font-bold text-teal-600 font-mono">
+                                {emp.data_residency_country === 'SA' ? 'SAR' : 'AED'} {(emp.eosb_accrued || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                              <div className="text-[10px] text-slate-400">Accrued to date</div>
+                            </td>
+                            <td className="p-4 text-right">
+                              <button className="text-teal-600 font-bold text-xs hover:underline">Manage &rarr;</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+    
+                  {selectedEmployee && (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-4 duration-300">
+                      
+                      <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-md border border-slate-200 space-y-6">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                          <h4 className="font-bold text-slate-900">
+                            {selectedEmployee.status === 'onboarding' ? 'Onboarding Checklist' : 
+                             selectedEmployee.status === 'offboarding' ? 'Offboarding Checklist' : 'Transition Tasks'}
+                          </h4>
+                          <div className="flex space-x-2">
+                            {selectedEmployee.status === 'onboarding' && (
+                              <button onClick={handleMarkProductive} className="bg-emerald-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-emerald-700 shadow-sm transition">Mark Productive</button>
+                            )}
+                            {(selectedEmployee.status === 'active' || selectedEmployee.status === 'onboarding') && (
+                              <button onClick={handleTransitionToOffboarding} className="bg-amber-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-amber-700 shadow-sm transition">Initiate Exit</button>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {(selectedEmployee.status === 'onboarding' || selectedEmployee.status === 'active' ? onboardingTasks : offboardingTasks).map(task => (
+                            <div key={task.id} className="flex items-start space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-teal-200 transition">
+                              <input aria-labelledby={`task-title-${task.id}`} 
+                                type="checkbox" 
+                                checked={task.status === 'completed'} 
+                                onChange={(e) => handleUpdateTask(task.id, selectedEmployee.status === 'offboarding' ? 'offboarding' : 'onboarding', e.target.checked ? 'completed' : 'pending')}
+                                className="mt-1 h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500 cursor-pointer"
+                              />
+                              <div>
+                                <div id={`task-title-${task.id}`} className={`text-sm font-bold ${task.status === 'completed' ? 'line-through text-slate-400' : 'text-slate-800'}`}>{task.title}</div>
+                                <p className="text-xs text-slate-500 leading-relaxed">{task.description}</p>
+                              </div>
+                            </div>
+                          ))}
+                          {(selectedEmployee.status === 'onboarding' || selectedEmployee.status === 'active' ? onboardingTasks : offboardingTasks).length === 0 && (
+                            <div className="py-12 text-center text-slate-400 text-sm italic">No tasks generated for this stage.</div>
+                          )}
+                        </div>
+                      </div>
+    
+                      
+                      <div className="bg-slate-900 text-white p-6 rounded-xl shadow-lg space-y-6">
+                        <h4 className="font-bold text-teal-400 text-sm tracking-widest uppercase">Compliance Center</h4>
+                        
+                        <div className="space-y-4">
+                          <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Privacy Notice (PDPL)</div>
+                            
+                            <div className="text-xs font-bold text-slate-300">
+                              Notice-based — recorded per pre-boarding case
+                            </div>
+                            <div className="text-[10px] text-slate-400 mt-1 leading-snug">
+                              One record per document that can be collected, with its basis, the notice version and the person who showed it. No consent flag is held on the employee record.
+                            </div>
+                          </div>
+    
+                          <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">EOSB Calculation Basis</div>
+                            <div className="text-xs font-bold text-teal-300">
+                              {selectedEmployee.data_residency_country === 'SA' ? 'Total Salary (KSA Rule)' : 'Basic Salary (UAE Rule)'}
+                            </div>
+                          </div>
+                        </div>
+    
+                        <div className="space-y-3 pt-2">
+                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Document Previews</div>
+                          <button 
+                            onClick={() => fetchTemplate('privacy-notice', 'PDPL Privacy Notice')}
+                            className="w-full text-left p-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition border border-slate-700/50 flex items-center space-x-3"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-xs">P</div>
+                            <span className="text-xs font-bold">Privacy Notice</span>
+                          </button>
+                          <button 
+                            onClick={() => fetchTemplate(selectedEmployee.data_residency_country === 'SA' ? 'ksa-employment-contract' : 'uae-employment-contract', 'Employment Contract')}
+                            className="w-full text-left p-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition border border-slate-700/50 flex items-center space-x-3"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">C</div>
+                            <span className="text-xs font-bold">Labor Contract</span>
+                          </button>
+                          {(selectedEmployee.status === 'offboarding' || selectedEmployee.status === 'terminated') && (
+                            <button 
+                              onClick={() => fetchTemplate('final-settlement-statement', 'Final Settlement')}
+                              className="w-full text-left p-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition border border-slate-700/50 flex items-center space-x-3"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">S</div>
+                              <span className="text-xs font-bold">Settlement Statement</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+    
+              {activeTab === 'transitions' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 className="font-bold text-slate-900 mb-4 uppercase text-xs tracking-widest">Ramping Employees (Onboarding)</h3>
+                    <div className="space-y-4">
+                      {employees.filter(e => onboardingPipelineIds.has(e.id)).map(emp => (
+                        <div key={emp.id} onClick={() => { setSelectedEmployee(emp); setActiveTab('employees'); }} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-teal-50/50 cursor-pointer transition flex justify-between items-center">
+                          <div className="font-bold text-sm text-slate-800">{emp.first_name} {emp.last_name}</div>
+                          <div className="text-[10px] font-bold text-teal-600">Day {Math.ceil((Date.now() - new Date(emp.start_date).getTime()) / (1000*60*60*24))}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 className="font-bold text-slate-900 mb-4 uppercase text-xs tracking-widest">Departing Employees (Offboarding)</h3>
+                    <div className="space-y-4">
+                      {employees.filter(e => e.status === 'offboarding').map(emp => (
+                        <div key={emp.id} onClick={() => { setSelectedEmployee(emp); setActiveTab('employees'); }} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-amber-50/50 cursor-pointer transition flex justify-between items-center">
+                          <div className="font-bold text-sm text-slate-800">{emp.first_name} {emp.last_name}</div>
+                          <div className="text-[10px] font-bold text-amber-600">EXIT {emp.end_date}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+    
+              {activeTab === 'analytics' && (
+                <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+                  
+                  <div className="bg-teal-900 text-white p-8 rounded-2xl shadow-xl">
+                    <h3 className="text-xl font-bold mb-6">Strategic Workforce Intelligence</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                       <div className="p-4 bg-white/10 rounded-xl border border-white/5">
+                          <div className="text-teal-300 text-[10px] font-bold uppercase mb-2">Retention Insight (Illustrative)</div>
+                          <p className="text-xs text-slate-200 leading-relaxed">
+                            Retention lift has {(analytics?.retentionLiftSeries?.length ?? 0) > 0 && (analytics?.retentionLiftSeries?.[analytics.retentionLiftSeries!.length - 1]?.lift ?? 0) > 0 ? 'increased' : 'stabilized'} in recent cohorts.
+                          </p>
+                       </div>
+                       <div className="p-4 bg-white/10 rounded-xl border border-white/5">
+                          <div className="text-emerald-300 text-[10px] font-bold uppercase mb-2">Productivity Gap (Illustrative)</div>
+                          <p className="text-xs text-slate-200 leading-relaxed">
+                            Average Time-to-Value is {analytics?.avgTtvDays || 0} days.
+                          </p>
+                       </div>
+                       <div className="p-4 bg-white/10 rounded-xl border border-white/5">
+                          <div className="text-rose-300 text-[10px] font-bold uppercase mb-2">Liability Exposure (Illustrative)</div>
+                          
+                          <p className="text-xs text-slate-200 leading-relaxed">
+                            An undiscounted projection of accrued EOSB entitlement, engine-computed - not a statutory or actuarial provision, and not a basis for booking.
+                            EOSB liability forecast shows a {(analytics?.eosbLiabilitySeries?.[2]?.combined ?? 0) > (analytics?.eosbLiabilitySeries?.[0]?.combined ?? 0) ? 'rise' : 'steady'} trend into 2027.
+                          </p>
+                       </div>
+                    </div>
+                  </div>
+    
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <div className="flex justify-between items-center mb-6">
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">Retention Lift — 1-Yr Cohort</h4>
+                          <p className="text-[10px] text-slate-400">Comparing cohort retention (Illustrative Benchmark)</p>
+                        </div>
+                      </div>
+                      <div className="space-y-6">
+                        {analytics?.retentionLiftSeries?.map(s => (
+                          <div key={s.cohort} className="space-y-2">
+                            <div className="flex justify-between text-[10px] font-bold">
+                              <span className="text-slate-600">{s.cohort}</span>
+                              <span className="text-teal-600">Lift: {s.lift > 0 ? '+' : ''}{s.lift}%</span>
+                            </div>
+                            <div className="relative h-4 bg-slate-100 rounded-full overflow-hidden flex">
+                              <div className="h-full bg-teal-600" style={{ width: `${s.retention}%` }}></div>
+                              <div className="absolute top-0 bottom-0 border-r-2 border-slate-400 border-dashed" style={{ left: `${s.benchmark}%` }}></div>
+                            </div>
+                            <div className="flex justify-between text-[9px] text-slate-400">
+                              <span>{s.retention}% (Cohort)</span>
+                              <span>{s.benchmark}% (Illustrative)</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+    
+                    
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <div className="flex justify-between items-center mb-6">
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">Time-to-Value by Department</h4>
+                          <p className="text-[10px] text-slate-400">Avg days to full productivity (Illustrative Target)</p>
+                        </div>
+                      </div>
+                      <div className="space-y-6">
+                        {analytics?.ttvByDepartment?.map(d => (
+                          <div key={d.department} className="space-y-2">
+                            <div className="flex justify-between text-[10px] font-bold">
+                              <span className="text-slate-600">{d.department}</span>
+                              <span className={d.avgDays > d.target ? 'text-rose-600' : 'text-emerald-600'}>
+                                {d.avgDays} d {d.avgDays > d.target ? '(Over)' : '(Under)'}
+                              </span>
+                            </div>
+                            <div className="relative h-4 bg-slate-100 rounded-full overflow-hidden flex">
+                              <div className={`h-full ${d.avgDays > d.target ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(100, (d.avgDays / 30) * 100)}%` }}></div>
+                              <div className="absolute top-0 bottom-0 border-r-2 border-slate-800" style={{ left: `${(d.target / 30) * 100}%` }}></div>
+                            </div>
+                          </div>
+                        ))}
+                        {(!analytics?.ttvByDepartment || analytics.ttvByDepartment.length === 0) && (
+                          <div className="py-12 text-center text-slate-400 italic text-xs">Insufficient productivity data.</div>
+                        )}
+                      </div>
+                    </div>
+    
+                    
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                      <div className="flex justify-between items-center mb-8">
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">EOSB Liability Forecast — by Jurisdiction & Quarter</h4>
+                          <p className="text-[10px] text-slate-400">Illustrative forecast based on UAE basic and KSA total salary rules</p>
+                        </div>
+                        <div className="flex space-x-4">
+                          <div className="flex items-center space-x-1.5">
+                            <div className="w-2.5 h-2.5 bg-teal-600 rounded-sm"></div>
+                            <span className="text-[10px] font-bold text-slate-500">UAE</span>
+                          </div>
+                          <div className="flex items-center space-x-1.5">
+                            <div className="w-2.5 h-2.5 bg-emerald-500 rounded-sm"></div>
+                            <span className="text-[10px] font-bold text-slate-500">KSA</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-end justify-between h-48 space-x-4 px-4 border-b border-slate-100">
+                        {analytics?.eosbLiabilitySeries?.map(s => {
+                          const max = Math.max(...analytics.eosbLiabilitySeries.map(x => x.combined)) * 1.1;
+                          const uaeHeight = (s.uae / max) * 100;
+                          const ksaHeight = (s.ksa / max) * 100;
+                          return (
+                            <div key={s.quarter} className="flex-1 flex flex-col items-center group">
+                              <div className="w-full max-w-[60px] flex flex-col-reverse h-full relative">
+                                <div className="bg-teal-600 w-full rounded-t-sm" style={{ height: `${uaeHeight}%` }}></div>
+                                <div className="bg-emerald-500 w-full" style={{ height: `${ksaHeight}%` }}></div>
+                                
+                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-2 py-1.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10 font-mono shadow-xl border border-slate-700">
+                                  <div className="flex justify-between space-x-2"><span>UAE:</span> <span>{s.uae.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED</span></div>
+                                  <div className="flex justify-between space-x-2 border-t border-slate-700 mt-1 pt-1"><span>KSA:</span> <span>{s.ksa.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span></div>
+                                </div>
+                              </div>
+                              <div className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{s.quarter}</div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+    
+              {activeTab === 'preboarding' && (
+                <div className="space-y-8">
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-bold text-slate-900">Pre-boarding Intelligence</h3>
+                          <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded uppercase border border-teal-200">Layer 2</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-2 max-w-2xl">
+                          A pre-boarding case opens the moment a job offer is accepted. It carries the start date, role,
+                          department, reporting line and jurisdiction, and it is opened through one case-creation path —
+                          recording the same accepted offer twice opens nothing new.
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0 ml-6">
+                        <div className="text-2xl font-extrabold text-slate-900">{preboardingCases.length}</div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cases open</div>
+                      </div>
+                    </div>
+                  </div>
+    
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <h4 id="offer-intake-heading" className="font-bold text-slate-900 text-sm">Record an accepted offer</h4>
+                      <p className="text-[10px] text-slate-400 mt-1 mb-5">
+                        The offer acceptance is the trigger: recording it here is what opens the case.
+                      </p>
+                      <form onSubmit={handleRecordOfferAcceptance} aria-labelledby="offer-intake-heading" className="space-y-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-offer-reference">Offer Reference</label>
+                          <input id="intake-offer-reference" type="text" required value={offerForm.offer_reference}
+                            onChange={e => setOfferForm({ ...offerForm, offer_reference: e.target.value })}
+                            placeholder="e.g. OFR-2026-014"
+                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-candidate-name">Candidate Name</label>
+                          <input id="intake-candidate-name" type="text" required value={offerForm.candidate_name}
+                            onChange={e => setOfferForm({ ...offerForm, candidate_name: e.target.value })}
+                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-candidate-email">Candidate Email</label>
+                          <input id="intake-candidate-email" type="email" value={offerForm.candidate_email}
+                            onChange={e => setOfferForm({ ...offerForm, candidate_email: e.target.value })}
+                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-role">Role</label>
+                            <input id="intake-role" type="text" required value={offerForm.role}
+                              onChange={e => setOfferForm({ ...offerForm, role: e.target.value })}
+                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-department">Department</label>
+                            <input id="intake-department" type="text" required value={offerForm.department}
+                              onChange={e => setOfferForm({ ...offerForm, department: e.target.value })}
+                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-reporting-line">Reporting Line</label>
+                          <input id="intake-reporting-line" type="text" required value={offerForm.reporting_line}
+                            onChange={e => setOfferForm({ ...offerForm, reporting_line: e.target.value })}
+                            placeholder="Who the hire reports to"
+                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-jurisdiction">Jurisdiction</label>
+                            <select id="intake-jurisdiction" value={offerForm.jurisdiction}
+                              onChange={e => setOfferForm({ ...offerForm, jurisdiction: e.target.value as 'AE' | 'SA' })}
+                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium">
+                              <option value="AE">UAE</option>
+                              <option value="SA">KSA</option>
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="intake-start-date">Start Date</label>
+                            <input id="intake-start-date" type="date" required value={offerForm.start_date}
+                              onChange={e => setOfferForm({ ...offerForm, start_date: e.target.value })}
+                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                          </div>
+                        </div>
+                        <button type="submit"
+                          className="w-full bg-teal-600 text-white hover:bg-teal-700 text-xs font-bold px-4 py-3 rounded-xl shadow transition">
+                          Open pre-boarding case
+                        </button>
+                      </form>
+                      {offerNotice && (
+                        <div className={`mt-4 p-3 rounded-xl text-xs font-medium border ${offerNotice.kind === 'ok' ? 'bg-teal-50 border-teal-200 text-teal-800' : offerNotice.kind === 'existing' ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+                          {offerNotice.text}
+                        </div>
+                      )}
+                    </div>
+    
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <div className="flex justify-between items-center mb-1">
+                        <h4 className="font-bold text-slate-900 text-sm">HR roll-up — outstanding items</h4>
+                        <button onClick={refreshPreboarding}
+                          className="text-[10px] font-bold uppercase tracking-wider text-teal-700 hover:text-teal-900">
+                          {casesLoading ? 'Syncing...' : 'Refresh'}
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mb-4">
+                        Every {jurisdiction === 'AE' ? 'UAE' : 'KSA'} case with the items still missing,
+                        named here — HR reads what is outstanding
+                        without opening a case. Open a row to work its employee track.
+                      </p>
+                      
+                      {checklistOverview && checklistOverview.cases.length > 0 && (
+                        <p className="text-[9px] text-slate-400 mb-4 -mt-2">
+                          {checklistOverview.cases[0]?.flag.scope_note}
+                        </p>
+                      )}
+                      {checklistOverview && checklistOverview.cases.length > 0 && (
+                        <div className="mb-4 grid grid-cols-3 gap-2 text-center">
+                          <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                            <div className="text-lg font-extrabold text-slate-900">{checklistOverview.totals.items_outstanding}</div>
+                            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Items outstanding</div>
+                          </div>
+                          <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                            <div className="text-lg font-extrabold text-slate-900">{checklistOverview.totals.items_verified}</div>
+                            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Items verified</div>
+                          </div>
+                          <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                            <div className="text-lg font-extrabold text-slate-900">{checklistOverview.totals.cases_notice_not_shown}</div>
+                            
+                            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Cases · notice not shown</div>
+                          </div>
+                        </div>
+                      )}
+                      {!checklistOverview || checklistOverview.cases.length === 0 ? (
+                        <div className="p-8 text-center border border-dashed border-slate-200 rounded-xl">
+                          <p className="text-xs text-slate-400">No open {jurisdiction === 'AE' ? 'UAE' : 'KSA'} pre-boarding
+                            cases — nothing outstanding to show for this jurisdiction. Record an accepted
+                            offer to open one.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {checklistOverview.cases.map(row => {
+                            const rowDistance = relDays(row.flag);
+                            const open = openCaseId === row.case_id;
+                            const detail = caseChecklist[row.case_id];
+                            const pkgData = casePackages[row.case_id];
+    
+    
+    
+    
+    
+    
+                            const wsBoards = caseWorkspaces[row.case_id];
+                            const wsData = wsBoards ? wsBoards[workspaceViewKey(workspaceFunction)] : undefined;
+                            const wsFacts = wsData || (wsBoards ? Object.values(wsBoards)[0] : undefined);
+                            const wsRead = workspaceReads[workspaceReadKey(row.case_id, workspaceFunction)];
+                            return (
+                              <div key={row.case_id} className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+                                <button onClick={() => toggleCase(row.case_id)} className="w-full text-left p-4">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <div className="text-sm font-bold text-slate-900">{row.candidate_name}</div>
+                                      <div className="text-[11px] text-slate-500">{row.role} · {row.department}</div>
+                                    </div>
+                                    <div className="flex items-center flex-wrap justify-end gap-2 shrink-0">
+                                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase border ${row.jurisdiction === 'AE' ? 'bg-teal-50 text-teal-700 border-teal-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                                        {row.jurisdiction === 'AE' ? 'UAE' : 'KSA'}
+                                      </span>
+    {row.flag.chip && (
+                                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded border whitespace-nowrap ${
+                                          row.flag.tone === 'amber' ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                            : row.flag.tone === 'rose' ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                              : 'bg-slate-100 text-slate-600 border-slate-200'
+                                        }`}>
+                                          {row.flag.chip}
+                                        </span>
+                                      )}
+                                      <span className="text-[10px] font-bold text-slate-400">{open ? 'Close' : 'Open'}</span>
+                                    </div>
+                                  </div>
+                                  <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+                                    <div>
+                                      <span className="text-slate-400">Start:</span> {row.start_date}
+                                      {rowDistance !== null && <span className="text-slate-400"> · {rowDistance}</span>}
+                                    </div>
+                                    <div>
+                                      <span className="text-slate-400">Verified:</span> {row.by_status.verified}/{row.items_total} ·{' '}
+                                      <span className={row.outstanding_count > 0 ? 'text-rose-600 font-semibold' : 'text-teal-700 font-semibold'}>
+                                        {row.outstanding_count} outstanding
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="text-slate-400">Workspace:</span>{' '}
+                                      {row.by_track
+                                        ? `${row.by_track.workspace.complete} of ${row.by_track.workspace.lines} done`
+                                        : 'not read yet'}
+                                      {row.by_track && row.by_track.workspace.open > 0 && (
+                                        <span className="text-amber-700"> · {row.by_track.workspace.open} open</span>
+                                      )}
+                                    </div>
+                                  </div>
+    {row.flag.raised && (
+                                    <div className={`mt-3 rounded-lg border px-3 py-2 ${row.flag.tone === 'amber' ? 'bg-amber-50 border-amber-200' : 'bg-rose-50 border-rose-200'}`}>
+                                      <div className={`text-[11px] font-bold ${row.flag.tone === 'amber' ? 'text-amber-800' : 'text-rose-800'}`}>
+                                        {row.flag.headline}
+                                      </div>
+                                      <ul className="mt-1 space-y-0.5">
+                                        {row.flag.open_items.map(item => (
+                                          <li key={item.item_key} className="text-[10px] text-slate-700">
+                                            {item.label} · {item.status.replace('_', ' ')}
+                                            {' · '}
+                                            {item.owner_known && item.owner
+                                              ? `owner: ${item.owner}`
+                                              : 'no owner on this item — the employee-track items carry no owner field'}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                      <div className="mt-1 text-[10px] text-slate-600">
+                                        Start {row.start_date}
+                                        {row.flag.state === 'inside_48_hours' && row.flag.hours_to_start !== null
+                                          ? ` · ${Math.round(row.flag.hours_to_start * 10) / 10} h before 00:00 on the start date`
+                                          : row.flag.days_to_start !== null
+                                            ? ` · ${Math.abs(row.flag.days_to_start)} d ${row.flag.days_to_start < 0 ? 'ago' : 'to go'}`
+                                            : ''}
+                                      </div>
+                                      {row.flag.body.map(line => (
+                                        <div key={line} className="mt-1 text-[10px] text-slate-600 italic">{line}</div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {row.outstanding.length > 0 && (
+                                    <div className="mt-2 flex flex-wrap gap-1">
+                                      {row.outstanding.map(item => (
+                                        <span key={item.item_key} className="px-2 py-0.5 bg-white border border-slate-200 rounded-full text-[10px] text-slate-600">
+                                          {item.label} · {item.status.replace('_', ' ')}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {!row.notice_recorded && (
+                                    <div className="mt-2 text-[10px] text-amber-700 font-medium">
+                                      The privacy notice has not been shown on this case yet, so no document can be
+                                      collected on it.
+                                    </div>
+                                  )}
+                                  {row.last_reminder_at && (
+                                    <div className="mt-1 text-[10px] text-slate-400 font-mono">
+                                      reminder recorded {row.last_reminder_at} · {row.last_reminder_count} item(s)
+                                    </div>
+                                  )}
+                                  <div className="mt-2 text-[10px] text-slate-400 font-mono">{row.offer_reference}</div>
+                                </button>
+                                {open && (
+                                  <div className="border-t border-slate-200 p-4 bg-white space-y-3">
+                                    {!detail ? (
+                                      <p className="text-[11px] text-slate-400">Reading the checklist…</p>
+                                    ) : (
+                                      <>
+                                        <div className="flex justify-between items-start gap-2">
+                                          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                            Employee track
+                                            {!detail.document_set_active && <span className="text-amber-700 normal-case tracking-normal"> · set not active in this release</span>}
+                                          </div>
+                                          <button onClick={() => handleViewNotice(row.case_id)}
+                                            className="shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-300 text-slate-700">
+                                            Open the notice{detail.notice ? ` ${detail.notice.version}` : ''}
+                                          </button>
+                                        </div>
+                                        
+                                        <div className="p-2 rounded-lg border border-slate-100 bg-slate-50 text-[10px] text-slate-600 space-y-1">
+                                          {detail.notice && detail.notice.acknowledgements.length > 0 ? (
+                                            <div className="space-y-0.5">
+                                              <div className="text-teal-700 font-semibold">
+                                                The notice has been shown for {detail.notice.acknowledgements.length} of{' '}
+                                                {row.notice_items_collectible} document(s) that can be collected.
+                                              </div>
+                                              {detail.notice.acknowledgements.map(ack => (
+                                                <div key={ack.item_key} className="text-slate-500">
+                                                  {ack.item_label}: shown on {ack.acknowledged_at} against notice {ack.notice_version},
+                                                  recorded by {ack.recorded_by} · basis {ack.lawful_basis}
+                                                  {ack.note ? ` · ${ack.note}` : ''}
+                                                </div>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <div className="text-amber-700 font-medium">
+                                              The notice has not been shown on this case yet, so no document can be
+                                              collected on it.
+                                            </div>
+                                          )}
+                                          {row.notice_items_no_basis > 0 && (
+                                            <div className="text-slate-500">
+                                              {row.notice_items_no_basis} item(s) the notice assigns no basis to cannot be
+                                              collected in this release; each one names the counsel question it waits on.
+                                            </div>
+                                          )}
+                                          <div className="flex items-center gap-2 pt-1">
+                                            <button onClick={() => handleRecordNoticeShown(row.case_id)}
+                                              disabled={!noticeOpened[row.case_id]}
+                                              title={!noticeOpened[row.case_id]
+                                                ? 'Open the notice first — this records that it was shown, and the notice has to be openable from here for that to mean anything'
+                                                : 'Records, in the product, that the signed-in user showed the notice'}
+                                              className="text-[10px] font-bold px-2 py-1 bg-slate-900 text-white rounded-lg disabled:opacity-40">
+                                              Record that the notice was shown
+                                            </button>
+                                            <span className="text-[9px] text-slate-400">
+                                              One act, one record per document — each carries that document's own basis
+                                              from the notice. Not a signature; the product cannot obtain one.
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                          {detail.items.map(item => {
+    
+    
+    
+    
+                                            const basis = detail.notice ? detail.notice.bases[item.item_key] : undefined;
+                                            const ack = detail.notice
+                                              ? detail.notice.acknowledgements.find(row => row.item_key === item.item_key)
+                                              : undefined;
+                                            const collectible = !basis || basis.collectible;
+                                            return (
+                                            <div key={item.item_key} className="flex justify-between items-center p-2 rounded-lg border border-slate-100">
+                                              <div>
+                                                <div className="text-[11px] font-semibold text-slate-800">{item.label}</div>
+                                                <div className="text-[10px] text-slate-400">
+                                                  {item.category} · {item.status.replace('_', ' ')}
+                                                  {item.document_reference ? ` · ${item.document_reference}` : ''}
+                                                </div>
+                                                {basis && basis.collectible && (
+                                                  <div className="text-[9px] text-slate-400">
+                                                    Notice basis: {basis.basis}
+                                                    {ack
+                                                      ? ` · shown ${ack.acknowledged_at} by ${ack.recorded_by} against ${ack.notice_version}`
+                                                      : ' · the notice has not been shown for this document yet'}
+                                                  </div>
+                                                )}
+                                                {basis && !basis.collectible && (
+                                                  <div className="text-[9px] text-amber-700">
+                                                    Not collectible in this release: {basis.reason} (pending counsel {basis.pending_counsel}).
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <div className="flex space-x-1 shrink-0">
+                                                {item.status === 'not_started' && (
+                                                  <ItemButton label="Request" onClick={() => handleItemStatus(row.case_id, item.item_key, 'requested')} />
+                                                )}
+                                                {item.status === 'requested' && (
+                                                  <>
+                                                    <ItemButton label="Mark received" disabled={!collectible || !ack}
+                                                      title={!collectible
+                                                        ? 'The notice assigns no basis to this document, so it cannot be collected in this release — the reason is on the line above'
+                                                        : !ack
+                                                          ? 'The notice has not been shown for this document yet'
+                                                          : undefined}
+                                                      onClick={() => handleItemStatus(row.case_id, item.item_key, 'received')} />
+                                                    <ItemButton label="Cancel" onClick={() => handleItemStatus(row.case_id, item.item_key, 'not_started')} />
+                                                  </>
+                                                )}
+                                                {item.status === 'received' && (
+                                                  <>
+                                                    <ItemButton label="Verify" onClick={() => handleItemStatus(row.case_id, item.item_key, 'verified')} />
+                                                    <ItemButton label="Send back" onClick={() => handleItemStatus(row.case_id, item.item_key, 'requested')} />
+                                                  </>
+                                                )}
+                                                {item.status === 'verified' && (
+                                                  <span className="text-[10px] font-bold text-teal-700 px-2 py-1">verified</span>
+                                                )}
+                                              </div>
+                                            </div>
+                                            );
+                                          })}
+                                        </div>
+                                        <button onClick={() => handleRemind(row.case_id)} disabled={row.outstanding_count === 0}
+                                          className="w-full text-[10px] font-bold px-3 py-2 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-40">
+                                          Record a reminder for {row.outstanding_count} outstanding item(s)
+                                        </button>
+                                        <p className="text-[9px] text-slate-400">
+                                          A reminder is recorded in the product. There is no mailer, webhook or SMS yet, so nothing
+                                          is sent to the hire — the delivery channel is a separate decision.
+                                        </p>
+                                        
+                                        <div className="mt-4 border-t border-slate-100 pt-3">
+                                          <div className="flex justify-between items-center">
+                                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                              Workspace track
+                                              {wsData && <span className="text-slate-400 normal-case tracking-normal"> · {wsData.totals.complete} of {wsData.totals.lines} done</span>}
+                                              {wsData && wsData.totals.overdue > 0 && <span className="text-rose-600 normal-case tracking-normal font-semibold"> · {wsData.totals.overdue} past due</span>}
+                                              {wsFacts && !wsFacts.track_active && <span className="text-amber-700 normal-case tracking-normal"> · track not active in this release</span>}
+                                            </div>
+                                            {wsFacts && (
+                                              <span className="text-[10px] text-slate-400">
+                                                from {wsFacts.derived_from.role} · {wsFacts.derived_from.department}
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div className="mt-2 flex flex-wrap items-center gap-1">
+                                            <span className="text-[10px] font-bold text-slate-500">
+                                              {wsFacts ? wsFacts.view.label : 'View by function'}:
+                                            </span>
+                                            {['All', 'IT', 'Admin', 'HR', 'Manager'].map(fn => {
+    
+    
+    
+    
+    
+    
+    
+    
+                                              const count = wsFacts
+                                                ? (fn === 'All'
+                                                  ? wsFacts.available_functions.reduce((sum, f) => sum + f.open, 0)
+                                                  : (wsFacts.available_functions.find(f => f.function === fn)?.open ?? 0))
+                                                : null;
+                                              return (
+                                                <button key={fn} onClick={() => handleWorkspaceFunction(fn)}
+                                                  className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${workspaceFunction === fn ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}>
+                                                  {fn}{count !== null ? ` (${count})` : ''}
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
+                                          {wsFacts && (
+                                            <p className="mt-1 text-[9px] text-slate-400">{wsFacts.view.note}</p>
+                                          )}
+                                          {!wsData ? (
+                                            <p className="mt-2 text-[11px] text-slate-400">
+                                              {wsRead === 'failed'
+                                                ? 'The workspace track could not be read.'
+                                                : 'Reading the workspace track...'}
+                                            </p>
+                                          ) : (
+                                            <div className="mt-2 space-y-3">
+                                              {wsData.groups.map(group => (
+                                                <div key={group.function}>
+                                                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                                    {group.function} · {group.lines.filter(l => l.complete).length}/{group.lines.length}
+                                                  </div>
+                                                  <div className="mt-1 space-y-2">
+                                                    {group.lines.map(line => (
+                                                      <div key={line.item_key} className="flex justify-between items-start gap-2 p-2 rounded-lg border border-slate-100">
+                                                        <div className="min-w-0">
+                                                          <div className="text-[11px] font-semibold text-slate-800">{line.label}</div>
+                                                          <div className="text-[10px] text-slate-400">
+                                                            {line.owner} · {line.category.replace('_', ' ')} · {line.status.replace('_', ' ')}
+                                                            {line.due_date ? ` · due ${line.due_date} (${line.due_rule})` : ''}
+                                                            {line.due_date && line.days_to_due !== null && (
+                                                              line.days_to_due < 0
+                                                                ? <span className="text-rose-600 font-semibold"> · {Math.abs(line.days_to_due)} d past due</span>
+                                                                : <span> · in {line.days_to_due} d</span>
+                                                            )}
+                                                          </div>
+                                                        </div>
+                                                        <div className="flex space-x-1 shrink-0">
+                                                          {line.status === 'not_started' && (
+                                                            <ItemButton label="Requested" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'requested')} />
+                                                          )}
+                                                          {line.status === 'requested' && (
+                                                            <>
+                                                              <ItemButton label="Received" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'received')} />
+                                                              <ItemButton label="Cancel" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'not_started')} />
+                                                            </>
+                                                          )}
+                                                          {line.status === 'received' && (
+                                                            <>
+                                                              <ItemButton label="Verified" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'verified')} />
+                                                              <ItemButton label="Send back" onClick={() => handleWorkspaceStatus(row.case_id, line.item_key, 'requested')} />
+                                                            </>
+                                                          )}
+                                                          {line.status === 'verified' && (
+                                                            <span className="text-[10px] font-bold text-teal-700 px-2 py-1">verified</span>
+                                                          )}
+                                                        </div>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                        
+                                        <div className="mt-4 border-t border-slate-100 pt-3">
+                                          <div className="flex justify-between items-center">
+                                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                              Pre-reading package
+                                              {pkgData && <span className="text-slate-400 normal-case tracking-normal"> · {pkgData.recorded_count}/{pkgData.item_count} acknowledged · {pkgData.required_recorded}/{pkgData.required_total} required</span>}
+                                            </div>
+                                            {pkgData && pkgData.package_available && (
+                                              <span className="text-[10px] text-slate-400">JD and NDA carry a required acknowledgement</span>
+                                            )}
+                                          </div>
+                                          {!pkgData ? (
+                                            <p className="mt-2 text-[11px] text-slate-400">Reading the pre-reading package…</p>
+                                          ) : (
+                                            <>
+                                              <div className="mt-2 space-y-2">
+                                                {pkgData.items.map(item => (
+                                                  <div key={item.item_key} className="flex justify-between items-start gap-2 p-2 rounded-lg border border-slate-100">
+                                                    <div className="min-w-0">
+                                                      <div className="text-[11px] font-semibold text-slate-800">
+                                                        {item.label}
+                                                        {item.acknowledgement_required && (
+                                                          <span className="ml-2 text-[9px] font-bold uppercase tracking-widest text-rose-700">required acknowledgement</span>
+                                                        )}
+                                                      </div>
+                                                      <div className="text-[10px] text-slate-500">
+                                                        Sent: <span className="font-semibold text-slate-600">not available</span> — no delivery channel in this release
+                                                      </div>
+                                                      <div className="text-[10px] text-slate-500">
+                                                        Read: <span className="font-semibold text-slate-600">not tracked</span> — no hire-facing portal in this release
+                                                      </div>
+                                                      <div className="text-[10px] text-slate-500">
+                                                        Acknowledged:{' '}
+                                                        {item.acknowledgement ? (
+                                                          <span className="font-semibold text-teal-700">
+                                                            {item.acknowledgement.recorded_by} · {item.acknowledgement.acknowledged_at} · in-product record, not an e-signature
+                                                          </span>
+                                                        ) : (
+                                                          <span className="font-semibold text-slate-600">not recorded</span>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                    {!item.acknowledgement && (
+                                                      <button
+                                                        onClick={() => handleRecordAcknowledgement(row.case_id, item.item_key, item.label)}
+                                                        disabled={!pkgData.package_available}
+                                                        title={!pkgData.package_available
+                                                          ? (pkgData.package_unavailable_reason || undefined)
+                                                          : "Records an in-product acknowledgement by the signed-in user, on the hire's behalf"}
+                                                        className="shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-40">
+                                                        Record acknowledgement
+                                                      </button>
+                                                    )}
+                                                  </div>
+                                                ))}
+                                              </div>
+                                              {!pkgData.package_available && (
+                                                <p className="mt-2 text-[10px] font-medium text-amber-700">{pkgData.package_unavailable_reason}</p>
+                                              )}
+                                              <p className="mt-2 text-[9px] text-slate-400">
+                                                The package is listed, not delivered: there is no mailer, webhook or SMS, so nothing has
+                                                been sent, and there is no hire-facing portal, so no read event exists to record. Each
+                                                acknowledgement is recorded in the product by the signed-in user on the hire's behalf — an
+                                                in-product record, not an electronic signature.
+                                              </p>
+                                            </>
+                                          )}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {checklistNotice && (
+                        <div className={`mt-4 p-3 rounded-xl text-xs font-medium border ${checklistNotice.kind === 'ok' ? 'bg-teal-50 border-teal-200 text-teal-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+                          {checklistNotice.text}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </main>
+    
+          
+          {showAddModal && (
+            <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-[100] backdrop-blur-sm">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                  <h3 className="font-bold text-slate-900 text-lg">New Strategic Hire</h3>
+                  <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 text-2xl font-light">&times;</button>
+                </div>
+                <form onSubmit={handleCreateEmployee} className="p-6 space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="employee-first-name">First Name</label>
+                      <input id="employee-first-name" type="text" required value={newEmployee.first_name} onChange={e => setNewEmployee({...newEmployee, first_name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="employee-last-name">Last Name</label>
+                      <input id="employee-last-name" type="text" required value={newEmployee.last_name} onChange={e => setNewEmployee({...newEmployee, last_name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="employee-email">Email Address</label>
+                    <input id="employee-email" type="email" required value={newEmployee.email} onChange={e => setNewEmployee({...newEmployee, email: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="employee-department">Department</label>
+                      <select id="employee-department" value={newEmployee.department} onChange={e => setNewEmployee({...newEmployee, department: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium">
+                        <option>Engineering</option><option>Product</option><option>Sales</option><option>Marketing</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="employee-role">Role</label>
+                      <input id="employee-role" type="text" required value={newEmployee.role} onChange={e => setNewEmployee({...newEmployee, role: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium" />
+                    </div>
+                  </div>
+                  
+                  <div className="p-5 bg-teal-50/50 rounded-2xl border border-teal-100 space-y-4">
+                    <h5 className="text-[10px] font-black text-teal-700 uppercase tracking-widest">GCC Localized Compliance</h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest" htmlFor="employee-jurisdiction">Jurisdiction</label>
+                        <select id="employee-jurisdiction" value={newEmployee.data_residency_country} onChange={e => setNewEmployee({...newEmployee, data_residency_country: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900">
+                          <option value="AE">🇦🇪 United Arab Emirates</option>
+                          <option value="SA">🇸🇦 Saudi Arabia</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest" htmlFor="employee-basic-salary">Basic Salary (Monthly)</label>
+                        <input id="employee-basic-salary" type="number" required value={newEmployee.basic_salary} onChange={e => setNewEmployee({...newEmployee, basic_salary: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-bold text-teal-900" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest" htmlFor="employee-national-id">National ID Value</label>
+                          <input id="employee-national-id" type="text" required placeholder="784-XXXX-XXXXXXX-X" value={newEmployee.national_id_value} onChange={e => setNewEmployee({...newEmployee, national_id_value: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900" />
+                       </div>
+                       <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest" htmlFor="employee-start-date">Start Date</label>
+                          <input id="employee-start-date" type="date" required value={newEmployee.start_date} onChange={e => setNewEmployee({...newEmployee, start_date: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900" />
+                       </div>
+                    </div>
+                  </div>
+    
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition">Discard</button>
+                    <button type="submit" className="px-8 py-2.5 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700 shadow-lg transition">Create Employee Profile</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+    
+          
+          {showExitModal && (
+            <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-[100] backdrop-blur-sm">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+                 <div className="p-6 border-b border-slate-100 bg-rose-50 flex justify-between items-center">
+                    <h3 className="font-bold text-rose-900 text-lg">Exit Intelligence Intake</h3>
+                    <button onClick={() => setShowExitModal(false)} className="text-rose-400 hover:text-rose-600 text-2xl font-light">&times;</button>
+                 </div>
+                 <form onSubmit={handleExitSubmit} className="p-6 space-y-6">
+                    <div className="space-y-1">
+                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="exit-departure-reason">Primary Departure Driver</label>
+                       <select id="exit-departure-reason" value={exitForm.departure_reason} onChange={e => setExitForm({...exitForm, departure_reason: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium">
+                          <option>Compensation</option><option>Career Growth</option><option>Managerial Friction</option><option>Personal/Family</option><option>Involuntary</option>
+                       </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="exit-preventable">Preventable Attrition?</label>
+                          <select id="exit-preventable" value={exitForm.preventable} onChange={e => setExitForm({...exitForm, preventable: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium">
+                            <option value="0">No (Structural/Personal)</option>
+                            <option value="1">Yes (Policy/Mgmt Adjustment)</option>
+                          </select>
+                       </div>
+                       <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="exit-new-salary">New Salary Offered (AED/SAR)</label>
+                          <input id="exit-new-salary" type="number" placeholder="Benchmarking data" value={exitForm.new_salary} onChange={e => setExitForm({...exitForm, new_salary: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium" />
+                       </div>
+                    </div>
+                    <div className="space-y-1">
+                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="exit-feedback">Qualitative Feedback Context</label>
+                       <textarea id="exit-feedback" rows={3} value={exitForm.detailed_feedback} onChange={e => setExitForm({...exitForm, detailed_feedback: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium" />
+                    </div>
+                    <button type="submit" className="w-full py-3 bg-rose-600 text-white rounded-xl font-bold text-xs hover:bg-rose-700 shadow-lg transition">Finalize Offboarding & Process EOSB</button>
+                 </form>
+              </div>
+            </div>
+          )}
+    
+          
+          {showTemplateModal && renderedTemplate && (
+            <div className="fixed inset-0 bg-slate-900/90 flex items-center justify-center p-12 z-[200] backdrop-blur-xl">
+               <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full h-full flex flex-col overflow-hidden">
+                  <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                     <div>
+                        <h3 className="font-bold text-slate-900 text-xl">{renderedTemplate.title}</h3>
+                        <p className="text-xs text-slate-500 font-bold tracking-widest uppercase mt-1">Pilot-ready draft — subject to your counsel's review</p>
+                     </div>
+                     <button onClick={() => setShowTemplateModal(false)} className="bg-slate-900 text-white px-8 py-3 rounded-2xl text-xs font-bold hover:bg-slate-800 transition shadow-xl">Close Preview</button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-16 bg-white font-serif">
+                     <div className="max-w-3xl mx-auto prose prose-slate">
+                        <pre className="whitespace-pre-wrap text-sm text-slate-700 leading-relaxed font-mono bg-slate-50 p-10 rounded-3xl border border-slate-100">
+                          {renderedTemplate.content}
+                        </pre>
+                     </div>
+                  </div>
+               </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (file:///home/agent-senior-software-engineer/antum-people/client/src/eosbTrendClaim.test.js:64:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: the card still states what the number is, in the forecast spec's own words
+ok 3 - the card still states what the number is, in the forecast spec's own words
+  ---
+  duration_ms: 0.309823
+  type: 'test'
+  ...
+# Subtest: classifyHttpStatus — the pure rule
+    # Subtest: the gate's refusal is 403 with nothing in it
+    ok 1 - the gate's refusal is 403 with nothing in it
+      ---
+      duration_ms: 0.737787
+      type: 'test'
+      ...
+    # Subtest: whitespace is still nothing — an empty answer stays a refusal
+    ok 2 - whitespace is still nothing — an empty answer stays a refusal
+      ---
+      duration_ms: 0.125402
+      type: 'test'
+      ...
+    # Subtest: a 403 carrying a body that is NOT the session error — the Origin gate — takes the sign-out branch
+    ok 3 - a 403 carrying a body that is NOT the session error — the Origin gate — takes the sign-out branch
+      ---
+      duration_ms: 0.244971
+      type: 'test'
+      ...
+    # Subtest: a 403 that carried a body is a dead session, not a refusal
+    ok 4 - a 403 that carried a body is a dead session, not a refusal
+      ---
+      duration_ms: 0.173801
+      type: 'test'
+      ...
+    # Subtest: 401 is a dead session however it is dressed
+    ok 5 - 401 is a dead session however it is dressed
+      ---
+      duration_ms: 0.110479
+      type: 'test'
+      ...
+    # Subtest: everything else is left alone — 2xx is usable, 404 and 500 belong to caller error handling
+    ok 6 - everything else is left alone — 2xx is usable, 404 and 500 belong to caller error handling
+      ---
+      duration_ms: 0.102997
+      type: 'test'
+      ...
+    1..6
+ok 4 - classifyHttpStatus — the pure rule
+  ---
+  duration_ms: 2.453811
+  type: 'suite'
+  ...
+# Subtest: the anti-vacuous control: a refusal must never be wired to a sign-out
+    # Subtest: REFUSAL maps to a notice in place, and specifically NOT to sign-out
+    ok 1 - REFUSAL maps to a notice in place, and specifically NOT to sign-out
+      ---
+      duration_ms: 0.308063
+      type: 'test'
+      ...
+    # Subtest: a dead session is the only classification that signs anyone out
+    ok 2 - a dead session is the only classification that signs anyone out
+      ---
+      duration_ms: 0.2355
+      type: 'test'
+      ...
+    1..2
+ok 5 - the anti-vacuous control: a refusal must never be wired to a sign-out
+  ---
+  duration_ms: 0.74618
+  type: 'suite'
+  ...
+# Subtest: createAuthedFetch — the wiring, with a fabricated transport
+    # Subtest: a normal answer passes through untouched and neither handler fires
+    ok 1 - a normal answer passes through untouched and neither handler fires
+      ---
+      duration_ms: 20.56555
+      type: 'test'
+      ...
+    # Subtest: 401: the session is ended centrally, and the response still goes back to the caller
+    ok 2 - 401: the session is ended centrally, and the response still goes back to the caller
+      ---
+      duration_ms: 1.139148
+      type: 'test'
+      ...
+    # Subtest: 403 with the dead-session body: sign out, and STOP the caller from using the body as data
+    ok 3 - 403 with the dead-session body: sign out, and STOP the caller from using the body as data
+      ---
+      duration_ms: 0.859609
+      type: 'test'
+      ...
+    # Subtest: 403 from the gate: the notice is raised, the session is KEPT, and the empty body is never parsed
+    ok 4 - 403 from the gate: the notice is raised, the session is KEPT, and the empty body is never parsed
+      ---
+      duration_ms: 0.550206
+      type: 'test'
+      ...
+    # Subtest: a 404 and a 500 are nobody's business here — both are handed back
+    ok 5 - a 404 and a 500 are nobody's business here — both are handed back
+      ---
+      duration_ms: 0.344829
+      type: 'test'
+      ...
+    # Subtest: reading the body to classify it does not eat it — the caller can still parse the response
+    ok 6 - reading the body to classify it does not eat it — the caller can still parse the response
+      ---
+      duration_ms: 0.364528
+      type: 'test'
+      ...
+    # Subtest: the caller's own token reaches the request
+    ok 7 - the caller's own token reaches the request
+      ---
+      duration_ms: 0.260506
+      type: 'test'
+      ...
+    # Subtest: with no token the sentinel still goes out, exactly as before this change
+    ok 8 - with no token the sentinel still goes out, exactly as before this change
+      ---
+      duration_ms: 0.816232
+      type: 'test'
+      ...
+    # Subtest: a caller that supplies its own Authorization header keeps it
+    ok 9 - a caller that supplies its own Authorization header keeps it
+      ---
+      duration_ms: 0.256868
+      type: 'test'
+      ...
+    1..9
+ok 6 - createAuthedFetch — the wiring, with a fabricated transport
+  ---
+  duration_ms: 25.566433
+  type: 'suite'
+  ...
+# Subtest: one screen, several panels: a refused sibling does not blank a granted one
+    # Subtest: the granted roster stays AND the refusal is recorded against its own url
+    ok 1 - the granted roster stays AND the refusal is recorded against its own url
+      ---
+      duration_ms: 2.158589
+      type: 'test'
+      ...
+    # Subtest: CONTROL — under the old one-Promise.all shape the granted roster IS blanked
+    ok 2 - CONTROL — under the old one-Promise.all shape the granted roster IS blanked
+      ---
+      duration_ms: 0.269863
+      type: 'test'
+      ...
+    # Subtest: a panel that never completed is a failure, not a refusal, and blanks only itself
+    ok 3 - a panel that never completed is a failure, not a refusal, and blanks only itself
+      ---
+      duration_ms: 0.328393
+      type: 'test'
+      ...
+    # Subtest: a dead session is re-thrown, never recorded as a panel outcome
+    ok 4 - a dead session is re-thrown, never recorded as a panel outcome
+      ---
+      duration_ms: 0.544247
+      type: 'test'
+      ...
+    # Subtest: the refusal names the panel it belongs to, from the url onRefusal already receives
+    ok 5 - the refusal names the panel it belongs to, from the url onRefusal already receives
+      ---
+      duration_ms: 0.287247
+      type: 'test'
+      ...
+    # Subtest: recordPanel tags by the error class, never by reading the body
+    ok 6 - recordPanel tags by the error class, never by reading the body
+      ---
+      duration_ms: 0.157598
+      type: 'test'
+      ...
+    1..6
+ok 7 - one screen, several panels: a refused sibling does not blank a granted one
+  ---
+  duration_ms: 4.84937
+  type: 'suite'
+  ...
+# Subtest: every state the row names has its own label
+ok 8 - every state the row names has its own label
+  ---
+  duration_ms: 1.210294
+  type: 'test'
+  ...
+# Subtest: an unknown state is labelled Unknown and wears no state colour
+ok 9 - an unknown state is labelled Unknown and wears no state colour
+  ---
+  duration_ms: 0.216754
+  type: 'test'
+  ...
+# Subtest: each of the four states has its own chip styling
+ok 10 - each of the four states has its own chip styling
+  ---
+  duration_ms: 0.118883
+  type: 'test'
+  ...
+# Subtest: a date is formatted the same way on every machine
+ok 11 - a date is formatted the same way on every machine
+  ---
+  duration_ms: 0.990373
+  type: 'test'
+  ...
+# Subtest: the next milestone is the earliest one not yet completed, cleared in order
+ok 12 - the next milestone is the earliest one not yet completed, cleared in order
+  ---
+  duration_ms: 0.312536
+  type: 'test'
+  ...
+# Subtest: the summary names the count, the offsets and what is next — and says nothing for an empty one
+ok 13 - the summary names the count, the offsets and what is next — and says nothing for an empty one
+  ---
+  duration_ms: 0.163498
+  type: 'test'
+  ...
+# Subtest: the window line prints both ends and the length it implies
+ok 14 - the window line prints both ends and the length it implies
+  ---
+  duration_ms: 0.186078
+  type: 'test'
+  ...
+# Subtest: automatic source detection is off, and the declared sources still name the markup
+ok 15 - automatic source detection is off, and the declared sources still name the markup
+  ---
+  duration_ms: 1.021181
+  type: 'test'
+  ...
+# Subtest: every class-carrying file is inside the declared sources, or states why it is not markup
+ok 16 - every class-carrying file is inside the declared sources, or states why it is not markup
+  ---
+  duration_ms: 7.157557
+  type: 'test'
+  ...
+# Subtest: no class-name list hides outside the declared sources
+ok 17 - no class-name list hides outside the declared sources
+  ---
+  duration_ms: 1.773639
+  type: 'test'
+  ...
+1..17
+# tests 36
+# suites 4
+# pass 35
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 333.088766
