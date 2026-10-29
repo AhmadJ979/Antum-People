@@ -39,9 +39,9 @@ This is the team's own rule — *a claim about a screen must be sourced from a s
 Two classes per row, both read at `2ff2891`:
 
 * **basis** — whether a **repository-producible basis** exists: a file in *this* repository that states the provision itself, or a citation a reader can resolve from it. **All 79 rows are `none`.** Every article and every figure traces back to another Antum document, which is ourselves; no file in the repository reproduces the text of Federal Decree-Law 33/2021, Federal Decree-Law 45/2021, Royal Decree M/51 or Royal Decree M/148 (measured: `git ls-files | grep -Eci 'statute|legislation|decree|fdl|m-51|m-148'` prints `0`, and the statute names appear only inside our own artefacts). This is the same finding `statutory-claims-determination.md:10` recorded on 2026-10-06 at base `eeb4dd3`: *"We hold no consolidated text of either statute."*
-* **asked** — whether the claim is put in question by a numbered item of a counsel letter. `no` = no letter asks it. Otherwise the letter and item: `UAE-1`…`UAE-6` (`/home/team/shared/uae-counsel-confirmation-request.md`), `KSA-1`…`KSA-5` (`/home/team/shared/ksa-counsel-confirmation-request.md`), `PDPL-1`…`PDPL-5` (`/home/team/shared/pdpl-counsel-request.md`, whose items the product numbers Q1, Q2, Q4, Q5, Q6).
+* **asked** — whether the claim is put in question by a numbered item of a counsel letter. `no` = no letter asks it. Otherwise the letter and item: `UAE-1`…`UAE-7` (`/home/team/shared/uae-counsel-confirmation-request.md`), `KSA-1`…`KSA-6` (`/home/team/shared/ksa-counsel-confirmation-request.md`), `PDPL-1`…`PDPL-5` (`/home/team/shared/pdpl-counsel-request.md`, whose items the product numbers Q1, Q2, Q4, Q5, Q6). The two items added on 2026-10-29 are the **statutory schedules** — UAE item 7 and KSA item 6 — and a row they reach is written `UAE-7 (U16)` / `KSA-6 (S14)`: the item first, then the Appendix A row of that letter carrying the claim, so the cell can be checked against the letter without a search.
 
-**Naming is not asking.** The KSA letter's own closing paragraph names six articles as unconfirmed — *"The article numbers already reach a reader through the KSA offboarding checklist (Art. 84, Arts. 74–75) and through our KSA contract template (Art. 80, Art. 84, and its termination table's Arts. 74, 75, 77, 82) … and each stays unconfirmed until counsel answers"* — while its **questions** are five. A row is `asked` only when a numbered question puts that proposition in question; a row the background merely names is `no`.
+**Naming is not asking.** The KSA letter's own closing paragraph names six articles as unconfirmed — *"The article numbers already reach a reader through the KSA offboarding checklist (Art. 84, Arts. 74–75) and through our KSA contract template (Art. 80, Art. 84, and its termination table's Arts. 74, 75, 77, 82) … and each stays unconfirmed until counsel answers"* — while its **questions** are **six** at this tip: the sixth is the statutory schedule, item 6, added 2026-10-29. A row is `asked` only when a numbered question puts that proposition in question; a row the background merely names is `no`.
 
 **No letter has a recipient** (owner decision 15(a)). "Asked" therefore means *asked in the drafted letters as they stand*, not *asked of a lawyer*; and the letters' items are drafts that have never been sent.
 
@@ -51,15 +51,15 @@ Two classes per row, both read at `2ff2891`:
 
 | # | line | claim as shipped (abridged) | basis | asked |
 |---|---|---|---|---|
-| REG-01 | `templates/uae-employment-contract.md:3` | governing instrument: UAE (Mainland) FDL 33/2021 | none | no |
-| REG-02 | `templates/uae-employment-contract.md:7` | contracts must be filed with MoHRE; bilingual per UAE law | none | no |
-| REG-03 | `templates/uae-employment-contract.md:58` | fixed-term contract under Article 8, FDL 33/2021 | none | no |
-| REG-04 | `templates/uae-employment-contract.md:101` | basic salary at least 50% of total, per MoHRE guidelines | none | no |
-| REG-05 | `templates/uae-employment-contract.md:108` | annual leave: 30 working days per year | none | no |
-| REG-06 | `templates/uae-employment-contract.md:109` | sick leave: 90 days per year (15 full + 30 half + 45 unpaid) | none | no |
-| REG-07 | `templates/uae-employment-contract.md:110` | maternity leave: 60 days (45 full + 15 half) | none | no |
-| REG-08 | `templates/uae-employment-contract.md:111` | parental leave: 5 working days | none | no |
-| REG-09 | `templates/uae-employment-contract.md:112` | Hajj leave: max 30 days, unpaid, once per employment | none | no |
+| REG-01 | `templates/uae-employment-contract.md:3` | governing instrument: UAE (Mainland) FDL 33/2021 | none | UAE-7 (U1) |
+| REG-02 | `templates/uae-employment-contract.md:7` | contracts must be filed with MoHRE; bilingual per UAE law | none | UAE-7 (U2) |
+| REG-03 | `templates/uae-employment-contract.md:58` | fixed-term contract under Article 8, FDL 33/2021 | none | UAE-7 (U3) |
+| REG-04 | `templates/uae-employment-contract.md:101` | basic salary at least 50% of total, per MoHRE guidelines | none | UAE-7 (U4) |
+| REG-05 | `templates/uae-employment-contract.md:108` | annual leave: 30 working days per year | none | UAE-7 (U5) |
+| REG-06 | `templates/uae-employment-contract.md:109` | sick leave: 90 days per year (15 full + 30 half + 45 unpaid) | none | UAE-7 (U6) |
+| REG-07 | `templates/uae-employment-contract.md:110` | maternity leave: 60 days (45 full + 15 half) | none | UAE-7 (U7) |
+| REG-08 | `templates/uae-employment-contract.md:111` | parental leave: 5 working days | none | UAE-7 (U8) |
+| REG-09 | `templates/uae-employment-contract.md:112` | Hajj leave: max 30 days, unpaid, once per employment | none | UAE-7 (U9) |
 | REG-10 | `templates/uae-employment-contract.md:119` | probation, employee: no notice | none | UAE-5 |
 | REG-11 | `templates/uae-employment-contract.md:120` | probation, employer: 14 days | none | UAE-5 |
 | REG-12 | `templates/uae-employment-contract.md:122` | summary dismissal: immediate, Art. 44 | none | UAE-3 |
@@ -69,30 +69,30 @@ Two classes per row, both read at `2ff2891`:
 | REG-16 | `templates/uae-employment-contract.md:130` | cap: 2 years' basic salary (730 days) | none | UAE-1 |
 | REG-17 | `templates/uae-employment-contract.md:131` | resignation reduction: 1/3 (1–3 yrs), 2/3 (3–5 yrs), full (5+ yrs) | none | UAE-2 |
 | REG-18 | `templates/uae-employment-contract.md:132` | eligibility: minimum 1 year of continuous service | none | UAE-1 |
-| REG-19 | `templates/uae-employment-contract.md:163` | termination ground: mutual agreement = Art. 42 | none | no |
-| REG-20 | `templates/uae-employment-contract.md:164` | termination ground: expiry of fixed term = Art. 8 | none | no |
-| REG-21 | `templates/uae-employment-contract.md:165` | termination ground: resignation by employee = Art. 43 | none | no |
-| REG-22 | `templates/uae-employment-contract.md:166` | termination ground: termination by employer = Art. 43 | none | no |
+| REG-19 | `templates/uae-employment-contract.md:163` | termination ground: mutual agreement = Art. 42 | none | UAE-7 (U10) |
+| REG-20 | `templates/uae-employment-contract.md:164` | termination ground: expiry of fixed term = Art. 8 | none | UAE-7 (U11) |
+| REG-21 | `templates/uae-employment-contract.md:165` | termination ground: resignation by employee = Art. 43 | none | UAE-7 (U12) |
+| REG-22 | `templates/uae-employment-contract.md:166` | termination ground: termination by employer = Art. 43 | none | UAE-7 (U13) |
 | REG-23 | `templates/uae-employment-contract.md:167` | termination ground: summary dismissal = Art. 44 | none | UAE-3 |
-| REG-24 | `templates/uae-employment-contract.md:168` | termination ground: redundancy = Art. 45 | none | no |
-| REG-25 | `templates/uae-employment-contract.md:169` | termination ground: constructive dismissal = Art. 47 | none | no |
-| REG-26 | `templates/uae-employment-contract.md:175` | internal grievance: written grievance to HR within 14 days | none | no |
-| REG-27 | `templates/uae-employment-contract.md:181` | processing per UAE PDPL (FDL 45/2021) | none | no |
+| REG-24 | `templates/uae-employment-contract.md:168` | termination ground: redundancy = Art. 45 | none | UAE-7 (U14) |
+| REG-25 | `templates/uae-employment-contract.md:169` | termination ground: constructive dismissal = Art. 47 | none | UAE-7 (U15) |
+| REG-26 | `templates/uae-employment-contract.md:175` | internal grievance: written grievance to HR within 14 days | none | UAE-7 (U16) |
+| REG-27 | `templates/uae-employment-contract.md:181` | processing per UAE PDPL (FDL 45/2021) | none | UAE-7 (U17) |
 
 ### 4.2 `templates/ksa-employment-contract.md` — 26 rows
 
 | # | line | claim as shipped (abridged) | basis | asked |
 |---|---|---|---|---|
-| REG-28 | `templates/ksa-employment-contract.md:4` | governing law: Saudi Labor Law (Royal Decree M/51), as amended | none | no |
-| REG-29 | `templates/ksa-employment-contract.md:7` | must be registered with Qiwa; Arabic the primary legal language; non-Saudi contracts fixed-term | none | no |
-| REG-30 | `templates/ksa-employment-contract.md:92` | overtime: 150% (normal) / 200% (weekends, public holidays) | none | no |
-| REG-31 | `templates/ksa-employment-contract.md:93` | Ramadan working hours: 6 hours per day | none | no |
+| REG-28 | `templates/ksa-employment-contract.md:4` | governing law: Saudi Labor Law (Royal Decree M/51), as amended | none | KSA-6 (S1) |
+| REG-29 | `templates/ksa-employment-contract.md:7` | must be registered with Qiwa; Arabic the primary legal language; non-Saudi contracts fixed-term | none | KSA-6 (S2) |
+| REG-30 | `templates/ksa-employment-contract.md:92` | overtime: 150% (normal) / 200% (weekends, public holidays) | none | KSA-6 (S3) |
+| REG-31 | `templates/ksa-employment-contract.md:93` | Ramadan working hours: 6 hours per day | none | KSA-6 (S4) |
 | REG-32 | `templates/ksa-employment-contract.md:109` | KSA EOSB is calculated on total salary, unlike UAE | none | KSA-2 |
-| REG-33 | `templates/ksa-employment-contract.md:116` | annual leave: 21 working days per year (min) | none | no |
-| REG-34 | `templates/ksa-employment-contract.md:117` | sick leave: 120 days per year (30 full + 60 at 75% + 30 unpaid) | none | no |
-| REG-35 | `templates/ksa-employment-contract.md:118` | maternity leave: 10 weeks, full pay | none | no |
-| REG-36 | `templates/ksa-employment-contract.md:119` | paternity leave: 3 days | none | no |
-| REG-37 | `templates/ksa-employment-contract.md:120` | Hajj leave: max 15 days, unpaid, once per employment | none | no |
+| REG-33 | `templates/ksa-employment-contract.md:116` | annual leave: 21 working days per year (min) | none | KSA-6 (S5) |
+| REG-34 | `templates/ksa-employment-contract.md:117` | sick leave: 120 days per year (30 full + 60 at 75% + 30 unpaid) | none | KSA-6 (S6) |
+| REG-35 | `templates/ksa-employment-contract.md:118` | maternity leave: 10 weeks, full pay | none | KSA-6 (S7) |
+| REG-36 | `templates/ksa-employment-contract.md:119` | paternity leave: 3 days | none | KSA-6 (S8) |
+| REG-37 | `templates/ksa-employment-contract.md:120` | Hajj leave: max 15 days, unpaid, once per employment | none | KSA-6 (S9) |
 | REG-38 | `templates/ksa-employment-contract.md:127` | probation, either party: no notice required | none | KSA-4 |
 | REG-39 | `templates/ksa-employment-contract.md:128` | post-probation, employee non-Saudi: 30 days | none | KSA-4 |
 | REG-40 | `templates/ksa-employment-contract.md:129` | post-probation, employee Saudi: 60 days | none | KSA-4 |
@@ -102,20 +102,20 @@ Two classes per row, both read at `2ff2891`:
 | REG-44 | `templates/ksa-employment-contract.md:140` | each subsequent year: one full month's total salary | none | KSA-1 |
 | REG-45 | `templates/ksa-employment-contract.md:142` | unserved notice: compensation = the unserved period's wage, a separate settlement item, never deducted from EOSB | none | KSA-4 |
 | REG-46 | `templates/ksa-employment-contract.md:164` | employer provides a service certificate within 2 weeks of termination | none | KSA-5 |
-| REG-47 | `templates/ksa-employment-contract.md:170` | termination ground: mutual agreement = Art. 74 | none | no |
-| REG-48 | `templates/ksa-employment-contract.md:171` | termination ground: expiry of fixed term = Art. 74 | none | no |
-| REG-49 | `templates/ksa-employment-contract.md:172` | termination ground: resignation by employee = Arts. 75, 77 | none | no |
+| REG-47 | `templates/ksa-employment-contract.md:170` | termination ground: mutual agreement = Art. 74 | none | KSA-6 (S10) |
+| REG-48 | `templates/ksa-employment-contract.md:171` | termination ground: expiry of fixed term = Art. 74 | none | KSA-6 (S11) |
+| REG-49 | `templates/ksa-employment-contract.md:172` | termination ground: resignation by employee = Arts. 75, 77 | none | KSA-6 (S12) |
 | REG-50 | `templates/ksa-employment-contract.md:173` | termination ground: summary dismissal = Art. 80 | none | KSA-3 |
-| REG-51 | `templates/ksa-employment-contract.md:174` | termination ground: force majeure = Art. 82 | none | no |
-| REG-52 | `templates/ksa-employment-contract.md:180` | internal grievance: written grievance to HR within 14 days | none | no |
-| REG-53 | `templates/ksa-employment-contract.md:186` | processing per KSA PDPL (Royal Decree M/148) | none | no |
+| REG-51 | `templates/ksa-employment-contract.md:174` | termination ground: force majeure = Art. 82 | none | KSA-6 (S13) |
+| REG-52 | `templates/ksa-employment-contract.md:180` | internal grievance: written grievance to HR within 14 days | none | KSA-6 (S14) |
+| REG-53 | `templates/ksa-employment-contract.md:186` | processing per KSA PDPL (Royal Decree M/148) | none | KSA-6 (S15) |
 
 ### 4.3 `templates/final-settlement-statement.md` — 2 rows
 
 | # | line | claim as shipped (abridged) | basis | asked |
 |---|---|---|---|---|
-| REG-54 | `templates/final-settlement-statement.md:53` | EN waiver: acknowledgment of "full and final settlement", no further claims, waiver of future claims | none | no |
-| REG-55 | `templates/final-settlement-statement.md:55` | AR waiver: the same waiver in Arabic | none | no |
+| REG-54 | `templates/final-settlement-statement.md:53` | EN waiver: acknowledgment of "full and final settlement", no further claims, waiver of future claims | none | UAE-7 (U18) / KSA-6 (S16) |
+| REG-55 | `templates/final-settlement-statement.md:55` | AR waiver: the same waiver in Arabic | none | UAE-7 (U18) / KSA-6 (S16) |
 
 ### 4.4 `templates/privacy-notice.md` — PDPL citations, 15 rows
 
@@ -153,21 +153,23 @@ Two classes per row, both read at `2ff2891`:
 
 ## 5. The rows no counsel question reaches
 
-**32 rows in the two contract templates are covered by no counsel question — 17 UAE (REG-01…REG-09, REG-19…REG-22, REG-24…REG-27) and 15 KSA (REG-28…REG-37, REG-47…REG-49, REG-51…REG-53); 30 of those 32 are figure-bearing** (the two without a figure are `uae-employment-contract.md:7` and `ksa-employment-contract.md:7`, the filing/registration notes). This is the class the plan called "the statutory half": leave entitlements, overtime and Ramadan hours, registration requirements, the residual termination-ground articles, the grievance deadline, and both PDPL instrument citations inside the contracts.
+**Restated 2026-10-29, after the statutory schedule (before → after in section 6).** **Only the 15 privacy-notice rows are reached by no counsel question** (REG-56…REG-70, `templates/privacy-notice.md`). Every other row is asked — already, or by this schedule: on 2026-10-29 both EOSB letters gained a **statutory schedule** — UAE letter **item 7**, Appendix A of 18 rows (`/home/team/shared/uae-counsel-confirmation-request.md:19`, table at `:27-50`); KSA letter **item 6**, Appendix A of 16 rows (`/home/team/shared/ksa-counsel-confirmation-request.md:17`, table at `:23-44`) — both letters at the 2026-10-29 md5s named in the last paragraph of this section. It carries the rows this section used to call unasked — **17 UAE (REG-01…REG-09, REG-19…REG-22, REG-24…REG-27) and 15 KSA (REG-28…REG-37, REG-47…REG-49, REG-51…REG-53); 30 of those 32 are figure-bearing** (the two without a figure are `uae-employment-contract.md:7` and `ksa-employment-contract.md:7`, the filing/registration notes) — plus, as the last row of each schedule, the settlement statement's waiver, which is the next paragraph. This is the class the plan called "the statutory half": leave entitlements, overtime and Ramadan hours, registration requirements, the residual termination-ground articles, the grievance deadline, and both PDPL instrument citations inside the contracts. Each appendix row names one claim by `file:line` and asks counsel for the article that governs it, **or** that no article does, **or** that the claim is wrong — and the item says in terms that **we assert no article number of our own**.
 
-**The settlement statement's waiver is asked in no letter** — `templates/final-settlement-statement.md:53` (EN) and `:55` (AR). It is the one row whose legal effect a reader signs: it records a settlement as "full and final" and waives future claims, and no letter asks whether a waiver of that breadth is effective in either jurisdiction.
+**The settlement statement's waiver is asked too, and by both letters** — as the last row of each schedule, **UAE U18** and **KSA S16** (`templates/final-settlement-statement.md:53` EN and `:55` AR) — so REG-54 and REG-55 each carry both items. It is the one row whose legal effect would fall on a signer: it records a settlement as "full and final" and waives future claims, and each letter now asks whether a waiver of that breadth is effective in that jurisdiction and what wording to use. Both letters also state that **no one has signed or received that statement** — the product withholds it — so the question is about the wording, not about an act.
 
 **The notice's 15 PDPL citations are asked in no letter.** The PDPL letter's items are the notice's content, Arabic certification, the shown-versus-consented instrument, the emergency contact and retention — and it says so itself: *"No article number is asserted. The notice template carries the caution that its article references follow our own reference set and must be confirmed; the letter asks for the posts rather than asserting them"* (`/home/team/shared/pdpl-counsel-request.md:48-49`).
 
-**The checklist rows are the only part of this surface a letter reaches.** All 9 `compliance_engine.js` rows are asked — Art. 84 and Arts. 74–75 through the KSA letter, Arts. 51–53 and the notice/deadline claims through the UAE letter. So the checklist a signed-in user actually reads is the covered part, and the documents nobody can read yet are the uncovered part.
+**The checklist rows were the only part of this surface a letter reached until 2026-10-29; the contract and settlement rows are reached now.** All 9 `compliance_engine.js` rows are asked — Art. 84 and Arts. 74–75 through the KSA letter, Arts. 51–53 and the notice/deadline claims through the UAE letter. So the checklist a signed-in user actually reads is no longer the only covered part — and the documents nobody can read yet are no longer the uncovered part either.
 
-**The cheapest fix is one added line to each letter**, and its insertion points are recorded in `/home/team/shared/counsel-letter-six-corrections-2026-10-29.md`. It is **not** implemented here: the owner's one-line answer is pending, and this PR changes no letter.
+**The schedules are implemented, and recorded in `/home/team/shared/counsel-letter-statutory-schedule-2026-10-29.md`** — the four host-pack files, their before → after line counts and md5s (KSA `.md` `fbe57939aa3501a3a4ff3f3d9ee70109`, UAE `.md` `657457fc98c9c1a0700a26fb2ddd2a99`, and the two `--send-ready.txt` twins), and the §4 check that these appendix rows were taken **out of this register** rather than restated in the letters. The insertion points recorded in `/home/team/shared/counsel-letter-six-corrections-2026-10-29.md` are superseded by it. No letter has a recipient (15a) and none has been sent.
 
 ## 6. Totals, and the command that reproduces them
 
 **Total: 79 rows** — UAE contract 27, KSA contract 26, settlement statement 2, privacy notice 15, offboarding checklists 9.
 **With a repository-producible basis: 0 of 79.**
-**Asked in a counsel letter: 30. Not asked: 49** (= 17 UAE contract + 15 KSA contract + 2 settlement + 15 notice).
+**Asked in a counsel letter: 64. Not asked: 15** (= the 15 privacy-notice rows, REG-56…REG-70). **Before → after the statutory schedule of 2026-10-29: asked 30 → 64; not asked 49 → 15.** The 34 rows that moved are 17 UAE contract + 15 KSA contract + the 2 settlement rows, asked by UAE letter item 7 (Appendix A) and KSA letter item 6 (Appendix A).
+
+**No row's line has moved since `2ff2891`.** Measured at the tip **`4c8779b`** (2026-10-29): `git diff --name-only 2ff2891 4c8779b -- templates server` prints nothing, so no `path:line` this register quotes shifted under its row; the row-set command below, re-run against `4c8779b`'s templates, still prints `79`; and all 79 rows' `path:line` resolve to a non-empty line at `4c8779b` (0 unresolved). What moved in this file on 2026-10-29 is the **`asked` column only** — no `REG-` id was renumbered and no article number was added.
 
 **Row set, re-derived from the files (not from this document).** Run in the deployed tree at `2ff2891`; it prints `79`:
 
@@ -189,7 +191,7 @@ Replace `-c` with `-n` to list the 79 lines with their numbers — that listing 
 cd /home/team/shared/probable-octo-sniffle && \
   grep -c '^| REG-' docs/statutory-claim-register.md                                                   # 79 rows
 awk -F'|' '/^\| REG-/ && $5 ~ /none/ {n++} END{print n}' docs/statutory-claim-register.md              # 79 with no repository-producible basis
-awk -F'|' '/^\| REG-/ && $6 ~ /^ *no *$/ {n++} END{print n}' docs/statutory-claim-register.md          # 49 asked in no letter
+awk -F'|' '/^\| REG-/ && $6 ~ /^ *no *$/ {n++} END{print n}' docs/statutory-claim-register.md          # 15 asked in no letter
 awk -F'|' '/^\| REG-/{split($3,a,":"); c[a[1]]++} END{for (f in c) print c[f], f}' docs/statutory-claim-register.md   # 27 / 26 / 2 / 15 / 9
 ```
 
@@ -203,9 +205,9 @@ This register is not an arithmetic restatement of the withdrawn headline; it rep
 
 ## 7. What unchanged today, and must not be read as coverage
 
-**The six corrections applied today to the host-pack counsel letters removed statements about our own product that were false at this tip; they added no question to any letter.** So the "asked in no letter" counts in section 5 **stand as measured here**, and a future reader must not read the corrections as coverage of the statutory schedule: correcting a letter's claims about ourselves is not asking counsel about the law. No letter has a recipient (15a), and no letter has been sent.
+**The six corrections applied today to the host-pack counsel letters removed statements about our own product that were false at this tip; they added no question to any letter.** Their coverage is therefore unchanged, and the "asked in no letter" counts in section 5 **stood as measured here until later the same day**, when the statutory schedule — a separate change, and not one of these six — moved them: **asked 30 → 64, asked in no letter 49 → 15** (section 6). A future reader must not read these six corrections as coverage of the statutory schedule: correcting a letter's claims about ourselves is not asking counsel about the law. No letter has a recipient (15a), and no letter has been sent.
 
-The same PR that adds this register also corrects one stale cross-reference in `statutory-claims-determination.md:10` (the KSA letter has five numbered items, and notice is item 4, not 6). That is a numbering correction; it adds no question either.
+The same PR that adds this register also corrects one stale cross-reference in `statutory-claims-determination.md:10` (the KSA letter has five numbered items, and notice is item 4, not 6). That is a numbering correction; it adds no question either. **Later the same day the statutory schedule made both counts larger** — the KSA letter now numbers **six** items and the UAE letter **seven** — and `statutory-claims-determination.md:10` was restated for that in the same PR that moved this register's `asked` column.
 
 ## 8. Limits of this register, stated so they are not mistaken for omissions
 
