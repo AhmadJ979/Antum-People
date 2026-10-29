@@ -1,0 +1,123 @@
+### live product on 3000 before the pass: 200
+==================== state=before ref=origin/main port=4752 db=/tmp/rigf/before.db
+Preparing worktree (detached HEAD 3d69bd2)
+HEAD is now at 3d69bd2 Merge pull request #321 from AhmadJ979/fix/watcher-note-detection-claim
+-- tree under test: 3d69bd2d9483d8612f9ed1e47f1449a7e07edad6  compliance_engine.js blob aaa6e1954036a6251e876367c20fac607d9b9a10
+-- seed: Seeding completed successfully.
+scratch user ok on /tmp/rigf/before.db
+-- listener: 3381 /tmp/rigf/before/server
+-- unauthenticated /api/employees: 401
+(node:3412) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+== tables in this DB (19)
+analytics_metrics audit_logs breach_register consent_records data_subject_requests employees eosb_calculations exit_interviews offboarding_tasks onboarding_tasks preboarding_acknowledgements preboarding_cases preboarding_consents preboarding_items preboarding_notice_acknowledgements preboarding_reminders probation_escalations probation_evaluations users
+
+== employees columns (37)
+id first_name last_name email department role manager_id start_date end_date status salary recruitment_cost fully_productive_date created_at updated_at national_id_type national_id_value data_residency_country consent_granted consent_date visa_status visa_expiry_date basic_salary eosb_accrued eosb_paid national_id_iqama jurisdiction total_salary unpaid_leave_days probation_end_date nitaqat_band emirati_flag governing_law allowances_housing allowances_transport gave_proper_notice termination_type
+employees column for employer_name: 0
+employees column for trade_license: 0
+employees column for mohre_code: 0
+employees column for qiwa_id: 0
+employees column for dpo_email: 0
+employees column for probation_period: 1
+
+== tables that could hold an employer/company/settings record: []
+
+== roster (14) id | country | status | salary | basic | eosb | end_date | visa | probation_end
+demo-emp-ahmad | AE | active | 15000 | 10000 | 6505 |  |  | 
+demo-emp-fatima | SA | active | 18000 | 12000 | 31250.89 |  |  | 
+demo-emp-hassan | AE | active | 20000 | 14000 | 7872.78 |  |  | 
+demo-emp-khalid | SA | active | 16000 | 11000 | 31940.1 |  |  | 
+demo-emp-leila | AE | active | 25000 | 17000 | 36995.4 |  |  | 
+demo-emp-lina | AE | onboarding | 13500 | 9500 | 0 |  |  | 2027-01-10
+demo-emp-mohammed | AE | active | 17000 | 11500 | 7253.01 |  |  | 
+demo-emp-noura | AE | offboarding | 16000 | 11000 | 6415.79 | 2026-10-10 |  | 
+demo-emp-omar | AE | onboarding | 14000 | 9500 | 0 |  |  | 2026-11-18
+demo-emp-reem | SA | onboarding | 11000 | 8000 | 1283.94 |  |  | 2027-02-01
+demo-emp-salim | AE | active | 19000 | 13000 | 21480.65 |  |  | 
+demo-emp-sarah | SA | offboarding | 13000 | 9000 | 19824.78 | 2026-09-30 |  | 
+demo-emp-sultan | SA | terminated | 14000 | 9500 | 3449.69 | 2024-09-01 |  | 
+demo-emp-yusuf | AE | terminated | 12000 | 8000 | 0 | 2023-08-25 |  | 
+literal "Antum Regional Hub" rows holding it: NONE
+literal "Dubai Internet City, UAE / Riyadh Business Gate, KSA" rows holding it: NONE
+literal "TL-882733-G" rows holding it: NONE
+literal "EST-99228" rows holding it: NONE
+literal "QIWA-88271" rows holding it: NONE
+literal "HR Director" rows holding it: NONE
+literal "privacy@antum.ae" rows holding it: NONE
+
+== login 200 access_role=hr_admin
+== template files on disk: ["breach-notification-letters","data-processing-agreement","dpia-questionnaire","final-settlement-statement","ksa-employment-contract","privacy-notice","uae-employment-contract"]
+
+== served documents: name | status | bytes | md5 | invented literals present
+notice-raw | 200 | 17665 | 6004b0a5b23ac5aa68415da5e45ec2cd | -
+template-breach-notification-letters--demo-emp-ahmad | 200 | 11302 | 770ae37135634a4a8393a2d8605fe743 | -
+template-data-processing-agreement--demo-emp-ahmad | 200 | 14908 | a18d438a3f200a48edea6bfddf6c5791 | -
+template-dpia-questionnaire--demo-emp-ahmad | 200 | 8837 | 770b522dde97d3e75c93e941f0675785 | -
+template-final-settlement-statement--demo-emp-noura | 200 | 2393 | 1603f332fbeeb65204f710c2b25cec1a | Antum Regional Hub
+template-ksa-employment-contract--demo-emp-fatima | 200 | 9375 | 1a6b61ba11295b142c8fb15547e8edc5 | Antum Regional Hub , TL-882733-G , QIWA-88271 , HR Director
+template-privacy-notice--demo-emp-ahmad | 200 | 17775 | d28625ae0b6fecbd37688fa3cbef2a3e | Antum Regional Hub , Dubai Internet City, UAE / Riyadh Business Gate, KSA , privacy@antum.ae
+template-uae-employment-contract--demo-emp-ahmad | 200 | 9393 | e7ddae64dd7c0dbf6bfd2fa995c04085 | Antum Regional Hub , TL-882733-G , EST-99228 , HR Director
+==================== state=after ref=fix/no-invented-document-values port=4753 db=/tmp/rigf/after.db
+Preparing worktree (detached HEAD 2667e96)
+HEAD is now at 2667e96 A served document refuses rather than inventing a fact it cannot establish
+-- tree under test: 2667e96981e7b2ce9e4fa252f876534d5cedbebb  compliance_engine.js blob 15a092dbcda80c345ad0a3c71969d09316dc931b
+-- seed: Seeding completed successfully.
+scratch user ok on /tmp/rigf/after.db
+-- listener: 3466 /tmp/rigf/after/server
+-- unauthenticated /api/employees: 401
+(node:3510) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+== tables in this DB (19)
+analytics_metrics audit_logs breach_register consent_records data_subject_requests employees eosb_calculations exit_interviews offboarding_tasks onboarding_tasks preboarding_acknowledgements preboarding_cases preboarding_consents preboarding_items preboarding_notice_acknowledgements preboarding_reminders probation_escalations probation_evaluations users
+
+== employees columns (37)
+id first_name last_name email department role manager_id start_date end_date status salary recruitment_cost fully_productive_date created_at updated_at national_id_type national_id_value data_residency_country consent_granted consent_date visa_status visa_expiry_date basic_salary eosb_accrued eosb_paid national_id_iqama jurisdiction total_salary unpaid_leave_days probation_end_date nitaqat_band emirati_flag governing_law allowances_housing allowances_transport gave_proper_notice termination_type
+employees column for employer_name: 0
+employees column for trade_license: 0
+employees column for mohre_code: 0
+employees column for qiwa_id: 0
+employees column for dpo_email: 0
+employees column for probation_period: 1
+
+== tables that could hold an employer/company/settings record: []
+
+== roster (14) id | country | status | salary | basic | eosb | end_date | visa | probation_end
+demo-emp-ahmad | AE | active | 15000 | 10000 | 6505 |  |  | 
+demo-emp-fatima | SA | active | 18000 | 12000 | 31250.89 |  |  | 
+demo-emp-hassan | AE | active | 20000 | 14000 | 7872.78 |  |  | 
+demo-emp-khalid | SA | active | 16000 | 11000 | 31940.1 |  |  | 
+demo-emp-leila | AE | active | 25000 | 17000 | 36995.4 |  |  | 
+demo-emp-lina | AE | onboarding | 13500 | 9500 | 0 |  |  | 2027-01-10
+demo-emp-mohammed | AE | active | 17000 | 11500 | 7253.01 |  |  | 
+demo-emp-noura | AE | offboarding | 16000 | 11000 | 6415.79 | 2026-10-10 |  | 
+demo-emp-omar | AE | onboarding | 14000 | 9500 | 0 |  |  | 2026-11-18
+demo-emp-reem | SA | onboarding | 11000 | 8000 | 1283.94 |  |  | 2027-02-01
+demo-emp-salim | AE | active | 19000 | 13000 | 21480.65 |  |  | 
+demo-emp-sarah | SA | offboarding | 13000 | 9000 | 19824.78 | 2026-09-30 |  | 
+demo-emp-sultan | SA | terminated | 14000 | 9500 | 3449.69 | 2024-09-01 |  | 
+demo-emp-yusuf | AE | terminated | 12000 | 8000 | 0 | 2023-08-25 |  | 
+literal "Antum Regional Hub" rows holding it: NONE
+literal "Dubai Internet City, UAE / Riyadh Business Gate, KSA" rows holding it: NONE
+literal "TL-882733-G" rows holding it: NONE
+literal "EST-99228" rows holding it: NONE
+literal "QIWA-88271" rows holding it: NONE
+literal "HR Director" rows holding it: NONE
+literal "privacy@antum.ae" rows holding it: NONE
+
+== login 200 access_role=hr_admin
+== template files on disk: ["breach-notification-letters","data-processing-agreement","dpia-questionnaire","final-settlement-statement","ksa-employment-contract","privacy-notice","uae-employment-contract"]
+
+== served documents: name | status | bytes | md5 | invented literals present
+notice-raw | 200 | 17665 | 6004b0a5b23ac5aa68415da5e45ec2cd | -
+template-breach-notification-letters--demo-emp-ahmad | 200 | 11302 | 770ae37135634a4a8393a2d8605fe743 | -
+template-data-processing-agreement--demo-emp-ahmad | 200 | 14908 | a18d438a3f200a48edea6bfddf6c5791 | -
+template-dpia-questionnaire--demo-emp-ahmad | 200 | 8837 | 770b522dde97d3e75c93e941f0675785 | -
+template-final-settlement-statement--demo-emp-noura | 200 | 926 | 0915cb3278310f2516540b871cb9b207 | -
+template-ksa-employment-contract--demo-emp-fatima | 200 | 836 | 26fa8e649df902d2fcfb726ff2f58aec | -
+template-privacy-notice--demo-emp-ahmad | 200 | 769 | 814e0542938a9caad514304f35b5574a | -
+template-uae-employment-contract--demo-emp-ahmad | 200 | 852 | d31401b61319d576b09dfc5737292ad9 | -
+### live product on 3000 after the pass: 200
+Terminated
+Terminated
+### instances stopped; listeners on 4752/4753: 0
