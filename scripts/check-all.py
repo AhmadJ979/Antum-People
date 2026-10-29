@@ -163,7 +163,12 @@ CHECKS = [
          # different one, so a branch green said nothing about the branch. @HEAD is substituted at
          # run time with the full sha of the tree under judgement (see the run loop).
          cmd=[PY, ACCESS_MODEL], env={"VERIFY_TREE": "@HEAD"},
-         what="the 137-check access-model instrument against docs/access-model.md, the document the product's access model is delivered in"),
+         # The "-check" figure is NOT written here. It was hand-typed as "137-check" and stayed
+         # there while the instrument grew to 141, so the entry point's own description of a
+         # check it runs disagreed with that check's own output. It is now read out of the
+         # instrument's summary line on every run (see instrument_label below).
+         what="the {checks}-check access-model instrument against docs/access-model.md, the document the product's access model is delivered in",
+         count_from_instrument=True),
 
     dict(id="cors-error-contract", mode="full", expect="green", home="operator CLI, off-host",
          cmd=["bash", "scripts/cors-error-contract-test.sh"],
@@ -222,6 +227,21 @@ ACTORS = [
 
 def git(*args):
     return subprocess.run(["git", "-C", ROOT, *args], capture_output=True, text=True).stdout.strip()
+
+def instrument_label(what, out):
+    """A count the instrument owns, taken from the instrument - never typed here.
+
+    The instrument's last line is `NNN/NNN checks hold against <sha> (ran=N, ...)`. Any `{checks}`
+    placeholder in a registry entry's `what` is filled from it. If that line is absent the
+    placeholder is left VISIBLE - a reader sees `the {checks}-check ...` rather than a number
+    nobody measured - and the run is already red or CANNOT-JUDGE in that case, since no summary
+    means the instrument did not reach a verdict.
+    """
+    if "{checks}" not in what:
+        return what
+    m = re.search(r"^(\d+)/(\d+) checks hold", out, re.M)
+    return what.replace("{checks}", m.group(2)) if m else what
+
 
 def tail_lines(text, n=TAIL_LINES):
     """The bounded, decisive end of a check's own output. A red check's LAST line is often
@@ -324,6 +344,8 @@ def main(argv):
                       (re.match(r"^# (tests|suites|pass|fail) (\d+)\s*$", ln) for ln in out.splitlines()) if m]
             if totals:
                 out = "server suite: " + ", ".join("%s %s" % (k, v) for k, v in totals)
+        if c.get("count_from_instrument"):
+            c = dict(c, what=instrument_label(c["what"], out))
         shown, hidden = tail_lines(out, 1 if word in ("OK", "RED-KNOWN") else TAIL_LINES)
         rows.append((c, word, code, shown, dt, hidden))
 
