@@ -333,7 +333,7 @@ IDENTIFY ──▶ CLASSIFY ──▶ ASSESS ──▶ CONTRACT ──▶ APPROV
 
 The full **bilingual Data Processing Agreement** is provided in:
 
-**`/home/team/shared/templates/data-processing-agreement.md`**
+**`templates/data-processing-agreement.md`** (this repository; the duplicate that stood at `/home/team/shared/templates/data-processing-agreement.md` was retired on 2026-10-29 — nothing stands at that path)
 
 It covers the statutory minimums required by both regimes:
 
