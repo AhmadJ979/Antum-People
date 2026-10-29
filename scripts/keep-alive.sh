@@ -62,38 +62,56 @@
 #   the server it had started kept running - the observed "site up, watchdog gone, nothing
 #   in the log" state. Detaching removes that class of death.
 #
-# TWO ARMING PATHS - TEST BOTH BEFORE SHIPPING A CHANGE TO THIS FILE:
+# ARMING PATHS - TEST 1 AND 2 BEFORE SHIPPING A CHANGE TO THIS FILE:
 #   1) setsid nohup bash scripts/keep-alive.sh   (what deploy-main.sh does, and the documented
 #      manual recovery) -> the loop is already a session leader, so it does NOT re-exec itself.
 #   2) nohup bash scripts/keep-alive.sh &       -> the loop self-detaches and re-execs under setsid.
+#   3) a login shell (which is also how the platform's own boot action runs): the hook at
+#      /etc/profile.d/zz-antum-product-guard.sh arms the loop. And once a loop is up, IT keeps that
+#      hook installed - see PATH 3 under the KNOWN HARD LIMIT note below.
 #   Path 1 is the one that runs in production and the stricter of the two: only path 2 creates
 #   a re-exec, and only a re-exec can put a marker into the exec-time environment that
 #   /proc/<pid>/environ reports. Anything that recognises this loop's own processes through
 #   the environment must therefore be checked on path 1. Regression test for both:
 #   scripts/keep-alive-deploypath-test.sh
 #
-# KNOWN HARD LIMIT - do not invent a mechanism this host does not have:
-#   there is no cron and no systemd here, so nothing re-arms the loop at BOOT. Two things arm it:
-#   1) the deploy script, on every cutover; and
-#   2) since 2026-10-13, the login-shell hook scripts/antum-product-guard-hook.sh, installed by
-#      deploy-main.sh as /etc/profile.d/zz-antum-product-guard.sh: a login/interactive shell (what
-#      the platform opens whenever it wakes an agent) arms the loop when no live guard can be
-#      verified, and appends every attempt and every outcome to server/guard-hook.log.
-#   So after a host restart the loop returns on the next *session* - not at boot, and not on the
-#   next human. That gap had a price: on 2026-10-13 the third restart killed the product and its
-#   guard, and the public URL answered 200 with the platform's placeholder until someone re-armed
-#   it by hand.
-#   The hook is a stopgap for owner decision 5 (an off-host check, or a scheduled task on a paid
-#   plan), and it can only arm anything once such a session exists.
+# KNOWN HARD LIMIT - do not invent a mechanism this host does not have (re-measured 2026-10-29):
+#   There is no cron (`crontab` and /usr/sbin/cron are absent) and no systemd running (pid 1 is
+#   `/bin/sh /entrypoint.sh`; /run/systemd/system does not exist). The platform's supervisor is
+#   /usr/local/bin/sandbox-api, started by /entrypoint.sh, and it is platform-owned.
+#
+#   BUT the thing it starts at boot is a LOGIN SHELL, and a login shell sources /etc/profile.d:
+#   measured, pid 339 = `bash -lc '<the site dev server loop>'`, forked by sandbox-api at 06:07:39,
+#   four seconds after pid 1. So path 2 below IS a boot-time re-arm - measured directly with
+#   `bash -lc 'echo ${ANTUM_GUARD_HOOK_RAN:-unset}'` -> `RAN=1`. After a host restart the loop returns
+#   AT BOOT on the next boot, provided the hook file is installed at that moment.
+#
+#   On 2026-10-29 it was not installed at that moment, and that is the whole of that day's outage:
+#   the hook log's first line for 2026-10-29 is 06:27:13, the installed file's mtime is 06:27:07 (the
+#   recovery deploy), and install-host-tools.sh only rewrites a target that DIFFERS (`cmp -s`, line
+#   ~187) - so the mtime proves the file was ABSENT, not merely rewritten. The boot's login shell
+#   therefore armed nothing, the platform's site dev server kept 3000, and the public URL answered 200
+#   with the placeholder for 18 minutes (boot 06:07:35 -> found by a person 06:25:41 -> recovered
+#   06:26:48). The hook lives in /etc; the only durable volume here is /home.
+#
+#   PATH 3 closes that, as far as it can be closed from inside the guest: this loop re-installs the
+#   hook from the deployed tree whenever it is missing or differs (scripts/ensure-login-hook.sh, called
+#   once per poll). A hook deleted from /etc while a loop is up comes back within one poll.
+#   THE RESIDUAL GAP, stated rather than implied: if /etc loses the hook while NO loop is running
+#   (a platform image refresh, which also kills this loop), nothing inside the guest re-arms anything
+#   until a session or a deploy runs. That gap is the one owner decision 5 (an off-host check) exists
+#   for, and nothing here may be written up as covering it.
 #
 # TESTING OFF THE LIVE TREE (WORKFLOW rule 14):
 #   The paths and the two waits can be redirected for a scratch run without changing the
-#   live defaults: ANTUM_DEPLOY_DIR, ANTUM_PORT, ANTUM_ENV_FILE, ANTUM_POLL_INTERVAL,
-#   ANTUM_START_DELAY. Only set them in a test; the deployed tree uses the defaults.
+#   live defaults: ANTUM_DEPLOY_DIR, ANTUM_PORT, ANTUM_ENV_FILE, ANTUM_HOOK_DST,
+#   ANTUM_POLL_INTERVAL, ANTUM_START_DELAY. Only set them in a test; the deployed tree uses the
+#   defaults.
 
 DEPLOY_DIR="${ANTUM_DEPLOY_DIR:-/home/team/shared/probable-octo-sniffle}"
 PORT="${ANTUM_PORT:-3000}"
 ENV_FILE="${ANTUM_ENV_FILE:-/etc/profile.d/cto-env-vars.sh}"
+HOOK_DST="${ANTUM_HOOK_DST:-/etc/profile.d/zz-antum-product-guard.sh}"
 POLL_INTERVAL="${ANTUM_POLL_INTERVAL:-60}"
 START_DELAY="${ANTUM_START_DELAY:-10}"
 LOCK_ATTEMPTS="${ANTUM_LOCK_ATTEMPTS:-3}"
@@ -595,6 +613,25 @@ log "guard starting: port $PORT, deploy dir $DEPLOY_DIR, poll ${POLL_INTERVAL}s,
 sleep "$START_DELAY" 9>&-
 
 while true; do
+    # PATH 3 - KEEP THE BOOT-TIME RE-ARM INSTALLED, BEFORE ANYTHING ELSE IN THE POLL.
+    # The login-shell hook is the only thing that arms this loop at boot, it lives in /etc, and /etc
+    # is not the durable volume. This costs two md5s of a 10 KB file, writes nothing when the hook
+    # already matches, and is the one repair that can put the boot path back without a person.
+    # It must never be able to stop the loop: a failure is logged once per change of state, and the
+    # detail lives in the ensure script's own log.
+    if [ -f "$DEPLOY_DIR/scripts/ensure-login-hook.sh" ]; then
+        if ANTUM_DEPLOY_DIR="$DEPLOY_DIR" ANTUM_HOOK_DST="$HOOK_DST" \
+             bash "$DEPLOY_DIR/scripts/ensure-login-hook.sh" >/dev/null 2>&1 9>&-; then
+            hook_rc=0
+        else
+            hook_rc=1
+        fi
+        if [ "$hook_rc" -ne 0 ] && [ "${last_hook_rc:-0}" -eq 0 ]; then
+            log "the login-shell hook at $HOOK_DST is missing or wrong and could not be restored - THIS HOST HAS NO BOOT-TIME RE-ARM; details in $DEPLOY_DIR/server/login-hook-ensure.log"
+        fi
+        last_hook_rc="$hook_rc"
+        unset hook_rc
+    fi
     check_health
     health=$?
 

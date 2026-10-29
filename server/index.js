@@ -1,3 +1,10 @@
+// ── THE PORT RULE RUNS FIRST, AND THAT ORDER IS THE SAFETY PROPERTY ──────────────────────────────
+// server/db.js opens and migrates the product database at REQUIRE time, so a process that is going to
+// refuse its port must refuse before db.js is required. server/public-port.test.js asserts that this
+// call sits above `require('./db')` in this file. Do not move it below the requires.
+const publicPort = require('./public-port');
+publicPort.enforce();
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -1474,7 +1481,9 @@ app.use((err, req, res, next) => {
   if (res.headersSent) return next(err); // response already streaming: let express close it
   res.status(status).json({ error: GENERIC_ERROR_BY_STATUS[status] || 'Internal Server Error' });
 });
-// Bind server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Antum server listening on port ${PORT}`);
-});
+// Bind server.
+// The callback and the error handler both live in server/public-port.js: what a bind failure SAYS is
+// the operator's first move (name the port and its holder), and leaving it as node's bare unhandled
+// EADDRINUSE stack meant the one message that mattered said neither.
+const listener = app.listen(PORT, '0.0.0.0', () => publicPort.onListening(PORT));
+listener.on('error', (err) => publicPort.onListenError(PORT, err));
