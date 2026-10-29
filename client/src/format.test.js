@@ -2,16 +2,27 @@
  * ONE CONVENTION, ONE PLACE — and the guard that keeps it there.
  *
  * The owner's ruling is that numerals are Latin digits throughout; the defects this file answers to
- * are (a) seven display sites in `App.tsx` calling `toLocaleString(undefined, ...)`, i.e. taking
+ * are (a) money display sites in `App.tsx` calling `toLocaleString(undefined, ...)`, i.e. taking
  * their convention from the machine the reader sits at, so one grid could show two digit
  * conventions at once, and (b) three date shapes on the same screen (`2026-09-19`, `19 Sep 2026`,
- * `29 October 2026`).
+ * `29 October 2026`). Measured at `56aa280`, counted mechanically rather than taken from a plan:
+ * **9** money call sites in `App.tsx` (7 `formatAmount`, 2 `money`), all routed through
+ * `src/format.js`, and **8** date sites. The guard at the foot of this file asserts those counts, so
+ * a site that stops routing reddens.
  *
  * Four things are asserted, and the ORDER matters — the last two are what keep the first two from
  * being decoration:
  *   1. the conventions themselves, on the returned STRINGS (not on the existence of a function);
- *   2. that each convention equals the server's own expression, read out of `server/` every run, so
- *      a figure on screen is the string that goes into the served document;
+ *   2. that the screen's figure still carries the server's DIGITS, read out of `server/` every run:
+ *      strip the group separators and the screen's string is byte-identical to
+ *      `Number(v).toFixed(2)`, with exactly two decimals. The separators are the ONLY licensed
+ *      difference — the owner's ruling of 2026-10-29 reverses that one detail of #334: amounts read
+ *      grouped on screen (`1,234,567.50`) while the served document beside them keeps
+ *      `1234567.50`. This REPLACED an equality assertion (`formatAmount(v) === Number(v).toFixed(2)`)
+ *      that had begun to encode the retired no-separator convention. The replacement is STRONGER,
+ *      not weaker: a rounding or precision regression (`1234567.5` -> `1234567.49`, or one decimal
+ *      instead of two) still reddens, and a separator that goes missing reddens too — which a
+ *      deleted assertion could never have done;
  *   3. that NO module under `client/src` outside `src/format.js` reaches for a locale-sensitive API
  *      — the tree is WALKED, so a file added tomorrow is covered, and a guard that cannot see its
  *      subject is a failure rather than a pass;
@@ -26,7 +37,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
-  AMOUNT_DECIMALS, DATE_LOCALE, DATE_OPTIONS, formatAmount, formatDate, formatTime, money,
+  AMOUNT_DECIMALS, DATE_LOCALE, DATE_OPTIONS, GROUP_SEPARATOR, formatAmount, formatDate, formatTime,
+  money,
 } from './format.js';
 
 const SRC = import.meta.dirname;
@@ -36,6 +48,10 @@ const SERVER = path.join(REPO, 'server', 'index.js');
 /** The server's own two expressions, as measured at `4c8779b` — a citation, not a memory. */
 const SERVER_MONEY = "Number(v).toFixed(2)";
 const SERVER_DATE_OPTIONS = "{ day: 'numeric', month: 'long', year: 'numeric' }";
+/** The screen's figure minus its group separators: what must equal the server's expression. */
+const unGroup = (text) => text.split(GROUP_SEPARATOR).join('');
+/** The screen's figure WITH its separators: 1-3 digits, then groups of exactly 3, then `.dd`. */
+const GROUPED_SHAPE = new RegExp(`^-?\\d{1,3}(\\${GROUP_SEPARATOR}\\d{3})*\\.\\d{2}$`);
 
 // ---------------------------------------------------------------- a comment-aware blanker
 /**
@@ -103,18 +119,29 @@ function walkSource(dir, acc = []) {
 }
 
 // ------------------------------------------------------------------------ 1. the conventions
-test('a figure is two decimals, Latin digits, and no group separator — everywhere', () => {
+test('a figure is two decimals, Latin digits, grouped in threes — everywhere', () => {
   assert.equal(AMOUNT_DECIMALS, 2);
-  assert.equal(formatAmount(1234567.5), '1234567.50');
+  assert.equal(GROUP_SEPARATOR, ',', 'the one separator is an ASCII comma, never a locale space');
+  assert.equal(formatAmount(1234567.5), '1,234,567.50');
   assert.equal(formatAmount(0), '0.00');
   assert.equal(formatAmount(12), '12.00');
-  assert.match(formatAmount(1234567.5), /^\d+\.\d{2}$/);
+  assert.equal(formatAmount(999), '999.00');
+  assert.equal(formatAmount(1000), '1,000.00');
+  assert.equal(formatAmount(-1234.5), '-1,234.50');
+  assert.match(formatAmount(1234567.5), GROUPED_SHAPE);
+  // The separator is owed from a thousand up, and owed NOWHERE else: under it there is nothing to
+  // group, and a four-digit year or count must never be handed to this function in the first place
+  // (grouping applies to money alone — the call-site audit below is where that is asserted).
+  assert.equal(formatAmount(999).includes(GROUP_SEPARATOR), false);
+  // A value `toFixed` writes as an exponent comes back exactly as `toFixed` wrote it, never
+  // half-grouped: `1e21` is `'1e+21'`, and this module must not turn it into `'1e+2' + '1'`.
+  assert.equal(formatAmount(1e21), (1e21).toFixed(2));
   assert.equal(/[\u0660-\u0669\u06f0-\u06f9]/.test(formatAmount(1234567.5)), false,
     'a figure must never carry Arabic-Indic or Extended Arabic-Indic digits');
 });
 
 test('money() puts the currency in front and never invents one', () => {
-  assert.equal(money('AED', 1234.5), 'AED 1234.50');
+  assert.equal(money('AED', 1234.5), 'AED 1,234.50');
   assert.equal(money('SAR', 0), 'SAR 0.00');
   assert.equal(money(null, 12), '\u2014 12.00');
   assert.equal(money('', 12), '\u2014 12.00');
@@ -151,7 +178,7 @@ test('a time has one shape too — and nothing on screen uses it yet, said out l
 });
 
 // ------------------------------------------------------- 2. the conventions ARE the server's
-test('the client figure is the string the server writes, read out of server/ every run', () => {
+test('the client figure carries the server\'s digits, read out of server/ every run', () => {
   assert.ok(fs.existsSync(SERVER),
     `CANNOT-JUDGE: ${SERVER} is absent, so agreement with the server cannot be checked — and a check `
     + 'that cannot see its subject must not pass');
@@ -162,9 +189,25 @@ test('the client figure is the string the server writes, read out of server/ eve
     `the server no longer writes amounts as ${SERVER_MONEY} — re-derive src/format.js against it`);
   assert.ok(server.includes(SERVER_DATE_OPTIONS),
     `the server no longer renders dates with ${SERVER_DATE_OPTIONS} — re-derive src/format.js`);
-  // And then the agreement itself, on returned strings, over a table of amounts.
-  for (const v of [0, 12, 1234.5, 1234567.5, 0.005, 1e6 + 0.01]) {
-    assert.equal(formatAmount(v), Number(v).toFixed(2), `figure ${v} disagrees with the server's expression`);
+  // And then the agreement itself — on the DIGITS — over a table of amounts. Three assertions per
+  // row, because the first alone can be satisfied vacuously:
+  //   (i)   the screen's figure minus its separators is byte-identical to the server's expression —
+  //         so a rounding or precision change reddens here;
+  //   (ii)  the grouped SHAPE and the exactly-two-decimals reading — stripping commas cannot notice
+  //         a separator that is simply ABSENT, so (i) alone would stay green on a dropped one;
+  //   (iii) the separator is present exactly when the value reaches a thousand — a function that
+  //         stopped grouping altogether satisfies (i) and (ii).
+  for (const v of [0, 12, 999, 1000, 1234.5, 1234567.5, 0.005, 1e6 + 0.01, -1234.5]) {
+    const screen = formatAmount(v);
+    const serverExpression = Number(v).toFixed(2);
+    assert.equal(unGroup(screen), serverExpression,
+      `figure ${v}: the screen's digits are no longer the server's expression once the separators are removed`);
+    const decimals = screen.split('.')[1];
+    assert.equal(decimals === undefined ? 0 : decimals.length, AMOUNT_DECIMALS,
+      `figure ${v} does not carry exactly ${AMOUNT_DECIMALS} decimals`);
+    assert.match(screen, GROUPED_SHAPE, `figure ${v} is not grouped in threes`);
+    assert.equal(screen.includes(GROUP_SEPARATOR), Math.abs(Number(v)) >= 1000,
+      `figure ${v} must carry a separator exactly when it reaches a thousand`);
   }
   const day = new Date(2026, 9, 29);
   assert.equal(formatDate(day), day.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }));
@@ -202,10 +245,13 @@ test('every figure and date site in App.tsx goes through the module', () => {
   const app = blankComments(fs.readFileSync(path.join(SRC, 'App.tsx'), 'utf8'));
   assert.equal((app.match(/toLocale/g) || []).length, 0, 'a raw locale call is back in App.tsx');
   assert.equal((app.match(/toFixed/g) || []).length, 0, 'App.tsx formats a figure itself');
-  // The counts, published before → after: 7 figures (all raw `toLocaleString` before) and 8 dates
-  // (raw `YYYY-MM-DD` before, beside `19 Sep 2026` from probationTimeline). `>=` so a new site does
-  // not have to argue with this line, but a site that stops routing does.
-  assert.ok((app.match(/formatAmount\(/g) || []).length >= 7, 'fewer than the seven figure sites route');
+  // The counts, re-derived mechanically at `56aa280` and published before → after: **7**
+  // `formatAmount` sites and **2** `money` sites — 9 money call sites in all — beside **8**
+  // `formatDate` sites. Every one of the nine is money; none is a year, a count, a day-number, an ID
+  // or a version (audited site by site, in the PR body). `>=` so a new site does not have to argue
+  // with this line, but a site that stops routing does.
+  assert.ok((app.match(/formatAmount\(/g) || []).length >= 7, 'fewer than the seven formatAmount sites route');
+  assert.ok((app.match(/\bmoney\(/g) || []).length >= 2, 'fewer than the two money() sites route');
   assert.ok((app.match(/formatDate\(/g) || []).length >= 8, 'fewer than the eight date sites route');
   assert.match(app, /import \{[^}]*\bformatAmount\b[^}]*\bformatDate\b[^}]*\} from '\.\/format\.js';/,
     'App.tsx must import the conventions from the one module');
@@ -253,7 +299,10 @@ test('in an ar_EG environment both readings stay Latin (control)', () => {
   console.log(`control (${reading.locale}): pinnedMoney=${reading.pinnedMoney} pinnedDate=${reading.pinnedDate}`
     + ` unpinnedMoney=${reading.unpinnedMoney} unpinnedDate=${reading.unpinnedDate}`
     + ` arabicDigits=${reading.arabicDigits}`);
-  assert.equal(reading.pinnedMoney, '1234567.50', `the pinned figure moved in locale ${reading.locale}`);
+  assert.equal(reading.pinnedMoney, '1,234,567.50', `the pinned figure moved in locale ${reading.locale}`);
+  // The grouping is ours; the digits are the server's — and they must survive the locale too.
+  assert.equal(unGroup(reading.pinnedMoney), '1234567.50',
+    `the pinned figure's digits moved in locale ${reading.locale}`);
   assert.equal(reading.pinnedDate, '19 September 2026', `the pinned date moved in locale ${reading.locale}`);
   // Where the host can represent Arabic at all, the UNPINNED calls must differ here — otherwise
   // this control is not exercising the defect it exists for.
