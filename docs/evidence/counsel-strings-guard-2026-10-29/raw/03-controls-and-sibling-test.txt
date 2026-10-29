@@ -1,0 +1,43 @@
+=== the two controls and the two honesty arms, from scripts/counsel-strings-test.sh ===
+head : 5215f9c
+cmd  : bash scripts/counsel-strings-test.sh
+
+counsel-strings sibling test  (tree: /home/team/shared/probable-octo-sniffle)
+  1. the guard is green on this tree, and judges a non-empty set
+          CHANGED, UNMARKED: 0
+          NEW / NO ENTRY   : 0
+          NO LONGER SERVED : 0
+          UNCHANGED        : 48
+        
+        VERDICT: every served legal unit matches the manifest. This says the text did not move since 5215f9c - it does NOT say anybody read it. exit 0
+        manifest units=48  served units=48  exit=0
+  ok    the guard is green on this tree (exit 0)
+  ok    it judged 48 served legal units (a run that judges nothing cannot pass)
+  ok    the served set and the manifest set are equal (48 = 48)
+  2. the two controls, and the two honesty arms (scratch copies; the repository is untouched)
+          ARM 0 - the clean copy: the guard must be GREEN against its own manifest
+          arm 0 exit=0 (want 0)
+          ARM A - SCOPE CONTROL: an item LABEL (chrome the screen shows, no legal content) is edited; the guard must stay GREEN
+          the chrome string as served: before 'Passport copy'  after 'Passport copy (scope control)'
+          arm A exit=0 (want 0 - a chrome edit is not this guard's business)
+          ARM B - CHANGE CONTROL: one served LEGAL sentence is edited; the guard must REDDEN and name the unit
+          arm B exit=1 (want 1) - the red names: 4 served legal unit(s) changed with the manifest not updated in this commit: doc:final-settlement-statement, doc:ksa-employment-contract, doc:privacy-notice, doc:uae-employment-contract
+          ARM C - the same edit, then the manifest is updated WITH a note: the run must be green and print the unit as MARKED, review still unreviewed
+            marked: doc:final-settlement-statement   selftest: one word of the refusal sentence moved (arm C)
+            marked: doc:ksa-employment-contract   selftest: one word of the refusal sentence moved (arm C)
+            marked: doc:privacy-notice   selftest: one word of the refusal sentence moved (arm C)
+            marked: doc:uae-employment-contract   selftest: one word of the refusal sentence moved (arm C)
+          marked units in the rewritten manifest: doc:final-settlement-statement, doc:ksa-employment-contract, doc:privacy-notice, doc:uae-employment-contract
+          arm C exit=0 (want 0)
+          arm D (extra): a manifest claiming a review -> exit=1 (want 1)
+        selftest: all arms behaved as required
+  ok    every selftest arm behaved as required (exit 0)
+  ok    SCOPE control: the served chrome string moved and the guard stayed green
+  ok    CHANGE control: the legal edit reddened and the red names the document unit
+  ok    a marked change is green-and-unreviewed; a claimed review is refused
+  3. an invocation this script does not understand is refused, never a silent green
+        REFUSED: '--from-tree' is not an option this script understands. It refuses rather than guessing, because a run that tested nothing must not exit 0.
+  ok    an unknown flag exits 2 (CANNOT-JUDGE), not 0
+
+counsel-strings-test: 8 ok, 0 FAIL
+EXIT=0

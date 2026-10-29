@@ -1,0 +1,4 @@
+run 1: 48 hashed units
+run 2: 48 hashed units
+differing lines: 0
+VERDICT: IDENTICAL - every id hashes the same on two independent rigs
