@@ -805,13 +805,21 @@ workspace track with its owner names; and any illustrative figure without its la
 - **No i18n layer and no direction handling.** `dir=` appears **0** times, there is no `lang`
   attribute and no language state, and every UI string is an English literal. The header switches
   **jurisdiction**, not language — there is no language switch in the product at all.
-- **Numbers already follow the browser, dates do not.** Money and counts use
-  `toLocaleString(undefined, …)` — **7 sites** (e.g. `App.tsx:1524`) — where `undefined` means
-  *the runtime locale*: on a machine set to `ar-AE` the digits change while the words around them
-  stay English. Dates are ISO strings printed raw: the workspace row prints
-  `due {line.due_date} ({line.due_rule})` — it renders as, say, `due 2026-10-09 (D-3) · in 2 d` (`App.tsx:2488`, with its distance at `:2489`–`:2493`), and the
-  roster prints `Day 49` from
-  `Math.ceil((Date.now() - new Date(emp.start_date).getTime()) / (1000*60*60*24))` (`App.tsx:1858`).
+- **Numbers and dates are convention-pinned — amended 2026-10-29.** The owner's numeral ruling
+  (Latin digits throughout) is implemented: the seven figure sites now read `formatAmount(...)`
+  (`App.tsx:1524`, `formatAmount(analytics.avgCostPerHireAE)`), and the convention it applies is
+  the server's own `Number(v).toFixed(2)` — two decimals, Latin digits, **no** group separator,
+  which is the string the served documents carry. Until that pass money and counts were formatted
+  with the ambient locale (a `undefined` where a locale belongs), so on a machine set to Arabic the
+  digits changed while the words around them stayed English. **Not true at this revision:**
+  `client/src` holds **0** ambient-locale calls outside `src/format.js`, which `src/format.test.js`
+  enforces by walking the tree.
+- **Dates are printed in one shape, not raw — amended 2026-10-29.** Every reader-facing date goes
+  through the same module, `formatDate`, so the workspace row prints
+  `due {formatDate(line.due_date)} ({line.due_rule})` — it renders as, say, `due 9 October 2026 (D-3) · in 2 d` (`App.tsx:2488`, with its distance at `:2489`–`:2493`), the shape the served
+  documents already use. The roster still prints `Day 49` from
+  `Math.ceil((Date.now() - new Date(emp.start_date).getTime()) / (1000*60*60*24))` (`App.tsx:1858`) —
+  a count, computed and printed in Latin digits, so it is unaffected by the reader's machine.
 - **The layout is written with physical utilities.** `space-x-*` **28** with
   `space-x-reverse` **0**; `border-r-*` **2**; `ml-*` **4** and `mr-*` **5**; `text-left` **6**
   and `text-right` **3** — against `text-start`/`text-end` **0**, `border-s-*`/`border-e-*` **0**
@@ -1196,7 +1204,8 @@ screens, the four status words the hire reads, and what the product can honestly
 is a reference string and nothing has a delivery channel; §8B names the EN/AR and RTL consequences and
 measures the client as it stands (`dir=` 0, no language state, `space-x-*` 28 against
 `space-x-reverse` 0, no logical-direction utilities, `toLocaleString(undefined, …)` in 7 places, ISO
-dates printed raw); §8C lays out five identity options with their consequences and **decides none of
+dates printed raw — **both of the last two since amended 2026-10-29: 0 ambient-locale calls, one
+date shape**); §8C lays out five identity options with their consequences and **decides none of
 them** — that is Q8. §9 gains D14–D16, §10 gains Q8–Q12, §11's P2-6 row carries the acceptance tests
 this pass adds, and §12 records what still does not exist. The consent notice's text is **not** in
 this document: it comes from the compliance expert's memo at the portal boundary (task `5c0a9ceb`),
