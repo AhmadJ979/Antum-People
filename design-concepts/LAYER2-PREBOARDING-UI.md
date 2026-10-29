@@ -193,7 +193,7 @@ F1.)
 | **Flag chip** (🔴 / 🟠 / ⚪) | From the derived flag in §5. First thing scanned, always left-most. | **Nothing** — must be computed |
 | **Name** | Case subject. | `employees.first_name/last_name` |
 | **Job role · Department** | The role the offer was accepted for. | `employees.role`, `employees.department` |
-| **Jurisdiction** (UAE / KSA chip) | The case's **own** recorded value, right-aligned on the name line. **Kept by the owner's decision (2026-10-07)**, decided **knowingly** — he was told it is redundant on a scoped list and kept it, so revisiting it is his call, not a reviewer's. | `preboarding_cases.jurisdiction` — rendered as `row.jurisdiction` since P2-1 (`App.tsx:2202`–`:2204`) |
+| **Jurisdiction** (UAE / KSA chip) | The case's **own** recorded value, right-aligned on the name line. **Kept by the owner's decision (2026-10-07)**, decided **knowingly** — he was told it is redundant on a scoped list and kept it, so revisiting it is his call, not a reviewer's. | `preboarding_cases.jurisdiction` — rendered as `row.jurisdiction === 'AE' ?` in the chip since P2-1 (`App.tsx:2202`–`:2204`) |
 | **Start date** | The anchor of the whole surface. A case cannot exist without one (P2-1). | `employees.start_date` |
 | **Relative time** — one reading, from the flag | **The row renders the flag's own derivation, never a second computation** (lead ruling, 2026-10-07, §5) — so one row can never carry two distances that disagree. Derived from the start date **at read time**, never stored; whole days = `ceil((start_date 00:00 − now) / 24h)`. The three readings, exactly: **clear / not raised → whole days** (`· 14 d`) · **inside 48 hours → hours, one decimal** (`· 7.5 h before 00:00 on the start date`) · **start date passed → `started 1 d ago`**, absolute value, **never a bare negative** — and the same absolute branch catches the case a reader will not think of, a *clear* case whose start date has passed with every item complete (`· started 6 d ago`). §5's copy rules carry the arithmetic behind this. | **Nothing** — must be computed |
 | **Employee-track progress** | `n of m` items complete, plus a bar. Counts, not percentages-as-scores. | **Partly** — counts computable from `onboarding_tasks.status`; the *track split* has no column (§9 D2) |
@@ -612,7 +612,7 @@ not a checkbox buried in a settings panel — and what it gates on is a record t
   notice has been opened in that session (`:2080`–`:2084`). The screen shows **that** the notice was
   shown, **by whom**, and **against which version** — it never claims a consent, and never shows the
   notice's contents.
-  *(Corrected 2026-10-09: this bullet previously cited `App.tsx:981`–`:982` for `✓ Recorded <date>`
+  *(Corrected 2026-10-09, and the strings it quotes are gone: the block now reads `Notice-based — recorded per pre-boarding case` at `App.tsx:1802`. This bullet previously cited `App.tsx:981`–`:982` for `✓ Recorded <date>`
   / `✗ Missing / required`. Those lines are offboarding code, and the strings cited belong to a
   different object — the **employee** record's `consent_granted` flag, shown as `✓ GRANTED ON
   <consent_date>` / `✗ MISSING / REQUIRED` at `:1407`–`:1408`. A later pass replaced the pair that
@@ -1203,7 +1203,7 @@ this document: it comes from the compliance expert's memo at the portal boundary
 and nothing here may be used to invent it.*
 *The same pass re-read every citation it touched and **corrected two**: §8's consent-line citation
 (`App.tsx:981`–`:982`) pointed at offboarding code and at the wrong object — the case's own line is
-`App.tsx:1863`–`:1864`, while `:1407`–`:1408` is the **employee** flag — and the workspace due-date
+`App.tsx:1802`, where the block reads `Notice-based — recorded per pre-boarding case`, and `:1411`, while `:1407`–`:1408` is the **employee** flag — and the workspace due-date
 row is the `line.due_date` / `line.due_rule` print at `App.tsx:2488`, with its distance at `:2489`–`:2493`, not the range this document carried. §8
 also now names the two consent stores (`preboarding_consents` for the case; `consent_records` +
 `employees.consent_granted` at Layer 1) and the gap that `consent_version: 'v1'` is hard-coded in the
