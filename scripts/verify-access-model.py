@@ -194,7 +194,7 @@ def git_show(path):
 # Named as data on 2026-10-20 so the §10.2 partition check below counts the SAME list this loop
 # enforces: two readers of one list drift apart, one list cannot.
 DOC_CITATIONS = [
-        ("index.js:921", "server/index.js", "a named actor is required to record an offer acceptance",
+        ("index.js:1005", "server/index.js", "a named actor is required to record an offer acceptance",
          "§5.2 rule 3 cites the refusal itself, not the comment above it"),
         # Added 2026-10-20, after a merge MOVED this file's lines under the document: the checker's own
         # tree claims for server/preboarding-items.js reddened (343/346 -> 360/363) while the document's
@@ -219,7 +219,7 @@ DOC_CITATIONS = [
         # Added 2026-10-26 with P3-3 (row `bb60c7a3`): the §3.1 row for the escalation read. Before this,
         # that row's citation was compared to nothing — the tree's own route count would redden if the
         # route vanished, but the document's pointer to it could drift onto any other line in silence.
-        ("index.js:1371", "server/index.js", "app.get('/api/probation/escalations'",
+        ("index.js:1455", "server/index.js", "app.get('/api/probation/escalations'",
          "§3.1 cites the P3-3 escalation read route itself, not the comment block above it"),
         # Added 2026-10-26 with the re-ground in §10.7. The ROUTES append moved every line below it by +15;
         # these three sites were covered by a tree claim alone, so this page could drift onto any other line
