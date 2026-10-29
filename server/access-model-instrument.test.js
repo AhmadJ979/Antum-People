@@ -72,6 +72,17 @@ function resolvedLines(out) {
   return m;
 }
 
+// The labels whose hint did NOT name the line the symbol resolved to. Same shape as the instrument's own
+// drift report, read off the run rather than assumed: `(hint N is stale)`, never the doc-citation wording.
+function staleLabels(out) {
+  const s = new Set();
+  for (const line of out.split('\n')) {
+    const m = line.match(/^(?:OK|FAIL)\s+\[(.+?)\]\s+server\/[^\s:]+:\d+\s+\(hint \d+ is stale\)/);
+    if (m) s.add(m[1]);
+  }
+  return s;
+}
+
 // What the two runs did per symbol: claims in `file` must resolve exactly `delta` lines lower, and
 // claims elsewhere must NOT move. Independent of how stale the hint table is — which is the whole
 // point (row 7daa1d44: with a fully stale table the count-based shape had no signal at all).
@@ -212,9 +223,10 @@ test('a document from another revision than the judged tree is REFUSED - the hyb
 });
 
 test('the MOVED control still fires when the hint table has no headroom', () => {
-  // The disarming case this row is about, built on demand: 60 inserted lines stale the whole table,
-  // then 7 more move the symbols again. Under the old count-based shape this scenario had NO signal
-  // (the counts are equal); the per-symbol control fires in any table state.
+  // The disarming case this row is about, built on demand: 60 inserted lines stale the whole
+  // server/index.js family, then 7 more move the symbols again. Under the old count-based shape this
+  // scenario had NO signal (the counts are equal); the per-symbol control fires in any table state.
+  // "The whole family" is now ASSERTED below, not assumed - see the premise check after the second run.
   const staleTable = synthTree('server/index.js',
     (src) => `${Array.from({ length: 60 }, (_, i) => `// staled hint line ${i + 1}`).join('\n')}\n${src}`,
     'synthetic: 60 lines inserted - the hint table has no headroom');
@@ -228,9 +240,28 @@ test('the MOVED control still fires when the hint table has no headroom', () => 
   const rep = shiftReport(base.out, r.out, 'server/index.js', 7);
   assert.deepStrictEqual(rep.wrong, [], `the shift was not reflected per symbol:\n${rep.wrong.join('\n')}`);
   assert.ok(rep.moved >= 40, `only ${rep.moved} claims compared - the control is not load-bearing`);
+  // THE PREMISE, ASSERTED RATHER THAN ASSUMED (2026-10-29). Everything below rests on the base run
+  // being FULLY stale for the shifted file: only then can a 7-line move add no stale hint, and only
+  // then is the old count shape genuinely disarmed. On 2026-10-29 the premise had silently gone false
+  // - the pin for [analytics reads the whole roster] landed by coincidence on an occurrence of its own
+  // needle after the 60-line shift (that occurrence sits exactly 60 lines above the pin in
+  // server/index.js, and the needle occurs seven times), which left the base run NOT fully stale while
+  // the moved run was, so the old shape fired (55 > 54) and this test went red in isolation. The pins
+  // were re-grounded from the instrument's own drift report (stale 23 -> 0, same commit as this
+  // comment) and this assertion makes the NEXT such collision fail by naming its cause instead of
+  // disarming the proof in silence.
+  const inFile = [...resolvedLines(base.out)].filter(([, v]) => v.path === 'server/index.js');
+  const staleInBase = staleLabels(base.out);
+  assert.ok(inFile.length >= 40,
+    `only ${inFile.length} claims into server/index.js were resolved - too few for this to prove anything`);
+  const notStale = inFile.map(([k]) => k).filter((l) => !staleInBase.has(l));
+  assert.deepStrictEqual(notStale, [],
+    `the base run is not fully stale: ${notStale.join(', ')} still resolve onto their own hint after the ` +
+    `60-line shift. A stale pin that lands on another occurrence of its own needle disarms this ` +
+    `construction - re-ground the pins from the instrument's own drift report before trusting this test`);
   // And the old shape really is disarmed here - the measurement the row asked for. `staleCount(moved) >
   // staleCount(base)` needs the shift to ADD stale hints; with the table already stale it adds none
-  // (measured at this construction: 54 -> 53, so the old shape had no signal at all).
+  // (measured at this construction on 2026-10-29 at 9e6a3ac: 55 -> 55, the old shape had no signal).
   assert.ok(!(staleCount(r.out) > staleCount(base.out)),
     `the old count shape FIRED here (${staleCount(r.out)} > ${staleCount(base.out)}), so this ` +
     `construction is not the disarmed one the row describes - re-measure before trusting this test`);
