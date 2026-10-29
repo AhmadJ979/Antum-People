@@ -108,8 +108,8 @@ which it now is.
 
 ### F3 — the breadcrumb spells the tab differently from the nav *(cosmetic)*
 
-The header *then* rendered `{activeTab} Panel` (`App.tsx:657` at `75e3ff2`), which printed "Preboarding Panel" for a nav
-entry labelled `Pre-boarding` (`App.tsx:377`). The breadcrumb now reads `{navLabel(activeTab)}` (`App.tsx:1405`). Every other tab's id happens to match its label, so
+The header *then* rendered `{activeTab} Panel` (`App.tsx:657` at `75e3ff2`), which printed "Preboarding Panel". The breadcrumb now reads `{navLabel(activeTab)}` (`App.tsx:1405`) for a nav
+entry labelled `Pre-boarding` (`App.tsx:377`). Every other tab's id happens to match its label, so
 this is the first one where it shows. Fix by mapping ids to labels for the breadcrumb, or by
 choosing one spelling; it should match the nav.
 
