@@ -61,6 +61,12 @@ REPO="${ANTUM_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 DST="${ANTUM_HOST_TOOLS_DIR:-/home/team/shared}"
 HOOK_DST="${ANTUM_HOOK_DST:-/etc/profile.d/zz-antum-product-guard.sh}"
 BACKUP_ROOT="${ANTUM_HOST_TOOLS_BACKUP:-}"
+# When set, only the named repo paths are installed (space-separated). This exists so
+# scripts/ensure-login-hook.sh can re-install the ONE host copy whose absence leaves the boot-time
+# re-arm missing, without re-running an install of every other copy from its 60-second poll. The
+# bytes, the provenance header and the `cmp -s` idempotence stay in this file — the thing that writes
+# the hook is one implementation, not two.
+ONLY="${ANTUM_HOST_TOOLS_ONLY:-}"
 
 REV=""
 HOOK_REV="${ANTUM_HOOK_REV:-}"
@@ -103,6 +109,7 @@ echo "  script: $0 | $(stat -c %s "$0" 2>/dev/null) B | sha256 $(sha256sum "$0" 
 echo "  repo:   $REPO"
 echo "  dest:   $DST   hook: $HOOK_DST   mode: $MODE"
 echo "  source: ${REV:-the working tree}"
+[ -n "$ONLY" ] && echo "  ONLY:   $ONLY   (every other target is left untouched)"
 
 if [ -n "$REV" ]; then
   SRC_SHA=$(git -C "$REPO" rev-parse --verify "$REV^{commit}" 2>/dev/null) || {
@@ -134,6 +141,7 @@ scripts/restore-product.sh|$DST/restore-product.sh|0755
 scripts/rollback-to-9d2182a.sh|$DST/rollback-to-9d2182a.sh|0755
 scripts/success-test.sh|$DST/success-test.sh|0755
 scripts/observe-serve-pair.sh|$DST/observe-serve-pair.sh|0755
+scripts/ensure-login-hook.sh|$DST/ensure-login-hook.sh|0755
 scripts/antum-product-guard-hook.sh|$HOOK_DST|0644"
 
 FAIL=0
@@ -159,6 +167,10 @@ write_target() { # $1 = dest, $2 = source file, $3 = repo path, $4 = mode; 1 = r
   local dest="$1" src="$2" rpath="$3" mode="$4"
   local tmp="$dest.new.$$" blob_md5
   blob_md5=$(md5sum < "$src" | cut -d' ' -f1)
+  # The destination's own directory, not just DST: the hook's destination is /etc/profile.d, which is
+  # NOT the durable volume and can be gone. Without this the repair path failed with "could not write
+  # (permissions?)" — a message that names the wrong cause and leaves the boot path unarmed.
+  mkdir -p "$(dirname "$dest")" 2>/dev/null
   if ! bash -n "$src" 2>/dev/null; then
     echo "  REFUSED   $dest — the source ($rpath) does not parse as shell (bash -n)"; return 1
   fi
@@ -220,6 +232,12 @@ trap 'rm -rf "$TMPDIR_HERE"' EXIT
 N=0
 while IFS='|' read -r rpath dest mode; do
   [ -n "$rpath" ] || continue
+  if [ -n "$ONLY" ]; then
+    case " $ONLY " in
+      *" $rpath "*) : ;;                  # named by the caller
+      *) continue ;;                      # not asked for: leave the installed copy alone
+    esac
+  fi
   N=$((N+1))
   src="$TMPDIR_HERE/$(basename "$rpath")"
   SRC_FROM="the tree ($SRC_SHA)"
@@ -248,6 +266,23 @@ while IFS='|' read -r rpath dest mode; do
   fi
 done <<< "$TARGETS"
 
+echo
+# THE BOOT-TIME RE-ARM IS CHECKED, NOT ASSUMED. The hook target above is a host copy in /etc, and /etc
+# is not the durable volume: on 2026-10-29 it had been removed, nothing armed the guard at the boot's
+# login shell, and the public URL served the placeholder for 18 minutes. So every install ends by
+# reading the hook back through the SAME code the guard runs each poll - one implementation, and an
+# install that leaves the boot path broken says so here instead of looking green. Idempotent: it
+# rewrites nothing when the hook already matches, which is the case this step usually sees.
+if [ "$MODE" = install ] && [ -z "$ONLY" ] && [ -f "$REPO/scripts/ensure-login-hook.sh" ]; then
+  echo "--- boot-time re-arm check (scripts/ensure-login-hook.sh)"
+  if ANTUM_DEPLOY_DIR="$REPO" ANTUM_HOOK_DST="$HOOK_DST" bash "$REPO/scripts/ensure-login-hook.sh"; then
+    echo "  the login-shell hook is installed at $HOOK_DST and matches this tree"
+  else
+    echo "  WARNING: the boot-time re-arm is NOT in place at $HOOK_DST - this host would come back"
+    echo "           from a boot with nothing arming the product guard"
+    FAIL=1
+  fi
+fi
 echo
 if [ "$FAIL" -ne 0 ]; then
   echo "=== RESULT: FAILED — $N targets seen, some refused, missing or unwritable ==="
