@@ -1,0 +1,132 @@
+====================================================================================================
+check-all - every check the team owns, one entry point
+  tree judged   : 414a007 (DIRTY: 1 tracked path(s) modified - NOT the commit's bytes)
+  repository    : /home/team/shared/wt-templates
+  NOT run by    : the movement. scripts/cutover-preflight.sh runs no checker (grep, this run's evidence).
+                  Wiring a check into the movement is the lead's ruling to make, not this script's.
+====================================================================================================
+
+[OK           ] design-concepts-index    tree=414a007   exit=0   0.0s
+                 home : operator CLI (bare) + suite gate
+                 what : every design-concepts/*.md except README.md carries exactly ONE index row; no row names a missing document; the README's own exclusion is asserted; the index is not empty
+                 said : OK: all 17 documents carry exactly one index row, no row is stray, and the README's own exclusion is asserted.
+                 ...  : 12 earlier line(s) not shown - full output: /usr/bin/python3 scripts/check-design-concepts-index.py
+
+[OK           ] index-ids                tree=414a007   exit=0   0.4s
+                 home : operator CLI (bare) - NO gate, which is why this entry point matters
+                 what : every id quoted in roadmap-board-index.md resolves against the board or git, no removal is unrecorded, and the re-check section's trigger structure is intact
+                 said : OK: every quoted id resolves, no removal is unrecorded, and the re-check section's trigger structure is intact
+                 ...  : 59 earlier line(s) not shown - full output: /usr/bin/python3 scripts/check-index-ids.py
+
+[BROKEN       ] doc-citations            tree=414a007   exit=1   0.2s
+                 home : operator CLI (bare form ADDED 2026-10-20 by this change - it raised IndexError before)
+                 what : every `App.tsx:<n>` citation in design-concepts/ lands on a line carrying one of the symbols the citing line names
+                 said : UNCHECKED design-concepts/LAYER3-IDENTITY.md:46 App.tsx:[1222, 1212, 1196] — the citing line names no symbol
+                      : UNCHECKED design-concepts/LAYER3-IDENTITY.md:71 App.tsx:[1215] — the citing line names no symbol
+                      : FAIL      design-concepts/LAYER3-IDENTITY.md:83 App.tsx:[1361] expects one of ['title="Sign Out"'] — :1361 is '}'
+                      : FAIL      design-concepts/LAYER3-IDENTITY.md:86 App.tsx:[1376] expects one of ['user?.access_role', 'hr_admin'] — :1376 is 'preventable: parseInt(exitForm.preventable),'
+                      : FAIL      design-concepts/LAYER3-IDENTITY.md:207 App.tsx:[1367, 1379, 1368, 456, 347, 517, 470] expects one of ['space-x-3', 'justify-end', 'ml-3', 'mr-2'] — :1367 is 'tr
+                      : FAIL      design-concepts/README.md:23 App.tsx:[1375, 1376, 1212, 1213, 1195] expects one of ['access_role'] — :1375 is 'satisfaction_score: parseInt(exitForm.satisfactio
+                      : FAIL      design-concepts/README.md:34 App.tsx:[745, 1162] expects one of ['const settled = settlePanels(await Promise.all([', 'client/session-vs-refusal', 'No data yet',
+                      : doc 414a007e6499 vs code 414a007e6499: 12 ok, 54 FAILING, 17 unchecked   [tree 414a007]
+                 ...  : 77 earlier line(s) not shown - full output: /usr/bin/python3 docs/evidence/no-403-claim-sweep-2026-10-20/check-doc-citations.py
+
+[OK           ] reachability-report      tree=414a007   exit=0   0.1s
+                 home : operator CLI (bare) + suite gate
+                 what : prints callerless routes, unopenable controls and displayed-only values. This check exits 0 by DESIGN - it is a report; the three assertions that can redden live in server/reachability.test.js and server/reachability-report-cli.test.js
+                 said : Summary of the four counted categories: {"CALLERLESS":8,"UNOPENABLE_CONTROLS":1,"DISPLAYED_VALUES":0,"DEAD_END_ITEMS":3}
+                 ...  : 141 earlier line(s) not shown - full output: node scripts/reachability-report.js
+
+[SKIP-FLAGGED ] suite                    tree=414a007   exit=-   0.0s
+                 home : suite gate (operator form: cd server && node --test); the movement does NOT run it
+                 what : the server suite - the doc/tracker-invariant gates (server/design-concepts-index.test.js, server/privacy-notice.test.js) plus the check-all classifier gate
+                 said : skipped by --no-suite
+
+[OK           ] access-model             tree=414a007   exit=0   0.3s
+                 home : IN the repository (scripts/verify-access-model.py) - a PR carries it; run by this entry point and by server/access-model-instrument.test.js
+                 what : the 141-check access-model instrument against docs/access-model.md, the document the product's access model is delivered in
+                 said : tree is 414a007e6499678ac0e1a04950f60fa0bb648fc1 - the document it judged is byte-identical to docs/access-model.md at that tree
+                 ...  : 146 earlier line(s) not shown - full output: /usr/bin/python3 /home/team/shared/wt-templates/scripts/verify-access-model.py
+
+[OK           ] host-template-copies     tree=414a007   exit=0   0.0s
+                 home : operator CLI (bare) + this entry point; it judges a HOST folder, so it is not run by the movement
+                 what : owner ruling 2026-10-29: the REPOSITORY is the sole authority for served documents, and /home/team/shared/templates is retired. The folder is WALKED, not matched against a list of names: 0 files at its top level, and only its flat retired/ may hold files, each named <document>.<ext>.retired-<revision>. A copy reappearing anywhere under it is RED and is named. A folder that is missing or unreadable exits 2 (CANNOT-JUDGE) - never a green (proof: scripts/check-host-template-copies-test.sh, cases J and K)
+                 said :     /home/team/shared/templates is in its retired state.
+                 ...  : 18 earlier line(s) not shown - full output: /usr/bin/python3 scripts/check-host-template-copies.py
+
+[OK           ] served-document-renderer tree=414a007   exit=0   0.1s
+                 home : operator CLI (bare) + this entry point; run by nothing else, which is why it is here
+                 what : every module under client/src (WALKED - not a list of names) hands a served document body to the DOM only as the `content` prop of MarkdownDocument: no injection sink, no `pre`/`code` element outside the renderer, no body printed raw anywhere. The body's field name is re-derived from server/ every run, and a check that cannot see its subject is RED, not green (scripts/check-served-document-renderer.py --selftest plants the violations and requires each to redden)
+                 said : PASS: 9 module(s) walked, 3 read(s) of the served body, every one of them handed to MarkdownDocument; no injection sink, no literal-print element outside the renderer. ex
+                 ...  : 16 earlier line(s) not shown - full output: /usr/bin/python3 scripts/check-served-document-renderer.py
+
+[SKIP-FLAGGED ] cors-error-contract      tree=414a007   exit=-   0.0s
+                 home : operator CLI, off-host
+                 what : the CORS + error-handling contract of server/index.js, booted off-host on its own port with a throwaway database
+                 said : off-host instrument proof - run it with --full
+
+[SKIP-FLAGGED ] guard-deploy-marker      tree=414a007   exit=-   0.0s
+                 home : operator CLI, off-host
+                 what : the deploy marker behaves as claimed, on a scratch tree with a STUB guard - never the live one
+                 said : off-host instrument proof - run it with --full
+
+[SKIP-FLAGGED ] install-host-tools       tree=414a007   exit=-   0.0s
+                 home : operator CLI, off-host
+                 what : the host-tooling installer does what it claims, entirely off the host
+                 said : off-host instrument proof - run it with --full
+
+[SKIP-FLAGGED ] keep-alive-deploypath    tree=414a007   exit=-   0.0s
+                 home : operator CLI, off-host
+                 what : keep-alive.sh's BOTH arming paths - the regression the hardened loop of 2026-10-06 needed
+                 said : off-host instrument proof - run it with --full
+
+[SKIP-FLAGGED ] observe-serve-pair       tree=414a007   exit=-   0.0s
+                 home : operator CLI, off-host
+                 what : the public-URL observer does what it claims, off-host, without touching the live tree
+                 said : off-host instrument proof - run it with --full
+
+[SKIP-FLAGGED ] guard-role-vs-shape      tree=414a007   exit=-   0.0s
+                 home : operator CLI, on a host with an armed guard
+                 what : the duplicate-guard check judges a process's ROLE (argv position: interpreter + non-flag first arg) not the SHAPE of a string that merely names keep-alive.sh. Compares the recorded pre-fix revision (2b14a94) against this tree, holds two decoys in the log's own shape, and requires both sides to count the live loop. exit 2 = CANNOT-JUDGE; it never signals, starts or stops a guard
+                 said : off-host instrument proof - run it with --full
+
+[SKIP-FLAGGED ] host-template-copies-proof tree=414a007   exit=-   0.0s
+                 home : operator CLI, off-host
+                 what : drives the retired-folder guard against a scratch copy of the folder (never the host one) and requires each plant to REDDEN on its own path: a copy at the top level, a copy in a nested directory, a name no list names, a second copy with the .retired- suffix in the middle, a nested directory inside the quarantine, and a symlink. It requires the quarantine's 3 files to stay green in EVERY red run, a missing folder and a file-instead-of-folder to exit 2, the fixture and the live host folder to be byte-identical afterwards, and the clean run's counts (2 directories, 3 entries, 0 top-level, 3 quarantined, 0 violations) to be printed - a green with a zero count is the defect it asserts against
+                 said : off-host instrument proof - run it with --full
+
+----------------------------------------------------------------------------------------------------
+checks NOT run by default, each with its reason and its own command (nothing is omitted quietly):
+  [skip] cutover-preflight    home: movement preflight - THE HOST, and ONLY the host
+         why : its preconditions are HOST state (dependency links in the live tree, the port, the armed guard), not the tree. Run in a scratch tree it CORRECTLY reports FAIL - measured: exit 1, 'PREFLIGHT FAIL - 3 precondition(s) do not hold' - so a red here would say nothing about the tree. DELIBERATELY not wired in: see the header.
+         run : bash scripts/cutover-preflight.sh    (on the host, before a movement)
+  [skip] success-test         home: operator CLI, LIVE-facing
+         why : it judges WHAT IS SERVING, not the tree: the cutover's four success tests against the public URL. Not a tree check.
+         run : bash scripts/success-test.sh LABEL    (or this entry point with --live LABEL)
+  [skip] cors-error-contract  home: operator CLI, off-host - off-host instrument proof, run with --full: bash scripts/cors-error-contract-test.sh
+  [skip] guard-deploy-marker  home: operator CLI, off-host - off-host instrument proof, run with --full: bash scripts/guard-deploy-marker-test.sh
+  [skip] install-host-tools   home: operator CLI, off-host - off-host instrument proof, run with --full: bash scripts/install-host-tools-test.sh
+  [skip] keep-alive-deploypath home: operator CLI, off-host - off-host instrument proof, run with --full: bash scripts/keep-alive-deploypath-test.sh
+  [skip] observe-serve-pair   home: operator CLI, off-host - off-host instrument proof, run with --full: bash scripts/observe-serve-pair-test.sh
+  [skip] guard-role-vs-shape  home: operator CLI, on a host with an armed guard - off-host instrument proof, run with --full: bash scripts/guard-role-vs-shape-test.sh
+  [skip] host-template-copies-proof home: operator CLI, off-host - off-host instrument proof, run with --full: bash scripts/check-host-template-copies-test.sh
+  [skip] success-test         home: operator CLI, LIVE-facing - run with --live LABEL: bash scripts/success-test.sh LABEL
+
+ACTORS listed, never run (they change the host, the live product or the demo data - not checks):
+  [actor] scripts/deploy-main.sh               moves the live product to origin/main: fetch, build, re-seed, restart
+  [actor] scripts/keep-alive.sh                the self-healing loop: starts/kills/restarts the product
+  [actor] scripts/restore-product.sh           restart-only recovery (a name for deploy-main.sh --restart-only)
+  [actor] scripts/rollback-to-9d2182a.sh       reverts the host to the pre-cutover commit
+  [actor] scripts/install-host-tools.sh        installs the operator tooling into /home/team/shared
+  [actor] scripts/antum-product-guard-hook.sh  the login-shell hook re-arming the guard (/etc/profile.d/zz-antum-product-guard.sh)
+  [actor] scripts/seed-demo.js                 rewrites the demo database (the labelled sample data every figure is read from)
+  [actor] scripts/observe-serve-pair.sh        probes the LIVE public URL; its off-host proof is scripts/observe-serve-pair-test.sh, listed above
+
+----------------------------------------------------------------------------------------------------
+totals: 7 check(s) run, 8 skipped
+        OK               6
+        BROKEN           1
+        SKIP-FLAGGED     8
+
+VERDICT: 1 check(s) RED and NOT in a declared state -> doc-citations
+         this is the BROKEN case: nothing declares this state. exit 1
