@@ -227,23 +227,26 @@ import sqlite3
 c=sqlite3.connect("$PRODUCT_DB")
 print("  ", c.execute("select id, consent_granted, consent_date from employees where id='demo-emp-sarah'").fetchone())
 PY
-echo "settlement statement: rendered EOSB vs the employee record (must match):"
+echo "settlement statement: the served document vs the employee record (an ISSUED statement must match the record; an UNISSUED one must be a figureless refusal):"
+# RE-GROUNDED 2026-10-29 (#325's truthful refusal). The old block searched the body for a rendered
+# EOSB and printed `match: False` on EVERY movement, because the product now correctly refuses to
+# render: the settlement statement is an instrument, the employer-side facts it names are held
+# nowhere, so it is not issued and carries no figure by design. A check that is red on the product's
+# truthful behaviour is not a check - it hides the real red and trains the operator to ignore it.
+# The assertion now lives in this tree's scripts/check-settlement-statement.py, which step 1's reset
+# guarantees is the version this movement deploys; it branches on `issued` and names each failed
+# assertion. rc=2 (CANNOT-JUDGE: the payload or the record could not be read) fails the run too: a
+# run that judged nothing is not a pass. The payload path is run-stamped, like the other evidence.
+SETTLE="/tmp/cutover-$STAMP-settlement.json"
 curl -s --noproxy '*' --max-time 25 -H "Authorization: Bearer $TOK" \
-  "$PUBLIC/api/compliance/templates/final-settlement-statement/demo-emp-sarah" > /tmp/cutover-settlement.json
-python3 - <<PY
-import json, re, sqlite3
-body = json.load(open('/tmp/cutover-settlement.json'))['content']
-rec = sqlite3.connect("$PRODUCT_DB").execute(
-    "select eosb_accrued from employees where id='demo-emp-sarah'").fetchone()[0]
-rendered = re.search(r'EOSB[^|]*\|\s*\*\*?([0-9,]+\.[0-9]{2})', body.replace('\n', ' '))
-rendered = rendered.group(1) if rendered else 'NOT FOUND'
-brackets = re.findall(r'\[[A-Za-z_]+\]', body)
-print("  record eosb_accrued:", rec, "| rendered:", rendered,
-      "| match:", abs(float(rendered.replace(',','')) - float(rec)) < 0.01 if rendered != 'NOT FOUND' else False)
-print("  unfilled [brackets]:", brackets if brackets else "NONE")
-net = re.search(r'NET PAYABLE AMOUNT:\s*\*?\*?([0-9,]+\.[0-9]{2})', body.replace('*',' '))
-print("  net payable:", net.group(1) if net else 'NOT FOUND')
-PY
+  "$PUBLIC/api/compliance/templates/final-settlement-statement/demo-emp-sarah" > "$SETTLE"
+SETTLE_RC=0
+python3 "$DEPLOY_DIR/scripts/check-settlement-statement.py" "$SETTLE" "$PRODUCT_DB" demo-emp-sarah || SETTLE_RC=$?
+if [ "$SETTLE_RC" -ne 0 ]; then
+  echo "FAIL: the settlement check is RED (rc=$SETTLE_RC) — see its own lines above."
+  echo "      The movement still completes (step 6 re-arms the guard from a running product) and"
+  echo "      exits 1 at the end, so a red here is visible without leaving the site unguarded."
+fi
 
 echo "--- 6. re-arm the watchdog from the tree we just deployed ---"
 # pkill is asynchronous. The old loop holds the flock until it actually exits, so
@@ -422,6 +425,12 @@ if [ "$RESTART_ONLY" -eq 1 ]; then
 fi
 
 echo "deployed commit: $(git log --oneline -1)"
+if [ "${SETTLE_RC:-0}" -ne 0 ]; then
+  # Deliberately the LAST thing, after step 6 and 6b: the guard is armed and the hook installed by
+  # now, so a red verification can fail the run without leaving the product unguarded.
+  echo "=== cutover finished $(date -Iseconds) WITH A RED VERIFICATION (settlement check rc=$SETTLE_RC) — run-stamped evidence: $OUT | build: $BUILD_LOG | seed: $SEED_LOG ==="
+  exit 1
+fi
 echo "=== cutover finished $(date -Iseconds) — run-stamped evidence: $OUT | build: $BUILD_LOG | seed: $SEED_LOG ==="
 
 # =====================================================================
