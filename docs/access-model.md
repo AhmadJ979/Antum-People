@@ -175,7 +175,7 @@ would also let a hire submit their own, and which this route **refuses outright*
 The route was appended at the end of the ROUTES list, for the reason the P3-1 paragraph gives: this file
 cites `file:line`, and inserting in the middle moves the instrument's checks.
 **P3-3's escalation read is `employees:read` with the COMPANY-WIDE row scope, and that narrowing is the
-decision** (row `bb60c7a3`; route `index.js:1325`, rule in `server/probation-escalation.js`). What the row
+decision** (row `bb60c7a3`; route `index.js:1364`, rule in `server/probation-escalation.js`). What the row
 serves is not the hire's dates — those are on the timeline route, under the roster's own scope — but the
 record of an escalation: *when the system noticed a missed probation milestone, and who it was addressed
 to*. It is addressed to the manager's manager and to HR, never to the direct manager, so serving it under
@@ -364,7 +364,7 @@ employee write paths were this document's longest-standing finding, and #239 clo
    was the finding a reader may have quoted.
 2. **Account creation must be logged — CLOSED by #236** (`index.js:280-270`).
 3. **An unnamed actor is refused, not defaulted** — the acknowledgement convention, carried to the checklist tick
-   by #223 and to the case path at `index.js:875`, which is the refusal itself (`if (!actor) return
+   by #223 and to the case path at `index.js:914`, which is the refusal itself (`if (!actor) return
    res.status(400)`). **An earlier revision of this line cited `:824-828`** — the rationale comment above the
    refusal, five lines of prose that end one line before the code that does the refusing. A citation that stops
    at the comment evidences the *intent*, not the refusal; the corrected line is in §9's check.
@@ -618,7 +618,7 @@ in the PR body).
 **This amendment changes the CHECKER, and records two defects this document carried that its own check could not
 see.** All three findings came from sweeping past the brief, and the first two are in this file.
 1. **§5.2 rule 3 cited the rationale comment, not the refusal.** It pointed at a five-line comment block ending
-   *one line before* the `if (!actor)` return that does the refusing — the refusal is `index.js:875`. A citation
+   *one line before* the `if (!actor)` return that does the refusing — the refusal is `index.js:914`. A citation
    that stops at the comment evidences the *intent*, not the mechanism. The checker had asserted `:829` as a tree
    claim all along and still passed the sentence, because **it asserted the tree's lines and never the
    document's citations to them.** That coupling is now a check (`[doc citation]`); reverting the citation
