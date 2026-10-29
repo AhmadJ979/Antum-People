@@ -1,0 +1,457 @@
+{
+ "manifest_version": 1,
+ "what": "The legal text Antum People SERVES, one hash per unit, taken from the HTTP responses a client receives (never from a source file). Read `scripts/check-counsel-strings.py` for how each unit is derived and for the blind spot.",
+ "blind_spot": "A hash says a unit's served bytes are unchanged since the revision named below. It says NOTHING about whether any person read the text, whether a change was legally significant or a typo fix, or whether the text is right.",
+ "reviewed_by": null,
+ "review_note": "No counsel recipient exists (owner decision 15a is open), so no unit can carry a review marker. Every unit is `unreviewed`, and the guard FAILS a run in which any unit claims otherwise. A guard that said 'counsel-approved' would be a false claim of exactly the class this repository has a rule about.",
+ "not_hashed": [
+  {
+   "what": "the client-side legal strings - the strings in client/src that assert a lawful basis, a consent fact, an entitlement qualification or a statutory computation basis",
+   "count": 20,
+   "derived_from": "design-chrome-legal-inventory-2026-10-29.md §1.3(b) (the designer's own inventory; the 20 are enumerated there by file:line)",
+   "why": "they are not API-served. Hashing them would mean hashing the built client bundle, which is gitignored and absent from a fresh tree, so the guard would either skip silently or judge a rig. A gap printed on every run is not a silent omission - it is still a gap."
+  }
+ ],
+ "measured_from": {
+  "tree_revision": "414a007",
+  "revision_note": "414a007 is the revision the hashes were READ from - a hash must name the revision it was measured from. The branch that carries this manifest touches four files and every one of them is under `scripts/`; no served path loads any of them (`grep -c scripts server/index.js` = 0, and nothing in server/ or client/ references this guard or its manifest), so the served bytes at that branch's head are this revision's. The guard prints the revision it judged on every run, so a reader never takes that on trust.",
+  "how": "booted a scratch instance of the tree (own port, throwaway database, throwaway hr_admin user), created the fixture through the product's own writers, and hashed the bytes of the HTTP responses",
+  "fixture": "one UAE and one KSA employee created by POST /api/employees with fixed literals, each moved to `offboarding` by PUT so both task checklists exist, plus one pre-boarding case by POST /api/preboarding/cases. The record and case ids the product mints are masked out of the served bytes (see mask() in the guard): a refusal names the record it refused, and that uuid is fixture noise, not legal text.",
+  "generated_at": "2026-10-29T17:04:14Z",
+  "generated_by": "VantageHR Lead"
+ },
+ "units": [
+  {
+   "id": "doc:breach-notification-letters",
+   "sha256": "6a641b902d54405d876bff5ded255c8650eb74922bdba4044cbe85c8850b178a",
+   "bytes": 16545,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/compliance/templates/breach-notification-letters/<record> -> content",
+   "marked": null
+  },
+  {
+   "id": "doc:data-processing-agreement",
+   "sha256": "3eeff2f7a30ae5716e27322467afea8a0cb2a72901733303e87ed1810f03d8f5",
+   "bytes": 19189,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/compliance/templates/data-processing-agreement/<record> -> content",
+   "marked": null
+  },
+  {
+   "id": "doc:dpia-questionnaire",
+   "sha256": "0f6f50a311d19e2cd5cd7f2c15535cc7e9630ea2fd9564eb569e61143e63a9e5",
+   "bytes": 11214,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/compliance/templates/dpia-questionnaire/<record> -> content",
+   "marked": null
+  },
+  {
+   "id": "doc:final-settlement-statement",
+   "sha256": "b59f71639d7fde940321b1e9c7821e35a1bfcff54d1a4167fa2f09ec106a1d21",
+   "bytes": 962,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/compliance/templates/final-settlement-statement/<record> -> content (the served refusal - the document itself is withheld)",
+   "marked": null
+  },
+  {
+   "id": "doc:ksa-employment-contract",
+   "sha256": "81f85893ba94108a53fce3d146c1d9b31920c10e7f430af20eb11cc605347371",
+   "bytes": 846,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/compliance/templates/ksa-employment-contract/<record> -> content (the served refusal - the document itself is withheld)",
+   "marked": null
+  },
+  {
+   "id": "doc:privacy-notice",
+   "sha256": "9a13bc570933835daedb4ba41fc40e14626927cb334460565548e12c71642cc0",
+   "bytes": 780,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/compliance/templates/privacy-notice/<record> -> content (the served refusal - the document itself is withheld)",
+   "marked": null
+  },
+  {
+   "id": "doc:uae-employment-contract",
+   "sha256": "e89164fed733eff6ff944c9ebf755e73b0271e1430f8111b9a9f2672c4924ec3",
+   "bytes": 863,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/compliance/templates/uae-employment-contract/<record> -> content (the served refusal - the document itself is withheld)",
+   "marked": null
+  },
+  {
+   "id": "notice:content",
+   "sha256": "348491967557649b8f6623f49c1a46f8be386ce82d2c918e05ecdcf58cc69b5d",
+   "bytes": 23525,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/compliance/notice -> content (as published, no substitution)",
+   "marked": null
+  },
+  {
+   "id": "notice:version",
+   "sha256": "5fb50206bfe939d4e940d30223cb65a5378d7cfe897cd0a4bf16b54f5d0f264b",
+   "bytes": 4,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/compliance/notice -> version",
+   "marked": null
+  },
+  {
+   "id": "basis:bank_details",
+   "sha256": "f0350112899c107a25b7bf6e2dffa2b3bbdf7740aa79ed4569f4f97d5c462323",
+   "bytes": 115,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/preboarding/cases/<case>/checklist -> notice.bases.bank_details",
+   "marked": null
+  },
+  {
+   "id": "basis:education_certificate",
+   "sha256": "da6982129fe7ca98de1ea218b773abd6307ed03545dd7822d50689e51d65ca40",
+   "bytes": 184,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/preboarding/cases/<case>/checklist -> notice.bases.education_certificate",
+   "marked": null
+  },
+  {
+   "id": "basis:emergency_contact",
+   "sha256": "51e6b6ef0088466dfed3f296d71f534b7527fe8be5954f6eafc9e57135c4feeb",
+   "bytes": 196,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/preboarding/cases/<case>/checklist -> notice.bases.emergency_contact",
+   "marked": null
+  },
+  {
+   "id": "basis:emirates_id",
+   "sha256": "cd2bbd0fa7d74cdceb1874b2f5e6fec7d7c612186219fa2a4d759a13b4180e35",
+   "bytes": 69,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/preboarding/cases/<case>/checklist -> notice.bases.emirates_id",
+   "marked": null
+  },
+  {
+   "id": "basis:experience_certificate",
+   "sha256": "da6982129fe7ca98de1ea218b773abd6307ed03545dd7822d50689e51d65ca40",
+   "bytes": 184,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/preboarding/cases/<case>/checklist -> notice.bases.experience_certificate",
+   "marked": null
+  },
+  {
+   "id": "basis:passport",
+   "sha256": "cd2bbd0fa7d74cdceb1874b2f5e6fec7d7c612186219fa2a4d759a13b4180e35",
+   "bytes": 69,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/preboarding/cases/<case>/checklist -> notice.bases.passport",
+   "marked": null
+  },
+  {
+   "id": "basis:visa_or_entry_permit",
+   "sha256": "cd2bbd0fa7d74cdceb1874b2f5e6fec7d7c612186219fa2a4d759a13b4180e35",
+   "bytes": 69,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/preboarding/cases/<case>/checklist -> notice.bases.visa_or_entry_permit",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:ae:mohre-contract-signing",
+   "sha256": "69d9b638e8661ba6719f273ff5f22fbb9e3057fe290af8b723ec84da3fca9dfc",
+   "bytes": 86,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:ae:entry-permit-issuance",
+   "sha256": "7b16995a0c179c5b1398bf653c7af739899030ef203b45616cad4e553abdae0d",
+   "bytes": 78,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:ae:medical-fitness-test",
+   "sha256": "ab35f4649d3b57c3725140eaf3e2ad914e1629d543faae9f55a524f7b964de6d",
+   "bytes": 85,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:ae:emirates-id-biometrics",
+   "sha256": "ac7a0ae1fae9df6cedf3e3a44465b84177d74b0a983822743ec94c2fa1786c9b",
+   "bytes": 81,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:ae:residence-visa-stamping",
+   "sha256": "68fbbb255ad650901d80e6c8de545984bcd390ce88280245fa98fae86fded7c2",
+   "bytes": 86,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:ae:wages-protection-system-wps-registration",
+   "sha256": "8795042ef4c43a5446b69b1e8a3ff6127816721e36ed6143c0c73f20327f30aa",
+   "bytes": 93,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:ae:privacy-notice-shown",
+   "sha256": "e4b4a1836c2efe02898b2c727d22a7a18a99463ba0b266578b65e1ccf9d6408b",
+   "bytes": 362,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:ae:hardware-return",
+   "sha256": "36d218929820936383c879db0b9c8c36fa8a1203e0be6fe512aadc1af2b5b3c8",
+   "bytes": 73,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:ae:access-revocation",
+   "sha256": "80dacb96f75540721759fb5b4c81fea2feb8c69326f0e90936dcbaf29603afd0",
+   "bytes": 76,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:ae:notice-period-verification",
+   "sha256": "c02a7ba80119281c9dc6687072c900c7f8299d08a87efe40771fed59e85ca7b2",
+   "bytes": 84,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:ae:eosb-calculation-uae",
+   "sha256": "c3e7e065620cd4c36efc36c03f99159279a1823510aeb9f4cbda2f6207c36802",
+   "bytes": 85,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:ae:annual-leave-encashment",
+   "sha256": "050bdccf3041219d1bca55e98b5772da5a2ffd43362be2ad4ba14f97a10aa7e2",
+   "bytes": 74,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:ae:mohre-work-permit-cancellation",
+   "sha256": "db1eba6177c0adc11dcb672d3d0a4ad15057ecf4296c78f6d67df5bf49fd8558",
+   "bytes": 71,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:ae:residency-visa-cancellation",
+   "sha256": "b34e3c4a46af0b279139f51f2164eb3f3e239ea02235451a34da2b46acecc8db",
+   "bytes": 70,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:ae:final-settlement-payment-within-14-days",
+   "sha256": "62517d5338dcbef78c5c6e9382be43990f44197510b09d3036101b0121e04008",
+   "bytes": 80,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:sa:qiwa-job-offer-acceptance",
+   "sha256": "e24ae6a4b8eb1e92b527156bf39e82e834dbe9ecf4e8e3e15ec302ce13e45f49",
+   "bytes": 77,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:sa:qiwa-employment-contract",
+   "sha256": "f6ad7cba153b3af486166f8cb9a5d03778d069c49064d9ac6df92fa392b4e23e",
+   "bytes": 74,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:sa:medical-exam-ksa",
+   "sha256": "093135dd27951e56b289b93bf52f4e837354658cb7ffce8993de6af1e64f1c69",
+   "bytes": 65,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:sa:iqama-issuance",
+   "sha256": "47e3846218c3d56c4b88850aca6d265cb3ff2ad512291477c8f032cf95babd01",
+   "bytes": 62,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:sa:gosi-registration",
+   "sha256": "a35218fccc946f21b5ce441396714cdf5d101e104ccce6e3608c58e1d8c26664",
+   "bytes": 91,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:sa:mudad-wps-enrollment",
+   "sha256": "37c116bb3337f0a4085bfe693fcdaa56fe40bc1930e6783e62dfc1e0d74f036c",
+   "bytes": 82,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:onboarding:sa:privacy-notice-shown",
+   "sha256": "e227e1a20800592eac4418ff886f76c99d7f92c58d23e23e5314daf399774ed4",
+   "bytes": 369,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/onboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:sa:hardware-return",
+   "sha256": "36d218929820936383c879db0b9c8c36fa8a1203e0be6fe512aadc1af2b5b3c8",
+   "bytes": 73,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:sa:access-revocation",
+   "sha256": "80dacb96f75540721759fb5b4c81fea2feb8c69326f0e90936dcbaf29603afd0",
+   "bytes": 76,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:sa:notice-period-verification",
+   "sha256": "9bbf4cce7e15b4d2a58af55e07e7f793d707e479b9a71be7dc3100371e8b2e71",
+   "bytes": 78,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:sa:eosb-calculation-ksa",
+   "sha256": "613c69c79aa77eca769929508c54b68cef9237d509cb3aa0fef613d27269db4e",
+   "bytes": 98,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:sa:gosi-de-registration",
+   "sha256": "9f6a7cafbf6ca3c433aa04ca3c0605e32f67cbec187e54f7af3ef8e7fc198fe1",
+   "bytes": 54,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:sa:iqama-cancellation-transfer",
+   "sha256": "ea9d400778a897c082d5fed28d38a08a248dd82a642cc7dc522e7fd5fbffa3e7",
+   "bytes": 72,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:sa:final-exit-visa-or-re-entry-if-transferring",
+   "sha256": "7ae37509d7e1c84fda2ea6202285159621f2d76373960f71c8288e98e5797870",
+   "bytes": 96,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:sa:service-certificate-issuance",
+   "sha256": "83ff09b2a1dccc6b5697e944e5d885d7a1c8fd069f84b5a1903dc57e34edd7b3",
+   "bytes": 82,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:sa:annual-leave-encashment",
+   "sha256": "050bdccf3041219d1bca55e98b5772da5a2ffd43362be2ad4ba14f97a10aa7e2",
+   "bytes": 74,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  },
+  {
+   "id": "task:offboarding:sa:final-settlement-payment",
+   "sha256": "74fe7b802c7f2e10464941a8bc4d97725c57cd2314d917d27a4869d0dccf9a66",
+   "bytes": 93,
+   "review": "unreviewed",
+   "counsel_question": null,
+   "where": "GET /api/employees/<record>/offboarding -> a task's title+description",
+   "marked": null
+  }
+ ]
+}
