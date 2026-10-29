@@ -70,9 +70,9 @@ line 1188. Everything above the first hunk shifts by one; everything below the s
 
 ### 1.3 The property that decides the instrument
 
-A **+10** shift is visibly wrong: `App.tsx:1212` now shows the wrong thing and a reader notices. A **+1** shift is
-**nearly right**: the doc says `ml-3` at `:415`, and at `:416` there is the `ml-3`. A reader who checks the citation
-sees the thing the citation names, one line off, and concludes the document is fine. **Five of the thirteen anchors
+A **+10** shift is visibly wrong: a citation ten lines short of its subject shows the wrong thing and a reader notices. A **+1** shift is
+**nearly right**: a citation one line short shows the thing it names, one line off, and the reader concludes the document is
+fine. The `ml-3` this example used moved from 415 to 416 at `7a4e00a`→`5017d39`; at this tip it sits at `App.tsx:517`. **Five of the thirteen anchors
 sit in that regime.**
 
 That is the defect to design against — not staleness, but staleness that reads as correctness. It also means a

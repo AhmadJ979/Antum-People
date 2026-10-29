@@ -3,7 +3,8 @@
 **A decision aid, not a change.** No `client/` or `server/` file is touched by this pass. Answer it in one
 line — *"apply 1, 3, 5"*.
 
-**Read at `origin/main` = `4b30e63`** (`git rev-parse origin/main`, this session). `client/` is
+**Read at `origin/main` = `4b30e63`** (`git rev-parse origin/main`, this session); the six rows' sites are
+**re-grounded at `fabef59` (2026-10-29)** — see "What this page is not". `client/` is
 **byte-identical to the served tree** `e19a98a` — `git diff --name-only e19a98a..4b30e63 -- client/` returns
 **0 files** — so the client lines below are the **served** lines, not a branch's. Blobs behind the citations:
 `client/src/App.tsx` md5 `946aa9bacf540afe67ea4c6b8edb8e63`, `server/preboarding-flag.js`
@@ -15,12 +16,12 @@ Rendered strings are quoted from the served pass already on file,
 
 | # | The fix | Site | What it reads / does now | Proposed | Size | Where |
 |---|---------|------|--------------------------|----------|------|-------|
-| **1** | The tile's grammar at 1 | `client/src/App.tsx:1902` (value), `:1910` (label) | `1 CASES · NOTICE NOT SHOWN` — the unit is hard-coded and uppercased, so it cannot agree with the number | count-aware noun: `1 CASE · NOTICE NOT SHOWN` at 1, `N CASES …` otherwise | 1 line | client |
-| **2** | The honest refusal never reaches the screen | `client/src/App.tsx:2122`–`:2125` (composed at `:2123`) | `Not collectible in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1).` — internal structure, and a question number nothing on the surface resolves | a sentence in words, e.g. *"We will not record a basis the notice does not assign. Waiting on counsel's answer about qualification documents."* | 2 lines | client (wording: compliance) |
-| **3** | The record names the account and nothing says so | `client/src/App.tsx:2062`, `:2117` | `… recorded by scratch-admin · basis Legal obligation` — reads as a person; pre-RBAC it is one shared account | name the field: `recorded by the signed-in account (scratch-admin)` | 2 lines | client |
-| **4** | The record button's precondition lives only in a tooltip | `client/src/App.tsx:2080`–`:2086` (`disabled` `:2081`, sentence `:2082`–`:2084`) | `title="Open the notice first — this records that it was shown, and the notice has to be openable from here for that to mean anything"` — a presenter clicks, nothing happens, the sentence is invisible | render that sentence in the panel while the notice is unopened (it is the product's best argument for why the record means anything) | ~4 lines | client |
-| **5** | Timestamps are printed raw | `client/src/App.tsx:2061`, `:2117` | `shown on 2026-10-12T06:49:44.731Z` — storage, on screen | format as the product does elsewhere — the server already renders long-form dates (`server/index.js:403`, `toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})`, the `8 October 2026` of the settlement statement); the client has no date helper, so add one and use it at both sites | 1 helper + 2 sites | client |
-| **6** | Two counts of "open", neither naming its scope | `server/preboarding-flag.js:191`, `:203` (chips); `client/src/App.tsx:1895` (tile label) | chip `Started 1 day ago · 21 items open` beside tile `21 ITEMS OUTSTANDING` — two different measures that can read the **same number**: the tile is the employee track (7 × 3), the chip is every item on the case (employee + workspace) | name the scope where the eye lands: chip `22 items open on the case · 7 with the hire`, tile `Items outstanding · employee track` | 2 strings + 1 label | server + client |
+| **1** | The tile's grammar at 1 | `client/src/App.tsx:2158` (value), `:2166` (label) | the label is the source string `Cases · notice not shown`, uppercased by the CSS `uppercase` class, and its unit is hard-coded, so it cannot agree with the number | count-aware noun in the source: the label reads `Case · notice not shown` at 1, `Cases · notice not shown` otherwise | 1 line | client |
+| **2** | The honest refusal never reaches the screen | `client/src/App.tsx:2377`–`:2381` (sentence at `:2379`) | `Not collectible in this release: the privacy notice has no purpose row for qualifications, so no basis is assigned to it (pending counsel Q1).` — internal structure, and a question number nothing on the surface resolves | a sentence in words, e.g. *"We will not record a basis the notice does not assign. Waiting on counsel's answer about qualification documents."* | 2 lines | client (wording: compliance) |
+| **3** | The record names the account and nothing says so | `client/src/App.tsx:2318`, `:2562` (the second prints `{item.acknowledgement.recorded_by}` and omits the words) | `… recorded by scratch-admin · basis Legal obligation` — reads as a person; pre-RBAC it is one shared account | name the field: `recorded by the signed-in account (scratch-admin)` | 2 lines | client |
+| **4** | The record button's precondition lives only in a tooltip | `client/src/App.tsx:2336`–`:2343` (`disabled` `:2337`, title `:2338`–`:2340`, sentence `:2339`) | `title="Open the notice first — this records that it was shown, and the notice has to be openable from here for that to mean anything"` — a presenter clicks, nothing happens, the sentence is invisible | render that sentence in the panel while the notice is unopened (it is the product's best argument for why the record means anything) | ~4 lines | client |
+| **5** | Timestamps are printed raw | `client/src/App.tsx:2317`, `:2562` | `shown on 2026-10-12T06:49:44.731Z` — storage, on screen | format as the product does elsewhere — the server already renders long-form dates (`server/index.js:403`, `toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})`, the `8 October 2026` of the settlement statement); the client has no date helper, so add one and use it at both sites | 1 helper + 2 sites | client |
+| **6** | Two counts of "open", neither naming its scope | `server/preboarding-flag.js:191`, `server/preboarding-flag.js:203` (chips); `client/src/App.tsx:2150` (value) `:2151` (label) | the chip is the server's `items open` string (`server/preboarding-flag.js:191`) beside the tile `{checklistOverview.totals.items_outstanding}` — two different measures that can read the **same number**: the tile is the employee track (7 × 3), the chip is every item on the case (employee + workspace) | name the scope where the eye lands: chip `22 items open on the case · 7 with the hire`, tile `Items outstanding · employee track` | 2 strings + 1 label | server + client |
 
 **Every one of the six owes a deployment movement.** Five touch `client/`, which rebuilds the bundle and
 moves the served asset's md5; #6 touches `server/` on the served path as well. They are one pass and one
@@ -68,8 +69,8 @@ decision 21.** If the owner's intent was a different five-and-one, the pick-list
 
 - It is **not** the change, and it does not pre-empt the review that wrote the findings: the surface review's
   own wording is quoted for #2, and its scope proposal for #6 is what #6 proposes.
-- It is **not** a claim that these are the only six. `main` and the served tree move; the sites above are
-  pinned to `4b30e63`, and a `file:line` that has moved is re-derived, not renumbered.
+- It is **not** a claim that these are the only six. `main` and the served tree move; the sites above were
+  measured at `4b30e63` and **re-grounded at `fabef59` (2026-10-29)** — each `file:line` re-derived from the symbol it names, not renumbered.
 - Whichever are applied, `design-concepts/LAYER2-NOTICE-SHOWN-SURFACE-REVIEW.md` should be annotated
   **applied** for those and left standing for the rest — a report describes the state it was written in, and
   the annotation is what tells the next reader which is which.
