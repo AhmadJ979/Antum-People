@@ -88,6 +88,7 @@ print("tree %s - doc %s vs code %s - %d document(s)"
       % (tree, doc_rev[:12], code_rev[:12], len(files)))
 def symbol(t):
     if not t or "App.tsx" in t: return False
+    if re.match(r"^@rev [0-9a-f]{7,40}$", t): return False   # a pin MARKER is instrument syntax, not a symbol
     if re.match(r"^[:：]?[\d,]+$", t): return False
     if re.match(r"^[0-9a-f]{7,40}$", t): return False
     if t.endswith((".md", ".tsx", ".js", ".json", ".css", ".sql")): return False

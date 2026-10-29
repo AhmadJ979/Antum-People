@@ -105,8 +105,8 @@ answers one more row of this table, marked in place.**
 **Recommendation (design call, reversible): a fifth top-level nav item — `Pre-boarding` — between
 Transitions Hub and Strategic Intelligence.**
 
-> **Built, exactly here.** P2-1 landed this placement (`@rev 75e3ff2`): nav entry `App.tsx:631`, tab render
-> `@rev 75e3ff2` `App.tsx:1184`–`:1321` (PR #66, 2026-10-07). The paragraphs below were written before that tab
+> **Built, exactly here.** P2-1 landed this placement (`@rev 75e3ff2`): nav entry `{ id: 'preboarding', label: 'Pre-boarding'` at `App.tsx:631`, tab render
+> `@rev 75e3ff2` `{activeTab === 'preboarding' && (` at `App.tsx:1184`–`:1321` (PR #66, 2026-10-07). The paragraphs below were written before that tab
 > existed and are now a description of what shipped, not only a proposal. What the tab does *not*
 > yet have — because it is P2-2/P2-4/P2-5, not P2-1 — is everything §2–§6 specify; the review of
 > the shipped surface against this spec is `design-concepts/LAYER2-P2-1-IMPLEMENTATION-REVIEW.md`.
@@ -1126,7 +1126,7 @@ not re-dated:** the pass was resolved on `main` = `501d5fa`, and no code has mer
 
 - **No screen here is built.** Every mock is a design artefact. Nothing in §2–§8 is a live
   surface, and no surface may ship with copy that implies otherwise. (P2-1's intake form and case
-  list — `@rev 75e3ff2` `App.tsx:1184`–`:1321` — are built on `main`, but they are not these screens: §3's case
+  list — `@rev 75e3ff2` `{activeTab === 'preboarding' && (` at `App.tsx:1184`–`:1321` — are built on `main`, but they are not these screens: §3's case
   detail and §4's function view do not exist anywhere, and §2's list is a superset of what P2-1
   renders. **§5's flag has since been built** — `server/preboarding-flag.js`, PR #76 — **and draws
   inside the built HR roll-up** (`App.tsx:2290`, `{row.flag.chip}` at `:2295`; `@rev fabef59` `:2206`/`:2211`, and `@rev 404b29d` `:1690`/`:1696` on `origin/main` = `404b29d`), *not* on §2's list row or §3's detail
