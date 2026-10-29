@@ -7,7 +7,8 @@
  * "Nothing here recomputes the state from the start date."
  *
  * What this module owns is the surface's vocabulary: the four state labels, the chip styling, the
- * date format and the one-line summary. Plain ES module JavaScript with no DOM and no React, so
+ * date format — DELEGATED to `src/format.js`, so all three surfaces share one shape — and the
+ * one-line summary. Plain ES module JavaScript with no DOM and no React, so
  * `client/src/probationTimeline.test.js` can assert all of it without a browser.
  *
  * `state` is one of the four the row names. A state that is not one of them is rendered as
@@ -16,6 +17,8 @@
  */
 
 'use strict';
+
+import { formatDate } from './format.js';
 
 /** The four states, as the row names them. */
 export const MILESTONE_LABELS = Object.freeze({
@@ -35,10 +38,6 @@ const CHIP_CLASSES = Object.freeze({
 
 const UNKNOWN_CHIP = 'bg-slate-100 text-slate-600 border-slate-200';
 
-/** The months, spelled out rather than taken from a locale: a demo must not read differently
- *  depending on the machine's locale, and a test must be able to pin the string. */
-const MONTHS = Object.freeze(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
-
 export function milestoneLabel(state) {
   return MILESTONE_LABELS[state] || 'Unknown';
 }
@@ -47,14 +46,12 @@ export function milestoneChipClass(state) {
   return CHIP_CLASSES[state] || UNKNOWN_CHIP;
 }
 
-/** `2026-09-19` → `19 Sep 2026`. Anything unparseable is returned as it came, never as a guess. */
+/** `2026-09-19` → `19 September 2026`, the ONE date shape, from `src/format.js`.
+ *  It used to spell its own months (`19 Sep 2026`), which put a second date shape on the same screen
+ *  as the served documents' (`29 October 2026`). This now delegates rather than holding a rival
+ *  convention: anything unparseable is still returned as it came, never as a guess. */
 export function formatDay(value) {
-  const day = String(value === null || value === undefined ? '' : value).slice(0, 10);
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
-  if (!match) return String(value === null || value === undefined ? '' : value);
-  const month = MONTHS[Number(match[2]) - 1];
-  if (!month) return day;
-  return `${Number(match[3])} ${month} ${match[1]}`;
+  return formatDate(value);
 }
 
 /** The milestone a reader is waiting on: the EARLIEST one not yet completed. A timeline is

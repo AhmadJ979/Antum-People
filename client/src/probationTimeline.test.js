@@ -50,8 +50,10 @@ test('each of the four states has its own chip styling', () => {
 });
 
 test('a date is formatted the same way on every machine', () => {
-  assert.strictEqual(formatDay('2026-09-19'), '19 Sep 2026');
-  assert.strictEqual(formatDay('2026-11-18T00:00:00Z'), '18 Nov 2026');
+  assert.strictEqual(formatDay('2026-09-19'), '19 September 2026');
+  // Midday, not midnight: a full timestamp is read in the reader's zone, and the assertion must not
+  // turn on which zone that is. `src/format.test.js` pins the zone-independent properties.
+  assert.strictEqual(formatDay('2026-11-18T12:00:00Z'), '18 November 2026');
   assert.strictEqual(formatDay('not-a-date'), 'not-a-date');
   assert.strictEqual(formatDay(null), '');
 });
@@ -75,12 +77,12 @@ test('the next milestone is the earliest one not yet completed, cleared in order
 test('the summary names the count, the offsets and what is next — and says nothing for an empty one', () => {
   assert.strictEqual(
     probationSummary(TIMELINE),
-    '3 milestones · day 30 / day 60 / day 90 · next: Overdue 19 Sep 2026',
+    '3 milestones · day 30 / day 60 / day 90 · next: Overdue 19 September 2026',
   );
   assert.strictEqual(probationSummary({ milestones: [] }), 'No milestones');
 });
 
 test('the window line prints both ends and the length it implies', () => {
-  assert.strictEqual(windowLine(TIMELINE), '20 Aug 2026 → 18 Nov 2026 (90 days)');
+  assert.strictEqual(windowLine(TIMELINE), '20 August 2026 → 18 November 2026 (90 days)');
   assert.strictEqual(windowLine({ start_date: '2026-08-20' }), '');
 });

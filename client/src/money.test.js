@@ -1,11 +1,12 @@
 /**
- * ONE FIGURE, ONE READING — the amount a reader sees must not depend on the reader's machine.
+ * ONE FIGURE, ONE READING — asserted through the path the SCREEN uses.
  *
- * `money()` used to call `value.toLocaleString(undefined, ...)`. The locale was whatever the reader's
- * environment said, so the same figure could read two ways, and the product's figures are quoted into
- * statutory artefacts. `src/money.test.js` holds the property (`en-AE`, Latin digits, two decimals)
- * and the CONTROL: it runs the real formatter in a child process whose locale is `ar_EG`, where the
- * unpinned call does not render `1,234,567.50` at all.
+ * `money()` used to call `value.toLocaleString(undefined, ...)`. The locale was whatever the
+ * reader's environment said, so the same figure could read two ways, and the product's figures are
+ * quoted into statutory artefacts. Since the owner's numeral ruling the convention lives in
+ * `src/format.js` and this module re-exports it; this file drives THIS path, which is what keeps
+ * the re-export honest. The full sweep (dates, times, and the tree-wide guard) is
+ * `src/format.test.js`.
  *
  * Run: `cd client && npm test`   (node --test, no browser, no DOM)
  */
@@ -14,22 +15,31 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { AMOUNT_LOCALE, formatAmount, money } from './money.js';
+import { AMOUNT_DECIMALS, formatAmount, money } from './money.js';
+import * as format from './format.js';
 
 const SRC = import.meta.dirname;
 
-test('the locale is pinned, and a figure reads the same in every environment', () => {
-  assert.equal(AMOUNT_LOCALE, 'en-AE');
-  assert.equal(formatAmount(1234567.5), '1,234,567.50');
+test('the amount convention is the server\'s: two decimals, Latin digits, no group separator', () => {
+  assert.equal(AMOUNT_DECIMALS, 2);
+  // `server/index.js:627` writes `Number(v).toFixed(2)`: no separator, so a screen figure and the
+  // figure in the served document beside it are the same string.
+  assert.equal(formatAmount(1234567.5), '1234567.50');
   assert.equal(formatAmount(0), '0.00');
   assert.equal(formatAmount(12), '12.00');
+  assert.equal(/[\u0660-\u0669\u06f0-\u06f9]/.test(formatAmount(1234567.5)), false);
 });
 
 test('money() puts the currency in front and never invents one', () => {
-  assert.equal(money('AED', 1234.5), 'AED 1,234.50');
+  assert.equal(money('AED', 1234.5), 'AED 1234.50');
   assert.equal(money('SAR', 0), 'SAR 0.00');
   assert.equal(money(null, 12), '\u2014 12.00');
   assert.equal(money('', 12), '\u2014 12.00');
+});
+
+test('this path and the module are ONE implementation, not two that can drift', () => {
+  assert.equal(money, format.money, 'money.js re-exports the one function; it must not wrap a second');
+  assert.equal(formatAmount, format.formatAmount, 'formatAmount is the same binding through both paths');
 });
 
 test('no amount is formatted with the DEFAULT locale', () => {
@@ -42,11 +52,12 @@ test('no amount is formatted with the DEFAULT locale', () => {
 });
 
 /**
- * The control. A test that only asserted `formatAmount(...) === '1,234,567.50'` would pass on a host
- * whose default locale is already en-US, i.e. it could not show the fix is load-bearing. So the real
- * module is imported in a CHILD PROCESS with `LC_ALL=ar_EG.UTF-8`, and both calls are compared there.
+ * The control, run through the path the screen imports. A test that only asserted
+ * `formatAmount(...) === '1234567.50'` would pass on a host whose locale is already en-US, i.e. it
+ * could not show the fix is load-bearing. So the real module is imported in a CHILD PROCESS with
+ * `LC_ALL=ar_EG.UTF-8`, and both calls are compared there.
  */
-test('in an ar_EG environment the pinned figure still reads 1,234,567.50 (control)', () => {
+test('in an ar_EG environment the figure still reads 1234567.50 (control)', () => {
   const probe = [
     "import { formatAmount } from " + JSON.stringify(path.join(SRC, 'money.js')) + ";",
     "const w = { minimumFractionDigits: 2, maximumFractionDigits: 2 };",
@@ -63,7 +74,7 @@ test('in an ar_EG environment the pinned figure still reads 1,234,567.50 (contro
   });
   const reading = JSON.parse(raw.trim());
   // The figure the product prints does not move with the reader's machine.
-  assert.equal(reading.pinned, '1,234,567.50', `pinned figure moved in locale ${reading.locale}`);
+  assert.equal(reading.pinned, '1234567.50', `pinned figure moved in locale ${reading.locale}`);
   // And where the host can represent Arabic digits at all, the UNPINNED call must differ here —
   // otherwise this control is not exercising the defect it exists for.
   if (reading.arabicDigits) {
