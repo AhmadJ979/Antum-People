@@ -137,6 +137,36 @@ function withoutComments(source) {
   return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
 }
 
+/**
+ * Every module the client can bundle, DISCOVERED by walking `src/` - never a list of filenames.
+ *
+ * The narrow form of this guard named `markdown.js` and `markdownView.js`, and that was a defect of
+ * the class rule 8 names: it passed for a reason that said nothing about the served bytes - it
+ * happened to name the only two files that mattered on the day it was written. A new module
+ * printing a document's `content` in a `<pre>` was invisible to it. The walk is the fix: a file is in
+ * scope because of where it lives, so a file that does not exist yet is already covered.
+ * Test files are excluded by design - they are not bundled, and this file's own mutant strings would
+ * otherwise be read as violations of it.
+ */
+function clientModules() {
+  const skip = new Set(['node_modules', 'dist', '__tests__']);
+  const out = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (!skip.has(entry.name)) walk(full);
+        continue;
+      }
+      if (!/\.(?:js|jsx|ts|tsx|mjs)$/.test(entry.name)) continue;
+      if (/\.(?:test|spec)\./.test(entry.name)) continue;
+      out.push(path.relative(SRC, full));
+    }
+  };
+  walk(SRC);
+  return out.sort();
+}
+
 const markupOf = (element) => renderToStaticMarkup(element);
 const textOfBlocks = (blocks) => textOfHtml(markupOf(React.createElement('div', null, renderBlocks(blocks))));
 const renderedText = (content) => textOfHtml(markupOf(React.createElement(MarkdownDocument, { content })));
@@ -251,8 +281,17 @@ describe('there is no markup path', () => {
       for (const list of lists) for (const s of list) assert.ok(segments.has(s.type), `unknown segment ${s.type}`);
       assert.equal(block.html, undefined, 'a block carried raw html');
     }
-    for (const file of ['markdown.js', 'markdownView.js']) {
-      // The scan reads CODE only: both modules explain in prose that they avoid HTML injection, and a
+    // The scan is over EVERY module the client bundles (see `clientModules`), not two filenames.
+    // `scripts/check-served-document-renderer.py` is the wider guard - it also refuses a `pre`/`code`
+    // element outside the renderer and a served body printed anywhere but through MarkdownDocument,
+    // and it walks this same tree from the operator's entry point. This half stays because the client
+    // suite is run on its own, and a suite that passes a bypass is the defect this PR closes.
+    const modules = clientModules();
+    assert.ok(modules.length >= 5,
+      `the walk found ${modules.length} module(s) under src/ - a scan with nothing to read is not a pass`);
+    assert.ok(modules.includes('App.tsx'), 'the walk must reach App.tsx, where served content is printed');
+    for (const file of modules) {
+      // The scan reads CODE only: the modules explain in prose that they avoid HTML injection, and a
       // check that scans its own explanation reddens on a correct tree (the same trap the stylesheet's
       // source guard documents, in `tailwindSources.test.js`).
       const source = withoutComments(fs.readFileSync(path.join(SRC, file), 'utf8'));

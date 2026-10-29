@@ -170,6 +170,16 @@ CHECKS = [
          what="the {checks}-check access-model instrument against docs/access-model.md, the document the product's access model is delivered in",
          count_from_instrument=True),
 
+    dict(id="served-document-renderer", mode="default", expect="green",
+         home="operator CLI (bare) + this entry point; run by nothing else, which is why it is here",
+         cmd=[PY, "scripts/check-served-document-renderer.py"],
+         what="every module under client/src (WALKED - not a list of names) hands a served document "
+              "body to the DOM only as the `content` prop of MarkdownDocument: no injection sink, no "
+              "`pre`/`code` element outside the renderer, no body printed raw anywhere. The body's "
+              "field name is re-derived from server/ every run, and a check that cannot see its "
+              "subject is RED, not green (scripts/check-served-document-renderer.py --selftest plants "
+              "the violations and requires each to redden)"),
+
     dict(id="cors-error-contract", mode="full", expect="green", home="operator CLI, off-host",
          cmd=["bash", "scripts/cors-error-contract-test.sh"],
          what="the CORS + error-handling contract of server/index.js, booted off-host on its own port with a throwaway database"),
