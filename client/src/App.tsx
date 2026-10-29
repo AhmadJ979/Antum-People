@@ -11,9 +11,9 @@ import {
 // `dangerouslySetInnerHTML` anywhere on the path. `markdown.test.js` asserts the visible text of the
 // real templates is the served text with the markers removed.
 import { MarkdownDocument } from './markdownView.js';
-// One figure, one reading: every amount goes through this helper, so the digits a reader sees do not
-// depend on the reader's machine (`src/money.test.js`).
-import { money } from './money.js';
+// One figure, one reading - and one date shape: every amount and every date on this screen goes
+// through `src/format.js`, so none of them depends on the machine the reader sits at (`src/format.test.js`).
+import { money, formatAmount, formatDate } from './format.js';
 
 // Unified API Base URL helper
 // Row d2328d67: what a refusal says. Plain on purpose, and reassuring on purpose — a refusal is not
@@ -322,9 +322,9 @@ const carriesTerminationFlag = (emp: Employee): boolean =>
   || emp.status === 'terminated'
   || Boolean((emp as unknown as { termination_type?: string | null }).termination_type);
 
-// `money` now lives in `src/money.js`, pinned to one locale. It used to call
-// `value.toLocaleString(undefined, ...)` here, so the figure followed the reader's machine: the same
-// amount rendered `1,234,567.50` on an en-US host and arabic-indic digits on an ar-EG one.
+// `money` and `formatAmount` now live in `src/format.js`, pinned to one locale and to the server's
+// own arithmetic. These sites used to call `value.toLocaleString(undefined, ...)`, so the figure
+// followed the reader's machine: `1234567.50` read as arabic-indic digits on an ar-EG one.
 
 /** The figure, rendered ON the flag: four components individually visible, assumptions beside them. */
 const ReplacementCostOnFlag = ({ state }: { state?: ReplacementCostReading }) => {
@@ -357,7 +357,7 @@ const ReplacementCostOnFlag = ({ state }: { state?: ReplacementCostReading }) =>
       <div className="mt-1 text-[9px] text-slate-500">
         {p.total.calculated_components} of {p.total.components_total} computed from records
         {p.window.replacement
-          ? ` · vacancy measured to the replacement's recorded start (${p.window.replacement.start_date})`
+          ? ` · vacancy measured to the replacement's recorded start (${formatDate(p.window.replacement.start_date)})`
           : ' · no replacement recorded in this role'}
       </div>
       <div className="mt-1 text-[9px] text-slate-400">
@@ -843,7 +843,7 @@ export default function App() {
         return;
       }
       if (data.created) {
-        setOfferNotice({ kind: 'ok', text: `Pre-boarding case opened for ${data.case.candidate_name} — starts ${data.case.start_date}.` });
+        setOfferNotice({ kind: 'ok', text: `Pre-boarding case opened for ${data.case.candidate_name} — starts ${formatDate(data.case.start_date)}.` });
         setOfferForm({ ...offerForm, offer_reference: '', candidate_name: '', candidate_email: '', role: '', reporting_line: '', start_date: '' });
       } else {
         setOfferNotice({ kind: 'existing', text: `Offer ${data.case.offer_reference} already had a case — nothing was created twice (case ${data.case.id.slice(0, 8)}…).` });
@@ -1521,13 +1521,13 @@ export default function App() {
                         {analytics.avgCostPerHireAE > 0 && (
                           <div className="flex items-baseline space-x-2">
                             <span className="text-xs text-slate-400 uppercase">AE</span>
-                            <span>{analytics.avgCostPerHireAE.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">AED</span></span>
+                            <span>{formatAmount(analytics.avgCostPerHireAE)} <span className="text-sm font-bold text-slate-400">AED</span></span>
                           </div>
                         )}
                         {analytics.avgCostPerHireSA > 0 && (
                           <div className="flex items-baseline space-x-2">
                             <span className="text-xs text-slate-400 uppercase">SA</span>
-                            <span>{analytics.avgCostPerHireSA.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">SAR</span></span>
+                            <span>{formatAmount(analytics.avgCostPerHireSA)} <span className="text-sm font-bold text-slate-400">SAR</span></span>
                           </div>
                         )}
                         {!analytics.avgCostPerHireAE && !analytics.avgCostPerHireSA && (
@@ -1558,13 +1558,13 @@ export default function App() {
                         {analytics.eosbByJurisdiction.AE > 0 && (
                           <div className="flex items-baseline space-x-2">
                             <span className="text-xs text-slate-400 uppercase">AE</span>
-                            <span>{analytics.eosbByJurisdiction.AE.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">AED</span></span>
+                            <span>{formatAmount(analytics.eosbByJurisdiction.AE)} <span className="text-sm font-bold text-slate-400">AED</span></span>
                           </div>
                         )}
                         {analytics.eosbByJurisdiction.SA > 0 && (
                           <div className="flex items-baseline space-x-2">
                             <span className="text-xs text-slate-400 uppercase">SA</span>
-                            <span>{analytics.eosbByJurisdiction.SA.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-bold text-slate-400">SAR</span></span>
+                            <span>{formatAmount(analytics.eosbByJurisdiction.SA)} <span className="text-sm font-bold text-slate-400">SAR</span></span>
                           </div>
                         )}
                         {!analytics.eosbByJurisdiction.AE && !analytics.eosbByJurisdiction.SA && (
@@ -1604,7 +1604,7 @@ export default function App() {
                           </div>
                         </div>
                         <span className="text-[10px] font-bold px-2 py-1 bg-white border border-slate-200 rounded text-slate-600">
-                          Started {emp.start_date}
+                          Started {formatDate(emp.start_date)}
                         </span>
                       </div>
                     ))}
@@ -1632,7 +1632,7 @@ export default function App() {
                           </div>
                         </div>
                         <span className="text-[10px] font-bold px-2 py-1 bg-white border border-slate-200 rounded text-amber-600">
-                          Exit {emp.end_date || 'Pending'}
+                          Exit {formatDate(emp.end_date) || 'Pending'}
                         </span>
                       </div>
                     ))}
@@ -1729,7 +1729,7 @@ export default function App() {
                         </td>
                         <td className="p-4">
                           <div className="text-sm font-bold text-teal-600 font-mono">
-                            {emp.data_residency_country === 'SA' ? 'SAR' : 'AED'} {(emp.eosb_accrued || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {emp.data_residency_country === 'SA' ? 'SAR' : 'AED'} {formatAmount(emp.eosb_accrued || 0)}
                           </div>
                           <div className="text-[10px] text-slate-400">Accrued to date</div>
                         </td>
@@ -1866,7 +1866,7 @@ export default function App() {
                   {employees.filter(e => e.status === 'offboarding').map(emp => (
                     <div key={emp.id} onClick={() => { setSelectedEmployee(emp); setActiveTab('employees'); }} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-amber-50/50 cursor-pointer transition flex justify-between items-center">
                       <div className="font-bold text-sm text-slate-800">{emp.first_name} {emp.last_name}</div>
-                      <div className="text-[10px] font-bold text-amber-600">EXIT {emp.end_date}</div>
+                      <div className="text-[10px] font-bold text-amber-600">EXIT {formatDate(emp.end_date)}</div>
                     </div>
                   ))}
                 </div>
@@ -2004,8 +2004,8 @@ export default function App() {
                             <div className="bg-emerald-500 w-full" style={{ height: `${ksaHeight}%` }}></div>
                             {/* Tooltip placeholder */}
                             <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-2 py-1.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10 font-mono shadow-xl border border-slate-700">
-                              <div className="flex justify-between space-x-2"><span>UAE:</span> <span>{s.uae.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED</span></div>
-                              <div className="flex justify-between space-x-2 border-t border-slate-700 mt-1 pt-1"><span>KSA:</span> <span>{s.ksa.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR</span></div>
+                              <div className="flex justify-between space-x-2"><span>UAE:</span> <span>{formatAmount(s.uae)} AED</span></div>
+                              <div className="flex justify-between space-x-2 border-t border-slate-700 mt-1 pt-1"><span>KSA:</span> <span>{formatAmount(s.ksa)} SAR</span></div>
                             </div>
                           </div>
                           <div className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{s.quarter}</div>
@@ -2216,7 +2216,7 @@ export default function App() {
                               </div>
                               <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
                                 <div>
-                                  <span className="text-slate-400">Start:</span> {row.start_date}
+                                  <span className="text-slate-400">Start:</span> {formatDate(row.start_date)}
                                   {rowDistance !== null && <span className="text-slate-400"> · {rowDistance}</span>}
                                 </div>
                                 <div>
@@ -2252,7 +2252,7 @@ export default function App() {
                                     ))}
                                   </ul>
                                   <div className="mt-1 text-[10px] text-slate-600">
-                                    Start {row.start_date}
+                                    Start {formatDate(row.start_date)}
                                     {row.flag.state === 'inside_48_hours' && row.flag.hours_to_start !== null
                                       ? ` · ${Math.round(row.flag.hours_to_start * 10) / 10} h before 00:00 on the start date`
                                       : row.flag.days_to_start !== null
@@ -2485,7 +2485,7 @@ export default function App() {
                                                       <div className="text-[11px] font-semibold text-slate-800">{line.label}</div>
                                                       <div className="text-[10px] text-slate-400">
                                                         {line.owner} · {line.category.replace('_', ' ')} · {line.status.replace('_', ' ')}
-                                                        {line.due_date ? ` · due ${line.due_date} (${line.due_rule})` : ''}
+                                                        {line.due_date ? ` · due ${formatDate(line.due_date)} (${line.due_rule})` : ''}
                                                         {line.due_date && line.days_to_due !== null && (
                                                           line.days_to_due < 0
                                                             ? <span className="text-rose-600 font-semibold"> · {Math.abs(line.days_to_due)} d past due</span>
