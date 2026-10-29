@@ -223,46 +223,87 @@ test('a document from another revision than the judged tree is REFUSED - the hyb
 });
 
 test('the MOVED control still fires when the hint table has no headroom', () => {
-  // The disarming case this row is about, built on demand: 60 inserted lines stale the whole
-  // server/index.js family, then 7 more move the symbols again. Under the old count-based shape this
-  // scenario had NO signal (the counts are equal); the per-symbol control fires in any table state.
-  // "The whole family" is now ASSERTED below, not assumed - see the premise check after the second run.
+  // The disarming case this row is about, built on demand: a hint table with no headroom for the whole
+  // server/index.js family, and then 7 more lines moving the symbols again. Under the old count-based
+  // shape this scenario had NO signal (the stale counts are equal); the per-symbol control fires in any
+  // table state. "The whole family" is ASSERTED below, not assumed.
+  //
+  // THE SHIFT IS NOW THE SMALLEST ONE THAT STALES THE TABLE (one line, then seven more). It was 60.
+  // A prepend of ANY length stales every claim in the file - every occurrence of every needle moves
+  // with it - so 60 bought this construction nothing, and it took something away: the resolver breaks a
+  // repeated needle by DISTANCE TO THE HINT, so a shift larger than half the gap between two
+  // occurrences flips which one is "nearest". Measured at 31a119d, with 60 lines prepended, the base
+  // run resolved [analytics reads the whole roster] to 725 - the templates read, 51 lines from the line
+  // the claim names - and [employee create audit] flipped between the two runs (-126 lines for a 7-line
+  // move), which is what turned this test red while everything else read green. A per-symbol assertion
+  // is only meaningful where the shift does not change WHICH occurrence a claim resolves to, so that is
+  // asserted here as a premise (against the HEAD run), and the large-drift case is judged at the end on
+  // the instrument's VERDICT alone, which is the property a large drift actually has to hold.
+  const prepend = (n, label) => (src) =>
+    `${Array.from({ length: n }, (_, i) => `// ${label} ${i + 1}`).join('\n')}\n${src}`;
+  const head = judge('HEAD');
   const staleTable = synthTree('server/index.js',
-    (src) => `${Array.from({ length: 60 }, (_, i) => `// staled hint line ${i + 1}`).join('\n')}\n${src}`,
-    'synthetic: 60 lines inserted - the hint table has no headroom');
+    prepend(1, 'synthetic: hint of a table with no headroom'),
+    'synthetic: 1 line inserted - every hint in server/index.js is stale');
   const base = judge(staleTable);
   const moved = synthTree('server/index.js',
-    (src) => `${Array.from({ length: 7 }, (_, i) => `// moved after the table went stale ${i + 1}`).join('\n')}\n${src}`,
-    'synthetic: 7 lines moved on top of a table with no headroom', staleTable);
+    prepend(7, 'synthetic: hint of a table with no headroom'),
+    'synthetic: 7 more lines on top of a table with no headroom', staleTable);
   const r = judge(moved);
-  assert.strictEqual(r.status, 0,
-    `the shifted run is not green (exit ${r.status}):\n${r.out.split('\n').filter((l) => l.startsWith('FAIL')).slice(0, 6).join('\n')}`);
+  for (const [run, out] of [['base', base], ['moved', r]]) {
+    assert.strictEqual(out.status, 0,
+      `the ${run} run is not green (exit ${out.status}):\n` +
+      out.out.split('\n').filter((l) => l.startsWith('FAIL')).slice(0, 6).join('\n'));
+  }
   const rep = shiftReport(base.out, r.out, 'server/index.js', 7);
   assert.deepStrictEqual(rep.wrong, [], `the shift was not reflected per symbol:\n${rep.wrong.join('\n')}`);
   assert.ok(rep.moved >= 40, `only ${rep.moved} claims compared - the control is not load-bearing`);
-  // THE PREMISE, ASSERTED RATHER THAN ASSUMED (2026-10-29). Everything below rests on the base run
-  // being FULLY stale for the shifted file: only then can a 7-line move add no stale hint, and only
-  // then is the old count shape genuinely disarmed. On 2026-10-29 the premise had silently gone false
-  // - the pin for [analytics reads the whole roster] landed by coincidence on an occurrence of its own
-  // needle after the 60-line shift (that occurrence sits exactly 60 lines above the pin in
-  // server/index.js, and the needle occurs seven times), which left the base run NOT fully stale while
-  // the moved run was, so the old shape fired (55 > 54) and this test went red in isolation. The pins
-  // were re-grounded from the instrument's own drift report (stale 23 -> 0, same commit as this
-  // comment) and this assertion makes the NEXT such collision fail by naming its cause instead of
-  // disarming the proof in silence.
-  const inFile = [...resolvedLines(base.out)].filter(([, v]) => v.path === 'server/index.js');
-  const staleInBase = staleLabels(base.out);
+  // THE PREMISE THE DELTA ASSERTION NEEDED AND NEVER HAD (2026-10-29). `moved.line - base.line === 7`
+  // is only evidence that the claim's symbol moved if the two runs resolved the SAME OCCURRENCE. A
+  // change to a claim's line that lands a pin on another occurrence of its own repeated needle leaves
+  // that assertion green while comparing two different lines - measured at 3f833b4, where
+  // [employee create audit] resolved to 347 in both runs (the account-creation insert, 58 and 51 lines
+  // away) and the control called it proof. So each claim in the file is anchored to the HEAD run here:
+  // 1 line for the base, 8 for the moved. A repeated needle that cannot be placed this way fails with
+  // the claim named instead of disarming the proof in silence.
+  const atHead = resolvedLines(head.out);
+  const atBase = resolvedLines(base.out);
+  const atMoved = resolvedLines(r.out);
+  const inFile = [...atHead].filter(([, v]) => v.path === 'server/index.js');
   assert.ok(inFile.length >= 40,
-    `only ${inFile.length} claims into server/index.js were resolved - too few for this to prove anything`);
+    `only ${inFile.length} claims into server/index.js were resolved at HEAD - too few to prove anything`);
+  const unstable = [];
+  for (const [label, hv] of inFile) {
+    const b = atBase.get(label);
+    const m = atMoved.get(label);
+    if (!b || !m) { unstable.push(`[${label}] is missing from a shifted run`); continue; }
+    if (b.line !== hv.line + 1 || m.line !== hv.line + 8) {
+      unstable.push(`[${label}] HEAD ${hv.line} -> base ${b.line} (want ${hv.line + 1}) -> moved ${m.line} ` +
+        `(want ${hv.line + 8}) - the shift moved which occurrence this claim resolves to, so a delta ` +
+        `between the runs would compare two different lines`);
+    }
+  }
+  assert.deepStrictEqual(unstable, [], `the shift was not occurrence-stable:\n${unstable.join('\n')}`);
+  // And the table really does have no headroom here: every claim in the file is stale in the base run,
+  // so only then can a 7-line move add no stale hint, and only then is the old count shape disarmed.
+  const staleInBase = staleLabels(base.out);
   const notStale = inFile.map(([k]) => k).filter((l) => !staleInBase.has(l));
   assert.deepStrictEqual(notStale, [],
     `the base run is not fully stale: ${notStale.join(', ')} still resolve onto their own hint after the ` +
-    `60-line shift. A stale pin that lands on another occurrence of its own needle disarms this ` +
-    `construction - re-ground the pins from the instrument's own drift report before trusting this test`);
-  // And the old shape really is disarmed here - the measurement the row asked for. `staleCount(moved) >
-  // staleCount(base)` needs the shift to ADD stale hints; with the table already stale it adds none
-  // (measured at this construction on 2026-10-29 at 9e6a3ac: 55 -> 55, the old shape had no signal).
+    `1-line shift - the construction is not the disarmed one this control needs`);
+  // The old shape really is disarmed here - the measurement the row asked for. `staleCount(moved) >
+  // staleCount(base)` needs the shift to ADD stale hints; with the table already stale it adds none.
   assert.ok(!(staleCount(r.out) > staleCount(base.out)),
     `the old count shape FIRED here (${staleCount(r.out)} > ${staleCount(base.out)}), so this ` +
     `construction is not the disarmed one the row describes - re-measure before trusting this test`);
+  // A LARGE DRIFT IS JUDGED ON THE VERDICT, NOT PER SYMBOL (2026-10-29). 60 lines prepended still has
+  // to read as a green run with a drift report - that is the property it has, and the only one it can
+  // have while repeated needles make per-symbol resolution depend on the size of the shift.
+  const big = judge(synthTree('server/index.js',
+    prepend(60, 'synthetic: sixty lines'),
+    'synthetic: 60 lines inserted - a large drift'));
+  assert.strictEqual(big.status, 0,
+    `a 60-line drift is not green (exit ${big.status}): it must report drift, not a defect:\n` +
+    big.out.split('\n').filter((l) => l.startsWith('FAIL')).slice(0, 6).join('\n'));
 });
+

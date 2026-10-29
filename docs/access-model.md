@@ -175,7 +175,7 @@ would also let a hire submit their own, and which this route **refuses outright*
 The route was appended at the end of the ROUTES list, for the reason the P3-1 paragraph gives: this file
 cites `file:line`, and inserting in the middle moves the instrument's checks.
 **P3-3's escalation read is `employees:read` with the COMPANY-WIDE row scope, and that narrowing is the
-decision** (row `bb60c7a3`; route `index.js:1371`, rule in `server/probation-escalation.js`). What the row
+decision** (row `bb60c7a3`; route `index.js:1455`, rule in `server/probation-escalation.js`). What the row
 serves is not the hire's dates — those are on the timeline route, under the roster's own scope — but the
 record of an escalation: *when the system noticed a missed probation milestone, and who it was addressed
 to*. It is addressed to the manager's manager and to HR, never to the direct manager, so serving it under
@@ -279,7 +279,7 @@ exists and is already exercised on the task routes.
 | `POST /api/exit-interviews` (`:805`) | ✔ | ✖ | ✖ | ✖ | ✖ |
 | `POST /api/compliance/calculate-eosb` (`:549`) | ✔ | ✖ | ✔ | ✖ | ✖ |
 | `GET /api/compliance/notice` (`:558`) | ✔ | ✔ | ✔ | ✔ | ✔ |
-| `GET /api/compliance/templates/…` (`:580`) | ✔ (all) | ✖ | ✔ (**settlement templates only**, `TEMPLATE_SCOPES` `access.js:235`, applied `index.js:605`) | ✖ (**§6.2**) | ✖ |
+| `GET /api/compliance/templates/…` (`:580`) | ✔ (all) | ✖ | ✔ (**settlement templates only**, `TEMPLATE_SCOPES` `access.js:235`, applied `index.js:653`) | ✖ (**§6.2**) | ✖ |
 | `GET /api/analytics/dashboard` (`:652`) | ✔ | **⚖ (§8 item 3)** | ✔ | ✖ | ✔ (read-only) |
 
 - **The notice is not restricted, and that is deliberate.** It is the document a data subject is shown. Every
@@ -364,7 +364,7 @@ employee write paths were this document's longest-standing finding, and #239 clo
    was the finding a reader may have quoted.
 2. **Account creation must be logged — CLOSED by #236** (`index.js:287-277`).
 3. **An unnamed actor is refused, not defaulted** — the acknowledgement convention, carried to the checklist tick
-   by #223 and to the case path at `index.js:921`, which is the refusal itself (`if (!actor) return
+   by #223 and to the case path at `index.js:1005`, which is the refusal itself (`if (!actor) return
    res.status(400)`). **An earlier revision of this line cited `:824-828`** — the rationale comment above the
    refusal, five lines of prose that end one line before the code that does the refusing. A citation that stops
    at the comment evidences the *intent*, not the refusal; the corrected line is in §9's check.
@@ -395,21 +395,21 @@ returns the row. **Refused for `employee` and `compliance_viewer` by their absen
 a manager is line-scoped and loses the national-ID and pay columns; finance keeps pay and loses the identifiers.
 
 ### 6.2 A manager or employee reading a settlement document — `GET /api/compliance/templates/…`
-Reads one employee (`index.js:605-603`), decrypts their national IDs, and substitutes the person's identifiers
+Reads one employee (`index.js:653-651`), decrypts their national IDs, and substitutes the person's identifiers
 and EOSB into a document. **Refused for `employee` and `manager`**; `finance` reaches settlements only
 (`TEMPLATE_SCOPES`), and a role absent from that table gets `undefined` — a refusal, never `all`.
 
 ### 6.3 A manager reading company-wide pay through the dashboard — `GET /api/analytics/dashboard`
-`SELECT *` on `employees` (`index.js:677`) plus exit and task rows, reduced to cohort figures. **Refused for
+`SELECT *` on `employees` (`index.js:736`) plus exit and task rows, reduced to cohort figures. **Refused for
 `manager`** — and the refusal is marked `⚖` rather than settled: the small-cohort threshold is **(counsel)** (§8 item 3), and the honest default until it is answered is to refuse rather than guess.
 
 ### 6.4 Ticking a step on someone else's record — `PUT /api/onboarding-tasks/:id`
-Requires a named actor (`index.js:510`) and is now **refused for `employee`** (the cell is
+Requires a named actor (`index.js:558`) and is now **refused for `employee`** (the cell is
 `[hr_admin, manager]`). For a manager, the scope is `reports` — so a manager cannot tick their own step, and the
 code **names that as a deliberate refusal rather than inferring "reports includes self"** (`access.js:193-196`).
 
 ### 6.5 Ending someone's employment — `POST /api/exit-interviews`
-Writes the interview and sets `employees.status='terminated'` (`index.js:854`; route at `:824`). **`hr_admin` only.** Of everything
+Writes the interview and sets `employees.status='terminated'` (`index.js:938`; route at `:824`). **`hr_admin` only.** Of everything
 in §3.3 it is the one where a wrong click is least recoverable.
 
 ---
@@ -618,7 +618,7 @@ in the PR body).
 **This amendment changes the CHECKER, and records two defects this document carried that its own check could not
 see.** All three findings came from sweeping past the brief, and the first two are in this file.
 1. **§5.2 rule 3 cited the rationale comment, not the refusal.** It pointed at a five-line comment block ending
-   *one line before* the `if (!actor)` return that does the refusing — the refusal is `index.js:921`. A citation
+   *one line before* the `if (!actor)` return that does the refusing — the refusal is `index.js:1005`. A citation
    that stops at the comment evidences the *intent*, not the mechanism. The checker had asserted `:829` as a tree
    claim all along and still passed the sentence, because **it asserted the tree's lines and never the
    document's citations to them.** That coupling is now a check (`[doc citation]`); reverting the citation

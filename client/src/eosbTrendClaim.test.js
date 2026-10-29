@@ -5,9 +5,9 @@
  *   "EOSB liability forecast shows a {rise|steady} trend into 2027."
  * The trend word came from comparing point 2 of the series with point 0, and the year was hard-coded in
  * the client. The series behind it is four hard-coded calendar quarter-ends (`server/index.js:773`),
- * each point computed with every employee projected as a resignation and with no departure ever
- * modelled, so the first point is in the past and the last is months ahead: a calendar series, not the
- * next twelve months. Four points under those assumptions cannot establish a trend, and this card is the
+ * each point computed on one hard-coded basis for everybody (a resignation, until the 2026-10-29 ruling
+ * made each row project on its own recorded reason) and with no departure ever modelled, so the first
+ * point is in the past and the last is months ahead: a calendar series, not the next twelve months. Four points under those assumptions cannot establish a trend, and this card is the
  * sentence a buyer reads. See `eosb-liability-forecast-spec.md` sections 2.3 and 7.
  *
  * The card now carries that spec's own honest label (section 7, "What this number is not") and asserts
@@ -63,7 +63,7 @@ test('the guard reads the analytics source, not an empty or renamed file', () =>
 test('no rendered string claims a trend in the EOSB forecast, and none names a forecast year', () => {
   assert.doesNotMatch(code, /trend into \d{4}/i,
     'a hard-coded forecast year with a "trend" claim is back in the client. The series is four calendar '
-    + 'quarter-ends computed on a resignation basis with no departures modelled, so a trend claim is not '
+    + 'quarter-ends computed on one hard-coded basis for everybody, with no departures modelled, so a trend claim is not '
     + 'supported by it (eosb-liability-forecast-spec.md section 7). If a trend is now supportable, that '
     + 'is P4-3\'s series change and this guard must be updated with it, not deleted.');
   assert.doesNotMatch(code, /liability forecast shows a/i,

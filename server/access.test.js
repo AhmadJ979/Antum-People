@@ -715,6 +715,32 @@ describe('every write names a person (§5.2 rules 1 and 3)', () => {
     assert.notStrictEqual(unchanged.department, 'Nowhere', 'the update did not land');
   });
 
+  test('a termination REASON is refused from a token that names nobody (owner ruling 2026-10-29)', async () => {
+    // The ruling makes the reason the SOURCE of the arithmetic: a row with none computes the whole
+    // entitlement, and only a reason a person recorded reduces it. So recording one is recording an
+    // event, and an event has a named actor - the gate on this path runs before the reason is parsed,
+    // which is why the answer is 400 rather than a write with a blank attribution. The two cases below
+    // are the pair: the refusal, and the same call with a named actor, so neither can pass vacuously.
+    const token = await tokenFor(ADMIN_NAME);
+    const created = await api('POST', '/api/employees', {
+      token,
+      body: { first_name: 'Reason', last_name: 'Gate', email: `reason-gate-${randomUUID()}@example.invalid`,
+        start_date: '2024-01-01', data_residency_country: 'AE' },
+    });
+    assert.strictEqual(created.status, 201);
+    const id = created.json.id;
+    const read = () => rawDb((db) => db.prepare('SELECT termination_type FROM employees WHERE id = ?').get(id)).termination_type;
+    assert.strictEqual(read(), null, 'a created row records NO reason - nothing is defaulted for it');
+
+    const refused = await api('PUT', `/api/employees/${id}`, { token: namelessToken(), body: { termination_type: 'resignation' } });
+    assert.strictEqual(refused.status, 400, `an unnamed actor recorded a termination reason (${refused.status})`);
+    assert.strictEqual(read(), null, 'the refused call left the column exactly as it was');
+
+    const accepted = await api('PUT', `/api/employees/${id}`, { token, body: { termination_type: 'resignation' } });
+    assert.strictEqual(accepted.status, 200, 'a NAMED actor recording the same reason is the control');
+    assert.strictEqual(read(), 'resignation', 'and only then does the column hold it');
+  });
+
   test('the tick still names its actor and refuses an unnamed one (decision 22)', async () => {
     const token = await tokenFor(ADMIN_NAME);
     assert.strictEqual((await api('PUT', '/api/onboarding-tasks/scratch-task-1', { token, body: { status: 'completed' } })).status, 200);

@@ -18,3 +18,8 @@ server/keep-alive.out
 # like every other log and force-added deliberately. The original defect (a pack that CITES a log it
 # never committed) is caught by a pack's own pack-check.py where the pack has one, and always by reading
 # the staged list both ways - which is the only check that covers every pack.
+
+# The login-hook check writes its one-line status BESIDE the log it appends to, and the log is
+# ignored by `*.log` while the status file was not: it rode a branch into a PR diff (measured
+# 2026-10-29). A runtime artifact of a host hook is not a repository file.
+*.log.status
