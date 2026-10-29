@@ -24,3 +24,8 @@
  * class names, so it is declared here — `tailwindSources.test.js` reddened on it the first time, which
  * is the check doing its job. */
 @source "../src/probationTimeline.js";
+/* The document preview's element builder: it carries the classes the served documents render with
+ * (headings, quotes, list items, tables and their bilingual cells). Declared here for the same reason
+ * the line above is — `tailwindSources.test.js` reddens on a class-carrying file the pin does not
+ * cover, which is how this line came to exist. */
+@source "../src/markdownView.js";

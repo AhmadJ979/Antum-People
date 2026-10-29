@@ -6,6 +6,14 @@ import { callPanel, settlePanels, refusalNoticeFor } from './panelResults.js';
 import {
   milestoneLabel, milestoneChipClass, formatDay, probationSummary, windowLine,
 } from './probationTimeline.js';
+// The document preview renders the SERVED markdown as a document instead of printing its markers.
+// `markdown.js` parses it to data, `markdownView.js` maps that data to React elements - no
+// `dangerouslySetInnerHTML` anywhere on the path. `markdown.test.js` asserts the visible text of the
+// real templates is the served text with the markers removed.
+import { MarkdownDocument } from './markdownView.js';
+// One figure, one reading: every amount goes through this helper, so the digits a reader sees do not
+// depend on the reader's machine (`src/money.test.js`).
+import { money } from './money.js';
 
 // Unified API Base URL helper
 // Row d2328d67: what a refusal says. Plain on purpose, and reassuring on purpose — a refusal is not
@@ -314,8 +322,9 @@ const carriesTerminationFlag = (emp: Employee): boolean =>
   || emp.status === 'terminated'
   || Boolean((emp as unknown as { termination_type?: string | null }).termination_type);
 
-const money = (currency: string | null, value: number): string =>
-  `${currency || '—'} ${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+// `money` now lives in `src/money.js`, pinned to one locale. It used to call
+// `value.toLocaleString(undefined, ...)` here, so the figure followed the reader's machine: the same
+// amount rendered `1,234,567.50` on an en-US host and arabic-indic digits on an ar-EG one.
 
 /** The figure, rendered ON the flag: four components individually visible, assumptions beside them. */
 const ReplacementCostOnFlag = ({ state }: { state?: ReplacementCostReading }) => {
@@ -2726,10 +2735,15 @@ export default function App() {
                  <button onClick={() => setShowTemplateModal(false)} className="bg-slate-900 text-white px-8 py-3 rounded-2xl text-xs font-bold hover:bg-slate-800 transition shadow-xl">Close Preview</button>
               </div>
               <div className="flex-1 overflow-y-auto p-16 bg-white font-serif">
-                 <div className="max-w-3xl mx-auto prose prose-slate">
-                    <pre className="whitespace-pre-wrap text-sm text-slate-700 leading-relaxed font-mono bg-slate-50 p-10 rounded-3xl border border-slate-100">
-                      {renderedTemplate.content}
-                    </pre>
+                 {/* A SERVED DOCUMENT, RENDERED AS A DOCUMENT. This was `prose prose-slate` around a
+                    <pre> printing `renderedTemplate.content` itself, so a reader was shown the
+                    document's markup - a literal `# Document not issued` and `**NOT ISSUED.**` in
+                    monospace - and `@tailwindcss/typography` is not a dependency, so those two class
+                    names emitted no CSS at all. The typography now lives in `src/markdownView.js`.
+                    `dir="auto"` sits on the container inside MarkdownDocument, i.e. on the element
+                    that prints served text; nothing here mirrors a layout. */}
+                 <div className="max-w-3xl mx-auto">
+                    <MarkdownDocument content={renderedTemplate.content} />
                  </div>
               </div>
            </div>
