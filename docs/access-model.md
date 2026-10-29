@@ -175,7 +175,7 @@ would also let a hire submit their own, and which this route **refuses outright*
 The route was appended at the end of the ROUTES list, for the reason the P3-1 paragraph gives: this file
 cites `file:line`, and inserting in the middle moves the instrument's checks.
 **P3-3's escalation read is `employees:read` with the COMPANY-WIDE row scope, and that narrowing is the
-decision** (row `bb60c7a3`; route `index.js:1325`, rule in `server/probation-escalation.js`). What the row
+decision** (row `bb60c7a3`; route `index.js:1364`, rule in `server/probation-escalation.js`). What the row
 serves is not the hire's dates — those are on the timeline route, under the roster's own scope — but the
 record of an escalation: *when the system noticed a missed probation milestone, and who it was addressed
 to*. It is addressed to the manager's manager and to HR, never to the direct manager, so serving it under
@@ -364,7 +364,7 @@ employee write paths were this document's longest-standing finding, and #239 clo
    was the finding a reader may have quoted.
 2. **Account creation must be logged — CLOSED by #236** (`index.js:280-270`).
 3. **An unnamed actor is refused, not defaulted** — the acknowledgement convention, carried to the checklist tick
-   by #223 and to the case path at `index.js:875`, which is the refusal itself (`if (!actor) return
+   by #223 and to the case path at `index.js:914`, which is the refusal itself (`if (!actor) return
    res.status(400)`). **An earlier revision of this line cited `:824-828`** — the rationale comment above the
    refusal, five lines of prose that end one line before the code that does the refusing. A citation that stops
    at the comment evidences the *intent*, not the refusal; the corrected line is in §9's check.
@@ -559,8 +559,8 @@ named below:
 |---|---|
 | distinct `file:line` sites | **48** |
 | compared as citations (the family above) | **10** |
-| pinned only as **tree claims** — redden when the file moves, never compare the number printed here | **29** |
-| in **no check at all** | **9** |
+| pinned only as **tree claims** — redden when the file moves, never compare the number printed here | **27** |
+| in **no check at all** | **11** |
 **Re-grounded 2026-10-22 for P3-1** (PR #287): the probation route is a new citation, and inserting it early in
 `server/index.js` and in `server/access.js` moved six cited lines (the access module plus the route table). The
 three numbers above are the recount after that re-grounding, and every moved citation is now at its MEASURED line,
@@ -618,7 +618,7 @@ in the PR body).
 **This amendment changes the CHECKER, and records two defects this document carried that its own check could not
 see.** All three findings came from sweeping past the brief, and the first two are in this file.
 1. **§5.2 rule 3 cited the rationale comment, not the refusal.** It pointed at a five-line comment block ending
-   *one line before* the `if (!actor)` return that does the refusing — the refusal is `index.js:875`. A citation
+   *one line before* the `if (!actor)` return that does the refusing — the refusal is `index.js:914`. A citation
    that stops at the comment evidences the *intent*, not the mechanism. The checker had asserted `:829` as a tree
    claim all along and still passed the sentence, because **it asserted the tree's lines and never the
    document's citations to them.** That coupling is now a check (`[doc citation]`); reverting the citation
@@ -758,3 +758,9 @@ about which line that sentence means.
 **The route count on `server/access.js` `ROUTES` moved 30 → 31**, which `scripts/verify-access-model.py` checks — published as a move rather than adjusted silently (rule 41) — and §3.1 carries the new route's row and the paragraph stating what its cell does and does not decide. **§10.2's four measured numbers stand — and the recount is what says so, after it went red.** As this pass was first written it left the instrument RED on the partition: `distinct file:line sites — printed 48, recounted 49` and `in no check at all — printed 9, recounted 10`, exit 1 (measured at the branch tip, 2026-10-28). The extra key was not a new citation: `access.js` `:432` was still cited at **two** sites this pass had re-grounded in only two of its four — §1's *the token carries the role* cell and §1.1's *the gate denies in four ways* sentence — so the page named one site under two numbers, the moved `:448` here and the stale `:432` there. Both are re-grounded to their measured lines (`:448`, `:448-402`) and the recount returns to the table's own numbers: **48 sites, 9 in no check at all** — published as a move **49 → 48**, never adjusted silently (rule 41). What caught it is that the table is re-derived at every run from the page and the checker's own two lists; a page read only by a human eye reads green here.
 
 **What this document still does not decide** is §8 item 13: who may READ a manager's assessment. No route serves an evaluation's `content` in this build, so nothing here publishes a manager's words to FINANCE or to the hire.
+### 10.9 Amended 2026-10-29 — the stale pins re-grounded, and the MOVED control's own premise
+**The served-document pass that landed the day before grew `server/index.js` in two places, and the pins under this page went stale in both.** The symbols did not move; the lines underneath them did — **+39** below the exit route and **+7** above the templates block, because two changes inserted at different depths. Twenty-one of the checker's own tree claims into `index.js` and two of this page's citations were left naming lines that now hold something else, worst drift **39 lines**. Hint drift is reported and **not** a verdict, so the instrument read green — and that is exactly what let the drift sit: **a stale pin is a number that can collide with a needle's other occurrences.**
+**The collision disarmed the one control that proves the content anchoring is load-bearing.** `server/access-model-instrument.test.js`'s MOVED control builds a table with no headroom — 60 inserted lines — and then moves 7 more; the per-symbol control must fire on the second run and the OLD count-based shape must have no signal, because a table that is already stale cannot grow stale. The pin for *analytics reads the whole roster* names a needle that occurs **seven times** in `index.js`. With the pin still on its pre-pass line, the 60-line shift put one of those occurrences exactly **on** the pin, so the base run was not fully stale while the moved run was: the old count shape fired **55 > 54** and the control refused to trust itself, in isolation as well as in the suite (measured **7 pass / 1 fail** at the branch tip, so not an ordering flake). Nothing was wrong with the tree, the document or the gate — a number was stale, and a stale number is a coin that can land on a symbol.
+**Every pin re-grounded, from the instrument's own HINT DRIFT report at the tip it named, never by an offset carried across a file.** Published as a move: **hints stale 23 → 0** (21 claim hints into `index.js`, plus this page's two citations, one of them at two sites). In this page's backticked shorthand, so that naming them here invents no new citation: `index.js` `:914` (was `:875`, cited at two sites) and `index.js` `:1364` (was `:1325`). **What this move did not change is the part worth stating plainly: no symbol, route, role or cell was touched, and the verdict was green before and after — 141/141 both times.** The re-ground bought nothing a reader could see, and it restored the control.
+**§10.2's four measured numbers moved with the re-ground, and the recount is what said so.** Re-grounded pins no longer coincide with this page's own sites, so two sites that were "pinned only as tree claims" are sites **no** check compares: **29 → 27** pinned only as tree claims, **9 → 11** in no check at all, with **48** distinct sites and **10** compared as citations unchanged — published as a move rather than adjusted silently (rule 41). The instrument went red on the partition before the table moved, which is the table working: it is re-derived at every run from this page and the checker's own two lists.
+**The control now also asserts its own premise**, so this class reddens by name rather than by luck: it checks that the 60-line shift really left the whole `index.js` family stale, and if a future insertion lets one pin land on an occurrence again it fails saying *the base run is not fully stale*, naming the claims. Without that, the next collision would disarm the same proof silently — which is what happened here for one pass.
