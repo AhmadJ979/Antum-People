@@ -2818,7 +2818,7 @@ export default function App() {
                  </div>
                  <button onClick={() => setShowTemplateModal(false)} className="bg-slate-900 text-white px-8 py-3 rounded-2xl text-xs font-bold hover:bg-slate-800 transition shadow-xl">Close Preview</button>
               </div>
-              <div className="flex-1 overflow-y-auto p-16 bg-white font-serif">
+              <div className="flex-1 overflow-y-auto p-16 bg-white font-document">
                  {/* A SERVED DOCUMENT, RENDERED AS A DOCUMENT. This was `prose prose-slate` around a
                     <pre> printing `renderedTemplate.content` itself, so a reader was shown the
                     document's markup - a literal `# Document not issued` and `**NOT ISSUED.**` in

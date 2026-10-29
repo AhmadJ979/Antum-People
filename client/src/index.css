@@ -29,3 +29,69 @@
  * the line above is — `tailwindSources.test.js` reddens on a class-carrying file the pin does not
  * cover, which is how this line came to exist. */
 @source "../src/markdownView.js";
+
+/* ==================================================================================================
+ * THE THREE DECIDED TYPEFACES - owner decision 2026-10-29. The bytes, their provenance, the licence
+ * finding and the regeneration command are in public/fonts/README.md; the guard over all of this is
+ * src/typefaces.test.js.
+ *
+ * ROLE -> FAMILY, and where each is wired
+ *   Arabic in the product interface
+ *     Cairo, first family of the --font-sans stack (below).
+ *   Arabic in legal documents, and in the on-screen document preview
+ *     Noto Naskh Arabic: first family of the --font-document stack (below), which the preview
+ *     container in App.tsx uses, and the first family of the rtl stack in templates/build-html.js.
+ *   The wordmark (Arabic)
+ *     Noto Kufi Arabic: the --font-mark stack (below). No element uses it yet, because the mark
+ *     itself is a separate change; the family is wired so that change is one class name.
+ *
+ * WHY unicode-range IS THE ENTIRE MECHANISM, AND WHY DELETING ONE IS INVISIBLE ELSEWHERE.
+ * Every face below declares the five Arabic Unicode ranges and NOTHING ELSE. A Latin character is
+ * therefore not covered by the face, so the browser moves on to the next family in the stack - and
+ * each stack's tail is byte-for-byte the stack this file had before these faces existed (Tailwind's
+ * own default sans stack, and the default serif stack). Latin appearance is unchanged by
+ * construction rather than by convention, which is what the owner asked for: Cairo for Arabic only,
+ * and leave the Latin as it is.
+ * DELETE ONE unicode-range AND THE FACE CLAIMS U+0000-10FFFF: every Latin string in the product
+ * silently changes typeface, and nothing else in this repository would notice. That one edit is what
+ * src/typefaces.test.js exists to catch.
+ * ================================================================================================== */
+@font-face {
+  font-family: "Cairo";
+  src: url("/fonts/cairo/cairo-arabic.woff2") format("woff2");
+  font-weight: 200 1000;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+}
+@font-face {
+  font-family: "Noto Naskh Arabic";
+  src: url("/fonts/noto-naskh-arabic/noto-naskh-arabic.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+}
+@font-face {
+  font-family: "Noto Kufi Arabic";
+  src: url("/fonts/noto-kufi-arabic/noto-kufi-arabic.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+}
+/* Each stack is the decided family FOLLOWED BY the stack this file had before, unchanged. That tail
+ * is the whole of the "Latin is untouched" guarantee at the level of the names; unicode-range is
+ * what makes the browser honour it. */
+@theme {
+  --font-sans: "Cairo", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-document: "Noto Naskh Arabic", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+/* The mark's family is declared in its own static theme so that it reaches the built stylesheet
+ * before any element uses it - an unused theme entry is otherwise dropped, and the family would be
+ * wired only in name. */
+@theme static {
+  --font-mark: "Noto Kufi Arabic", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
