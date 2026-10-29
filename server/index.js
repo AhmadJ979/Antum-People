@@ -571,10 +571,17 @@ app.get('/api/compliance/notice', async (req, res) => {
     // No substitution: this is the notice as published — the document the hire is shown — not a
     // per-employee rendering. A pre-boarding case has no employee row to render against, which is
     // exactly why the gate needs this read.
+    const content = privacyNotice.readNotice();
     res.json({
       version: privacyNotice.noticeVersion(),
-      content: privacyNotice.readNotice(),
+      content,
       path: privacyNotice.noticePath(),
+      // A reader of this text sees its own unfilled lines as bracketed blanks: the Controller line is
+      // `[employer_name]`, the data-protection contact is `[dpo_name] - [dpo_email] - [dpo_phone]`.
+      // No record holds either, and the text is served as published rather than filled in, so naming
+      // them here is what makes that visible instead of silent. (The templates route refuses to
+      // render this document at all; see documentClassFor.)
+      unpopulated_placeholders: compliance.unpopulatedPlaceholders(content),
     });
   } catch (err) {
     console.error('[Compliance] Failed to read the privacy notice:', err);
@@ -606,9 +613,15 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
     emp.national_id_value = auth.decrypt(emp.national_id_value);
     emp.national_id_iqama = auth.decrypt(emp.national_id_iqama);
 
+    // A figure the record does not hold is ABSENT, never 0.00: `(emp.salary || 0)` used to turn a
+    // missing salary into a settlement of 0.00, which reads as a computed total, and the totals below
+    // were computed from that zero. `heldAmount` returns undefined for a NULL — the renderer then
+    // reports the fact as missing and the document is not issued (compliance_engine.REQUIRED_FACTS).
+    const heldAmount = (v) => (v === null || v === undefined || v === '' ? undefined : Number(v).toFixed(2));
+
     // FIX 1: Settlement Statement Calculations
-    let eosb_amount = (emp.eosb_accrued || 0).toFixed(2);
-    let final_pro_rated_salary = 'not calculated';
+    const eosb_amount = heldAmount(emp.eosb_accrued);
+    let final_pro_rated_salary;
     if (emp.end_date && emp.salary) {
       const endDate = new Date(emp.end_date);
       const day = endDate.getDate();
@@ -617,21 +630,28 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       final_pro_rated_salary = (emp.salary * (day / daysInMonth)).toFixed(2);
     }
-    
-    const gross_val = (parseFloat(final_pro_rated_salary) || 0) + parseFloat(eosb_amount);
-    const total_deductions = (0).toFixed(2);
-    const net_settlement = (gross_val - parseFloat(total_deductions)).toFixed(2);
+
+    const gross_val = (final_pro_rated_salary === undefined || eosb_amount === undefined)
+      ? undefined
+      : (parseFloat(final_pro_rated_salary) + parseFloat(eosb_amount)).toFixed(2);
+    // No deduction is recorded anywhere — no table, no column, no event — so `0.00` here would be an
+    // assertion that there are none, and the net would inherit it. The settlement statement carries
+    // both rows, so neither can be computed from an absent record.
+    const total_deductions = undefined;
+    const net_settlement = (gross_val === undefined || total_deductions === undefined)
+      ? undefined
+      : (parseFloat(gross_val) - parseFloat(total_deductions)).toFixed(2);
 
     const templateData = {
       ...emp,
       full_name: `${emp.first_name} ${emp.last_name}`,
       national_id: emp.national_id_value,
       employee_id: emp.id,
-      total_salary: (emp.salary || 0).toFixed(2),
-      basic_salary: (emp.basic_salary || 0).toFixed(2),
+      total_salary: heldAmount(emp.salary),
+      basic_salary: heldAmount(emp.basic_salary),
       eosb_amount,
       final_pro_rated_salary,
-      gross_settlement: gross_val.toFixed(2),
+      gross_settlement: gross_val,
       total_deductions,
       net_settlement,
       termination_reason: emp.termination_type || 'Resignation',
@@ -646,7 +666,26 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
     if (!fs.existsSync(templatePath)) return res.status(404).json({ error: 'Template not found' });
     const templateContent = fs.readFileSync(templatePath, 'utf8');
     const rendered = compliance.renderTemplate(templateContent, templateData);
-    res.json({ content: rendered });
+
+    // A document that names a fact we do not hold is NOT ISSUED, and the mechanism is a refusal
+    // BODY rather than a 4xx: this route has exactly one caller, `fetchTemplate` in
+    // client/src/App.tsx, which renders `content` on 2xx and renders NOTHING on any other status
+    // (`if (res.ok) { ... }`, no else) — so a refusal status would be silently swallowed, and a
+    // reader clicking "Employment Contract" would see nothing at all, unable to tell a refusal from
+    // a broken page. `issued: false` states it for any other caller, and the body carries no part
+    // of the document (compliance_engine.refusalDocument), so it cannot be mistaken for one.
+    if (compliance.documentClassFor(templateName) === 'instrument' && rendered.missing.length > 0) {
+      return res.json({
+        issued: false,
+        template: templateName,
+        employee_id: employeeId,
+        missing_fields: rendered.missing,
+        content: compliance.refusalDocument({ templateName, employeeId, missing: rendered.missing }),
+      });
+    }
+    // A form (a working document a human fills in) is served with a legible blank where a fact is
+    // missing — never a plausible-looking value — and names the blanks it carries.
+    res.json({ issued: true, unpopulated_fields: rendered.missing, content: rendered.content });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error" });
   }

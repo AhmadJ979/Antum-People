@@ -199,7 +199,7 @@ This contract constitutes the entire agreement between the parties and supersede
 |---|---|
 | Signature: ________________ | Signature: ________________ |
 | Name: [employer_representative] | Name: [full_name] |
-| Title: HR Director | Iqama No: [national_id] |
+| Title: [employer_representative_title] | Iqama No: [national_id] |
 | Date: [current_date] | Date: [current_date] |
 
 ---

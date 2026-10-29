@@ -195,7 +195,7 @@ This contract constitutes the entire agreement between the parties and supersede
 |---|---|
 | Signature: ________________ | Signature: ________________ |
 | Name: [employer_representative] | Name: [full_name] |
-| Title: HR Director | Date: [current_date] |
+| Title: [employer_representative_title] | Date: [current_date] |
 | Date: [current_date] | |
 
 ---
