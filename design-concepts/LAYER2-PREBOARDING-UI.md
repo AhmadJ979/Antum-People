@@ -1202,8 +1202,8 @@ this pass adds, and §12 records what still does not exist. The consent notice's
 this document: it comes from the compliance expert's memo at the portal boundary (task `5c0a9ceb`),
 and nothing here may be used to invent it.*
 *The same pass re-read every citation it touched and **corrected two**: §8's consent-line citation
-(`App.tsx:981`–`:982`) pointed at offboarding code and at the wrong object — the case's own line is
-`App.tsx:1802`, where the block reads `Notice-based — recorded per pre-boarding case`, and `:1411`, while `:1407`–`:1408` is the **employee** flag — and the workspace due-date
+(`App.tsx:981`–`:982`) pointed at offboarding code and at the wrong object — the case's own line is `App.tsx:1802`,
+where the block reads `Notice-based — recorded per pre-boarding case`, and `:1411`, while `:1407`–`:1408` is the **employee** flag — and the workspace due-date
 row is the `line.due_date` / `line.due_rule` print at `App.tsx:2488`, with its distance at `:2489`–`:2493`, not the range this document carried. §8
 also now names the two consent stores (`preboarding_consents` for the case; `consent_records` +
 `employees.consent_granted` at Layer 1) and the gap that `consent_version: 'v1'` is hard-coded in the
