@@ -331,6 +331,35 @@ describe('P3-3 · the rule — a deadline strictly behind the reading day, and n
     assert.strictEqual(second.completed_at, null);
     assert.strictEqual(first.resolved, true, 'the two rows differ only in the answer to "was it done anyway?"');
   });
+  test('the escalation read carries correction_count, so "resolved" cannot be read as "still as submitted"', async () => {
+    // Spec §6, "recommended, not required": the evaluation that resolved an escalation may SINCE have
+    // been corrected (`server/probation-evaluations.js`), and `resolved: true` on its own reads as "the
+    // assessment behind this record still stands as submitted". The count is the fact that separates the
+    // two readings; the corrected TEXT stays unpublished — who may read a manager's words is
+    // docs/access-model.md §8 item 13, an open owner question, and is not decided by this field.
+    const before = (await escalation.listEscalations({ employee_id: OTHERWISE_DONE }))
+      .find((r) => r.milestone_index === 1);
+    assert.strictEqual(before.correction_count, 0, 'an evaluation with no correction reads 0, never undefined');
+    const evaluationId = rawDb((h) => h.prepare(
+      'SELECT id FROM probation_evaluations WHERE employee_id = ? AND milestone_index = 1').get(OTHERWISE_DONE)).id;
+    assert.ok(evaluationId, 'the fixture evaluation is the row a correction names');
+    rawDb((h) => h.prepare(`INSERT INTO probation_evaluation_corrections
+      (id, evaluation_id, employee_id, milestone_index, content, reason, corrected_by, corrected_at)
+      VALUES (?, ?, ?, 1, 'Corrected late review.', 'the first text named the wrong reviewer', ?, ?)`)
+      .run(randomUUID(), evaluationId, OTHERWISE_DONE, MANAGER_ACCOUNT, `${TODAY}T16:00:00.000Z`));
+    const after = (await escalation.listEscalations({ employee_id: OTHERWISE_DONE }))
+      .find((r) => r.milestone_index === 1);
+    assert.strictEqual(after.correction_count, 1, 'the correction is counted on the escalation read');
+    assert.strictEqual(after.resolved, true, 'and a correction does NOT re-open or re-resolve the escalation');
+    assert.strictEqual(after.detected_at, before.detected_at, 'what fired is unchanged');
+    assert.strictEqual(after.completed_at, before.completed_at, 'and so is when it was completed');
+    // The control: the milestone BESIDE it has no submitted evaluation, and the table now holds one
+    // correction row. A count that was not joined to THIS escalation's evaluation — an unqualified
+    // `COUNT(*)`, or one keyed on the employee — reads 1 here and reddens this line.
+    const sibling = (await escalation.listEscalations({ employee_id: OTHERWISE_DONE }))
+      .find((r) => r.milestone_index === 2);
+    assert.strictEqual(sibling.correction_count, 0, "an unresolved milestone does not inherit its neighbour's count");
+  });
 
   test('a Date is read as the day it names, not as today', () => {
     // The trap this pins, measured 2026-10-26: `milestonesFor` documents `now` as `Date|string`, and a

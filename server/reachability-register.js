@@ -39,6 +39,16 @@ const CALLERLESS = {
     owner: 'decision 21 (leave it and say so) - the submission surface arrives with the P3-3/P3-4 '
        + 'slices of row `69dbf57d`, and until it does this entry is what says so out loud',
   },
+  'POST /api/employees/:id/probation-evaluations/:evaluation_id/corrections': {
+    route: 'server/index.js:1377',
+    why: 'P3-2\'s follow-up (row `0484e79e`, owner decision (A), 2026-10-28) ships the CORRECTION path '
+       + 'over HTTP beside the submission path, for the same reason and with the same shape: the route '
+       + 'is reachable by path and is exercised end to end by server/probation-evaluations.test.js, and '
+       + 'no click in the product posts to it yet — the surface that will offer a correction is the '
+       + 'probation screen\'s next slice (P3-4). Deliberate and tested, not an orphan.',
+    owner: 'decision 21 (leave it and say so) - the correction surface arrives with the P3-4 slice, and '
+       + 'until it does this entry is what says so out loud',
+  },
   'POST /api/compliance/calculate-eosb': {
     route: 'server/index.js:335',
     why: 'A pure EOSB calculator over the request body. The product computes EOSB server-side for the '
