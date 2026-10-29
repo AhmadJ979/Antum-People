@@ -335,6 +335,11 @@ app.get('/api/employees', async (req, res) => {
       // so no role's response passes through the plaintext on its way out.
       if (removed.indexOf('national_id_value') === -1) row.national_id_value = auth.decrypt(row.national_id_value);
       if (removed.indexOf('national_id_iqama') === -1) row.national_id_iqama = auth.decrypt(row.national_id_iqama);
+      // WHY the accrued figure is what it is (owner ruling 2026-10-29). Attached only where the
+      // figure itself is served: §4 keeps a report's pay from a manager, and the basis is a fact
+      // about that pay, not a fact about the person. The basis is the engine's own output for this
+      // row — never a sentence written here — so the screen cannot invent a reason for a number.
+      if (removed.indexOf('eosb_accrued') === -1) row.eosb_basis = eosb.basisForRow(emp);
       return row;
     };
     res.json(employees.map(project));
@@ -370,7 +375,17 @@ app.post('/api/employees', async (req, res) => {
     const bSalary = parseFloat(data.basic_salary) || 0;
     const tSalary = parseFloat(data.salary) || 0;
     
-    const eosbAccrued = eosb.calculateEOSB(data.start_date, null, bSalary, tSalary, country, 'resignation', parseFloat(data.unpaid_leave_days) || 0);
+    // The termination reason is NOT invented here (owner ruling 2026-10-29). This route used to
+    // compute the accrued figure on a hard-coded 'resignation' AND store that word, so every record
+    // the product created began life asserting a reason no person had recorded — and, for a UAE row
+    // inside the 1/3 or 2/3 tier, on a shrunken figure. A record created here now holds NO reason
+    // (NULL) and its benefit is computed UNREDUCED. A caller that genuinely names one is honoured —
+    // it has already named its actor above — and an unknown one is refused rather than stored.
+    const createReason = eosb.storedReason(data.termination_type);
+    if (!createReason.recognised) {
+      return res.status(400).json({ error: 'unknown termination reason', known_reasons: eosb.TERMINATION_REASONS });
+    }
+    const eosbAccrued = eosb.calculateEOSB(data.start_date, null, bSalary, tSalary, country, createReason.reason, parseFloat(data.unpaid_leave_days) || 0);
 
     const encryptedNationalId = auth.encrypt(data.national_id_value);
     const encryptedIqama = auth.encrypt(data.national_id_iqama);
@@ -396,7 +411,7 @@ app.post('/api/employees', async (req, res) => {
         ${db.escapeString(country)}, ${tSalary},
         ${db.escapeString(data.visa_status)},
         ${db.escapeString(data.visa_expiry_date)}, ${eosbAccrued}, 0,
-        'resignation', ${parseFloat(data.unpaid_leave_days) || 0}
+        ${createReason.reason === null ? 'NULL' : db.escapeString(createReason.reason)}, ${parseFloat(data.unpaid_leave_days) || 0}
       )
     `;
     await db.query(insertSql);
@@ -428,6 +443,16 @@ app.put('/api/employees/:id', async (req, res) => {
     const actor = actorOf(req);
     if (!actor) return res.status(400).json({ error: 'a named actor is required to update an employee' });
 
+    // Recording a termination reason is recording an event, and §5.2 rule 1 is why the actor gate
+    // above runs FIRST: a request that names a reason without naming a person is refused 400 before
+    // anything is read, exactly as it is on the exit-interview path. A value this engine does not
+    // recognise is refused by name here rather than coerced, and a blank one is a legitimate CLEAR
+    // (the reason goes back to not recorded, and the figure back to unreduced).
+    const reasonWrite = data.termination_type === undefined ? undefined : eosb.storedReason(data.termination_type);
+    if (reasonWrite && !reasonWrite.recognised) {
+      return res.status(400).json({ error: 'unknown termination reason', known_reasons: eosb.TERMINATION_REASONS });
+    }
+
     const existing = await db.query(`SELECT * FROM employees WHERE id = ${db.escapeString(empId)}`);
     if (existing.length === 0) return res.status(404).json({ error: 'Employee not found' });
     const emp = existing[0];
@@ -435,6 +460,13 @@ app.put('/api/employees/:id', async (req, res) => {
     const updates = [];
     Object.keys(data).forEach(key => {
       if (['first_name', 'last_name', 'email', 'department', 'role', 'manager_id', 'status', 'visa_status', 'visa_expiry_date', 'national_id_type', 'data_residency_country', 'start_date', 'end_date', 'fully_productive_date', 'termination_type'].includes(key)) {
+        if (key === 'termination_type') {
+          // A reason is a record of an event, or it is ABSENT — never `''` (a third state a reader
+          // would have to guess at). A blank clears the column to NULL, which is what sends the
+          // accrued figure back to the unreduced basis.
+          updates.push(`termination_type = ${reasonWrite && reasonWrite.reason !== null ? db.escapeString(reasonWrite.reason) : 'NULL'}`);
+          return;
+        }
         updates.push(`${key} = ${db.escapeString(data[key])}`);
         if (key === 'data_residency_country') {
           updates.push(`jurisdiction = ${db.escapeString(data[key])}`);
@@ -455,7 +487,23 @@ app.put('/api/employees/:id', async (req, res) => {
     if (updates.length > 0) {
       const mergedStatus = data.status || emp.status;
       const mergedEndDate = data.end_date || emp.end_date;
-      const mergedTerminationType = data.termination_type || emp.termination_type || 'resignation';
+      // A read of a STORED reason is never coerced either. If this row already holds a word the
+      // engine does not know, the recompute below cannot say what it means — so the edit is refused
+      // by name (409) instead of being answered with a generic 500 from the catch, and the same
+      // request that records a real reason is allowed through the moment it sends one.
+      const storedOnRow = eosb.storedReason(emp.termination_type);
+      if (reasonWrite === undefined && !storedOnRow.recognised) {
+        return res.status(409).json({
+          error: 'the termination reason on this record is not one the engine recognises',
+          recorded_reason: storedOnRow.reason,
+          known_reasons: eosb.TERMINATION_REASONS,
+        });
+      }
+      // The third and last silent default this ruling closes: `|| 'resignation'` here meant an edit
+      // that touched any other field recomputed the benefit as though the employee had resigned.
+      // The merged reason is exactly what the record will hold after this write — the value sent, or
+      // the value already on the row, or NOTHING — and the engine computes on that, no more.
+      const mergedTerminationType = reasonWrite === undefined ? emp.termination_type : reasonWrite.reason;
       const mergedUnpaidLeave = data.unpaid_leave_days !== undefined ? data.unpaid_leave_days : (emp.unpaid_leave_days || 0);
 
       const newEosb = eosb.calculateEOSB(
@@ -661,7 +709,18 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
       gross_settlement: gross_val,
       total_deductions,
       net_settlement,
-      termination_reason: emp.termination_type || 'Resignation',
+      // A reason no record holds is NOT printed, and it is not printed as "not calculated" either
+      // (owner ruling 2026-10-29). `emp.termination_type || 'Resignation'` put an invented word on a
+      // document a person is paid against — the same class of defect as the refusal strings. The
+      // field is passed through only when the record holds it; `termination_reason` is a REQUIRED_FACT
+      // in compliance_engine, so a blank one renders as "(reason for termination — not held)", is
+      // named in `missing_fields`, and this document is REFUSED rather than issued with a guess.
+      termination_reason: emp.termination_type === null || emp.termination_type === undefined || String(emp.termination_type).trim() === ''
+        ? undefined
+        : emp.termination_type,
+      // The basis of the EOSB figure in the same payload, so a reader of this document is never left
+      // to infer why the amount is unreduced.
+      eosb_basis: eosb.basisForRow(emp),
       current_date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
     };
 
@@ -687,12 +746,13 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
         template: templateName,
         employee_id: employeeId,
         missing_fields: rendered.missing,
+        eosb_basis: templateData.eosb_basis,
         content: compliance.refusalDocument({ templateName, employeeId, missing: rendered.missing }),
       });
     }
     // A form (a working document a human fills in) is served with a legible blank where a fact is
     // missing — never a plausible-looking value — and names the blanks it carries.
-    res.json({ issued: true, unpopulated_fields: rendered.missing, content: rendered.content });
+    res.json({ issued: true, unpopulated_fields: rendered.missing, eosb_basis: templateData.eosb_basis, content: rendered.content });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error" });
   }
@@ -822,14 +882,36 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       { quarter: 'Q1 2027', date: '2027-03-31' },
       { quarter: 'Q2 2027', date: '2027-06-30' }
     ];
+    // The forecast used to project every row on a hard-coded 'resignation' too — the same invented
+    // reason as the write paths, in the one place that produces a number a buyer reads. Each row is
+    // now projected on ITS OWN record: a row that records a resignation keeps the tier it has, and a
+    // row that records none is projected UNREDUCED (owner ruling 2026-10-29). A stored reason this
+    // engine does not recognise is not guessed at either: the row is left OUT of the projection and
+    // counted, so the chart says how many rows it does not cover instead of absorbing them silently.
+    let forecastExcludedRows = 0;
+    const projectedReason = activeEmployees.map(e => {
+      const state = eosb.storedReason(e.termination_type);
+      if (!state.recognised) forecastExcludedRows += 1;
+      return { employee: e, state };
+    });
     const eosbLiabilitySeries = forecastQuarterEnds.map(({ quarter, date }) => {
       let uae = 0, ksa = 0;
-      activeEmployees.forEach(e => {
-        const projected = eosb.calculateEOSB(e.start_date, date, e.basic_salary, e.salary, e.data_residency_country, 'resignation', 0);
+      projectedReason.forEach(({ employee: e, state }) => {
+        if (!state.recognised) return;
+        const projected = eosb.calculateEOSB(e.start_date, date, e.basic_salary, e.salary, e.data_residency_country, state.reason, 0);
         if (e.data_residency_country === 'AE') uae += projected;
         else if (e.data_residency_country === 'SA') ksa += projected;
       });
       return { quarter, uae: Math.round(uae), ksa: Math.round(ksa), combined: Math.round(uae + ksa) };
+    });
+    // The basis of the figures in the two EOSB cards above, counted off the same rows they sum, so a
+    // card can say why a total is what it is instead of presenting a larger number without a word.
+    const eosbAccruedBasis = { no_reason_recorded: 0, recorded: 0, unrecognised: 0 };
+    activeEmployees.forEach(e => {
+      const state = eosb.storedReason(e.termination_type);
+      if (!state.recognised) eosbAccruedBasis.unrecognised += 1;
+      else if (state.reason === null) eosbAccruedBasis.no_reason_recorded += 1;
+      else eosbAccruedBasis.recorded += 1;
     });
 
     const reasonsMap = {};
@@ -849,6 +931,8 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       retentionLiftSeries,
       eosbLiabilitySeries,
       eosbByJurisdiction,
+      eosbAccruedBasis,
+      eosbForecastExcludedRows: forecastExcludedRows,
       onboardingPipeline,
       exitsByReason: Object.keys(reasonsMap).map(reason => ({ reason, count: reasonsMap[reason] })),
       activeSalarySpend: totalSalary,

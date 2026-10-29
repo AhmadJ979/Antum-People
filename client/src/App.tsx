@@ -49,6 +49,10 @@ interface Employee {
   basic_salary: number;
   eosb_accrued: number;
   eosb_paid: number;
+  // WHY the accrued figure is what it is (owner ruling 2026-10-29): the basis the server's engine
+  // returned for this row. Absent for a role that is not served the figure at all (S4: a manager
+  // does not see a report's pay, and the basis is a fact about that pay, not about the person).
+  eosb_basis?: EosbBasis | null;
 }
 
 interface Task {
@@ -315,6 +319,46 @@ interface ReplacementCostPayload {
 }
 type ReplacementCostReading = { reading: 'loading' | 'ok' | 'refused' | 'failed'; cost: ReplacementCostPayload | null };
 
+/**
+ * The basis the SERVER's engine returned for a row's accrued EOSB: WHY the figure is what it is.
+ * Derived on the server (`server/eosb.js` -> `basisForRow`), never re-derived here - the client does
+ * not know the tier thresholds and must not learn them (owner ruling 2026-10-29: a blank termination
+ * reason computes the benefit UNREDUCED, and the screen has to say so rather than present a larger
+ * number without a word).
+ */
+type EosbBasis = {
+  reason: string | null;
+  basis: 'no_reason_recorded' | 'recorded_no_reduction' | 'recorded_reduced'
+       | 'forfeited' | 'below_minimum_service' | 'not_computable' | 'unrecognised_reason';
+  factor: number | null;
+  recognised: boolean;
+};
+/** One line, only where the basis has something a reader must not have to guess at. */
+const EosbBasisNote = ({ basis }: { basis?: EosbBasis | null }) => {
+  if (!basis) return null;
+  if (basis.basis === 'no_reason_recorded') {
+    return (
+      <div className="text-[10px] text-amber-700 font-semibold mt-0.5">
+        Unreduced — no termination reason recorded
+      </div>
+    );
+  }
+  if (basis.basis === 'recorded_reduced') {
+    return (
+      <div className="text-[10px] text-slate-400 mt-0.5">
+        Reduced for a recorded resignation
+      </div>
+    );
+  }
+  if (basis.basis === 'unrecognised_reason') {
+    return (
+      <div className="text-[10px] text-rose-600 font-semibold mt-0.5">
+        Termination reason on file is not one the engine recognises
+      </div>
+    );
+  }
+  return null;
+};
 // The flag the figure hangs on — the same two readings the server makes in `triggerOf`. There is no
 // performance flag in the schema (no column, no route), so this does not invent one.
 const carriesTerminationFlag = (emp: Employee): boolean =>
@@ -416,6 +460,12 @@ interface Analytics {
   retentionLiftSeries: { cohort: string; retention: number; benchmark: number; lift: number }[];
   eosbLiabilitySeries: { quarter: string; uae: number; ksa: number; combined: number }[];
   eosbByJurisdiction: { AE: number; SA: number };
+  // WHY the EOSB figures on this screen are what they are (owner ruling 2026-10-29): how many active
+  // rows are computed UNREDUCED because they record no termination reason, and how many hold a reason
+  // the engine does not recognise (those rows are left OUT of the forecast rather than guessed at).
+  // Both counted server-side, off the same rows the totals above sum.
+  eosbAccruedBasis?: { no_reason_recorded: number; recorded: number; unrecognised: number };
+  eosbForecastExcludedRows?: number;
   onboardingPipeline: { id: string; first_name: string; last_name: string; role: string; start_date: string }[];
   exitsByReason: { reason: string; count: number }[];
   activeSalarySpend: number;
@@ -571,7 +621,7 @@ export default function App() {
 
   // Compliance Documents
   const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [renderedTemplate, setRenderedTemplate] = useState<{ title: string, content: string } | null>(null);
+  const [renderedTemplate, setRenderedTemplate] = useState<{ title: string, content: string, basis?: EosbBasis | null } | null>(null);
 
   // Modals and Forms
   const [showAddModal, setShowAddModal] = useState(false);
@@ -1190,7 +1240,13 @@ export default function App() {
       }
       const data = await res.json();
       if (res.ok) {
-        setRenderedTemplate({ title, content: data.content });
+        // The basis of the EOSB figure rides with the settlement statement only: on a contract it is
+        // not a fact the document states, and a note about it there would be noise.
+        setRenderedTemplate({
+          title,
+          content: data.content,
+          basis: templateName === 'final-settlement-statement' ? data.eosb_basis : undefined,
+        });
         setShowTemplateModal(true);
       }
     } catch (err) {
@@ -1581,6 +1637,20 @@ export default function App() {
                   <p className="text-[10px] text-slate-400 mt-1">
                     Accrued to date across regions
                   </p>
+                  {analytics?.eosbAccruedBasis?.no_reason_recorded ? (
+                    <p className="text-[10px] text-amber-700 font-semibold mt-1">
+                      {analytics.eosbAccruedBasis.no_reason_recorded} active employee
+                      {analytics.eosbAccruedBasis.no_reason_recorded === 1 ? '' : 's'} record no termination
+                      reason — their benefit is shown unreduced rather than guessed at.
+                    </p>
+                  ) : null}
+                  {analytics?.eosbAccruedBasis?.unrecognised ? (
+                    <p className="text-[10px] text-rose-600 font-semibold mt-1">
+                      {analytics.eosbAccruedBasis.unrecognised} active employee
+                      {analytics.eosbAccruedBasis.unrecognised === 1 ? '' : 's'} record a reason this engine
+                      does not recognise — that figure carries no basis.
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
@@ -1732,6 +1802,7 @@ export default function App() {
                             {emp.data_residency_country === 'SA' ? 'SAR' : 'AED'} {formatAmount(emp.eosb_accrued || 0)}
                           </div>
                           <div className="text-[10px] text-slate-400">Accrued to date</div>
+                          <EosbBasisNote basis={emp.eosb_basis} />
                         </td>
                         <td className="p-4 text-right">
                           <button className="text-teal-600 font-bold text-xs hover:underline">Manage &rarr;</button>
@@ -1897,8 +1968,10 @@ export default function App() {
                       {/* Removed 2026-10-28. This card used to read: "EOSB liability forecast shows a
                           {rise or steady} trend into 2027." - a trend word chosen by comparing point 2 of the
                           series with point 0, and a year hard-coded in the client. The series behind it is
-                          four hard-coded calendar quarter-ends (server/index.js:773), each point computed with
-                          every employee projected as a resignation and no departure ever modelled, so today
+                          four hard-coded calendar quarter-ends, each point computed with every employee
+                          projected on the SAME hard-coded resignation basis until 2026-10-29 (since then each
+                          row projects on its own recorded reason, and a row with none is unreduced) and with
+                          no departure ever modelled, so today
                           the first point is already in the past and the last is eight months ahead: a
                           calendar series, not the next twelve months (eosb-liability-forecast-spec.md
                           sections 2.3 and 7). Four points under those assumptions cannot establish a trend,
@@ -1979,7 +2052,18 @@ export default function App() {
                   <div className="flex justify-between items-center mb-8">
                     <div>
                       <h4 className="font-bold text-slate-900 text-sm">EOSB Liability Forecast — by Jurisdiction & Quarter</h4>
-                      <p className="text-[10px] text-slate-400">Illustrative forecast based on UAE basic and KSA total salary rules</p>
+                      <p className="text-[10px] text-slate-400">
+                        Illustrative forecast based on UAE basic and KSA total salary rules. Each employee is
+                        projected on their own record: one with no termination reason recorded is projected
+                        unreduced rather than as a resignation.
+                      </p>
+                      {analytics?.eosbForecastExcludedRows ? (
+                        <p className="text-[10px] text-rose-600 font-semibold mt-1">
+                          {analytics.eosbForecastExcludedRows} employee
+                          {analytics.eosbForecastExcludedRows === 1 ? '' : 's'} excluded: the termination reason
+                          on file is not one the engine recognises.
+                        </p>
+                      ) : null}
                     </div>
                     <div className="flex space-x-4">
                       <div className="flex items-center space-x-1.5">
@@ -2744,6 +2828,12 @@ export default function App() {
                     that prints served text; nothing here mirrors a layout. */}
                  <div className="max-w-3xl mx-auto">
                     <MarkdownDocument content={renderedTemplate.content} />
+                    {renderedTemplate.basis && renderedTemplate.basis.basis === 'no_reason_recorded' ? (
+                      <p className="text-xs text-amber-700 font-semibold mt-6 border-t border-slate-200 pt-4" dir="auto">
+                        End-of-service figure behind this document: computed UNREDUCED — no termination
+                        reason is recorded for this employee.
+                      </p>
+                    ) : null}
                  </div>
               </div>
            </div>

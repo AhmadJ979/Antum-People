@@ -354,13 +354,19 @@ async function seed() {
     // EOSB liability cards exclude them anyway (server/index.js), but the stored figure
     // should still reflect what was actually owed at departure, computed by the same
     // engine as everyone else (no manual overrides).
+    // The reason is NOT passed (owner ruling 2026-10-29). This call used to hand the engine the
+    // hard-coded word 'resignation', which shrank every demo row inside the UAE 1/3 or 2/3 tier by
+    // a third or more on a reason no record held — and the seeder never wrote that word to the row,
+    // so the figure and the record disagreed from the moment it was written. It now seeds the
+    // UNREDUCED figure the ruling requires, and writes NO reason: the column is left out of the
+    // INSERT below, so re-seeding still clears whatever reason a demo run recorded.
     const eosbAccrued = eosb.calculateEOSB(
       emp.start_date,
       emp.end_date || null,
       emp.basic_salary,
       emp.salary,
       emp.data_residency_country,
-      'resignation',
+      null,
       0
     );
 

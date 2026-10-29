@@ -131,6 +131,12 @@ const REQUIRED_FACTS = Object.freeze({
   // terms the document states as agreed
   probation_period: 'probation period',
   visa_status: 'visa status',
+  // WHY the employment ended, when the document states it. A reason is a record of an event, so a
+  // blank row is a missing fact and not a default: the settlement statement's Reason for Termination
+  // row used to be served with the invented word 'Resignation' (owner ruling 2026-10-29). Naming it
+  // here means the row renders as a legible "(reason for termination ... not held)", the refusal lists
+  // it, and the document is withheld rather than issued on a reason nobody recorded.
+  termination_reason: 'reason for termination',
   // amounts
   basic_salary: 'basic salary',
   total_salary: 'total monthly salary',
@@ -226,7 +232,10 @@ function renderTemplate(templateContent, data = {}) {
     role: data.role || 'not calculated',
     department: data.department || 'not calculated',
     contract_no: data.contract_no || 'not calculated',
-    termination_reason: data.termination_reason || 'not calculated'
+    // `termination_reason` is deliberately NOT defaulted here any more. It is a REQUIRED_FACT (see
+    // the table above), so the line below overwrites this entry with the record's own value — and
+    // the `|| 'not calculated'` that used to sit here was a second place a reason-shaped word could
+    // come from. One value, one source: the record (owner ruling 2026-10-29).
   };
   for (const key of Object.keys(REQUIRED_FACTS)) values[key] = data[key];
 
