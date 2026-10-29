@@ -134,17 +134,10 @@ CHECKS = [
          cmd=[PY, "scripts/check-index-ids.py"],
          what="every id quoted in roadmap-board-index.md resolves against the board or git, no removal is unrecorded, and the re-check section's trigger structure is intact"),
 
-    dict(id="doc-citations", mode="default", expect="known-red",
+    dict(id="doc-citations", mode="default", expect="green",
          home="operator CLI (bare form ADDED 2026-10-20 by this change - it raised IndexError before)",
          cmd=[PY, CITE],
-         what="every `App.tsx:<n>` citation in design-concepts/ lands on a line carrying one of the symbols the citing line names",
-         known_reason=("the App.tsx anchors in design-concepts/ are KNOWN STALE (the #254 -> #255 anchor class), an open "
-                       "defect nobody has re-grounded, and among its FAIL lines are 2 the checker's own authors "
-                       "admitted are FALSE POSITIVES of the checker. Neither is re-grounded or hidden here."),
-         known_pointer=("docs/evidence/no-403-claim-sweep-2026-10-20/README.md:132 (\"Two of the 42 are false positives, "
-                        "verified by hand\"); measured at tree 2b14a94: 11 ok, 43 FAILING, 30 unchecked"),
-         known_ends_when=("the check reads `0 FAILING` - the anchors re-grounded, a separate task. Then DELETE this "
-                          "declaration: it is a statement about the tree, and STALE-EXCEPTION fails the run when it lies.")),
+         what="every `App.tsx:<n>` citation in design-concepts/ lands on a line carrying one of the symbols the citing line names"),
 
     dict(id="reachability-report", mode="default", expect="green", report_only=True,
          home="operator CLI (bare) + suite gate",
