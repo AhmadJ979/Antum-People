@@ -1,0 +1,29 @@
+=== what this run is ===
+tree : /home/team/shared/probable-octo-sniffle
+head : 5215f9c  5215f9ce658c28242f80527df24edcef6465e950
+date : 2026-10-29T17:07:41Z
+cmd  : python3 scripts/check-counsel-strings.py
+
+====================================================================================================
+counsel-strings - the legal text this product SERVES, hashed so an edit cannot be quiet
+  tree judged      : 5215f9c
+  repository       : /home/team/shared/probable-octo-sniffle
+  manifest         : /home/team/shared/probable-octo-sniffle/scripts/counsel-strings-manifest.json
+  blind spot       : this detects that a string CHANGED. It cannot tell whether anyone read it,
+                     whether the edit was legally significant or a typo fix, or whether the new text is right.
+====================================================================================================
+  served from      : a scratch instance of THIS tree (own port, throwaway DB, throwaway user)
+                     port 4891 · database /tmp/counsel-strings-judge-cmmgqszj/rig.db
+  units served     : 48   (documents 7 · notice 2 · bases 7 · tasks 32)
+  served bytes     : 77914
+  manifest         : 48 unit(s), measured from 414a007
+  review markers   : 0 of 48 unit(s) carry one (no counsel recipient exists)
+  not hashed       : 20 - the client-side legal strings - the strings in client/src that assert a lawful basis, a consent fact, an entitlement qualification or a statutory computation basis (they are not API-served. Hashing them would mean hashing the built client bundle, which is gitignored and absent from a fresh tree, so the guard would either skip silently or judge a rig. A gap printed on every run is not a silent omission - it is still a gap.)
+  CHANGED, MARKED  : 0
+  CHANGED, UNMARKED: 0
+  NEW / NO ENTRY   : 0
+  NO LONGER SERVED : 0
+  UNCHANGED        : 48
+
+VERDICT: every served legal unit matches the manifest. This says the text did not move since 5215f9c - it does NOT say anybody read it. exit 0
+EXIT=0

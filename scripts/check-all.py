@@ -3,7 +3,7 @@
 ONE operator-facing entry point for every check the team owns.
 
     python3 scripts/check-all.py                  # the default set: fast, read-only, tree-scoped
-    python3 scripts/check-all.py --full           # + the five off-host instrument proofs
+    python3 scripts/check-all.py --full           # + the six off-host instrument proofs
     python3 scripts/check-all.py --live LABEL     # + the cutover success tests against what is serving
     python3 scripts/check-all.py --no-suite       # skip `node --test` (the slow one)
     python3 scripts/check-all.py --only ID        # ONE check, loudly labelled a PARTIAL run
@@ -182,6 +182,29 @@ CHECKS = [
               "field name is re-derived from server/ every run, and a check that cannot see its "
               "subject is RED, not green (scripts/check-served-document-renderer.py --selftest plants "
               "the violations and requires each to redden)"),
+
+    # Added 2026-10-29 (owner said yes to the counsel-string guard). It is a DEFAULT check
+    # because it is cheap and reads nothing but a scratch instance of this tree: measured at
+    # 1.65 s, own port, throwaway database, throwaway user - and it boots a rig of THIS tree, so
+    # it judges the working tree rather than a commit. Its green says the served legal text has
+    # not moved since the revision the manifest names; it never says anyone read it.
+    dict(id="counsel-strings", mode="default", expect="green",
+         home="operator CLI (bare) + this entry point",
+         cmd=[PY, "scripts/check-counsel-strings.py"],
+         what="every legal string this product SERVES - the documents the templates route hands over, "
+              "the notice as published, the lawful-basis rows the pre-boarding checklist serves, and the "
+              "generated statutory task checklist - still matches its recorded hash. A CHANGED unit is RED "
+              "unless the manifest was updated with a note in the same commit. Hashes come from the HTTP "
+              "responses, never from a source file. Print counts, not verdicts: the run names its own blind "
+              "spot and refuses any manifest that claims a counsel review"),
+
+    dict(id="counsel-strings-controls", mode="full", expect="green", home="operator CLI, off-host",
+         cmd=["bash", "scripts/counsel-strings-test.sh"],
+         what="the counsel-string guard's own controls, each on a scratch COPY of this tree: a CHROME string "
+              "moves and the guard stays GREEN (scope control); one served LEGAL sentence moves and the guard "
+              "REDDENS naming the unit (change control); the same edit marked in the manifest reads GREEN with "
+              "the unit printed as MARKED and still `unreviewed`; a manifest claiming a review is REFUSED; and "
+              "an unknown flag exits 2 rather than buying a green run"),
 
     dict(id="cors-error-contract", mode="full", expect="green", home="operator CLI, off-host",
          cmd=["bash", "scripts/cors-error-contract-test.sh"],
