@@ -1,0 +1,56 @@
+TAP version 13
+# /home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:78
+#     throw new Error(
+#     ^
+# Error: the demo seeder exited 1 instead of seeding — its own words follow.
+# --- stdout ---
+# [DB] Upgraded: created index(es) idx_users_employee_id_unique
+# --- Antum People Coherent Demo Seed v3.1 ---
+# Targeting: Product-owned SQLite database
+# --- stderr ---
+# (node:17321) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Seed failed: Error: Refusing to seed a termination reason. The demo dataset may never record one: employees.termination_type stays NULL until a named actor records a real event, and a seeded reason would both invent a personnel event nobody recorded and turn an unreduced benefit into a reduced one. Owner direction 2026-10-30. Offending rows on the roster:
+#   demo-emp-yusuf.termination_type = "resignation"
+#     at Object.assertRosterCarriesNoTerminationReason (/home/team/shared/probable-octo-sniffle/scripts/seed-termination-guard.js:83:11)
+#     at seed (/home/team/shared/probable-octo-sniffle/scripts/seed-demo.js:329:19)
+#     at Object.<anonymous> (/home/team/shared/probable-octo-sniffle/scripts/seed-demo.js:785:1)
+#     at Module._compile (node:internal/modules/cjs/loader:1781:14)
+#     at Object..js (node:internal/modules/cjs/loader:1913:10)
+#     at Module.load (node:internal/modules/cjs/loader:1505:32)
+#     at Function._load (node:internal/modules/cjs/loader:1309:12)
+#     at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+#     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+#     at node:internal/main/run_main_module:36:49
+#     at runSeed (/home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:78:11)
+#     at Object.<anonymous> (/home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:85:20)
+#     at Module._compile (node:internal/modules/cjs/loader:1781:14)
+#     at Object..js (node:internal/modules/cjs/loader:1913:10)
+#     at Module.load (node:internal/modules/cjs/loader:1505:32)
+#     at Function._load (node:internal/modules/cjs/loader:1309:12)
+#     at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+#     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+#     at node:internal/main/run_main_module:36:49
+# Node.js v22.23.4
+# Subtest: server/demo-seed-termination-reason.test.js
+not ok 1 - server/demo-seed-termination-reason.test.js
+  ---
+  duration_ms: 218.362414
+  type: 'test'
+  location: '/home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 230.357453
+rc=1
