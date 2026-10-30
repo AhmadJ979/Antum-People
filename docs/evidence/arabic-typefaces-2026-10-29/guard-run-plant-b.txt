@@ -1,0 +1,8 @@
+=== PLANT (b): the EMITTED stylesheet's Cairo url() pointed at /fonts/cairo/absent.woff2 ===
+2026-10-29T16:21:59Z
+# RED emitted: url(/fonts/cairo/absent.woff2) resolves in the build: the built stylesheet references /fonts/cairo/absent.woff2, which resolves to /home/team/shared/probable-octo-sniffle/client/dist/fonts/cairo/absent.woff2 - no such file in the built output. A face that cannot be fetched falls back to a system font in silence.
+not ok 1 - typeface roles hold: 43/44 checks passed at 414a007e6499678ac0e1a04950f60fa0bb648fc1; fonts: public/fonts/cairo/cairo-arabic.woff2 58556 B md5 4b42d306847d28a53555a0a2c5b7965a | public/fonts/noto-kufi-arabic/noto-kufi-arabic.woff2 110092 B md5 5f08fbaf5a27f8ce85b56f90663c818b | public/fonts/noto-naskh-arabic/noto-naskh-arabic.woff2 83740 B md5 b62b3a8c76006438f396f8d878f1162d
+not ok 2 - the guard can fail: a deleted unicode-range and a url() at a missing file both redden
+# tests 3
+# pass 1
+# fail 2

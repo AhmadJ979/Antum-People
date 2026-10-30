@@ -1,0 +1,9 @@
+=== BEFORE (clean tree, built) ===
+2026-10-29T16:21:37Z
+414a007e6499678ac0e1a04950f60fa0bb648fc1
+# typefaces: 44 checks, 0 failures
+# typefaces self-check: clean 0 red / plant(a) 1 red / plant(b) 1 red / reverted 0 red, on 44 checks
+# typefaces no-dist control: 7 red, refusing: emitted: client/dist exists
+# tests 3
+# pass 3
+# fail 0

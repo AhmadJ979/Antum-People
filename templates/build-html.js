@@ -79,9 +79,43 @@ function mdToHtml(md) {
   return out.join('\n');
 }
 
+// ---------------- Fonts ----------------
+// The three decided typefaces live in the CLIENT's public directory, so the repository holds ONE copy
+// of each file: the client serves it at /fonts/... and this builder points at the same bytes on disk.
+// See client/public/fonts/README.md for provenance, the licence finding and the regeneration command.
+//
+// The builder writes its output into this directory, so the reference is a path RELATIVE to __dirname.
+// A font that cannot be found is a build failure, never a quiet fall back to a system face: a PDF
+// that silently prints Arabic in some other typeface is exactly what this reference exists to prevent.
+const FONT_DIR = path.join(__dirname, '..', 'client', 'public', 'fonts');
+const ARABIC_RANGES = 'U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF';
+function fontUrl(relativeToFontDir) {
+  const absolute = path.join(FONT_DIR, relativeToFontDir);
+  if (!fs.existsSync(absolute)) {
+    throw new Error(
+      'build-html: missing font file ' + absolute + '\n'
+      + '  The print pipeline references the shipped subsets under client/public/fonts/'
+      + ' (regenerate them as described in client/public/fonts/README.md, or fix the path here).\n'
+      + '  Refusing to build: a document built without its Arabic face would print in a system face '
+      + 'and nothing in the file would say so.');
+  }
+  return path.relative(DIR, absolute).split(path.sep).join('/');
+}
+const NASKH = fontUrl('noto-naskh-arabic/noto-naskh-arabic.woff2');
 // ---------------- Shared CSS ----------------
 function css(brand, version) {
   return `
+  /* Arabic in these documents is Noto Naskh Arabic (owner decision 2026-10-29) - and only Arabic:
+     the unicode-range below keeps the face off every Latin character, so the Latin stacks further
+     down this stylesheet stay the ones that produced the current PDFs. A silent fall back is the
+     failure mode this whole change exists to avoid, so the build fails if the file is absent. */
+  @font-face {
+    font-family: 'Noto Naskh Arabic';
+    src: url('${NASKH}') format('woff2');
+    font-weight: 400 700;
+    font-display: swap;
+    unicode-range: ${ARABIC_RANGES};
+  }
   :root {
     --teal:#0F766E; --teal2:#14B8A6; --slate900:#0F172A; --slate600:#475569;
     --slate50:#F8FAFC; --amber:#F59E0B; --red:#EF4444; --border:#E2E8F0;
@@ -94,7 +128,10 @@ function css(brand, version) {
     color: var(--slate900); font-size: 10.5pt; line-height: 1.5;
     background: #fff;
   }
-  .lang[dir="rtl"] body, .lang[dir="rtl"] { font-family: 'DejaVu Sans', 'Segoe UI', sans-serif; }
+  /* The Arabic face goes FIRST in the rtl stack only. Latin characters - including the Latin inside an
+     Arabic document, a number, a party's name, an English parenthetical - are not covered by the face's
+     unicode-range, so they land on the same 'DejaVu Sans', 'Segoe UI' tail as before: unchanged. */
+  .lang[dir="rtl"] body, .lang[dir="rtl"] { font-family: 'Noto Naskh Arabic', 'DejaVu Sans', 'Segoe UI', sans-serif; }
 
   .doc-header {
     background: var(--teal); color:#fff; border-radius: 8px;
