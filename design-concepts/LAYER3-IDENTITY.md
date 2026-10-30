@@ -34,9 +34,9 @@ what an **unnamed-actor refusal** looks like on screen.
 
 | # | Surface | State today | This slice |
 |---|---------|-------------|------------|
-| **S-L1** | Sign-in | `App.tsx:456` (card opens), its `Sign In` button at `:530` (the block was `:317`–`431` at `7b073f8`) — a username field, a password field, `Sign In`, a recovery note | unchanged in shape; the copy stops implying the account *is* the person |
-| **S-L2** | Who am I / sign out | `App.tsx:1361` (icon-only `Sign Out`), `:1367`–`:1379` identity card | the card shows a **person's name and role**, and its two fallbacks are removed |
-| **S-L3** | The named actor on a record | `App.tsx:2318` prints `recorded by {ack.recorded_by} · basis {ack.lawful_basis}`; the second site `:2562` prints `{item.acknowledgement.recorded_by}` without the words; the checklist tick stores `completed_at` and **no actor** | every record reads as *made by a person*, and says **which kind of person** |
+| **S-L1** | Sign-in | `App.tsx:506` (card opens), its `Sign In` button at `:580` (the block was `@rev 7b073f8` `:317`–`431`) — a username field, a password field, `Sign In`, a recovery note | unchanged in shape; the copy stops implying the account *is* the person |
+| **S-L2** | Who am I / sign out | `App.tsx:1417` (icon-only `Sign Out`), `:1423`–`:1435` identity card | the card shows a **person's name and role**, and its two fallbacks are removed |
+| **S-L3** | The named actor on a record | `App.tsx:2402` prints `recorded by {ack.recorded_by} · basis {ack.lawful_basis}`; the second site `:2646` prints `{item.acknowledgement.recorded_by}` without the words; the checklist tick stores `completed_at` and **no actor** | every record reads as *made by a person*, and says **which kind of person** |
 | **S-L4** | The unnamed-actor refusal | the server answers **400**; the client shows a generic error banner | the refusal says what is missing and what to do, in the product's words |
 
 ---
@@ -80,10 +80,10 @@ Placed where the card is today — sidebar, under the brand row (App.tsx:1215 at
   └──────────────────────────────────────────────┘
 ```
 
-- **Sign out stays one tap and stays icon-only** (`App.tsx:1361`, `title="Sign Out"`). Do not move it, do
+- **Sign out stays one tap and stays icon-only** (`App.tsx:1417`, `title="Sign Out"`). Do not move it, do
   not add a menu: a person must be able to leave the product without hunting, and the button already
   announces itself. Add an accessible name if the icon is ever unlabelled — today it relies on `title`.
-- **The `role` string is the access model's vocabulary, not invented here** (`user?.access_role` at `App.tsx:1376` — the field is no longer named `role`) — and it is no longer
+- **The `role` string is the access model's vocabulary, not invented here** (`user?.access_role` at `App.tsx:1432` — the field is no longer named `role`) — and it is no longer
   `(open)`: `docs/access-model.md` **§2.1** names the five (`hr_admin`, `manager`, `finance`, `employee`,
   `compliance_viewer`). The card displays one of those; it makes no claim about what it permits.
 - **The card must say *which* role it is showing.** The model's **§2.4** records a naming hazard this
@@ -164,7 +164,7 @@ Three rules the design asks for, each traceable to something already decided:
 > name the person who showed the notice, on the hire's behalf"*
 
 **Measured, from the client** (`App.tsx`): failures render into one banner (`checklistNotice`,
-`:2393`–`:2394`) with `data.error` if the server sent one. So the honest sentence **does** reach the screen —
+`:2477`–`:2478`) with `data.error` if the server sent one. So the honest sentence **does** reach the screen —
 the design question is whether it reads correctly and is attributed to the right act.
 
 **Proposed behaviour:**
@@ -204,7 +204,7 @@ No Arabic copy ships with this slice (decision 15(c) is open). The requirement i
 | `dir=` / `lang=` | **0** / **0** | no direction handling exists |
 
 **The two surfaces added here are the ones with the most physical markup in the product**, measured in place:
-the identity block (`App.tsx:1367`–`:1379`, `space-x-3` at `:1368`) and the login card (opens `:456`; was `:347`–`431`) use `justify-end`, `ml-3` (the dismiss button, `:517`) and `mr-2` (the error icon, `:470`). Rules for anything
+the identity block (`App.tsx:1423`–`:1435`, `space-x-3` at `:1424`) and the login card (opens `:506`) use `justify-end`, `ml-3` (the dismiss button, `:567`) and `mr-2` (the error icon, `:520`); the card's block was `@rev 7b073f8` `:347`–`431`. Rules for anything
 new:
 
 1. **Spacing inside the identity card and any new row goes through `gap-*` on a flex container**, never

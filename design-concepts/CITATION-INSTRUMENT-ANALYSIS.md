@@ -72,7 +72,7 @@ line 1188. Everything above the first hunk shifts by one; everything below the s
 
 A **+10** shift is visibly wrong: a citation ten lines short of its subject shows the wrong thing and a reader notices. A **+1** shift is
 **nearly right**: a citation one line short shows the thing it names, one line off, and the reader concludes the document is
-fine. The `ml-3` this example used moved from 415 to 416 at `7a4e00a`→`5017d39`; at this tip it sits at `App.tsx:517`. **Five of the thirteen anchors
+fine. The `ml-3` this example used moved from 415 to 416 at `7a4e00a`→`5017d39`; at this tip it sits at `App.tsx:567`. **Five of the thirteen anchors
 sit in that regime.**
 
 That is the defect to design against — not staleness, but staleness that reads as correctness. It also means a
