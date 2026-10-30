@@ -163,6 +163,16 @@ CHECKS = [
          what="the {checks}-check access-model instrument against docs/access-model.md, the document the product's access model is delivered in",
          count_from_instrument=True),
 
+    dict(id="host-template-copies", mode="default", expect="green",
+         home="operator CLI (bare) + this entry point; it judges a HOST folder, so it is not run by the movement",
+         cmd=[PY, "scripts/check-host-template-copies.py"],
+         what="owner ruling 2026-10-29: the REPOSITORY is the sole authority for served documents, and "
+              "/home/team/shared/templates is retired. The folder is WALKED, not matched against a list of "
+              "names: 0 files at its top level, and only its flat retired/ may hold files, each named "
+              "<document>.<ext>.retired-<revision>. A copy reappearing anywhere under it is RED and is named. "
+              "A folder that is missing or unreadable exits 2 (CANNOT-JUDGE) - never a green "
+              "(proof: scripts/check-host-template-copies-test.sh, cases J and K)"),
+
     dict(id="served-document-renderer", mode="default", expect="green",
          home="operator CLI (bare) + this entry point; run by nothing else, which is why it is here",
          cmd=[PY, "scripts/check-served-document-renderer.py"],
@@ -202,6 +212,17 @@ CHECKS = [
     dict(id="guard-role-vs-shape", mode="full", expect="green", home="operator CLI, on a host with an armed guard",
          cmd=["bash", "scripts/guard-role-vs-shape-test.sh"],
          what="the duplicate-guard check judges a process's ROLE (argv position: interpreter + non-flag first arg) not the SHAPE of a string that merely names keep-alive.sh. Compares the recorded pre-fix revision (2b14a94) against this tree, holds two decoys in the log's own shape, and requires both sides to count the live loop. exit 2 = CANNOT-JUDGE; it never signals, starts or stops a guard"),
+
+    dict(id="host-template-copies-proof", mode="full", expect="green", home="operator CLI, off-host",
+         cmd=["bash", "scripts/check-host-template-copies-test.sh"],
+         what="drives the retired-folder guard against a scratch copy of the folder (never the host one) and "
+              "requires each plant to REDDEN on its own path: a copy at the top level, a copy in a nested "
+              "directory, a name no list names, a second copy with the .retired- suffix in the middle, a "
+              "nested directory inside the quarantine, and a symlink. It requires the quarantine's 3 files "
+              "to stay green in EVERY red run, a missing folder and a file-instead-of-folder to exit 2, the "
+              "fixture and the live host folder to be byte-identical afterwards, and the clean run's counts "
+              "(2 directories, 3 entries, 0 top-level, 3 quarantined, 0 violations) to be printed - a green "
+              "with a zero count is the defect it asserts against"),
 ]
 
 SKIPS = [

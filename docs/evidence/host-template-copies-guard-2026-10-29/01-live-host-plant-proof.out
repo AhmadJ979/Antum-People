@@ -1,0 +1,155 @@
+=== host plant proof 17:15:48Z · check: /home/team/shared/wt-templates/scripts/check-host-template-copies.py
+=== the folder BEFORE anything:
+d . 29
+d ./retired 163
+f ./retired/ksa-employment-contract.md.retired-9d2182a 10662
+f ./retired/privacy-notice.md.retired-9d2182a 23566
+f ./retired/uae-employment-contract.md.retired-4c8779b 10824
+
+--- P0 clean run (the state today) -------------------------------------------------
+host template folder check - the repository is the sole authority for served documents
+  rule                  : the retired host folder holds 0 files, and only 'retired'/ may hold files,
+                          each named <document>.<ext>.retired-<revision> (flat, plain files)
+  folder judged         : /home/team/shared/templates
+  check read from tree  : 414a007
+  NOT run by            : the movement. It judges a HOST folder, loads nothing served, and
+                          `grep -c scripts server/index.js` is 0 - no served path reads scripts/
+  IS NOT A MONITOR      : nothing schedules it. It notices a reappearing copy when it is run.
+  directories walked    : 2  ['.', 'retired']
+  entries examined      : 3  (every file, link and special file under the folder, walked -
+                          not matched against a list of names)
+  files at TOP LEVEL    : 0   (want 0)
+  quarantined (matching): 3
+      ok    retired/ksa-employment-contract.md.retired-9d2182a
+      ok    retired/privacy-notice.md.retired-9d2182a
+      ok    retired/uae-employment-contract.md.retired-4c8779b
+  violations            : 0
+OK: 3 entries examined, 0 at the top level (want 0), 3 quarantined and matching the rule, 0 violations.
+    /home/team/shared/templates is in its retired state.
+P0 exit=0
+
+--- P1 TOP LEVEL plant: privacy-notice.md (a name that belongs only to the repository) ---
+$ ls: ./privacy-notice.md 
+host template folder check - the repository is the sole authority for served documents
+  rule                  : the retired host folder holds 0 files, and only 'retired'/ may hold files,
+                          each named <document>.<ext>.retired-<revision> (flat, plain files)
+  folder judged         : /home/team/shared/templates
+  check read from tree  : 414a007
+  NOT run by            : the movement. It judges a HOST folder, loads nothing served, and
+                          `grep -c scripts server/index.js` is 0 - no served path reads scripts/
+  IS NOT A MONITOR      : nothing schedules it. It notices a reappearing copy when it is run.
+  directories walked    : 2  ['.', 'retired']
+  entries examined      : 4  (every file, link and special file under the folder, walked -
+                          not matched against a list of names)
+  files at TOP LEVEL    : 1   (want 0)
+  quarantined (matching): 3
+      ok    retired/ksa-employment-contract.md.retired-9d2182a
+      ok    retired/privacy-notice.md.retired-9d2182a
+      ok    retired/uae-employment-contract.md.retired-4c8779b
+  violations            : 1
+      RED   privacy-notice.md
+            TOP-LEVEL: a file at the TOP LEVEL of the retired folder - the folder holds 0 files; the authoritative copy is templates/ in the repository
+FAIL: 1 entr(ies) in the retired folder that the ruling does not allow - each is named above with its path.
+      The authoritative copy is templates/ in the repository; a host copy is a second copy that will drift.
+P1 exit=1
+
+--- P1b clean again after removing the plant ------------------------------------------
+host template folder check - the repository is the sole authority for served documents
+  rule                  : the retired host folder holds 0 files, and only 'retired'/ may hold files,
+                          each named <document>.<ext>.retired-<revision> (flat, plain files)
+  folder judged         : /home/team/shared/templates
+  check read from tree  : 414a007
+  NOT run by            : the movement. It judges a HOST folder, loads nothing served, and
+                          `grep -c scripts server/index.js` is 0 - no served path reads scripts/
+  IS NOT A MONITOR      : nothing schedules it. It notices a reappearing copy when it is run.
+  directories walked    : 2  ['.', 'retired']
+  entries examined      : 3  (every file, link and special file under the folder, walked -
+                          not matched against a list of names)
+  files at TOP LEVEL    : 0   (want 0)
+  quarantined (matching): 3
+      ok    retired/ksa-employment-contract.md.retired-9d2182a
+      ok    retired/privacy-notice.md.retired-9d2182a
+      ok    retired/uae-employment-contract.md.retired-4c8779b
+  violations            : 0
+OK: 3 entries examined, 0 at the top level (want 0), 3 quarantined and matching the rule, 0 violations.
+    /home/team/shared/templates is in its retired state.
+P1b exit=0
+
+--- P2 NESTED DIRECTORY plant: drafts/ksa-employment-contract.md -----------------------
+host template folder check - the repository is the sole authority for served documents
+  rule                  : the retired host folder holds 0 files, and only 'retired'/ may hold files,
+                          each named <document>.<ext>.retired-<revision> (flat, plain files)
+  folder judged         : /home/team/shared/templates
+  check read from tree  : 414a007
+  NOT run by            : the movement. It judges a HOST folder, loads nothing served, and
+                          `grep -c scripts server/index.js` is 0 - no served path reads scripts/
+  IS NOT A MONITOR      : nothing schedules it. It notices a reappearing copy when it is run.
+  directories walked    : 3  ['.', 'retired', 'drafts']
+  entries examined      : 4  (every file, link and special file under the folder, walked -
+                          not matched against a list of names)
+  files at TOP LEVEL    : 0   (want 0)
+  quarantined (matching): 3
+      ok    retired/ksa-employment-contract.md.retired-9d2182a
+      ok    retired/privacy-notice.md.retired-9d2182a
+      ok    retired/uae-employment-contract.md.retired-4c8779b
+  violations            : 1
+      RED   drafts/ksa-employment-contract.md
+            FOREIGN-DIR: inside 'drafts'/ - the retired folder holds no directory but 'retired'/ that may hold files; a document copy here is a second authoritative copy
+FAIL: 1 entr(ies) in the retired folder that the ruling does not allow - each is named above with its path.
+      The authoritative copy is templates/ in the repository; a host copy is a second copy that will drift.
+P2 exit=1
+
+--- P3 a name NO LIST NAMES: retired/privacy-addendum-2027.txt ------------------------
+host template folder check - the repository is the sole authority for served documents
+  rule                  : the retired host folder holds 0 files, and only 'retired'/ may hold files,
+                          each named <document>.<ext>.retired-<revision> (flat, plain files)
+  folder judged         : /home/team/shared/templates
+  check read from tree  : 414a007
+  NOT run by            : the movement. It judges a HOST folder, loads nothing served, and
+                          `grep -c scripts server/index.js` is 0 - no served path reads scripts/
+  IS NOT A MONITOR      : nothing schedules it. It notices a reappearing copy when it is run.
+  directories walked    : 2  ['.', 'retired']
+  entries examined      : 4  (every file, link and special file under the folder, walked -
+                          not matched against a list of names)
+  files at TOP LEVEL    : 0   (want 0)
+  quarantined (matching): 3
+      ok    retired/ksa-employment-contract.md.retired-9d2182a
+      ok    retired/privacy-notice.md.retired-9d2182a
+      ok    retired/uae-employment-contract.md.retired-4c8779b
+  violations            : 1
+      RED   retired/privacy-addendum-2027.txt
+            BAD-QUARANTINE-NAME: the name does not match <document>.<ext>.retired-<revision> (e.g. privacy-notice.md.retired-9d2182a)
+FAIL: 1 entr(ies) in the retired folder that the ruling does not allow - each is named above with its path.
+      The authoritative copy is templates/ in the repository; a host copy is a second copy that will drift.
+P3 exit=1
+
+--- P4 final: clean, and the quarantine's three reported green -----------------------
+host template folder check - the repository is the sole authority for served documents
+  rule                  : the retired host folder holds 0 files, and only 'retired'/ may hold files,
+                          each named <document>.<ext>.retired-<revision> (flat, plain files)
+  folder judged         : /home/team/shared/templates
+  check read from tree  : 414a007
+  NOT run by            : the movement. It judges a HOST folder, loads nothing served, and
+                          `grep -c scripts server/index.js` is 0 - no served path reads scripts/
+  IS NOT A MONITOR      : nothing schedules it. It notices a reappearing copy when it is run.
+  directories walked    : 2  ['.', 'retired']
+  entries examined      : 3  (every file, link and special file under the folder, walked -
+                          not matched against a list of names)
+  files at TOP LEVEL    : 0   (want 0)
+  quarantined (matching): 3
+      ok    retired/ksa-employment-contract.md.retired-9d2182a
+      ok    retired/privacy-notice.md.retired-9d2182a
+      ok    retired/uae-employment-contract.md.retired-4c8779b
+  violations            : 0
+OK: 3 entries examined, 0 at the top level (want 0), 3 quarantined and matching the rule, 0 violations.
+    /home/team/shared/templates is in its retired state.
+P4 exit=0
+
+=== the folder AFTER everything:
+d . 29
+d ./retired 163
+f ./retired/ksa-employment-contract.md.retired-9d2182a 10662
+f ./retired/privacy-notice.md.retired-9d2182a 23566
+f ./retired/uae-employment-contract.md.retired-4c8779b 10824
+=== RESTORED: the host folder lists identically to how it was found (paths, kinds, sizes)
+=== done 17:15:49Z

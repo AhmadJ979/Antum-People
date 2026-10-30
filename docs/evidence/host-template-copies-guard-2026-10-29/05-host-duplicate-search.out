@@ -1,0 +1,1100 @@
+====================================================================================================
+DUPLICATE SEARCH - is any repository document copied outside the repository?
+  repository          : /home/team/shared/probable-octo-sniffle
+  searched            : /home/team/shared (excluding the trees named below)
+  repository documents indexed by CONTENT (md5): 1130
+      templates/ (a served document's authoritative home)      : 14
+      docs/*.md (live documents, docs/evidence/ treated as history): 4
+      docs/ other files (evidence, data, scripts)              : 1088
+      repository root *.md (live documents)                   : 24
+
+  host files examined : 1420
+  trees/locations EXCLUDED, with their file counts (each is not 'outside the repository' or not a document):
+      __pycache__                                  1
+      probable-octo-sniffle                        14544
+      site/node_modules                            6645
+      wt-templates                                 1300
+
+  BY NAME   : repository document basenames: 968 | host basenames: 1123 | COLLISIONS: 207
+      NAME HIT 01-engine-at-main.txt
+          repository: ['docs/evidence/eosb-forecast-2026-10-27/01-engine-at-main.txt']
+          host      : ['p4-3-eosb-forecast/evidence/01-engine-at-main.txt']
+      NAME HIT 01-hybrid-and-athead-controls-redden.txt
+          repository: ['docs/evidence/access-model-instrument-honesty-2026-10-26/01-hybrid-and-athead-controls-redden.txt']
+          host      : ['evidence-access-model-instrument-honesty-2026-10-26/01-hybrid-and-athead-controls-redden.txt']
+      NAME HIT 01-index-html.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/01-index-html.txt']
+          host      : ['acceptance-2026-10-22/01-index-html.txt']
+      NAME HIT 01-instrument-BEFORE-at-62665dc.txt
+          repository: ['docs/evidence/access-model-reground-2026-10-26/01-instrument-BEFORE-at-62665dc.txt']
+          host      : ['evidence-access-model-reground-2026-10-26/01-instrument-BEFORE-at-62665dc.txt']
+      NAME HIT 01-restart-only-recovery-run-stamped.txt
+          repository: ['docs/evidence/recovery-2026-10-22T0907Z/01-restart-only-recovery-run-stamped.txt']
+          host      : ['recovery-2026-10-22T0907Z/01-restart-only-recovery-run-stamped.txt']
+      NAME HIT 01-rig-BEFORE-505ddd3.txt
+          repository: ['docs/evidence/exit-interview-actor-2026-10-26/01-rig-BEFORE-505ddd3.txt']
+          host      : ['evidence/exit-interview-actor-2026-10-26/01-rig-BEFORE-505ddd3.txt']
+      NAME HIT 02-instrument-AFTER-this-branch.txt
+          repository: ['docs/evidence/access-model-reground-2026-10-26/02-instrument-AFTER-this-branch.txt']
+          host      : ['evidence-access-model-reground-2026-10-26/02-instrument-AFTER-this-branch.txt']
+      NAME HIT 02-instrument-own-tests-8of8.txt
+          repository: ['docs/evidence/access-model-instrument-honesty-2026-10-26/02-instrument-own-tests-8of8.txt']
+          host      : ['evidence-access-model-instrument-honesty-2026-10-26/02-instrument-own-tests-8of8.txt']
+      NAME HIT 02-rig-AFTER-aecd2ee.txt
+          repository: ['docs/evidence/exit-interview-actor-2026-10-26/02-rig-AFTER-aecd2ee.txt']
+          host      : ['evidence/exit-interview-actor-2026-10-26/02-rig-AFTER-aecd2ee.txt']
+      NAME HIT 02-roster-and-trajectory.txt
+          repository: ['docs/evidence/eosb-forecast-2026-10-27/02-roster-and-trajectory.txt']
+          host      : ['p4-3-eosb-forecast/evidence/02-roster-and-trajectory.txt']
+      NAME HIT 02-served-vs-dist.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/02-served-vs-dist.txt']
+          host      : ['acceptance-2026-10-22/02-served-vs-dist.txt']
+      NAME HIT 03-failure-modes.txt
+          repository: ['docs/evidence/eosb-forecast-2026-10-27/03-failure-modes.txt']
+          host      : ['p4-3-eosb-forecast/evidence/03-failure-modes.txt']
+      NAME HIT 03-guard.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/03-guard.txt']
+          host      : ['acceptance-2026-10-22/03-guard.txt']
+      NAME HIT 03-instrument-own-tests-4of4.txt
+          repository: ['docs/evidence/access-model-reground-2026-10-26/03-instrument-own-tests-4of4.txt']
+          host      : ['evidence-access-model-reground-2026-10-26/03-instrument-own-tests-4of4.txt']
+      NAME HIT 03-rig-BEFORE-server-log.txt
+          repository: ['docs/evidence/exit-interview-actor-2026-10-26/03-rig-BEFORE-server-log.txt']
+          host      : ['evidence/exit-interview-actor-2026-10-26/03-rig-BEFORE-server-log.txt']
+      NAME HIT 03-stale-table-disarm-probe.txt
+          repository: ['docs/evidence/access-model-instrument-honesty-2026-10-26/03-stale-table-disarm-probe.txt']
+          host      : ['evidence-access-model-instrument-honesty-2026-10-26/03-stale-table-disarm-probe.txt']
+      NAME HIT 04-athead-before-the-fix.txt
+          repository: ['docs/evidence/access-model-instrument-honesty-2026-10-26/04-athead-before-the-fix.txt']
+          host      : ['evidence-access-model-instrument-honesty-2026-10-26/04-athead-before-the-fix.txt']
+      NAME HIT 04-check-all-full-output.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/04-check-all-full-output.txt']
+          host      : ['acceptance-2026-10-22/04-check-all-full-output.txt']
+      NAME HIT 04-entry-point.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/04-entry-point.txt']
+          host      : ['acceptance-2026-10-22/04-entry-point.txt']
+      NAME HIT 04-full-suite-AFTER.txt
+          repository: ['docs/evidence/access-model-reground-2026-10-26/04-full-suite-AFTER.txt']
+          host      : ['evidence-access-model-reground-2026-10-26/04-full-suite-AFTER.txt']
+      NAME HIT 04-movers-and-crossings.txt
+          repository: ['docs/evidence/eosb-forecast-2026-10-27/04-movers-and-crossings.txt']
+          host      : ['p4-3-eosb-forecast/evidence/04-movers-and-crossings.txt']
+      NAME HIT 04-rig-AFTER-server-log.txt
+          repository: ['docs/evidence/exit-interview-actor-2026-10-26/04-rig-AFTER-server-log.txt']
+          host      : ['evidence/exit-interview-actor-2026-10-26/04-rig-AFTER-server-log.txt']
+      NAME HIT 05-host-state.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/05-host-state.txt']
+          host      : ['acceptance-2026-10-22/05-host-state.txt']
+      NAME HIT 05-hybrid-after-the-fix.txt
+          repository: ['docs/evidence/access-model-instrument-honesty-2026-10-26/05-hybrid-after-the-fix.txt']
+          host      : ['evidence-access-model-instrument-honesty-2026-10-26/05-hybrid-after-the-fix.txt']
+      NAME HIT 05-pack-check-first-run-red.txt
+          repository: ['docs/evidence/eosb-forecast-2026-10-27/05-pack-check-first-run-red.txt']
+          host      : ['p4-3-eosb-forecast/evidence/05-pack-check-first-run-red.txt']
+      NAME HIT 05-suite-AFTER-aecd2ee.txt
+          repository: ['docs/evidence/exit-interview-actor-2026-10-26/05-suite-AFTER-aecd2ee.txt']
+          host      : ['evidence/exit-interview-actor-2026-10-26/05-suite-AFTER-aecd2ee.txt']
+      NAME HIT 06-control-tests-without-fix.txt
+          repository: ['docs/evidence/exit-interview-actor-2026-10-26/06-control-tests-without-fix.txt']
+          host      : ['evidence/exit-interview-actor-2026-10-26/06-control-tests-without-fix.txt']
+      NAME HIT 06-pack-check-falsified.txt
+          repository: ['docs/evidence/eosb-forecast-2026-10-27/06-pack-check-falsified.txt']
+          host      : ['p4-3-eosb-forecast/evidence/06-pack-check-falsified.txt']
+      NAME HIT 06-recon-superseded-hook-absent.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/06-recon-superseded-hook-absent.txt']
+          host      : ['acceptance-2026-10-22/06-recon-superseded-hook-absent.txt']
+      NAME HIT 06-unresolvable-ref-after-the-fix.txt
+          repository: ['docs/evidence/access-model-instrument-honesty-2026-10-26/06-unresolvable-ref-after-the-fix.txt']
+          host      : ['evidence-access-model-instrument-honesty-2026-10-26/06-unresolvable-ref-after-the-fix.txt']
+      NAME HIT 07-guard-identify.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/07-guard-identify.txt']
+          host      : ['acceptance-2026-10-22/07-guard-identify.txt']
+      NAME HIT 07-old-doc-usage-still-works.txt
+          repository: ['docs/evidence/access-model-instrument-honesty-2026-10-26/07-old-doc-usage-still-works.txt']
+          host      : ['evidence-access-model-instrument-honesty-2026-10-26/07-old-doc-usage-still-works.txt']
+      NAME HIT 07-rig-identity.txt
+          repository: ['docs/evidence/eosb-forecast-2026-10-27/07-rig-identity.txt']
+          host      : ['p4-3-eosb-forecast/evidence/07-rig-identity.txt']
+      NAME HIT 07-suite-narrowed-AFTER.txt
+          repository: ['docs/evidence/exit-interview-actor-2026-10-26/07-suite-narrowed-AFTER.txt']
+          host      : ['evidence/exit-interview-actor-2026-10-26/07-suite-narrowed-AFTER.txt']
+      NAME HIT 08-full-suite-at-this-branch.txt
+          repository: ['docs/evidence/access-model-instrument-honesty-2026-10-26/08-full-suite-at-this-branch.txt']
+          host      : ['evidence-access-model-instrument-honesty-2026-10-26/08-full-suite-at-this-branch.txt']
+      NAME HIT 08-hook-provenance.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/08-hook-provenance.txt']
+          host      : ['acceptance-2026-10-22/08-hook-provenance.txt']
+      NAME HIT 09-movement-in-flight.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/09-movement-in-flight.txt']
+          host      : ['acceptance-2026-10-22/09-movement-in-flight.txt']
+      NAME HIT 10-guard-settled.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/10-guard-settled.txt']
+          host      : ['acceptance-2026-10-22/10-guard-settled.txt']
+      NAME HIT 11-retake-pair.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/11-retake-pair.txt']
+          host      : ['acceptance-2026-10-22/11-retake-pair.txt']
+      NAME HIT 12-guard-retake.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/12-guard-retake.txt']
+          host      : ['acceptance-2026-10-22/12-guard-retake.txt']
+      NAME HIT 13-observer.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/13-observer.txt']
+          host      : ['acceptance-2026-10-22/13-observer.txt']
+      NAME HIT 14-check-all-bare-full-output.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/14-check-all-bare-full-output.txt']
+          host      : ['acceptance-2026-10-22/14-check-all-bare-full-output.txt']
+      NAME HIT 14-entry-point-bare.txt
+          repository: ['docs/evidence/host-acceptance-2026-10-22/14-entry-point-bare.txt']
+          host      : ['acceptance-2026-10-22/14-entry-point-bare.txt']
+      NAME HIT A-branch-tip.txt
+          repository: ['docs/evidence/content-anchored-citations-2026-10-26/A-branch-tip.txt']
+          host      : ['evidence-content-anchored-2026-10-26/A-branch-tip.txt']
+      NAME HIT E-gate-test.txt
+          repository: ['docs/evidence/content-anchored-citations-2026-10-26/E-gate-test.txt']
+          host      : ['evidence-content-anchored-2026-10-26/E-gate-test.txt']
+      NAME HIT E1-gate-test-first-run-reddened.txt
+          repository: ['docs/evidence/content-anchored-citations-2026-10-26/E1-gate-test-first-run-reddened.txt']
+          host      : ['evidence-content-anchored-2026-10-26/E1-gate-test-first-run-reddened.txt']
+      NAME HIT FINDINGS.md
+          repository: ['docs/evidence/demo-weak-screens-reground/FINDINGS.md', 'docs/evidence/l2-demo-seed/FINDINGS.md']
+          host      : ['p2-2-browser-dogfood/FINDINGS.md']
+      NAME HIT MOVEMENT.md
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/MOVEMENT.md']
+          host      : ['movements/2026-10-20T1607Z/MOVEMENT.md']
+      NAME HIT README.md
+          repository: ['docs/evidence/demo-walkthrough-preboarding/README.md', 'docs/evidence/p2-3-pre-reading-package/README.md', 'docs/evidence/p2-4-filter-scope/README.md', 'docs/evidence/p2-4-rendered/README.md', 'docs/evidence/p2-4-scope-note/README.md', 'docs/evidence/p2-6-pdpl-memo/README.md', 'docs/evidence/l2-a11y-intake-labels/README.md', 'docs/evidence/l2-storage-decision/README.md', 'docs/evidence/label-rule-recheck/README.md', 'docs/evidence/p2-4-served-pass/README.md', 'docs/evidence/post-cutover-reground/README.md', 'docs/evidence/all-chip-race-2026-10-09/README.md', 'docs/evidence/label-per-surface-2026-10-09/README.md', 'docs/evidence/board-removal-2026-10-09/README.md', 'docs/evidence/cutover3-reground/README.md', 'docs/evidence/pdpl-lawful-basis-mapping/README.md', 'docs/evidence/pre-cutover-render-2026-10-09/README.md', 'docs/evidence/response-shape-envelope-2026-10-09/README.md', 'docs/evidence/ksa-contract-divergence-2026-10-12/README.md', 'docs/evidence/notice-acknowledgement-2026-10-12/README.md', 'docs/evidence/notice-acknowledgement-seed-2026-10-12/README.md', 'docs/evidence/notice-not-shown-copy-2026-10-12/README.md', 'docs/evidence/one-authoritative-notice-2026-10-12/README.md', 'docs/evidence/pdpl-acknowledgement-spec/README.md', 'docs/evidence/post-cutover-reground-2026-10-12/README.md', 'docs/evidence/decisions-21-17-2026-10-13/README.md', 'docs/evidence/ksa-host-copy-retired-2026-10-13/README.md', 'docs/evidence/p2-6-premise-sweep/README.md', 'docs/evidence/post-cutover-5-2026-10-12-0642-reground/README.md', 'docs/evidence/reachability-report-four-counts-2026-10-14/README.md', 'docs/evidence/decision-17-columns-2026-10-15/README.md', 'docs/evidence/host-tools-2026-10-18/README.md', 'docs/evidence/movement-recut-2026-10-18/README.md', 'docs/evidence/cutover-2026-10-19-1041/README.md', 'docs/evidence/hook-pairing-2026-10-19/README.md', 'docs/evidence/layer3-slice1-2026-10-19/README.md', 'docs/evidence/observer-2026-10-19/README.md', 'docs/evidence/runbook-retirement-2026-10-19/README.md', 'docs/evidence/cutover-2026-10-20-0515/README.md', 'docs/evidence/layer3-slice2-prereqs-2026-10-20/README.md', 'docs/evidence/observer-2026-10-20-0526/README.md', 'docs/evidence/cutover-2026-10-20T065020/README.md', 'docs/evidence/client-states-cites-2026-10-20/README.md', 'docs/evidence/cutover-2026-10-20T084915/README.md', 'docs/evidence/cutover-2026-10-20T090619/README.md', 'docs/evidence/no-403-claim-sweep-2026-10-20/README.md', 'docs/evidence/stylesheet-30-bytes/README.md', 'docs/evidence/cutover-2026-10-20T092938/README.md', 'docs/evidence/design-index-check-2026-10-20/README.md', 'docs/evidence/reachability-report-cli/README.md', 'docs/evidence/reachability-role-test/README.md', 'docs/evidence/tailwind-pinned-sources/README.md', 'docs/evidence/guard-role-vs-shape/README.md', 'docs/evidence/access-model-citations-2026-10-20/README.md', 'docs/evidence/movement-2026-10-20T1511Z/README.md', 'docs/evidence/movement-2026-10-20T1607Z/README.md', 'docs/evidence/preflight-record-and-serving-2026-10-20/README.md', 'docs/evidence/guard-lock-holder-2026-10-22/README.md', 'docs/evidence/host-acceptance-2026-10-22/README.md', 'docs/evidence/movement-2026-10-21T1012Z/README.md', 'docs/evidence/preflight-record-validation-2026-10-22/README.md', 'docs/evidence/recovery-2026-10-22T0907Z/README.md', 'docs/evidence/p4-1-replacement-cost-2026-10-24/README.md', 'docs/evidence/host-recovery-2026-10-25/README.md', 'docs/evidence/content-anchored-citations-2026-10-26/README.md', 'docs/evidence/deployed-tip-suite-2026-10-26/README.md', 'docs/evidence/termination-type-finding-2026-10-26/README.md', 'docs/evidence/exit-interview-actor-2026-10-26/README.md', 'docs/evidence/probation-evaluations-p3-2-2026-10-26/README.md', 'docs/evidence/access-model-reground-2026-10-26/README.md', 'docs/evidence/workflow-rule-41-merge-2026-10-26/README.md', 'docs/evidence/access-model-instrument-honesty-2026-10-26/README.md', 'docs/evidence/probation-correction-decision-2026-10-26/README.md', 'docs/evidence/p3-3-screen-2026-10-26/README.md', 'docs/evidence/eosb-forecast-2026-10-27/README.md', 'docs/evidence/access-claim-guard-2026-10-28/README.md', 'docs/evidence/eosb-trend-claim-2026-10-28/README.md', 'docs/evidence/watcher-note-detection-claim-2026-10-28/README.md', 'docs/evidence/served-document-facts-2026-10-28/README.md', 'docs/evidence/preview-renders-document-2026-10-29/README.md', 'README.md']
+          host      : ['tracker-round-40/README.md', 'antum-people-working/client/README.md', 'design-concepts/README.md', 'cutover-20261009/README.md', 'cutover-20261009-1234/README.md', 'cutover-4-record-revision-2026-10-12/README.md', 'notice-v2.3/README.md', 'reachability-report-cli/README.md', 'client-states-v1-draft/README.md', 'client-states-v1-draft/client-states-cites-2026-10-20/README.md', 'reachability-report-four-counts-2026-10-14/README.md', 'cutover-2026-10-14/README.md', 'restore-2026-10-17/README.md', 'hook-marker-2026-10-17/README.md', 'round-54-recheck/README.md', 'tailwind-pinned-sources/README.md', 'evidence-226-reverify-at-moved-base-2026-10-19/README.md', 'evidence-round-51/README.md', 'access-model-checker-ee4bbdf/README.md', 'client-states/README.md', 'pr318-host-acceptance-run6/README.md', 'eosb-trend-claim-2026-10-28/README.md', 'evidence-access-model-reground-2026-10-26/README.md', 'evidence-access-model-instrument-honesty-2026-10-26/README.md', 'p4-3-eosb-forecast/evidence/README.md', 'served-document-facts-2026-10-28/README.md', 'amount-grouping-2026-10-29/README.md', 'dist-preserved-3f833b4/README.md', 'dist-preserved-414a007/README.md']
+      NAME HIT README.txt
+          repository: ['docs/evidence/p3-1-probation-timeline-2026-10-22/README.txt', 'docs/evidence/movement-2026-10-22-1247/README.txt']
+          host      : ['evidence/suite-2026-10-17/README.txt', 'p2-5-flag-note-2026-10-27/README.txt']
+      NAME HIT WORKFLOW.md
+          repository: ['WORKFLOW.md']
+          host      : ['WORKFLOW.md']
+      NAME HIT board-and-plan-reads-r54.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/board-and-plan-reads-r54.txt']
+          host      : ['round-54-recheck/board-and-plan-reads-r54.txt']
+      NAME HIT board-counts.txt
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/board-counts.txt']
+          host      : ['movements/2026-10-20T1607Z/board-counts.txt']
+      NAME HIT board-now.txt
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/board-now.txt']
+          host      : ['movements/2026-10-20T1607Z/board-now.txt']
+      NAME HIT board-open.txt
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/board-open.txt']
+          host      : ['movements/2026-10-20T1607Z/board-open.txt']
+      NAME HIT build-proof.txt
+          repository: ['docs/evidence/p2-2/build-proof.txt', 'docs/evidence/l2-demo-seed/build-proof.txt', 'docs/evidence/p2-4-filter-scope/build-proof.txt', 'docs/evidence/p2-4-scope-note/build-proof.txt', 'docs/evidence/p2-5/build-proof.txt', 'docs/evidence/rollup-scope/build-proof.txt', 'docs/evidence/exit-modal-opener/build-proof.txt']
+          host      : ['p2-1-offer-acceptance-case/build-proof.txt', 'p2-2-document-checklist/build-proof.txt']
+      NAME HIT build.log
+          repository: ['docs/evidence/movement-2026-10-22-1247/build.log']
+          host      : ['movement-2026-10-22-1247/build.log', 'amount-grouping-2026-10-29/build.log']
+      NAME HIT bundle-identity.txt
+          repository: ['docs/evidence/eosb-trend-claim-2026-10-28/bundle-identity.txt']
+          host      : ['eosb-trend-claim-2026-10-28/bundle-identity.txt']
+      NAME HIT check-pack.py
+          repository: ['docs/evidence/probation-correction-decision-2026-10-26/check-pack.py', 'docs/evidence/eosb-forecast-2026-10-27/check-pack.py']
+          host      : ['p4-3-eosb-forecast/evidence/check-pack.py']
+      NAME HIT checker-r54-controls.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/checker-r54-controls.txt']
+          host      : ['round-54-recheck/checker-r54-controls.txt']
+      NAME HIT checker-r54-green-after-repair-and-amendment.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/checker-r54-green-after-repair-and-amendment.txt']
+          host      : ['round-54-recheck/checker-r54-green-after-repair-and-amendment.txt']
+      NAME HIT checker-r54-green-after-second-movement.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/checker-r54-green-after-second-movement.txt']
+          host      : ['round-54-recheck/checker-r54-green-after-second-movement.txt']
+      NAME HIT checker-r54-green.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/checker-r54-green.txt']
+          host      : ['round-54-recheck/checker-r54-green.txt']
+      NAME HIT client-build-after.log
+          repository: ['docs/evidence/eosb-trend-claim-2026-10-28/client-build-after.log']
+          host      : ['eosb-trend-claim-2026-10-28/client-build-after.log']
+      NAME HIT compliance-audit-enhancement.md
+          repository: ['compliance-audit-enhancement.md']
+          host      : ['compliance-audit-enhancement.md']
+      NAME HIT compliance-dpia-vendor-risk.md
+          repository: ['compliance-dpia-vendor-risk.md']
+          host      : ['compliance-dpia-vendor-risk.md']
+      NAME HIT compliance-requirements.md
+          repository: ['compliance-requirements.md']
+          host      : ['compliance-requirements.md']
+      NAME HIT control-A-renamed-category-NEW.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/control-A-renamed-category-NEW.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/control-A-renamed-category-NEW.txt']
+      NAME HIT control-A-renamed-category-OLD.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/control-A-renamed-category-OLD.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/control-A-renamed-category-OLD.txt']
+      NAME HIT control-B-fifth-category-NEW.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/control-B-fifth-category-NEW.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/control-B-fifth-category-NEW.txt']
+      NAME HIT control-B-fifth-category-OLD.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/control-B-fifth-category-OLD.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/control-B-fifth-category-OLD.txt']
+      NAME HIT control-C-extra-register-entry-NEW.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/control-C-extra-register-entry-NEW.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/control-C-extra-register-entry-NEW.txt']
+      NAME HIT control-C-extra-register-entry-OLD.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/control-C-extra-register-entry-OLD.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/control-C-extra-register-entry-OLD.txt']
+      NAME HIT control-D-fourth-no-basis-item-NEW.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/control-D-fourth-no-basis-item-NEW.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/control-D-fourth-no-basis-item-NEW.txt']
+      NAME HIT control-D-fourth-no-basis-item-OLD.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/control-D-fourth-no-basis-item-OLD.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/control-D-fourth-no-basis-item-OLD.txt']
+      NAME HIT control-E-unmodified-tree-NEW.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-NEW.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-NEW.txt']
+      NAME HIT control-E-unmodified-tree-OLD.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-OLD.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-OLD.txt']
+      NAME HIT control-F-one-orphan-route-NEW.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/control-F-one-orphan-route-NEW.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/control-F-one-orphan-route-NEW.txt']
+      NAME HIT control-F-one-orphan-route-OLD.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/control-F-one-orphan-route-OLD.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/control-F-one-orphan-route-OLD.txt']
+      NAME HIT controls-HEADER.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/controls-HEADER.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/controls-HEADER.txt']
+      NAME HIT controls-harness.sh
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/controls-harness.sh']
+          host      : ['reachability-report-four-counts-2026-10-14/controls-harness.sh']
+      NAME HIT controls-transcript-20261014T155714Z.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/controls-transcript-20261014T155714Z.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/controls-transcript-20261014T155714Z.txt']
+      NAME HIT cutover-20261020-092938-build.log
+          repository: ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-092938-build.log']
+          host      : ['round-54-recheck/cutover-20261020-092938-build.log']
+      NAME HIT cutover-20261020-092938-evidence.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-092938-evidence.txt']
+          host      : ['round-54-recheck/cutover-20261020-092938-evidence.txt']
+      NAME HIT cutover-20261020-092938-pb-overview.json
+          repository: ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-092938-pb-overview.json']
+          host      : ['round-54-recheck/cutover-20261020-092938-pb-overview.json']
+      NAME HIT cutover-20261020-092938-seed.log
+          repository: ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-092938-seed.log']
+          host      : ['round-54-recheck/cutover-20261020-092938-seed.log']
+      NAME HIT cutover-20261020-094644-build.log
+          repository: ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-094644-build.log']
+          host      : ['round-54-recheck/cutover-20261020-094644-build.log']
+      NAME HIT cutover-20261020-094644-evidence.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-094644-evidence.txt']
+          host      : ['round-54-recheck/cutover-20261020-094644-evidence.txt']
+      NAME HIT cutover-20261020-094644-pb-overview.json
+          repository: ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-094644-pb-overview.json']
+          host      : ['round-54-recheck/cutover-20261020-094644-pb-overview.json']
+      NAME HIT cutover-20261020-094644-seed.log
+          repository: ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-094644-seed.log']
+          host      : ['round-54-recheck/cutover-20261020-094644-seed.log']
+      NAME HIT cutover-20261020-151147-build.log
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/cutover-20261020-151147-build.log']
+          host      : ['movements/2026-10-20T1511Z/cutover-20261020-151147-build.log']
+      NAME HIT cutover-20261020-151147-evidence.txt
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/cutover-20261020-151147-evidence.txt']
+          host      : ['movements/2026-10-20T1511Z/cutover-20261020-151147-evidence.txt']
+      NAME HIT cutover-20261020-151147-seed.log
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/cutover-20261020-151147-seed.log']
+          host      : ['movements/2026-10-20T1511Z/cutover-20261020-151147-seed.log']
+      NAME HIT decision-number-counts-20261014T155714Z.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/decision-number-counts-20261014T155714Z.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/decision-number-counts-20261014T155714Z.txt']
+      NAME HIT demo-walkthrough-script.md
+          repository: ['demo-walkthrough-script.md']
+          host      : ['demo-walkthrough-script.md']
+      NAME HIT deploy-evidence.txt
+          repository: ['docs/evidence/movement-2026-10-22-1247/deploy-evidence.txt']
+          host      : ['movement-2026-10-22-1247/deploy-evidence.txt']
+      NAME HIT diag-guard.sh
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/diag-guard.sh']
+          host      : ['movements/2026-10-20T1511Z/diag-guard.sh']
+      NAME HIT employees.json
+          repository: ['docs/evidence/cutover-2026-10-20-0515/employees.json']
+          host      : ['db-snapshots-20260925/employees.json']
+      NAME HIT employees.png
+          repository: ['docs/evidence/label-per-surface-2026-10-09/shots/employees.png', 'docs/evidence/pre-cutover-render-2026-10-09/shots/employees.png']
+          host      : ['l2-surface-review/employees.png']
+      NAME HIT eosb-engine-gaps-spec.md
+          repository: ['eosb-engine-gaps-spec.md']
+          host      : ['eosb-engine-gaps-spec.md']
+      NAME HIT eosb-liability-forecast-spec.md
+          repository: ['eosb-liability-forecast-spec.md']
+          host      : ['p4-3-eosb-forecast/eosb-liability-forecast-spec.md']
+      NAME HIT eosb-review-report.md
+          repository: ['eosb-review-report.md']
+          host      : ['eosb-review-report.md']
+      NAME HIT evidence-transcript.txt
+          repository: ['docs/evidence/served-document-facts-2026-10-28/evidence-transcript.txt']
+          host      : ['served-document-facts-2026-10-28/evidence-transcript.txt']
+      NAME HIT failed-count-in-guard-log.txt
+          repository: ['docs/evidence/movement-2026-10-22-1247/failed-count-in-guard-log.txt']
+          host      : ['movement-2026-10-22-1247/failed-count-in-guard-log.txt']
+      NAME HIT full-suite-after.log
+          repository: ['docs/evidence/served-document-facts-2026-10-28/full-suite-after.log']
+          host      : ['served-document-facts-2026-10-28/full-suite-after.log']
+      NAME HIT get-prs.sh
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/get-prs.sh']
+          host      : ['movements/2026-10-20T1607Z/get-prs.sh']
+      NAME HIT guard-GREEN-after-fix.log
+          repository: ['docs/evidence/served-document-facts-2026-10-28/guard-GREEN-after-fix.log']
+          host      : ['served-document-facts-2026-10-28/guard-GREEN-after-fix.log']
+      NAME HIT guard-RED-before-fix.log
+          repository: ['docs/evidence/served-document-facts-2026-10-28/guard-RED-before-fix.log']
+          host      : ['served-document-facts-2026-10-28/guard-RED-before-fix.log']
+      NAME HIT guard-acceptance.console
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/guard-acceptance.console']
+          host      : ['movements/2026-10-20T1607Z/guard-acceptance.console']
+      NAME HIT guard-acceptance.out
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/guard-acceptance.out']
+          host      : ['movements/2026-10-20T1607Z/guard-acceptance.out']
+      NAME HIT guard-acceptance.sh
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/guard-acceptance.sh']
+          host      : ['movements/2026-10-20T1607Z/guard-acceptance.sh']
+      NAME HIT guard-acceptance2.out
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/guard-acceptance2.out']
+          host      : ['movements/2026-10-20T1607Z/guard-acceptance2.out']
+      NAME HIT guard-acceptance2.sh
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/guard-acceptance2.sh']
+          host      : ['movements/2026-10-20T1607Z/guard-acceptance2.sh']
+      NAME HIT guard-evidence.out
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/guard-evidence.out']
+          host      : ['movements/2026-10-20T1607Z/guard-evidence.out']
+      NAME HIT guard-evidence.sh
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/guard-evidence.sh']
+          host      : ['movements/2026-10-20T1511Z/guard-evidence.sh']
+      NAME HIT guard-falsified-mutation-A.log
+          repository: ['docs/evidence/eosb-trend-claim-2026-10-28/guard-falsified-mutation-A.log']
+          host      : ['eosb-trend-claim-2026-10-28/guard-falsified-mutation-A.log']
+      NAME HIT guard-falsified-mutation-B.log
+          repository: ['docs/evidence/eosb-trend-claim-2026-10-28/guard-falsified-mutation-B.log']
+          host      : ['eosb-trend-claim-2026-10-28/guard-falsified-mutation-B.log']
+      NAME HIT guard-green.log
+          repository: ['docs/evidence/eosb-trend-claim-2026-10-28/guard-green.log']
+          host      : ['eosb-trend-claim-2026-10-28/guard-green.log']
+      NAME HIT guard-log-excerpt-acceptance.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/guard-log-excerpt-acceptance.txt']
+          host      : ['round-54-recheck/guard-log-excerpt-acceptance.txt']
+      NAME HIT guard-predicate-test.out
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/guard-predicate-test.out']
+          host      : ['movements/2026-10-20T1607Z/guard-predicate-test.out']
+      NAME HIT hook-notes-after-rearm.log
+          repository: ['docs/evidence/movement-2026-10-22-1247/hook-notes-after-rearm.log']
+          host      : ['movement-2026-10-22-1247/hook-notes-after-rearm.log']
+      NAME HIT host-tools-verify-after.log
+          repository: ['docs/evidence/movement-2026-10-22-1247/host-tools-verify-after.log']
+          host      : ['movement-2026-10-22-1247/host-tools-verify-after.log']
+      NAME HIT http-acceptance.txt
+          repository: ['docs/evidence/p2-2/http-acceptance.txt', 'docs/evidence/l2-demo-seed/http-acceptance.txt', 'docs/evidence/p2-5/http-acceptance.txt', 'docs/evidence/rollup-scope/http-acceptance.txt']
+          host      : ['p2-1-offer-acceptance-case/http-acceptance.txt', 'p2-2-document-checklist/http-acceptance.txt']
+      NAME HIT http-smoke.txt
+          repository: ['docs/evidence/p2-4/http-smoke.txt']
+          host      : ['p2-4/http-smoke.txt']
+      NAME HIT ksa-contract-divergence-ruling.md
+          repository: ['ksa-contract-divergence-ruling.md']
+          host      : ['ksa-contract-divergence-ruling.md']
+      NAME HIT legal-signoff-checklist.md
+          repository: ['legal-signoff-checklist.md']
+          host      : ['legal-signoff-checklist.md']
+      NAME HIT manifest.txt
+          repository: ['docs/evidence/guard-lock-holder-2026-10-22/manifest.txt', 'docs/evidence/movement-2026-10-21T1012Z/manifest.txt', 'docs/evidence/p3-1-probation-timeline-2026-10-22/manifest.txt', 'docs/evidence/preflight-record-validation-2026-10-22/manifest.txt', 'docs/evidence/recovery-2026-10-22T0907Z/manifest.txt', 'docs/evidence/movement-2026-10-22-1247/manifest.txt', 'docs/evidence/p4-1-replacement-cost-2026-10-24/manifest.txt', 'docs/evidence/host-recovery-2026-10-25/manifest.txt', 'docs/evidence/content-anchored-citations-2026-10-26/manifest.txt', 'docs/evidence/deployed-tip-suite-2026-10-26/manifest.txt', 'docs/evidence/workflow-rule-41-merge-2026-10-26/manifest.txt']
+          host      : ['recovery-2026-10-22T0907Z/manifest.txt']
+      NAME HIT measured-diag.txt
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/measured-diag.txt']
+          host      : ['movements/2026-10-20T1511Z/measured-diag.txt']
+      NAME HIT measured-ge.txt
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/measured-ge.txt']
+          host      : ['movements/2026-10-20T1511Z/measured-ge.txt']
+      NAME HIT measured-live-verify.txt
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/measured-live-verify.txt']
+          host      : ['movements/2026-10-20T1511Z/measured-live-verify.txt']
+      NAME HIT measured-lv.txt
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/measured-lv.txt']
+          host      : ['movements/2026-10-20T1511Z/measured-lv.txt']
+      NAME HIT measured-lv2.txt
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/measured-lv2.txt']
+          host      : ['movements/2026-10-20T1511Z/measured-lv2.txt']
+      NAME HIT measured-record.txt
+          repository: ['docs/evidence/movement-2026-10-22-1247/measured-record.txt']
+          host      : ['movement-2026-10-22-1247/measured-record.txt']
+      NAME HIT measured-vpb.txt
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/measured-vpb.txt']
+          host      : ['movements/2026-10-20T1511Z/measured-vpb.txt']
+      NAME HIT movement-7a4e00a.log
+          repository: ['docs/evidence/cutover-2026-10-20T092938/movement-7a4e00a.log']
+          host      : ['round-54-recheck/movement-7a4e00a.log']
+      NAME HIT movement.log
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/movement.log', 'docs/evidence/movement-2026-10-20T1607Z/movement.log']
+          host      : ['movements/2026-10-20T1511Z/movement.log', 'movements/2026-10-20T1607Z/movement.log']
+      NAME HIT observer-2026-10-20T0941.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/observer-2026-10-20T0941.txt']
+          host      : ['round-54-recheck/observer-2026-10-20T0941.txt']
+      NAME HIT observer-record-line-2026-10-20T0941.jsonl
+          repository: ['docs/evidence/cutover-2026-10-20T092938/observer-record-line-2026-10-20T0941.jsonl']
+          host      : ['round-54-recheck/observer-record-line-2026-10-20T0941.jsonl']
+      NAME HIT observer-serve-pair.log
+          repository: ['docs/evidence/movement-2026-10-22-1247/observer-serve-pair.log']
+          host      : ['movement-2026-10-22-1247/observer-serve-pair.log']
+      NAME HIT pack-check.txt
+          repository: ['docs/evidence/eosb-forecast-2026-10-27/pack-check.txt']
+          host      : ['p4-3-eosb-forecast/evidence/pack-check.txt']
+      NAME HIT pdpl-acknowledgement-route-spec.md
+          repository: ['pdpl-acknowledgement-route-spec.md']
+          host      : ['pdpl-acknowledgement-route-spec.md']
+      NAME HIT pdpl-lawful-basis-mapping.md
+          repository: ['pdpl-lawful-basis-mapping.md']
+          host      : ['pdpl-lawful-basis-mapping.md']
+      NAME HIT pdpl-portal-boundary-memo.md
+          repository: ['pdpl-portal-boundary-memo.md']
+          host      : ['pdpl-portal-boundary-memo.md']
+      NAME HIT pilot-outreach-messages.md
+          repository: ['pilot-outreach-messages.md']
+          host      : ['pilot-outreach-messages.md']
+      NAME HIT pr-review.txt
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/pr-review.txt']
+          host      : ['movements/2026-10-20T1607Z/pr-review.txt']
+      NAME HIT preflight-before-record.log
+          repository: ['docs/evidence/movement-2026-10-22-1247/preflight-before-record.log']
+          host      : ['movement-2026-10-22-1247/preflight-before-record.log']
+      NAME HIT preflight-defect.txt
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/preflight-defect.txt']
+          host      : ['movements/2026-10-20T1607Z/preflight-defect.txt']
+      NAME HIT preflight-full.txt
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/preflight-full.txt']
+          host      : ['movements/2026-10-20T1607Z/preflight-full.txt']
+      NAME HIT preflight-recut.txt
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/preflight-recut.txt']
+          host      : ['movements/2026-10-20T1607Z/preflight-recut.txt']
+      NAME HIT preflight-reddened.txt
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/preflight-reddened.txt']
+          host      : ['movements/2026-10-20T1607Z/preflight-reddened.txt']
+      NAME HIT preflight-with-measured-record.log
+          repository: ['docs/evidence/movement-2026-10-22-1247/preflight-with-measured-record.log']
+          host      : ['movement-2026-10-22-1247/preflight-with-measured-record.log']
+      NAME HIT preflight.txt
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/preflight.txt']
+          host      : ['movements/2026-10-20T1607Z/preflight.txt']
+      NAME HIT privacy-notice-preview-after.png
+          repository: ['docs/evidence/preview-renders-document-2026-10-29/privacy-notice-preview-after.png']
+          host      : ['ui-preview-2026-10-29/privacy-notice-preview-after.png']
+      NAME HIT privacy-notice-preview-before.png
+          repository: ['docs/evidence/preview-renders-document-2026-10-29/privacy-notice-preview-before.png']
+          host      : ['ui-preview-2026-10-29/privacy-notice-preview-before.png']
+      NAME HIT program-manager-live-r54.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/program-manager-live-r54.txt']
+          host      : ['round-54-recheck/program-manager-live-r54.txt']
+      NAME HIT prs-open.json
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/prs-open.json']
+          host      : ['movements/2026-10-20T1607Z/prs-open.json']
+      NAME HIT prs-open.status
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/prs-open.status']
+          host      : ['movements/2026-10-20T1607Z/prs-open.status']
+      NAME HIT prs-open.txt
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/prs-open.txt']
+          host      : ['movements/2026-10-20T1607Z/prs-open.txt']
+      NAME HIT reachability-red-r54.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/reachability-red-r54.txt']
+          host      : ['round-54-recheck/reachability-red-r54.txt']
+      NAME HIT reachability-test-20261014T155714Z.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/reachability-test-20261014T155714Z.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/reachability-test-20261014T155714Z.txt']
+      NAME HIT refusal-final-settlement-statement.md
+          repository: ['docs/evidence/served-document-facts-2026-10-28/refusal-final-settlement-statement.md']
+          host      : ['served-document-facts-2026-10-28/refusal-final-settlement-statement.md']
+      NAME HIT refusal-uae-employment-contract.md
+          repository: ['docs/evidence/served-document-facts-2026-10-28/refusal-uae-employment-contract.md']
+          host      : ['served-document-facts-2026-10-28/refusal-uae-employment-contract.md']
+      NAME HIT register-raw-counts-20261014T155714Z.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/register-raw-counts-20261014T155714Z.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/register-raw-counts-20261014T155714Z.txt']
+      NAME HIT remote-main.txt
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/remote-main.txt']
+          host      : ['movements/2026-10-20T1607Z/remote-main.txt']
+      NAME HIT report-four-counts-20261014T155714Z.txt
+          repository: ['docs/evidence/reachability-report-four-counts-2026-10-14/report-four-counts-20261014T155714Z.txt']
+          host      : ['reachability-report-four-counts-2026-10-14/report-four-counts-20261014T155714Z.txt']
+      NAME HIT retired-routes.out
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/retired-routes.out']
+          host      : ['movements/2026-10-20T1607Z/retired-routes.out']
+      NAME HIT review-prs.sh
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/review-prs.sh']
+          host      : ['movements/2026-10-20T1607Z/review-prs.sh']
+      NAME HIT rig-readings.txt
+          repository: ['docs/evidence/eosb-trend-claim-2026-10-28/rig-readings.txt']
+          host      : ['eosb-trend-claim-2026-10-28/rig-readings.txt']
+      NAME HIT roadmap-board-index.md
+          repository: ['roadmap-board-index.md']
+          host      : ['roadmap-board-index.md']
+      NAME HIT round-47-staleness-2026-10-17.md
+          repository: ['docs/evidence/round-47-staleness-2026-10-17.md']
+          host      : ['round-47-staleness-2026-10-17.md']
+      NAME HIT run-client-suite.sh
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/run-client-suite.sh']
+          host      : ['movements/2026-10-20T1607Z/run-client-suite.sh']
+      NAME HIT run-guard-evidence.console
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/run-guard-evidence.console']
+          host      : ['movements/2026-10-20T1607Z/run-guard-evidence.console']
+      NAME HIT run-guard-evidence.sh
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/run-guard-evidence.sh']
+          host      : ['movements/2026-10-20T1607Z/run-guard-evidence.sh']
+      NAME HIT run-verify.console
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/run-verify.console']
+          host      : ['movements/2026-10-20T1607Z/run-verify.console']
+      NAME HIT run-verify.sh
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/run-verify.sh']
+          host      : ['movements/2026-10-20T1607Z/run-verify.sh']
+      NAME HIT run.log
+          repository: ['docs/evidence/cutover-2026-10-19-1041/run.log', 'docs/evidence/cutover-2026-10-20-0515/run.log', 'docs/evidence/movement-2026-10-22-1247/run.log']
+          host      : ['movement-2026-10-22-1247/run.log']
+      NAME HIT runs.jsonl
+          repository: ['docs/evidence/observer-2026-10-20-0526/runs.jsonl']
+          host      : ['observer/runs.jsonl']
+      NAME HIT scratch-build.log
+          repository: ['docs/evidence/movement-2026-10-22-1247/scratch-build.log']
+          host      : ['movement-2026-10-22-1247/scratch-build.log']
+      NAME HIT screen-after-VOID.txt
+          repository: ['docs/evidence/eosb-trend-claim-2026-10-28/screen-after-VOID.txt']
+          host      : ['eosb-trend-claim-2026-10-28/screen-after-VOID.txt']
+      NAME HIT screen-before-dom.txt
+          repository: ['docs/evidence/eosb-trend-claim-2026-10-28/screen-before-dom.txt']
+          host      : ['eosb-trend-claim-2026-10-28/screen-before-dom.txt']
+      NAME HIT second-movement-and-guard-acceptance.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/second-movement-and-guard-acceptance.txt']
+          host      : ['round-54-recheck/second-movement-and-guard-acceptance.txt']
+      NAME HIT seed.log
+          repository: ['docs/evidence/movement-2026-10-22-1247/seed.log']
+          host      : ['movement-2026-10-22-1247/seed.log']
+      NAME HIT served-after-index-BK_EwcpZ.css
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/served-after-index-BK_EwcpZ.css']
+          host      : ['movements/2026-10-20T1511Z/served-after-index-BK_EwcpZ.css']
+      NAME HIT served-before-35d-served.css
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/served-before-35d-served.css']
+          host      : ['movements/2026-10-20T1511Z/served-before-35d-served.css']
+      NAME HIT settlement-preview-after.png
+          repository: ['docs/evidence/preview-renders-document-2026-10-29/settlement-preview-after.png']
+          host      : ['ui-preview-2026-10-29/settlement-preview-after.png']
+      NAME HIT settlement-preview-before.png
+          repository: ['docs/evidence/preview-renders-document-2026-10-29/settlement-preview-before.png']
+          host      : ['ui-preview-2026-10-29/settlement-preview-before.png']
+      NAME HIT snapshot-state.sh
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/snapshot-state.sh']
+          host      : ['movements/2026-10-20T1607Z/snapshot-state.sh']
+      NAME HIT statutory-claims-determination.md
+          repository: ['statutory-claims-determination.md']
+          host      : ['statutory-claims-determination.md']
+      NAME HIT strategic-intelligence-before.png
+          repository: ['docs/evidence/eosb-trend-claim-2026-10-28/strategic-intelligence-before.png']
+          host      : ['eosb-trend-claim-2026-10-28/strategic-intelligence-before.png']
+      NAME HIT suite-client-WRONG-vitest.out
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/suite-client-WRONG-vitest.out']
+          host      : ['movements/2026-10-20T1607Z/suite-client-WRONG-vitest.out']
+      NAME HIT suite-client-main-94c6ef0-deployed-install.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/suite-client-main-94c6ef0-deployed-install.txt']
+          host      : ['round-54-recheck/suite-client-main-94c6ef0-deployed-install.txt']
+      NAME HIT suite-client.out
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/suite-client.out']
+          host      : ['movements/2026-10-20T1607Z/suite-client.out']
+      NAME HIT suite-no-install-r54.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/suite-no-install-r54.txt']
+          host      : ['round-54-recheck/suite-no-install-r54.txt']
+      NAME HIT suite-server-main-94c6ef0-deployed-install.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/suite-server-main-94c6ef0-deployed-install.txt']
+          host      : ['round-54-recheck/suite-server-main-94c6ef0-deployed-install.txt']
+      NAME HIT suite-server-main-ab7e9c3-deployed-install.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/suite-server-main-ab7e9c3-deployed-install.txt']
+          host      : ['round-54-recheck/suite-server-main-ab7e9c3-deployed-install.txt']
+      NAME HIT suite-server-served-7a4e00a-deployed-install.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/suite-server-served-7a4e00a-deployed-install.txt']
+          host      : ['round-54-recheck/suite-server-served-7a4e00a-deployed-install.txt']
+      NAME HIT suite-server.out
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/suite-server.out']
+          host      : ['movements/2026-10-20T1607Z/suite-server.out']
+      NAME HIT suite-summary-r54.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/suite-summary-r54.txt']
+          host      : ['round-54-recheck/suite-summary-r54.txt']
+      NAME HIT suite-tip-reread-94c6ef0.txt
+          repository: ['docs/evidence/cutover-2026-10-20T092938/suite-tip-reread-94c6ef0.txt']
+          host      : ['round-54-recheck/suite-tip-reread-94c6ef0.txt']
+      NAME HIT task-results.txt
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/task-results.txt']
+          host      : ['movements/2026-10-20T1607Z/task-results.txt']
+      NAME HIT tech-stack.md
+          repository: ['tech-stack.md']
+          host      : ['tech-stack.md']
+      NAME HIT verify-live.console
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/verify-live.console']
+          host      : ['movements/2026-10-20T1607Z/verify-live.console']
+      NAME HIT verify-live.console2
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/verify-live.console2']
+          host      : ['movements/2026-10-20T1607Z/verify-live.console2']
+      NAME HIT verify-live.out
+          repository: ['docs/evidence/movement-2026-10-20T1607Z/verify-live.out']
+          host      : ['movements/2026-10-20T1607Z/verify-live.out']
+      NAME HIT verify-live.sh
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/verify-live.sh', 'docs/evidence/movement-2026-10-20T1607Z/verify-live.sh']
+          host      : ['movements/2026-10-20T1511Z/verify-live.sh', 'movements/2026-10-20T1607Z/verify-live.sh']
+      NAME HIT verify-live2.sh
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/verify-live2.sh']
+          host      : ['movements/2026-10-20T1511Z/verify-live2.sh']
+      NAME HIT verify-pb.sh
+          repository: ['docs/evidence/movement-2026-10-20T1511Z/verify-pb.sh']
+          host      : ['movements/2026-10-20T1511Z/verify-pb.sh']
+
+  BY CONTENT (byte-identical): hashing all 1420 host files...
+  hashed 1420 of 1420 host files | BYTE-IDENTICAL MATCHES: 216
+      BYTE HIT compliance-dpia-vendor-risk.md (26284 B)
+          == ['compliance-dpia-vendor-risk.md']
+      BYTE HIT legal-signoff-checklist.md (3176 B)
+          == ['legal-signoff-checklist.md']
+      BYTE HIT round-47-staleness-2026-10-17.md (9198 B)
+          == ['docs/evidence/round-47-staleness-2026-10-17.md']
+      BYTE HIT cutover-20261019-before-overview-AE.json (14876 B)
+          == ['docs/evidence/cutover-2026-10-19-1041/before-overview-AE.json']
+      BYTE HIT cutover-20261019-1040-run.log (6981 B)
+          == ['docs/evidence/cutover-2026-10-19-1041/cutover-20261019-104031-evidence.txt', 'docs/evidence/cutover-2026-10-19-1041/run.log']
+      BYTE HIT cutover-20261019-notice-served.md (23905 B)
+          == ['docs/evidence/cutover-2026-10-19-1041/notice-served.json']
+      BYTE HIT cutover-20261019-after-overview-AE.json (14858 B)
+          == ['docs/evidence/cutover-2026-10-19-1041/after-overview-AE.json']
+      BYTE HIT host-suspend-measurement-2026-10-24.txt (7656 B)
+          == ['docs/evidence/host-recovery-2026-10-25/04-suspension-2026-10-24.txt']
+      BYTE HIT movement-2026-10-24-1158-console.txt (7513 B)
+          == ['docs/evidence/host-recovery-2026-10-25/06-movement-console-2026-10-24-1158.txt']
+      BYTE HIT preflight-2026-10-24-1158-record.log (5376 B)
+          == ['docs/evidence/host-recovery-2026-10-25/07-preflight-record.log']
+      BYTE HIT checkall-deployed-2026-10-24-1200.out (10301 B)
+          == ['docs/evidence/host-recovery-2026-10-25/08-checkall-deployed-3257047.out']
+      BYTE HIT recovery-2026-10-25-restart-only.log (5165 B)
+          == ['docs/evidence/host-recovery-2026-10-25/02-recovery-restart-only.log']
+      BYTE HIT host-acceptance-2026-10-25.txt (3098 B)
+          == ['docs/evidence/host-recovery-2026-10-25/03-acceptance.txt']
+      BYTE HIT recovery-2026-10-26-restart-only.log (6206 B)
+          == ['docs/evidence/host-recovery-2026-10-25/11-recovery-2-2026-10-26-restart-only.log']
+      BYTE HIT host-acceptance-2026-10-26.txt (2294 B)
+          == ['docs/evidence/host-recovery-2026-10-25/12-acceptance-2026-10-26.txt']
+      BYTE HIT lead-post337-live.png (29151 B)
+          == ['docs/evidence/l2-a11y-intake-labels/after/af-login.png', 'docs/evidence/l2-a11y-intake-labels/before/bg-login.png']
+      BYTE HIT demo-evidence-20261006/scratch-signin.png (29151 B)
+          == ['docs/evidence/l2-a11y-intake-labels/after/af-login.png', 'docs/evidence/l2-a11y-intake-labels/before/bg-login.png']
+      BYTE HIT cors-foreign-origin-hardening/after-page-login.png (29151 B)
+          == ['docs/evidence/l2-a11y-intake-labels/after/af-login.png', 'docs/evidence/l2-a11y-intake-labels/before/bg-login.png']
+      BYTE HIT p2-2-document-checklist/build-proof.txt (1136 B)
+          == ['docs/evidence/p2-2/build-proof.txt']
+      BYTE HIT l2-surface-review/s1-preboarding-tab.png (110264 B)
+          == ['docs/evidence/l2-demo-seed/screenshots/01-rollup-three-states.png']
+      BYTE HIT l2-surface-review/case-expanded.png (110246 B)
+          == ['docs/evidence/l2-demo-seed/screenshots/02-case-checklist.png', 'docs/evidence/l2-demo-seed/screenshots/03-consent-gate-disabled.png']
+      BYTE HIT client-states-v1-draft/client-states-cites-2026-10-20/verify-states-cites.py (3662 B)
+          == ['docs/evidence/client-states-cites-2026-10-20/verify-states-cites-ee4bbdf.py']
+      BYTE HIT client-states-v1-draft/client-states-cites-2026-10-20/verify-states-cites.txt (2688 B)
+          == ['docs/evidence/client-states-cites-2026-10-20/verify-states-cites-ee4bbdf.txt']
+      BYTE HIT client-states-v1-draft/client-states-cites-2026-10-20/negative-control.txt (2965 B)
+          == ['docs/evidence/client-states-cites-2026-10-20/negative-control-ee4bbdf.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/control-B-fifth-category-OLD.txt (7200 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-A-renamed-category-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-B-fifth-category-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-C-extra-register-entry-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-D-fourth-no-basis-item-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-OLD.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/controls-harness.sh (7166 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/controls-harness.sh']
+      BYTE HIT reachability-report-four-counts-2026-10-14/report-four-counts-20261014T155714Z.txt (9764 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-NEW.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/report-four-counts-20261014T155714Z.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/register-raw-counts-20261014T155714Z.txt (480 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/register-raw-counts-20261014T155714Z.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/reachability-test-20261014T155714Z.txt (2871 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/reachability-test-20261014T155714Z.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/decision-number-counts-20261014T155714Z.txt (279 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/decision-number-counts-20261014T155714Z.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/controls-HEADER.txt (247 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/controls-HEADER.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/control-A-renamed-category-NEW.txt (689 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-A-renamed-category-NEW.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/control-A-renamed-category-OLD.txt (7200 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-A-renamed-category-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-B-fifth-category-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-C-extra-register-entry-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-D-fourth-no-basis-item-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-OLD.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/control-B-fifth-category-NEW.txt (581 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-B-fifth-category-NEW.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/control-C-extra-register-entry-NEW.txt (10109 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-C-extra-register-entry-NEW.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/control-C-extra-register-entry-OLD.txt (7200 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-A-renamed-category-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-B-fifth-category-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-C-extra-register-entry-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-D-fourth-no-basis-item-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-OLD.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/control-D-fourth-no-basis-item-NEW.txt (9843 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-D-fourth-no-basis-item-NEW.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/control-D-fourth-no-basis-item-OLD.txt (7200 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-A-renamed-category-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-B-fifth-category-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-C-extra-register-entry-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-D-fourth-no-basis-item-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-OLD.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-NEW.txt (9764 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-NEW.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/report-four-counts-20261014T155714Z.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-OLD.txt (7200 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-A-renamed-category-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-B-fifth-category-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-C-extra-register-entry-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-D-fourth-no-basis-item-OLD.txt', 'docs/evidence/reachability-report-four-counts-2026-10-14/control-E-unmodified-tree-OLD.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/control-F-one-orphan-route-NEW.txt (10074 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-F-one-orphan-route-NEW.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/control-F-one-orphan-route-OLD.txt (7420 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/control-F-one-orphan-route-OLD.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/controls-transcript-20261014T155714Z.txt (5851 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/controls-transcript-20261014T155714Z.txt']
+      BYTE HIT reachability-report-four-counts-2026-10-14/README.md (8802 B)
+          == ['docs/evidence/reachability-report-four-counts-2026-10-14/README.md']
+      BYTE HIT evidence/suite-2026-10-17/tap-pr209-head-fc898a9.txt (46763 B)
+          == ['docs/evidence/movement-recut-2026-10-18/suite-pr209-head-fc898a9-tap.txt']
+      BYTE HIT evidence/exit-interview-actor-2026-10-26/01-rig-BEFORE-505ddd3.txt (2025 B)
+          == ['docs/evidence/exit-interview-actor-2026-10-26/01-rig-BEFORE-505ddd3.txt']
+      BYTE HIT evidence/exit-interview-actor-2026-10-26/02-rig-AFTER-aecd2ee.txt (2594 B)
+          == ['docs/evidence/exit-interview-actor-2026-10-26/02-rig-AFTER-aecd2ee.txt']
+      BYTE HIT evidence/exit-interview-actor-2026-10-26/03-rig-BEFORE-server-log.txt (3148 B)
+          == ['docs/evidence/exit-interview-actor-2026-10-26/03-rig-BEFORE-server-log.txt']
+      BYTE HIT evidence/exit-interview-actor-2026-10-26/04-rig-AFTER-server-log.txt (708 B)
+          == ['docs/evidence/exit-interview-actor-2026-10-26/04-rig-AFTER-server-log.txt']
+      BYTE HIT evidence/exit-interview-actor-2026-10-26/05-suite-AFTER-aecd2ee.txt (84702 B)
+          == ['docs/evidence/exit-interview-actor-2026-10-26/05-suite-AFTER-aecd2ee.txt']
+      BYTE HIT evidence/exit-interview-actor-2026-10-26/06-control-tests-without-fix.txt (1090 B)
+          == ['docs/evidence/exit-interview-actor-2026-10-26/06-control-tests-without-fix.txt']
+      BYTE HIT evidence/exit-interview-actor-2026-10-26/07-suite-narrowed-AFTER.txt (689 B)
+          == ['docs/evidence/exit-interview-actor-2026-10-26/07-suite-narrowed-AFTER.txt']
+      BYTE HIT round-54-recheck/README.md (10205 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/README.md']
+      BYTE HIT round-54-recheck/board-and-plan-reads-r54.txt (6433 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/board-and-plan-reads-r54.txt']
+      BYTE HIT round-54-recheck/checker-r54-controls.txt (2719 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/checker-r54-controls.txt']
+      BYTE HIT round-54-recheck/checker-r54-green-after-repair-and-amendment.txt (13649 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/checker-r54-green-after-repair-and-amendment.txt']
+      BYTE HIT round-54-recheck/checker-r54-green.txt (6609 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/checker-r54-green.txt']
+      BYTE HIT round-54-recheck/cutover-20261020-092938-build.log (442 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-092938-build.log']
+      BYTE HIT round-54-recheck/cutover-20261020-092938-evidence.txt (7586 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-092938-evidence.txt']
+      BYTE HIT round-54-recheck/cutover-20261020-092938-pb-overview.json (14858 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-092938-pb-overview.json']
+      BYTE HIT round-54-recheck/cutover-20261020-092938-seed.log (1948 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-092938-seed.log']
+      BYTE HIT round-54-recheck/movement-7a4e00a.log (7593 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/movement-7a4e00a.log']
+      BYTE HIT round-54-recheck/observer-2026-10-20T0941.txt (1983 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/observer-2026-10-20T0941.txt']
+      BYTE HIT round-54-recheck/observer-record-line-2026-10-20T0941.jsonl (487 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/observer-record-line-2026-10-20T0941.jsonl']
+      BYTE HIT round-54-recheck/program-manager-live-r54.txt (3520 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/program-manager-live-r54.txt']
+      BYTE HIT round-54-recheck/reachability-red-r54.txt (5541 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/reachability-red-r54.txt']
+      BYTE HIT round-54-recheck/suite-client-main-94c6ef0-deployed-install.txt (6372 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/suite-client-main-94c6ef0-deployed-install.txt']
+      BYTE HIT round-54-recheck/suite-no-install-r54.txt (120619 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/suite-no-install-r54.txt']
+      BYTE HIT round-54-recheck/suite-server-main-94c6ef0-deployed-install.txt (73209 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/suite-server-main-94c6ef0-deployed-install.txt']
+      BYTE HIT round-54-recheck/suite-server-main-ab7e9c3-deployed-install.txt (72772 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/suite-server-main-ab7e9c3-deployed-install.txt']
+      BYTE HIT round-54-recheck/suite-server-served-7a4e00a-deployed-install.txt (71807 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/suite-server-served-7a4e00a-deployed-install.txt']
+      BYTE HIT round-54-recheck/suite-summary-r54.txt (1807 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/suite-summary-r54.txt']
+      BYTE HIT round-54-recheck/suite-tip-reread-94c6ef0.txt (3616 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/suite-tip-reread-94c6ef0.txt']
+      BYTE HIT round-54-recheck/checker-r54-green-after-second-movement.txt (6531 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/checker-r54-green-after-second-movement.txt']
+      BYTE HIT round-54-recheck/cutover-20261020-094644-build.log (442 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-094644-build.log']
+      BYTE HIT round-54-recheck/cutover-20261020-094644-seed.log (1948 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-094644-seed.log']
+      BYTE HIT round-54-recheck/cutover-20261020-094644-evidence.txt (7526 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-094644-evidence.txt']
+      BYTE HIT round-54-recheck/cutover-20261020-094644-pb-overview.json (14859 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/cutover-20261020-094644-pb-overview.json']
+      BYTE HIT round-54-recheck/guard-log-excerpt-acceptance.txt (1596 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/guard-log-excerpt-acceptance.txt']
+      BYTE HIT round-54-recheck/second-movement-and-guard-acceptance.txt (4190 B)
+          == ['docs/evidence/cutover-2026-10-20T092938/second-movement-and-guard-acceptance.txt']
+      BYTE HIT movements/2026-10-20T1511Z/cutover-20261020-151147-evidence.txt (7549 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/cutover-20261020-151147-evidence.txt', 'docs/evidence/movement-2026-10-20T1511Z/movement.log']
+      BYTE HIT movements/2026-10-20T1511Z/cutover-20261020-151147-build.log (442 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/cutover-20261020-151147-build.log']
+      BYTE HIT movements/2026-10-20T1511Z/cutover-20261020-151147-seed.log (1948 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/cutover-20261020-151147-seed.log']
+      BYTE HIT movements/2026-10-20T1511Z/movement.log (7549 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/cutover-20261020-151147-evidence.txt', 'docs/evidence/movement-2026-10-20T1511Z/movement.log']
+      BYTE HIT movements/2026-10-20T1511Z/measured-lv.txt (1004 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/measured-lv.txt']
+      BYTE HIT movements/2026-10-20T1511Z/measured-lv2.txt (1133 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/measured-lv2.txt']
+      BYTE HIT movements/2026-10-20T1511Z/measured-vpb.txt (716 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/measured-vpb.txt']
+      BYTE HIT movements/2026-10-20T1511Z/measured-ge.txt (7503 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/measured-ge.txt']
+      BYTE HIT movements/2026-10-20T1511Z/measured-diag.txt (5276 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/measured-diag.txt']
+      BYTE HIT movements/2026-10-20T1511Z/measured-live-verify.txt (370 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/measured-live-verify.txt']
+      BYTE HIT movements/2026-10-20T1511Z/verify-live.sh (2999 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/verify-live.sh']
+      BYTE HIT movements/2026-10-20T1511Z/verify-live2.sh (2778 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/verify-live2.sh']
+      BYTE HIT movements/2026-10-20T1511Z/guard-evidence.sh (1032 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/guard-evidence.sh']
+      BYTE HIT movements/2026-10-20T1511Z/verify-pb.sh (2153 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/verify-pb.sh']
+      BYTE HIT movements/2026-10-20T1511Z/diag-guard.sh (644 B)
+          == ['docs/evidence/movement-2026-10-20T1511Z/diag-guard.sh']
+      BYTE HIT movements/2026-10-20T1511Z/served-before-35d-served.css (35805 B)
+          == ['docs/evidence/tailwind-pinned-sources/index-DvmxiaxC.before.css', 'docs/evidence/movement-2026-10-20T1511Z/served-before-35d-served.css']
+      BYTE HIT movements/2026-10-20T1511Z/served-after-index-BK_EwcpZ.css (35306 B)
+          == ['docs/evidence/tailwind-pinned-sources/control-B-narrowed.css', 'docs/evidence/tailwind-pinned-sources/index-BK_EwcpZ.after.css', 'docs/evidence/movement-2026-10-20T1511Z/served-after-index-BK_EwcpZ.css']
+      BYTE HIT movements/2026-10-20T1607Z/preflight.txt (1834 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/preflight.txt']
+      BYTE HIT movements/2026-10-20T1607Z/preflight-full.txt (3856 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/preflight-full.txt']
+      BYTE HIT movements/2026-10-20T1607Z/preflight-recut.txt (3678 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/preflight-recut.txt']
+      BYTE HIT movements/2026-10-20T1607Z/preflight-reddened.txt (3687 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/preflight-reddened.txt']
+      BYTE HIT movements/2026-10-20T1607Z/preflight-defect.txt (1556 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/preflight-defect.txt']
+      BYTE HIT movements/2026-10-20T1607Z/movement.log (7554 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/movement.log']
+      BYTE HIT movements/2026-10-20T1607Z/guard-acceptance.sh (5617 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/guard-acceptance.sh']
+      BYTE HIT movements/2026-10-20T1607Z/guard-acceptance.console (1089 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/guard-acceptance.console']
+      BYTE HIT movements/2026-10-20T1607Z/guard-acceptance.out (1067 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/guard-acceptance.out']
+      BYTE HIT movements/2026-10-20T1607Z/guard-acceptance2.sh (7115 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/guard-acceptance2.sh']
+      BYTE HIT movements/2026-10-20T1607Z/run-guard-evidence.sh (1283 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/run-guard-evidence.sh']
+      BYTE HIT movements/2026-10-20T1607Z/run-guard-evidence.console (262 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/run-guard-evidence.console']
+      BYTE HIT movements/2026-10-20T1607Z/guard-evidence.out (1711 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/guard-evidence.out']
+      BYTE HIT movements/2026-10-20T1607Z/guard-predicate-test.out (1575 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/guard-predicate-test.out']
+      BYTE HIT movements/2026-10-20T1607Z/guard-acceptance2.out (1471 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/guard-acceptance2.out']
+      BYTE HIT movements/2026-10-20T1607Z/verify-live.sh (4447 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/verify-live.sh']
+      BYTE HIT movements/2026-10-20T1607Z/run-verify.sh (1022 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/run-verify.sh']
+      BYTE HIT movements/2026-10-20T1607Z/run-verify.console (22 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/run-verify.console']
+      BYTE HIT movements/2026-10-20T1607Z/verify-live.console (2246 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/verify-live.console']
+      BYTE HIT movements/2026-10-20T1607Z/verify-live.out (2233 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/verify-live.console2', 'docs/evidence/movement-2026-10-20T1607Z/verify-live.out']
+      BYTE HIT movements/2026-10-20T1607Z/suite-server.out (76343 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/suite-server.out']
+      BYTE HIT movements/2026-10-20T1607Z/snapshot-state.sh (609 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/snapshot-state.sh']
+      BYTE HIT movements/2026-10-20T1607Z/board-open.txt (3336 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/board-open.txt']
+      BYTE HIT movements/2026-10-20T1607Z/board-counts.txt (218 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/board-counts.txt']
+      BYTE HIT movements/2026-10-20T1607Z/prs-open.json (113 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/prs-open.json']
+      BYTE HIT movements/2026-10-20T1607Z/prs-open.status (7 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/prs-open.status']
+      BYTE HIT movements/2026-10-20T1607Z/remote-main.txt (57 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/remote-main.txt']
+      BYTE HIT movements/2026-10-20T1607Z/verify-live.console2 (2233 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/verify-live.console2', 'docs/evidence/movement-2026-10-20T1607Z/verify-live.out']
+      BYTE HIT movements/2026-10-20T1607Z/retired-routes.out (1259 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/retired-routes.out']
+      BYTE HIT movements/2026-10-20T1607Z/run-client-suite.sh (944 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/run-client-suite.sh']
+      BYTE HIT movements/2026-10-20T1607Z/suite-client-WRONG-vitest.out (4076 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/suite-client-WRONG-vitest.out']
+      BYTE HIT movements/2026-10-20T1607Z/suite-client.out (7167 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/suite-client.out']
+      BYTE HIT movements/2026-10-20T1607Z/get-prs.sh (996 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/get-prs.sh']
+      BYTE HIT movements/2026-10-20T1607Z/prs-open.txt (1175 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/prs-open.txt']
+      BYTE HIT movements/2026-10-20T1607Z/MOVEMENT.md (5605 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/MOVEMENT.md']
+      BYTE HIT movements/2026-10-20T1607Z/review-prs.sh (1246 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/review-prs.sh']
+      BYTE HIT movements/2026-10-20T1607Z/task-results.txt (6246 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/task-results.txt']
+      BYTE HIT movements/2026-10-20T1607Z/pr-review.txt (4817 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/pr-review.txt']
+      BYTE HIT movements/2026-10-20T1607Z/board-now.txt (489 B)
+          == ['docs/evidence/movement-2026-10-20T1607Z/board-now.txt']
+      BYTE HIT recovery-2026-10-22T0907Z/01-restart-only-recovery-run-stamped.txt (4642 B)
+          == ['docs/evidence/recovery-2026-10-22T0907Z/01-restart-only-recovery-run-stamped.txt']
+      BYTE HIT recovery-2026-10-22T0907Z/03-replacement-inventory-before-recovery.txt (2436 B)
+          == ['docs/evidence/recovery-2026-10-22T0907Z/02-replacement-inventory-before-the-recovery.txt']
+      BYTE HIT recovery-2026-10-22T0907Z/04-post-recovery-measurement-and-merge-check.txt (5480 B)
+          == ['docs/evidence/recovery-2026-10-22T0907Z/03-post-recovery-measurement-and-merge-check.txt']
+      BYTE HIT acceptance-2026-10-22/01-index-html.txt (319 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/01-index-html.txt']
+      BYTE HIT acceptance-2026-10-22/02-served-vs-dist.txt (1109 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/02-served-vs-dist.txt']
+      BYTE HIT acceptance-2026-10-22/03-guard.txt (2259 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/03-guard.txt']
+      BYTE HIT acceptance-2026-10-22/04-entry-point.txt (1680 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/04-entry-point.txt']
+      BYTE HIT acceptance-2026-10-22/04-check-all-full-output.txt (10302 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/04-check-all-full-output.txt']
+      BYTE HIT acceptance-2026-10-22/05-host-state.txt (4975 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/05-host-state.txt']
+      BYTE HIT acceptance-2026-10-22/06-recon-superseded-hook-absent.txt (1032 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/06-recon-superseded-hook-absent.txt']
+      BYTE HIT acceptance-2026-10-22/07-guard-identify.txt (1784 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/07-guard-identify.txt']
+      BYTE HIT acceptance-2026-10-22/08-hook-provenance.txt (5949 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/08-hook-provenance.txt']
+      BYTE HIT acceptance-2026-10-22/09-movement-in-flight.txt (4743 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/09-movement-in-flight.txt']
+      BYTE HIT acceptance-2026-10-22/10-guard-settled.txt (3167 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/10-guard-settled.txt']
+      BYTE HIT acceptance-2026-10-22/11-retake-pair.txt (1121 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/11-retake-pair.txt']
+      BYTE HIT acceptance-2026-10-22/12-guard-retake.txt (1532 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/12-guard-retake.txt']
+      BYTE HIT acceptance-2026-10-22/13-observer.txt (12068 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/13-observer.txt']
+      BYTE HIT acceptance-2026-10-22/14-entry-point-bare.txt (1644 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/14-entry-point-bare.txt']
+      BYTE HIT acceptance-2026-10-22/14-check-all-bare-full-output.txt (10333 B)
+          == ['docs/evidence/host-acceptance-2026-10-22/14-check-all-bare-full-output.txt']
+      BYTE HIT rollback-58acdac-dist-20261021-101156/md5s.txt (354 B)
+          == ['docs/evidence/movement-2026-10-21T1012Z/17-pre-movement-rollback-copy-md5s.txt']
+      BYTE HIT rollback-58acdac-dist-20261021-101156/assets/index-BK_EwcpZ.css (35306 B)
+          == ['docs/evidence/tailwind-pinned-sources/control-B-narrowed.css', 'docs/evidence/tailwind-pinned-sources/index-BK_EwcpZ.after.css', 'docs/evidence/movement-2026-10-20T1511Z/served-after-index-BK_EwcpZ.css']
+      BYTE HIT movement-2026-10-22-1247/run.log (7528 B)
+          == ['docs/evidence/movement-2026-10-22-1247/deploy-evidence.txt', 'docs/evidence/movement-2026-10-22-1247/run.log']
+      BYTE HIT movement-2026-10-22-1247/deploy-evidence.txt (7528 B)
+          == ['docs/evidence/movement-2026-10-22-1247/deploy-evidence.txt', 'docs/evidence/movement-2026-10-22-1247/run.log']
+      BYTE HIT movement-2026-10-22-1247/build.log (442 B)
+          == ['docs/evidence/movement-2026-10-22-1247/build.log']
+      BYTE HIT movement-2026-10-22-1247/seed.log (1948 B)
+          == ['docs/evidence/movement-2026-10-22-1247/seed.log']
+      BYTE HIT movement-2026-10-22-1247/preflight-before-record.log (5249 B)
+          == ['docs/evidence/movement-2026-10-22-1247/preflight-before-record.log']
+      BYTE HIT movement-2026-10-22-1247/preflight-with-measured-record.log (5068 B)
+          == ['docs/evidence/movement-2026-10-22-1247/preflight-with-measured-record.log']
+      BYTE HIT movement-2026-10-22-1247/host-tools-verify-after.log (1569 B)
+          == ['docs/evidence/movement-2026-10-22-1247/host-tools-verify-after.log']
+      BYTE HIT movement-2026-10-22-1247/observer-serve-pair.log (1370 B)
+          == ['docs/evidence/movement-2026-10-22-1247/observer-serve-pair.log']
+      BYTE HIT movement-2026-10-22-1247/scratch-build.log (442 B)
+          == ['docs/evidence/movement-2026-10-22-1247/scratch-build.log']
+      BYTE HIT movement-2026-10-22-1247/hook-notes-after-rearm.log (486 B)
+          == ['docs/evidence/movement-2026-10-22-1247/hook-notes-after-rearm.log']
+      BYTE HIT movement-2026-10-22-1247/failed-count-in-guard-log.txt (2 B)
+          == ['docs/evidence/movement-2026-10-22-1247/failed-count-in-guard-log.txt']
+      BYTE HIT movement-2026-10-22-1247/measured-record.txt (386 B)
+          == ['docs/evidence/movement-2026-10-22-1247/measured-record.txt']
+      BYTE HIT eosb-trend-claim-2026-10-28/README.md (5868 B)
+          == ['docs/evidence/eosb-trend-claim-2026-10-28/README.md']
+      BYTE HIT eosb-trend-claim-2026-10-28/bundle-identity.txt (1774 B)
+          == ['docs/evidence/eosb-trend-claim-2026-10-28/bundle-identity.txt']
+      BYTE HIT eosb-trend-claim-2026-10-28/client-build-after.log (442 B)
+          == ['docs/evidence/eosb-trend-claim-2026-10-28/client-build-after.log']
+      BYTE HIT eosb-trend-claim-2026-10-28/guard-falsified-mutation-A.log (163951 B)
+          == ['docs/evidence/eosb-trend-claim-2026-10-28/guard-falsified-mutation-A.log']
+      BYTE HIT eosb-trend-claim-2026-10-28/guard-falsified-mutation-B.log (318267 B)
+          == ['docs/evidence/eosb-trend-claim-2026-10-28/guard-falsified-mutation-B.log']
+      BYTE HIT eosb-trend-claim-2026-10-28/guard-green.log (9122 B)
+          == ['docs/evidence/eosb-trend-claim-2026-10-28/guard-green.log']
+      BYTE HIT eosb-trend-claim-2026-10-28/rig-readings.txt (2920 B)
+          == ['docs/evidence/eosb-trend-claim-2026-10-28/rig-readings.txt']
+      BYTE HIT eosb-trend-claim-2026-10-28/screen-after-VOID.txt (1537 B)
+          == ['docs/evidence/eosb-trend-claim-2026-10-28/screen-after-VOID.txt']
+      BYTE HIT eosb-trend-claim-2026-10-28/screen-before-dom.txt (2018 B)
+          == ['docs/evidence/eosb-trend-claim-2026-10-28/screen-before-dom.txt']
+      BYTE HIT eosb-trend-claim-2026-10-28/strategic-intelligence-before.png (95228 B)
+          == ['docs/evidence/eosb-trend-claim-2026-10-28/strategic-intelligence-before.png']
+      BYTE HIT evidence-content-anchored-2026-10-26/E1-gate-test-first-run-reddened.txt (1659 B)
+          == ['docs/evidence/content-anchored-citations-2026-10-26/E1-gate-test-first-run-reddened.txt']
+      BYTE HIT evidence-access-model-reground-2026-10-26/01-instrument-BEFORE-at-62665dc.txt (15061 B)
+          == ['docs/evidence/access-model-reground-2026-10-26/01-instrument-BEFORE-at-62665dc.txt']
+      BYTE HIT evidence-access-model-reground-2026-10-26/02-instrument-AFTER-this-branch.txt (9040 B)
+          == ['docs/evidence/access-model-reground-2026-10-26/02-instrument-AFTER-this-branch.txt']
+      BYTE HIT evidence-access-model-reground-2026-10-26/03-instrument-own-tests-4of4.txt (1024 B)
+          == ['docs/evidence/access-model-reground-2026-10-26/03-instrument-own-tests-4of4.txt']
+      BYTE HIT evidence-access-model-reground-2026-10-26/04-full-suite-AFTER.txt (88091 B)
+          == ['docs/evidence/access-model-reground-2026-10-26/04-full-suite-AFTER.txt']
+      BYTE HIT evidence-access-model-instrument-honesty-2026-10-26/01-hybrid-and-athead-controls-redden.txt (1037 B)
+          == ['docs/evidence/access-model-instrument-honesty-2026-10-26/01-hybrid-and-athead-controls-redden.txt']
+      BYTE HIT evidence-access-model-instrument-honesty-2026-10-26/02-instrument-own-tests-8of8.txt (1925 B)
+          == ['docs/evidence/access-model-instrument-honesty-2026-10-26/02-instrument-own-tests-8of8.txt']
+      BYTE HIT evidence-access-model-instrument-honesty-2026-10-26/03-stale-table-disarm-probe.txt (486 B)
+          == ['docs/evidence/access-model-instrument-honesty-2026-10-26/03-stale-table-disarm-probe.txt']
+      BYTE HIT evidence-access-model-instrument-honesty-2026-10-26/04-athead-before-the-fix.txt (8673 B)
+          == ['docs/evidence/access-model-instrument-honesty-2026-10-26/04-athead-before-the-fix.txt']
+      BYTE HIT evidence-access-model-instrument-honesty-2026-10-26/05-hybrid-after-the-fix.txt (973 B)
+          == ['docs/evidence/access-model-instrument-honesty-2026-10-26/05-hybrid-after-the-fix.txt']
+      BYTE HIT evidence-access-model-instrument-honesty-2026-10-26/06-unresolvable-ref-after-the-fix.txt (96 B)
+          == ['docs/evidence/access-model-instrument-honesty-2026-10-26/06-unresolvable-ref-after-the-fix.txt']
+      BYTE HIT evidence-access-model-instrument-honesty-2026-10-26/07-old-doc-usage-still-works.txt (9470 B)
+          == ['docs/evidence/access-model-instrument-honesty-2026-10-26/07-old-doc-usage-still-works.txt']
+      BYTE HIT evidence-access-model-instrument-honesty-2026-10-26/README.md (7101 B)
+          == ['docs/evidence/access-model-instrument-honesty-2026-10-26/README.md']
+      BYTE HIT evidence-access-model-instrument-honesty-2026-10-26/08-full-suite-at-this-branch.txt (88999 B)
+          == ['docs/evidence/access-model-instrument-honesty-2026-10-26/08-full-suite-at-this-branch.txt']
+      BYTE HIT p4-3-eosb-forecast/eosb-liability-forecast-spec.md (27148 B)
+          == ['eosb-liability-forecast-spec.md']
+      BYTE HIT p4-3-eosb-forecast/evidence/01-engine-at-main.txt (3820 B)
+          == ['docs/evidence/eosb-forecast-2026-10-27/01-engine-at-main.txt']
+      BYTE HIT p4-3-eosb-forecast/evidence/check-pack.py (9476 B)
+          == ['docs/evidence/eosb-forecast-2026-10-27/check-pack.py']
+      BYTE HIT p4-3-eosb-forecast/evidence/02-roster-and-trajectory.txt (7842 B)
+          == ['docs/evidence/eosb-forecast-2026-10-27/02-roster-and-trajectory.txt']
+      BYTE HIT p4-3-eosb-forecast/evidence/03-failure-modes.txt (3809 B)
+          == ['docs/evidence/eosb-forecast-2026-10-27/03-failure-modes.txt']
+      BYTE HIT p4-3-eosb-forecast/evidence/04-movers-and-crossings.txt (4148 B)
+          == ['docs/evidence/eosb-forecast-2026-10-27/04-movers-and-crossings.txt']
+      BYTE HIT p4-3-eosb-forecast/evidence/05-pack-check-first-run-red.txt (3930 B)
+          == ['docs/evidence/eosb-forecast-2026-10-27/05-pack-check-first-run-red.txt']
+      BYTE HIT p4-3-eosb-forecast/evidence/pack-check.txt (3538 B)
+          == ['docs/evidence/eosb-forecast-2026-10-27/pack-check.txt']
+      BYTE HIT p4-3-eosb-forecast/evidence/06-pack-check-falsified.txt (4355 B)
+          == ['docs/evidence/eosb-forecast-2026-10-27/06-pack-check-falsified.txt']
+      BYTE HIT p4-3-eosb-forecast/evidence/README.md (3654 B)
+          == ['docs/evidence/eosb-forecast-2026-10-27/README.md']
+      BYTE HIT p4-3-eosb-forecast/evidence/07-rig-identity.txt (1311 B)
+          == ['docs/evidence/eosb-forecast-2026-10-27/07-rig-identity.txt']
+      BYTE HIT served-document-facts-2026-10-28/refusal-final-settlement-statement.md (943 B)
+          == ['docs/evidence/served-document-facts-2026-10-28/refusal-final-settlement-statement.md']
+      BYTE HIT served-document-facts-2026-10-28/guard-RED-before-fix.log (21550 B)
+          == ['docs/evidence/served-document-facts-2026-10-28/guard-RED-before-fix.log']
+      BYTE HIT served-document-facts-2026-10-28/guard-GREEN-after-fix.log (4730 B)
+          == ['docs/evidence/served-document-facts-2026-10-28/guard-GREEN-after-fix.log']
+      BYTE HIT served-document-facts-2026-10-28/full-suite-after.log (102311 B)
+          == ['docs/evidence/served-document-facts-2026-10-28/full-suite-after.log']
+      BYTE HIT served-document-facts-2026-10-28/README.md (6583 B)
+          == ['docs/evidence/served-document-facts-2026-10-28/README.md']
+      BYTE HIT served-document-facts-2026-10-28/evidence-transcript.txt (9185 B)
+          == ['docs/evidence/served-document-facts-2026-10-28/evidence-transcript.txt']
+      BYTE HIT served-document-facts-2026-10-28/refusal-uae-employment-contract.md (869 B)
+          == ['docs/evidence/served-document-facts-2026-10-28/refusal-uae-employment-contract.md']
+      BYTE HIT ui-preview-2026-10-29/settlement-preview-before.png (74481 B)
+          == ['docs/evidence/preview-renders-document-2026-10-29/settlement-preview-before.png']
+      BYTE HIT ui-preview-2026-10-29/privacy-notice-preview-before.png (74852 B)
+          == ['docs/evidence/preview-renders-document-2026-10-29/privacy-notice-preview-before.png']
+      BYTE HIT ui-preview-2026-10-29/settlement-preview-after.png (80707 B)
+          == ['docs/evidence/preview-renders-document-2026-10-29/settlement-preview-after.png']
+      BYTE HIT ui-preview-2026-10-29/privacy-notice-preview-after.png (90212 B)
+          == ['docs/evidence/preview-renders-document-2026-10-29/privacy-notice-preview-after.png']
+      BYTE HIT amount-grouping-2026-10-29/tsc.log (0 B)
+          == ['docs/evidence/all-chip-race-2026-10-09/after-verdict.err', 'docs/evidence/all-chip-race-2026-10-09/before-verdict.err', 'docs/evidence/pre-cutover-render-2026-10-09/raw/console.txt', 'docs/evidence/pre-cutover-render-2026-10-09/raw/page-errors.txt', 'docs/evidence/post-cutover-reground-2026-10-12/raw/board-console.txt', 'docs/evidence/post-cutover-reground-2026-10-12/raw/page-errors.txt', 'docs/evidence/p3-1-probation-timeline-2026-10-22/tsc-b.log']
+
+  BY CONTENT (the same text, DRIFTED - the case md5 cannot see):
+      long-line index: 29555 distinct lines (>=60 chars) shared-indexed from 1420 host files
+      DRIFT HIT lead-330-register.md
+          shares 74 of 138 long lines (54%) with docs/statutory-claim-register.md
+      DRIFT HIT legal-signoff-checklist.md
+          shares 15 of 15 long lines (100%) with legal-signoff-checklist.md
+      DRIFT HIT compliance-audit-enhancement.md
+          shares 162 of 165 long lines (98%) with compliance-audit-enhancement.md
+      DRIFT HIT tech-stack.md
+          shares 77 of 82 long lines (94%) with tech-stack.md
+      DRIFT HIT compliance-dpia-vendor-risk.md
+          shares 176 of 176 long lines (100%) with compliance-dpia-vendor-risk.md
+      DRIFT HIT eosb-engine-gaps-spec.md
+          shares 63 of 75 long lines (84%) with eosb-engine-gaps-spec.md
+      DRIFT HIT pilot-outreach-messages.md
+          shares 34 of 40 long lines (85%) with pilot-outreach-messages.md
+      DRIFT HIT compliance-requirements.md
+          shares 167 of 206 long lines (81%) with compliance-requirements.md
+      DRIFT HIT WORKFLOW.md
+          shares 102 of 112 long lines (91%) with WORKFLOW.md
+      DRIFT HIT p4-3-eosb-forecast/eosb-liability-forecast-spec.md
+          shares 205 of 205 long lines (100%) with eosb-liability-forecast-spec.md
+      documents compared by text: 39 | DRIFTED DUPLICATE CANDIDATES: 10
+
+VERDICT: 1420 host files examined against 1130 repository documents (14 templates, 4 docs/*.md, 24 root *.md, 1088 other docs files). Name collisions 207, byte-identical 216, drifted-text 10 -> 433 HIT(S) - see above

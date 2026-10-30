@@ -1,0 +1,44 @@
+== check-host-template-copies proof ==
+check : /home/team/shared/wt-templates/scripts/check-host-template-copies.py
+fixture: /tmp/check-host-template-copies-test.fZdQAU/fixture  (a scratch copy - the host folder is never written to)
+
+  PASS  (A) the fixture mirroring today's host state is GREEN (exit 0)
+  PASS  (A) counts: 2 directories walked
+  PASS  (A) counts: 3 entries examined
+  PASS  (A) counts: 0 files at the top level
+  PASS  (A) counts: 3 quarantined, matching the rule
+  PASS  (A) counts: 0 violations
+  PASS  (B) a document copy at the TOP LEVEL of the retired folder  (exit 1, named privacy-notice.md: TOP-LEVEL)
+  PASS  (C) removing the plant restored green - the redden in (B) was the plant, not the run
+  PASS  (D) a document copy in a NESTED directory  (exit 1, named notes/ksa-employment-contract.md: FOREIGN-DIR)
+  PASS  (E) a name NO LIST NAMES, quarantined  (exit 1, named retired/privacy-addendum-2027.txt: BAD-QUARANTINE-NAME)
+  PASS  (F) a second authoritative copy wearing a different name (suffix not at the end)  (exit 1, named retired/privacy-notice.retired-9d2182a.md: BAD-QUARANTINE-NAME)
+  PASS  (G) a nested directory INSIDE the quarantine (the quarantine is flat)  (exit 1, named retired/deep/privacy-notice.md: NESTED-IN-QUARANTINE)
+  PASS  (H) a symlink where a quarantined file should be  (exit 1, named retired/ksa-employment-contract.md.retired-abc1234: NOT-A-PLAIN-FILE)
+  PASS  (I) after every plant was removed, the quarantine's 3 files are green and reported by name
+  PASS  (J) a MISSING folder exits 2 (CANNOT-JUDGE) - not 0 and not 1
+  PASS  (J) and it says so on its own line
+  PASS  (J) and it prints no OK line
+  PASS  (K) a path that is a FILE exits 2 (CANNOT-JUDGE)
+  PASS  (L) the fixture's bytes and file list are unchanged by the whole suite
+  PASS  (L) the live host folder is untouched by the suite (paths, sizes, mtimes)
+
+== the live host folder, judged once (host state - reported here, scored by check-all.py) ==
+  LIVE:   NOT run by            : the movement. It judges a HOST folder, loads nothing served, and
+  LIVE:                           `grep -c scripts server/index.js` is 0 - no served path reads scripts/
+  LIVE:   IS NOT A MONITOR      : nothing schedules it. It notices a reappearing copy when it is run.
+  LIVE:   directories walked    : 2  ['.', 'retired']
+  LIVE:   entries examined      : 3  (every file, link and special file under the folder, walked -
+  LIVE:                           not matched against a list of names)
+  LIVE:   files at TOP LEVEL    : 0   (want 0)
+  LIVE:   quarantined (matching): 3
+  LIVE:       ok    retired/ksa-employment-contract.md.retired-9d2182a
+  LIVE:       ok    retired/privacy-notice.md.retired-9d2182a
+  LIVE:       ok    retired/uae-employment-contract.md.retired-4c8779b
+  LIVE:   violations            : 0
+  LIVE: OK: 3 entries examined, 0 at the top level (want 0), 3 quarantined and matching the rule, 0 violations.
+  LIVE:     /home/team/shared/templates is in its retired state.
+  LIVE: exit 0   (0 = retired state; 1 = a copy is back; 2 = the folder could not be judged)
+  LIVE: the host folder is in its retired state right now
+
+== 20 passed, 0 failed ==
