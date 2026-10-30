@@ -1,0 +1,36 @@
+seed stdout tail:
+- Opened OFR-2026-DEMO-03 (Yousef Al-Hammadi, AE, start 2026-10-29) — start date already passed, items still open; items: 7 not_started; notice shown for 4/4 collectible (passport=Legal obligation, visa_or_entry_permit=Legal obligation, emirates_id=Legal obligation, bank_details=Performance of the employment contract / contractual necessity)
+Seeding completed successfully.
+
+
+employee rows written: 14
+rows carrying a non-null termination_type: 0
+by status: {"active":7,"onboarding":3,"offboarding":2,"terminated":2}
+
+non-active rows:
+  demo-emp-lina        onboarding   term_type=null eosb=0 AE
+  demo-emp-noura       offboarding  term_type=null eosb=19247.36 AE
+  demo-emp-omar        onboarding   term_type=null eosb=0 AE
+  demo-emp-reem        onboarding   term_type=null eosb=1305.46 SA
+  demo-emp-sarah       offboarding  term_type=null eosb=19824.78 SA
+  demo-emp-sultan      terminated   term_type=null eosb=3449.69 SA
+  demo-emp-yusuf       terminated   term_type=null eosb=0 AE
+
+exit_interviews (departure_reason):
+  demo-emp-sarah       "Better Opportunity"
+  demo-emp-yusuf       "Career Change"
+  demo-emp-sultan      "Relocation"
+  demo-emp-noura       "Better Opportunity"
+
+audit_logs rows: [{"action":"CREATE","entity_id":"21d6d259-2924-4eda-9ae8-07446aa31ef2"},{"action":"CREATE","entity_id":"21d6d259-2924-4eda-9ae8-07446aa31ef2"},{"action":"CREATE","entity_id":"f4c32981-9e70-4445-a05e-4ba2ee90fe4d"},{"action":"CREATE","entity_id":"21d6d259-2924-4eda-9ae8-07446aa31ef2"},{"action":"CREATE","entity_id":"f4c32981-9e70-4445-a05e-4ba2ee90fe4d"},{"action":"CREATE","entity_id":"f4c32981-9e70-4445-a05e-4ba2ee90fe4d"},{"action":"STATUS","entity_id":"7dc11966-c25a-438a-9360-b25bf583a145"},{"action":"STATUS","entity_id":"7dc11966-c25a-438a-9360-b25bf583a145"},{"action":"CREATE","entity_id":"21d6d259-2924-4eda-9ae8-07446aa31ef2"},{"action":"CREATE","entity_id":"f4c32981-9e70-4445-a05e-4ba2ee90fe4d"},{"action":"CREATE","entity_id":"21d6d259-2924-4eda-9ae8-07446aa31ef2"},{"action":"STATUS","entity_id":"7dc11966-c25a-438a-9360-b25bf583a145"},{"action":"CREATE","entity_id":"7dc11966-c25a-438a-9360-b25bf583a145"},{"action":"CREATE","entity_id":"demo-emp-omar"},{"action":"CREATE","entity_id":"demo-exit-1"},{"action":"OFFBOARD_START","entity_id":"demo-emp-sarah"},{"action":"CREATE","entity_id":"f4c32981-9e70-4445-a05e-4ba2ee90fe4d"}]
+
+unreduced vs reduced (reason=null vs reason=resignation) for the odd rows:
+  demo-emp-lina        stored=0 unreduced=0 reduced(resignation)=0
+  demo-emp-noura       stored=19247.36 unreduced=19247.36 reduced(resignation)=6415.79
+  demo-emp-omar        stored=0 unreduced=0 reduced(resignation)=0
+  demo-emp-reem        stored=1305.46 unreduced=1305.46 reduced(resignation)=1305.46
+  demo-emp-sarah       stored=19824.78 unreduced=19824.78 reduced(resignation)=19824.78
+  demo-emp-sultan      stored=3449.69 unreduced=3449.69 reduced(resignation)=3449.69
+  demo-emp-yusuf       stored=0 unreduced=0 reduced(resignation)=0
+(node:10973) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

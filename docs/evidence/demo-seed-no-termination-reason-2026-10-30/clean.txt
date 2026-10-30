@@ -1,0 +1,92 @@
+TAP version 13
+# (node:18224) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [demo-seed-termination-reason] examined 14 employee rows written by the seed; 0 carry a termination reason
+#     demo-emp-ahmad       status=active       termination_type=null
+#     demo-emp-fatima      status=active       termination_type=null
+#     demo-emp-hassan      status=active       termination_type=null
+#     demo-emp-khalid      status=active       termination_type=null
+#     demo-emp-leila       status=active       termination_type=null
+#     demo-emp-lina        status=onboarding   termination_type=null
+#     demo-emp-mohammed    status=active       termination_type=null
+#     demo-emp-noura       status=offboarding  termination_type=null
+#     demo-emp-omar        status=onboarding   termination_type=null
+#     demo-emp-reem        status=onboarding   termination_type=null
+#     demo-emp-salim       status=active       termination_type=null
+#     demo-emp-sarah       status=offboarding  termination_type=null
+#     demo-emp-sultan      status=terminated   termination_type=null
+#     demo-emp-yusuf       status=terminated   termination_type=null
+# [demo-seed-termination-reason] the demo's leavers (terminated or offboarding): 4
+#     demo-emp-noura       offboarding  termination_type=null → the Directory row reads "Unreduced — no termination reason recorded"
+#     demo-emp-sarah       offboarding  termination_type=null → the Directory row reads "Unreduced — no termination reason recorded"
+#     demo-emp-sultan      terminated   termination_type=null → the Directory row reads "Unreduced — no termination reason recorded"
+#     demo-emp-yusuf       terminated   termination_type=null → the Directory row reads "Unreduced — no termination reason recorded"
+# [demo-seed-termination-reason] demo-emp-noura       stored=19247.36 unreduced=19247.36 if-a-resignation-had-been-passed=6415.79
+# [demo-seed-termination-reason] demo-emp-sarah       stored=19824.78 unreduced=19824.78 if-a-resignation-had-been-passed=19824.78
+# [demo-seed-termination-reason] demo-emp-sultan      stored=3449.69 unreduced=3449.69 if-a-resignation-had-been-passed=3449.69
+# [demo-seed-termination-reason] demo-emp-yusuf       stored=0 unreduced=0 if-a-resignation-had-been-passed=0
+# [demo-seed-termination-reason] rows where a seeded reason WOULD have moved the figure: demo-emp-noura
+# [demo-seed-termination-reason] NOT a termination reason, and deliberately still seeded: 4 exit-interview row(s)
+#     demo-exit-1    demo-emp-sarah       departure_reason="Better Opportunity"
+#     demo-exit-2    demo-emp-yusuf       departure_reason="Career Change"
+#     demo-exit-3    demo-emp-sultan      departure_reason="Relocation"
+#     demo-exit-4    demo-emp-noura       departure_reason="Better Opportunity"
+# Subtest: the demo seed records no termination reason (owner direction, 2026-10-30)
+    # Subtest: the seed ran to completion and wrote the roster it owns
+    ok 1 - the seed ran to completion and wrote the roster it owns
+      ---
+      duration_ms: 2.366105
+      type: 'test'
+      ...
+    # Subtest: ZERO seeded employee rows carry a termination reason — and the scan prints what it examined
+    ok 2 - ZERO seeded employee rows carry a termination reason — and the scan prints what it examined
+      ---
+      duration_ms: 1.764105
+      type: 'test'
+      ...
+    # Subtest: the demo still shows its terminations — every one of them with no reason attached
+    ok 3 - the demo still shows its terminations — every one of them with no reason attached
+      ---
+      duration_ms: 0.43488
+      type: 'test'
+      ...
+    # Subtest: the leavers carry the UNREDUCED figure, and the comparison has teeth
+    ok 4 - the leavers carry the UNREDUCED figure, and the comparison has teeth
+      ---
+      duration_ms: 0.6372
+      type: 'test'
+      ...
+    # Subtest: the refusal is exercised: a roster naming a reason is refused, and the blank states are not
+    ok 5 - the refusal is exercised: a roster naming a reason is refused, and the blank states are not
+      ---
+      duration_ms: 0.647328
+      type: 'test'
+      ...
+    # Subtest: the write names the column and binds the refusal — the one signal the seeded bytes cannot give
+    ok 6 - the write names the column and binds the refusal — the one signal the seeded bytes cannot give
+      ---
+      duration_ms: 1.036133
+      type: 'test'
+      ...
+    # Subtest: what this file does NOT judge, printed: the exit-interview reasons are still seeded
+    ok 7 - what this file does NOT judge, printed: the exit-interview reasons are still seeded
+      ---
+      duration_ms: 0.369453
+      type: 'test'
+      ...
+    1..7
+ok 1 - the demo seed records no termination reason (owner direction, 2026-10-30)
+  ---
+  duration_ms: 8.31682
+  type: 'suite'
+  ...
+1..1
+# tests 7
+# suites 1
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 262.638306
+rc=0

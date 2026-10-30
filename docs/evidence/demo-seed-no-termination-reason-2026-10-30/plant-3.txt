@@ -1,0 +1,205 @@
+TAP version 13
+# (node:17400) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [demo-seed-termination-reason] examined 14 employee rows written by the seed; 14 carry a termination reason
+#     demo-emp-ahmad       status=active       termination_type="resignation"
+#     demo-emp-fatima      status=active       termination_type="resignation"
+#     demo-emp-hassan      status=active       termination_type="resignation"
+#     demo-emp-khalid      status=active       termination_type="resignation"
+#     demo-emp-leila       status=active       termination_type="resignation"
+#     demo-emp-lina        status=onboarding   termination_type="resignation"
+#     demo-emp-mohammed    status=active       termination_type="resignation"
+#     demo-emp-noura       status=offboarding  termination_type="resignation"
+#     demo-emp-omar        status=onboarding   termination_type="resignation"
+#     demo-emp-reem        status=onboarding   termination_type="resignation"
+#     demo-emp-salim       status=active       termination_type="resignation"
+#     demo-emp-sarah       status=offboarding  termination_type="resignation"
+#     demo-emp-sultan      status=terminated   termination_type="resignation"
+#     demo-emp-yusuf       status=terminated   termination_type="resignation"
+# [demo-seed-termination-reason] the demo's leavers (terminated or offboarding): 4
+#     demo-emp-noura       offboarding  termination_type="resignation" → the Directory row reads "Unreduced — no termination reason recorded"
+#     demo-emp-sarah       offboarding  termination_type="resignation" → the Directory row reads "Unreduced — no termination reason recorded"
+#     demo-emp-sultan      terminated   termination_type="resignation" → the Directory row reads "Unreduced — no termination reason recorded"
+#     demo-emp-yusuf       terminated   termination_type="resignation" → the Directory row reads "Unreduced — no termination reason recorded"
+# [demo-seed-termination-reason] demo-emp-noura       stored=19247.36 unreduced=19247.36 if-a-resignation-had-been-passed=6415.79
+# [demo-seed-termination-reason] demo-emp-sarah       stored=19824.78 unreduced=19824.78 if-a-resignation-had-been-passed=19824.78
+# [demo-seed-termination-reason] demo-emp-sultan      stored=3449.69 unreduced=3449.69 if-a-resignation-had-been-passed=3449.69
+# [demo-seed-termination-reason] demo-emp-yusuf       stored=0 unreduced=0 if-a-resignation-had-been-passed=0
+# [demo-seed-termination-reason] rows where a seeded reason WOULD have moved the figure: demo-emp-noura
+# [demo-seed-termination-reason] NOT a termination reason, and deliberately still seeded: 4 exit-interview row(s)
+#     demo-exit-1    demo-emp-sarah       departure_reason="Better Opportunity"
+#     demo-exit-2    demo-emp-yusuf       departure_reason="Career Change"
+#     demo-exit-3    demo-emp-sultan      departure_reason="Relocation"
+#     demo-exit-4    demo-emp-noura       departure_reason="Better Opportunity"
+# Subtest: the demo seed records no termination reason (owner direction, 2026-10-30)
+    # Subtest: the seed ran to completion and wrote the roster it owns
+    ok 1 - the seed ran to completion and wrote the roster it owns
+      ---
+      duration_ms: 2.258966
+      type: 'test'
+      ...
+    # Subtest: ZERO seeded employee rows carry a termination reason — and the scan prints what it examined
+    not ok 2 - ZERO seeded employee rows carry a termination reason — and the scan prints what it examined
+      ---
+      duration_ms: 2.998988
+      type: 'test'
+      location: '/home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:102:3'
+      failureType: 'testCodeFailure'
+      error: |-
+        the demo seed recorded a termination reason on a row no named actor wrote. The demo may never seed one: it invents a personnel event and it turns an unreduced benefit into a reduced one (owner direction 2026-10-30)
+        + actual - expected
+        
+        + [
+        +   'demo-emp-ahmad = "resignation"',
+        +   'demo-emp-fatima = "resignation"',
+        +   'demo-emp-hassan = "resignation"',
+        +   'demo-emp-khalid = "resignation"',
+        +   'demo-emp-leila = "resignation"',
+        +   'demo-emp-lina = "resignation"',
+        +   'demo-emp-mohammed = "resignation"',
+        +   'demo-emp-noura = "resignation"',
+        +   'demo-emp-omar = "resignation"',
+        +   'demo-emp-reem = "resignation"',
+        +   'demo-emp-salim = "resignation"',
+        +   'demo-emp-sarah = "resignation"',
+        +   'demo-emp-sultan = "resignation"',
+        +   'demo-emp-yusuf = "resignation"'
+        + ]
+        - []
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+      actual:
+        0: 'demo-emp-ahmad = "resignation"'
+        1: 'demo-emp-fatima = "resignation"'
+        2: 'demo-emp-hassan = "resignation"'
+        3: 'demo-emp-khalid = "resignation"'
+        4: 'demo-emp-leila = "resignation"'
+        5: 'demo-emp-lina = "resignation"'
+        6: 'demo-emp-mohammed = "resignation"'
+        7: 'demo-emp-noura = "resignation"'
+        8: 'demo-emp-omar = "resignation"'
+        9: 'demo-emp-reem = "resignation"'
+        10: 'demo-emp-salim = "resignation"'
+        11: 'demo-emp-sarah = "resignation"'
+        12: 'demo-emp-sultan = "resignation"'
+        13: 'demo-emp-yusuf = "resignation"'
+      operator: 'deepStrictEqual'
+      stack: |-
+        TestContext.<anonymous> (/home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:120:12)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        Suite.processPendingSubtests (node:internal/test_runner/test:744:18)
+        Test.postRun (node:internal/test_runner/test:1173:19)
+        Test.run (node:internal/test_runner/test:1101:12)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Promise.all (index 0)
+        async Suite.run (node:internal/test_runner/test:1442:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: the demo still shows its terminations — every one of them with no reason attached
+    not ok 3 - the demo still shows its terminations — every one of them with no reason attached
+      ---
+      duration_ms: 0.7783
+      type: 'test'
+      location: '/home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:129:3'
+      failureType: 'testCodeFailure'
+      error: 'a leaver carries a reason: the fix is "no reason", never "no terminations"'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        TestContext.<anonymous> (/home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:144:12)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        Suite.processPendingSubtests (node:internal/test_runner/test:744:18)
+        Test.postRun (node:internal/test_runner/test:1173:19)
+        Test.run (node:internal/test_runner/test:1101:12)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: the leavers carry the UNREDUCED figure, and the comparison has teeth
+    ok 4 - the leavers carry the UNREDUCED figure, and the comparison has teeth
+      ---
+      duration_ms: 0.561429
+      type: 'test'
+      ...
+    # Subtest: the refusal is exercised: a roster naming a reason is refused, and the blank states are not
+    ok 5 - the refusal is exercised: a roster naming a reason is refused, and the blank states are not
+      ---
+      duration_ms: 0.651492
+      type: 'test'
+      ...
+    # Subtest: the write names the column and binds the refusal — the one signal the seeded bytes cannot give
+    not ok 6 - the write names the column and binds the refusal — the one signal the seeded bytes cannot give
+      ---
+      duration_ms: 0.771046
+      type: 'test'
+      location: '/home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:198:3'
+      failureType: 'testCodeFailure'
+      error: "the termination column is no longer bound to the guard's constant — an unbound NULL is a value someone can change without meeting the refusal"
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        TestContext.<anonymous> (/home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:211:12)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        Suite.processPendingSubtests (node:internal/test_runner/test:744:18)
+        Test.postRun (node:internal/test_runner/test:1173:19)
+        Test.run (node:internal/test_runner/test:1101:12)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: what this file does NOT judge, printed: the exit-interview reasons are still seeded
+    not ok 7 - what this file does NOT judge, printed: the exit-interview reasons are still seeded
+      ---
+      duration_ms: 0.528197
+      type: 'test'
+      location: '/home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:216:3'
+      failureType: 'testCodeFailure'
+      error: |-
+        a departure reason from the exit interview must not appear as an employee termination reason
+        
+        14 !== 0
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 0
+      actual: 14
+      operator: 'strictEqual'
+      stack: |-
+        TestContext.<anonymous> (/home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:228:12)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        Suite.processPendingSubtests (node:internal/test_runner/test:744:18)
+        Test.postRun (node:internal/test_runner/test:1173:19)
+        Test.run (node:internal/test_runner/test:1101:12)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    1..7
+not ok 1 - the demo seed records no termination reason (owner direction, 2026-10-30)
+  ---
+  duration_ms: 9.649571
+  type: 'suite'
+  location: '/home/team/shared/probable-octo-sniffle/server/demo-seed-termination-reason.test.js:94:1'
+  failureType: 'subtestsFailed'
+  error: '4 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 7
+# suites 1
+# pass 3
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 252.086703
+rc=1
