@@ -231,11 +231,11 @@ the four rules that matter most for *this* screen:
 4. **The refusal sentence wraps and never truncates** — it is the one place the person must read the whole
    reason. (`truncate` is fine on a name; never on a refusal.)
 
-Numeral and date decision, if Arabic lands before this screen is built: **Arabic-Indic for counts and
-distances; Latin for identifiers** (ISO dates, `v2.3`, IBAN, Emirates ID, currency codes). The client
-currently renders money with `toLocaleString(undefined, …)` — **7 sites** — where `undefined` means the
-runtime locale, so digits would change while the words stay English. That is `LAYER2-PREBOARDING-UI.md`
-§8B.1's finding and it applies here unchanged.
+Numeral and date decision, **settled**: Latin digits throughout, in one module (`client/src/format.js`) —
+amounts grouped on screen, dates in the `en-GB` long-month shape. No ambient-locale call is left in
+`client/` outside that module (**0** sites; `src/format.test.js` walks the tree and reddens on one), so
+digits cannot change while the words stay English. That is `LAYER2-PREBOARDING-UI.md` §8B.1's finding
+and it applies here unchanged.
 
 ---
 

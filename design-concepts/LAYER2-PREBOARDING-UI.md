@@ -808,8 +808,8 @@ workspace track with its owner names; and any illustrative figure without its la
 - **Numbers and dates are convention-pinned — amended 2026-10-29.** The owner's numeral ruling
   (Latin digits throughout) is implemented: the seven figure sites now read `formatAmount(...)`
   (`App.tsx:1580`, `formatAmount(analytics.avgCostPerHireAE)`), and the convention it applies is
-  the server's own `Number(v).toFixed(2)` — two decimals, Latin digits, **no** group separator,
-  which is the string the served documents carry. Until that pass money and counts were formatted
+  the server's own `Number(v).toFixed(2)` — two decimals and Latin digits — with a comma every three
+  integer digits; that grouping is the one difference from the served documents. Until that pass money and counts were formatted
   with the ambient locale (a `undefined` where a locale belongs), so on a machine set to Arabic the
   digits changed while the words around them stayed English. **Not true at this revision:**
   `client/src` holds **0** ambient-locale calls outside `src/format.js`, which `src/format.test.js`
@@ -831,7 +831,7 @@ workspace track with its owner names; and any illustrative figure without its la
   `design-concepts/intelligence-dashboard-prototype.html` sets
   `document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr'` (`:290`), swaps the font stack
   (`body.ar{font-family: … 'Noto Naskh Arabic' …}`, `:16`) and converts numerals with a
-  `toArabic()` helper (`:313`, `:317`). **Follow that convention; do not invent a second one.**
+  `toArabic()` helper (`:313`, `:317`). **Follow its direction and font handling; do not invent a second convention — its numeral conversion is the one part not followed (item 4).**
 
 **Why this is not a strings file:** the components were written with physical spacing and with the
 *browser* deciding how numbers look. "Adding Arabic" here is a direction-aware layout pass plus a
@@ -872,21 +872,21 @@ numeral/date decision the product has not yet made.
    `·`. Rule: wrap each LTR run — the ISO date, the `D-n` token, `AED`/`SAR`, an email address, an
    IBAN, an Emirates ID — in `<bdi>` (or a `dir="auto"` span). The separators are the most common
    visible breakage: `·` is text, and it must be isolated with its neighbour.
-4. **Numerals: decide once, in the strings file.** The prototype renders Arabic-Indic numerals in
-   AR (`toArabic()`, `:313`). If the portal follows it: (a) the same value reads differently in the
-   two languages, which is the house convention; and (b) **a numeral inside an ISO date must not be
-   half-converted**. Recommendation: **Arabic-Indic for counts and distances; Latin for ISO dates,
-   identifiers and currency codes** (IBAN, Emirates ID, `2026-10-09`, `AED`) — those are
-   identifiers, not quantities.
+4. **Numerals: decided — Latin digits (0-9) in both languages, and nothing else.** The owner ruled it
+   on 2026-10-29 and it ships: `client/src/format.js` is the one module, and `src/format.test.js` walks
+   `client/src` and reddens if any file outside it takes a digit, a separator or a month name from the
+   machine. The prototype's `toArabic()` conversion is therefore **not** followed, and no Arabic-Indic
+   toggle is offered — there is no language switch in the product at all. An identifier and a quantity
+   read the same way, so a date, an IBAN and a count cannot disagree with the document beside them.
 5. **The due-date column** moves; its contents do not. The dates stay LTR runs, the column moves to
    the start edge in RTL, and the "past due" emphasis carries the **word**, never an arrow glyph —
    a chevron points the wrong way in one of the two directions and reads as "next".
-6. **Dates.** Today the product prints ISO (`App.tsx:2043`). ISO is unambiguous and
-   direction-safe, but it is not how a hire reads a date in Arabic. Options: keep ISO; a numeric
-   `09/10/2026` (ambiguous between day-first and month-first, which is unacceptable on a deadline);
-   or a written form ("9 October 2026" / "٩ أكتوبر ٢٠٢٦"). **Recommendation: keep ISO in both
-   languages for the hire's due dates** — an ambiguous date against a document deadline is worse
-   than a formal one, and ISO needs no translation.
+6. **Dates.** Not ISO any more, and not raw: every reader-facing date goes through `formatDate`
+   (§8B.1) and renders `en-GB`, long month — `9 October 2026` — in both languages, in Latin digits
+   (`App.tsx:2572`, the row printing `due {formatDate(line.due_date)} ({line.due_rule})`). The earlier
+   recommendation to keep ISO for the hire's due dates is **withdrawn**; ISO stays the *stored and
+   transported* shape (`2026-10-09` in a record, the `D-3` token, an audit line) and never the
+   reader's form. A numeric `09/10/2026` stays rejected (§8B.3.4).
 7. **Font and metrics**: the AR stack from the prototype (`:16`), with 20–30% longer strings (§7)
    and more leading than Latin at the same size. Row height must be allowed to grow: a row sized to
    "Passport copy" will not hold "نسخة جواز السفر". No truncation to preserve the English rhythm.

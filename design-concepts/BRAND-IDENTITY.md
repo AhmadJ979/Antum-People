@@ -56,7 +56,7 @@ font-family: 'Inter Arabic', 'Inter', sans-serif; /* Arabic text variant */
 ---
 ## 4. Design Principles
 1. **Clarity over density** — Data should be immediately readable, not overwhelming
-2. **GCC-first** — Date formats (DD/MM/YYYY), currency (AED, SAR), RTL readiness for Arabic
+2. **GCC-first** — One date shape, `en-GB` long month (`9 September 2026`); currency (AED, SAR); RTL readiness for Arabic
 3. **Progressive disclosure** — Show summary first, drill into details when needed
 4. **Actionable insights** — Every chart answers a question; never show data without context
 5. **Trust through transparency** — Compliance status indicators, data freshness timestamps
