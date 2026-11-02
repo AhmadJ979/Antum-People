@@ -189,6 +189,68 @@ else
   bad "the refused Origin was not logged"
 fi
 
+echo "6. this business's OWN platform names are served by PATTERN, not by a list"
+# The first fix for the blank page added one allowlist entry per hostname and was one name
+# behind on the very next one: `-dev` — the platform's WORKING-SITE name, the one the owner's
+# SITE tab opens — was still refused, and its bundle 403'd, so #root never mounted. The four
+# names below are the shape this business is served under; all four must be served with no
+# entry anywhere. Measured before this change on the live host: the `-dev` asset answered
+# 403 with the 21-byte body, i.e. the same blank page.
+BIZ=b974147c03228029e277d1cbe6646fe6
+for own in "https://$BIZ-dev.cto.site" "https://$BIZ.cto.site" \
+           "https://$BIZ.ctonew.app" "https://$BIZ-dev.ctonew.app"; do
+  out=$(probe -H "Origin: $own" "$BASE/api/employees")
+  check "own platform name $own -> status" "$(field "$out" 1)" "401"
+done
+# The one that was blank, spelled out on its own so a failure names it.
+DEV_SITE_ORIGIN="https://$BIZ-dev.cto.site"
+out=$(probe -H "Origin: $DEV_SITE_ORIGIN" "$BASE/api/employees")
+check "the -dev .cto.site name -> body" \
+  "$(cat "$(field "$out" 3)")" '{"error":"Authentication token required"}'
+if curl -s -D - -o /dev/null -H "Origin: $DEV_SITE_ORIGIN" "$BASE/api/employees" \
+     | grep -qi "^access-control-allow-origin: $DEV_SITE_ORIGIN"; then
+  ok "the -dev .cto.site name gets its CORS header (gate and cors middleware agree)"
+else
+  bad "the -dev .cto.site name was served but the cors middleware withheld its header"
+fi
+if [ -f "$ROOT/client/dist/index.html" ]; then
+  check "the -dev bundle (the blank page's cause) loads" \
+    "$(curl -s -o /dev/null -w '%{http_code}' -H "Origin: $DEV_SITE_ORIGIN" "$BASE$bundle")" "200"
+  check "the -dev stylesheet loads" \
+    "$(curl -s -o /dev/null -w '%{http_code}' -H "Origin: $DEV_SITE_ORIGIN" \
+        "$BASE$(sed -n 's/.*href="\([^"]*\.css\)".*/\1/p' "$ROOT/client/dist/index.html" | head -1)")" "200"
+fi
+
+echo "7. ...and the pattern admits NOTHING ELSE (the refusals, quoted)"
+# Each of these is refused deliberately: 403, the short generic body, no CORS header. The
+# lookalikes are the reason the match is on LABELS: a suffix test against the whole host string
+# admits `<biz>.cto.site.evil.example`, and `endsWith` admits a name padded at the front.
+refuse() { # refuse <label> <origin>
+  local out
+  out=$(probe -H "Origin: $2" "$BASE/api/employees")
+  check "$1 -> status" "$(field "$out" 1)" "403"
+  check "$1 -> body" "$(cat "$(field "$out" 3)")" '{"error":"Forbidden"}'
+  if curl -s -D - -o /dev/null -H "Origin: $2" "$BASE/api/employees" \
+       | grep -qi '^access-control-allow-origin:'; then
+    bad "$1 was refused but granted a CORS header"
+  fi
+}
+refuse "foreign Origin"                 'https://evil.example'
+refuse "another team's hash on .cto.site" 'https://0123456789abcdef0123456789abcdef.cto.site'
+refuse "lookalike: our name, then a foreign parent" "https://$BIZ.cto.site.evil.example"
+refuse "lookalike: our name padded at the front"    "https://x$BIZ.cto.site"
+refuse "lookalike: our name with a -dev lookalike"  "https://$BIZ-devx.cto.site"
+refuse "bare platform domain"           'https://cto.site'
+refuse "bare app domain"                'https://ctonew.app'
+refuse "our id, a suffix we do not serve" "https://$BIZ.example.com"
+refuse "our id as a SUBdomain of the suffix" "https://$BIZ.foo.cto.site"
+refuse "plaintext Origin on our own name" "http://$BIZ.cto.site"
+# The asset the owner's page asks for, from a name we do not own: refused, short body.
+if [ -f "$ROOT/client/dist/index.html" ]; then
+  check "foreign Origin on the bundle -> status" \
+    "$(curl -s -o /dev/null -w '%{http_code}' -H 'Origin: https://evil.example' "$BASE$bundle")" "403"
+fi
+
 echo
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1
