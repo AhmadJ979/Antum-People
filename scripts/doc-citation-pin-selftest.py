@@ -62,10 +62,14 @@ REPORT = re.compile(r"^(ok|FAIL|UNCHECKED|UNUSED-PIN)\s", re.M)
 
 # The symbols below were read OUT OF THE TREES THEY ARE CITED AT, not guessed:
 #   7a4e00a:1212 -> {user?.username || 'Admin User'}
-#   tip:1212     -> `const settled = settlePanels(await Promise.all([`   (no `username`)
-#   tip:1580     -> {formatAmount(analytics.avgCostPerHireAE)}
+#   tip:1212     -> `setChecklistNotice({ kind: 'error', ...`            (no `username`)
+#   tip:1597     -> {formatAmount(analytics.avgCostPerHireAE)}
+# The `tip:` entries are TIP readings - they say what the cited number holds at the tip of
+# THIS tree, which is why P2 (the same 1212, unpinned) FAILS. They move whenever App.tsx
+# grows, and the plant's own number must move with them: re-grounded 2026-11-02 for the
+# escalation panel, whose +61 lines above the analytics tab took 1580 -> 1597.
 # `{activeTab` is deliberately NOT used for P1: it is not on 7a4e00a:1212 (measured - it
-# lives at tip:2105). A plant naming a symbol that is not there would make P1 red for the
+# lives at tip:2166). A plant naming a symbol that is not there would make P1 red for the
 # wrong reason. It appears in P6 instead, where its absence is the whole point.
 P1 = """
 # pin selftest plant
@@ -85,7 +89,7 @@ P3 = """
 P4 = """
 # pin selftest plant
 
-- `App.tsx:1580` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
+- `App.tsx:1597` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
 """
 P5 = """
 # pin selftest plant
