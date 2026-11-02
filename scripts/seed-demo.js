@@ -7,6 +7,10 @@ const auth = require('../server/auth');
 // so the demo cannot drift from the behaviour a real caller gets.
 const preboarding = require('../server/preboarding');
 const preboardingItems = require('../server/preboarding-items');
+// The demo seed records NO termination reason, and this is the module that makes that true by
+// refusing rather than by remembering (owner direction 2026-10-30). Its header says what it does
+// not police — the product's own gated route, and the exit-interview's departure reason.
+const seedTermination = require('./seed-termination-guard');
 
 // Who the seed signs the notice record as: the demo account a walkthrough signs in as, because
 // that is the session that would write the row in the product. Not 'system' — the module refuses
@@ -315,6 +319,14 @@ async function seed() {
 
   const allEmployees = [...personas, ...historicalLeavers];
 
+  // REFUSAL, not remembrance (owner direction 2026-10-30). The INSERT below enumerates its columns,
+  // so a `termination_type` named on a persona is dropped in silence — the same trap that once made
+  // `probation_end_date` take effect nowhere. This turns that silence into a failure that names the
+  // row, the field and the value, and it runs BEFORE any write, so a refused seed half-writes
+  // nothing. It is the data half of the control; `terminationTypeSqlValue` in the write below is the
+  // writer half.
+  seedTermination.assertRosterCarriesNoTerminationReason(allEmployees);
+
   if (forceClear) {
     console.log('FORCE CLEAR: Deleting existing demo data...');
     // Sequence matters for foreign keys
@@ -357,16 +369,21 @@ async function seed() {
     // The reason is NOT passed (owner ruling 2026-10-29). This call used to hand the engine the
     // hard-coded word 'resignation', which shrank every demo row inside the UAE 1/3 or 2/3 tier by
     // a third or more on a reason no record held — and the seeder never wrote that word to the row,
-    // so the figure and the record disagreed from the moment it was written. It now seeds the
-    // UNREDUCED figure the ruling requires, and writes NO reason: the column is left out of the
-    // INSERT below, so re-seeding still clears whatever reason a demo run recorded.
+    // so the figure and the record disagreed from the moment it was written. It now passes
+    // SEEDED_TERMINATION_TYPE — the module's single constant, `null` — and the column below is
+    // written EXPLICITLY as that constant's SQL value, so the figure and the record cannot disagree:
+    // both come from the one value, and `terminationTypeSqlValue` throws on anything but blank.
+    // (Consequence, unchanged by this edit and named here so a reader is not surprised: the employees
+    // write is `INSERT OR REPLACE` and the column is written blank, so a re-seed CLEARS whatever
+    // reason a demo run had recorded on a demo row. That is the opposite defect to a seeded reason,
+    // it is the owner's call whether to keep it, and no part of this change decides it.)
     const eosbAccrued = eosb.calculateEOSB(
       emp.start_date,
       emp.end_date || null,
       emp.basic_salary,
       emp.salary,
       emp.data_residency_country,
-      null,
+      seedTermination.SEEDED_TERMINATION_TYPE,
       0
     );
 
@@ -381,7 +398,8 @@ async function seed() {
         id, first_name, last_name, email, department, role, start_date, end_date,
         status, salary, basic_salary, recruitment_cost, data_residency_country,
         jurisdiction, total_salary, national_id_value,
-        eosb_accrued, fully_productive_date, created_at, updated_at, probation_end_date, manager_id
+        eosb_accrued, fully_productive_date, created_at, updated_at, probation_end_date, manager_id,
+        termination_type
       ) VALUES (
         ${db.escapeString(emp.id)}, ${db.escapeString(emp.first_name)}, ${db.escapeString(emp.last_name)},
         ${db.escapeString(emp.email)}, ${db.escapeString(emp.department)}, ${db.escapeString(emp.role)},
@@ -392,7 +410,8 @@ async function seed() {
         ${eosbAccrued},
         ${db.escapeString(emp.fully_productive_date)}, '2026-09-23 09:00:00', '2026-09-23 09:00:00',
         ${db.escapeString(emp.probation_end_date || null)},
-        ${db.escapeString(emp.manager_id || null)}
+        ${db.escapeString(emp.manager_id || null)},
+        ${seedTermination.terminationTypeSqlValue(seedTermination.SEEDED_TERMINATION_TYPE)}
       )
     `;
     await db.query(sql);
@@ -522,6 +541,14 @@ async function seed() {
     }
   ];
 
+  // NOT the L4 termination reason, and deliberately still seeded: `departure_reason` belongs to the
+  // EXIT INTERVIEW — what the person themselves said when they left — on its own table, written in
+  // the product by `POST /api/exit-interviews` behind its own named-actor gate, and read only by the
+  // exit-interview roll-up. It reduces no benefit: the figure is computed from
+  // `employees.termination_type` alone, and that column is written blank above and refused by
+  // `seed-termination-guard`. A reader comparing the two must not conclude that a seeded reason leaked
+  // in through this table, and equally must not read this block as "we removed every reason from the
+  // demo" — this one is still here, on purpose, and it is not a termination reason.
   for (const ex of exitInterviews) {
     await db.query(`
       INSERT OR REPLACE INTO exit_interviews (id, employee_id, interview_date, departure_reason, detailed_feedback, satisfaction_score)
