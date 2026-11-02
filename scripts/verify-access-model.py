@@ -139,18 +139,26 @@ CLAIMS = [
     ("server/index.js", 420, "INSERT INTO audit_logs", "employee create audit"),
     ("server/index.js", 436, "app.put('/api/employees/:id'", "update employee"),
     ("server/index.js", 444, "a named actor is required to update an employee", "unnamed actor refused (400)"),
-    ("server/index.js", 527, "INSERT INTO audit_logs", "employee update audit"),
+    # RE-GROUNDED 527 -> 619 (2026-11-02; re-measured on the merge of #351/#353/#354). The probation
+    # write path inserted four blocks into `server/index.js` and moved this symbol (527 -> 584 on that
+    # branch); the caller-error PR and the escalation-panel PR moved it again, so no branch's number
+    # survives the merge. The OCCURRENCE did not change: main resolves this claim to occurrence #1
+    # (index.js:591) and the merged tree resolves it to occurrence #1 at :619 — the same
+    # `INSERT INTO audit_logs` statement, one line longer because `probation_end_date` joined its
+    # payload. An EXACT hint is the maximum-headroom state, so it is set to the line the instrument
+    # resolves it to now; the 7-line prepend control leaves it on the same occurrence.
+    ("server/index.js", 619, "INSERT INTO audit_logs", "employee update audit"),
     ("server/index.js", 546, "/api/employees/:id/onboarding", "onboarding read"),
-    # RE-GROUNDED 550 -> 723 (2026-11-02). `scopeAllowsTarget` occurs 8 times in index.js, and this
-    # hint named the onboarding read's scope check. The PR that made caller-error answers 400 inserted
-    # 37 lines above it, which moved that check from :686 to :723 and left the hint sitting 5 lines
-    # from the MIDPOINT between :367 (the function definition) and :723 - so any shift of 6 or more
-    # lines re-resolved the claim to the definition, and the content-anchoring control (which prepends
-    # 7) went red with "resolved -349 lines lower". The hint is a tie-breaker, not the assertion, and
-    # the instrument's own drift report calls re-grounding one "a documentation act, not a fix"; the
-    # occurrence it names is unchanged, so the claim is the same claim. Headroom at :723 is 178 lines
-    # of upward drift, against 5 at :550.
-    ("server/index.js", 723, "scopeAllowsTarget", "the read is scoped"),
+    # RE-GROUNDED 550 -> 723 -> 785 (2026-11-02; re-measured on the merge of #351/#353/#354).
+    # `scopeAllowsTarget` occurs 8 times in index.js and this hint names the onboarding read's scope
+    # check. TWO PRs moved it independently: the caller-error PR inserted 37 lines above it
+    # (:686 -> :723) and the probation write path inserted 62 more, so neither branch's number is
+    # right on the merge — the merged tree resolves the claim to :785. The line at :785 is
+    # byte-identical to main's :723, so the claim names the same code. At :723 the hint sat 178 lines
+    # of upward drift from the definition at :367, and the content-anchoring control (which prepends
+    # 7) stayed inside that headroom; at :785 the hint is an EXACT hit, the maximum-headroom state.
+    # Re-grounding a hint is a documentation act, not a fix: nothing about the claim changed.
+    ("server/index.js", 785, "scopeAllowsTarget", "the read is scoped"),
     ("server/index.js", 566, "app.put('/api/onboarding-tasks/:id'", "the tick route"),
     ("server/index.js", 576, "a named actor is required to complete a task", "the tick refuses an unnamed actor"),
     ("server/index.js", 587, "/api/employees/:id/offboarding", "offboarding read"),

@@ -280,8 +280,21 @@ test('a value a tile displays has a writer in a route a user can reach — or is
   const writersOf = (column) => {
     const statements = r.columnWritePaths(column)
       .map((p) => ({ file: 'server/index.js', line: p.line, text: p.what, scope: 'server' }));
+    // A LINE-BASED hit is only a write when it puts the column into SQL. `columnWriters` matches
+    // `column =` anywhere, so `auditNewValues.probation_end_date = probationEnd` — the audit payload's
+    // own field, which writes to no table — counts as a "writer" and keeps this guard GREEN after the
+    // real write paths are gone. MEASURED 2026-11-02: with the INSERT column AND the PUT's update line
+    // removed, the guard still passed on that one line alone. So a property assignment
+    // (`x.column = …`) is excluded, and what remains is a bare `column = …` inside a statement
+    // template, or a line that names INSERT/SET.
+    const sqlShaped = (text) => new RegExp(`(^|[^.\\w])${column}\\s*=`).test(text) || /\b(INSERT|SET)\b/i.test(text);
     const seen = new Set();
-    return [...r.columnWriters(column), ...statements].filter((w) => {
+    return [
+      // A TEST that names the column is not a writer: `columnWriters` walks `server/*.js`, so a suite
+      // asserting the INSERT's shape would otherwise be listed as production code that writes it.
+      ...r.columnWriters(column).filter((w) => sqlShaped(w.text) && !/\.test\.js$/.test(w.file)),
+      ...statements,
+    ].filter((w) => {
       const key = `${w.file}:${w.line}`;
       if (seen.has(key)) return false;
       seen.add(key);
