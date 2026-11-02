@@ -13,6 +13,9 @@ const compliance = require('./compliance_engine');
 const auth = require('./auth');
 const access = require('./access');
 const eosb = require('./eosb');
+// The forecast window: the next four calendar quarter-ends after today, derived rather than
+// listed, so the series cannot present a quarter that has already ended as a projection.
+const eosbForecastWindow = require('./eosb-forecast-window');
 const preboarding = require('./preboarding');
 const preboardingItems = require('./preboarding-items');
 const privacyNotice = require('./privacy-notice');
@@ -1009,12 +1012,13 @@ app.get('/api/analytics/dashboard', async (req, res) => {
     // arbitrary growth multiplier. Tenure only ever increases, so each quarter's total
     // is >= the previous one for a stable workforce — no unexplained dip, and the
     // trajectory is the engine's own output, not a guess (rule 16).
-    const forecastQuarterEnds = [
-      { quarter: 'Q3 2026', date: '2026-09-30' },
-      { quarter: 'Q4 2026', date: '2026-12-31' },
-      { quarter: 'Q1 2027', date: '2027-03-31' },
-      { quarter: 'Q2 2027', date: '2027-06-30' }
-    ];
+    // The window is DERIVED FROM THE CLOCK. It used to be a four-entry literal ending at `Q2 2027`;
+    // on 2026-11-02 its first entry (`Q3 2026`, `2026-09-30`) was 33 days in the past and was still
+    // served under a "Forecast" heading, and the literal could not notice the passage of time or
+    // redden. server/eosb-forecast-window.js returns the next four quarter-ends STRICTLY AFTER today,
+    // in the same `{ quarter, date }` shape the loop below consumes; the length is still four, so the
+    // chart's shape is unchanged. server/eosb-forecast-window.test.js holds the boundary cases.
+    const forecastQuarterEnds = eosbForecastWindow.forecastQuarterEnds();
     // The forecast used to project every row on a hard-coded 'resignation' too — the same invented
     // reason as the write paths, in the one place that produces a number a buyer reads. Each row is
     // now projected on ITS OWN record: a row that records a resignation keeps the tier it has, and a
