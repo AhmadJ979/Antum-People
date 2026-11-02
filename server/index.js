@@ -52,15 +52,50 @@ app.disable('x-powered-by');
 //
 // Decision order:
 //   1. no Origin header      -> serve. curl, uptime probes and the /api 401 contract send none.
-//   2. Origin host == Host   -> serve. Same-origin is not a CORS question at all; this is what
-//                               lets the app run from antum.ae, a client domain or a forwarded
-//                               port without needing an allowlist entry per host.
+//   2. Origin host == a host this request actually ARRIVED on -> serve. Same-origin is not a
+//                               CORS question at all; this is what lets the app run from
+//                               antum.ae, a client domain or a forwarded port without needing
+//                               an allowlist entry per host.
 //   3. Origin in allowlist   -> serve, and the cors middleware grants the CORS headers.
 //   4. anything else         -> deliberate 403, short generic JSON body, detail to the log.
-const allowedOrigins = [
+//
+// "the host this request actually arrived on" is NOT just req.headers.host. Measured
+// 2026-11-02 by attaching strace to the live product and reading the bytes it read from its
+// socket: a request to the platform hostname
+// https://b974147c03228029e277d1cbe6646fe6.cto.site arrives at this process as
+//
+//   Host:              ip-10-110-75-104.us-west-2.prod.aws.beamlit.net
+//   X-Forwarded-Host:  c92e15e4f97c516d8c977075708bb720.preview.bl.run
+//   X-Forwarded-Proto: https
+//   Origin:            https://b974147c03228029e277d1cbe6646fe6.cto.site
+//
+// i.e. the edge rewrites Host to its own internal name and puts the name it was addressed as
+// in X-Forwarded-Host. Comparing the Origin host against req.headers.host alone therefore
+// refused EVERY same-origin request on that hostname — the bundle and the stylesheet are
+// CORS-mode requests, so #root stayed empty and the page was blank — while the allowlisted
+// hostname went on working. That asymmetry is the defect the owner reported twice, and it is
+// ours: the 403 was this middleware's 21-byte body, not the edge's.
+//
+// X-Forwarded-Host does not fix this deployment on its own: measured the same day, its value
+// is the SAME for both public hostnames (the edge's own preview name), so it cannot name the
+// public host. Hence the explicit allowlist entry below. Step 2 still matters, because it is
+// the rule that makes this middleware correct on any proxy that DOES forward the original
+// host, and it is what serves the edge's own preview hostname without an entry per name.
+//
+// Trusting X-Forwarded-Host here is sound only because a proxy we control sets it: measured
+// the same day, a caller-supplied `X-Forwarded-Host: evil.example` and `Host: evil.example`
+// are both OVERWRITTEN by the edge before the request reaches this process. It rests on the
+// same `trust proxy` posture as req.ip below. A deployment exposed directly to the internet,
+// with no such proxy in front, must not rely on it.
+const DEFAULT_ALLOWED_ORIGINS = [
   'https://b974147c03228029e277d1cbe6646fe6.ctonew.app',
-  'https://b974147c03228029e277d1cbe6646fe6-dev.ctonew.app'
-].concat(
+  'https://b974147c03228029e277d1cbe6646fe6-dev.ctonew.app',
+  // This deployment's OTHER public hostname — the one the owner uses. It is named here
+  // because, per the measurement above, no header reaching this process carries it: without
+  // this entry a same-origin request from it is indistinguishable from a foreign one.
+  'https://b974147c03228029e277d1cbe6646fe6.cto.site'
+];
+const allowedOrigins = DEFAULT_ALLOWED_ORIGINS.concat(
   // Extra hosts for a deployment behind a proxy that rewrites Host, e.g.
   // ALLOWED_ORIGINS=https://antum.ae,https://app.client.example
   (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
@@ -72,14 +107,47 @@ const originHost = (origin) => {
     return null; // 'null', malformed, or non-http origin: not same-origin, not allowlisted
   }
 };
+// One host name, normalized. A default port spelled out is the same host: `antum.ae:443` and
+// `antum.ae` are one origin, and a proxy that keeps the port must not read as a different host.
+const bareHost = (host) => {
+  const h = String(host === undefined || host === null ? '' : host).trim().toLowerCase();
+  if (h.endsWith(':443')) return h.slice(0, -4);
+  if (h.endsWith(':80')) return h.slice(0, -3);
+  return h;
+};
+// Every host name this request could have been addressed as: Host, plus every entry of
+// X-Forwarded-Host (proxies produce a comma-separated list when they chain). Total by
+// construction — these values are caller-supplied, and a throw here would reach express's
+// default error handler, which is the 500-with-a-stack-trace this middleware exists to avoid.
+const arrivedHosts = (headers) => {
+  const raw = [];
+  const push = (value) => {
+    if (typeof value === 'string') {
+      for (const part of value.split(',')) raw.push(part);
+    } else if (Array.isArray(value)) {
+      for (const item of value) if (typeof item === 'string') for (const part of item.split(',')) raw.push(part);
+    }
+  };
+  push(headers && headers.host);
+  push(headers && headers['x-forwarded-host']);
+  return raw.map(bareHost).filter(Boolean);
+};
+// Caller-supplied values reach the log escaped and bounded — never raw.
+const logSafe = (value) => String(value === undefined || value === null ? '' : value)
+  .replace(/[^\x20-\x7e]/g, '?')
+  .slice(0, 200);
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (!origin || allowedOrigins.includes(origin)) return next();
-  if (originHost(origin) !== null && originHost(origin) === String(req.headers.host || '').toLowerCase()) {
+  const host = originHost(origin);
+  if (host !== null && arrivedHosts(req.headers).includes(bareHost(host))) {
     return next();
   }
-  // Log the refusal (control characters stripped: the header is caller-supplied), answer generically.
-  console.warn(`[cors] refused Origin ${String(origin).replace(/[^\x20-\x7e]/g, '?').slice(0, 200)} for ${req.method} ${req.path}`);
+  // Log the refusal, then answer generically. The host values belong in this line: on
+  // 2026-11-02 this deployment refused its own public hostname for days and the log recorded
+  // the Origin but not what the request had arrived as, so the cause could not be read off it.
+  console.warn(`[cors] refused Origin ${logSafe(origin)} for ${req.method} ${req.path}`
+    + ` (host ${logSafe(req.headers.host)}; x-forwarded-host ${logSafe(req.headers['x-forwarded-host'])})`);
   return res.status(403).json({ error: 'Forbidden' });
 });
 app.use(cors({

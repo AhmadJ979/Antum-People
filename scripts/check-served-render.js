@@ -18,17 +18,22 @@
     - the page-error count and how long it waited for the mount, so a zero on a page that never
       finished painting cannot read as a zero on a page that did.
 
-  WHY THE DECLARED-RED TARGET IS INSIDE THIS FILE AND NOT check-all's `expect="known-red"`.
-  One hostname (`.cto.site`) is served by a platform edge that answers 403 `{"error":"Forbidden"}`
-  to every request carrying an `Origin` header - including the document's own module-script and
-  stylesheet requests - so the app cannot mount there while the document itself is 200. That edge
-  is outside this repository and is not ours to fix. Declaring the WHOLE CHECK known-red in
-  check-all would make a real failure of the OTHER two targets print RED-KNOWN and PASS the run -
-  a false green, and exactly the class of defect this file exists to end. So the discrimination is
-  PER TARGET here: a declared-red target that fails prints RED-KNOWN and does not fail the run; a
-  declared-red target that PASSES prints STALE-DECLARATION and exits 1 (a declaration that no
-  longer fires is a lie about the tree). check-all registers this check `expect="green"`, so
-  everything else - including the local process and the working public host - is a hard gate.
+  THE ONE DECLARED-RED TARGET THIS FILE EVER CARRIED WAS WITHDRAWN ON 2026-11-02 - AND WHY.
+  `.cto.site` was declared RED-KNOWN here, on the stated reason that "the platform edge fronting
+  this hostname answers 403 ... Outside this repository; not ours to fix". THAT REASON WAS FALSE.
+  Measured 2026-11-02: the 403 was this repository's own CORS middleware in `server/index.js`,
+  refusing the document's own Origin because the edge rewrites `Host` to an internal name, so the
+  Origin host never matched it. The edge only decorated OUR response with its own
+  `access-control-*` headers, and that decoration is what made the refusal look like the edge's.
+  Fixed in the change that withdrew the declaration, and this file is what would have caught it
+  earlier had the declaration not been written around it.
+  The mechanism is kept, and is what a genuine outside-the-repository failure should use: the
+  discrimination is PER TARGET, because declaring the WHOLE CHECK known-red would make a real
+  failure of the other targets print RED-KNOWN and pass the run - a false green, and exactly the
+  class of defect this file exists to end. A declared-red target that fails prints RED-KNOWN and
+  does not fail the run; a declared-red target that PASSES prints STALE-DECLARATION and exits 1 (a
+  declaration that no longer fires is a lie about the tree). ALL THREE targets are required today,
+  so check-all registers this check `expect="green"` and any one of them failing is a hard gate.
 
   WHAT IT CANNOT SEE, so a green run never implies otherwise:
     - whether the rendered TEXT IS CORRECT (it asserts non-empty, not truthful);
@@ -84,18 +89,7 @@ const DEFAULT_TARGETS = [
   {
     id: "public-site",
     url: "https://b974147c03228029e277d1cbe6646fe6.cto.site/",
-    note: "the public hostname the owner was given",
-    declaredRed: {
-      reason:
-        "the platform edge fronting this hostname answers 403 {\"error\":\"Forbidden\"} to every " +
-        "request that carries an Origin header - the document's own <script type=module> and " +
-        "stylesheet requests carry one - so no bundle executes and #root stays empty while the " +
-        "document itself answers 200. Outside this repository; not ours to fix.",
-      pointer: "docs/evidence/served-render-blank-page-2026-11-02/EVIDENCE.md",
-      endsWhen:
-        "every named asset answers 200 and #root mounts on this hostname. Then DELETE this " +
-        "declaration: a declaration that no longer fires exits 1 (STALE-DECLARATION), never green.",
-    },
+    note: "the public hostname the owner was given - REQUIRED since 2026-11-02 (see the header)",
   },
 ];
 
