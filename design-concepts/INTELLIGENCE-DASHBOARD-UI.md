@@ -222,9 +222,9 @@ The same toggle pattern as the consent flow: a pill segmented control `EN ▾ | 
 | Sidebar | Left | Right (mirrored) |
 | Text alignment | Left | Right |
 | Icon order | icon → label | label → icon (flipped) |
-| Numerals | Western `4.2`, `١` off | Arabic-Indic `٤٫٢` (optional toggle) |
-| Currency | `AED 6,300,000` | `٦٬٣٠٠٬٠٠٠ د.إ` |
-| Dates | `06/09/2026` | `٠٦/٠٩/٢٠٢٦` |
+| Numerals | Latin `4.2` | Latin `4.2` — **unchanged in Arabic** (owner, 2026-10-29) |
+| Currency | `AED 6,300,000` | `AED 6,300,000` — Latin code, Latin digits, the same commas |
+| Dates | `9 September 2026` | `9 September 2026` — one shape, `en-GB` long month, not `DD/MM/YYYY` |
 | Font | Inter | Inter Arabic (or Tajawal/IBM Plex Sans Arabic) |
 | Chart axes | Left-to-right | Right-to-left (categories reversed) |
 
@@ -253,7 +253,7 @@ LTR (EN)                              RTL (AR)
 | `chart.retention.benchmark` | Benchmark | المعيار |
 
 ### 7.4 Arabic numeral & currency rules
-- Default: keep Western digits in AR (common in GCC business dashboards) but **offer** an Arabic-Indic toggle.
+- **Decided (owner, 2026-10-29): Latin digits in both languages.** No Arabic-Indic toggle is offered or planned; the one money formatter is `formatAmount` in `client/src/format.js`, and a guard reddens on any other file reaching for a locale-sensitive number API.
 - Currency symbol placement: postfix in Arabic (`٣٫١ مليون د.إ`), prefix in English (`AED 3.1M`).
 - Use **short scale** in AR: `مليون` (million), `مليار` (billion) — never "M"/"B".
 
@@ -303,7 +303,7 @@ IntelligenceDashboard
 - Use `react-i18next` (or native `Intl`) with `dir` + `lang` attributes on `<html>`.
 - Store `locale` preference per user in `config` / session; default EN, KSA-tenants default AR.
 - Charts re-render on locale change (reversed category order for RTL).
-- Number formatting via `Intl.NumberFormat(locale, { style:'currency', currency })`; Arabic-Indic via `numberingSystem: 'arab'` option.
+- **No `Intl.NumberFormat` in the shipped client and no `numberingSystem: 'arab'`.** Money is formatted by `formatAmount` in `client/src/format.js` — `toFixed(2)` plus a comma every three integer digits, hand-rolled so its output cannot vary with the host's ICU build; `formatDate` renders in `en-GB` from an explicit constant, never the ambient locale.
 
 ### 9.3 Key states
 | State | Behaviour |
