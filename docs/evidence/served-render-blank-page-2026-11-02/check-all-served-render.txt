@@ -1,0 +1,21 @@
+====================================================================================================
+check-all - every check the team owns, one entry point
+  tree judged   : cb16b40 (DIRTY: 1 tracked path(s) modified - NOT the commit's bytes)
+  repository    : /home/team/shared/probable-octo-sniffle
+  NOT run by    : the movement. scripts/cutover-preflight.sh runs no checker (grep, this run's evidence).
+                  Wiring a check into the movement is the lead's ruling to make, not this script's.
+  PARTIAL RUN   : --only served-render - ONE check of 19. The verdict below covers THIS check alone.
+====================================================================================================
+
+[OK           ] served-render            tree=cb16b40   exit=0   16.3s
+                 home : operator CLI (bare) + this entry point
+                 what : does the SERVED product RENDER? For each target: the document's status from the browser's own network log, the status of every same-origin script/stylesheet the document NAMES (a named asset with no request reads NO-REQUEST and fails), and whether #root mounted (>=1 child element, non-empty innerText). One line per target with the measured values, never a bare verdict; a target declared red (the .cto.site edge 403s any request carrying an Origin header) prints RED-KNOWN and does not fail the run, and a declaration that stops firing exits 1. Drives agent-browser headless with a per-target timeout, so a browser that will not start fails instead of hanging
+                 said : VERDICT: every required target rendered; every declared-red target is still red.  [3 target(s), 17/21 assertions passed] exit 0
+                 ...  : 15 earlier line(s) not shown - full output: node scripts/check-served-render.js
+
+----------------------------------------------------------------------------------------------------
+totals: 1 check(s) run, 0 skipped   [PARTIAL: --only served-render]
+        OK               1
+
+VERDICT: every check that can be green on this tree is green. exit 0
+EXIT=0

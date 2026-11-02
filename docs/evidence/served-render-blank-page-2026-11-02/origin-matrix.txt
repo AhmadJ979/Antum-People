@@ -1,0 +1,22 @@
+=== origin matrix 2026-11-02T18:48:44Z
+host   : https://b974147c03228029e277d1cbe6646fe6.cto.site
+assets : /assets/index-vsGFc45L.js  /assets/index-CdmIUBt1.css   (re-derived from the document at http://127.0.0.1:3000)
+
+METHOD PATH                               ORIGIN       STATUS BYTES    BODY
+GET    /                                  origin=no    200    809      <!doctype html><html lang="en" dir="ltr"> 
+GET    /                                  origin=yes   403    21       {"error":"Forbidden"}
+GET    /favicon.svg                       origin=no    200    9522     <svg xmlns="http://www.w3.org/2000/svg" widt
+GET    /favicon.svg                       origin=yes   403    21       {"error":"Forbidden"}
+GET    /api/auth/me                       origin=no    401    41       {"error":"Authentication token required"}
+GET    /api/auth/me                       origin=yes   403    21       {"error":"Forbidden"}
+GET    /assets/index-vsGFc45L.js          origin=no    200    290272   var e=Object.create,t=Object.defineProperty,
+GET    /assets/index-vsGFc45L.js          origin=yes   403    21       {"error":"Forbidden"}
+GET    /assets/index-CdmIUBt1.css         origin=no    200    37757    /*! tailwindcss v4.3.1 | MIT License | https
+GET    /assets/index-CdmIUBt1.css         origin=yes   403    21       {"error":"Forbidden"}
+HEAD   /                                  origin=no    200    881      HTTP/2 200 date: Mon, 02 Nov 2026 18:48:45
+HEAD   /                                  origin=yes   403    983      HTTP/2 403 date: Mon, 02 Nov 2026 18:48:45
+POST   /api/login                         origin=no    500    33       {"error":"Internal Server Error"}
+POST   /api/login                         origin=yes   403    21       {"error":"Forbidden"}
+
+=== our Node server sets no access-control-* headers: grep -ci 'access-control' server/index.js
+0

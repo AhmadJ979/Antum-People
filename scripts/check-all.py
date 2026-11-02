@@ -183,6 +183,39 @@ CHECKS = [
               "subject is RED, not green (scripts/check-served-document-renderer.py --selftest plants "
               "the violations and requires each to redden)"),
 
+    # Added 2026-11-02, after the owner was shown a BLANK page while every instrument here was
+    # green. Nothing in this file loaded a rendered screen: check-all, the 404-test server suite,
+    # the bundle's md5 and the API all passed, and an uptime check would have missed it too - the
+    # document answers 200. This one drives a headless browser at the local process AND both public
+    # hostnames and asks whether the app MOUNTED (#root has a child and non-empty text), printing
+    # the document status and every same-origin script/stylesheet status it measured.
+    # It is a DEFAULT check because the failure it catches is the one the owner sees. It needs the
+    # network and a browser: when either is missing it exits 2, which this file prints as
+    # CANNOT-JUDGE and FAILS the run - a skip that reads like a pass is the defect it answers to.
+    # The `.cto.site` hostname is declared RED inside the check, per target, not here: a
+    # check-level known-red would swallow a real failure of the other two targets.
+    dict(id="served-render", mode="default", expect="green",
+         home="operator CLI (bare) + this entry point",
+         cmd=["node", "scripts/check-served-render.js"],
+         what="does the SERVED product RENDER? For each target: the document's status from the "
+              "browser's own network log, the status of every same-origin script/stylesheet the "
+              "document NAMES (a named asset with no request reads NO-REQUEST and fails), and "
+              "whether #root mounted (>=1 child element, non-empty innerText). One line per target "
+              "with the measured values, never a bare verdict; a target declared red (the .cto.site "
+              "edge 403s any request carrying an Origin header) prints RED-KNOWN and does not fail "
+              "the run, and a declaration that stops firing exits 1. Drives agent-browser headless "
+              "with a per-target timeout, so a browser that will not start fails instead of hanging"),
+
+    dict(id="served-render-controls", mode="full", expect="green", home="operator CLI, off-host",
+         cmd=["node", "scripts/check-served-render.js", "--selftest"],
+         what="the served-render check's own controls: three planted pages on a throwaway "
+              "127.0.0.1 server driven through the SAME code path as a real target - one that mounts "
+              "from a 200 script (must be GREEN with 2 assets and 1 child), one whose script answers "
+              "403 (must REDDEN naming that asset and the 0 children), and one whose 200 script "
+              "mounts nothing (must REDDEN on #root's child count, so the mount assertion is "
+              "load-bearing and not just the asset one). An unknown flag exits 2 - a plausible "
+              "invocation must never buy a green run"),
+
     # Added 2026-10-29 (owner said yes to the counsel-string guard). It is a DEFAULT check
     # because it is cheap and reads nothing but a scratch instance of this tree: measured at
     # 1.65 s, own port, throwaway database, throwaway user - and it boots a rig of THIS tree, so
