@@ -807,7 +807,7 @@ workspace track with its owner names; and any illustrative figure without its la
   **jurisdiction**, not language — there is no language switch in the product at all.
 - **Numbers and dates are convention-pinned — amended 2026-10-29.** The owner's numeral ruling
   (Latin digits throughout) is implemented: the seven figure sites now read `formatAmount(...)`
-  (`App.tsx:1580`, `formatAmount(analytics.avgCostPerHireAE)`), and the convention it applies is
+  (`App.tsx:1580`, `{formatAmount(analytics.avgCostPerHireAE)}`), and the convention it applies is
   the server's own `Number(v).toFixed(2)` — two decimals and Latin digits — with a comma every three
   integer digits; that grouping is the one difference from the served documents. Until that pass money and counts were formatted
   with the ambient locale (a `undefined` where a locale belongs), so on a machine set to Arabic the
@@ -1372,7 +1372,7 @@ records that the served-file comment and the `db.js` refusal landed together in 
   lands on the rows it names (by the current numbering those are `:76`, `:79` and `:80`) — noted, not
   renumbered, because the declaration is a historic record in its own right.
 - **§8B's cites are pinned by declaration** — that section is headed "measured on `main` at
-  `b7630cb`" — so its `App.tsx:1183`/`:1970`/`:1461` cites are correctly stale *for that revision* and
+  `b7630cb`" — so its `@rev b7630cb` `App.tsx:1183`/`:1970`/`:1461` cites — `{analytics.avgCostPerHireAE.toLocaleString(...)}`, `{line.due_date} (${line.due_rule})`, `Math.ceil((Date.now() - new Date(emp.start_date).getTime()) / (1000*60*60*24))` — are correctly stale *for that revision* and
   are left as written. A pinned-revision cite is not a defect; an unpinned one is.
 
 **Not touched, by declaration.** Historical quotations inside `*(Until 2026-10-13 ...)*` parentheticals
