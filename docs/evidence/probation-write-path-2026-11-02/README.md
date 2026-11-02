@@ -130,3 +130,93 @@ VERDICT: 2 check(s) RED and NOT in a declared state -> doc-citations, doc-citati
          this is the BROKEN case: nothing declares this state. exit 1
 DONE
 ```
+
+## The gate, after the re-grounding (2026-11-02, `64c7cf7`)
+
+The run above is RED on `doc-citations` and `doc-citation-pin-selftest`. Both were
+this branch's own doing: `client/src/App.tsx` gains 21 lines and replaces 2 (hunks at
+old 644, 1292, 2760), so every unpinned `App.tsx` citation below line 644 moved by
++4, +5 or +19. No product code was touched to fix it; the citations moved.
+
+**The control that says the failures were mine, not inherited.** Judged with the OLD
+documents against the OLD code, the instrument is clean:
+
+```
+doc fff847b vs code fff847b: 75 ok, 0 FAILING, 8 unchecked, 21 pinned, 0 unused pin
+```
+
+So every one of the 31 FAILING groups appeared with this branch's `App.tsx` edit.
+
+**Two proofs per shifted number, both asserted before anything was written.**
+
+1. *Content identity.* The diff only INSERTS lines, so for every old line `n` outside
+   the two replaced lines, `App.tsx` at `fff847b` line `n` is byte-identical to
+   `App.tsx` at `e1f62bc` line `n+delta`. All 44 distinct shifts verified identical.
+   A shift here is not a guess about where the content went; it is the same line at
+   its new number.
+2. *The instrument's own symbol test*, re-run on the shifted number: 38 of 52 land.
+   The other 14 are the far end of a range whose symbol sits on the near end (for
+   example `:1428`-`:1440`, the identity card), and the instrument judges per GROUP,
+   so the group lands on the near end.
+
+52 numbers on the 31 named lines, across 6 files. **31 insertions, 31 deletions** -
+the document line count does not change, so nothing else in these files is
+renumbered by the edit.
+
+**Not moved, on purpose.** Pinned readings (a `@rev` marker before the number):
+`@rev 75e3ff2` `App.tsx:355` at `LAYER2-P2-1-IMPLEMENTATION-REVIEW.md:54`, and
+`@rev 75e3ff2` `App.tsx:981`-`:982` at `LAYER2-PREBOARDING-UI.md:615` and `:1214`.
+And `README.md:23`'s pairs dated in prose (`:1268`-`:1269` at `7a4e00a`, `:1251`-`1198`
+at `7b073f8`): they describe older trees, and shifting them would make them describe
+neither tree.
+
+**The pin control was red for a reason that had nothing to do with pins.** Plant P4
+cites `App.tsx:1580` for `{formatAmount(analytics.avgCostPerHireAE)}`; that symbol is
+at 1585 now, so the plant's own citation stopped landing and P4 exited 1 where it
+must exit 0. The plant's number moved to the line that carries the symbol it names.
+**No expectation changed** - P4 is still (exit 0, `UNUSED-PIN`, unused pin == 1), and
+P1/P2/P3/P6 are pinned to `7a4e00a`, which a tip move cannot reach.
+
+**Measured at `64c7cf7`:**
+
+```
+python3 scripts/check-all.py
+totals: 12 check(s) run, 9 skipped
+        OK               12
+        SKIP-FLAGGED     9
+VERDICT: every check that can be green on this tree is green. exit 0
+
+doc-citations        doc 64c7cf7 vs code 64c7cf7: 75 ok, 0 FAILING, 8 unchecked, 21 pinned, 0 unused pin
+doc-citation-pin-selftest  6 plant(s) judged, 0 unexpected outcome(s)   exit 0
+  baseline at 64c7cf7: 75 ok, 0 FAILING, 8 unchecked, 21 pinned, 0 unused pin, exit 0
+  P1 exit 0, 76 ok, 0 FAILING, 22 pinned     (pin lands, pinned rises by 1)
+  P2 exit 1, 1 FAILING                       (marker deleted)
+  P3 exit 2, refused, no report, no footer   (unresolvable pin)
+  P4 exit 0, 76 ok, 1 unused pin             (marker governs nothing)
+  P5 exit 0, 9 unchecked                     (bare SHA in prose is not a pin)
+  P6 exit 1, 22 pinned                       (correct pin, symbol absent there)
+
+cd server && node --test
+# tests 439   # suites 71   # pass 439   # fail 0   # cancelled 0   # skipped 0   # todo 0
+```
+
+**The pin still reddens.** `--mutant ignore-pin` (the instrument's pin resolution
+disabled, committed inside the scratch clone) prints
+`MUTANT ignore-pin CAUGHT by P1 - the control reddens on a weakened instrument.`
+exit 0. P1 is the plant that proves it: a pin the instrument ignores cannot land
+`7a4e00a`'s line, so P1 fails and `pinned` stops rising.
+
+**What is still stale, and is not fixed here.** The instrument only reads a line that
+contains the literal `App.tsx`, so a citation on the continuation line of a bullet is
+invisible to it. These carry numbers this branch's edit moved, each read in context,
+and are left for a single follow-up change rather than widened into this one:
+
+| document | line | numbers, now off by +4 or +5 |
+|---|---|---|
+| `CLIENT-STATES.md` | 65, 114, 247, 288 | `:739`, `:1503`, `:1228`, `:2216`-`:2225` |
+| `LAYER2-P2-1-IMPLEMENTATION-REVIEW.md` | 98 | `:2122` |
+| `LAYER2-PREBOARDING-UI.md` | 618, 1215, 1366, 1367 | `:1407`-`:1408`, `:1463`-`:1467`, `:2440`, `:1793`, `:1865` |
+
+Fourteen numbers on nine lines. The checker is green without them because each sits
+in a bullet whose named line lands; that is the instrument's blind spot, not a
+statement that the numbers are right.
