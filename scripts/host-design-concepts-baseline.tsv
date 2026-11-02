@@ -1,0 +1,33 @@
+# DEBT REGISTER for /home/team/shared/design-concepts/ - read by scripts/check-host-template-copies.py
+#
+# WHAT THIS IS: the copies that still stand in the design-concepts host folder, each with the md5 it
+# had when the register was written (2026-11-02). The check accepts an entry ONLY if it is either a
+# pointer (`POINTER, not a copy` in its first 400 bytes) or listed here with EXACTLY this md5.
+# So: an undeclared file reddens, and a declared file whose bytes move reddens too. This is a debt
+# register - a record of what has NOT been converted yet - never a list of blessed names.
+#
+# `BRAND-IDENTITY.md` IS DELIBERATELY ABSENT: it is a pointer now, and a copy of it reappearing must
+# redden. Do not add it here.
+#
+# The remaining entries are a QUEUED PASS, not a decision that they are fine. Format:
+#   <md5>	<relative path>	<note>
+1f6adda17cc37920f004b374fcd6a3c7	COMPLIANCE-AUDIT-UI.md	byte-identical to the repository copy at HEAD - still a second copy that will drift
+47b7d946d157c450260fcf2a354f7dd6	COMPLIANCE-UI.md	older host text - differs from the repository copy at HEAD
+a334d262c7f7f00ec81c0a359f090a8c	DASHBOARD-WIREFRAMES.md	byte-identical to the repository copy at HEAD - still a second copy that will drift
+32fbf17fa55680d97ce07447c1ea19c8	INTELLIGENCE-DASHBOARD-UI.md	older host text - differs from the repository copy at HEAD
+e024ccae3e2d8ccc98bfa04facd19f06	INTERACTIVE-CONSENT-SPECS.md	byte-identical to the repository copy at HEAD - still a second copy that will drift
+49dbd7d7805c59a0ca5717cbbfeef306	README.md	older host text - differs from the repository copy at HEAD
+46ae8b6a5d9280e461383bb7ca596dce	USER-JOURNEY-MAPS.md	byte-identical to the repository copy at HEAD - still a second copy that will drift
+a433b0721440610ede96d0243073d0b2	audit-consent-mockup.png	byte-identical to the repository copy at HEAD - still a second copy that will drift
+a695d9b94736e22d82268372f57463fc	breach-dsr-mockup.png	byte-identical to the repository copy at HEAD - still a second copy that will drift
+c55bd7160456645cc9a00b77a2904e1c	compliance-dashboard-mockup.png	byte-identical to the repository copy at HEAD - still a second copy that will drift
+63adb6d07a4d052d488c8e3c4ab25b1f	dashboard-mockup.png	byte-identical to the repository copy at HEAD - still a second copy that will drift
+bde78e3fdd93091c658fef14bcb82cd5	dashboard-wireframe.html	byte-identical to the repository copy at HEAD - still a second copy that will drift
+72d8096282d95c0d67d4a786fbe71c5d	eosb-calculator-mockup.png	byte-identical to the repository copy at HEAD - still a second copy that will drift
+b1728e261977501390907b12c7631143	intelligence-dashboard-ar-mockup.png	byte-identical to the repository copy at HEAD - still a second copy that will drift
+8a8279ef7776bb9027f414ac8fcfd629	intelligence-dashboard-en-mockup.png	byte-identical to the repository copy at HEAD - still a second copy that will drift
+ab6f646ac78f0b0720977f6762158f69	intelligence-dashboard-prototype.html	older host text - differs from the repository copy at HEAD
+74cc8ef2fafa79ef619669a6ef722577	interactive-consent-mockup.png	byte-identical to the repository copy at HEAD - still a second copy that will drift
+ecd78ca85497a85e13c32fc667266d88	interactive-consent-prototype.html	byte-identical to the repository copy at HEAD - still a second copy that will drift
+532e2116f23f4f9070bc4a2f98616c87	template-mapping-mockup.png	byte-identical to the repository copy at HEAD - still a second copy that will drift
+98c352013154ffa1f2f742888f944718	user-journey-visual.png	byte-identical to the repository copy at HEAD - still a second copy that will drift

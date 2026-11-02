@@ -30,4 +30,4 @@ The controller-side **data-protection contact** / `[dpo_name]` placeholder in th
 
 - **Confirmed:** DPO name (Ahmad Aljairoudi), registered address city/country (Dubai, United Arab Emirates), DPO email reserved (dpo@antum.ae — not a live mailbox).
 - **Open:** formal entity name/suffix, trade licence/CR number, full street address, DPO phone, Arabic wordmark.
-- **Domains** `antum.ae` / `antum.me` are registered; no website, portal, inbox or data-subject-request channel is asserted as live.
+- **Domains** `antum.ae` / `antum.me` are **not registered to Antum** (both are held by third parties, and are not purchasable); no website, portal, inbox or data-subject-request channel is asserted as live.
