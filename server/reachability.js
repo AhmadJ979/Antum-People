@@ -16,15 +16,19 @@
  * Limits, stated up front (a check that overstates itself is worse than none):
  *   - Paths are matched statically. A call site that builds its path at runtime is not proven by
  *     equality; it is reported as PLAUSIBLE and must be *declared* in the test's DYNAMIC_SITES.
- *   - The HTTP method is read from the call site's own `method:` (JS) or `-X` (shell); a call site
- *     that states no method is read as GET, which is what `fetch` and curl do by default.
+ *   - The HTTP method is read from the call site's own `method:` (JS) or `-X`/`--request` (shell);
+ *     a call site that states no method is read as GET, which is what `fetch` and curl do by default.
+ *     "The call site's own" means the WHOLE call: in a shell file the verb is looked for anywhere in
+ *     the backslash-continued command that carries the path, not only below it (see `shellCommand`).
  *   - A segment that is part literal, part template keeps its literal prefix (`workspace${q}` ->
  *     `workspace`). A call site that composes a *middle* segment at runtime would not be matched.
  *   - It reasons about the client's source, not about what a user sees; a control rendered inside
  *     an unreachable branch of JSX is still "called" here.
  *   - A mention is a CALL SITE only when a request-shaped call is within three lines of it (see
- *     `issuesRequest`): a comparison, an object or cache key, a display string or a test fixture is
- *     not a caller. Those mentions are kept in the PROSE bucket and printed, so a mention that stops
+ *     `issuesRequest`) — or, in a shell file, anywhere in the same backslash-continued command, since
+ *     the shell joins those physical lines into one command before it runs anything: a comparison, an
+ *     object or cache key, a display string or a test fixture is not a caller. Those mentions are
+ *     kept in the PROSE bucket and printed, so a mention that stops
  *     counting as a caller is still visible to a reader — that is the price of the role test and it
  *     is paid in public rather than by silence.
  *   - RESIDUAL BLIND SPOTS, stated rather than implied: a path built into a variable one place and
@@ -135,6 +139,45 @@ function issuesRequest(scope, window) {
   return EXTRA_REQUEST_HELPERS.some((h) => new RegExp('\\b' + h + '\\s*\\(').test(window));
 }
 
+/** A shell line whose trailing backslash continues the same command onto the next physical line. */
+function continuesShellLine(line) {
+  return /(^|[^\\])\\\s*$/.test(line); // one trailing backslash; a `\\` ends an escaped backslash
+}
+
+/**
+ * THE ONE COMMAND a shell line belongs to, as text. The shell joins `\` continuations before it runs
+ * anything, so
+ *
+ *     LOGIN_CODE=$(curl -s --max-time 25 -w '%{http_code}' \
+ *       -X POST -H 'Content-Type: application/json' \
+ *       --data-binary "{...}" "$PUBLIC/api/login")
+ *
+ * is ONE command whose verb is stated on a line ABOVE the path.
+ *
+ * Measured 2026-11-02 (PR #354): the verb search was `lines.slice(idx, idx + 4)` — forward only — so
+ * this call was attributed GET, `GET /api/login` is not a registered route, and the reachability gate
+ * went red on a correct deploy probe. The role test a few lines up already treated a split call as one
+ * call ("a curl invocation split across lines is still one call"); the verb now reads the same bytes
+ * the role test reads, so both halves of the scanner answer the same question about the same command.
+ *
+ * Scope of the rule, measured rather than assumed: no script in this tree states its verb by sending
+ * data (`-d`/`--data-binary`/`-F`) without `-X`, so curl's own data-implies-POST default is NOT
+ * inferred here — a future call that relies on it is attributed GET, which reddens loudly as an
+ * unregistered call site rather than passing quietly.
+ */
+function shellCommand(lines, idx) {
+  let start = idx;
+  while (start > 0 && continuesShellLine(lines[start - 1])) start -= 1;
+  let end = idx;
+  while (end < lines.length - 1 && continuesShellLine(lines[end])) end += 1;
+  return { start, end, text: lines.slice(start, end + 1).join('\n') };
+}
+
+/** The scope a FILE speaks, which is a property of its language, not only of the root it sits in. */
+function scopeOfFile(declaredScope, file) {
+  return path.extname(file) === '.sh' ? 'scripts' : declaredScope;
+}
+
 /**
  * One scanner, two predicates — because the question is not "does this string appear" but "what is it
  * doing here". An /api path appears in two roles:
@@ -162,30 +205,46 @@ function scanApiMentions(kind, opts = {}) {
     for (const file of listFiles(dir)) {
       const rel = path.relative(root, file);
       if (file.endsWith('.test.js') || SKIP_FILES.has(rel)) continue;
+      const fileScope = scopeOfFile(scope, file);
+      const isShell = path.extname(file) === '.sh';
       const lines = read(file).split('\n');
       const commented = commentLines(lines, path.extname(file));
       lines.forEach((line, idx) => {
         if (commented.has(idx)) return; // a mention in prose is not a caller
         if (/^\s*app\.(get|post|put|delete|patch)\(\s*'/.test(line)) return;
+        // The bytes that make up ONE call: the whole backslash-continued shell command in a script,
+        // or the three-lines-either-way window used everywhere else.
+        const command = isShell ? shellCommand(lines, idx) : null;
         for (const m of line.matchAll(callRe)) {
           const raw = m[0];
           // the role test: a path quoted in a shell script issues nothing unless a request primitive is
-          // within reach of it
-          const window = lines.slice(Math.max(0, idx - 3), idx + 4).join('\n');
+          // within reach of it. "Within reach" is the three-line window OR the whole backslash-
+          // continued command the path sits in — never less than before. The window cannot simply be
+          // dropped in favour of the command: `scripts/cors-error-contract-test.sh:207` reaches
+          // `$BASE/api/employees` through a local `probe` wrapper whose name carries no request token,
+          // and only the neighbouring `curl` line makes it a caller. Nor can the command be ignored:
+          // a curl continued over six lines puts its `curl` far more than three lines from the path.
+          const window = command
+            ? `${command.text}\n${lines.slice(Math.max(0, idx - 3), idx + 4).join('\n')}`
+            : lines.slice(Math.max(0, idx - 3), idx + 4).join('\n');
           // One role test for every scope: a mention is a caller only when a request is issued
-          // around it. The window is three lines either way — a call split across lines is still one
-          // call — and a mention that fails the test is REPORTED as prose, never dropped.
-          const issues = issuesRequest(scope, window);
+          // around it. A call split across lines is still one call — and a mention that fails the test
+          // is REPORTED as prose, never dropped.
+          const issues = issuesRequest(fileScope, window);
           if (kind === 'prose' ? issues : !issues) continue;
+          // The verb is stated ONCE, anywhere in the call: `-X POST` on the line above the path is the
+          // same statement as `-X POST` beside it (measured 2026-11-02 — see `shellCommand`). It is
+          // read from the command, never from the wider role-test window: a neighbouring command's
+          // verb is not this call's verb.
           let method = null;
-          for (const probe of lines.slice(idx, idx + 4)) {
+          for (const probe of (command ? [command.text] : lines.slice(idx, idx + 4))) {
             const js = /method:\s*'([A-Za-z]+)'/.exec(probe);
-            const sh = /-X\s+([A-Z]+)/.exec(probe);
+            const sh = /(?:-X|--request)[=\s]+([A-Z]+)/.exec(probe);
             if (js) { method = js[1].toUpperCase(); break; }
             if (sh) { method = sh[1].toUpperCase(); break; }
           }
           sites.push({
-            file: rel, line: idx + 1, raw, scope,
+            file: rel, line: idx + 1, raw, scope: fileScope,
             method: method || 'GET', stated: Boolean(method),
             canon: canonPath(raw), dynamic: raw.includes('${'),
           });

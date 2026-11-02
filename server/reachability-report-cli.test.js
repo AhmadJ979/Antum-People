@@ -75,6 +75,30 @@ test('ANTI-VACUOUS CONTROL, OPERATOR-REACHABLE: the planted caller reddens the r
   assert.ok(r.stdout.includes('NEW finding'), 'and the closing line says so');
 });
 
+/**
+ * The same control, planted as a SHELL script, because a `.sh` caller is read by a different role test
+ * (`curl`/`wget`) and its verb may be stated on a `\`-continued line ABOVE the path. Measured
+ * 2026-11-02 (PR #354): `scripts/deploy-main.sh`'s login probe — `-X POST` on one line, the URL on the
+ * next — was attributed GET, and `GET /api/login` is not a route, so the gate went red on a correct
+ * probe. The fix must not have bought that green by exempting shell scripts: this plant is a `.sh`
+ * calling a route nobody registers, and it must still exit 1.
+ */
+test('ANTI-VACUOUS CONTROL, SHELL: a .sh caller of an unregistered route reddens from the command line', (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'reachability-cli-shell-probe-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(dir, 'planted.sh'), [
+    'code=$(curl -s -w \'%{http_code}\' \\',
+    '  -X DELETE \\',
+    '  "$PUBLIC/api/definitely-not-registered")',
+    '',
+  ].join('\n'));
+  const r = run('--extra-root', dir);
+  assert.ok(r.stdout.includes('/api/definitely-not-registered'), 'the shell plant is named in the output');
+  assert.ok(r.stdout.includes('DELETE /api/definitely-not-registered'),
+    'and with the verb it states across the continuation, not a defaulted GET');
+  assert.strictEqual(r.status, 1, 'a .sh caller is not exempt from the drift check');
+});
+
 test('the control is load-bearing: without the flag the planted caller is not found', (t) => {
   const dir = probeDir(t);
   const withFlag = run('--extra-root', dir);

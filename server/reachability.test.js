@@ -338,11 +338,11 @@ const os = require('node:os');
 const path = require('node:path');
 
 /** Point the scanner at a throwaway tree for the duration of one assertion. */
-function withProbeTree(files, fn) {
+function withProbeTree(files, fn, scope = 'client') {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'reachability-role-'));
   try {
     for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src);
-    return fn({ roots: [{ scope: 'client', dir }], root: dir }, dir);
+    return fn({ roots: [{ scope, dir }], root: dir }, dir);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -392,6 +392,99 @@ test('ANTI-VACUOUS CONTROL: a planted caller to an unregistered route still redd
       .map((s) => `${s.method} ${s.canon}`);
     assert.deepStrictEqual(drift, ['GET /api/definitely-not-registered'],
       'without this, "no drift" could mean "the check sees nothing" rather than "nothing is wrong"');
+  });
+});
+
+/* ------------------------------------------------------------------------------------------------
+ * THE SHELL'S OWN RULE: a `\` continuation is ONE command (measured 2026-11-02, PR #354).
+ *
+ * The scanner counts `scripts/*.sh` call sites on purpose — `SCAN_ROOTS` carries a `scripts` scope
+ * and `issuesRequest` has a shell branch whose comment says "a curl invocation split across lines is
+ * still one call". The role test honoured that sentence; the VERB did not: it searched only FORWARD
+ * from the path (`lines.slice(idx, idx + 4)`), so a `-X POST` on the line above the URL was invisible
+ * and the call was attributed GET. `GET /api/login` is not a registered route, so a correct deploy
+ * probe was reported as drift and the gate went red.
+ *
+ * The rule these tests hold: the shell joins `\` continuations before it runs anything, so one
+ * command is one call — its verb may be stated anywhere inside it, and a verb from a NEIGHBOURING
+ * command is never borrowed. Both directions matter: reading only the path's own line loses the
+ * verb, and widening the verb search to the neighbourhood invents one.
+ * ---------------------------------------------------------------------------------------------- */
+
+test('a shell call split across `\\` continuations is ONE call, and its verb is the one it states', () => {
+  withProbeTree({
+    'probe.sh': [
+      'LOGIN_CODE=$(curl -s --noproxy \'*\' -w \'%{http_code}\' \\',
+      "  -X POST -H 'Content-Type: application/json' \\",
+      '  --data-binary "{}" "$PUBLIC/api/login")',
+    ].join('\n'),
+  }, (opts) => {
+    const sites = r.parseCallSites(opts);
+    assert.strictEqual(sites.length, 1, 'the three physical lines are one call, not three mentions');
+    assert.strictEqual(sites[0].method, 'POST',
+      'the verb is stated on a line ABOVE the path — a forward-only search reads GET and invents drift');
+    assert.strictEqual(sites[0].stated, true, 'and it is read as STATED, not defaulted');
+    assert.strictEqual(sites[0].scope, 'scripts',
+      'a .sh file speaks shell wherever it sits — the language decides the role test, not the root');
+  });
+});
+
+test('a curl continued over more than three lines is still one call', () => {
+  withProbeTree({
+    'long.sh': [
+      'code=$(curl -s --noproxy \'*\' \\',
+      '  --max-time 25 \\',
+      '  -o /tmp/out \\',
+      '  -w \'%{http_code}\' \\',
+      '  -H \'Accept: application/json\' \\',
+      '  "$PUBLIC/api/preboarding/checklist/overview")',
+    ].join('\n'),
+  }, (opts) => {
+    const sites = r.parseCallSites(opts);
+    assert.strictEqual(sites.length, 1,
+      '`curl` is six lines above the path: a three-line proximity window would file this as prose');
+    assert.strictEqual(sites[0].method, 'GET', 'and it states no verb, which is curl\'s GET');
+  });
+});
+
+test('a verb is never borrowed from a neighbouring command', () => {
+  withProbeTree({
+    'two.sh': [
+      'curl -s -X POST "$PUBLIC/api/employees" > /dev/null',
+      'curl -s "$PUBLIC/api/preboarding/checklist/overview" > /dev/null',
+    ].join('\n'),
+  }, (opts) => {
+    const sites = r.parseCallSites(opts);
+    const second = sites.find((s) => s.raw === '/api/preboarding/checklist/overview');
+    assert.ok(second, 'the second command is a caller');
+    assert.strictEqual(second.method, 'GET',
+      'it states no verb of its own — the POST on the line above belongs to a different command');
+    assert.strictEqual(sites.find((s) => s.raw === '/api/employees').method, 'POST');
+  });
+});
+
+test('ANTI-VACUOUS CONTROL: a shell script calling an unregistered route still reddens the drift check', () => {
+  withProbeTree({
+    'planted.sh': [
+      'code=$(curl -s -w \'%{http_code}\' \\',
+      '  -X DELETE \\',
+      '  "$PUBLIC/api/definitely-not-registered")',
+    ].join('\n'),
+  }, (opts) => {
+    const drift = r.unregisteredCallSites(r.parseRoutes(), r.parseCallSites(opts))
+      .map((s) => `${s.method} ${s.canon}`);
+    assert.deepStrictEqual(drift, ['DELETE /api/definitely-not-registered'],
+      'a .sh caller is not exempt: the deploy harness cannot hide a route nobody registers');
+  });
+});
+
+test('a script caller does not upgrade a route to REACHABLE(client): a probe cannot launder reachability', () => {
+  withProbeTree({
+    'only.sh': 'curl -s "$PUBLIC/api/employees" > /dev/null',
+  }, (opts) => {
+    const rows = r.classify([{ method: 'GET', path: '/api/employees', line: 1 }], r.parseCallSites(opts));
+    assert.strictEqual(rows[0].verdict, 'REACHABLE(scripts)',
+      'a maintenance script is not a user path, and the verdict says which scope reached it');
   });
 });
 
