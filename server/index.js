@@ -56,8 +56,13 @@ app.disable('x-powered-by');
 //                               CORS question at all; this is what lets the app run from
 //                               antum.ae, a client domain or a forwarded port without needing
 //                               an allowlist entry per host.
-//   3. Origin in allowlist   -> serve, and the cors middleware grants the CORS headers.
-//   4. anything else         -> deliberate 403, short generic JSON body, detail to the log.
+//   3. Origin is a hostname this BUSINESS serves -> serve. Its platform names are matched by
+//                               PATTERN (isBusinessPlatformOrigin below), not enumerated: a
+//                               list of them is what failed twice.
+//   4. Origin in allowlist   -> serve, and the cors middleware grants the CORS headers.
+//                               This is for names that are NOT of the platform shape — a
+//                               custom domain such as antumpeople.com.
+//   5. anything else         -> deliberate 403, short generic JSON body, detail to the log.
 //
 // "the host this request actually arrived on" is NOT just req.headers.host. Measured
 // 2026-11-02 by attaching strace to the live product and reading the bytes it read from its
@@ -78,23 +83,39 @@ app.disable('x-powered-by');
 //
 // X-Forwarded-Host does not fix this deployment on its own: measured the same day, its value
 // is the SAME for both public hostnames (the edge's own preview name), so it cannot name the
-// public host. Hence the explicit allowlist entry below. Step 2 still matters, because it is
-// the rule that makes this middleware correct on any proxy that DOES forward the original
-// host, and it is what serves the edge's own preview hostname without an entry per name.
+// public host. Step 2 still matters, because it is the rule that makes this middleware correct
+// on any proxy that DOES forward the original host, and it is what serves the edge's own
+// preview hostname without an entry per name.
+//
+// SO THE PUBLIC NAMES ARE MATCHED BY PATTERN, NOT ENUMERATED. The first fix for the blank page
+// added one allowlist entry per hostname, and it failed again on the very next one: `-dev` was
+// still refused, and `-dev.cto.site` is the platform's WORKING-SITE name — the one the owner's
+// SITE tab opens. Every hostname this business serves under the platform is
+//
+//     <business id>.cto.site      <business id>-dev.cto.site
+//     <business id>.ctonew.app    <business id>-dev.ctonew.app
+//
+// so that SHAPE is what step 3 accepts. A list cannot keep up with it — it was already one
+// name behind twice — and it would be one name behind again for every suffix the platform
+// adds. A custom domain is still admitted BY NAME through ALLOWED_ORIGINS (step 4), which is
+// the mechanism for names that are not of this shape.
+//
+// The match is on the hostname's LABELS, never on a suffix of the string. `endsWith('.cto.site')`
+// is satisfied by a caller who pads the front of the name, and a test against the whole host
+// admits `<biz>.cto.site.evil.example`. The label count is fixed at three, so neither a
+// subdomain of our own name nor a deeper name reaches step 3 — they fall through to the 403.
 //
 // Trusting X-Forwarded-Host here is sound only because a proxy we control sets it: measured
 // the same day, a caller-supplied `X-Forwarded-Host: evil.example` and `Host: evil.example`
 // are both OVERWRITTEN by the edge before the request reaches this process. It rests on the
 // same `trust proxy` posture as req.ip below. A deployment exposed directly to the internet,
 // with no such proxy in front, must not rely on it.
-const DEFAULT_ALLOWED_ORIGINS = [
-  'https://b974147c03228029e277d1cbe6646fe6.ctonew.app',
-  'https://b974147c03228029e277d1cbe6646fe6-dev.ctonew.app',
-  // This deployment's OTHER public hostname — the one the owner uses. It is named here
-  // because, per the measurement above, no header reaching this process carries it: without
-  // this entry a same-origin request from it is indistinguishable from a foreign one.
-  'https://b974147c03228029e277d1cbe6646fe6.cto.site'
-];
+
+// Deliberately EMPTY. Every platform hostname this business has is matched by the pattern
+// below, so an entry here would only be the enumeration that already fell behind twice. Names
+// that are NOT of the platform shape — a custom domain such as antumpeople.com, or a client's
+// own hostname — arrive at runtime through ALLOWED_ORIGINS.
+const DEFAULT_ALLOWED_ORIGINS = [];
 const allowedOrigins = DEFAULT_ALLOWED_ORIGINS.concat(
   // Extra hosts for a deployment behind a proxy that rewrites Host, e.g.
   // ALLOWED_ORIGINS=https://antum.ae,https://app.client.example
@@ -132,13 +153,57 @@ const arrivedHosts = (headers) => {
   push(headers && headers['x-forwarded-host']);
   return raw.map(bareHost).filter(Boolean);
 };
+
+// ── THIS BUSINESS'S OWN PLATFORM NAMES — A PATTERN, NOT A LIST ─────────────────────────
+// The fixed id this deployment is served under. It is not a secret (it is in every public URL)
+// and it is not a credential: knowing it buys an Origin header that step 3 accepts, and nothing
+// else — this API carries no ambient credential, so a request without a token answers 401
+// whatever its Origin.
+const BUSINESS_ID = 'b974147c03228029e277d1cbe6646fe6';
+// The suffixes the platform serves this business under. A suffix added here is served on BOTH
+// the plain and the `-dev` name without a second edit, which is the whole point.
+const PLATFORM_HOST_SUFFIXES = ['cto.site', 'ctonew.app'];
+
+// Is `host` one of this business's platform hostnames? Matched on LABELS, so that padding the
+// string cannot satisfy it: `x<biz>.cto.site` has a first label that is not the id, and
+// `<biz>.cto.site.evil.example` has four labels and a suffix that is not one of ours. Exactly
+// three labels — a subdomain of our own name is a different host, and is not served here.
+const isBusinessPlatformHost = (host) => {
+  const labels = String(host === undefined || host === null ? '' : host)
+    .trim().toLowerCase().split('.');
+  if (labels.length !== 3) return false;
+  if (!PLATFORM_HOST_SUFFIXES.includes(labels[1] + '.' + labels[2])) return false;
+  return labels[0] === BUSINESS_ID || labels[0] === BUSINESS_ID + '-dev';
+};
+
+// The Origin form of the same question. `https` is required: every public name of this business
+// is served over TLS, and a plaintext Origin on a name we own is not one of our pages.
+// Total by construction — a throw here would reach express's default error handler, which is
+// the 500-with-a-stack-trace this middleware exists to avoid.
+const isBusinessPlatformOrigin = (origin) => {
+  let url;
+  try {
+    url = new URL(origin);
+  } catch (e) {
+    return false; // 'null', malformed, non-http origin: not ours
+  }
+  if (url.protocol !== 'https:') return false;
+  return isBusinessPlatformHost(bareHost(url.host));
+};
+
+// ONE predicate, used by the gate below AND by the cors middleware, so the two cannot come to
+// disagree about which Origins are ours. (They did disagree in shape: the gate could pass a
+// request for which the cors middleware then withheld the headers.)
+const isTrustedOrigin = (origin) => (
+  allowedOrigins.includes(origin) || isBusinessPlatformOrigin(origin)
+);
 // Caller-supplied values reach the log escaped and bounded — never raw.
 const logSafe = (value) => String(value === undefined || value === null ? '' : value)
   .replace(/[^\x20-\x7e]/g, '?')
   .slice(0, 200);
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (!origin || allowedOrigins.includes(origin)) return next();
+  if (!origin || isTrustedOrigin(origin)) return next();
   const host = originHost(origin);
   if (host !== null && arrivedHosts(req.headers).includes(bareHost(host))) {
     return next();
@@ -152,7 +217,7 @@ app.use((req, res, next) => {
 });
 app.use(cors({
   origin: (origin, callback) => {
-    callback(null, !origin || allowedOrigins.includes(origin));
+    callback(null, !origin || isTrustedOrigin(origin));
   },
   credentials: false
 }));
