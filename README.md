@@ -18,7 +18,7 @@ Antum People transforms administrative transitions into strategic intelligence l
 - **Frontend**: React + Vite + TypeScript (client/)
 - **Backend**: Node.js + Express API (server/)
 - **Data Layer**: Shared team-db (SQLite)
-- **Primary Domains**: antum.ae (UAE), antum.me (global)
+- **Primary Domains**: **none registered — Antum holds no domain.** `antum.ae` (UAE) and `antum.me` (global) are the intended names; both are held by third parties and are not purchasable. The product's domain is undecided (open owner decision).
 
 ## Local Development
 
@@ -55,3 +55,4 @@ On 2026-09-17, this product was rebranded from **VantageHR** to **Antum** / **An
 
 - UAE: privacy@antum.ae, dpo@antum.ae, legal@antum.ae
 - Global: privacy@antum.me
+- Every address above is **reserved, not provisioned — none of them can receive mail**: Antum holds no domain, so no mailbox is served on any of these names.

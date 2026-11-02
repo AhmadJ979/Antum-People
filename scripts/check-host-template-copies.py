@@ -65,6 +65,33 @@ COUNTS, NOT A VERDICT (an instrument that measures nothing exits 0)
   count, the quarantine count and the violation count. A run that walked nothing cannot print "OK" -
   see the CANNOT-JUDGE cases below. The counts are the evidence that the verdict was earned.
 
+THE SECOND FOLDER IT JUDGES, AND WHY (added 2026-11-02)
+  `design-concepts/` had no guard, and the cost of that was measurable: a second copy of
+  `BRAND-IDENTITY.md` sat at `/home/team/shared/design-concepts/` from 17 September until 2026-11-02,
+  **one line behind** the repository and still asserting that `antum.ae` and `antum.me` are "registered &
+  owned by Antum" - a claim the business cannot make, because it holds **no domain at all**. Every check
+  was green while it stood there, because nothing looked at that folder. It is now a POINTER (the form
+  the seven earlier conversions used, marker `POINTER, not a copy` in the first 400 bytes).
+
+  So this file judges TWO folders, and the second has its own rule:
+
+    /home/team/shared/design-concepts/  every entry must be ONE of
+        1. a POINTER - the marker `POINTER, not a copy` in the first 400 bytes. This is the sanctioned
+           form for a repository document that used to be duplicated here.
+        2. DECLARED DEBT - named in `scripts/host-design-concepts-baseline.tsv` with its exact md5. That
+           file records the copies that remain (mockups, prototypes, the older text of five documents) so
+           this check can be green today without pretending they are not there. It is a DEBT REGISTER,
+           not a list of blessed names: every entry pins the md5, so a declared file that drifts reddens
+           exactly like an undeclared one, and the file prints how many entries are debt.
+        3. anything else is a VIOLATION, named with its path and reason.
+
+  `BRAND-IDENTITY.md` is deliberately NOT in the baseline: it is a pointer now, so a copy of it reappearing
+  - the old text, the current text, any text - is an entry with no declaration and reddens.
+
+  The design folder is judged only on a run that does NOT pass `--root` (the templates-only form the
+  existing proof uses); pass `--design-root DIR` to judge another one. That is printed, never silent: a
+  section that measured nothing says so on its own line.
+
 EXIT CODES (the team's three)
   0  the folder is in its retired state: 0 files at the top level, every entry under `retired/` matching
      the quarantine rule
@@ -92,6 +119,7 @@ PROVEN, NOT ASSERTED: `bash scripts/check-host-template-copies-test.sh` plants a
   green throughout; and requires a missing folder to exit 2 rather than 0.
 """
 import argparse
+import hashlib
 import os
 import re
 import sys
@@ -155,12 +183,121 @@ def judge(rel, kind):
     return None, "quarantined"
 
 
+DESIGN_ROOT_DEFAULT = "/home/team/shared/design-concepts"
+DESIGN_BASELINE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "host-design-concepts-baseline.tsv")
+POINTER_MARKER = b"POINTER, not a copy"
+
+
+def load_design_baseline(path):
+    """md5 + note per relative path. Returns (entries, error). A missing baseline is an ERROR, not an
+    empty one: an empty register would declare every existing copy a violation, and a silent empty one
+    would declare nothing at all - both are worse than refusing to judge."""
+    if not os.path.isfile(path):
+        return None, "%s does not exist - the debt register is part of the rule, not an accessory" % path
+    entries = {}
+    with open(path, encoding="utf-8") as f:
+        for n, line in enumerate(f, 1):
+            line = line.rstrip("\n")
+            if not line.strip() or line.startswith("#"):
+                continue
+            parts = line.split("\t")
+            if len(parts) < 2 or len(parts[0]) != 32:
+                return None, "%s:%d is not `<md5>\\t<rel path>\\t[note]`" % (path, n)
+            entries[parts[1]] = (parts[0].lower(), parts[2] if len(parts) > 2 else "")
+    return entries, None
+
+
+def judge_design(root, baseline_path):
+    """Judge the design-concepts folder. Returns (exit code, counts dict). Prints its own counts."""
+    print("  --- design-concepts folder (the second ruled location) ---")
+    print("  design folder judged  : %s" % root)
+    if not os.path.exists(root):
+        print("CANNOT-JUDGE: %s does not exist - the folder is not retired, so its absence means the "
+              "record and the host have parted company. exit 2" % root)
+        return CANNOT_JUDGE, {}
+    if not os.path.isdir(root):
+        print("CANNOT-JUDGE: %s is not a directory. exit 2" % root)
+        return CANNOT_JUDGE, {}
+
+    entries, err = load_design_baseline(baseline_path)
+    if err:
+        print("CANNOT-JUDGE: %s. exit 2" % err)
+        return CANNOT_JUDGE, {}
+
+    dirs, seen, unreadable = scan(root)
+    if unreadable:
+        for u in unreadable:
+            print("      unreadable  %s" % u)
+        print("CANNOT-JUDGE: %d unreadable location(s) under %s. exit 2" % (len(unreadable), root))
+        return CANNOT_JUDGE, {}
+
+    pointers, declared, violations = [], [], []
+    for rel, kind in seen:
+        if kind != "file":
+            violations.append((rel, "NOT-A-PLAIN-FILE", "a %s where a plain file or a pointer belongs" % kind))
+            continue
+        full = os.path.join(root, rel)
+        try:
+            with open(full, "rb") as f:
+                head = f.read(400)
+                f.seek(0)
+                digest = hashlib.md5(f.read()).hexdigest()
+        except OSError as e:
+            print("CANNOT-JUDGE: %s could not be read (%s). exit 2" % (rel, e))
+            return CANNOT_JUDGE, {}
+        if POINTER_MARKER in head:
+            pointers.append(rel)
+            continue
+        if rel in entries:
+            if entries[rel][0] == digest:
+                declared.append((rel, entries[rel][1]))
+            else:
+                violations.append((rel, "DECLARED-BUT-DRIFTED",
+                                   "declared md5 %s, file is %s - a debt entry that moved is a new copy"
+                                   % (entries[rel][0], digest)))
+            continue
+        violations.append((rel, "UNDECLARED-COPY",
+                           "not a pointer and not in the debt register - a second copy of a repository "
+                           "document, md5 %s" % digest))
+
+    print("  entries examined      : %d  (walked, not matched against a list of names)" % len(seen))
+    print("  pointers              : %d  (the sanctioned form for a repository document)" % len(pointers))
+    for rel in pointers:
+        print("      ok    %s" % rel)
+    print("  declared debt         : %d  (in scripts/host-design-concepts-baseline.tsv, md5 pinned)"
+          % len(declared))
+    print("  violations            : %d" % len(violations))
+    for rel, why, detail in violations:
+        print("      RED   %s" % rel)
+        print("            %s: %s" % (why, detail))
+
+    if len(seen) == 0:
+        print("CANNOT-JUDGE: the walk examined no entry under %s. exit 2" % root)
+        return CANNOT_JUDGE, {}
+
+    counts = {"entries": len(seen), "pointers": len(pointers), "declared": len(declared),
+              "violations": len(violations)}
+    if violations:
+        print("FAIL: %d entr(ies) in %s that the ruling does not allow - each is named above."
+              % (len(violations), root))
+        return RED, counts
+    return OK, counts
+
+
 def main(argv):
     ap = argparse.ArgumentParser(add_help=True)
-    ap.add_argument("--root", default=os.environ.get("ANTUM_HOST_TEMPLATES_DIR", DEFAULT_ROOT),
+    # `default=None`, not DEFAULT_ROOT: this script must be able to tell "the operator passed --root"
+    # from "nobody passed anything", because the design-concepts folder is judged only on the bare run
+    # (the existing proof drives this script with --root on scratch folders and must not be coupled to
+    # host state).
+    ap.add_argument("--root", default=None,
                     help="the retired folder to judge (default: %s)" % DEFAULT_ROOT)
+    ap.add_argument("--design-root", default=None,
+                    help="the design-concepts folder to judge (default: %s, and only when --root is "
+                         "not given)" % DESIGN_ROOT_DEFAULT)
     args = ap.parse_args(argv[1:])
-    root = os.path.abspath(args.root)
+    root = os.path.abspath(args.root or os.environ.get("ANTUM_HOST_TEMPLATES_DIR") or DEFAULT_ROOT)
 
     repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     rev = "UNKNOWN"
@@ -181,6 +318,21 @@ def main(argv):
     print("  NOT run by            : the movement. It judges a HOST folder, loads nothing served, and")
     print("                          `grep -c scripts server/index.js` is 0 - no served path reads scripts/")
     print("  IS NOT A MONITOR      : nothing schedules it. It notices a reappearing copy when it is run.")
+
+    # --- the second ruled folder, judged FIRST so a red here is never hidden by a green below --------
+    design_root = os.path.abspath(args.design_root or os.environ.get("ANTUM_HOST_DESIGN_DIR", "")
+                                 or DESIGN_ROOT_DEFAULT)
+    if args.design_root or args.root is None or os.environ.get("ANTUM_HOST_DESIGN_DIR"):
+        design_rc, design_counts = judge_design(design_root, DESIGN_BASELINE)
+        if design_rc != OK:
+            return design_rc
+        print("  design-concepts       : %d entries / %d pointers / %d declared debt / 0 violations"
+              % (design_counts["entries"], design_counts["pointers"], design_counts["declared"]))
+    else:
+        print("  design-concepts       : NOT JUDGED - --root was given without --design-root (the "
+              "templates-only form).")
+        print("                          This is printed, not silent: pass --design-root DIR to judge "
+              "that folder too.")
 
     if not os.path.exists(root):
         print("  CANNOT-JUDGE          : %s does not exist. The retired folder must exist on this host -"

@@ -171,7 +171,26 @@ CHECKS = [
               "names: 0 files at its top level, and only its flat retired/ may hold files, each named "
               "<document>.<ext>.retired-<revision>. A copy reappearing anywhere under it is RED and is named. "
               "A folder that is missing or unreadable exits 2 (CANNOT-JUDGE) - never a green "
-              "(proof: scripts/check-host-template-copies-test.sh, cases J and K)"),
+              "(proof: scripts/check-host-template-copies-test.sh, cases J and K). Since 2026-11-02 the bare "
+              "run ALSO judges /home/team/shared/design-concepts (added 2026-11-02 after a second copy of "
+              "BRAND-IDENTITY.md stood there unnoticed for six weeks): every entry there must be a POINTER "
+              "or declared with its md5 in scripts/host-design-concepts-baseline.tsv, and the run prints "
+              "entries / pointers / declared debt / violations"),
+
+    # Added 2026-11-02, the same day the false claim it catches was corrected in three documents.
+    # A DEFAULT check: it reads 161 tracked .md files and 26,866 lines in well under a second, and it
+    # touches nothing but the tree.
+    dict(id="domain-claims", mode="default", expect="green",
+         home="operator CLI (bare) + this entry point; not run by the movement, and nothing schedules it",
+         cmd=[PY, "scripts/check-domain-claims.py"],
+         what="no tracked markdown may assert that Antum holds a domain. It was written for the sentence "
+              "`Domains (registered & owned by Antum): antum.ae, antum.me` - false, because the business "
+              "holds NO domain (both names are held by third parties and are not purchasable, and the "
+              "product's domain is an open owner decision). It walks every tracked .md, matches four claim "
+              "shapes, exempts a clause that DENIES ownership (so the corrected text passes), and names "
+              "file:line. Print counts, not verdicts: files / lines / claims / denials / violations, and a "
+              "tree with no markdown is CANNOT-JUDGE, never OK. --selftest plants the original sentence and "
+              "requires it to REDDEN"),
 
     dict(id="served-document-renderer", mode="default", expect="green",
          home="operator CLI (bare) + this entry point; run by nothing else, which is why it is here",
