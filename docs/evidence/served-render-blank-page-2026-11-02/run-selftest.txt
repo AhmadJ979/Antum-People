@@ -1,0 +1,19 @@
+selftest: 3 planted pages on http://127.0.0.1:37261 (one browser, one session per page)
+[GREEN]           ok           http://127.0.0.1:37261/ok
+                  doc=200  assets=2 (/ok.js=200, /ok.css=200)  #rootchildren=1  text="selftest mounted"  pageErrors=0  waited=824ms  title="selftest ok"
+                  selftest ok : planted GREEN, observed GREEN (assertions 7/7 passed)
+[RED]             asset-403    http://127.0.0.1:37261/asset-403
+                  doc=200  assets=1 (/blocked.js=403)  #rootchildren=0  text=""  pageErrors=0  waited=12450ms  title="selftest asset 403"
+                  FAILED: asset-403: script /blocked.js answered 403 (must be 200) [request carried Origin: http://127.0.0.1:37261]
+                  FAILED: asset-403: #root has 0 child element(s) (must be >= 1) - the app did not mount
+                  FAILED: asset-403: #root innerText is empty (must be non-empty)
+                  selftest ok : planted RED, observed RED (assertions 3/6 passed)
+[RED]             no-mount     http://127.0.0.1:37261/no-mount
+                  doc=200  assets=1 (/silent.js=200)  #rootchildren=0  text=""  pageErrors=0  waited=12066ms  title="selftest no mount"
+                  FAILED: no-mount: #root has 0 child element(s) (must be >= 1) - the app did not mount
+                  FAILED: no-mount: #root innerText is empty (must be non-empty)
+                  selftest ok : planted RED, observed RED (assertions 4/6 passed)
+
+selftest: 3/3 planted cases behaved as stated
+VERDICT: the instrument reddens on an asset that is not 200 and on a page that mounts nothing. exit 0
+EXIT=0

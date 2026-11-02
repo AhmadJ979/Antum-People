@@ -1,0 +1,18 @@
+served-render: 3 target(s), driver=agent-browser (agent-browser 0.27.0), mount=#root, wait<=12000ms, targetTimeout=70000ms
+[GREEN]           local        http://127.0.0.1:3000/
+                  doc=200  assets=2 (/assets/index-vsGFc45L.js=200, /assets/index-CdmIUBt1.css=200)  #rootchildren=1  text="Antum People HR Onboarding/Offboarding Intelligence Platform..."  pageErrors=0  waited=992ms  title="Antum People"
+[GREEN]           public-app   https://b974147c03228029e277d1cbe6646fe6.ctonew.app/
+                  doc=200  assets=2 (/assets/index-vsGFc45L.js=200, /assets/index-CdmIUBt1.css=200)  #rootchildren=1  text="Antum People HR Onboarding/Offboarding Intelligence Platform..."  pageErrors=0  waited=1138ms  title="Antum People"
+[RED-KNOWN]       public-site  https://b974147c03228029e277d1cbe6646fe6.cto.site/
+                  doc=200  assets=2 (/assets/index-vsGFc45L.js=403, /assets/index-CdmIUBt1.css=403)  #rootchildren=0  text=""  pageErrors=0  waited=12539ms  title="Antum People"
+                  FAILED: public-site: script /assets/index-vsGFc45L.js answered 403 (must be 200) [request carried Origin: https://b974147c03228029e277d1cbe6646fe6.cto.site]
+                  FAILED: public-site: stylesheet /assets/index-CdmIUBt1.css answered 403 (must be 200) [request carried Origin: https://b974147c03228029e277d1cbe6646fe6.cto.site]
+                  FAILED: public-site: #root has 0 child element(s) (must be >= 1) - the app did not mount
+                  FAILED: public-site: #root innerText is empty (must be non-empty)
+                  WHY THIS IS NOT A REGRESSION: the platform edge fronting this hostname answers 403 {"error":"Forbidden"} to every request that carries an Origin header - the document's own <script type=module> and stylesheet requests carry one - so no bundle executes and #root stays empty while the document itself answers 200. Outside this repository; not ours to fix.
+                  recorded at : docs/evidence/served-render-blank-page-2026-11-02/EVIDENCE.md
+                  ends when   : every named asset answers 200 and #root mounts on this hostname. Then DELETE this declaration: a declaration that no longer fires exits 1 (STALE-DECLARATION), never green.
+
+3 target(s): 2 GREEN, 0 RED, 1 RED-KNOWN (declared), 0 STALE-DECLARATION, 0 CANNOT-JUDGE  |  assertions: 17 passed, 4 failed (4 of them inside declared-red targets)
+VERDICT: every required target rendered; every declared-red target is still red.  [3 target(s), 17/21 assertions passed] exit 0
+EXIT=0
