@@ -75,6 +75,18 @@ published headline does not move (**170,576 → 170,576**). The series *would* m
 
 ### 2.3 The one forecast-shaped thing that exists
 
+> **Status, 2026-11-02 — the window in this section is no longer a literal.** `forecastQuarterEnds`
+> is now derived from the clock (`server/eosb-forecast-window.js`: the next four calendar quarter-ends
+> **strictly after today**, same `{ quarter, date }` shape, same length of four, so the chart's shape is
+> unchanged). The excerpt and the four dates below are the code and the window **as they stood on
+> 2026-10-27**, and the figures in point 1 are tied to those four dates — they are a measurement of
+> *that* window, not of the one served now, and they are left as written rather than renumbered.
+> Point 2's defect is closed: the window moves with the calendar instead of rotting, and
+> `server/eosb-forecast-window.test.js` reddens if it drifts behind the clock again (it also fails if
+> `server/index.js` carries a quarter literal). This fix changes the **window only**. (Point 3's
+> `'resignation'` literal was superseded earlier still, on 2026-10-29, by the owner ruling that each row
+> projects on its own recorded reason; the excerpt below predates that as well.)
+
 `server/index.js:770-787`:
 
 ```js

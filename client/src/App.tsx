@@ -1967,15 +1967,15 @@ export default function App() {
                       <div className="text-rose-300 text-[10px] font-bold uppercase mb-2">Liability Exposure (Illustrative)</div>
                       {/* Removed 2026-10-28. This card used to read: "EOSB liability forecast shows a
                           {rise or steady} trend into 2027." - a trend word chosen by comparing point 2 of the
-                          series with point 0, and a year hard-coded in the client. The series behind it is
-                          four hard-coded calendar quarter-ends, each point computed with every employee
-                          projected on the SAME hard-coded resignation basis until 2026-10-29 (since then each
-                          row projects on its own recorded reason, and a row with none is unreduced) and with
-                          no departure ever modelled, so today
-                          the first point is already in the past and the last is eight months ahead: a
-                          calendar series, not the next twelve months (eosb-liability-forecast-spec.md
-                          sections 2.3 and 7). Four points under those assumptions cannot establish a trend,
-                          and this card is the sentence a buyer reads.
+                          series with point 0, and a year hard-coded in the client. It is four calendar
+                          quarter-ends, each point computed with every employee projected on the SAME
+                          hard-coded resignation basis until 2026-10-29 (since then each row projects on its
+                          own recorded reason, and a row with none is unreduced) and with no departure ever
+                          modelled: a calendar ladder, not the next twelve months (eosb-liability-forecast-
+                          spec.md sections 2.3 and 7). Until 2026-11-02 those four were a LITERAL ending at
+                          Q2 2027, the first point 33 days in the past and still served as a forecast; the
+                          window is now derived from the clock (server/eosb-forecast-window.js), so it moves
+                          with the calendar. Four points cannot establish a trend; this card is the sentence a buyer reads.
                           The wording below is that spec's own honest label (section 7, "What this number is
                           not"), not a new claim: it says what the number is and what it is not, and asserts
                           no movement at all. P4-3 owns the series, the window, the basis and this screen. Do
