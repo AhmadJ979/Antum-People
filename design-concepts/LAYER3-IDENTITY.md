@@ -43,7 +43,10 @@ what an **unnamed-actor refusal** looks like on screen.
 
 ## 2. S-L2 — who am I, and the two fallbacks that must go
 
-**Today, read from the shipped file** (`App.tsx:1222`–`1223` at `ab7e9c3`; `:1212`–`1213` at `7a4e00a`; `:1196`–`1197` at `7b073f8`):
+**Today, read from the shipped file.** The sidebar card renders two fallback divs,
+`{user?.username || 'Admin User'}` and `{user?.access_role || 'Administrator'}` — read at `@rev ab7e9c3` `App.tsx:1222`–`1223`;
+at `@rev 7a4e00a` `App.tsx:1212`–`1213`, the same `{user?.access_role || 'Administrator'}` pair;
+at `@rev 7b073f8` `App.tsx:1196`/`App.tsx:1197` — `{user?.username || 'Admin User'}`, then `{user?.role || 'Administrator'}` (the role fallback there reads `role`, not `access_role`):
 
 ```
 <div className="text-xs font-bold text-white truncate">{user?.username || 'Admin User'}</div>
@@ -68,7 +71,7 @@ Two findings, both worth fixing in this slice because slice 1 is what makes them
 **Proposed card (same classes, same place, no restyle):**
 
 ```
-Placed where the card is today — sidebar, under the brand row (App.tsx:1215 at `ab7e9c3`)
+Placed where the card is today — sidebar, under the brand row (`@rev ab7e9c3` `App.tsx:1215`, the `<div className="flex items-center space-x-3">` brand row)
   ┌──────────────────────────────────────────────┐
   │  [avatar]  Layla Haddad                      │   ← person's name, when the account carries one
   │            HR · Pre-boarding                 │   ← role, as the access model names it (open)
