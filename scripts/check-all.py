@@ -220,9 +220,11 @@ CHECKS = [
               "browser's own network log, the status of every same-origin script/stylesheet the "
               "document NAMES (a named asset with no request reads NO-REQUEST and fails), and "
               "whether #root mounted (>=1 child element, non-empty innerText). One line per target "
-              "with the measured values, never a bare verdict; a target declared red (the .cto.site "
-              "edge 403s any request carrying an Origin header) prints RED-KNOWN and does not fail "
-              "the run, and a declaration that stops firing exits 1. Drives agent-browser headless "
+              "with the measured values, never a bare verdict; a target declared red prints RED-KNOWN "
+              "and does not fail the run, and a declaration that stops firing exits 1. NO target is "
+              "declared red today: the .cto.site one was withdrawn on 2026-11-02 when its stated cause "
+              "- an edge refusing every Origin-bearing request - turned out to be this repository's "
+              "own CORS middleware, fixed in server/index.js. Drives agent-browser headless "
               "with a per-target timeout, so a browser that will not start fails instead of hanging"),
 
     dict(id="served-render-controls", mode="full", expect="green", home="operator CLI, off-host",

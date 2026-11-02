@@ -127,6 +127,50 @@ else
   echo "  skip  client/dist is not built in this checkout"
 fi
 
+echo "3b. same-origin behind a proxy that REWRITES Host (the 2026-11-02 blank-page regression)"
+# The edge in front of the live deployment rewrites Host to its own internal name and puts the
+# name it was addressed as in X-Forwarded-Host. Measured 2026-11-02 by reading the bytes the
+# live process read from its socket, for a request to
+# https://b974147c03228029e277d1cbe6646fe6.cto.site:
+#     Host:             ip-10-110-75-104.us-west-2.prod.aws.beamlit.net
+#     X-Forwarded-Host: c92e15e4f97c516d8c977075708bb720.preview.bl.run
+#     X-Forwarded-Proto: https
+#     Origin:           https://b974147c03228029e277d1cbe6646fe6.cto.site
+# Comparing the Origin host against Host alone refused every Origin-bearing request on that
+# hostname, so the bundle and the stylesheet 403'd and #root stayed empty. Both shapes below
+# answered 403 before this fix; the first is the regression, the second is the same rule with
+# the entry that matters arriving not-first in a proxy chain's list.
+XFH_ORIGIN=https://antum.example.ae
+out=$(probe -H "Origin: $XFH_ORIGIN" -H 'X-Forwarded-Host: antum.example.ae' "$BASE/api/employees")
+check "Origin host == X-Forwarded-Host while Host differs -> status" "$(field "$out" 1)" "401"
+check "Origin host == X-Forwarded-Host while Host differs -> body" \
+  "$(cat "$(field "$out" 3)")" '{"error":"Authentication token required"}'
+if [ -f "$ROOT/client/dist/index.html" ]; then
+  check "bundle with Origin host == X-Forwarded-Host" \
+    "$(curl -s -o /dev/null -w '%{http_code}' -H "Origin: $XFH_ORIGIN" \
+        -H 'X-Forwarded-Host: antum.example.ae' "$BASE$bundle")" "200"
+fi
+out=$(probe -H "Origin: $XFH_ORIGIN" -H 'X-Forwarded-Host: edge-internal.example, antum.example.ae' \
+  "$BASE/api/employees")
+check "X-Forwarded-Host list, matching entry not first -> status" "$(field "$out" 1)" "401"
+# A default port spelled out is the same host on both sides (`antum.ae:443` == `antum.ae`).
+out=$(probe -H "Origin: $XFH_ORIGIN" -H 'X-Forwarded-Host: antum.example.ae:443' "$BASE/api/employees")
+check "explicit :443 on the forwarded host -> status" "$(field "$out" 1)" "401"
+# The refusal still holds for a host we do not serve, in the same shape.
+out=$(probe -H 'Origin: https://evil.example' -H 'X-Forwarded-Host: antum.example.ae' "$BASE/api/employees")
+check "foreign Origin, unrelated X-Forwarded-Host -> status" "$(field "$out" 1)" "403"
+check "foreign Origin, unrelated X-Forwarded-Host -> body" "$(cat "$(field "$out" 3)")" '{"error":"Forbidden"}'
+# PINNED, and stated rather than hidden: a caller who sets BOTH Origin and X-Forwarded-Host to
+# the same foreign host is served by the forwarded-host rule. That is the cost of trusting a
+# proxy header, and it is bounded here by three measured facts — the live edge OVERWRITES a
+# caller-supplied X-Forwarded-Host (measured 2026-11-02, so the rule is unreachable from
+# outside it), a browser cannot set the header at all, and this API carries no ambient
+# credential (a token lives in localStorage, so a request without one answers 401 whatever its
+# Origin). Asserted so that any future change to that boundary is visible in this run.
+out=$(probe -H 'Origin: https://evil.example' -H 'X-Forwarded-Host: evil.example' "$BASE/api/employees")
+check "DOCUMENTED proxy-trust boundary: both headers forged -> served, not refused" \
+  "$(field "$out" 1)" "401"
+
 echo "4. a thrown error answers JSON, not express's HTML page"
 out=$(probe -X POST -H 'Content-Type: application/json' -H "Origin: $DEV_ORIGIN" -d '{"username": ' "$BASE/api/login")
 check "malformed JSON body -> status" "$(field "$out" 1)" "400"

@@ -285,3 +285,44 @@ Stated so a green run never implies more than it measured:
 | `origin-matrix.sh` | the script that produced it |
 | `check-all-served-render.txt` | `check-all --only served-render`, raw |
 | `check-all-full.txt` | the whole `check-all` run at this tree (10 OK / 0 BROKEN, suite 404/0), raw |
+
+---
+
+## ANNOTATION, 2026-11-02 (later the same day) — section 2's attribution to the edge is REFUTED
+
+**Everything this pack measured stands. Its conclusion in section 2 does not.** The 403 that blanked
+`.cto.site` was not the platform edge's: it was **this repository's own CORS middleware** in
+`server/index.js`, refusing the document's own `Origin`.
+
+**How that was established.** `strace` was attached read-only to the live product and the bytes it
+read from its socket were captured for a request to the owner's hostname:
+
+    GET /assets/index-vsGFc45L.js?probe=strace1 HTTP/1.1
+    Host: ip-10-110-75-104.us-west-2.prod.aws.beamlit.net
+    X-Forwarded-Host: c92e15e4f97c516d8c977075708bb720.preview.bl.run
+    X-Forwarded-Proto: https
+    Origin: https://b974147c03228029e277d1cbe6646fe6.cto.site
+
+The edge rewrites `Host` to its own internal name, so the `Origin` host never equals
+`req.headers.host`, and the middleware fell through to its deliberate 403. The request had reached
+our process all along: `server/server.log` carries the matching
+`[cors] refused Origin https://...cto.site` lines, and the origin's own 403 is byte-identical to the
+public one — same `Content-Length: 21`, same `ETag: W/"15-TLNzmZqKxaTuFdX/dVWWPBu44/c"`.
+
+**Why section 2 read as the edge.** The edge *does* decorate the response: it injects
+`access-control-allow-origin`, `access-control-allow-credentials: true`,
+`access-control-expose-headers`, `access-control-allow-methods/headers` and
+`x-cache: Error from cloudfront`. Our server sets no `access-control-*` header at all and
+`credentials: false`, so those headers could not have come from us — true, and it is what was read
+as "the edge is injecting them and issuing the 403". The body and its `ETag` were the discriminator,
+and this pack did not compare them against the origin's own response.
+
+**Corrected the same day:** the same-origin test now compares the `Origin` host against `Host` *and*
+every entry of `X-Forwarded-Host`, and the platform's second public hostname is named in the
+allowlist — the forwarded host turns out to be the edge's own preview name, **identical for both
+public hostnames**, so it cannot identify the public host on its own. The declared-red target this
+pack introduced for `.cto.site` was withdrawn with that fix.
+
+**The raw transcripts in this pack are unchanged.** They record what the surface said on that tree
+at that moment, and they are still accurate measurements; only the cause attributed to them is
+corrected here.
