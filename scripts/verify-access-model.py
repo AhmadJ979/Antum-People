@@ -141,7 +141,16 @@ CLAIMS = [
     ("server/index.js", 444, "a named actor is required to update an employee", "unnamed actor refused (400)"),
     ("server/index.js", 527, "INSERT INTO audit_logs", "employee update audit"),
     ("server/index.js", 546, "/api/employees/:id/onboarding", "onboarding read"),
-    ("server/index.js", 550, "scopeAllowsTarget", "the read is scoped"),
+    # RE-GROUNDED 550 -> 723 (2026-11-02). `scopeAllowsTarget` occurs 8 times in index.js, and this
+    # hint named the onboarding read's scope check. The PR that made caller-error answers 400 inserted
+    # 37 lines above it, which moved that check from :686 to :723 and left the hint sitting 5 lines
+    # from the MIDPOINT between :367 (the function definition) and :723 - so any shift of 6 or more
+    # lines re-resolved the claim to the definition, and the content-anchoring control (which prepends
+    # 7) went red with "resolved -349 lines lower". The hint is a tie-breaker, not the assertion, and
+    # the instrument's own drift report calls re-grounding one "a documentation act, not a fix"; the
+    # occurrence it names is unchanged, so the claim is the same claim. Headroom at :723 is 178 lines
+    # of upward drift, against 5 at :550.
+    ("server/index.js", 723, "scopeAllowsTarget", "the read is scoped"),
     ("server/index.js", 566, "app.put('/api/onboarding-tasks/:id'", "the tick route"),
     ("server/index.js", 576, "a named actor is required to complete a task", "the tick refuses an unnamed actor"),
     ("server/index.js", 587, "/api/employees/:id/offboarding", "offboarding read"),
