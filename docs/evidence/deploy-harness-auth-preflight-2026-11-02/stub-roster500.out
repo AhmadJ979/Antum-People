@@ -1,0 +1,13 @@
+=== authentication preflight 2026-11-02T23:27:24+00:00 ===
+  script: scripts/deploy-main.sh | 42805 B | sha256 a18d516eb14ef4dc
+  tree:   (not used by --preflight — no git, no build, no dist)   port: 3000   mode: authentication preflight
+  target: http://127.0.0.1:4599   (the same public URL step 5 judges)
+--- authentication preflight (preflight) ---
+  credential: 20 character(s) read from /home/team/shared/.demo-admin-password (the value is never printed)
+  login:      HTTP 200, token 120 character(s) (expect >100)
+
+CANNOT-JUDGE: the authenticated read (GET /api/employees -> HTTP 500)
+  the harness could not read what this check needs, so it judged nothing here — and it says
+  so instead of reporting the shape of its own confusion as a verdict about the product.
+  log: /tmp/preflight-20261102-232724-evidence.txt
+EXIT_ROSTER500=4

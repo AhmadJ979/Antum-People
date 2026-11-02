@@ -1,0 +1,68 @@
+=== control: the preflight is load-bearing (2026-11-02T23:26:05+00:00) ===
+  the OLD path is taken from revision: fff847b of /home/team/wt-preflight
+  the NEW path is the script under test:  /home/team/wt-preflight/scripts/deploy-main.sh
+  wrong credential: /tmp/control-wrong-pw (32 characters — deliberately not the real one)
+  the live product is NOT restarted, built or written by this script.
+
+--- A. the PRE-FIX step 5, extracted byte for byte from fff847b, run as that revision's own code ---
+  step-5 fragment:  63 lines -> /tmp/control-20261102-232605-step5.sh
+  verdict fragment: 33 lines -> /tmp/control-20261102-232605-verdict.sh
+  extraction is mechanical: git show <rev>:scripts/deploy-main.sh | awk between two anchors
+--- 5. verify the live demo end to end ---
+public status/title: 200 <title>Antum People</title>
+demo login token chars: 0 (expect >100)
+bad-password path: 401 (expect 401)
+roster: 401
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+KeyError: 0
+pre-boarding demo state as the live API serves it (expect three distinct flag states):
+  totals: {}
+Traceback (most recent call last):
+  File "<stdin>", line 6, in <module>
+AttributeError: 'str' object has no attribute 'get'
+KSA offboarding checklist as the live API serves it:
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+TypeError: string indices must be integers, not 'str'
+  tasks: 1
+consent-date field for the departing employee:
+   ('demo-emp-sarah', 0, None)
+settlement statement: the served document vs the employee record (an ISSUED statement must match the record; an UNISSUED one must be a figureless refusal):
+CANNOT-JUDGE: /tmp/cutover-20261102-232605-settlement.json carries no document content - nothing to judge
+FAIL: the settlement check is RED (rc=2) — see its own lines above.
+      The movement still completes (step 6 re-arms the guard from a running product) and
+      exits 1 at the end, so a red here is visible without leaving the site unguarded.
+deployed commit: fff847b Merge pull request #350 from AhmadJ979/fix/eosb-forecast-window-derived-2026-11-02
+=== cutover finished 2026-11-02T23:26:05+00:00 WITH A RED VERIFICATION (settlement check rc=2) — run-stamped evidence: /tmp/control-20261102-232605.out | build: /tmp/control-20261102-232605-build.log | seed: /tmp/control-20261102-232605-seed.log ===
+  OLD PATH EXIT CODE: 1
+
+--- B. the NEW preflight, the same wrong credential, the same product ---
+  | === authentication preflight 2026-11-02T23:26:05+00:00 ===
+  |   script: /home/team/wt-preflight/scripts/deploy-main.sh | 42396 B | sha256 09645dbdf8441d1d
+  |   tree:   (not used by --preflight — no git, no build, no dist)   port: 3000   mode: authentication preflight
+  |   target: https://b974147c03228029e277d1cbe6646fe6.ctonew.app   (the same public URL step 5 judges)
+  | --- authentication preflight (preflight) ---
+  |   credential: 32 character(s) read from /tmp/control-wrong-pw (the value is never printed)
+  | 
+  | FAIL (AUTHENTICATION): the login endpoint refused the credential (HTTP 401 from https://b974147c03228029e277d1cbe6646fe6.ctonew.app/api/login)
+  |   credential file: /tmp/control-wrong-pw
+  |   characters read: 32   (the value is never printed, here or in the evidence log)
+  |   what this means: the harness could not prove it is entitled to judge, so it judged NOTHING.
+  |                    No settlement, roster, pre-boarding, offboarding or consent check ran, and
+  |                    none of them is implicated: this is a credential problem, not a data one.
+  |   what was done:   nothing — --preflight does no git, build, restart or DB write.
+  |   fix:             relay the current demo password into that file by hand, then re-run.
+  |                    Check it without touching the product: bash /home/team/wt-preflight/scripts/deploy-main.sh --preflight
+  |   log:             /tmp/preflight-20261102-232605-evidence.txt
+  NEW PATH EXIT CODE: 3
+
+--- C. what each path said ---
+  old path: a python traceback in the evidence ....... YES
+  old path: verdict named 'settlement check rc=' ..... YES
+  new path: names AUTHENTICATION as the cause ........ YES
+  new path: reached a settlement verdict ............. NO
+
+CONTROL HOLDS: bypassing the preflight lets a wrong credential reach judgment and blames the
+settlement check (old exit 1); the preflight stops it as authentication (new exit 3)
+and no settlement verdict is reached. log: /tmp/control-20261102-232605.out

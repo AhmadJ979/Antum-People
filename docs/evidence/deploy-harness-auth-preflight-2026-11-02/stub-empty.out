@@ -1,0 +1,17 @@
+=== authentication preflight 2026-11-02T23:27:38+00:00 ===
+  script: scripts/deploy-main.sh | 42805 B | sha256 a18d516eb14ef4dc
+  tree:   (not used by --preflight — no git, no build, no dist)   port: 3000   mode: authentication preflight
+  target: https://b974147c03228029e277d1cbe6646fe6.ctonew.app   (the same public URL step 5 judges)
+--- authentication preflight (preflight) ---
+
+FAIL (AUTHENTICATION): the credential file is empty (0 characters read)
+  credential file: /tmp/empty-pw
+  characters read: 0   (the value is never printed, here or in the evidence log)
+  what this means: the harness could not prove it is entitled to judge, so it judged NOTHING.
+                   No settlement, roster, pre-boarding, offboarding or consent check ran, and
+                   none of them is implicated: this is a credential problem, not a data one.
+  what was done:   nothing — --preflight does no git, build, restart or DB write.
+  fix:             relay the current demo password into that file by hand, then re-run.
+                   Check it without touching the product: bash scripts/deploy-main.sh --preflight
+  log:             /tmp/preflight-20261102-232738-evidence.txt
+EXIT_EMPTY=3

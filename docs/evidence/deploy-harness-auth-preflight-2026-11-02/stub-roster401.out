@@ -1,0 +1,19 @@
+=== authentication preflight 2026-11-02T23:27:28+00:00 ===
+  script: scripts/deploy-main.sh | 42805 B | sha256 a18d516eb14ef4dc
+  tree:   (not used by --preflight — no git, no build, no dist)   port: 3000   mode: authentication preflight
+  target: http://127.0.0.1:4599   (the same public URL step 5 judges)
+--- authentication preflight (preflight) ---
+  credential: 20 character(s) read from /home/team/shared/.demo-admin-password (the value is never printed)
+  login:      HTTP 200, token 120 character(s) (expect >100)
+
+FAIL (AUTHENTICATION): the token was REJECTED by an authenticated read (GET /api/employees -> HTTP 401): the credential file and the product's own user table disagree
+  credential file: /home/team/shared/.demo-admin-password
+  characters read: 20   (the value is never printed, here or in the evidence log)
+  what this means: the harness could not prove it is entitled to judge, so it judged NOTHING.
+                   No settlement, roster, pre-boarding, offboarding or consent check ran, and
+                   none of them is implicated: this is a credential problem, not a data one.
+  what was done:   nothing — --preflight does no git, build, restart or DB write.
+  fix:             relay the current demo password into that file by hand, then re-run.
+                   Check it without touching the product: bash scripts/deploy-main.sh --preflight
+  log:             /tmp/preflight-20261102-232728-evidence.txt
+EXIT_ROSTER401=3

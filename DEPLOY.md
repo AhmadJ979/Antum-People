@@ -189,6 +189,46 @@ end and holds it open, so **the script finishes while the pipeline never returns
 re-arm, with the work already done. Redirect the run's output to a file instead; that is the shape of the
 2026-10-24 log above.
 
+### Check the credential before you move anything: `--preflight`
+
+**A harness that names the wrong subsystem is worse than no harness.** On 2026-11-02 a `--restart-only`
+movement ran with `/home/team/shared/.demo-admin-password` holding a stale 33-character password while the
+real one was 20. The login answered 401, so every step-5 probe ran with an empty token: the roster answered
+401, three inline `python3` blocks printed tracebacks on the 401 body, the settlement check was handed an
+error payload and correctly answered rc=2 (CANNOT-JUDGE), and the run's own verdict line read
+**`RED VERIFICATION (settlement check rc=2)`** — naming the settlement check, which had never been at fault.
+
+`deploy-main.sh` now establishes its entitlement to judge *before* it judges anything, and `--preflight`
+runs exactly that step and nothing else:
+
+    bash scripts/deploy-main.sh --preflight            # the real credential file
+    ANTUM_PW_FILE=/tmp/scratch-pw bash scripts/deploy-main.sh --preflight   # simulate a wrong one
+
+It reads the credential file, logs in, makes **one authenticated read** (the roster), prints the character
+counts and the record count, and exits. **No git, no build, no restart, no database write** — which is why it
+can be run against the live product at any time, including in the middle of deciding whether to move it.
+
+What it asserts, in order, each failure naming **AUTHENTICATION** as the cause, printing a character *count*
+(never the value) and the file it read:
+
+1. the credential file exists, is readable and is not empty;
+2. the login yields a token of the expected shape (>100 characters) — a right-length token is still not proof;
+3. an authenticated read **accepts** that token. A 401 there is an authentication failure and nothing else.
+
+**Exit codes:** `0` the run's own verdict · `1` a judged red (build, seed, settlement, served bytes) ·
+`2` usage · **`3` AUTHENTICATION — the harness could not prove it may judge, so it judged nothing** ·
+**`4` CANNOT-JUDGE — a response was not the shape the check needs** (printed as
+`CANNOT-JUDGE: <what it was> (<status code>)`, never as a python traceback).
+
+The same preflight runs inside a movement, twice: the credential **file** is refused at the very start
+(before the fetch, the build and the restart — no point taking the product down to find out), and the full
+login + authenticated read runs at the head of step 5, after the restart. Nothing in step 5 can run on an
+empty token. The settlement check is additionally handed its document only after its HTTP status is checked,
+so a 401 or a 500 there is a fetch failure, not "the settlement check is RED".
+
+**Not the same thing as `scripts/cutover-preflight.sh`**, which measures HOST preconditions (dependency
+links, the port, the armed guard) before a movement. This one measures the credential and the token.
+
 ### The sequence
 
 1. `date -u` — check the clock against the timing rule below before anything else.
