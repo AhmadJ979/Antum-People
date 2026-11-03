@@ -215,6 +215,40 @@ CHECKS = [
               "subject is RED, not green (scripts/check-served-document-renderer.py --selftest plants "
               "the violations and requires each to redden)"),
 
+    # Added 2026-11-03, after the live product served an UNMERGED branch's bundle for ~50 minutes
+    # and nothing caught it. `client/dist` is untracked, so a build in the deployed tree publishes
+    # bytes with no merge, no movement and no restart; the recorded pair for the deployed revision
+    # was not on disk at all, and its URL answered 200 with the SPA shell - so every status-based
+    # instrument and every source-reading check passed. This one reads what the tree SERVES: the
+    # dist/index.html, the build's own record (client/dist/build-provenance.json, written by
+    # client/vite.config.ts at build time), and the bytes on disk. A tree with NO record is
+    # UNPROVEN and exits 1 - deliberately, because on 2026-11-02 there was no record and that is
+    # exactly the state that must not read as a pass. It judges the DEPLOYED tree (WORKFLOW rule
+    # 7) unless --tree names another, and it prints both sides of every comparison.
+    dict(id="served-provenance", mode="default", expect="green",
+         home="operator CLI (bare) + this entry point",
+         cmd=[PY, "scripts/check-served-provenance.py"],
+         what="do the bytes this tree SERVES prove where they came from? Reads dist/index.html, "
+              "dist/build-provenance.json and dist/** - never source, never a status code (a missing "
+              "asset answers 200 with the SPA shell). Asserts the asset index.html names is the entry "
+              "the build recorded; that it and every other named asset (the CSS too) exist on disk "
+              "with the recorded byte size AND md5; that index.html's own bytes are the recorded ones; "
+              "that the provenance revision equals `git rev-parse HEAD` OF THE TREE BEING MEASURED (a "
+              "merge without a rebuild, or --restart-only, or a build from elsewhere all land here); "
+              "and that dist/assets/ holds nothing the build did not name. Prints bytes, md5 and "
+              "revision for BOTH sides of each comparison. NO record = UNPROVEN = exit 1, not a skip"),
+
+    dict(id="served-provenance-controls", mode="full", expect="green", home="operator CLI, off-host",
+         cmd=[PY, "scripts/check-served-provenance.py", "--selftest"],
+         what="the served-provenance check's own mutants, each on its own scratch tree with a real git "
+              "history: (control) nothing planted must be PROVEN, exit 0 - a harness with no green "
+              "control proves nothing; (a) index.html's entry renamed to a missing asset must REDDEN "
+              "naming entry-mismatch - tonight's exact shape; (b) one byte flipped in the entry asset "
+              "must REDDEN naming asset-drift with both sizes and md5s; (c) the provenance revision "
+              "moved off HEAD must REDDEN naming revision-mismatch; (d) the record deleted must REDDEN "
+              "as UNPROVEN; (e) a stray bundle in dist/assets/ must REDDEN naming it. An unknown flag "
+              "exits 2 rather than buying a green run"),
+
     # Added 2026-11-02, after the owner was shown a BLANK page while every instrument here was
     # green. Nothing in this file loaded a rendered screen: check-all, the 404-test server suite,
     # the bundle's md5 and the API all passed, and an uptime check would have missed it too - the
