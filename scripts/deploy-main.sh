@@ -7,6 +7,15 @@
 #                                                install the login-shell hook. No fetch, no reset, no
 #                                                build, no re-seed — it cannot change which commit is
 #                                                served.
+#   bash scripts/deploy-main.sh --preflight      the AUTHENTICATION PREFLIGHT alone: read the credential
+#                                                file, log in, make one authenticated read, print the
+#                                                counts, exit. No git, no build, no restart, no DB write
+#                                                — which is what makes the preflight provable without a
+#                                                cutover. ANTUM_PW_FILE points it at another credential.
+#
+# EXIT CODES: 0 the run's own verdict · 1 a judged red (build, seed, settlement, served bytes) ·
+#             2 usage · 3 AUTHENTICATION: the harness could not prove it is entitled to judge, so it
+#             judged nothing · 4 CANNOT-JUDGE: a response was not the shape the check needs.
 #
 # VERSIONED 2026-10-17 from /home/team/shared/deploy-main.sh (278 lines, md5 342b791f…), which had been
 # host state: a path that moves the product, reviewable by nobody, with no history and no conflict
@@ -24,6 +33,18 @@
 #   - a listener on the port that is not ours -> evict and re-bind in the same window, never assume
 #   - `--restart-only` never asserts a remembered bundle hash: it fetches the asset the public HTML
 #     names and compares it with the file on disk, both measured at run time
+#   - the credential file missing, empty or unreadable -> refuse BEFORE the product is touched: no
+#     probe in step 5 can be judged without it, and taking the site down to discover that is backwards
+#   - a login that yields no usable token, or a token that an authenticated read REJECTS -> abort as an
+#     AUTHENTICATION failure (exit 3) before ANY verification runs. WHY (measured 2026-11-02): a stale
+#     credential file (33 chars, the real one 20) made every step-5 probe run with an empty token; the
+#     roster answered 401, three inline python blocks printed tracebacks on the 401 body, and the run's
+#     own verdict line read "RED VERIFICATION (settlement check rc=2)" — naming the settlement check,
+#     whose logic was correct and was being handed an error payload. A harness that names the wrong
+#     subsystem is worse than no verification, so the entitlement to judge is now proved first.
+#   - a response body that is not the shape a check needs -> "CANNOT-JUDGE: <what it was> (<status>)"
+#     and exit 4, never a python traceback: a stack trace in the evidence file is the harness
+#     confessing it did not understand its own input
 #
 # EVERY HOST VALUE IS AN OVERRIDE: the defaults below are this host's, and each can be replaced by an
 # ANTUM_* variable so the script can be exercised off the live tree (WORKFLOW rule 14).
@@ -39,25 +60,183 @@ HOOK_DST="${ANTUM_HOOK_DST:-/etc/profile.d/zz-antum-product-guard.sh}"
 
 # --- the mode ----------------------------------------------------------------------
 RESTART_ONLY=0
+PREFLIGHT=0
 case "${1:-}" in
   "")            : ;;
   --restart-only) RESTART_ONLY=1 ;;
-  -h|--help)     sed -n '2,32p' "$0"; exit 0 ;;
-  *)             echo "unknown argument: $1 (use --restart-only, or no argument for a full movement)"; exit 2 ;;
+  --preflight)   PREFLIGHT=1 ;;
+  # The help prints the header block, ending at the first line of code. It used to be a fixed
+  # `sed -n '2,32p'`, which two things broke: editing the header silently truncated the help, and
+  # install-host-tools.sh inserts a provenance block after the shebang, so on the HOST copy the fixed
+  # range printed the provenance and cut the last bullets off. Anchor it on the code, not on a number.
+  -h|--help)     awk 'NR>1 && /^set -uo pipefail/{exit} NR>1' "$0"; exit 0 ;;
+  *)             echo "unknown argument: $1 (use --preflight, --restart-only, or no argument for a full movement)"; exit 2 ;;
 esac
 # Run-stamped evidence paths. These were FIXED names until 2026-10-09, so every run silently
 # destroyed the previous run's evidence: the 13:46 run overwrote the 10:46 run's three files,
 # and the 10:46 record's /tmp citations then resolved to the LATER run's output — a false
 # artifact filed under the earlier record's names. Never reuse a fixed evidence path across runs.
 STAMP=$(date -u +%Y%m%d-%H%M%S)
-OUT="/tmp/cutover-$STAMP-evidence.txt"
+if [ "$PREFLIGHT" -eq 1 ]; then
+  OUT="/tmp/preflight-$STAMP-evidence.txt"
+else
+  OUT="/tmp/cutover-$STAMP-evidence.txt"
+fi
 BUILD_LOG="/tmp/cutover-$STAMP-build.log"
 SEED_LOG="/tmp/cutover-$STAMP-seed.log"
 
 exec > >(tee "$OUT") 2>&1
-echo "=== $( [ "$RESTART_ONLY" -eq 1 ] && echo 'restart-only recovery' || echo 'cutover' ) $(date -Iseconds) ==="
+if [ "$PREFLIGHT" -eq 1 ]; then
+  MODE_NAME="authentication preflight"
+elif [ "$RESTART_ONLY" -eq 1 ]; then
+  MODE_NAME="restart-only recovery"
+else
+  MODE_NAME="cutover"
+fi
+echo "=== $MODE_NAME $(date -Iseconds) ==="
 echo "  script: $0 | $(stat -c %s "$0" 2>/dev/null) B | sha256 $(sha256sum "$0" 2>/dev/null | cut -c1-16)"
-echo "  tree:   $DEPLOY_DIR   port: $PORT   mode: $( [ "$RESTART_ONLY" -eq 1 ] && echo restart-only || echo full-movement )"
+if [ "$PREFLIGHT" -eq 1 ]; then
+  # The tree is deliberately NOT used by --preflight, and saying so beats printing a path a reader
+  # would take to be the thing being measured: this mode measures the credential and the running
+  # product, nothing on disk.
+  echo "  tree:   (not used by --preflight — no git, no build, no dist)   port: $PORT   mode: $MODE_NAME"
+else
+  echo "  tree:   $DEPLOY_DIR   port: $PORT   mode: $MODE_NAME"
+fi
+
+# ===================================================================================================
+# THE AUTHENTICATION PREFLIGHT — the entitlement to judge, established before any judgment
+# ===================================================================================================
+# WHY THIS EXISTS (measured 2026-11-02, not imagined). A --restart-only movement ran with
+# /home/team/shared/.demo-admin-password holding a stale 33-character password while the real one was
+# 20 characters. The login answered 401, so TOK was empty; every step-5 probe ran unauthenticated; the
+# roster answered 401; three inline python blocks hit json.load on the 401 body and printed tracebacks;
+# the settlement check was handed an error payload, correctly returned rc=2 (CANNOT-JUDGE), and the
+# run's own verdict line read "RED VERIFICATION (settlement check rc=2)". The settlement logic was
+# fine. The harness blamed a subsystem that was never at fault, and the tracebacks were it confessing
+# it did not understand its own input.
+#
+# So: nothing in step 5 may run until this has passed. Three things are asserted, in order, and each
+# failure names AUTHENTICATION as the cause, prints a character COUNT (never the value) and the file
+# it came from, and exits 3:
+#   1. the credential file exists, is readable and is not empty;
+#   2. the login yields a token of the expected shape (>100 characters);
+#   3. an authenticated read accepts that token — because a token of the right length is not proof
+#      that it works. A 401 on that read is an authentication failure and NOTHING else.
+PW_CHARS=0
+PW_VALUE=""
+AUTH_STAGE="preflight"
+
+auth_fail() { # $1 = the cause, in one line. Never prints the credential, never prints its value.
+  echo ""
+  echo "FAIL (AUTHENTICATION): $1"
+  echo "  credential file: $PW_FILE"
+  echo "  characters read: $PW_CHARS   (the value is never printed, here or in the evidence log)"
+  echo "  what this means: the harness could not prove it is entitled to judge, so it judged NOTHING."
+  echo "                   No settlement, roster, pre-boarding, offboarding or consent check ran, and"
+  echo "                   none of them is implicated: this is a credential problem, not a data one."
+  case "$AUTH_STAGE" in
+    preflight)    echo "  what was done:   nothing — --preflight does no git, build, restart or DB write." ;;
+    early)        echo "  what was done:   nothing — the run stopped before touching the product: no fetch, no build, no restart, no re-seed." ;;
+    post-restart) echo "  what was done:   step 4 restarted the product; step 6 (re-arm) and 6b (hook) were NOT reached, so the guard already running is still in charge." ;;
+  esac
+  echo "  fix:             relay the current demo password into that file by hand, then re-run."
+  echo "                   Check it without touching the product: bash $0 --preflight"
+  echo "  log:             $OUT"
+  exit 3
+}
+
+cannot_judge() { # $1 = what could not be judged. Exit 4: a run that judged nothing is not a pass.
+  echo ""
+  echo "CANNOT-JUDGE: $1"
+  echo "  the harness could not read what this check needs, so it judged nothing here — and it says"
+  echo "  so instead of reporting the shape of its own confusion as a verdict about the product."
+  echo "  log: $OUT"
+  exit 4
+}
+
+read_credential() {
+  PW_CHARS=0
+  PW_VALUE=""
+  [ -f "$PW_FILE" ] || auth_fail "the credential file does not exist"
+  [ -r "$PW_FILE" ] || auth_fail "the credential file is not readable"
+  PW_VALUE="$(cat "$PW_FILE" 2>/dev/null)" || auth_fail "the credential file could not be read"
+  PW_CHARS=${#PW_VALUE}
+  [ "$PW_CHARS" -gt 0 ] || auth_fail "the credential file is empty (0 characters read)"
+}
+
+authenticate() { # $1 = the stage auth_fail reports
+  AUTH_STAGE="${1:-preflight}"
+  echo "--- authentication preflight ($AUTH_STAGE) ---"
+  read_credential
+  echo "  credential: $PW_CHARS character(s) read from $PW_FILE (the value is never printed)"
+
+  LOGIN_BODY=$(mktemp /tmp/antum-login-XXXXXX.json) || cannot_judge "a scratch file for the login response"
+  LOGIN_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$LOGIN_BODY" -w '%{http_code}' \
+    -X POST -H 'Content-Type: application/json' \
+    --data-binary "{\"username\":\"admin\",\"password\":\"$PW_VALUE\"}" "$PUBLIC/api/login")
+  case "$LOGIN_CODE" in
+    200)     : ;;
+    000|"")  auth_fail "the login endpoint could not be reached (no HTTP status from $PUBLIC/api/login)" ;;
+    *)       auth_fail "the login endpoint refused the credential (HTTP $LOGIN_CODE from $PUBLIC/api/login)" ;;
+  esac
+  # Tolerant of whitespace around the colon on purpose: the product's `res.json` emits compact JSON,
+  # but a token extractor that silently yields "" when it is handed `"token": "..."` would turn a
+  # perfectly good login into the very failure this preflight is meant to distinguish. It fails LOUD
+  # (the length assertion below) rather than quietly proceeding with an empty token.
+  TOK=$(sed -n 's/.*"token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$LOGIN_BODY" | head -1)
+  TOK_CHARS=${#TOK}
+  echo "  login:      HTTP 200, token $TOK_CHARS character(s) (expect >100)"
+  [ "$TOK_CHARS" -gt 100 ] || auth_fail "the login answered HTTP 200 but yielded no usable token ($TOK_CHARS characters, expected >100): the credential did not become a session"
+
+  # PROVE the token works. This is the read step 5 reports on, so the proof and the reported count are
+  # the same measurement — there is no second, unproven read to disagree with it.
+  ROSTER_BODY=$(mktemp /tmp/antum-roster-XXXXXX.json) || cannot_judge "a scratch file for the roster response"
+  ROSTER_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$ROSTER_BODY" -w '%{http_code}' \
+    -H "Authorization: Bearer $TOK" "$PUBLIC/api/employees")
+  case "$ROSTER_CODE" in
+    200) : ;;
+    401) auth_fail "the token was REJECTED by an authenticated read (GET /api/employees -> HTTP 401): the credential file and the product's own user table disagree" ;;
+    403) cannot_judge "the authenticated read (GET /api/employees -> HTTP 403): the credential is accepted but this account may not read the roster, so the token cannot be proved by it" ;;
+    *)   cannot_judge "the authenticated read (GET /api/employees -> HTTP $ROSTER_CODE)" ;;
+  esac
+  ROSTER_SUM=$(python3 -c '
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    sys.exit(4)
+if not isinstance(d, list):
+    sys.exit(4)
+print(len(d), (d[0].get("id") if d else "-"))
+' "$ROSTER_BODY" 2>/dev/null)
+  [ -n "$ROSTER_SUM" ] || cannot_judge "the roster body (HTTP $ROSTER_CODE): it is not the JSON list this check reads"
+  ROSTER_N=${ROSTER_SUM%% *}
+  ROSTER_FIRST=${ROSTER_SUM#* }
+  echo "  roster:     HTTP $ROSTER_CODE, $ROSTER_N record(s) — the token is PROVEN by an authenticated read"
+}
+
+# ---------------------------------------------------------------------------------------------
+# --preflight: the entitlement to judge, and nothing else. This mode is why the fix is provable
+# without a cutover — read the credential file, log in, make one authenticated read, print the
+# counts, exit. No git, no build, no restart, no database write.
+# ---------------------------------------------------------------------------------------------
+if [ "$PREFLIGHT" -eq 1 ]; then
+  echo "  target: $PUBLIC   (the same public URL step 5 judges)"
+  authenticate preflight
+  echo ""
+  echo "PREFLIGHT PASSED: the credential authenticates and an authenticated read accepts the token."
+  echo "  what this proves:      step 5 is entitled to judge."
+  echo "  what it does NOT prove: that anything else is correct. Nothing was restarted, built or written."
+  echo "  evidence: $OUT"
+  exit 0
+fi
+
+# The credential every check below depends on. Refused HERE, before the fetch, the build and the
+# restart: discovering it at step 5 means taking the product down for nothing.
+AUTH_STAGE="early"
+read_credential
+echo "  credential file: $PW_FILE ($PW_CHARS character(s) read; the value is never printed)"
 
 if [ ! -d "$DEPLOY_DIR/server" ]; then
   echo "FAIL: no deployed tree at $DEPLOY_DIR — nothing to restart and nothing to move."
@@ -186,46 +365,72 @@ claim_port || exit 1
 tail -1 server.log
 
 echo "--- 5. verify the live demo end to end ---"
+# NO JUDGMENT BEFORE THE ENTITLEMENT TO JUDGE. authenticate() proves three things — the credential
+# file is a credential, the login turns it into a token of the expected shape, and an authenticated
+# read ACCEPTS that token — and exits 3 naming AUTHENTICATION if any of them fails, so not one line
+# below runs on an empty token. The roster reported here is that same proven read, not a second,
+# unchecked one: the proof and the reported count are one measurement.
+authenticate post-restart
 echo "public status/title: $(curl -s --noproxy '*' -o /tmp/cutover-page -w '%{http_code}' --max-time 25 "$PUBLIC") $(grep -o '<title>[^<]*</title>' /tmp/cutover-page | head -1)"
-TOK=$(curl -s --noproxy '*' --max-time 25 -X POST -H 'Content-Type: application/json' \
-  --data-binary "{\"username\":\"admin\",\"password\":\"$(cat "$PW_FILE")\"}" "$PUBLIC/api/login" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
-echo "demo login token chars: ${#TOK} (expect >100)"
 echo "bad-password path: $(curl -s --noproxy '*' -o /dev/null -w '%{http_code}' --max-time 20 -X POST -H 'Content-Type: application/json' --data-binary '{"username":"admin","password":"nope"}' "$PUBLIC/api/login") (expect 401)"
-echo "roster: $(curl -s --noproxy '*' -o /tmp/cutover-emp -w '%{http_code}' --max-time 25 -H "Authorization: Bearer $TOK" "$PUBLIC/api/employees")"
-python3 - <<'PY'
-import json
-d=json.load(open('/tmp/cutover-emp'))
-print("  employees:",len(d),"| first id:",d[0]['id'] if d else None)
-PY
+echo "roster: $ROSTER_CODE"
+echo "  employees: $ROSTER_N | first id: $ROSTER_FIRST"
 # The re-seed exists to leave the demo in three distinct flag states, so the RUN must prove it
 # rather than the operator checking by hand afterwards. This is also the reading that goes stale
 # fastest: the flags are derived from the seed day's offsets, so an early re-seed gives a
 # different configuration from a late one. Run-stamped, per the rule that a fixed evidence path
 # lets the next run overwrite this one's bytes.
 echo "pre-boarding demo state as the live API serves it (expect three distinct flag states):"
-curl -s --noproxy '*' --max-time 25 -H "Authorization: Bearer $TOK" \
-  "$PUBLIC/api/preboarding/checklist/overview?jurisdiction=AE" > "/tmp/cutover-$STAMP-pb-overview.json"
-python3 - <<PY
-import json
-d=json.load(open("/tmp/cutover-$STAMP-pb-overview.json"))
-cases=d.get('cases',d) if isinstance(d,dict) else d
-if isinstance(d,dict): print("  totals:", json.dumps(d.get('totals',{}), sort_keys=True))
+PB_JSON="/tmp/cutover-$STAMP-pb-overview.json"
+PB_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$PB_JSON" -w '%{http_code}' -H "Authorization: Bearer $TOK" \
+  "$PUBLIC/api/preboarding/checklist/overview?jurisdiction=AE")
+[ "$PB_CODE" = "200" ] || cannot_judge "the pre-boarding checklist overview (HTTP $PB_CODE): there is no checklist to read the flag states out of"
+python3 - "$PB_JSON" <<'PY' 2>/dev/null || cannot_judge "the pre-boarding overview body (HTTP $PB_CODE): it is not the JSON this check reads"
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    raise SystemExit(4)
+cases = d.get('cases', d) if isinstance(d, dict) else d
+if not isinstance(cases, list):
+    raise SystemExit(4)
+if isinstance(d, dict): print("  totals:", json.dumps(d.get('totals', {}), sort_keys=True))
 for c in cases:
-    f=c.get('flag') or {}; bt=c.get('by_track') or {}
+    f = c.get('flag') or {}; bt = c.get('by_track') or {}
     print("   start", c.get('start_date'), "|", f.get('state'), "| tone", f.get('tone'),
           "| open", f.get('open_count'), "| lines emp/ws",
           (bt.get('employee') or {}).get('lines'), (bt.get('workspace') or {}).get('lines'))
-states=sorted({(c.get('flag') or {}).get('state') for c in cases} - {None})
+states = sorted({(c.get('flag') or {}).get('state') for c in cases} - {None})
 print("  distinct flag states:", states, "(expect 3: clear, inside_48_hours, started)")
 PY
 echo "KSA offboarding checklist as the live API serves it:"
-curl -s --noproxy '*' --max-time 25 -H "Authorization: Bearer $TOK" "$PUBLIC/api/employees/demo-emp-sarah/offboarding" \
- | python3 -c "import json,sys; d=json.load(sys.stdin); print('  tasks:',len(d)); [print('   ',i+1,t['title']) for i,t in enumerate(d)]"
+OFF_JSON="/tmp/cutover-$STAMP-offboarding.json"
+OFF_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$OFF_JSON" -w '%{http_code}' -H "Authorization: Bearer $TOK" \
+  "$PUBLIC/api/employees/demo-emp-sarah/offboarding")
+[ "$OFF_CODE" = "200" ] || cannot_judge "the KSA offboarding checklist for demo-emp-sarah (HTTP $OFF_CODE)"
+python3 - "$OFF_JSON" <<'PY' 2>/dev/null || cannot_judge "the offboarding checklist body (HTTP $OFF_CODE): it is not the JSON list this check reads"
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    raise SystemExit(4)
+if not isinstance(d, list):
+    raise SystemExit(4)
+print("  tasks:", len(d))
+for i, t in enumerate(d):
+    print("   ", i + 1, t.get('title'))
+PY
 echo "consent-date field for the departing employee:"
-python3 - <<PY
-import sqlite3
-c=sqlite3.connect("$PRODUCT_DB")
-print("  ", c.execute("select id, consent_granted, consent_date from employees where id='demo-emp-sarah'").fetchone())
+python3 - "$PRODUCT_DB" <<'PY' 2>/dev/null || cannot_judge "the consent record for demo-emp-sarah (the product database could not be read, or the row is absent)"
+import sqlite3, sys
+try:
+    c = sqlite3.connect(sys.argv[1])
+    row = c.execute("select id, consent_granted, consent_date from employees where id='demo-emp-sarah'").fetchone()
+except Exception:
+    raise SystemExit(4)
+if row is None:
+    raise SystemExit(4)
+print("  ", row)
 PY
 echo "settlement statement: the served document vs the employee record (an ISSUED statement must match the record; an UNISSUED one must be a figureless refusal):"
 # RE-GROUNDED 2026-10-29 (#325's truthful refusal). The old block searched the body for a rendered
@@ -238,12 +443,27 @@ echo "settlement statement: the served document vs the employee record (an ISSUE
 # assertion. rc=2 (CANNOT-JUDGE: the payload or the record could not be read) fails the run too: a
 # run that judged nothing is not a pass. The payload path is run-stamped, like the other evidence.
 SETTLE="/tmp/cutover-$STAMP-settlement.json"
-curl -s --noproxy '*' --max-time 25 -H "Authorization: Bearer $TOK" \
-  "$PUBLIC/api/compliance/templates/final-settlement-statement/demo-emp-sarah" > "$SETTLE"
+SETTLE_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$SETTLE" -w '%{http_code}' -H "Authorization: Bearer $TOK" \
+  "$PUBLIC/api/compliance/templates/final-settlement-statement/demo-emp-sarah")
+# THE STATUS IS CHECKED BEFORE THE CHECK IS ASKED TO JUDGE. This is the incident's exact seam: on
+# 2026-11-02 the 401 body was written to this file, the settlement script correctly answered rc=2
+# (CANNOT-JUDGE), and the harness reported that as "the settlement check is RED". A check handed an
+# error payload has not judged anything, and must never be the line that gets blamed for it.
+case "$SETTLE_CODE" in
+  200) : ;;
+  401) auth_fail "the token was rejected when reading the settlement statement (HTTP 401) — the session the preflight proved is not holding" ;;
+  *)   cannot_judge "the settlement statement document (HTTP $SETTLE_CODE): the check was given no document to judge" ;;
+esac
 SETTLE_RC=0
+SETTLE_KIND=""
 python3 "$DEPLOY_DIR/scripts/check-settlement-statement.py" "$SETTLE" "$PRODUCT_DB" demo-emp-sarah || SETTLE_RC=$?
 if [ "$SETTLE_RC" -ne 0 ]; then
-  echo "FAIL: the settlement check is RED (rc=$SETTLE_RC) — see its own lines above."
+  if [ "$SETTLE_RC" -eq 2 ]; then
+    SETTLE_KIND="CANNOT-JUDGE: the check could not read its input — NOT a verdict about the settlement document"
+  else
+    SETTLE_KIND="RED: the served document contradicts the employee record"
+  fi
+  echo "FAIL: the settlement check did not pass (rc=$SETTLE_RC) — $SETTLE_KIND. See its own lines above."
   echo "      The movement still completes (step 6 re-arms the guard from a running product) and"
   echo "      exits 1 at the end, so a red here is visible without leaving the site unguarded."
 fi
@@ -428,7 +648,7 @@ echo "deployed commit: $(git log --oneline -1)"
 if [ "${SETTLE_RC:-0}" -ne 0 ]; then
   # Deliberately the LAST thing, after step 6 and 6b: the guard is armed and the hook installed by
   # now, so a red verification can fail the run without leaving the product unguarded.
-  echo "=== cutover finished $(date -Iseconds) WITH A RED VERIFICATION (settlement check rc=$SETTLE_RC) — run-stamped evidence: $OUT | build: $BUILD_LOG | seed: $SEED_LOG ==="
+  echo "=== cutover finished $(date -Iseconds) WITH A FAILED VERIFICATION (settlement check rc=$SETTLE_RC — $SETTLE_KIND) — run-stamped evidence: $OUT | build: $BUILD_LOG | seed: $SEED_LOG ==="
   exit 1
 fi
 echo "=== cutover finished $(date -Iseconds) — run-stamped evidence: $OUT | build: $BUILD_LOG | seed: $SEED_LOG ==="
