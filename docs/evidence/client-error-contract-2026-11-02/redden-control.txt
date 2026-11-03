@@ -1,0 +1,436 @@
+TAP version 13
+# Subtest: no caller-error probe against any API route answers 5xx, and every 400 says what was wrong
+not ok 1 - no caller-error probe against any API route answers 5xx, and every 400 says what was wrong
+  ---
+  duration_ms: 1228.682132
+  type: 'test'
+  location: '/tmp/redproof/client-error-contract.test.js:246:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    6 caller-error probe(s) answered 5xx — the caller's mistake is being reported as ours:
+    POST /api/login | no path parameters; empty object body {} -> 500 {"error":"Internal Server Error"}
+    POST /api/login | no path parameters; array body [] -> 500 {"error":"Internal Server Error"}
+    POST /api/login | no path parameters; every body field an array (35 fields) -> 500 {"error":"Internal Server Error"}
+    POST /api/login | no path parameters; every body field a number (35 fields) -> 500 {"error":"Internal Server Error"}
+    GET /api/compliance/notice | no path parameters; no query parameters -> 500 {"error":"Internal Server Error"}
+    GET /api/compliance/notice | no path parameters; nonsense query parameters -> 500 {"error":"Internal Server Error"}
+    + actual - expected
+    
+    + [
+    +   'POST /api/login | no path parameters; empty object body {} -> 500 {"error":"Internal Server Error"}',
+    +   'POST /api/login | no path parameters; array body [] -> 500 {"error":"Internal Server Error"}',
+    +   'POST /api/login | no path parameters; every body field an array (35 fields) -> 500 {"error":"Internal Server Error"}',
+    +   'POST /api/login | no path parameters; every body field a number (35 fields) -> 500 {"error":"Internal Server Error"}',
+    +   'GET /api/compliance/notice | no path parameters; no query parameters -> 500 {"error":"Internal Server Error"}',
+    +   'GET /api/compliance/notice | no path parameters; nonsense query parameters -> 500 {"error":"Internal Server Error"}'
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: 'POST /api/login | no path parameters; empty object body {} -> 500 {"error":"Internal Server Error"}'
+    1: 'POST /api/login | no path parameters; array body [] -> 500 {"error":"Internal Server Error"}'
+    2: 'POST /api/login | no path parameters; every body field an array (35 fields) -> 500 {"error":"Internal Server Error"}'
+    3: 'POST /api/login | no path parameters; every body field a number (35 fields) -> 500 {"error":"Internal Server Error"}'
+    4: 'GET /api/compliance/notice | no path parameters; no query parameters -> 500 {"error":"Internal Server Error"}'
+    5: 'GET /api/compliance/notice | no path parameters; nonsense query parameters -> 500 {"error":"Internal Server Error"}'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/redproof/client-error-contract.test.js:329:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# PROBE 500  POST /api/login  |  no path parameters; empty object body {}  |  {"error":"Internal Server Error"}
+# PROBE 400  POST /api/login  |  no path parameters; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 500  POST /api/login  |  no path parameters; array body []  |  {"error":"Internal Server Error"}
+# PROBE 400  POST /api/login  |  no path parameters; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 500  POST /api/login  |  no path parameters; every body field an array (35 fields)  |  {"error":"Internal Server Error"}
+# PROBE 500  POST /api/login  |  no path parameters; every body field a number (35 fields)  |  {"error":"Internal Server Error"}
+# PROBE 200  GET /api/users  |  no path parameters; no query parameters  |  []
+# PROBE 200  GET /api/users  |  no path parameters; nonsense query parameters  |  []
+# PROBE 400  POST /api/users  |  no path parameters; empty object body {}  |  {"error":"username is required"}
+# PROBE 400  POST /api/users  |  no path parameters; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/users  |  no path parameters; array body []  |  {"error":"username is required"}
+# PROBE 400  POST /api/users  |  no path parameters; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/users  |  no path parameters; every body field an array (35 fields)  |  {"error":"username is required"}
+# PROBE 400  POST /api/users  |  no path parameters; every body field a number (35 fields)  |  {"error":"username is required"}
+# PROBE 200  GET /api/employees  |  no path parameters; no query parameters  |  [{"id":"e060df51-2e9e-440d-829e-e364db7044ae","first_name":"Probe","last_name":"Row","email":"probe.row@example.test","department":"Operations","role":"Analyst"
+# PROBE 200  GET /api/employees  |  no path parameters; nonsense query parameters  |  [{"id":"e060df51-2e9e-440d-829e-e364db7044ae","first_name":"Probe","last_name":"Row","email":"probe.row@example.test","department":"Operations","role":"Analyst"
+# PROBE 400  POST /api/employees  |  no path parameters; empty object body {}  |  {"error":"data_residency_country is required"}
+# PROBE 400  POST /api/employees  |  no path parameters; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/employees  |  no path parameters; array body []  |  {"error":"request body must be a JSON object"}
+# PROBE 400  POST /api/employees  |  no path parameters; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/employees  |  no path parameters; every body field an array (35 fields)  |  {"error":"first_name must be a string"}
+# PROBE 400  POST /api/employees  |  no path parameters; every body field a number (35 fields)  |  {"error":"first_name must be a string"}
+# PROBE 404  PUT /api/employees/no-such-id-0000  |  path id = "no-such-id-0000"; empty object body {}  |  {"error":"Employee not found"}
+# PROBE 400  PUT /api/employees/no-such-id-0000  |  path id = "no-such-id-0000"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/employees/no-such-id-0000  |  path id = "no-such-id-0000"; array body []  |  {"error":"request body must be a JSON object"}
+# PROBE 400  PUT /api/employees/no-such-id-0000  |  path id = "no-such-id-0000"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/employees/no-such-id-0000  |  path id = "no-such-id-0000"; every body field an array (35 fields)  |  {"error":"first_name must be a string"}
+# PROBE 400  PUT /api/employees/no-such-id-0000  |  path id = "no-such-id-0000"; every body field a number (35 fields)  |  {"error":"first_name must be a string"}
+# PROBE 404  PUT /api/employees/1  |  path id = "1"; empty object body {}  |  {"error":"Employee not found"}
+# PROBE 400  PUT /api/employees/1  |  path id = "1"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/employees/1  |  path id = "1"; array body []  |  {"error":"request body must be a JSON object"}
+# PROBE 400  PUT /api/employees/1  |  path id = "1"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/employees/1  |  path id = "1"; every body field an array (35 fields)  |  {"error":"first_name must be a string"}
+# PROBE 400  PUT /api/employees/1  |  path id = "1"; every body field a number (35 fields)  |  {"error":"first_name must be a string"}
+# PROBE 200  PUT /api/employees/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; empty object body {}  |  {"message":"Employee updated"}
+# PROBE 400  PUT /api/employees/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/employees/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; array body []  |  {"error":"request body must be a JSON object"}
+# PROBE 400  PUT /api/employees/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/employees/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; every body field an array (35 fields)  |  {"error":"first_name must be a string"}
+# PROBE 400  PUT /api/employees/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; every body field a number (35 fields)  |  {"error":"first_name must be a string"}
+# PROBE 403  PUT /api/employees  |  id segment absent; empty object body {}  |  
+# PROBE 400  PUT /api/employees  |  id segment absent; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  PUT /api/employees  |  id segment absent; array body []  |  
+# PROBE 400  PUT /api/employees  |  id segment absent; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  PUT /api/employees  |  id segment absent; every body field an array (35 fields)  |  
+# PROBE 403  PUT /api/employees  |  id segment absent; every body field a number (35 fields)  |  
+# PROBE 200  GET /api/employees/no-such-id-0000/onboarding  |  path id = "no-such-id-0000"; no query parameters  |  []
+# PROBE 200  GET /api/employees/no-such-id-0000/onboarding  |  path id = "no-such-id-0000"; nonsense query parameters  |  []
+# PROBE 200  GET /api/employees/1/onboarding  |  path id = "1"; no query parameters  |  []
+# PROBE 200  GET /api/employees/1/onboarding  |  path id = "1"; nonsense query parameters  |  []
+# PROBE 200  GET /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/onboarding  |  path id = a real row; no query parameters  |  [{"id":"498f0284-86c0-49c4-a279-ac647beab67c","employee_id":"e060df51-2e9e-440d-829e-e364db7044ae","title":"MoHRE Contract Signing","description":"Ensure the em
+# PROBE 200  GET /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/onboarding  |  path id = a real row; nonsense query parameters  |  [{"id":"498f0284-86c0-49c4-a279-ac647beab67c","employee_id":"e060df51-2e9e-440d-829e-e364db7044ae","title":"MoHRE Contract Signing","description":"Ensure the em
+# PROBE 403  GET /api/employees/onboarding  |  id segment absent; no query parameters  |  
+# PROBE 403  GET /api/employees/onboarding  |  id segment absent; nonsense query parameters  |  
+# PROBE 400  PUT /api/onboarding-tasks/no-such-id-0000  |  path id = "no-such-id-0000"; empty object body {}  |  {"error":"status is required"}
+# PROBE 400  PUT /api/onboarding-tasks/no-such-id-0000  |  path id = "no-such-id-0000"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/onboarding-tasks/no-such-id-0000  |  path id = "no-such-id-0000"; array body []  |  {"error":"request body must be a JSON object"}
+# PROBE 400  PUT /api/onboarding-tasks/no-such-id-0000  |  path id = "no-such-id-0000"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/onboarding-tasks/no-such-id-0000  |  path id = "no-such-id-0000"; every body field an array (35 fields)  |  {"error":"status must be a string"}
+# PROBE 400  PUT /api/onboarding-tasks/no-such-id-0000  |  path id = "no-such-id-0000"; every body field a number (35 fields)  |  {"error":"status must be a string"}
+# PROBE 400  PUT /api/onboarding-tasks/1  |  path id = "1"; empty object body {}  |  {"error":"status is required"}
+# PROBE 400  PUT /api/onboarding-tasks/1  |  path id = "1"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/onboarding-tasks/1  |  path id = "1"; array body []  |  {"error":"request body must be a JSON object"}
+# PROBE 400  PUT /api/onboarding-tasks/1  |  path id = "1"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/onboarding-tasks/1  |  path id = "1"; every body field an array (35 fields)  |  {"error":"status must be a string"}
+# PROBE 400  PUT /api/onboarding-tasks/1  |  path id = "1"; every body field a number (35 fields)  |  {"error":"status must be a string"}
+# PROBE 400  PUT /api/onboarding-tasks/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; empty object body {}  |  {"error":"status is required"}
+# PROBE 400  PUT /api/onboarding-tasks/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/onboarding-tasks/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; array body []  |  {"error":"request body must be a JSON object"}
+# PROBE 400  PUT /api/onboarding-tasks/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/onboarding-tasks/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; every body field an array (35 fields)  |  {"error":"status must be a string"}
+# PROBE 400  PUT /api/onboarding-tasks/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; every body field a number (35 fields)  |  {"error":"status must be a string"}
+# PROBE 403  PUT /api/onboarding-tasks  |  id segment absent; empty object body {}  |  
+# PROBE 400  PUT /api/onboarding-tasks  |  id segment absent; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  PUT /api/onboarding-tasks  |  id segment absent; array body []  |  
+# PROBE 400  PUT /api/onboarding-tasks  |  id segment absent; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  PUT /api/onboarding-tasks  |  id segment absent; every body field an array (35 fields)  |  
+# PROBE 403  PUT /api/onboarding-tasks  |  id segment absent; every body field a number (35 fields)  |  
+# PROBE 200  GET /api/employees/no-such-id-0000/offboarding  |  path id = "no-such-id-0000"; no query parameters  |  []
+# PROBE 200  GET /api/employees/no-such-id-0000/offboarding  |  path id = "no-such-id-0000"; nonsense query parameters  |  []
+# PROBE 200  GET /api/employees/1/offboarding  |  path id = "1"; no query parameters  |  []
+# PROBE 200  GET /api/employees/1/offboarding  |  path id = "1"; nonsense query parameters  |  []
+# PROBE 200  GET /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/offboarding  |  path id = a real row; no query parameters  |  []
+# PROBE 200  GET /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/offboarding  |  path id = a real row; nonsense query parameters  |  []
+# PROBE 403  GET /api/employees/offboarding  |  id segment absent; no query parameters  |  
+# PROBE 403  GET /api/employees/offboarding  |  id segment absent; nonsense query parameters  |  
+# PROBE 400  PUT /api/offboarding-tasks/no-such-id-0000  |  path id = "no-such-id-0000"; empty object body {}  |  {"error":"status is required"}
+# PROBE 400  PUT /api/offboarding-tasks/no-such-id-0000  |  path id = "no-such-id-0000"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/offboarding-tasks/no-such-id-0000  |  path id = "no-such-id-0000"; array body []  |  {"error":"request body must be a JSON object"}
+# PROBE 400  PUT /api/offboarding-tasks/no-such-id-0000  |  path id = "no-such-id-0000"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/offboarding-tasks/no-such-id-0000  |  path id = "no-such-id-0000"; every body field an array (35 fields)  |  {"error":"status must be a string"}
+# PROBE 400  PUT /api/offboarding-tasks/no-such-id-0000  |  path id = "no-such-id-0000"; every body field a number (35 fields)  |  {"error":"status must be a string"}
+# PROBE 400  PUT /api/offboarding-tasks/1  |  path id = "1"; empty object body {}  |  {"error":"status is required"}
+# PROBE 400  PUT /api/offboarding-tasks/1  |  path id = "1"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/offboarding-tasks/1  |  path id = "1"; array body []  |  {"error":"request body must be a JSON object"}
+# PROBE 400  PUT /api/offboarding-tasks/1  |  path id = "1"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/offboarding-tasks/1  |  path id = "1"; every body field an array (35 fields)  |  {"error":"status must be a string"}
+# PROBE 400  PUT /api/offboarding-tasks/1  |  path id = "1"; every body field a number (35 fields)  |  {"error":"status must be a string"}
+# PROBE 400  PUT /api/offboarding-tasks/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; empty object body {}  |  {"error":"status is required"}
+# PROBE 400  PUT /api/offboarding-tasks/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/offboarding-tasks/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; array body []  |  {"error":"request body must be a JSON object"}
+# PROBE 400  PUT /api/offboarding-tasks/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  PUT /api/offboarding-tasks/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; every body field an array (35 fields)  |  {"error":"status must be a string"}
+# PROBE 400  PUT /api/offboarding-tasks/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; every body field a number (35 fields)  |  {"error":"status must be a string"}
+# PROBE 403  PUT /api/offboarding-tasks  |  id segment absent; empty object body {}  |  
+# PROBE 400  PUT /api/offboarding-tasks  |  id segment absent; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  PUT /api/offboarding-tasks  |  id segment absent; array body []  |  
+# PROBE 400  PUT /api/offboarding-tasks  |  id segment absent; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  PUT /api/offboarding-tasks  |  id segment absent; every body field an array (35 fields)  |  
+# PROBE 403  PUT /api/offboarding-tasks  |  id segment absent; every body field a number (35 fields)  |  
+# PROBE 400  POST /api/compliance/calculate-eosb  |  no path parameters; empty object body {}  |  {"error":"start_date is required"}
+# PROBE 400  POST /api/compliance/calculate-eosb  |  no path parameters; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/compliance/calculate-eosb  |  no path parameters; array body []  |  {"error":"request body must be a JSON object"}
+# PROBE 400  POST /api/compliance/calculate-eosb  |  no path parameters; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/compliance/calculate-eosb  |  no path parameters; every body field an array (35 fields)  |  {"error":"start_date must be a string"}
+# PROBE 400  POST /api/compliance/calculate-eosb  |  no path parameters; every body field a number (35 fields)  |  {"error":"start_date must be a string"}
+# PROBE 500  GET /api/compliance/notice  |  no path parameters; no query parameters  |  {"error":"Internal Server Error"}
+# PROBE 500  GET /api/compliance/notice  |  no path parameters; nonsense query parameters  |  {"error":"Internal Server Error"}
+# PROBE 404  GET /api/compliance/templates/no-such-id-0000/no-such-id-0000  |  path id = "no-such-id-0000"; no query parameters  |  {"error":"Employee not found"}
+# PROBE 404  GET /api/compliance/templates/no-such-id-0000/no-such-id-0000  |  path id = "no-such-id-0000"; nonsense query parameters  |  {"error":"Employee not found"}
+# PROBE 404  GET /api/compliance/templates/1/1  |  path id = "1"; no query parameters  |  {"error":"Employee not found"}
+# PROBE 404  GET /api/compliance/templates/1/1  |  path id = "1"; nonsense query parameters  |  {"error":"Employee not found"}
+# PROBE 404  GET /api/compliance/templates/e060df51-2e9e-440d-829e-e364db7044ae/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; no query parameters  |  {"error":"Template not found"}
+# PROBE 404  GET /api/compliance/templates/e060df51-2e9e-440d-829e-e364db7044ae/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; nonsense query parameters  |  {"error":"Template not found"}
+# PROBE 403  GET /api/compliance/templates/:employeeId  |  id segment absent; no query parameters  |  
+# PROBE 403  GET /api/compliance/templates/:employeeId  |  id segment absent; nonsense query parameters  |  
+# PROBE 200  GET /api/analytics/dashboard  |  no path parameters; no query parameters  |  {"activeHeadcount":1,"monthlyPayroll":1250,"eosbLiability":12858,"attritionRate":0,"avgCostPerHireAE":0,"avgCostPerHireSA":0,"avgTtvDays":0,"ttvByDepartment":[]
+# PROBE 200  GET /api/analytics/dashboard  |  no path parameters; nonsense query parameters  |  {"activeHeadcount":1,"monthlyPayroll":1250,"eosbLiability":12858,"attritionRate":0,"avgCostPerHireAE":0,"avgCostPerHireSA":0,"avgTtvDays":0,"ttvByDepartment":[]
+# PROBE 400  POST /api/exit-interviews  |  no path parameters; empty object body {}  |  {"error":"employee_id is required"}
+# PROBE 400  POST /api/exit-interviews  |  no path parameters; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/exit-interviews  |  no path parameters; array body []  |  {"error":"request body must be a JSON object"}
+# PROBE 400  POST /api/exit-interviews  |  no path parameters; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/exit-interviews  |  no path parameters; every body field an array (35 fields)  |  {"error":"employee_id must be a string"}
+# PROBE 400  POST /api/exit-interviews  |  no path parameters; every body field a number (35 fields)  |  {"error":"employee_id must be a string"}
+# PROBE 400  POST /api/preboarding/cases  |  no path parameters; empty object body {}  |  {"error":"offer_reference is required: it identifies the accepted offer, and it is what keeps one offer to one case"}
+# PROBE 400  POST /api/preboarding/cases  |  no path parameters; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/preboarding/cases  |  no path parameters; array body []  |  {"error":"offer_reference is required: it identifies the accepted offer, and it is what keeps one offer to one case"}
+# PROBE 400  POST /api/preboarding/cases  |  no path parameters; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/preboarding/cases  |  no path parameters; every body field an array (35 fields)  |  {"error":"offer_reference is required: it identifies the accepted offer, and it is what keeps one offer to one case"}
+# PROBE 400  POST /api/preboarding/cases  |  no path parameters; every body field a number (35 fields)  |  {"error":"offer_reference is required: it identifies the accepted offer, and it is what keeps one offer to one case"}
+# PROBE 200  GET /api/preboarding/cases  |  no path parameters; no query parameters  |  {"cases":[],"totals":{"cases":0,"open":0,"closed":0}}
+# PROBE 400  GET /api/preboarding/cases  |  no path parameters; nonsense query parameters  |  {"error":"status must be one of open, closed"}
+# PROBE 404  GET /api/preboarding/cases/no-such-id-0000  |  path id = "no-such-id-0000"; no query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/no-such-id-0000  |  path id = "no-such-id-0000"; nonsense query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/1  |  path id = "1"; no query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/1  |  path id = "1"; nonsense query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; no query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae  |  path id = a real row; nonsense query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 200  GET /api/preboarding/cases  |  id segment absent; no query parameters  |  {"cases":[],"totals":{"cases":0,"open":0,"closed":0}}
+# PROBE 400  GET /api/preboarding/cases  |  id segment absent; nonsense query parameters  |  {"error":"status must be one of open, closed"}
+# PROBE 200  GET /api/preboarding/checklist/overview  |  no path parameters; no query parameters  |  {"jurisdiction":null,"cases":[],"totals":{"cases":0,"items":0,"items_outstanding":0,"items_received":0,"items_verified":0,"cases_notice_not_shown":0,"cases_read
+# PROBE 200  GET /api/preboarding/checklist/overview  |  no path parameters; nonsense query parameters  |  {"jurisdiction":"%%","cases":[],"totals":{"cases":0,"items":0,"items_outstanding":0,"items_received":0,"items_verified":0,"cases_notice_not_shown":0,"cases_read
+# PROBE 404  GET /api/preboarding/cases/no-such-id-0000/checklist  |  path id = "no-such-id-0000"; no query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/no-such-id-0000/checklist  |  path id = "no-such-id-0000"; nonsense query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/1/checklist  |  path id = "1"; no query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/1/checklist  |  path id = "1"; nonsense query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/checklist  |  path id = a real row; no query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/checklist  |  path id = a real row; nonsense query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/checklist  |  id segment absent; no query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/checklist  |  id segment absent; nonsense query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/no-such-id-0000/workspace  |  path id = "no-such-id-0000"; no query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/no-such-id-0000/workspace  |  path id = "no-such-id-0000"; nonsense query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/1/workspace  |  path id = "1"; no query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/1/workspace  |  path id = "1"; nonsense query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/workspace  |  path id = a real row; no query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/workspace  |  path id = a real row; nonsense query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/workspace  |  id segment absent; no query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/workspace  |  id segment absent; nonsense query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/items/no-such-id-0000/status  |  path id = "no-such-id-0000"; empty object body {}  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/no-such-id-0000/items/no-such-id-0000/status  |  path id = "no-such-id-0000"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/items/no-such-id-0000/status  |  path id = "no-such-id-0000"; array body []  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/no-such-id-0000/items/no-such-id-0000/status  |  path id = "no-such-id-0000"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/items/no-such-id-0000/status  |  path id = "no-such-id-0000"; every body field an array (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/items/no-such-id-0000/status  |  path id = "no-such-id-0000"; every body field a number (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/1/items/1/status  |  path id = "1"; empty object body {}  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/1/items/1/status  |  path id = "1"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/1/items/1/status  |  path id = "1"; array body []  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/1/items/1/status  |  path id = "1"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/1/items/1/status  |  path id = "1"; every body field an array (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/1/items/1/status  |  path id = "1"; every body field a number (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/items/e060df51-2e9e-440d-829e-e364db7044ae/status  |  path id = a real row; empty object body {}  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/items/e060df51-2e9e-440d-829e-e364db7044ae/status  |  path id = a real row; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/items/e060df51-2e9e-440d-829e-e364db7044ae/status  |  path id = a real row; array body []  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/items/e060df51-2e9e-440d-829e-e364db7044ae/status  |  path id = a real row; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/items/e060df51-2e9e-440d-829e-e364db7044ae/status  |  path id = a real row; every body field an array (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/items/e060df51-2e9e-440d-829e-e364db7044ae/status  |  path id = a real row; every body field a number (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 403  POST /api/preboarding/cases/items/:itemKey/status  |  id segment absent; empty object body {}  |  
+# PROBE 400  POST /api/preboarding/cases/items/:itemKey/status  |  id segment absent; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  POST /api/preboarding/cases/items/:itemKey/status  |  id segment absent; array body []  |  
+# PROBE 400  POST /api/preboarding/cases/items/:itemKey/status  |  id segment absent; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  POST /api/preboarding/cases/items/:itemKey/status  |  id segment absent; every body field an array (35 fields)  |  
+# PROBE 403  POST /api/preboarding/cases/items/:itemKey/status  |  id segment absent; every body field a number (35 fields)  |  
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/reminders  |  path id = "no-such-id-0000"; empty object body {}  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/no-such-id-0000/reminders  |  path id = "no-such-id-0000"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/reminders  |  path id = "no-such-id-0000"; array body []  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/no-such-id-0000/reminders  |  path id = "no-such-id-0000"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/reminders  |  path id = "no-such-id-0000"; every body field an array (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/reminders  |  path id = "no-such-id-0000"; every body field a number (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/1/reminders  |  path id = "1"; empty object body {}  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/1/reminders  |  path id = "1"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/1/reminders  |  path id = "1"; array body []  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/1/reminders  |  path id = "1"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/1/reminders  |  path id = "1"; every body field an array (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/1/reminders  |  path id = "1"; every body field a number (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/reminders  |  path id = a real row; empty object body {}  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/reminders  |  path id = a real row; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/reminders  |  path id = a real row; array body []  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/reminders  |  path id = a real row; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/reminders  |  path id = a real row; every body field an array (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/reminders  |  path id = a real row; every body field a number (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 403  POST /api/preboarding/cases/reminders  |  id segment absent; empty object body {}  |  
+# PROBE 400  POST /api/preboarding/cases/reminders  |  id segment absent; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  POST /api/preboarding/cases/reminders  |  id segment absent; array body []  |  
+# PROBE 400  POST /api/preboarding/cases/reminders  |  id segment absent; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  POST /api/preboarding/cases/reminders  |  id segment absent; every body field an array (35 fields)  |  
+# PROBE 403  POST /api/preboarding/cases/reminders  |  id segment absent; every body field a number (35 fields)  |  
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/notice-acknowledgements  |  path id = "no-such-id-0000"; empty object body {}  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/no-such-id-0000/notice-acknowledgements  |  path id = "no-such-id-0000"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/notice-acknowledgements  |  path id = "no-such-id-0000"; array body []  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/no-such-id-0000/notice-acknowledgements  |  path id = "no-such-id-0000"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/notice-acknowledgements  |  path id = "no-such-id-0000"; every body field an array (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/notice-acknowledgements  |  path id = "no-such-id-0000"; every body field a number (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/1/notice-acknowledgements  |  path id = "1"; empty object body {}  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/1/notice-acknowledgements  |  path id = "1"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/1/notice-acknowledgements  |  path id = "1"; array body []  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/1/notice-acknowledgements  |  path id = "1"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/1/notice-acknowledgements  |  path id = "1"; every body field an array (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/1/notice-acknowledgements  |  path id = "1"; every body field a number (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/notice-acknowledgements  |  path id = a real row; empty object body {}  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/notice-acknowledgements  |  path id = a real row; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/notice-acknowledgements  |  path id = a real row; array body []  |  {"error":"Pre-boarding case not found"}
+# PROBE 400  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/notice-acknowledgements  |  path id = a real row; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/notice-acknowledgements  |  path id = a real row; every body field an array (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/notice-acknowledgements  |  path id = a real row; every body field a number (35 fields)  |  {"error":"Pre-boarding case not found"}
+# PROBE 403  POST /api/preboarding/cases/notice-acknowledgements  |  id segment absent; empty object body {}  |  
+# PROBE 400  POST /api/preboarding/cases/notice-acknowledgements  |  id segment absent; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  POST /api/preboarding/cases/notice-acknowledgements  |  id segment absent; array body []  |  
+# PROBE 400  POST /api/preboarding/cases/notice-acknowledgements  |  id segment absent; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  POST /api/preboarding/cases/notice-acknowledgements  |  id segment absent; every body field an array (35 fields)  |  
+# PROBE 403  POST /api/preboarding/cases/notice-acknowledgements  |  id segment absent; every body field a number (35 fields)  |  
+# PROBE 404  GET /api/preboarding/cases/no-such-id-0000/package  |  path id = "no-such-id-0000"; no query parameters  |  {"error":"No pre-boarding case with id no-such-id-0000"}
+# PROBE 404  GET /api/preboarding/cases/no-such-id-0000/package  |  path id = "no-such-id-0000"; nonsense query parameters  |  {"error":"No pre-boarding case with id no-such-id-0000"}
+# PROBE 404  GET /api/preboarding/cases/1/package  |  path id = "1"; no query parameters  |  {"error":"No pre-boarding case with id 1"}
+# PROBE 404  GET /api/preboarding/cases/1/package  |  path id = "1"; nonsense query parameters  |  {"error":"No pre-boarding case with id 1"}
+# PROBE 404  GET /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/package  |  path id = a real row; no query parameters  |  {"error":"No pre-boarding case with id e060df51-2e9e-440d-829e-e364db7044ae"}
+# PROBE 404  GET /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/package  |  path id = a real row; nonsense query parameters  |  {"error":"No pre-boarding case with id e060df51-2e9e-440d-829e-e364db7044ae"}
+# PROBE 404  GET /api/preboarding/cases/package  |  id segment absent; no query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  GET /api/preboarding/cases/package  |  id segment absent; nonsense query parameters  |  {"error":"Pre-boarding case not found"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/package/no-such-id-0000/acknowledgement  |  path id = "no-such-id-0000"; empty object body {}  |  {"error":"No pre-boarding case with id no-such-id-0000"}
+# PROBE 400  POST /api/preboarding/cases/no-such-id-0000/package/no-such-id-0000/acknowledgement  |  path id = "no-such-id-0000"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/package/no-such-id-0000/acknowledgement  |  path id = "no-such-id-0000"; array body []  |  {"error":"No pre-boarding case with id no-such-id-0000"}
+# PROBE 400  POST /api/preboarding/cases/no-such-id-0000/package/no-such-id-0000/acknowledgement  |  path id = "no-such-id-0000"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/package/no-such-id-0000/acknowledgement  |  path id = "no-such-id-0000"; every body field an array (35 fields)  |  {"error":"No pre-boarding case with id no-such-id-0000"}
+# PROBE 404  POST /api/preboarding/cases/no-such-id-0000/package/no-such-id-0000/acknowledgement  |  path id = "no-such-id-0000"; every body field a number (35 fields)  |  {"error":"No pre-boarding case with id no-such-id-0000"}
+# PROBE 404  POST /api/preboarding/cases/1/package/1/acknowledgement  |  path id = "1"; empty object body {}  |  {"error":"No pre-boarding case with id 1"}
+# PROBE 400  POST /api/preboarding/cases/1/package/1/acknowledgement  |  path id = "1"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/1/package/1/acknowledgement  |  path id = "1"; array body []  |  {"error":"No pre-boarding case with id 1"}
+# PROBE 400  POST /api/preboarding/cases/1/package/1/acknowledgement  |  path id = "1"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/1/package/1/acknowledgement  |  path id = "1"; every body field an array (35 fields)  |  {"error":"No pre-boarding case with id 1"}
+# PROBE 404  POST /api/preboarding/cases/1/package/1/acknowledgement  |  path id = "1"; every body field a number (35 fields)  |  {"error":"No pre-boarding case with id 1"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/package/e060df51-2e9e-440d-829e-e364db7044ae/acknowledgement  |  path id = a real row; empty object body {}  |  {"error":"No pre-boarding case with id e060df51-2e9e-440d-829e-e364db7044ae"}
+# PROBE 400  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/package/e060df51-2e9e-440d-829e-e364db7044ae/acknowledgement  |  path id = a real row; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/package/e060df51-2e9e-440d-829e-e364db7044ae/acknowledgement  |  path id = a real row; array body []  |  {"error":"No pre-boarding case with id e060df51-2e9e-440d-829e-e364db7044ae"}
+# PROBE 400  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/package/e060df51-2e9e-440d-829e-e364db7044ae/acknowledgement  |  path id = a real row; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/package/e060df51-2e9e-440d-829e-e364db7044ae/acknowledgement  |  path id = a real row; every body field an array (35 fields)  |  {"error":"No pre-boarding case with id e060df51-2e9e-440d-829e-e364db7044ae"}
+# PROBE 404  POST /api/preboarding/cases/e060df51-2e9e-440d-829e-e364db7044ae/package/e060df51-2e9e-440d-829e-e364db7044ae/acknowledgement  |  path id = a real row; every body field a number (35 fields)  |  {"error":"No pre-boarding case with id e060df51-2e9e-440d-829e-e364db7044ae"}
+# PROBE 403  POST /api/preboarding/cases/package/:itemKey/acknowledgement  |  id segment absent; empty object body {}  |  
+# PROBE 400  POST /api/preboarding/cases/package/:itemKey/acknowledgement  |  id segment absent; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  POST /api/preboarding/cases/package/:itemKey/acknowledgement  |  id segment absent; array body []  |  
+# PROBE 400  POST /api/preboarding/cases/package/:itemKey/acknowledgement  |  id segment absent; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  POST /api/preboarding/cases/package/:itemKey/acknowledgement  |  id segment absent; every body field an array (35 fields)  |  
+# PROBE 403  POST /api/preboarding/cases/package/:itemKey/acknowledgement  |  id segment absent; every body field a number (35 fields)  |  
+# PROBE 200  GET /api/preboarding/flag-watch  |  no path parameters; no query parameters  |  {"process_started_at":"2026-11-02T21:31:21.262Z","last_scan_at":"2026-11-02T21:31:21.262Z","interval_ms":300000,"last_error":null,"delivery":"none","catch_up_ru
+# PROBE 200  GET /api/preboarding/flag-watch  |  no path parameters; nonsense query parameters  |  {"process_started_at":"2026-11-02T21:31:21.262Z","last_scan_at":"2026-11-02T21:31:21.262Z","interval_ms":300000,"last_error":null,"delivery":"none","catch_up_ru
+# PROBE 404  GET /api/employees/no-such-id-0000/replacement-cost  |  path id = "no-such-id-0000"; no query parameters  |  {"error":"employee not found"}
+# PROBE 404  GET /api/employees/no-such-id-0000/replacement-cost  |  path id = "no-such-id-0000"; nonsense query parameters  |  {"error":"employee not found"}
+# PROBE 404  GET /api/employees/1/replacement-cost  |  path id = "1"; no query parameters  |  {"error":"employee not found"}
+# PROBE 404  GET /api/employees/1/replacement-cost  |  path id = "1"; nonsense query parameters  |  {"error":"employee not found"}
+# PROBE 200  GET /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/replacement-cost  |  path id = a real row; no query parameters  |  {"model":"replacement-cost/1","employee_id":"e060df51-2e9e-440d-829e-e364db7044ae","employee_name":"Probe Row","role":"Analyst","department":"Operations","curre
+# PROBE 200  GET /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/replacement-cost  |  path id = a real row; nonsense query parameters  |  {"model":"replacement-cost/1","employee_id":"e060df51-2e9e-440d-829e-e364db7044ae","employee_name":"Probe Row","role":"Analyst","department":"Operations","curre
+# PROBE 403  GET /api/employees/replacement-cost  |  id segment absent; no query parameters  |  
+# PROBE 403  GET /api/employees/replacement-cost  |  id segment absent; nonsense query parameters  |  
+# PROBE 200  GET /api/probation/timelines  |  no path parameters; no query parameters  |  {"timelines":[],"completions_recorded":true,"note":"A milestone reads `completed` only from a submitted evaluation (P3-2): the record names the manager who subm
+# PROBE 400  GET /api/probation/timelines  |  no path parameters; nonsense query parameters  |  {"error":"as_of must be a date, YYYY-MM-DD"}
+# PROBE 404  POST /api/employees/no-such-id-0000/probation-evaluations  |  path id = "no-such-id-0000"; empty object body {}  |  {"error":"Employee not found"}
+# PROBE 400  POST /api/employees/no-such-id-0000/probation-evaluations  |  path id = "no-such-id-0000"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/employees/no-such-id-0000/probation-evaluations  |  path id = "no-such-id-0000"; array body []  |  {"error":"Employee not found"}
+# PROBE 400  POST /api/employees/no-such-id-0000/probation-evaluations  |  path id = "no-such-id-0000"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/employees/no-such-id-0000/probation-evaluations  |  path id = "no-such-id-0000"; every body field an array (35 fields)  |  {"error":"Employee not found"}
+# PROBE 404  POST /api/employees/no-such-id-0000/probation-evaluations  |  path id = "no-such-id-0000"; every body field a number (35 fields)  |  {"error":"Employee not found"}
+# PROBE 404  POST /api/employees/1/probation-evaluations  |  path id = "1"; empty object body {}  |  {"error":"Employee not found"}
+# PROBE 400  POST /api/employees/1/probation-evaluations  |  path id = "1"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/employees/1/probation-evaluations  |  path id = "1"; array body []  |  {"error":"Employee not found"}
+# PROBE 400  POST /api/employees/1/probation-evaluations  |  path id = "1"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/employees/1/probation-evaluations  |  path id = "1"; every body field an array (35 fields)  |  {"error":"Employee not found"}
+# PROBE 404  POST /api/employees/1/probation-evaluations  |  path id = "1"; every body field a number (35 fields)  |  {"error":"Employee not found"}
+# PROBE 400  POST /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/probation-evaluations  |  path id = a real row; empty object body {}  |  {"error":"a submitted evaluation must carry the manager’s own words: content cannot be empty"}
+# PROBE 400  POST /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/probation-evaluations  |  path id = a real row; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/probation-evaluations  |  path id = a real row; array body []  |  {"error":"a submitted evaluation must carry the manager’s own words: content cannot be empty"}
+# PROBE 400  POST /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/probation-evaluations  |  path id = a real row; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/probation-evaluations  |  path id = a real row; every body field an array (35 fields)  |  {"error":"a submitted evaluation must carry the manager’s own words: content cannot be empty"}
+# PROBE 400  POST /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/probation-evaluations  |  path id = a real row; every body field a number (35 fields)  |  {"error":"a submitted evaluation must carry the manager’s own words: content cannot be empty"}
+# PROBE 403  POST /api/employees/probation-evaluations  |  id segment absent; empty object body {}  |  
+# PROBE 400  POST /api/employees/probation-evaluations  |  id segment absent; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  POST /api/employees/probation-evaluations  |  id segment absent; array body []  |  
+# PROBE 400  POST /api/employees/probation-evaluations  |  id segment absent; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  POST /api/employees/probation-evaluations  |  id segment absent; every body field an array (35 fields)  |  
+# PROBE 403  POST /api/employees/probation-evaluations  |  id segment absent; every body field a number (35 fields)  |  
+# PROBE 200  GET /api/probation/escalations  |  no path parameters; no query parameters  |  {"escalations":[],"count":0,"watcher":{"process_started_at":"2026-11-02T21:31:21.263Z","last_scan_at":"2026-11-02T21:31:21.263Z","interval_ms":300000,"escalatio
+# PROBE 200  GET /api/probation/escalations  |  no path parameters; nonsense query parameters  |  {"escalations":[],"count":0,"watcher":{"process_started_at":"2026-11-02T21:31:21.263Z","last_scan_at":"2026-11-02T21:31:21.263Z","interval_ms":300000,"escalatio
+# PROBE 404  POST /api/employees/no-such-id-0000/probation-evaluations/no-such-id-0000/corrections  |  path id = "no-such-id-0000"; empty object body {}  |  {"error":"Employee not found"}
+# PROBE 400  POST /api/employees/no-such-id-0000/probation-evaluations/no-such-id-0000/corrections  |  path id = "no-such-id-0000"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/employees/no-such-id-0000/probation-evaluations/no-such-id-0000/corrections  |  path id = "no-such-id-0000"; array body []  |  {"error":"Employee not found"}
+# PROBE 400  POST /api/employees/no-such-id-0000/probation-evaluations/no-such-id-0000/corrections  |  path id = "no-such-id-0000"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/employees/no-such-id-0000/probation-evaluations/no-such-id-0000/corrections  |  path id = "no-such-id-0000"; every body field an array (35 fields)  |  {"error":"Employee not found"}
+# PROBE 404  POST /api/employees/no-such-id-0000/probation-evaluations/no-such-id-0000/corrections  |  path id = "no-such-id-0000"; every body field a number (35 fields)  |  {"error":"Employee not found"}
+# PROBE 404  POST /api/employees/1/probation-evaluations/1/corrections  |  path id = "1"; empty object body {}  |  {"error":"Employee not found"}
+# PROBE 400  POST /api/employees/1/probation-evaluations/1/corrections  |  path id = "1"; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/employees/1/probation-evaluations/1/corrections  |  path id = "1"; array body []  |  {"error":"Employee not found"}
+# PROBE 400  POST /api/employees/1/probation-evaluations/1/corrections  |  path id = "1"; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 404  POST /api/employees/1/probation-evaluations/1/corrections  |  path id = "1"; every body field an array (35 fields)  |  {"error":"Employee not found"}
+# PROBE 404  POST /api/employees/1/probation-evaluations/1/corrections  |  path id = "1"; every body field a number (35 fields)  |  {"error":"Employee not found"}
+# PROBE 400  POST /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/probation-evaluations/e060df51-2e9e-440d-829e-e364db7044ae/corrections  |  path id = a real row; empty object body {}  |  {"error":"a correction must carry the manager’s corrected words: content cannot be empty"}
+# PROBE 400  POST /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/probation-evaluations/e060df51-2e9e-440d-829e-e364db7044ae/corrections  |  path id = a real row; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/probation-evaluations/e060df51-2e9e-440d-829e-e364db7044ae/corrections  |  path id = a real row; array body []  |  {"error":"a correction must carry the manager’s corrected words: content cannot be empty"}
+# PROBE 400  POST /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/probation-evaluations/e060df51-2e9e-440d-829e-e364db7044ae/corrections  |  path id = a real row; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 400  POST /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/probation-evaluations/e060df51-2e9e-440d-829e-e364db7044ae/corrections  |  path id = a real row; every body field an array (35 fields)  |  {"error":"a correction must carry the manager’s corrected words: content cannot be empty"}
+# PROBE 400  POST /api/employees/e060df51-2e9e-440d-829e-e364db7044ae/probation-evaluations/e060df51-2e9e-440d-829e-e364db7044ae/corrections  |  path id = a real row; every body field a number (35 fields)  |  {"error":"a correction must carry the manager’s corrected words: content cannot be empty"}
+# PROBE 403  POST /api/employees/probation-evaluations/:evaluation_id/corrections  |  id segment absent; empty object body {}  |  
+# PROBE 400  POST /api/employees/probation-evaluations/:evaluation_id/corrections  |  id segment absent; JSON null body  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  POST /api/employees/probation-evaluations/:evaluation_id/corrections  |  id segment absent; array body []  |  
+# PROBE 400  POST /api/employees/probation-evaluations/:evaluation_id/corrections  |  id segment absent; malformed JSON  |  {"error":"request body could not be parsed as a JSON object"}
+# PROBE 403  POST /api/employees/probation-evaluations/:evaluation_id/corrections  |  id segment absent; every body field an array (35 fields)  |  
+# PROBE 403  POST /api/employees/probation-evaluations/:evaluation_id/corrections  |  id segment absent; every body field a number (35 fields)  |  
+# PROBED 334 requests across 32 enumerated routes; 0 route(s) unprobeable by any role
+# Subtest: a wrong credential is still 401, and a missing one is still 401
+ok 2 - a wrong credential is still 401, and a missing one is still 401
+  ---
+  duration_ms: 335.667195
+  type: 'test'
+  ...
+# Subtest: a policy refusal is still 403 with no body at all
+ok 3 - a policy refusal is still 403 with no body at all
+  ---
+  duration_ms: 1.965359
+  type: 'test'
+  ...
+# Subtest: a valid request is untouched
+ok 4 - a valid request is untouched
+  ---
+  duration_ms: 2.048804
+  type: 'test'
+  ...
+# Subtest: the instance that started this: an empty login body is refused 400 and names what is missing
+not ok 5 - the instance that started this: an empty login body is refused 400 and names what is missing
+  ---
+  duration_ms: 2.082085
+  type: 'test'
+  location: '/tmp/redproof/client-error-contract.test.js:371:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    POST /api/login with {} must be 400, got 500: {"error":"Internal Server Error"}
+    
+    500 !== 400
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 400
+  actual: 500
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/redproof/client-error-contract.test.js:373:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: malformed JSON is refused by the body parser, not by a route
+ok 6 - malformed JSON is refused by the body parser, not by a route
+  ---
+  duration_ms: 1.936425
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 4
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1806.074054

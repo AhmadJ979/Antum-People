@@ -19,6 +19,9 @@ const eosbForecastWindow = require('./eosb-forecast-window');
 const preboarding = require('./preboarding');
 const preboardingItems = require('./preboarding-items');
 const privacyNotice = require('./privacy-notice');
+// Caller-error validation: what a request got wrong, said in a sentence the caller can act on, and
+// answered 400 — see the module's own note. `400 = the caller's fault, 500 = ours`.
+const validation = require('./request-validation');
 // P3-1 and P3-2 — the probation timeline, and the manager's submitted evaluation.
 //
 // `probationTimeline` WAS NEVER BOUND IN THIS FILE until P3-2, and the route below used it: measured
@@ -257,8 +260,22 @@ const dummyHash = auth.hashPasswordSync(require('crypto').randomBytes(32).toStri
 // -------------------------------------------------------------
 
 app.post('/api/login', rateLimitLogin, async (req, res) => {
+  // A request that does not carry a username and a password is the CALLER's mistake, and it is
+  // refused as one — before any credential work, so the answer says what is missing instead of
+  // naming the server. Measured 2026-11-02: `{}` answered 500, because the destructuring produced
+  // `undefined`, `bcrypt.compare` threw, and this route's own catch reported that as ours.
+  // A WRONG PASSWORD is a different thing and stays 401, unchanged: the request was well-formed and
+  // the credential simply was not right, which is the failure branch further down.
+  const bodyShape = validation.bodyProblem(req.body, {});
+  if (bodyShape) return res.status(400).json({ error: bodyShape });
+  const { username, password } = req.body;
+  if (validation.isBlank(username) || validation.isBlank(password)) {
+    return res.status(400).json({ error: 'username and password are required' });
+  }
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ error: 'username and password must be strings' });
+  }
   try {
-    const { username, password } = req.body;
     
     const users = await db.query(`SELECT * FROM users WHERE username = ${db.escapeString(username)}`);
     const user = users[0];
@@ -492,9 +509,27 @@ app.get('/api/employees', async (req, res) => {
 // down in RETIRED (server/reachability-register.js), and server/reachability.test.js reddens if it
 // is answerable again.
 
+
+// The employee write paths read a long list of fields, and every one of them is a STRING or a NUMBER
+// by the time it reaches SQL, the EOSB engine or `auth.encrypt`. A wrong-typed field used to reach
+// those as-is: `national_id_value: []` made `auth.encrypt` throw and the route's catch answered 500
+// for a request that was merely malformed (measured 2026-11-02, on both write paths). Checked here,
+// once, so the two paths cannot drift.
+const EMPLOYEE_WRITE_SPEC = {
+  strings: [
+    'first_name', 'last_name', 'email', 'department', 'role', 'manager_id',
+    'start_date', 'end_date', 'fully_productive_date',
+    'visa_status', 'visa_expiry_date', 'national_id_type', 'national_id_value', 'national_id_iqama',
+    'data_residency_country', 'termination_type',
+  ],
+  numbers: ['salary', 'basic_salary', 'recruitment_cost', 'eosb_paid', 'unpaid_leave_days'],
+};
+
 app.post('/api/employees', async (req, res) => {
   try {
     const data = req.body;
+    const problem = validation.bodyProblem(data, EMPLOYEE_WRITE_SPEC);
+    if (problem) return res.status(400).json({ error: problem });
 
     // §5.2 rule 1: every write names the signed-in actor, and an unnamed one is REFUSED rather than
     // recorded (rule 3). This path used to write the literal 'system' into `performed_by` — a field
@@ -573,6 +608,8 @@ app.put('/api/employees/:id', async (req, res) => {
   try {
     const data = req.body;
     const empId = req.params.id;
+    const problem = validation.bodyProblem(data, EMPLOYEE_WRITE_SPEC);
+    if (problem) return res.status(400).json({ error: problem });
 
     // §5.2 rule 1/3, exactly as on the CREATE path above: the actor is signed in and named, or the
     // write does not happen. This path used to attribute every edit to the literal 'system'.
@@ -700,7 +737,11 @@ app.get('/api/employees/:id/onboarding', async (req, res) => {
 // stays refused for them by the policy cell). A task that resolves to nothing is refused rather than
 // answered "Task updated" — the route does not report a change it did not make.
 app.put('/api/onboarding-tasks/:id', async (req, res) => {
-  try {
+  try {    // A tick names the status it is recording. A body that is not a JSON object, or a `status` that is
+    // not a string, used to be written through as SQL `NULL`/empty and answered "Task updated" — a
+    // change the caller never asked for, reported as one. It is the caller's mistake and it is 400.
+    const problem = validation.bodyProblem(req.body, { required: ['status'], strings: ['status'] });
+    if (problem) return res.status(400).json({ error: problem });
     const { status } = req.body || {};
     const actor = actorOf(req);
     if (req.accessScope !== access.SCOPE.ALL) {
@@ -733,7 +774,11 @@ app.get('/api/employees/:id/offboarding', async (req, res) => {
 // sides agree: completing without a named actor is refused, and the name is the signed-in user's
 // (never 'system', never a placeholder).
 app.put('/api/offboarding-tasks/:id', async (req, res) => {
-  try {
+  try {    // A tick names the status it is recording. A body that is not a JSON object, or a `status` that is
+    // not a string, used to be written through as SQL `NULL`/empty and answered "Task updated" — a
+    // change the caller never asked for, reported as one. It is the caller's mistake and it is 400.
+    const problem = validation.bodyProblem(req.body, { required: ['status'], strings: ['status'] });
+    if (problem) return res.status(400).json({ error: problem });
     const { status } = req.body || {};
     const actor = actorOf(req);
     if (status === 'completed' && !actor) {
@@ -749,8 +794,26 @@ app.put('/api/offboarding-tasks/:id', async (req, res) => {
 });
 
 app.post('/api/compliance/calculate-eosb', (req, res) => {
+  // This route is a calculator a caller may hit with anything, so it states its own shapes rather
+  // than trusting them: a number where a date belongs, or a reason the engine does not know, is the
+  // CALLER's mistake. The engine itself REFUSES an unknown reason by throwing (server/eosb.js
+  // `recordedReason`), which is right for an internal caller and wrong for a request — that throw
+  // used to reach the catch-all and be reported as a 500 (measured 2026-11-02).
+  // `start_date` is REQUIRED and the others are not: without a start date the engine cannot compute
+  // anything, and it answers `amount: 0` — a zero that reads as a figure rather than as "not
+  // computed". A missing end date means "as of today", which is the engine's own contract.
+  const problem = validation.bodyProblem(req.body, {
+    required: ['start_date'],
+    strings: ['start_date', 'end_date', 'country', 'termination_type'],
+    numbers: ['basic_salary', 'total_salary', 'unpaid_leave_days'],
+  });
+  if (problem) return res.status(400).json({ error: problem });
   const { start_date, end_date, basic_salary, total_salary, country, termination_type, unpaid_leave_days } = req.body;
-  const amount = eosb.calculateEOSB(start_date, end_date, basic_salary, total_salary, country, termination_type, unpaid_leave_days);
+  const reason = eosb.storedReason(termination_type);
+  if (!reason.recognised) {
+    return res.status(400).json({ error: 'unknown termination reason', known_reasons: eosb.TERMINATION_REASONS });
+  }
+  const amount = eosb.calculateEOSB(start_date, end_date, basic_salary, total_salary, country, reason.reason, unpaid_leave_days);
   res.json({ amount });
 });
 
@@ -1091,6 +1154,8 @@ app.get('/api/analytics/dashboard', async (req, res) => {
 app.post('/api/exit-interviews', async (req, res) => {
   try {
     const data = req.body;
+    const problem = validation.bodyProblem(data, { required: ['employee_id'], strings: ['employee_id'] });
+    if (problem) return res.status(400).json({ error: problem });
     // The actor is signed in and named, or nothing is written — before any lookup, as on the other paths.
     const actor = actorOf(req);
     if (!actor) return res.status(400).json({ error: 'a named actor is required to record an exit interview' });
@@ -1696,6 +1761,17 @@ const GENERIC_ERROR_BY_STATUS = {
   429: 'Too many requests. Please try again later.'
 };
 app.use((err, req, res, next) => {
+  // A body the JSON parser could not read is the CALLER's mistake, and express already marks it as
+  // one (`status: 400`, `type: 'entity.parse.failed'`). VERIFIED, not assumed: malformed JSON
+  // answered 400 before this change as well — what changes is that it now SAYS SO. The generic
+  // "Bad Request" it used to carry named nothing, and a JSON `null` body (which the parser's strict
+  // mode refuses) took the same branch, so one sentence covers both honestly: the bytes did not
+  // arrive as a JSON object this API can read.
+  if (err && err.type === 'entity.parse.failed') {
+    console.error(`[error] ${req.method} ${req.originalUrl} -> 400 (body was not a readable JSON object)`);
+    if (res.headersSent) return next(err);
+    return res.status(400).json({ error: 'request body could not be parsed as a JSON object' });
+  }
   const upstream = err && Number.isInteger(err.status) ? err.status : null;
   const status = upstream >= 400 && upstream <= 499 ? upstream : 500;
   console.error(`[error] ${req.method} ${req.originalUrl} -> ${status}\n${(err && err.stack) || String(err)}`);
