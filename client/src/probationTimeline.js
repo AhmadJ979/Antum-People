@@ -73,6 +73,26 @@ export function probationSummary(timeline) {
   return `${milestones.length} milestones · ${days} · next: ${milestoneLabel(next.state)} ${formatDay(next.due_date)}`;
 }
 
+/**
+ * The panel's subtitle. It names the PROVENANCE of the milestones and never a milestone.
+ *
+ * The offsets are `round(k * window / 3)` for k = 1, 2, 3 (`server/probation-timeline.js`'s
+ * `milestoneOffsets`), so a 90-day window gives 30/60/90 and a 180-day one gives 60/120/180. This
+ * line said "30/60/90 derived from the start date" until 2026-11-02 — a fixed rule asserted over a
+ * derived variable, and therefore FALSE for every 180-day hire the panel was already rendering.
+ * Naming a different triple would be the same defect one window later: `resolveWindow` deliberately
+ * accepts any positive whole number of days, so no triple is true for every window.
+ *
+ * The panel does not need to restate the offsets — each hire's own row prints them
+ * (`probationSummary` above). What is left for this line to say is where they come from, and that is
+ * true for a window of any length. It takes the COUNT only, so it structurally cannot depend on a
+ * window and cannot go stale the way a triple does.
+ */
+export function probationSubtitle(count) {
+  const hires = Number.isFinite(Number(count)) ? Number(count) : 0;
+  return `${hires} hire${hires === 1 ? '' : 's'} on probation \u00b7 milestones derived per hire from its own start date and probation window`;
+}
+
 /** The window itself, for the panel's second line. */
 export function windowLine(timeline) {
   if (!timeline || !timeline.start_date || !timeline.end_date) return '';

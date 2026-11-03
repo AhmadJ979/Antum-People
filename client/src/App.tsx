@@ -4,8 +4,13 @@ import { callPanel, settlePanels, refusalNoticeFor } from './panelResults.js';
 // P3-1 -- the probation timeline's vocabulary (labels, chips, date format, summary). The DATES come
 // from the server; nothing in this file computes a milestone from a start date.
 import {
-  milestoneLabel, milestoneChipClass, formatDay, probationSummary, windowLine,
+  milestoneLabel, milestoneChipClass, formatDay, probationSummary, probationSubtitle, windowLine,
 } from './probationTimeline.js';
+// P3-3 -- the escalation record as a READING. A refusal and an empty list are different facts and
+// must not render alike; `probationEscalations.js` is where that distinction is made, and tested.
+import {
+  escalationReading, escalationRowLine, loadingReading,
+} from './probationEscalations.js';
 // The document preview renders the SERVED markdown as a document instead of printing its markers.
 // `markdown.js` parses it to data, `markdownView.js` maps that data to React elements - no
 // `dangerouslySetInnerHTML` anywhere on the path. `markdown.test.js` asserts the visible text of the
@@ -614,6 +619,11 @@ export default function App() {
   const [probationTimelines, setProbationTimelines] = useState<any[]>([]);
   const [probationNote, setProbationNote] = useState<string | null>(null);
 
+  // P3-3 -- the escalation records, held as ONE reading rather than as a list. A refusal, a
+  // failed read and an empty list must not render alike; `probationEscalations.js` decides which
+  // one this is, and its `rows` is null on every branch that is not a granted read.
+  const [escalation, setEscalation] = useState<any>(loadingReading());
+
   // Single source of truth for "who is mid-onboarding": derived from incomplete
   // onboarding tasks server-side, not from an employee status label, so the dashboard
   // card, the transitions list, and the checklist itself can never disagree.
@@ -792,14 +802,21 @@ export default function App() {
       // refusal rejected the pair and took the granted roster down with it: a screen whose data was
       // ALLOWED rendered empty under the notice. A granted panel keeps its data now; a refused one
       // contributes none and is named in the notice.
+      // P3-3: the escalation records settle on their own, like the three panels below. The call is
+      // held in a name so it can be read as a READING once the pair has settled: the route refuses
+      // anything but company-wide scope with an empty 403, and a refusal must not render as [] here.
+      const escalationCall = callPanel('escalations', `${API_BASE}/api/probation/escalations`,
+        authedFetch(`${API_BASE}/api/probation/escalations`));
       const settled = settlePanels(await Promise.all([
         callPanel('employees', `${API_BASE}/api/employees?jurisdiction=${jurisdiction}`,
           authedFetch(`${API_BASE}/api/employees?jurisdiction=${jurisdiction}`)),
         callPanel('analytics', `${API_BASE}/api/analytics/dashboard?jurisdiction=${jurisdiction}`,
           authedFetch(`${API_BASE}/api/analytics/dashboard?jurisdiction=${jurisdiction}`)),
         callPanel('probation', `${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`,
-          authedFetch(`${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`))
+          authedFetch(`${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`)),
+        escalationCall
       ]));
+      setEscalation(escalationReading(await escalationCall));
 
       // P3-1: settled on its own, like the two above -- a refusal of the probation panel cannot blank
       // the roster. The server's note travels to the surface with the data rather than being dropped
@@ -1726,7 +1743,7 @@ export default function App() {
                   <div>
                     <h3 className="font-bold text-slate-900">Probation timelines</h3>
                     <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight">
-                      {probationTimelines.length} hire{probationTimelines.length === 1 ? '' : 's'} on probation · 30/60/90 derived from the start date
+                      {probationSubtitle(probationTimelines.length)}
                     </p>
                   </div>
                   <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded uppercase border border-teal-200">P3-1</span>
@@ -1757,6 +1774,50 @@ export default function App() {
                   <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500">{probationNote}</div>
                 )}
               </div>
+              {/* P3-3 -- the escalation records. BEGIN: the block between this marker and END is
+                  read by client/src/probationEscalations.test.js, which asserts that the list is
+                  only ever rendered on a GRANTED reading and never on a refusal. */}
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-slate-900">Escalation records</h3>
+                    <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight">
+                      {escalation.kind === 'granted'
+                        ? `${escalation.rows.length} recorded \u00b7 the record of what fired, and to whom`
+                        : 'the record of what fired, and to whom'}
+                    </p>
+                  </div>
+                  <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded uppercase border border-teal-200">P3-3</span>
+                </div>
+                {escalation.kind === 'granted' ? (
+                  escalation.rows.length === 0 ? (
+                    <div className="p-4 text-xs text-slate-500">{escalation.sentence}</div>
+                  ) : (
+                    <ul className="divide-y divide-slate-100">
+                      {escalation.rows.map((row: any) => (
+                        <li key={row.id} className="p-4">
+                          <div className="flex items-baseline justify-between gap-4">
+                            <div className="text-sm font-bold text-slate-900">{row.employee_name}</div>
+                            <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-tighter">
+                              {row.resolved ? 'resolved' : 'open'}{row.late ? ' \u00b7 late' : ''}
+                            </div>
+                          </div>
+                          <div className="mt-1 text-[11px] text-slate-700">{escalationRowLine(row)}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  )
+                ) : (
+                  <div className="p-4 text-xs text-slate-500">{escalation.sentence}</div>
+                )}
+                {escalation.watcherLine && (
+                  <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500">{escalation.watcherLine}</div>
+                )}
+                {escalation.note && (
+                  <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500">{escalation.note}</div>
+                )}
+              </div>
+              {/* P3-3 escalation records -- END */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <table className="w-full text-left border-collapse">
                   <thead>
