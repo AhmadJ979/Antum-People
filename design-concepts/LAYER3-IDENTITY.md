@@ -203,7 +203,7 @@ No Arabic copy ships with this slice (decision 15(c) is open). The requirement i
 | `ml-` / `mr-` | **4** / **5** | → `ms-` / `me-` when the pass runs |
 | `text-left` / `text-right` | **6** / **3** | → `text-start` / `text-end` |
 | `text-start` / `text-end`, `border-s-`/`-e-`, `rounded-s-`/`-e-` | **0** | nothing logical is used yet |
-| `border-r-*` | **2** | both are **chart rule lines**, not chrome: a benchmark marker (`:1782`) and a target marker (`:1812`), each drawn with an inline `left:`. Neither is on these surfaces, and whether a chart mirrors is a real decision, not a bug — flagged here only so it is not mistaken for spacing. |
+| `border-r-*` | **2** | both are **chart rule lines**, not chrome: a benchmark marker (`:1681`) and a target marker (`:1711`), each drawn with an inline `left:`. Neither is on these surfaces, and whether a chart mirrors is a real decision, not a bug — flagged here only so it is not mistaken for spacing. |
 | `dir=` / `lang=` | **0** / **0** | no direction handling exists |
 
 **The two surfaces added here are the ones with the most physical markup in the product**, measured in place:

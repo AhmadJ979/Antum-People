@@ -1418,11 +1418,11 @@ declared and takes the "was" that pairs with it.
 
 **2. The §8 tab row's JSX bounds, measured.** `@rev f46b7a9` `client/src/App.tsx` on `f46b7a9` is **2,493 lines** and holds
 six tab blocks, opened at `:1323` (dashboard), `:1506` (employees), `:1607` (transitions), `:1635`
-(analytics) and `:1866` (pre-boarding). The pre-boarding block — `{activeTab === 'preboarding' && (` at
+(analytics) and `:1765` (pre-boarding). The pre-boarding block — `{activeTab === 'preboarding' && (` at
 `:1765` — closes at **`:2356`**, 592 lines, found by brace-matching from the opening line. Four independent
-anchors sit inside it: the `Pre-boarding Intelligence` heading at `:1872`; the intake form
-(`<form onSubmit={handleRecordOfferAcceptance}>`) at `:1917`, under its heading at `:1913`; the `HR roll-up —
-outstanding items` heading at `:1989`; and the case list's `{checklistOverview.cases.map(row => {` at
+anchors sit inside it: the `Pre-boarding Intelligence` heading at `:1771`; the intake form
+(`<form onSubmit={handleRecordOfferAcceptance}>`) at `:1793`, under its heading at `:1789`; the `HR roll-up —
+outstanding items` heading at `:1865`; and the case list's `{checklistOverview.cases.map(row => {` at
 `:1922`. The corrected range is in the row. Why the old pair was wrong is worth keeping: `:1397` is the
 dashboard's pipeline card and `:1650` is inside the *analytics* block, so the range the row called "the tab"
 never described one block at all.
