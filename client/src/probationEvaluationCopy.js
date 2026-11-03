@@ -163,7 +163,7 @@ export const OUTCOME = Object.freeze({
  *                    the outcome on its own — the shipped classification already made that call.
  *   `status`         the HTTP status, when a response arrived.
  *   `payload`        the parsed body, or `{}` when it did not parse.
- *   `sentContent`    exactly what the form sent. Read ONLY to tell the empty-content refusal apart.
+ *   `sentText`       exactly what the form sent. Read ONLY to tell the empty-content refusal apart.
  *   `sentMilestoneIndex` the index the form sent, used when the 409's payload omits it.
  *   `timeline`       the row the form was opened from, used to name the day in the 409 sentence.
  * @returns {{kind: string, sentence: string|null}} `sentence` is null only where the shipped
@@ -172,7 +172,7 @@ export const OUTCOME = Object.freeze({
  */
 export function submissionOutcome(outcome = {}) {
   const {
-    error, status, payload, sentContent, sentMilestoneIndex, timeline,
+    error, status, payload, sentText, sentMilestoneIndex, timeline,
   } = outcome;
   const body = payload && typeof payload === 'object' ? payload : {};
 
@@ -208,7 +208,7 @@ export function submissionOutcome(outcome = {}) {
 
   if (code === 400) {
     if (body.known_milestones) return { kind: OUTCOME.STALE_MILESTONE, sentence: STALE_MILESTONE };
-    if (typeof sentContent === 'string' && sentContent.trim() === '') {
+    if (typeof sentText === 'string' && sentText.trim() === '') {
       return { kind: OUTCOME.EMPTY_CONTENT, sentence: EMPTY_CONTENT };
     }
     return { kind: OUTCOME.NO_RUNNING_WINDOW, sentence: NO_RUNNING_WINDOW };
@@ -271,8 +271,8 @@ export function milestoneOptionLabel(milestone) {
  * and `due_date` are copied from the server's own derivation (`:123-124`), so sending any of them
  * would be a second, client-side version of a fact the server already holds.
  */
-export function evaluationPayload(milestoneIndex, content) {
-  return { milestone_index: Number(milestoneIndex), content };
+export function evaluationPayload(milestoneIndex, text) {
+  return { milestone_index: Number(milestoneIndex), content: text };
 }
 
 /**
@@ -280,7 +280,7 @@ export function evaluationPayload(milestoneIndex, content) {
  * is in flight, and the evaluation is not empty once trimmed. The server's `400` for empty content is
  * still rendered if it ever arrives — this guard is the courtesy, not the enforcement.
  */
-export function canSubmit({ content, submitting } = {}) {
+export function canSubmit({ text, submitting } = {}) {
   if (submitting) return false;
-  return typeof content === 'string' && content.trim() !== '';
+  return typeof text === 'string' && text.trim() !== '';
 }

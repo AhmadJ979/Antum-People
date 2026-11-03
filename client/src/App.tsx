@@ -635,8 +635,8 @@ export default function App() {
   // boolean: the form shows one hire's milestones and posts to that hire's route, and one value
   // cannot disagree with itself. `null` is closed.
   const [evaluationFor, setEvaluationFor] = useState<any | null>(null);
-  const [evaluationForm, setEvaluationForm] = useState<{ milestone_index: string; content: string }>({
-    milestone_index: '', content: '',
+  const [evaluationForm, setEvaluationForm] = useState<{ milestone_index: string; text: string }>({
+    milestone_index: '', text: '',
   });
   const [evaluationSubmitting, setEvaluationSubmitting] = useState(false);
   // The refusal is rendered IN PLACE inside the modal. It is never a console.error: a refusal that
@@ -1374,25 +1374,25 @@ export default function App() {
   // the act of failing.
   const openEvaluationForm = (timeline: any) => {
     setEvaluationFor(timeline);
-    setEvaluationForm({ milestone_index: defaultMilestoneIndex(timeline), content: '' });
+    setEvaluationForm({ milestone_index: defaultMilestoneIndex(timeline), text: '' });
     setEvaluationRefusal(null);
     setEvaluationNotice(null);
   };
 
   const closeEvaluationForm = () => {
     setEvaluationFor(null);
-    setEvaluationForm({ milestone_index: '', content: '' });
+    setEvaluationForm({ milestone_index: '', text: '' });
     setEvaluationRefusal(null);
   };
 
   const handleRecordEvaluation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!evaluationFor) return;
-    if (!canSubmit({ content: evaluationForm.content, submitting: evaluationSubmitting })) return;
+    if (!canSubmit({ text: evaluationForm.text, submitting: evaluationSubmitting })) return;
     // Read both fields ONCE, so the request, the classification and the success line all describe the
     // same submission even if the reader types while it is in flight.
     const submittedIndex = evaluationForm.milestone_index;
-    const submittedContent = evaluationForm.content;
+    const submittedText = evaluationForm.text;
     setEvaluationSubmitting(true);
     setEvaluationRefusal(null);
     try {
@@ -1402,7 +1402,7 @@ export default function App() {
       const res = await authedFetch(`${API_BASE}/api/employees/${evaluationFor.employee_id}/probation-evaluations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(evaluationPayload(submittedIndex, submittedContent)),
+        body: JSON.stringify(evaluationPayload(submittedIndex, submittedText)),
       });
       if (res.status === 401) {
         handleLogout();
@@ -1412,7 +1412,7 @@ export default function App() {
       const outcome = submissionOutcome({
         status: res.status,
         payload,
-        sentContent: submittedContent,
+        sentText: submittedText,
         sentMilestoneIndex: submittedIndex,
         timeline: evaluationFor,
       });
@@ -1425,7 +1425,7 @@ export default function App() {
       // flips only on the re-read below, which is why the re-read is awaited before the line is shown.
       const day = dayOf(evaluationFor, submittedIndex);
       setEvaluationFor(null);
-      setEvaluationForm({ milestone_index: '', content: '' });
+      setEvaluationForm({ milestone_index: '', text: '' });
       await fetchData();
       setEvaluationNotice(evaluationRecordedLine(day));
     } catch (err) {
@@ -3009,8 +3009,8 @@ export default function App() {
                   id="evaluation-content"
                   rows={6}
                   required
-                  value={evaluationForm.content}
-                  onChange={e => setEvaluationForm({ ...evaluationForm, content: e.target.value })}
+                  value={evaluationForm.text}
+                  onChange={e => setEvaluationForm({ ...evaluationForm, text: e.target.value })}
                   className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium"
                 />
                 <p className="text-[9px] text-slate-500">{EVALUATION_HELPER}</p>
@@ -3026,7 +3026,7 @@ export default function App() {
                 <button type="button" onClick={closeEvaluationForm} className="px-6 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition">{CANCEL}</button>
                 <button
                   type="submit"
-                  disabled={!canSubmit({ content: evaluationForm.content, submitting: evaluationSubmitting })}
+                  disabled={!canSubmit({ text: evaluationForm.text, submitting: evaluationSubmitting })}
                   className="px-8 py-2.5 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700 shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {RECORD_BUTTON}

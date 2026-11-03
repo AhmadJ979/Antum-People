@@ -72,13 +72,16 @@ REPORT = re.compile(r"^(ok|FAIL|UNCHECKED|UNUSED-PIN|CONTINUATION|OTHER-FILE)\s"
 # The symbols below were read OUT OF THE TREES THEY ARE CITED AT, not guessed:
 #   7a4e00a:1212 -> {user?.username || 'Admin User'}
 #   tip:1216     -> `setChecklistNotice({ kind: 'error', ...`            (no `username`)
-#   tip:1602     -> {formatAmount(analytics.avgCostPerHireAE)}
+#   tip:1703     -> {formatAmount(analytics.avgCostPerHireAE)}
 # The `tip:` entries are TIP readings - they say what the cited number holds at the tip of
 # THIS tree, which is why P2 (the same 1212, unpinned) FAILS: at this tip, `:1212` is
 # `handleLogout();`, and the `username` line has moved to :1453. They move whenever App.tsx
 # grows, and the plant's own number must move with them: 1580 -> 1597 (the escalation panel,
-# +61 lines above the analytics tab) -> 1602 (the probation write path, +5 more at that line);
-# the example line moved 1212 -> 1216 for the same reason.
+# +61 lines above the analytics tab) -> 1602 (the probation write path, +5 more at that line)
+# -> 1703 (the probation evaluation screen, +101 more above the analytics tab); the example
+# line moved 1212 -> 1216 for the same reason. A stale P4 number does not read as "re-tip
+# me": the citation stops landing, and P4 reports `exit 1, expected 0` while its UNUSED-PIN
+# is still printed. Re-measure the number before blaming the plant.
 # The 1212 in P1/P2/P3/P6 is NOT a tip reading - it is the line at `7a4e00a`, where it holds
 # `{user?.username || 'Admin User'}`, and it stays 1212 because that tree does not move.
 # `{activeTab` is deliberately NOT used for P1: it is not on 7a4e00a:1212 (measured - it
@@ -102,7 +105,7 @@ P3 = """
 P4 = """
 # pin selftest plant
 
-- `App.tsx:1602` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
+- `App.tsx:1703` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
 """
 P5 = """
 # pin selftest plant

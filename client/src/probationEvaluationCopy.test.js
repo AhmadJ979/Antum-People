@@ -112,7 +112,7 @@ describe('the ten refusals', () => {
   });
 
   test('#5 no probation window still running', () => {
-    const outcome = submissionOutcome({ status: 400, payload: { error: 'this hire has no probation window that is still running, so there is no milestone to evaluate' }, sentContent: 'Shipped the migration.' });
+    const outcome = submissionOutcome({ status: 400, payload: { error: 'this hire has no probation window that is still running, so there is no milestone to evaluate' }, sentText: 'Shipped the migration.' });
     assert.strictEqual(outcome.kind, OUTCOME.NO_RUNNING_WINDOW);
     assert.strictEqual(outcome.sentence, NO_RUNNING_WINDOW);
   });
@@ -159,18 +159,18 @@ describe('the ten refusals', () => {
     const outcome = submissionOutcome({
       status: 400,
       payload: { error: "milestone_index must be one of this hire's milestones (1, 2)", known_milestones: [{ index: 1, day: 45, due_date: '2026-10-04' }] },
-      sentContent: 'Shipped the migration.',
+      sentText: 'Shipped the migration.',
     });
     assert.strictEqual(outcome.kind, OUTCOME.STALE_MILESTONE);
     assert.strictEqual(outcome.sentence, STALE_MILESTONE);
   });
 
   test('#8 empty content — decided on what the form SENT, never on the server\'s prose', () => {
-    const outcome = submissionOutcome({ status: 400, payload: { error: 'a submitted evaluation must carry the manager’s own words: content cannot be empty' }, sentContent: '   ' });
+    const outcome = submissionOutcome({ status: 400, payload: { error: 'a submitted evaluation must carry the manager’s own words: content cannot be empty' }, sentText: '   ' });
     assert.strictEqual(outcome.kind, OUTCOME.EMPTY_CONTENT);
     assert.strictEqual(outcome.sentence, EMPTY_CONTENT);
     // The SAME body with real content is the missing-window refusal: the prose was not consulted.
-    const other = submissionOutcome({ status: 400, payload: { error: 'a submitted evaluation must carry the manager’s own words: content cannot be empty' }, sentContent: 'Shipped the migration.' });
+    const other = submissionOutcome({ status: 400, payload: { error: 'a submitted evaluation must carry the manager’s own words: content cannot be empty' }, sentText: 'Shipped the migration.' });
     assert.strictEqual(other.kind, OUTCOME.NO_RUNNING_WINDOW);
   });
 
@@ -202,8 +202,8 @@ test('every kind the classifier can return has a case above, and none is left un
     submissionOutcome({ status: 404 }).kind,
     submissionOutcome({ status: 409, payload: { recorded_by: 'a', recorded_at: '2026-10-19', milestone_index: 2 }, timeline: TIMELINE }).kind,
     submissionOutcome({ status: 400, payload: { known_milestones: [] } }).kind,
-    submissionOutcome({ status: 400, sentContent: '' }).kind,
-    submissionOutcome({ status: 400, sentContent: 'x' }).kind,
+    submissionOutcome({ status: 400, sentText: '' }).kind,
+    submissionOutcome({ status: 400, sentText: 'x' }).kind,
     submissionOutcome({ status: 500 }).kind,
     submissionOutcome({ error: new Error('socket hang up') }).kind,
   ]);
@@ -304,17 +304,17 @@ describe('the request body', () => {
 
 describe('the submit control', () => {
   test('is disabled while in flight', () => {
-    assert.strictEqual(canSubmit({ content: 'Shipped the migration.', submitting: true }), false);
+    assert.strictEqual(canSubmit({ text: 'Shipped the migration.', submitting: true }), false);
   });
 
   test('is disabled on empty or whitespace-only content', () => {
-    assert.strictEqual(canSubmit({ content: '', submitting: false }), false);
-    assert.strictEqual(canSubmit({ content: '   \n\t ', submitting: false }), false);
+    assert.strictEqual(canSubmit({ text: '', submitting: false }), false);
+    assert.strictEqual(canSubmit({ text: '   \n\t ', submitting: false }), false);
     assert.strictEqual(canSubmit({}), false);
   });
 
   test('is enabled with real content and nothing in flight', () => {
-    assert.strictEqual(canSubmit({ content: 'Shipped the migration.', submitting: false }), true);
-    assert.strictEqual(canSubmit({ content: ' a ', submitting: false }), true);
+    assert.strictEqual(canSubmit({ text: 'Shipped the migration.', submitting: false }), true);
+    assert.strictEqual(canSubmit({ text: ' a ', submitting: false }), true);
   });
 });
