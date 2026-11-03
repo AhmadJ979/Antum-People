@@ -651,7 +651,11 @@ export default function App() {
     data_residency_country: 'AE',
     visa_status: 'Employment Visa',
     visa_expiry_date: '',
-    basic_salary: ''
+    basic_salary: '',
+    // PROBATION (2026-11-02): a LENGTH, not a date. The server derives `probation_end_date` from the
+    // start date (server/probation-timeline.js#resolveWindow), because the window's length is the
+    // decision a user makes and the date is arithmetic. '' means None — the hire is not on probation.
+    probation_window_days: ''
   });
 
   const [exitForm, setExitForm] = useState({
@@ -1306,7 +1310,8 @@ export default function App() {
           data_residency_country: 'AE',
           visa_status: 'Employment Visa',
           visa_expiry_date: '',
-          basic_salary: ''
+          basic_salary: '',
+          probation_window_days: ''
         });
         await fetchData();
       }
@@ -2818,6 +2823,20 @@ export default function App() {
                       <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest" htmlFor="employee-start-date">Start Date</label>
                       <input id="employee-start-date" type="date" required value={newEmployee.start_date} onChange={e => setNewEmployee({...newEmployee, start_date: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900" />
                    </div>
+                </div>
+                {/* PROBATION (2026-11-02) — the write path for `probation_end_date`, which the whole
+                    Probation timelines panel is derived from. Until this control existed the column was
+                    written only by the demo seeder, so every hire "on probation" in the product was a
+                    seeded one. The user picks a LENGTH; the server computes the end date from the start
+                    date, so there is one arithmetic in the product and not two. */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest" htmlFor="employee-probation">Probation</label>
+                  <select id="employee-probation" value={newEmployee.probation_window_days} onChange={e => setNewEmployee({...newEmployee, probation_window_days: e.target.value})} className="w-full p-2.5 bg-white border border-teal-200 rounded-xl outline-none text-sm font-bold text-teal-900">
+                    <option value="">None</option>
+                    <option value="90">90 days</option>
+                    <option value="180">180 days</option>
+                  </select>
+                  <p className="text-[9px] text-teal-600">The end date is derived from the start date. A hire with no probation gets no timeline.</p>
                 </div>
               </div>
 

@@ -210,4 +210,104 @@ const COMPLETION_NOTE =
   'A milestone reads `completed` only from a submitted evaluation (P3-2): the record names the manager '
   + 'who submitted it and the moment they did. A milestone with no submission stays upcoming, due or overdue.';
 
-module.exports = { STATES, COMPLETION_NOTE, probationWindow, milestoneOffsets, milestonesFor, timelinesFor };
+/**
+ * ============================ THE WRITE PATH (2026-11-02) ============================
+ *
+ * The read side above derives the whole probation surface from ONE column, `probation_end_date`. Until
+ * this section existed, nothing in the product could WRITE that column: it was named in the schema, in
+ * this module's reads and in the demo seeder, and nowhere else. The panel rendered — it renders two
+ * seeded hires on the live demo — and a buyer's first question, *"where do I set this?"*, had no answer.
+ * A feature only the demo seed can populate is a mock, however good the screen looks.
+ *
+ * THE DECISION A USER MAKES IS A LENGTH, NOT A DATE. `probation_end_date` is arithmetic from
+ * `start_date`, so the modal offers None / 90 / 180 and the server computes the end date. That keeps
+ * ONE arithmetic in the product: the same `wholeDays`/`addDays` pair `probationWindow` reads the stored
+ * value back with, so a date the route writes and a date this module derives can never be counted
+ * differently. `WINDOW_CHOICES` is what the interface offers; `resolveWindow` accepts any positive whole
+ * number of days, because a contract that says 60 is a real contract and refusing it would be this file
+ * inventing a rule it has no source for.
+ *
+ * A WINDOW THAT IS NOT A WINDOW IS REFUSED, NOT STORED. `end <= start` would be stored as a row that
+ * reads as "no probation" to every caller above (`probationWindow` returns null for it) — the hire
+ * would look like they were never put on probation while the record silently claimed they were. So the
+ * refusal names the field, in the shape `server/request-validation.js` established (400 = the caller's
+ * fault, and it says which field).
+ */
+
+/** The window lengths the interface offers. A length, never a date — see the header. */
+const WINDOW_CHOICES = Object.freeze([90, 180]);
+
+const isBlank = (value) => value === undefined || value === null
+  || (typeof value === 'string' && value.trim() === '');
+
+/**
+ * `start_date + days`, as a UTC day string — or `null` when either input is unusable. The ONE place a
+ * probation end date is computed; `probationWindow` reads the stored value back with the same
+ * `addDays`/`wholeDays` pair, so write and read agree by construction.
+ */
+function endDateForWindow(startDate, days) {
+  const start = toUtcDay(startDate);
+  const length = Number(days);
+  if (!start || !Number.isInteger(length) || length <= 0) return null;
+  return isoDay(addDays(start, length));
+}
+
+/**
+ * Resolve the window a caller is ASKING FOR into the single value the product stores.
+ *
+ * @param {object} input
+ * @param {string} [input.start_date]     the hire's anchor (on PUT: the merged one — the request's or the row's)
+ * @param {string|number} [input.window_days]  a length in days; `0`, blank or absent means "no probation"
+ * @param {string} [input.end_date]       an explicit end date; it WINS over `window_days` when both arrive
+ * @returns {{end_date: string|null, field: string|null, problem: string|null}}
+ *   `end_date: null` with `problem: null` is a legitimate CLEAR ("None"), not a failure.
+ */
+function resolveWindow(input = {}) {
+  const startDate = input.start_date;
+  const requestedEnd = input.end_date;
+  const windowDays = input.window_days;
+  const hasEnd = !isBlank(requestedEnd);
+  const hasDays = !isBlank(windowDays);
+
+  if (hasEnd && !toUtcDay(requestedEnd)) {
+    return { end_date: null, field: 'probation_end_date', problem: 'probation_end_date must be a date, YYYY-MM-DD' };
+  }
+  if (hasDays) {
+    const length = Number(windowDays);
+    if (!Number.isInteger(length) || length < 0) {
+      return {
+        end_date: null,
+        field: 'probation_window_days',
+        problem: 'probation_window_days must be a whole number of days, or 0 for no probation',
+      };
+    }
+  }
+
+  const wantsWindow = hasEnd || (hasDays && Number(windowDays) > 0);
+  if (!wantsWindow) return { end_date: null, field: null, problem: null };
+
+  const start = toUtcDay(startDate);
+  if (!start) {
+    return {
+      end_date: null,
+      field: 'start_date',
+      problem: 'start_date must be a date, YYYY-MM-DD, to place probation_end_date',
+    };
+  }
+  const end = hasEnd ? toUtcDay(requestedEnd) : toUtcDay(endDateForWindow(startDate, windowDays));
+  const lengthDays = wholeDays(start, end);
+  if (lengthDays <= 0) {
+    return {
+      end_date: null,
+      field: 'probation_end_date',
+      problem: `probation_end_date (${isoDay(end)}) must be after start_date (${isoDay(start)})`,
+    };
+  }
+  return { end_date: isoDay(end), field: null, problem: null };
+}
+
+module.exports = {
+  STATES, COMPLETION_NOTE, WINDOW_CHOICES,
+  probationWindow, milestoneOffsets, milestonesFor, timelinesFor,
+  endDateForWindow, resolveWindow,
+};

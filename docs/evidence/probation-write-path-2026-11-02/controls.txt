@@ -1,0 +1,91 @@
+== Redden controls — run 2026-11-02 from a throwaway git worktree at the branch tip
+== (git worktree add --detach /tmp/wt-pw <tip>; each control plants ONE defect, runs node --test
+==  from the worktree's server/, then reverts with git checkout --)
+
+Preparing worktree (detached HEAD fdda7d0)
+HEAD is now at fdda7d0 feat(probation): a hire can be put on probation by a user, not only by the seeder
+== worktree /tmp/wt-pw at fdda7d05cbbfc7a19b603395ae8c10620cda8739
+
+== CONTROL 0 (green): the tree the PR ships
+--- green-pw: node --test probation-write.test.js -> exit 0
+    # tests 12
+    # pass 12
+    # fail 0
+--- green-rc: node --test reachability.test.js -> exit 0
+    # tests 19
+    # pass 19
+    # fail 0
+
+== CONTROL A: drop the probation value from the INSERT, keep the column named (the lists shift)
+--- control-a: node --test probation-write.test.js -> exit 1
+    # tests 12
+    # pass 1
+    # fail 11
+    not ok 1 - a hire can be put on probation through the product
+    not ok 2 - an existing hire can be moved onto probation and off it
+    not ok 3 - the employee INSERT keeps its column list and value list paired
+    >       error: "position 25 holds undefined, which is not this column's value: the lists have shifted"
+
+== CONTROL B: keep both lists the same length, but put the WRONG value at probation's position
+--- control-b: node --test probation-write.test.js -> exit 1
+    # tests 12
+    # pass 4
+    # fail 8
+    not ok 1 - a hire can be put on probation through the product
+    not ok 2 - an existing hire can be moved onto probation and off it
+    not ok 3 - the employee INSERT keeps its column list and value list paired
+    >       error: 'position 25 holds "${db.escapeString(data.start_date)}", which is not this column\'s value: the lists have shifted'
+
+== CONTROL C: remove the write path (the INSERT no longer names probation_end_date)
+--- control-c: node --test reachability.test.js -> exit 0
+    # tests 19
+    # pass 19
+    # fail 0
+
+== CONTROL D: empty the DISPLAYED_VALUES register (the vacuous pass this guard used to have)
+--- control-d: node --test reachability.test.js -> exit 1
+    # tests 19
+    # pass 18
+    # fail 1
+    not ok 11 - a value a tile displays has a writer in a route a user can reach — or is registered
+    >   error: 'the displayed-value register is EMPTY, so this guard is measuring nothing: it iterates the register, and an empty register passes whatever the tree does. Register the values a tile draws (with `writer: required
+
+== CONTROL E: the panel anchor is gone from the screen (the tile this entry describes)
+--- control-e: node --test reachability.test.js -> exit 1
+    # tests 19
+    # pass 18
+    # fail 1
+    not ok 11 - a value a tile displays has a writer in a route a user can reach — or is registered
+
+== restored: 1 modified files in the worktree
+--- restored-pw: node --test probation-write.test.js -> exit 0
+    # tests 12
+    # pass 12
+    # fail 0
+--- restored-rc: node --test reachability.test.js -> exit 0
+    # tests 19
+    # pass 19
+    # fail 0
+
+DONE
+
+== control C, re-run after the writer measurement was tightened to require a SQL-shaped line
+== (the first two runs passed — see README: the audit payload's own field counted as a writer)
+== control 0 (green, with the tightened writer measurement):
+    # tests 19
+    # pass 19
+    # fail 0
+
+== CONTROL C (third attempt): remove the INSERT column AND the PUT's update line — the whole product write path
+    exit=1
+    not ok 11 - a value a tile displays has a writer in a route a user can reach — or is registered
+    # tests 19
+    # pass 18
+    # fail 1
+    >     a displayed value marked `writer: required` has NO writer in a route a user can reach — the tile is drawing something the product cannot produce, and the only writer is the demo seeder: [{"tile":"Probation timelines (Employee Directory)","productionWriters":["server/probation-write.test.js:383"],"seederWriters":[]}]
+
+== restored:
+    # tests 19
+    # pass 19
+    # fail 0
+DONE

@@ -62,14 +62,18 @@ REPORT = re.compile(r"^(ok|FAIL|UNCHECKED|UNUSED-PIN)\s", re.M)
 
 # The symbols below were read OUT OF THE TREES THEY ARE CITED AT, not guessed:
 #   7a4e00a:1212 -> {user?.username || 'Admin User'}
-#   tip:1212     -> `setChecklistNotice({ kind: 'error', ...`            (no `username`)
-#   tip:1597     -> {formatAmount(analytics.avgCostPerHireAE)}
+#   tip:1216     -> `setChecklistNotice({ kind: 'error', ...`            (no `username`)
+#   tip:1602     -> {formatAmount(analytics.avgCostPerHireAE)}
 # The `tip:` entries are TIP readings - they say what the cited number holds at the tip of
-# THIS tree, which is why P2 (the same 1212, unpinned) FAILS. They move whenever App.tsx
-# grows, and the plant's own number must move with them: re-grounded 2026-11-02 for the
-# escalation panel, whose +61 lines above the analytics tab took 1580 -> 1597.
+# THIS tree, which is why P2 (the same 1212, unpinned) FAILS: at this tip, `:1212` is
+# `handleLogout();`, and the `username` line has moved to :1453. They move whenever App.tsx
+# grows, and the plant's own number must move with them: 1580 -> 1597 (the escalation panel,
+# +61 lines above the analytics tab) -> 1602 (the probation write path, +5 more at that line);
+# the example line moved 1212 -> 1216 for the same reason.
+# The 1212 in P1/P2/P3/P6 is NOT a tip reading - it is the line at `7a4e00a`, where it holds
+# `{user?.username || 'Admin User'}`, and it stays 1212 because that tree does not move.
 # `{activeTab` is deliberately NOT used for P1: it is not on 7a4e00a:1212 (measured - it
-# lives at tip:2166). A plant naming a symbol that is not there would make P1 red for the
+# lives at tip:2171). A plant naming a symbol that is not there would make P1 red for the
 # wrong reason. It appears in P6 instead, where its absence is the whole point.
 P1 = """
 # pin selftest plant
@@ -89,7 +93,7 @@ P3 = """
 P4 = """
 # pin selftest plant
 
-- `App.tsx:1597` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
+- `App.tsx:1602` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
 """
 P5 = """
 # pin selftest plant

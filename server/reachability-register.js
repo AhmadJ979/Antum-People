@@ -120,11 +120,37 @@ const UNOPENABLE_CONTROLS = {
  * 17's defect in one sentence, and this is the assertion that keeps it from being re-forgotten.
  */
 const DISPLAYED_VALUES = [
-  // EMPTY as of 2026-10-13, and that is the measurement: this register held exactly one entry — the
-  // employee record's "✓ GRANTED ON {date}" tile, whose value only the demo seeder wrote (decision
-  // 17). The tile is retired, so there is nothing left to register here. A displayed value with no
-  // reachable writer that is NOT written down still fails the test above; this list is where it goes
-  // when one is found, and it is deliberately empty rather than deleted.
+  // A value a tile DRAWS, with what the product must be able to do about it. Two expectations, and the
+  // second one is new (2026-11-02):
+  //
+  //   `writer: 'missing'` — a RECORDED DEFECT: nothing a user can reach writes this value. It must be
+  //     written down here with the decision that owns the fix, exactly as before.
+  //   `writer: 'required'` — the value MUST have a reachable writer. This is the direction the old
+  //     register could not express, and its absence is why `probation_end_date` sat green: the guard
+  //     only ever asked "is every unregistered value declared?", never "is every declared value
+  //     actually produced by something a user can do?".
+  //
+  // WHY THIS ENTRY EXISTS AT ALL. Until 2026-11-02 the only writer of `probation_end_date` in the whole
+  // tree was `scripts/seed-demo.js`: the Probation timelines panel rendered (two seeded hires on the
+  // live demo) and a buyer's first question — "where do I set this?" — had no answer. The write path
+  // now exists (`POST`/`PUT /api/employees`, `server/probation-timeline.js#resolveWindow`), and this
+  // entry is what reddens if it is ever removed again. A register that is EMPTY is a register that
+  // measures nothing; `server/reachability.test.js` now fails on that too.
+  {
+    tile: 'Probation timelines (Employee Directory)',
+    // The panel on the screen, anchored on its own heading text so an unrelated insertion above it is
+    // not a failure. The dates come from the server; the panel formats them and claims nothing itself.
+    panel: { file: 'client/src/App.tsx', anchor: '<h3 className="font-bold text-slate-900">Probation timelines</h3>' },
+    // The READ that produces the value, and the only line in the tree that names the column on a
+    // SELECT: `probation_end_date` is never a field the client holds, it is the server's input.
+    reader: 'server/index.js',
+    readerPattern: 'SELECT id, first_name, last_name, start_date, probation_end_date',
+    columns: ['probation_end_date'],
+    writer: 'required',
+    why: 'The whole probation surface is derived from this one column (server/probation-timeline.js: '
+       + 'a NULL means the hire is not on probation, so no timeline exists at all). It had no product '
+       + 'write path — only the demo seeder — until POST/PUT /api/employees wrote it on 2026-11-02.',
+  },
 ];
 
 /**

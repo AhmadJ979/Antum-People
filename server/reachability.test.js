@@ -242,34 +242,108 @@ test('every boolean control state can be opened, or is registered as un-openable
 });
 
 test('a value a tile displays has a writer in a route a user can reach — or is registered', () => {
+  // -------------------------------------------------------------
+  // THIS GUARD USED TO BE VACUOUS, AND THAT IS HOW THE PROBATION GAP SAT GREEN (2026-11-02).
+  //
+  // The measurement below runs over `DISPLAYED_VALUES`. The register was EMPTY — its own comment said
+  // "a displayed value with no reachable writer that is NOT written down still fails the test above",
+  // which was false: with nothing in the list, the loop ran zero times and the test passed. So the
+  // one value in the product whose only writer was the demo seeder — `probation_end_date`, the column
+  // the whole Probation timelines panel is derived from — was never looked at.
+  //
+  // Two things are fixed here, and both are load-bearing:
+  //   1. an EMPTY register FAILS, so the list cannot quietly go back to measuring nothing;
+  //   2. an entry can say `writer: 'required'` — a value the product MUST be able to produce — and the
+  //      guard then reddens if that write path disappears. The old register could only ever record a
+  //      defect, never hold a fix in place.
+  // -------------------------------------------------------------
+  assert.ok(DISPLAYED_VALUES.length > 0,
+    'the displayed-value register is EMPTY, so this guard is measuring nothing: it iterates the '
+    + 'register, and an empty register passes whatever the tree does. Register the values a tile draws '
+    + '(with `writer: required` for one the product must produce, `writer: missing` for a recorded '
+    + 'defect), or this test is a vacuous pass — which is exactly how probation_end_date stayed green.');
+
   const routes = apiRoutes();
   const routeAt = (file, line) => routes.find((x) => {
     if (file !== 'server/index.js') return false;
     const next = routes.filter((y) => y.line > x.line).sort((a, b) => a.line - b.line)[0];
     return line >= x.line && (!next || line < next.line);
   });
-  const withoutReachableWriter = [];
-  for (const entry of DISPLAYED_VALUES) {
-    const reader = findOne(entry.reader, entry.readerPattern); // the tile is still there to be read
+
+  /**
+   * Every place `column` can be written, as a STATEMENT rather than a line. `columnWriters` searches
+   * line by line, so it cannot see a column named on the continuation line of a multi-line INSERT nor
+   * a key admitted by a PUT whitelist array — and those are the two shapes the employee write path
+   * uses. `columnWritePaths` parses both structurally. Both are asked, and the union is de-duplicated
+   * by file:line so one statement is not counted twice.
+   */
+  const writersOf = (column) => {
+    const statements = r.columnWritePaths(column)
+      .map((p) => ({ file: 'server/index.js', line: p.line, text: p.what, scope: 'server' }));
+    // A LINE-BASED hit is only a write when it puts the column into SQL. `columnWriters` matches
+    // `column =` anywhere, so `auditNewValues.probation_end_date = probationEnd` — the audit payload's
+    // own field, which writes to no table — counts as a "writer" and keeps this guard GREEN after the
+    // real write paths are gone. MEASURED 2026-11-02: with the INSERT column AND the PUT's update line
+    // removed, the guard still passed on that one line alone. So a property assignment
+    // (`x.column = …`) is excluded, and what remains is a bare `column = …` inside a statement
+    // template, or a line that names INSERT/SET.
+    const sqlShaped = (text) => new RegExp(`(^|[^.\\w])${column}\\s*=`).test(text) || /\b(INSERT|SET)\b/i.test(text);
+    const seen = new Set();
+    return [
+      // A TEST that names the column is not a writer: `columnWriters` walks `server/*.js`, so a suite
+      // asserting the INSERT's shape would otherwise be listed as production code that writes it.
+      ...r.columnWriters(column).filter((w) => sqlShaped(w.text) && !/\.test\.js$/.test(w.file)),
+      ...statements,
+    ].filter((w) => {
+      const key = `${w.file}:${w.line}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
+  // Measure every registered value once, and keep the measurement: the assertions below are about the
+  // same numbers, so a reader cannot be told two different things by two passes over the tree.
+  const measured = DISPLAYED_VALUES.map((entry) => {
+    assert.ok(['required', 'missing'].includes(entry.writer),
+      `${entry.tile}: writer must be 'required' (the product must produce it) or 'missing' (a recorded `
+      + `defect), got ${JSON.stringify(entry.writer)}`);
+    const reader = findOne(entry.reader, entry.readerPattern); // the read that produces it is still there
     assert.ok(entry.columns.some((c) => reader.text.includes(c)),
       `${entry.tile}: the reader at ${entry.reader}:${reader.line} no longer reads `
       + `${entry.columns.join(' / ')} — update or drop this entry`);
-    const writers = entry.columns.flatMap((c) => r.columnWriters(c));
+    if (entry.panel) findOne(entry.panel.file, entry.panel.anchor); // and the tile is still on the screen
+    const writers = entry.columns.flatMap(writersOf);
     const production = writers.filter((w) => w.scope === 'server');
     const reachable = production.filter((w) => {
       const route = routeAt(w.file, w.line);
       return route && route.verdict.startsWith('REACHABLE');
     });
-    if (!reachable.length) {
-      withoutReachableWriter.push({
-        tile: entry.tile,
-        productionWriters: production.map((w) => `${w.file}:${w.line}`),
-        scriptWriters: writers.filter((w) => w.scope === 'script').map((w) => `${w.file}:${w.line}`),
-      });
-    }
-  }
-  // Every displayed value in this state has to be registered, because none of them has a reachable
-  // writer. The register is where the defect is written down as a defect, with a decision on it.
+    return {
+      tile: entry.tile,
+      writer: entry.writer,
+      entry,
+      productionWriters: production.map((w) => `${w.file}:${w.line}`),
+      scriptWriters: writers.filter((w) => w.scope === 'script').map((w) => `${w.file}:${w.line}`),
+      reachableWriters: reachable.map((w) => `${w.file}:${w.line}`),
+    };
+  });
+
+  // `required`: the value must be produced by something a user can reach. This is the half that holds
+  // the fix in place — delete the write path and this reddens, which the old guard could not do.
+  const missingWriter = measured.filter((x) => x.writer === 'required' && x.reachableWriters.length === 0)
+    .map((x) => ({
+      tile: x.tile,
+      productionWriters: x.productionWriters,
+      seederWriters: x.scriptWriters,
+    }));
+  assert.deepStrictEqual(missingWriter, [],
+    'a displayed value marked `writer: required` has NO writer in a route a user can reach — the tile '
+    + 'is drawing something the product cannot produce, and the only writer is the demo seeder: '
+    + JSON.stringify(missingWriter));
+
+  // `missing`: a recorded defect. Every one of these must be written down with the decision that owns it.
+  const withoutReachableWriter = measured.filter((x) => x.reachableWriters.length === 0);
   for (const x of withoutReachableWriter) {
     const declared = DISPLAYED_VALUES.find((e) => e.tile === x.tile);
     assert.ok(declared, `unregistered displayed value: ${x.tile}`);
@@ -278,11 +352,12 @@ test('a value a tile displays has a writer in a route a user can reach — or is
       + `production writers ${x.productionWriters.join(', ') || 'none'}; `
       + `seeder ${x.scriptWriters.join(', ') || 'none'}`);
   }
-  // And the register cannot flatter us: an entry whose value now HAS a reachable writer is stale
-  // the moment the fix lands, and this asserts it is removed rather than left looking like a defect.
-  const stale = DISPLAYED_VALUES
-    .filter((e) => !withoutReachableWriter.some((x) => x.tile === e.tile))
-    .map((e) => e.tile);
+  // And the register cannot flatter us: a RECORDED DEFECT whose value now HAS a reachable writer is
+  // stale the moment the fix lands, and this asserts it is removed rather than left looking like a
+  // defect. An entry marked `required` is the opposite question and is answered above.
+  const stale = measured
+    .filter((x) => x.writer !== 'required' && x.reachableWriters.length > 0)
+    .map((x) => x.tile);
   assert.deepStrictEqual(stale, [],
     'these displayed values now have a reachable writer — remove their register entries');
 });

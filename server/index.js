@@ -561,6 +561,23 @@ app.post('/api/employees', async (req, res) => {
     const encryptedNationalId = auth.encrypt(data.national_id_value);
     const encryptedIqama = auth.encrypt(data.national_id_iqama);
 
+    // PROBATION (2026-11-02) — the write path for `probation_end_date`, the ONE column the whole
+    // probation surface is derived from (server/probation-timeline.js). Until this existed the column
+    // was written by `scripts/seed-demo.js` and by nothing else: every probation row in the product was
+    // seeded, and a buyer's "where do I set this?" had no answer. The caller names a LENGTH (the modal
+    // offers None / 90 / 180) and the end date is arithmetic from `start_date`, so the write path and
+    // the read path share one arithmetic instead of two. A window that is not a window (`end <= start`)
+    // is REFUSED by name rather than stored, because such a row reads as "no probation" everywhere
+    // above while the record claims otherwise.
+    const probation = probationTimeline.resolveWindow({
+      start_date: data.start_date,
+      window_days: data.probation_window_days,
+      end_date: data.probation_end_date,
+    });
+    if (probation.problem) {
+      return res.status(400).json({ error: probation.problem, field: probation.field });
+    }
+
     // Decision 17 fence (2026-10-13, lead's ruling): this INSERT no longer names
     // `consent_granted`. The company-visible column keeps its schema DEFAULT 0 — what is removed is
     // the product's second write path to a retired instrument, not the column.
@@ -569,7 +586,8 @@ app.post('/api/employees', async (req, res) => {
         id, first_name, last_name, email, department, role, manager_id, start_date, status, salary, basic_salary, 
         recruitment_cost, national_id_type, national_id_value, national_id_iqama, data_residency_country, 
         jurisdiction, total_salary,
-        visa_status, visa_expiry_date, eosb_accrued, eosb_paid, termination_type, unpaid_leave_days
+        visa_status, visa_expiry_date, eosb_accrued, eosb_paid, termination_type, unpaid_leave_days,
+        probation_end_date
       )
       VALUES (
         ${db.escapeString(id)}, ${db.escapeString(data.first_name)}, ${db.escapeString(data.last_name)},
@@ -582,12 +600,22 @@ app.post('/api/employees', async (req, res) => {
         ${db.escapeString(country)}, ${tSalary},
         ${db.escapeString(data.visa_status)},
         ${db.escapeString(data.visa_expiry_date)}, ${eosbAccrued}, 0,
-        ${createReason.reason === null ? 'NULL' : db.escapeString(createReason.reason)}, ${parseFloat(data.unpaid_leave_days) || 0}
+        ${createReason.reason === null ? 'NULL' : db.escapeString(createReason.reason)}, ${parseFloat(data.unpaid_leave_days) || 0},
+        ${db.escapeString(probation.end_date)}
       )
     `;
     await db.query(insertSql);
 
-    const auditData = { ...data, national_id_value: encryptedNationalId, national_id_iqama: encryptedIqama };
+    // The audit row records the value that was STORED, not only what was asked for: a caller that names
+    // a LENGTH (`probation_window_days`) sends no end date at all, and an audit row that omitted the
+    // derived one would be the defect class this repository already has one live instance of — a term
+    // of employment that changed with nothing on the record saying what it changed to.
+    const auditData = {
+      ...data,
+      national_id_value: encryptedNationalId,
+      national_id_iqama: encryptedIqama,
+      probation_end_date: probation.end_date,
+    };
     await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, new_values, timestamp)
       VALUES (${db.escapeString(generateId())}, ${db.escapeString(actor)}, 'employee', ${db.escapeString(id)}, 'CREATE', ${db.escapeString(JSON.stringify(auditData))}, CURRENT_TIMESTAMP)`);
 
@@ -630,8 +658,34 @@ app.put('/api/employees/:id', async (req, res) => {
     if (existing.length === 0) return res.status(404).json({ error: 'Employee not found' });
     const emp = existing[0];
 
+    // PROBATION (2026-11-02) — the EDIT half of the write path, so an existing hire can be put on
+    // probation or taken off it. `undefined` means "this request says nothing about probation, leave
+    // the column alone"; `null` is a CLEAR (None). Two refusals, both by name:
+    //   * a window this request asks for that is not a window (`end <= start`) — refused 400;
+    //   * a request that MOVES `start_date` on a hire who has a window, far enough that the stored end
+    //     date lands on or before the new start. Left alone, that edit would delete the timeline
+    //     silently (server/probation-timeline.js reads `end <= start` as "no probation"), so the hire
+    //     would look like they were never on probation while the record still claimed a window.
+    let probationEnd;
+    const probationTouched = data.probation_end_date !== undefined || data.probation_window_days !== undefined;
+    if (probationTouched) {
+      const resolved = probationTimeline.resolveWindow({
+        start_date: data.start_date !== undefined ? data.start_date : emp.start_date,
+        window_days: data.probation_window_days,
+        end_date: data.probation_end_date,
+      });
+      if (resolved.problem) return res.status(400).json({ error: resolved.problem, field: resolved.field });
+      probationEnd = resolved.end_date;
+    } else if (data.start_date !== undefined && emp.probation_end_date) {
+      const merged = probationTimeline.resolveWindow({ start_date: data.start_date, end_date: emp.probation_end_date });
+      if (merged.problem) return res.status(400).json({ error: merged.problem, field: merged.field });
+    }
+
     const updates = [];
     Object.keys(data).forEach(key => {
+      // Handled above, through the one resolver — never through the generic string branch, which would
+      // store `''` for a cleared window instead of NULL.
+      if (key === 'probation_end_date' || key === 'probation_window_days') return;
       if (['first_name', 'last_name', 'email', 'department', 'role', 'manager_id', 'status', 'visa_status', 'visa_expiry_date', 'national_id_type', 'data_residency_country', 'start_date', 'end_date', 'fully_productive_date', 'termination_type'].includes(key)) {
         if (key === 'termination_type') {
           // A reason is a record of an event, or it is ABSENT — never `''` (a third state a reader
@@ -656,6 +710,10 @@ app.put('/api/employees/:id', async (req, res) => {
         }
       }
     });
+
+    if (probationEnd !== undefined) {
+      updates.push(`probation_end_date = ${db.escapeString(probationEnd)}`);
+    }
 
     if (updates.length > 0) {
       const mergedStatus = data.status || emp.status;
@@ -696,6 +754,10 @@ app.put('/api/employees/:id', async (req, res) => {
       const auditNewValues = { ...data };
       if (auditNewValues.national_id_value) auditNewValues.national_id_value = auth.encrypt(auditNewValues.national_id_value);
       if (auditNewValues.national_id_iqama) auditNewValues.national_id_iqama = auth.encrypt(auditNewValues.national_id_iqama);
+      // The STORED value, not the length that produced it: probation is a term of employment, and a
+      // record of the change that named only `probation_window_days` would leave a reader to redo the
+      // arithmetic against a start date that may since have moved.
+      if (probationEnd !== undefined) auditNewValues.probation_end_date = probationEnd;
 
       await db.query(`INSERT INTO audit_logs (id, performed_by, entity_type, entity_id, action, old_values, new_values, timestamp)
         VALUES (${db.escapeString(generateId())}, ${db.escapeString(actor)}, 'employee', ${db.escapeString(empId)}, 'UPDATE', ${db.escapeString(JSON.stringify(emp))}, ${db.escapeString(JSON.stringify(auditNewValues))}, CURRENT_TIMESTAMP)`);
