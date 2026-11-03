@@ -10,8 +10,8 @@ print `ok`, and the only thing separating them is a counter in the footer that n
 had a control for. A fix that cannot redden is a comment, and so is a counter nobody
 has watched move.
 
-WHAT IT DOES. Six plants, each one committed into a SCRATCH CLONE and each one judged by
-running the clone's own copy of the real instrument over that clone:
+WHAT IT DOES. Seven plants, each one committed into a SCRATCH CLONE and each one judged
+by running the clone's own copy of the real instrument over that clone:
 
   P1  a correct pin lands        -> the plant line is `ok` AND `pinned` rises by 1
   P2  the same citation, marker deleted
@@ -26,6 +26,15 @@ running the clone's own copy of the real instrument over that clone:
                                  -> `FAIL` and exit 1 while `pinned` STILL rises by 1.
                                     P1 alone cannot tell "the pin moved the tree" from
                                     "the counter moved"; P6 separates them.
+  P7  a citation that WRAPS across a line break (`App.tsx:` on one line, the number on
+      the next)            -> the instrument prints a `CONTINUATION` line for it. This is
+                                    the one plant judged TWICE: P7 also runs the PRE-CHANGE
+                                    instrument (the copy at `754031c`, extracted from the
+                                    clone's own objects) over the same committed plant and
+                                    requires that it prints NOTHING for that file. The new
+                                    reading alone would not prove the old one was blind -
+                                    it could have been reporting the line all along, in
+                                    another word. Both readings are printed.
 
 WHY A CLONE, AND WHY THE CLONE'S OWN COPY OF THE INSTRUMENT. The instrument reads GIT
 OBJECTS (`git show <rev>:<path>`), so a plant that is not committed is invisible: the
@@ -43,7 +52,7 @@ the plants name (`7a4e00a`, `b7630cb`) is present. The source repository is neve
 written to. If the clone cannot be made, this EXITS NON-ZERO rather than skipping: a
 control that cannot run must not read as a pass.
 
-Exit 0 only when all six plants produced exactly the documented outcome. Any mismatch
+Exit 0 only when all seven plants produced exactly the documented outcome. Any mismatch
 prints the plant, the expectation and the actual output, and exits 1.
 
 --mutant <name> is a second, separate proof: it weakens the instrument inside the clone
@@ -58,7 +67,7 @@ REL_INSTRUMENT = "docs/evidence/no-403-claim-sweep-2026-10-20/check-doc-citation
 PLANT = "design-concepts/PIN-SELFTEST-PLANT.md"
 FOOTER = re.compile(r"(\d+) ok, (\d+) FAILING, (\d+) unchecked, (\d+) pinned, (\d+) unused pin")
 TREE = re.compile(r"\[tree ([0-9a-f]+)\]")
-REPORT = re.compile(r"^(ok|FAIL|UNCHECKED|UNUSED-PIN)\s", re.M)
+REPORT = re.compile(r"^(ok|FAIL|UNCHECKED|UNUSED-PIN|CONTINUATION|OTHER-FILE)\s", re.M)
 
 # The symbols below were read OUT OF THE TREES THEY ARE CITED AT, not guessed:
 #   7a4e00a:1212 -> {user?.username || 'Admin User'}
@@ -106,6 +115,19 @@ P6 = """
 - `@rev 7a4e00a` `App.tsx:1212` renders `{activeTab === 'preboarding' && (` at the revision it names.
 """
 
+P7 = """
+# pin selftest plant
+
+- The identity card renders `{user?.username || 'Admin User'}` at App.tsx:
+  `:1212` on the tree it names, and the number is on the NEXT line, not this one.
+"""
+
+# The instrument BEFORE the continuation fix. P7 extracts this revision's copy of the
+# instrument from the clone's own objects and runs it over the same committed plant, so
+# "the old one was blind to this" is a measurement and not a claim about the past.
+PRE_CONTINUATION_AT = "754031c"
+PRE_CONTINUATION_NAME = "doc-cite-instrument-before-continuation.py"
+
 # id, plant, want-exit, want-status-word (None = not asserted), want pinned delta,
 # want-footer (a refusal prints none), why
 CASES = [
@@ -123,6 +145,10 @@ CASES = [
     ("P6", P6, 1, "FAIL", +1, True,
      "a correct pin naming a symbol absent at that revision FAILS while `pinned` still rises: "
      "the pin is not a rubber stamp"),
+    ("P7", P7, 0, "CONTINUATION", 0, True,
+     "a citation wrapped across a line break is REPORTED (CONTINUATION) instead of being "
+     "skipped in silence - and the pre-change instrument, run over the same plant, says "
+     "nothing about it at all"),
 ]
 
 # A control that cannot redden proves nothing, so this one had to be shown able to. Each
@@ -141,6 +167,13 @@ CASES = [
 # branch leaves the `elif not show(sha, "client/src/App.tsx")` branch refusing the same pin,
 # so the refusal is guarded twice. Both facts are recorded here rather than assumed, and
 # re-running any of them re-checks them.
+#
+# KNOCK-ON, MEASURED 2026-11-03 and recorded rather than tidied away: `weaken-symbol` makes
+# EVERY backticked token a symbol tree-wide, so lines that were UNCHECKED start being judged
+# by junk and some fail. That is why it also knocks over P1, P4 and P7 (4 unexpected
+# outcomes), not only its target P5. The mutant contract is about the TARGET - the run
+# prints "MUTANT weaken-symbol CAUGHT by P5" and exits 0 - so the knock-ons do not make the
+# mutant wrong; suppressing them would mean not judging the tree it was applied to.
 MUTANTS = {
     "weaken-symbol": (
         [('if re.match(r"^[0-9a-f]{7,40}$", t): return False',
@@ -314,6 +347,31 @@ def main():
                         break
                 if word != want_word:
                     problems.append("plant line reported %r, expected %r" % (word, want_word))
+
+            if cid == "P7":
+                # THE OTHER HALF OF THE CONTROL: the same committed plant, the OLD instrument.
+                old_src = run(["git", "show", PRE_CONTINUATION_AT + ":" + REL_INSTRUMENT],
+                              clone).stdout
+                if not old_src.strip():
+                    problems.append("could not read the pre-change instrument at %s"
+                                    % PRE_CONTINUATION_AT)
+                else:
+                    old_path = os.path.join(clone, PRE_CONTINUATION_NAME)
+                    with open(old_path, "w", encoding="utf-8") as fh:
+                        fh.write(old_src)
+                    o_code, o_out = run_instrument(old_path, clone)
+                    old_lines = [ln for ln in o_out.split("\n") if PLANT + ":" in ln]
+                    if o_code != 0:
+                        problems.append("the pre-change instrument exited %d on a clean "
+                                        "tree - its silence would then prove nothing"
+                                        % o_code)
+                    if old_lines:
+                        problems.append("the pre-change instrument REPORTED the plant after "
+                                        "all (%r) - it was not blind to this" % old_lines[0])
+                    print("        -> pre-change instrument at %s: exit %d, %d line(s) for "
+                          "%s (expected 0)" % (PRE_CONTINUATION_AT, o_code, len(old_lines),
+                                               PLANT))
+                    os.remove(old_path)
 
             if problems:
                 failures.append("%s: %s" % (cid, "; ".join(problems)))

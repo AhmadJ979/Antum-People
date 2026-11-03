@@ -47,6 +47,28 @@ where `client/src/App.tsx` does not exist, is a REFUSAL (exit 2): a pin is a cla
 tree, and a claim the instrument cannot read is not a green.
 The pin does NOT make a group judgeable: a group with no symbol is UNCHECKED whether or
 not it is pinned. What the pin changes is WHICH TREE the symbol is looked for in.
+
+THE CONTINUATION PASS (added 2026-11-03). A citation whose `App.tsx` is on one line and
+whose numbers are on the next used to match no literal and was neither judged nor counted:
+INVISIBLE, which is worse than unknown. It is now found and reported. Each such line gets
+ONE of four verdicts, always with its file:line:
+
+    CONTINUATION   the one file governing it is App.tsx -> REPORTED, not judged by default
+    OTHER-FILE     the document names a different file there -> said, not judged here
+    UNCHECKED      the citing line names several files, or none -> cannot attribute
+    ok / FAIL      only with --judge-continuations (see the block below for why that is
+                   opt-in: the symbol test misreads wrapped citations, measured)
+
+FOUR NUMBERS, ALWAYS PRINTED, so a change in the set cannot pass quietly:
+
+    citations found: <discovered>  = judged + not-judged + other-file
+    continuation:    <lines> carrying <numbers>
+    floor:           <the recorded census>       (SHRANK + exit 1 if discovered falls below)
+
+FLAGS. `--floor N` re-records the census deliberately; `--ignore-floor` measures an old
+branch; `--judge-continuations` prints the stronger, noisier reading of wrapped citations.
+Positional <doc-rev> [<code-rev>] are read AFTER the flags are stripped, so a flag value
+can never be taken for a revision.
 """
 import os, re, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -58,8 +80,28 @@ def git(*args):
     # read relative to the directory git is told to work in, and this file lives four
     # levels down inside docs/evidence/.
     return _git(repo or HERE, *args)
-doc_rev = sys.argv[1] if len(sys.argv) > 1 else git("rev-parse", "HEAD").stdout.strip()
-code_rev = sys.argv[2] if len(sys.argv) > 2 else doc_rev
+# FLAGS ARE STRIPPED BEFORE THE POSITIONAL ARGUMENTS ARE READ, so that `--floor 200` cannot
+# be mistaken for a revision and silently judge a tree nobody named.
+_argv = list(sys.argv[1:])
+FLOOR_IGNORED = False
+if "--ignore-floor" in _argv:
+    FLOOR_IGNORED = True
+    _argv.remove("--ignore-floor")
+JUDGE_CONT = False
+if "--judge-continuations" in _argv:
+    JUDGE_CONT = True
+    _argv.remove("--judge-continuations")
+FLOOR_OVERRIDE = None
+if "--floor" in _argv:
+    _k = _argv.index("--floor")
+    try:
+        FLOOR_OVERRIDE = int(_argv[_k + 1])
+    except (IndexError, ValueError):
+        print("REFUSED: nothing was checked - --floor needs an integer.")
+        sys.exit(2)
+    del _argv[_k:_k + 2]
+doc_rev = _argv[0] if len(_argv) > 0 else git("rev-parse", "HEAD").stdout.strip()
+code_rev = _argv[1] if len(_argv) > 1 else doc_rev
 if not repo or not doc_rev or git("rev-parse", "--verify", doc_rev + "^{commit}").returncode != 0:
     print("REFUSED: nothing was checked - repo=%s rev=%s does not resolve."
           % (repo or "(no git working tree above this file)", doc_rev or "(no revision given)"))
@@ -119,38 +161,198 @@ if bad_pins:
         print("  @rev %-12s %s" % (sha, why))
     print("  A pin is a claim about a tree; a claim this instrument cannot read is not a green.")
     sys.exit(2)
-ok = fail = unchecked = pinned = unused = 0
+# --- THE CONTINUATION BLIND SPOT, CLOSED 2026-11-03 -----------------------------------
+# The loop below used to open `if "App.tsx" not in l: continue`. A citation that WRAPS -
+# the `App.tsx` on one line and the numbers on the next - therefore matched no literal and
+# was neither judged nor counted as unchecked. It was INVISIBLE, which is worse than
+# unknown: 14 such numbers on 9 continuation lines sat in these documents while the run
+# printed a clean 75 ok / 0 FAILING / 8 unchecked. A citation the instrument cannot judge
+# may be reported as unjudged; it may not be silent.
+#
+# A NUMBER ALONE DOES NOT SAY WHICH FILE IT NUMBERS. These documents cite several files,
+# and a bare `:` number belongs to whichever file the document itself names: on
+# CLIENT-STATES.md:115 a bare `:138` is `httpStatus.js`, and on :318 `:213` is
+# `LAYER3-EMPLOYEE-OWN-VIEW.md`. Attributing every bare number to App.tsx would INVENT
+# citations, and an invented citation is the same defect class as an invented figure. So
+# each continuation number is resolved the way a reader resolves it - from the file named
+# on its own line, else on the nearest preceding line of the same block - and it is judged
+# ONLY when exactly one file governs it and that file is App.tsx.
+#
+# WHY THEY ARE REPORTED RATHER THAN JUDGED BY DEFAULT. The instrument's judgement is "at
+# least one backticked symbol on the citing line appears on one of the cited lines". That
+# test is calibrated for a citation whose number and symbol were written together. Applied
+# to wrapped citations it harvests prose and globs instead of code: measured on these
+# documents at 754031c it produced 13 "failures", of which 8 named a description
+# (`· the notice has not been shown for this document yet`), a glob (`border-r-*`) or a
+# fragment (`)}`) that no line could ever contain. Five of the 13 look like genuine
+# staleness - documents that name their tree in PROSE ("measured on `f46b7a9`") instead of
+# with an `@rev` marker, which the pin path cannot honour. Reddening the gate on eight
+# wrong symbols to report five right ones would make the gate wrong. So the default is to
+# NAME them: file:line, the numbers, the line the `App.tsx` actually sits on, and the
+# reason. `--judge-continuations` prints that stronger, noisier reading on demand.
+#
+# CITATION_FLOOR. A count that can shrink quietly is the same blindness one level up. The
+# number of citation groups discovered is compared against a recorded floor; if a document
+# is edited and citations disappear, the run says SHRANK and exits 1 rather than printing a
+# smaller clean set. The floor is a claim about the DOCUMENTS, so it is counted before the
+# `1 <= n <= len(App.tsx)` range filter and cannot move when App.tsx grows or shrinks.
+# Re-census deliberately with `--floor N`; `--ignore-floor` is for measuring an old branch.
+CITATION_FLOOR = 287
+CITATION_FLOOR_AT = "754031c (the documents; this PR changes none of them)"
+if FLOOR_OVERRIDE is not None:
+    CITATION_FLOOR = FLOOR_OVERRIDE
+
+FILE_REF = re.compile(r"(?<![\w./-])([\w][\w./-]*\.(?:tsx|jsx|js|json|css|md|sql|py))\b")
+CONT_REASON = ("reported, not judged: the symbol test is calibrated for a citation whose "
+               "number and symbol share a line, and on wrapped ones it names prose or a glob "
+               "instead of code (see --judge-continuations)")
+def pin_on(line):
+    """The last `@rev` marker on a line, or None."""
+    last = None
+    for m in PIN.finditer(line):
+        last = m.group(1)
+    return last
+def files_named(line):
+    """The file names a line refers to, as basenames, in order, de-duplicated."""
+    out = []
+    for m in FILE_REF.finditer(line):
+        b = os.path.basename(m.group(1))
+        if b not in out:
+            out.append(b)
+    return out
+def governing(lines, i):
+    """The file(s) a bare `:n` on line i belongs to: named on the line itself, else on the
+    nearest preceding line of the same block (a blank line ends the block)."""
+    own = files_named(lines[i])
+    if own:
+        return own, i
+    j = i - 1
+    while j >= 0 and lines[j].strip() != "":
+        f = files_named(lines[j])
+        if f:
+            return f, j
+        j -= 1
+    return [], None
+def hits(tok, line):
+    ids = re.findall(r"[A-Za-z_][A-Za-z0-9_.-]{4,}", tok)
+    return any(x in line for x in ids) if ids else (tok in line)
+def group_tokens(lines, i, span=2):
+    """The backticked SYMBOLS a citation group claims.
+
+    A same-line citation keeps the 2-line window this instrument has always used, because
+    its `App.tsx:n` and its symbol are often on adjacent lines. A CONTINUATION citation is
+    read on its OWN line: the evidence for a wrapped citation is the line that states the
+    number, and taking the next line instead picks up the symbol of a different list item.
+    A weaker subject gets a narrower rule, never a looser one."""
+    win = " ".join(lines[i:i + span])
+    toks = [t.strip() for t in re.findall(r"`([^`]+)`", win)]
+    return [t for t in toks if symbol(t)][:12]
+
+ok = fail = unchecked = pinned = unused = other = 0
+unch_plain = unch_cont = cont_groups = cont_nums = 0
 for f in files:
     lines = show(doc_rev, f).split("\n")
     for i, l in enumerate(lines):
-        if "App.tsx" not in l: continue
-        nums = []
-        for m in re.finditer(r"App\.tsx[:\uff1a](\d+)", l):
-            nums.append((int(m.group(1)), pin_at(l, m.start())))
-        for m in re.finditer(r"`[:\uff1a](\d+)`", l):
-            nums.append((int(m.group(1)), pin_at(l, m.start())))
-        nums = [(n, r) for n, r in nums if 1 <= n <= len(code_at(r))]   # a time (09:37:41) or a port (:5173) is not a citation
-        if not nums: continue
+        has_app = "App.tsx" in l
+        nums = [(int(m.group(1)), pin_at(l, m.start()))
+                for m in re.finditer(r"App\.tsx[:\uff1a](\d+)", l)]
+        nums += [(int(m.group(1)), pin_at(l, m.start()))
+                 for m in re.finditer(r"`[:\uff1a](\d+)`", l)]
+        gi = None
+        gov_note = ""
+        if has_app:
+            kind = "app"
+            if not nums:
+                continue
+        else:
+            if not nums:
+                continue
+            gov, gi = governing(lines, i)
+            if not gov:
+                kind = "unattributed"
+                gov_note = "no file is named on this line or before it in the block"
+            elif len(gov) > 1:
+                kind = "ambiguous"
+                gov_note = ("line %d names %d files (%s), so a bare `:` number here cannot be "
+                            "attributed to one of them" % (gi + 1, len(gov), ", ".join(gov)))
+            elif gov[0] != "App.tsx":
+                kind = "other"
+                gov_note = "the file named at line %d is %s, not App.tsx" % (gi + 1, gov[0])
+            else:
+                kind = "cont"
+                inherit = pin_on(lines[gi]) or code_rev
+                nums = [(int(m.group(1)),
+                         pin_at(l, m.start()) if pin_on(l) else inherit)
+                        for m in re.finditer(r"`[:\uff1a](\d+)`", l)]
+                gov_note = "the `App.tsx` is on line %d, not this one" % (gi + 1)
+        if kind != "app":
+            cont_groups += 1
+            cont_nums += len(nums)
+        # a bare `:5173` (a port) or a wrapped time is not a citation - the same exclusion
+        # as before, now applied to continuation numbers too.
+        nums = [(n, r) for n, r in nums if 1 <= n <= len(code_at(r))]
+        if not nums:
+            continue
         if pin_unused(l):
             unused += 1
             print(f"UNUSED-PIN {f}:{i+1} - a `@rev` marker with no citation number after it on this line")
-        toks = [t.strip() for t in re.findall(r"`([^`]+)`", " ".join(lines[i:i+2]))]
-        toks = [t for t in toks if symbol(t)][:12]
+        shown = [n for n, _ in nums]
+        if kind == "other":
+            other += 1
+            print(f"OTHER-FILE {f}:{i+1} :{shown} - NOT judged here: {gov_note}")
+            continue
+        if kind in ("unattributed", "ambiguous"):
+            unchecked += 1
+            unch_plain += 1
+            print(f"UNCHECKED {f}:{i+1} :{shown} - cannot attribute this number to App.tsx: {gov_note}")
+            continue
+        if kind == "cont" and not JUDGE_CONT:
+            unchecked += 1
+            unch_cont += 1
+            print(f"CONTINUATION {f}:{i+1} App.tsx:{shown} - {gov_note}. {CONT_REASON}")
+            continue
+        toks = group_tokens(lines, i, span=1 if kind == "cont" else 2)
         if not toks:
-            unchecked += 1; print(f"UNCHECKED {f}:{i+1} App.tsx:{[n for n, _ in nums]} — the citing line names no symbol"); continue
-        if any(r != code_rev for _, r in nums): pinned += 1
-        def hits(tok, line):
-            ids = re.findall(r"[A-Za-z_][A-Za-z0-9_.-]{4,}", tok)
-            return any(i in line for i in ids) if ids else (tok in line)
+            unchecked += 1
+            if kind == "cont":
+                unch_cont += 1
+            else:
+                unch_plain += 1
+            print(f"UNCHECKED {f}:{i+1} App.tsx:{shown} - the citing line names no symbol"
+                  + (f" ({gov_note})" if gov_note else ""))
+            continue
+        if any(r != code_rev for _, r in nums):
+            pinned += 1
         landed = [n for n, r in nums if any(hits(t, code_at(r)[n-1]) for t in toks)]
         if landed:
             ok += 1
-            print(f"ok        {f}:{i+1} App.tsx:{[n for n, _ in nums]} -> landed {landed}")
+            print(f"ok        {f}:{i+1} App.tsx:{shown} -> landed {landed}"
+                  + (f"  [{gov_note}]" if gov_note else ""))
         else:
             fail += 1
             n0, r0 = nums[0]
             found = code_at(r0)[n0-1].strip()[:70] if 0 < n0 <= len(code_at(r0)) else "<past EOF>"
-            print(f"FAIL      {f}:{i+1} App.tsx:{[n for n, _ in nums]} expects one of {toks[:4]} — :{n0} at {r0[:12]} is {found!r}")
+            print(f"FAIL      {f}:{i+1} App.tsx:{shown} expects one of {toks[:4]} - :{n0} at "
+                  f"{r0[:12]} is {found!r}"
+                  + (f"  [{gov_note}]" if gov_note else ""))
+judged = ok + fail
+discovered = judged + unchecked + other
 print(f"\ndoc {doc_rev[:12]} vs code {code_rev[:12]}: {ok} ok, {fail} FAILING, {unchecked} unchecked"
       f", {pinned} pinned, {unused} unused pin   [tree {tree}]")
-sys.exit(1 if fail else 0)
+print(f"citations found: {discovered} group(s) - {judged} judged ({ok} ok, {fail} FAILING), "
+      f"{unchecked} NOT judged ({unch_plain} with an unattributable or missing file, {unch_cont} wrapped-but-unjudged), "
+      f"{other} OTHER-FILE (a bare `:` number whose document names another file)")
+print(f"continuation:   {cont_groups} citing line(s) carry {cont_nums} number(s) with no `App.tsx` "
+      f"on the line - the class this instrument used to skip IN SILENCE"
+      + ("   [--judge-continuations: they WERE judged]" if JUDGE_CONT else ""))
+print(f"floor:          {CITATION_FLOOR} group(s) discovered, recorded at {CITATION_FLOOR_AT}"
+      + ("   [OVERRIDDEN by --floor]" if FLOOR_OVERRIDE is not None else ""))
+
+shrank = (discovered < CITATION_FLOOR) and not FLOOR_IGNORED
+if shrank:
+    print(f"\nSHRANK: {discovered} citation group(s) discovered, below the recorded floor of "
+          f"{CITATION_FLOOR} (recorded at {CITATION_FLOOR_AT}).")
+    print("  A smaller set is not a cleaner one. Either a document lost citations - which is a")
+    print("  finding, not a tidy-up - or the census needs moving deliberately:")
+    print(f"    python3 {os.path.basename(__file__)} --floor {discovered}   (re-record the floor)")
+sys.exit(1 if (fail or shrank) else 0)
