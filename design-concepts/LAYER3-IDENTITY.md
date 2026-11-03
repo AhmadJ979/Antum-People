@@ -196,7 +196,7 @@ say why.
 No Arabic copy ships with this slice (decision 15(c) is open). The requirement is that nothing added here
 **blocks** the pass. Read on `main` at `7b073f8`:
 
-| Pattern | Count in `client/src/App.tsx` | Note |
+| Pattern | Count in `client/src/App.tsx` (`@rev 7b073f8`) | Note |
 |---------|------------------------------|------|
 | `space-x-*` | **28** | physical; `space-x-reverse` is used **0** times |
 | `gap-*` | **23** | direction-agnostic — use it for new groups |

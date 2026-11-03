@@ -285,7 +285,7 @@ sentence, which is the seat that was missing. Four sets already exist and each k
   *"No open {jurisdiction} pre-boarding cases — nothing outstanding to show for this jurisdiction. Record an
   accepted offer to open one."* (`:1951`). **§3 is where they collide with the new banner.**
 - **One existing rule looks like it forbids the client owning a sentence, and does not.** `App.tsx:2283` (inside the
-  `:2216`–`:2225` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
+  `:2282`–`:2291` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
   the structure that produced the drift… Nothing is composed here, and with no cases there is no sentence to
   state rather than a page-level claim about a list that is not on screen."* The distinction it was making:
   the client must not **assert facts about the data or about scope** — that is the server's (`scope_note`). A

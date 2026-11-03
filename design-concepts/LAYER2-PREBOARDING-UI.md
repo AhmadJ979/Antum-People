@@ -428,7 +428,7 @@ The flag is a **state, not an event**. On this product there is no mailer, webho
 **Anchor check — re-read off `origin/main` = `404b29d`, 2026-10-08.** The client anchors this section rests on, each with the grep that finds it, run against the merged file rather than a branch:
 
 - `{row.flag.chip}` — `git show origin/main:client/src/App.tsx | grep -n "row.flag.chip"` -> on **this tree** `App.tsx:2355` (the guard), `:2361` (the span) and `:2364` (the `Open`/`Close` span). Re-read at `fabef59`, 2026-10-29: `@rev fabef59` `:2205` (the guard), `:2211` (the span) and `:2214` (the `Open`/`Close` span); and `@rev 404b29d` `:1690`, `:1696` and `:1699` when the grep was run at `404b29d`.
-- the row's own distance — `... | grep -n "relDays(row.flag)"` -> **`:1744`**.
+- the row's own distance — `... | grep -n "relDays(row.flag)"` -> **`:1674`**.
 - `h before 00:00 on the start date` — `... | grep -n "h before 00:00"` -> **two** hits, **`:197`** (the flag's own derivation in `relDays`) and **`:1733`** (the panel's own line). It is **not** a unique anchor: quote the hit you mean.
 
 An earlier submission cited line 1624 for the third of these and line 1605 for the first. Both were carried rather than re-read: line 1605 was this span when the review ran against `5087136`, line 1624 was never right, and **PR #79 (2026-10-08) added 165 lines to this file, none deleted** (`git diff --numstat 5087136 404b29d -- client/src/App.tsx` -> the diffstat reads 165 added and 0 deleted; 1887 lines -> 2052), which is why no single offset describes the move: 157 -> 197 (+40) but 1602 -> 1696 (+94). That is why the anchors above are pinned to the commit they were read from and given with their greps.
@@ -1363,8 +1363,8 @@ records that the served-file comment and the `db.js` refusal landed together in 
   that row itself and stays as written. The live half, `App.tsx:1414`–`:1667`, was stale — at `:1414` the
   file renders the dashboard's pipeline card and line 1650 lands inside the *analytics* block that opens at line
   1635 — and is now **`App.tsx:2171`–`:2762`**: the `{activeTab === 'preboarding' && (` line at `:2171`,
-  closed by its matching `)}` at `:2440`, found by brace-matching rather than by plausible arithmetic, and
-  holding the intake form (`:1793`) and the `HR roll-up — outstanding items` heading at **`:1865`**. The
+  closed by its matching `)}` at `:2762`, found by brace-matching rather than by plausible arithmetic, and
+  holding the intake form (`:2199`) and the `HR roll-up — outstanding items` heading at **`:2271`**. The
   bounds are unambiguous, so they are applied rather than flagged. The same stale pair is cited twice more
   in this document — recorded with the measured value in the pass record below, and **neither is edited**
   (one is pinned to PR #66; the other needs its sentence re-cast, not its number swapped).
@@ -1416,7 +1416,7 @@ each true and none is interchangeable: `989↔1038` the heading, `991↔1040` th
 that actually gained the clause naming what happened to its first target. The row keeps the "is now" it
 declared and takes the "was" that pairs with it.
 
-**2. The §8 tab row's JSX bounds, measured.** `client/src/App.tsx` on `f46b7a9` is **2,493 lines** and holds
+**2. The §8 tab row's JSX bounds, measured.** `@rev f46b7a9` `client/src/App.tsx` on `f46b7a9` is **2,493 lines** and holds
 six tab blocks, opened at `:1323` (dashboard), `:1506` (employees), `:1607` (transitions), `:1635`
 (analytics) and `:1765` (pre-boarding). The pre-boarding block — `{activeTab === 'preboarding' && (` at
 `:1765` — closes at **`:2356`**, 592 lines, found by brace-matching from the opening line. Four independent
