@@ -26,6 +26,63 @@ The server requires these variables to be set in the environment:
    setsid nohup node index.js > server/server.log 2>&1 &
    ```
 
+## Build provenance — what a `dist/` was built from, recorded in the `dist/`
+
+`client/dist` is **gitignored and untracked**. A checkout does not touch it, `git status`
+stays clean, and `--restart-only` does not rebuild — so a build in the deployed tree
+publishes bytes with **no merge, no movement and no restart**, and the server reads
+`client/dist` from disk on every request. That is not hypothetical: on 2026-11-02 the shared
+tree's `client/dist` was built at 22:55:44 from the unmerged `#353` branch and the live
+product served `index-B3KFG1-j.js` (295,549 B, md5 `b86ba75e…`) for ~50 minutes. The recorded
+pair for the deployed revision (`index-vsGFc45L.js`, 290,272 B, md5 `5145487f…`) was **not on
+disk at all**, so its URL fell through the SPA catch-all and answered **200 with HTML** —
+which is why no status code and no source-reading check could have found it.
+
+**The build now records itself.** `client/vite.config.ts` has a `closeBundle` hook, so the
+gate command is unchanged (`cd client && npm run build` = `tsc -b && vite build`) and each
+build writes `client/dist/build-provenance.json`:
+
+| field | meaning |
+| --- | --- |
+| `revision` | `git rev-parse HEAD` of the tree the build ran in (`null` + `revision_reason` if git is unavailable — recorded, never a crash) |
+| `dirty`, `dirty_files` | whether tracked files were modified at build time, and which |
+| `built_at_utc` | when |
+| `entry` | the asset `index.html` names as the module the browser runs |
+| `referenced` | every `/assets/…` path `index.html` names, the stylesheet included |
+| `files` | byte size and md5 of **every** file in `dist/` (assets, index.html, fonts, icons) |
+
+The build prints one line carrying the same record, so a movement's own transcript has it.
+
+**The check:** `python3 scripts/check-served-provenance.py [--tree PATH]`, registered in
+`check-all` as `served-provenance` (default) with its mutants as `served-provenance-controls`
+(`--full`). It reads the disk, never the network, and reddens when:
+
+* the asset `index.html` names is not the entry the build recorded (tonight's exact shape);
+* any asset `index.html` names is missing from disk, or its byte size or md5 differs from the
+  record — read from the filesystem, because a missing asset answers **200 with the SPA shell**;
+* `index.html`'s own bytes differ from the record, or it names a different set of assets
+  (an `index.html` edited back by hand — the 23:45 restore — is a change to this file);
+* `index.html` names no stylesheet at all;
+* **the provenance revision ≠ `git rev-parse HEAD` of the tree being measured** — a merge
+  landed without a rebuild, `--restart-only`, or a build from somewhere else;
+* a file sits in `dist/assets/` the record does not name (a foreign build's leftover bundle);
+* any recorded file is missing or has drifted.
+
+**A tree with no `build-provenance.json` is UNPROVEN and exits 1** — not a skip, not a pass.
+Today the deployed tree is in exactly that state: its bytes predate any record, so the honest
+verdict is `NOT PROVEN · provenance-missing`. What makes it proven is a real build at a real
+revision — `cd client && npm run build` **in the tree that serves** (which a movement already
+does) — never a hand-written record, which would manufacture the assurance the check exists
+to prevent.
+
+**What it cannot prove, stated rather than implied.** It proves the served bytes are the
+bytes *this tree's own build* produced at *this tree's* revision. It does not prove that
+revision is merged, reviewed or on `main`: a build of an unmerged branch checked out cleanly
+records its own revision and passes — and that is the legitimate case (WORKFLOW rule 43, build
+in a worktree), which must not be reddened. It prints a build's `dirty` flag but does not fail
+on it, for the same reason. And it reads the disk, not the URL: whether the running process is
+serving this `dist` at all is `scripts/observe-serve-pair.sh` and `scripts/check-served-render.js`.
+
 ## Database Management
 The product uses a private SQLite database, isolated from the team coordination store.
 - **Schema**: Defined in `server/schema.sql`.
