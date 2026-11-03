@@ -19,15 +19,11 @@
  */
 
 const CALLERLESS = {
-  'POST /api/employees/:id/probation-evaluations': {
-    route: 'server/index.js:1257',
-    why: 'P3-2 ships the submission path over HTTP while the form that will call it is the probation '
-       + 'screen\'s next slice: the route is reachable by path and is exercised end to end by '
-       + 'server/probation-evaluations.test.js, and no click in the product posts to it yet. '
-       + 'Deliberate and tested, not an orphan.',
-    owner: 'decision 21 (leave it and say so) - the submission surface arrives with the P3-3/P3-4 '
-       + 'slices of row `69dbf57d`, and until it does this entry is what says so out loud',
-  },
+  // `POST /api/employees/:id/probation-evaluations` USED TO SIT HERE, and its removal is the point of
+  // this register: from 2026-11-03 the `Record evaluation` control on each probation row posts to it
+  // (`client/src/App.tsx`, declared in DYNAMIC_SITES below because the path is built from the row's
+  // employee id). A fixed defect that lingers here reads as an open one — `server/reachability.test.js`
+  // fails the moment an entry's route becomes reachable.
   'POST /api/employees/:id/probation-evaluations/:evaluation_id/corrections': {
     route: 'server/index.js:1377',
     why: 'P3-2\'s follow-up (row `0484e79e`, owner decision (A), 2026-10-28) ships the CORRECTION path '
@@ -96,6 +92,16 @@ const DYNAMIC_SITES = [
     covers: ['PUT /api/onboarding-tasks/:id', 'PUT /api/offboarding-tasks/:id'],
     why: 'the line above sets endpoint from a ternary — onboarding-tasks or offboarding-tasks — which '
        + 'are exactly the two task routes; the task checkbox in the employee view calls it.',
+  },
+  {
+    file: 'client/src/App.tsx',
+    expr: '/api/employees/${evaluationFor.employee_id}/probation-evaluations',
+    covers: ['POST /api/employees/:id/probation-evaluations'],
+    why: 'the middle segment is the employee id of the probation row the form was opened from, which is '
+       + 'the same id the row carries, so the POST addresses the hire whose milestones the form is '
+       + 'showing. The call is `authedFetch` with `method: \'POST\'` on the next line, and its body is '
+       + '`evaluationPayload` — exactly `{ milestone_index, content }`. Added 2026-11-03 with the '
+       + '`Record evaluation` control, which is what took this route out of CALLERLESS.',
   },
 ];
 

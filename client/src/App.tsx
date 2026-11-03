@@ -6,6 +6,16 @@ import { callPanel, settlePanels, refusalNoticeFor } from './panelResults.js';
 import {
   milestoneLabel, milestoneChipClass, formatDay, probationSummary, probationSubtitle, windowLine,
 } from './probationTimeline.js';
+// P3-4 (screen 1) -- the evaluation form's sentences and its client-side guards. They live in their
+// own module so every refusal can be asserted without a browser (`probationEvaluationCopy.test.js`),
+// in the convention `httpStatus.js`, `probationTimeline.js` and `panelResults.js` already ship.
+import {
+  RECORD_BUTTON, ALL_RECORDED, FORM_TITLE, MILESTONE_LABEL, EVALUATION_LABEL, CANCEL,
+  EMPTY_PANEL_SENTENCE, EVALUATION_HELPER,
+  evaluationRecordedLine, submissionOutcome, OUTCOME, dayOf,
+  selectableMilestones, hasRecordableMilestone, defaultMilestoneIndex, milestoneOptionLabel,
+  evaluationPayload, canSubmit,
+} from './probationEvaluationCopy.js';
 // P3-3 -- the escalation record as a READING. A refusal and an empty list are different facts and
 // must not render alike; `probationEscalations.js` is where that distinction is made, and tested.
 import {
@@ -613,11 +623,28 @@ export default function App() {
   // for, and it stays reachable so the KSA surface can still be served and tested.
   const [jurisdiction, setJurisdiction] = useState<'AE' | 'SA'>('AE');
 
-  // P3-1 -- the probation timelines of the active view, and the server's own note naming the one
-  // milestone state that is not yet reachable (nothing records an evaluation until P3-2). Both are
-  // read off the payload; neither is computed here.
+  // P3-1 -- the probation timelines of the active view, and the server's own note saying what makes
+  // a milestone read `completed` (COMPLETION_NOTE, server/probation-timeline.js:209). Both are read
+  // off the payload; neither is computed here. Until 2026-11-03 this comment called that state "not
+  // yet reachable", and it was right: nothing in the client submitted an evaluation. The `Record
+  // evaluation` control below now does, so the state the note names is reachable from this screen.
   const [probationTimelines, setProbationTimelines] = useState<any[]>([]);
   const [probationNote, setProbationNote] = useState<string | null>(null);
+
+  // P3-4 (screen 1) -- the evaluation form. `evaluationFor` is the ROW the modal is open for, not a
+  // boolean: the form shows one hire's milestones and posts to that hire's route, and one value
+  // cannot disagree with itself. `null` is closed.
+  const [evaluationFor, setEvaluationFor] = useState<any | null>(null);
+  const [evaluationForm, setEvaluationForm] = useState<{ milestone_index: string; content: string }>({
+    milestone_index: '', content: '',
+  });
+  const [evaluationSubmitting, setEvaluationSubmitting] = useState(false);
+  // The refusal is rendered IN PLACE inside the modal. It is never a console.error: a refusal that
+  // only reaches the console leaves the reader looking at a form that appears to have done nothing.
+  const [evaluationRefusal, setEvaluationRefusal] = useState<string | null>(null);
+  // The success line at the foot of the panel. It says what the RE-READ shows, never what the 201
+  // answered with -- see `handleRecordEvaluation`.
+  const [evaluationNotice, setEvaluationNotice] = useState<string | null>(null);
 
   // P3-3 -- the escalation records, held as ONE reading rather than as a list. A refusal, a
   // failed read and an empty list must not render alike; `probationEscalations.js` decides which
@@ -1342,6 +1369,80 @@ export default function App() {
     }
   };
 
+  // P3-4 (screen 1) -- open, close, and record. The form is opened from a row and closed by Cancel,
+  // by the x, or by a successful submission; nothing else closes it, so a refusal is never cleared by
+  // the act of failing.
+  const openEvaluationForm = (timeline: any) => {
+    setEvaluationFor(timeline);
+    setEvaluationForm({ milestone_index: defaultMilestoneIndex(timeline), content: '' });
+    setEvaluationRefusal(null);
+    setEvaluationNotice(null);
+  };
+
+  const closeEvaluationForm = () => {
+    setEvaluationFor(null);
+    setEvaluationForm({ milestone_index: '', content: '' });
+    setEvaluationRefusal(null);
+  };
+
+  const handleRecordEvaluation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!evaluationFor) return;
+    if (!canSubmit({ content: evaluationForm.content, submitting: evaluationSubmitting })) return;
+    // Read both fields ONCE, so the request, the classification and the success line all describe the
+    // same submission even if the reader types while it is in flight.
+    const submittedIndex = evaluationForm.milestone_index;
+    const submittedContent = evaluationForm.content;
+    setEvaluationSubmitting(true);
+    setEvaluationRefusal(null);
+    try {
+      // EXACTLY the two fields the route reads. `submitted_by`/`submitted_at` are stamped from the
+      // token and the clock, and the milestone's day and due date are copied from the server's own
+      // derivation -- sending them would be a second version of a fact the server already holds.
+      const res = await authedFetch(`${API_BASE}/api/employees/${evaluationFor.employee_id}/probation-evaluations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(evaluationPayload(submittedIndex, submittedContent)),
+      });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      const payload = await res.json().catch(() => ({}));
+      const outcome = submissionOutcome({
+        status: res.status,
+        payload,
+        sentContent: submittedContent,
+        sentMilestoneIndex: submittedIndex,
+        timeline: evaluationFor,
+      });
+      if (outcome.kind !== OUTCOME.RECORDED) {
+        setEvaluationRefusal(outcome.sentence);
+        return;
+      }
+      // Recorded. The 201's own `milestone.state` is NOT read: it is derived without this submission
+      // (server/probation-evaluations.js:82-95), so it still says `overdue`/`upcoming` here. The chip
+      // flips only on the re-read below, which is why the re-read is awaited before the line is shown.
+      const day = dayOf(evaluationFor, submittedIndex);
+      setEvaluationFor(null);
+      setEvaluationForm({ milestone_index: '', content: '' });
+      await fetchData();
+      setEvaluationNotice(evaluationRecordedLine(day));
+    } catch (err) {
+      // A refusal arrives THROWN -- `authedFetch` throws `RefusalError` for a 403 with an empty body
+      // and `SessionExpiredError` for a dead session (httpStatus.js). Falling through to a
+      // console.error here is the older handlers' habit and would render nothing at all.
+      const outcome = submissionOutcome({ error: err, timeline: evaluationFor, sentMilestoneIndex: submittedIndex });
+      if (outcome.kind === OUTCOME.SIGNED_OUT) {
+        handleLogout();
+        return;
+      }
+      setEvaluationRefusal(outcome.sentence);
+    } finally {
+      setEvaluationSubmitting(false);
+    }
+  };
+
   const handleMarkProductive = async () => {
     if (!selectedEmployee || !token) return;
     const productiveDate = new Date().toISOString().split('T')[0];
@@ -1754,7 +1855,7 @@ export default function App() {
                   <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded uppercase border border-teal-200">P3-1</span>
                 </div>
                 {probationTimelines.length === 0 ? (
-                  <div className="p-4 text-xs text-slate-500">No hire in this view is on probation today.</div>
+                  <div className="p-4 text-xs text-slate-500">{EMPTY_PANEL_SENTENCE}</div>
                 ) : (
                   <ul className="divide-y divide-slate-100">
                     {probationTimelines.map((t: any) => (
@@ -1770,13 +1871,36 @@ export default function App() {
                             </span>
                           ))}
                         </div>
-                        <div className="mt-1 text-[10px] text-slate-500">{probationSummary(t)}</div>
+                        <div className="mt-1 flex items-end justify-between gap-4">
+                          <div className="text-[10px] text-slate-500">{probationSummary(t)}</div>
+                          {/* ONE control per row, not one per chip. A hire with every milestone recorded
+                              has nothing to submit (a second submission is a 409), so the button is
+                              absent and the line says so instead. It is shown to everyone who can read
+                              the panel: entry points are not hidden by role -- the server refuses, and
+                              that refusal is rendered in the form. */}
+                          {hasRecordableMilestone(t) ? (
+                            <button
+                              onClick={() => openEvaluationForm(t)}
+                              className="shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-200 text-slate-700 hover:border-teal-300 hover:text-teal-700 transition"
+                            >
+                              {RECORD_BUTTON}
+                            </button>
+                          ) : (
+                            <div className="shrink-0 text-[10px] font-semibold text-emerald-700">{ALL_RECORDED}</div>
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ul>
                 )}
                 {probationNote && (
                   <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500">{probationNote}</div>
+                )}
+                {evaluationNotice && (
+                  <div className="px-4 py-2 bg-teal-50 border-t border-teal-200 text-[10px] text-teal-800 font-medium flex items-center justify-between gap-4">
+                    <span>{evaluationNotice}</span>
+                    <button onClick={() => setEvaluationNotice(null)} className="text-teal-600 hover:text-teal-800 font-bold text-sm leading-none">&times;</button>
+                  </div>
                 )}
               </div>
               {/* P3-3 -- the escalation records. BEGIN: the block between this marker and END is
@@ -2843,6 +2967,70 @@ export default function App() {
               <div className="flex justify-end space-x-3 pt-4">
                 <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition">Discard</button>
                 <button type="submit" className="px-8 py-2.5 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700 shadow-lg transition">Create Employee Profile</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: RECORD A PROBATION EVALUATION (P3-4, screen 1) -- the ONLY thing that makes a
+          milestone read `completed` (server/probation-evaluations.js). Until this existed the panel
+          told a reader a milestone completes only from a submitted evaluation and offered no way to
+          submit one. */}
+      {evaluationFor && (
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-[100] backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+              <div>
+                <h3 className="font-bold text-slate-900 text-lg">{FORM_TITLE}</h3>
+                <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight">
+                  {evaluationFor.employee_name} &middot; {windowLine(evaluationFor)}
+                </p>
+              </div>
+              <button onClick={closeEvaluationForm} className="text-slate-400 hover:text-slate-600 text-2xl font-light">&times;</button>
+            </div>
+            <form onSubmit={handleRecordEvaluation} className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="evaluation-milestone">{MILESTONE_LABEL}</label>
+                <select
+                  id="evaluation-milestone"
+                  value={evaluationForm.milestone_index}
+                  onChange={e => setEvaluationForm({ ...evaluationForm, milestone_index: e.target.value })}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
+                >
+                  {selectableMilestones(evaluationFor).map((m: any) => (
+                    <option key={m.index} value={String(m.index)}>{milestoneOptionLabel(m)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="evaluation-content">{EVALUATION_LABEL}</label>
+                <textarea
+                  id="evaluation-content"
+                  rows={6}
+                  required
+                  value={evaluationForm.content}
+                  onChange={e => setEvaluationForm({ ...evaluationForm, content: e.target.value })}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium"
+                />
+                <p className="text-[9px] text-slate-500">{EVALUATION_HELPER}</p>
+              </div>
+              {/* The refusal, in place. Every sentence comes from `probationEvaluationCopy.js`, which
+                  is where the ten are asserted; this file chooses none of them. */}
+              {evaluationRefusal && (
+                <div className="p-3 rounded-xl text-xs font-medium border bg-rose-50 border-rose-200 text-rose-800">
+                  {evaluationRefusal}
+                </div>
+              )}
+              <div className="flex justify-end space-x-3 pt-2">
+                <button type="button" onClick={closeEvaluationForm} className="px-6 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition">{CANCEL}</button>
+                <button
+                  type="submit"
+                  disabled={!canSubmit({ content: evaluationForm.content, submitting: evaluationSubmitting })}
+                  className="px-8 py-2.5 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700 shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {RECORD_BUTTON}
+                </button>
               </div>
             </form>
           </div>
