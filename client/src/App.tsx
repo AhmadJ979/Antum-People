@@ -15,6 +15,16 @@ import {
   evaluationRecordedLine, submissionOutcome, OUTCOME, dayOf,
   selectableMilestones, hasRecordableMilestone, defaultMilestoneIndex, milestoneOptionLabel,
   evaluationPayload, canSubmit,
+  // P3-4 (screen 2, 2026-11-04) -- the correction form's sentences and guards, in the same module and
+  // the same test file. The form's OWN fields are `text` and `why`, never the wire's `content` and
+  // `reason`: `content` is the SERVED DOCUMENT body's field name, and
+  // `scripts/check-served-document-renderer.py` reddens on any `.content` read under `client/src`
+  // outside `MarkdownDocument`. The two names meet only inside `correctionPayload`/`effectiveText`.
+  CORRECT_BUTTON, CORRECTION_TITLE, CORRECTED_LABEL, WHY_LABEL, CORRECTION_SUBMIT, REASON_HELPER,
+  ORIGINAL_NOT_SHOWN,
+  completedMilestones, completionLine, correctionClause, milestoneContextLine, recordedLine,
+  correctionsSoFarLine, correctionPayload, effectiveText, effectiveCorrectionCount,
+  correctionRecordedLine, correctionOutcome, canSubmitCorrection,
 } from './probationEvaluationCopy.js';
 // P3-3 -- the escalation record as a READING. A refusal and an empty list are different facts and
 // must not render alike; `probationEscalations.js` is where that distinction is made, and tested.
@@ -645,6 +655,22 @@ export default function App() {
   // The success line at the foot of the panel. It says what the RE-READ shows, never what the 201
   // answered with -- see `handleRecordEvaluation`.
   const [evaluationNotice, setEvaluationNotice] = useState<string | null>(null);
+
+  // P3-4 (screen 2) -- the correction form. `correctionFor` is the COMPLETION the modal was opened
+  // from: the hire, the milestone, and the `evaluation_id` the route takes as a PATH parameter
+  // (`server/index.js:1786`). One value, so the form cannot post against a hire its own read-only
+  // block is not describing. `null` is closed. The id is never typed or picked by a reader -- it
+  // travels from a rendered completion, which is itself a granted read.
+  const [correctionFor, setCorrectionFor] = useState<any | null>(null);
+  // The form's own fields, named `text` and `why`. Not cosmetic: see the import comment above.
+  const [correctionForm, setCorrectionForm] = useState<{ text: string; why: string }>({ text: '', why: '' });
+  const [correctionSubmitting, setCorrectionSubmitting] = useState(false);
+  // Rendered IN PLACE inside the modal, never a console.error: a refusal that only reaches the
+  // console leaves the reader looking at a form that appears to have done nothing.
+  const [correctionRefusal, setCorrectionRefusal] = useState<string | null>(null);
+  // The success line at the foot of the panel. It says what the RE-READ shows; the wording in it is
+  // the 201's own `effective` text, which is what the reader just typed.
+  const [correctionNotice, setCorrectionNotice] = useState<string | null>(null);
 
   // P3-3 -- the escalation records, held as ONE reading rather than as a list. A refusal, a
   // failed read and an empty list must not render alike; `probationEscalations.js` decides which
@@ -1443,6 +1469,85 @@ export default function App() {
     }
   };
 
+  // P3-4 (screen 2) -- open, close, and record a correction. Closed by Cancel, by the x, or by a
+  // successful submission; nothing else closes it, so a refusal is never cleared by the act of
+  // failing.
+  const openCorrectionForm = (timeline: any, milestone: any) => {
+    setCorrectionFor({
+      employee_id: timeline.employee_id,
+      employee_name: timeline.employee_name,
+      milestone,
+      evaluation_id: milestone.completion.evaluation_id,
+    });
+    setCorrectionForm({ text: '', why: '' });
+    setCorrectionRefusal(null);
+    setCorrectionNotice(null);
+  };
+
+  const closeCorrectionForm = () => {
+    setCorrectionFor(null);
+    setCorrectionForm({ text: '', why: '' });
+    setCorrectionRefusal(null);
+  };
+
+  const handleRecordCorrection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!correctionFor) return;
+    if (!canSubmitCorrection({ text: correctionForm.text, why: correctionForm.why, submitting: correctionSubmitting })) return;
+    // Read both fields ONCE, so the request and the classification describe the same submission
+    // even if the reader types while it is in flight.
+    const submittedText = correctionForm.text;
+    const submittedWhy = correctionForm.why;
+    setCorrectionSubmitting(true);
+    setCorrectionRefusal(null);
+    try {
+      // EXACTLY the two fields the route reads. `milestone_index` is deliberately NOT sent: the row
+      // being corrected already carries it (`server/index.js:1765-1766`), and a second source could
+      // disagree with it. The evaluation id is a PATH segment, not a body field.
+      const res = await authedFetch(`${API_BASE}/api/employees/${correctionFor.employee_id}/probation-evaluations/${correctionFor.evaluation_id}/corrections`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(correctionPayload(submittedText, submittedWhy)),
+      });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      const payload = await res.json().catch(() => ({}));
+      const outcome = correctionOutcome({
+        status: res.status,
+        payload,
+        sentText: submittedText,
+        sentWhy: submittedWhy,
+      });
+      if (outcome.kind !== OUTCOME.CORRECTED) {
+        setCorrectionRefusal(outcome.sentence);
+        return;
+      }
+      // Recorded. The 201's `evaluation` is the ORIGINAL row, unmodified
+      // (`server/probation-evaluations.js:237`) -- the words being corrected -- so it is never
+      // rendered here. `effective` is what a reader should show (`:282-302`), and the sentence is
+      // built from that.
+      const shownText = effectiveText(payload.effective);
+      const shownCount = effectiveCorrectionCount(payload.effective);
+      setCorrectionFor(null);
+      setCorrectionForm({ text: '', why: '' });
+      await fetchData();
+      setCorrectionNotice(correctionRecordedLine(shownText, shownCount));
+    } catch (err) {
+      // A refusal arrives THROWN -- `authedFetch` throws `RefusalError` for a 403 with an empty body
+      // and `SessionExpiredError` for a dead session (httpStatus.js).
+      const outcome = correctionOutcome({ error: err });
+      if (outcome.kind === OUTCOME.SIGNED_OUT) {
+        handleLogout();
+        return;
+      }
+      setCorrectionRefusal(outcome.sentence);
+    } finally {
+      setCorrectionSubmitting(false);
+    }
+  };
+
   const handleMarkProductive = async () => {
     if (!selectedEmployee || !token) return;
     const productiveDate = new Date().toISOString().split('T')[0];
@@ -1871,6 +1976,29 @@ export default function App() {
                             </span>
                           ))}
                         </div>
+                        {/* P3-4 (screen 2) -- ONE line per milestone that already carries a recorded
+                            evaluation, with the `Correct` control on it. The id is neither typed nor
+                            picked: it is `completion.evaluation_id` on the timeline this row was
+                            rendered from, so the form can only open against a completion the reader
+                            has already been granted. A milestone with no completion has no line, so a
+                            hire with no evaluations has no `Correct` control anywhere -- absence is
+                            an absent affordance, never an empty list. Shown to every role that can
+                            read the panel: entry points are not hidden by role, the server refuses,
+                            and that refusal is rendered in the form. */}
+                        {completedMilestones(t).map((m: any) => (
+                          <div key={`correct-${m.index}`} className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
+                            <span>{completionLine(m)}</span>
+                            {correctionClause(m.completion) ? (
+                              <span className="text-slate-400">&middot; {correctionClause(m.completion)}</span>
+                            ) : null}
+                            <button
+                              onClick={() => openCorrectionForm(t, m)}
+                              className="text-[10px] font-bold px-2 py-0.5 rounded-lg border border-slate-200 text-slate-700 hover:border-teal-300 hover:text-teal-700 transition"
+                            >
+                              {CORRECT_BUTTON}
+                            </button>
+                          </div>
+                        ))}
                         <div className="mt-1 flex items-end justify-between gap-4">
                           <div className="text-[10px] text-slate-500">{probationSummary(t)}</div>
                           {/* ONE control per row, not one per chip. A hire with every milestone recorded
@@ -1900,6 +2028,15 @@ export default function App() {
                   <div className="px-4 py-2 bg-teal-50 border-t border-teal-200 text-[10px] text-teal-800 font-medium flex items-center justify-between gap-4">
                     <span>{evaluationNotice}</span>
                     <button onClick={() => setEvaluationNotice(null)} className="text-teal-600 hover:text-teal-800 font-bold text-sm leading-none">&times;</button>
+                  </div>
+                )}
+                {/* Screen 2's own line. Kept separate from the one above: a correction is not a
+                    submission, and one notice standing for both would say the wrong thing about
+                    which write landed. */}
+                {correctionNotice && (
+                  <div className="px-4 py-2 bg-teal-50 border-t border-teal-200 text-[10px] text-teal-800 font-medium flex items-center justify-between gap-4">
+                    <span>{correctionNotice}</span>
+                    <button onClick={() => setCorrectionNotice(null)} className="text-teal-600 hover:text-teal-800 font-bold text-sm leading-none">&times;</button>
                   </div>
                 )}
               </div>
@@ -3030,6 +3167,77 @@ export default function App() {
                   className="px-8 py-2.5 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700 shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {RECORD_BUTTON}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: CORRECT A RECORDED EVALUATION (P3-4, screen 2) -- the correction write path, which
+          has answered over HTTP since P3-2 and had NO caller in the product until this. Every
+          sentence below comes from `probationEvaluationCopy.js`, where each one is asserted; this
+          file chooses none of them. */}
+      {correctionFor && (
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-[100] backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+              <div>
+                <h3 className="font-bold text-slate-900 text-lg">{CORRECTION_TITLE}</h3>
+                <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight">
+                  {correctionFor.employee_name}
+                </p>
+              </div>
+              <button onClick={closeCorrectionForm} className="text-slate-400 hover:text-slate-600 text-2xl font-light">&times;</button>
+            </div>
+            <form onSubmit={handleRecordCorrection} className="p-6 space-y-4">
+              {/* The read-only block. All four values were already on the row the form was opened
+                  from, so nothing here is a second derivation of a fact the server sent. */}
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[10px] text-slate-600 space-y-1">
+                <div>{milestoneContextLine(correctionFor.milestone)}</div>
+                <div>{recordedLine(correctionFor.milestone.completion)}</div>
+                <div>{correctionsSoFarLine(correctionFor.milestone.completion)}</div>
+              </div>
+              {/* The original wording cannot be shown: no route serves it. Said out loud, because a
+                  blank box would read as "the original is empty". */}
+              <p className="text-[9px] text-slate-500">{ORIGINAL_NOT_SHOWN}</p>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="correction-text">{CORRECTED_LABEL}</label>
+                <textarea
+                  id="correction-text"
+                  rows={6}
+                  required
+                  value={correctionForm.text}
+                  onChange={e => setCorrectionForm({ ...correctionForm, text: e.target.value })}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="correction-why">{WHY_LABEL}</label>
+                <textarea
+                  id="correction-why"
+                  rows={3}
+                  required
+                  value={correctionForm.why}
+                  onChange={e => setCorrectionForm({ ...correctionForm, why: e.target.value })}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium"
+                />
+                <p className="text-[9px] text-slate-500">{REASON_HELPER}</p>
+              </div>
+              {/* The refusal, in place. */}
+              {correctionRefusal && (
+                <div className="p-3 rounded-xl text-xs font-medium border bg-rose-50 border-rose-200 text-rose-800">
+                  {correctionRefusal}
+                </div>
+              )}
+              <div className="flex justify-end space-x-3 pt-2">
+                <button type="button" onClick={closeCorrectionForm} className="px-6 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition">{CANCEL}</button>
+                <button
+                  type="submit"
+                  disabled={!canSubmitCorrection({ text: correctionForm.text, why: correctionForm.why, submitting: correctionSubmitting })}
+                  className="px-8 py-2.5 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700 shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {CORRECTION_SUBMIT}
                 </button>
               </div>
             </form>

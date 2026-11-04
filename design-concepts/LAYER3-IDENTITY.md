@@ -34,9 +34,9 @@ what an **unnamed-actor refusal** looks like on screen.
 
 | # | Surface | State today | This slice |
 |---|---------|-------------|------------|
-| **S-L1** | Sign-in | `App.tsx:521` (card opens), its `Sign In` button at `:595` (the block was `@rev 7b073f8` `:327`–`431`) — a username field, a password field, `Sign In`, a recovery note | unchanged in shape; the copy stops implying the account *is* the person |
-| **S-L2** | Who am I / sign out | `App.tsx:1540` (icon-only `Sign Out`), `:1546`–`:1558` identity card | the card shows a **person's name and role**, and its two fallbacks are removed |
-| **S-L3** | The named actor on a record | `App.tsx:2592` prints `recorded by {ack.recorded_by} · basis {ack.lawful_basis}`; the second site `:2836` prints `{item.acknowledgement.recorded_by}` without the words; the checklist tick stores `completed_at` and **no actor** | every record reads as *made by a person*, and says **which kind of person** |
+| **S-L1** | Sign-in | `App.tsx:605` (card opens), its `Sign In` button at `:605` (the block was `@rev 7b073f8` `:327`–`431`) — a username field, a password field, `Sign In`, a recovery note | unchanged in shape; the copy stops implying the account *is* the person |
+| **S-L2** | Who am I / sign out | `App.tsx:1645` (icon-only `Sign Out`), `:1645`–`:1645` identity card | the card shows a **person's name and role**, and its two fallbacks are removed |
+| **S-L3** | The named actor on a record | `App.tsx:2729` prints `recorded by {ack.recorded_by} · basis {ack.lawful_basis}`; the second site `:2973` prints `{item.acknowledgement.recorded_by}` without the words; the checklist tick stores `completed_at` and **no actor** | every record reads as *made by a person*, and says **which kind of person** |
 | **S-L4** | The unnamed-actor refusal | the server answers **400**; the client shows a generic error banner | the refusal says what is missing and what to do, in the product's words |
 
 ---
@@ -83,10 +83,10 @@ Placed where the card is today — sidebar, under the brand row (`@rev ab7e9c3` 
   └──────────────────────────────────────────────┘
 ```
 
-- **Sign out stays one tap and stays icon-only** (`App.tsx:1540`, `title="Sign Out"`). Do not move it, do
+- **Sign out stays one tap and stays icon-only** (`App.tsx:1645`, `title="Sign Out"`). Do not move it, do
   not add a menu: a person must be able to leave the product without hunting, and the button already
   announces itself. Add an accessible name if the icon is ever unlabelled — today it relies on `title`.
-- **The `role` string is the access model's vocabulary, not invented here** (`user?.access_role` at `App.tsx:1555` — the field is no longer named `role`) — and it is no longer
+- **The `role` string is the access model's vocabulary, not invented here** (`user?.access_role` at `App.tsx:1660` — the field is no longer named `role`) — and it is no longer
   `(open)`: `docs/access-model.md` **§2.1** names the five (`hr_admin`, `manager`, `finance`, `employee`,
   `compliance_viewer`). The card displays one of those; it makes no claim about what it permits.
 - **The card must say *which* role it is showing.** The model's **§2.4** records a naming hazard this
@@ -207,7 +207,7 @@ No Arabic copy ships with this slice (decision 15(c) is open). The requirement i
 | `dir=` / `lang=` | **0** / **0** | no direction handling exists |
 
 **The two surfaces added here are the ones with the most physical markup in the product**, measured in place:
-the identity block (`App.tsx:1546`–`:1558`, `space-x-3` at `:1547`) and the login card (opens `:521`) use `justify-end`, `ml-3` (the dismiss button, `:582`) and `mr-2` (the error icon, `:535`); the card's block was `@rev 7b073f8` `:357`–`431`. Rules for anything
+the identity block (`App.tsx:1652`–`:1669`, `space-x-3` at `:1652`) and the login card (opens `:545`) use `justify-end`, `ml-3` (the dismiss button, `:592`) and `mr-2` (the error icon, `:545`); the card's block was `@rev 7b073f8` `:357`–`431`. Rules for anything
 new:
 
 1. **Spacing inside the identity card and any new row goes through `gap-*` on a flex container**, never
