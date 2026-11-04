@@ -24,16 +24,12 @@ const CALLERLESS = {
   // (`client/src/App.tsx`, declared in DYNAMIC_SITES below because the path is built from the row's
   // employee id). A fixed defect that lingers here reads as an open one — `server/reachability.test.js`
   // fails the moment an entry's route becomes reachable.
-  'POST /api/employees/:id/probation-evaluations/:evaluation_id/corrections': {
-    route: 'server/index.js:1377',
-    why: 'P3-2\'s follow-up (row `0484e79e`, owner decision (A), 2026-10-28) ships the CORRECTION path '
-       + 'over HTTP beside the submission path, for the same reason and with the same shape: the route '
-       + 'is reachable by path and is exercised end to end by server/probation-evaluations.test.js, and '
-       + 'no click in the product posts to it yet — the surface that will offer a correction is the '
-       + 'probation screen\'s next slice (P3-4). Deliberate and tested, not an orphan.',
-    owner: 'decision 21 (leave it and say so) - the correction surface arrives with the P3-4 slice, and '
-       + 'until it does this entry is what says so out loud',
-  },
+  // `POST /api/employees/:id/probation-evaluations/:evaluation_id/corrections` USED TO SIT HERE TOO,
+  // and its removal is the same point as the entry above: from 2026-11-04 the `Correct` control on a
+  // completed milestone's line posts to it (`client/src/App.tsx`, declared in DYNAMIC_SITES below
+  // because both the employee id and the evaluation id are path parameters built from the row). The
+  // P3-4 screen-2 slice is what it was waiting for, and a fixed orphan that lingers here reads as an
+  // open one.
   'POST /api/compliance/calculate-eosb': {
     route: 'server/index.js:335',
     why: 'A pure EOSB calculator over the request body. The product computes EOSB server-side for the '
@@ -102,6 +98,19 @@ const DYNAMIC_SITES = [
        + 'showing. The call is `authedFetch` with `method: \'POST\'` on the next line, and its body is '
        + '`evaluationPayload` — exactly `{ milestone_index, content }`. Added 2026-11-03 with the '
        + '`Record evaluation` control, which is what took this route out of CALLERLESS.',
+  },
+  {
+    file: 'client/src/App.tsx',
+    expr: '/api/employees/${correctionFor.employee_id}/probation-evaluations/${correctionFor.evaluation_id}/corrections',
+    covers: ['POST /api/employees/:id/probation-evaluations/:evaluation_id/corrections'],
+    why: 'BOTH dynamic segments are read off the completion the form was opened from: '
+       + '`correctionFor.employee_id` is the hire whose timeline row carried the completion, and '
+       + '`correctionFor.evaluation_id` is that completion\'s own `evaluation_id` -- the same value the '
+       + 'timeline payload published, so the form can only address an evaluation the reader was '
+       + 'already shown. The call is `authedFetch` with `method: \'POST\'` on the next line and its body '
+       + 'is `correctionPayload` -- exactly `{ content, reason }`, with `milestone_index` deliberately '
+       + 'absent because the row being corrected already carries it. Added 2026-11-04 with the '
+       + '`Correct` control, which is what took this route out of CALLERLESS.',
   },
 ];
 
