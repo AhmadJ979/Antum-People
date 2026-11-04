@@ -3180,8 +3180,16 @@ export default function App() {
           file chooses none of them. */}
       {correctionFor && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-[100] backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+          {/* The dialog is capped to the viewport rather than to a fixed fraction of it, and it is
+              laid out as a column: the header and the action row never shrink, so the only thing
+              that scrolls is the field region between them. Until 2026-11-04 the card itself held
+              BOTH the height cap and the scroll, so title, fields and actions were one scroll
+              surface -- on a 1280x576 window the `Why this is being changed` field ran past the
+              bottom edge and `Record a correction` sat at y=627..663, 51px below the fold, which
+              in front of a prospect reads as a missing button. Measured on a scratch instance at
+              d92b028 with this same form; re-measured after this change. */}
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden border border-slate-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0 bg-white">
               <div>
                 <h3 className="font-bold text-slate-900 text-lg">{CORRECTION_TITLE}</h3>
                 <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight">
@@ -3190,47 +3198,51 @@ export default function App() {
               </div>
               <button onClick={closeCorrectionForm} className="text-slate-400 hover:text-slate-600 text-2xl font-light">&times;</button>
             </div>
-            <form onSubmit={handleRecordCorrection} className="p-6 space-y-4">
-              {/* The read-only block. All four values were already on the row the form was opened
-                  from, so nothing here is a second derivation of a fact the server sent. */}
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[10px] text-slate-600 space-y-1">
-                <div>{milestoneContextLine(correctionFor.milestone)}</div>
-                <div>{recordedLine(correctionFor.milestone.completion)}</div>
-                <div>{correctionsSoFarLine(correctionFor.milestone.completion)}</div>
-              </div>
-              {/* The original wording cannot be shown: no route serves it. Said out loud, because a
-                  blank box would read as "the original is empty". */}
-              <p className="text-[9px] text-slate-500">{ORIGINAL_NOT_SHOWN}</p>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="correction-text">{CORRECTED_LABEL}</label>
-                <textarea
-                  id="correction-text"
-                  rows={6}
-                  required
-                  value={correctionForm.text}
-                  onChange={e => setCorrectionForm({ ...correctionForm, text: e.target.value })}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="correction-why">{WHY_LABEL}</label>
-                <textarea
-                  id="correction-why"
-                  rows={3}
-                  required
-                  value={correctionForm.why}
-                  onChange={e => setCorrectionForm({ ...correctionForm, why: e.target.value })}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium"
-                />
-                <p className="text-[9px] text-slate-500">{REASON_HELPER}</p>
-              </div>
-              {/* The refusal, in place. */}
-              {correctionRefusal && (
-                <div className="p-3 rounded-xl text-xs font-medium border bg-rose-50 border-rose-200 text-rose-800">
-                  {correctionRefusal}
+            <form onSubmit={handleRecordCorrection} className="min-h-0 flex-1 flex flex-col">
+              {/* The scroll container. Every field the form had is in here, in its old order, and
+                  so is the refusal. The actions are outside it, in the row below. */}
+              <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
+                {/* The read-only block. All four values were already on the row the form was opened
+                    from, so nothing here is a second derivation of a fact the server sent. */}
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[10px] text-slate-600 space-y-1">
+                  <div>{milestoneContextLine(correctionFor.milestone)}</div>
+                  <div>{recordedLine(correctionFor.milestone.completion)}</div>
+                  <div>{correctionsSoFarLine(correctionFor.milestone.completion)}</div>
                 </div>
-              )}
-              <div className="flex justify-end space-x-3 pt-2">
+                {/* The original wording cannot be shown: no route serves it. Said out loud, because a
+                    blank box would read as "the original is empty". */}
+                <p className="text-[9px] text-slate-500">{ORIGINAL_NOT_SHOWN}</p>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="correction-text">{CORRECTED_LABEL}</label>
+                  <textarea
+                    id="correction-text"
+                    rows={6}
+                    required
+                    value={correctionForm.text}
+                    onChange={e => setCorrectionForm({ ...correctionForm, text: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="correction-why">{WHY_LABEL}</label>
+                  <textarea
+                    id="correction-why"
+                    rows={3}
+                    required
+                    value={correctionForm.why}
+                    onChange={e => setCorrectionForm({ ...correctionForm, why: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium"
+                  />
+                  <p className="text-[9px] text-slate-500">{REASON_HELPER}</p>
+                </div>
+                {/* The refusal, in place. */}
+                {correctionRefusal && (
+                  <div className="p-3 rounded-xl text-xs font-medium border bg-rose-50 border-rose-200 text-rose-800">
+                    {correctionRefusal}
+                  </div>
+                )}
+              </div>
+              <div className="px-6 py-4 border-t border-slate-100 bg-white shrink-0 flex justify-end space-x-3">
                 <button type="button" onClick={closeCorrectionForm} className="px-6 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition">{CANCEL}</button>
                 <button
                   type="submit"
