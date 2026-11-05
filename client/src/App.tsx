@@ -862,8 +862,11 @@ export default function App() {
       // P3-3: the escalation records settle on their own, like the three panels below. The call is
       // held in a name so it can be read as a READING once the pair has settled: the route refuses
       // anything but company-wide scope with an empty 403, and a refusal must not render as [] here.
-      const escalationCall = callPanel('escalations', `${API_BASE}/api/probation/escalations`,
-        authedFetch(`${API_BASE}/api/probation/escalations`));
+      // P3-3 scope (owner decision 2026-11-04): the panel reads the market the header is in, the
+      // same way its three siblings below do. Without the query string the route lists every
+      // market's escalations, so a KSA hire appeared on the UAE screen.
+      const escalationCall = callPanel('escalations', `${API_BASE}/api/probation/escalations?jurisdiction=${jurisdiction}`,
+        authedFetch(`${API_BASE}/api/probation/escalations?jurisdiction=${jurisdiction}`));
       const settled = settlePanels(await Promise.all([
         callPanel('employees', `${API_BASE}/api/employees?jurisdiction=${jurisdiction}`,
           authedFetch(`${API_BASE}/api/employees?jurisdiction=${jurisdiction}`)),
