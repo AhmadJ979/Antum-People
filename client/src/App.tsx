@@ -37,6 +37,17 @@ import {
   EVALUATION_SUBMITTED, CORRECTION_SUBMITTED,
   JURISDICTION_CHANGED, NOTICE_DISMISSED,
 } from './probationNotice.js';
+// The Layer 2 notice slots: ONE reducer owning both bars' whole life. Before this, the checklist
+// line was cleared in exactly one place (opening a DIFFERENT case) and the offer line by nothing at
+// all -- neither had a dismiss control, and both outlived the case, the tab and the market they
+// described (`preboardingNotices.test.js`, measured at `6ca7062`).
+import {
+  NO_NOTICES, preboardingNoticesReducer, offerBar, checklistBar,
+  OFFER_RECORDED, CHECKLIST_RECORDED,
+  OFFER_SUBMITTED, CHECKLIST_ACTION_STARTED,
+  CASE_OPENED, CASE_CLOSED, TAB_CHANGED, MARKET_CHANGED,
+  OFFER_DISMISSED, CHECKLIST_DISMISSED,
+} from './preboardingNotices.js';
 // P3-3 -- the escalation record as a READING. A refusal and an empty list are different facts and
 // must not render alike; `probationEscalations.js` is where that distinction is made, and tested.
 import {
@@ -649,6 +660,9 @@ export default function App() {
   const switchJurisdiction = (next: 'AE' | 'SA') => {
     setJurisdiction(next);
     dispatchProbationNotice({ type: JURISDICTION_CHANGED });
+    // The same market change ends the Layer 2 lines: both describe an act in the market being
+    // left, and the bars sit over rows that have just been replaced by the other market's.
+    dispatchPreboardingNotices({ type: MARKET_CHANGED });
   };
 
   // P3-1 -- the probation timelines of the active view, and the server's own note saying what makes
@@ -773,9 +787,17 @@ export default function App() {
   const [caseWorkspaces, setCaseWorkspaces] = useState<Record<string, Record<string, WorkspaceBoard>>>({});
   const [workspaceReads, setWorkspaceReads] = useState<Record<string, 'reading' | 'failed'>>({});
   const [workspaceFunction, setWorkspaceFunction] = useState<string>('All');
-  const [checklistNotice, setChecklistNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  // THE LAYER 2 NOTICE SLOTS. Two slots, one reducer: the offer line renders under the offer form
+  // and the checklist line under the case list, so they are two bars on two panels -- but they
+  // share one lifecycle, and that is the part that was missing. The checklist line used to be
+  // cleared in one place only (opening a DIFFERENT case: closing returned before it) and the offer
+  // line by nothing at all, so both outlived the case, the tab and the market they described. Neither had
+  // a dismiss control. `preboardingNoticesReducer` owns every transition: a newer line replaces the
+  // older one, starting an action that will produce its own line empties the slot first, opening or
+  // closing a case, changing tab or changing market empties both, and each bar carries an x.
+  const [preboardingNotices, dispatchPreboardingNotices] = useReducer(
+    preboardingNoticesReducer, NO_NOTICES);
   const [casesLoading, setCasesLoading] = useState(false);
-  const [offerNotice, setOfferNotice] = useState<{ kind: 'ok' | 'existing' | 'error'; text: string } | null>(null);
   const [offerForm, setOfferForm] = useState({
     offer_reference: '',
     candidate_name: '',
@@ -823,6 +845,11 @@ export default function App() {
   // A refusal is about the screen you asked for, so moving to another one retires it: the notice
   // must not outlive the request that raised it and become furniture.
   useEffect(() => { setRefusal(null); }, [activeTab, jurisdiction]);
+  // The Layer 2 notice bars describe one act on one screen, so leaving the screen retires them.
+  // Keyed on the STATE, not on a handler: `setActiveTab` is called from eight places (the nav and
+  // the dashboard's own links), and a fix for one call site is not a fix for the class -- no call
+  // site can reach the state without passing through this effect.
+  useEffect(() => { dispatchPreboardingNotices({ type: TAB_CHANGED }); }, [activeTab]);
 
   useEffect(() => {
     if (token) {
@@ -968,8 +995,10 @@ export default function App() {
   // The form sends the payload and reports what the writer did with it.
   const handleRecordOfferAcceptance = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Starting the action empties the slot: the previous offer's line describes a different offer.
+    dispatchPreboardingNotices({ type: OFFER_SUBMITTED });
     if (!offerForm.start_date) {
-      setOfferNotice({ kind: 'error', text: 'A start date is required — a pre-boarding case cannot exist without one.' });
+      dispatchPreboardingNotices({ type: OFFER_RECORDED, kind: 'error', text: 'A start date is required — a pre-boarding case cannot exist without one.' });
       return;
     }
     try {
@@ -985,20 +1014,20 @@ export default function App() {
         return;
       }
       if (!res.ok) {
-        setOfferNotice({ kind: 'error', text: data.error || `The offer was not recorded (HTTP ${res.status}).` });
+        dispatchPreboardingNotices({ type: OFFER_RECORDED, kind: 'error', text: data.error || `The offer was not recorded (HTTP ${res.status}).` });
         return;
       }
       if (data.created) {
-        setOfferNotice({ kind: 'ok', text: `Pre-boarding case opened for ${data.case.candidate_name} — starts ${formatDate(data.case.start_date)}.` });
+        dispatchPreboardingNotices({ type: OFFER_RECORDED, kind: 'ok', text: `Pre-boarding case opened for ${data.case.candidate_name} — starts ${formatDate(data.case.start_date)}.` });
         setOfferForm({ ...offerForm, offer_reference: '', candidate_name: '', candidate_email: '', role: '', reporting_line: '', start_date: '' });
       } else {
-        setOfferNotice({ kind: 'existing', text: `Offer ${data.case.offer_reference} already had a case — nothing was created twice (case ${data.case.id.slice(0, 8)}…).` });
+        dispatchPreboardingNotices({ type: OFFER_RECORDED, kind: 'existing', text: `Offer ${data.case.offer_reference} already had a case — nothing was created twice (case ${data.case.id.slice(0, 8)}…).` });
       }
       await fetchPreboardingCases();
       await fetchChecklistOverview();
     } catch (err) {
       console.error('Error recording offer acceptance:', err);
-      setOfferNotice({ kind: 'error', text: 'The offer could not be recorded.' });
+      dispatchPreboardingNotices({ type: OFFER_RECORDED, kind: 'error', text: 'The offer could not be recorded.' });
     }
   };
 
@@ -1039,7 +1068,7 @@ export default function App() {
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setChecklistNotice({ kind: 'error', text: data.error || `The checklist could not be read (HTTP ${res.status}).` });
+        dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'error', text: data.error || `The checklist could not be read (HTTP ${res.status}).` });
         return;
       }
       setCaseChecklist(prev => ({
@@ -1067,7 +1096,7 @@ export default function App() {
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setChecklistNotice({ kind: 'error', text: data.error || `The pre-reading package could not be read (HTTP ${res.status}).` });
+        dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'error', text: data.error || `The pre-reading package could not be read (HTTP ${res.status}).` });
         return;
       }
       setCasePackages(prev => ({ ...prev, [caseId]: data as PreboardingPackage }));
@@ -1095,7 +1124,7 @@ export default function App() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setWorkspaceReads(prev => ({ ...prev, [readKey]: 'failed' }));
-        setChecklistNotice({ kind: 'error', text: data.error || `The workspace track could not be read (HTTP ${res.status}).` });
+        dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'error', text: data.error || `The workspace track could not be read (HTTP ${res.status}).` });
         return;
       }
       // Filed under the view it was read for, never under whichever chip is selected by the time
@@ -1141,6 +1170,7 @@ export default function App() {
    * default-checked box, and a refusal from the server is shown as the refusal it is.
    */
   const handleRecordAcknowledgement = async (caseId: string, itemKey: string, label: string) => {
+    dispatchPreboardingNotices({ type: CHECKLIST_ACTION_STARTED });
     try {
       const res = await authedFetch(
         `${API_BASE}/api/preboarding/cases/${caseId}/package/${itemKey}/acknowledgement`,
@@ -1152,11 +1182,11 @@ export default function App() {
         return;
       }
       if (!res.ok) {
-        setChecklistNotice({ kind: 'error', text: data.error || `The acknowledgement was not recorded (HTTP ${res.status}).` });
+        dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'error', text: data.error || `The acknowledgement was not recorded (HTTP ${res.status}).` });
         return;
       }
       if (data.package) setCasePackages(prev => ({ ...prev, [caseId]: data.package as PreboardingPackage }));
-      setChecklistNotice({
+      dispatchPreboardingNotices({ type: CHECKLIST_RECORDED,
         kind: 'ok',
         text: data.created === false
           ? `${label}: already recorded — the first record stands, and its timestamp was not rewritten.`
@@ -1168,10 +1198,15 @@ export default function App() {
   };
   const toggleCase = async (caseId: string) => {
     if (openCaseId === caseId) {
+      // Closing ends the line: the checklist bar describes an item inside the case being closed,
+      // and it used to survive the close and be waiting on the screen when the case was re-opened.
+      dispatchPreboardingNotices({ type: CASE_CLOSED });
       setOpenCaseId(null);
       return;
     }
-    setChecklistNotice(null);
+    // Opening ends both lines: the checklist bar described the case just left, and the offer bar
+    // describes an act the case now on screen supersedes.
+    dispatchPreboardingNotices({ type: CASE_OPENED });
     // P2-4 defect fix: the function filter belongs to the view of one case, not to the row that was
     // opened last - it used to follow the user here. Opening a case starts it on `All`, and the read
     // is issued with `All` explicitly rather than with the state variable, which on this tick still
@@ -1187,6 +1222,7 @@ export default function App() {
   };
 
   const handleItemStatus = async (caseId: string, itemKey: string, status: PreboardingItem['status']) => {
+    dispatchPreboardingNotices({ type: CHECKLIST_ACTION_STARTED });
     try {
       const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/items/${itemKey}/status`, {
         method: 'POST',
@@ -1199,15 +1235,15 @@ export default function App() {
         return;
       }
       if (!res.ok) {
-        setChecklistNotice({ kind: 'error', text: data.error || `The item was not moved (HTTP ${res.status}).` });
+        dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'error', text: data.error || `The item was not moved (HTTP ${res.status}).` });
         return;
       }
-      setChecklistNotice({ kind: 'ok', text: `${data.item.label} is now ${data.item.status.replace('_', ' ')}.` });
+      dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'ok', text: `${data.item.label} is now ${data.item.status.replace('_', ' ')}.` });
       await fetchCaseChecklist(caseId);
       await fetchChecklistOverview();
     } catch (err) {
       console.error('Error moving a checklist item:', err);
-      setChecklistNotice({ kind: 'error', text: 'The item could not be moved.' });
+      dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'error', text: 'The item could not be moved.' });
     }
   };
 
@@ -1226,7 +1262,7 @@ export default function App() {
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setChecklistNotice({ kind: 'error', text: data.error || `The privacy notice could not be read (HTTP ${res.status}).` });
+        dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'error', text: data.error || `The privacy notice could not be read (HTTP ${res.status}).` });
         return;
       }
       setRenderedTemplate({ title: `Privacy Notice ${data.version} — the notice shown to the hire`, content: data.content });
@@ -1234,7 +1270,7 @@ export default function App() {
       setNoticeOpened(prev => ({ ...prev, [caseId]: true }));
     } catch (err) {
       console.error('Error reading the privacy notice:', err);
-      setChecklistNotice({ kind: 'error', text: 'The privacy notice could not be read.' });
+      dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'error', text: 'The privacy notice could not be read.' });
     }
   };
 
@@ -1246,6 +1282,7 @@ export default function App() {
    * name and the screen says why, rather than recording an invented basis.
    */
   const handleRecordNoticeShown = async (caseId: string) => {
+    dispatchPreboardingNotices({ type: CHECKLIST_ACTION_STARTED });
     try {
       const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/notice-acknowledgements`, {
         method: 'POST',
@@ -1258,10 +1295,10 @@ export default function App() {
         return;
       }
       if (!res.ok) {
-        setChecklistNotice({ kind: 'error', text: data.error || `The record was not written (HTTP ${res.status}).` });
+        dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'error', text: data.error || `The record was not written (HTTP ${res.status}).` });
         return;
       }
-      setChecklistNotice({
+      dispatchPreboardingNotices({ type: CHECKLIST_RECORDED,
         kind: 'ok',
         text: data.created > 0
           ? `Recorded that the notice (${data.notice_version}) was shown, for ${data.created} of ${data.considered} document(s) that can be collected — one row per document, each with that document's own basis.`
@@ -1271,11 +1308,12 @@ export default function App() {
       await fetchChecklistOverview();
     } catch (err) {
       console.error('Error recording that the notice was shown:', err);
-      setChecklistNotice({ kind: 'error', text: 'The record could not be written.' });
+      dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'error', text: 'The record could not be written.' });
     }
   };
 
   const handleRemind = async (caseId: string) => {
+    dispatchPreboardingNotices({ type: CHECKLIST_ACTION_STARTED });
     try {
       const res = await authedFetch(`${API_BASE}/api/preboarding/cases/${caseId}/reminders`, {
         method: 'POST',
@@ -1288,15 +1326,15 @@ export default function App() {
         return;
       }
       if (!res.ok) {
-        setChecklistNotice({ kind: 'error', text: data.error || `The reminder was not recorded (HTTP ${res.status}).` });
+        dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'error', text: data.error || `The reminder was not recorded (HTTP ${res.status}).` });
         return;
       }
-      setChecklistNotice({ kind: 'ok', text: `Reminder recorded against ${data.reminder.outstanding_count} outstanding item(s) — recorded in the product, not sent: there is no delivery channel yet.` });
+      dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'ok', text: `Reminder recorded against ${data.reminder.outstanding_count} outstanding item(s) — recorded in the product, not sent: there is no delivery channel yet.` });
       await fetchCaseChecklist(caseId);
       await fetchChecklistOverview();
     } catch (err) {
       console.error('Error recording a reminder:', err);
-      setChecklistNotice({ kind: 'error', text: 'The reminder could not be recorded.' });
+      dispatchPreboardingNotices({ type: CHECKLIST_RECORDED, kind: 'error', text: 'The reminder could not be recorded.' });
     }
   };
 
@@ -2544,11 +2582,14 @@ export default function App() {
                       Open pre-boarding case
                     </button>
                   </form>
-                  {offerNotice && (
-                    <div className={`mt-4 p-3 rounded-xl text-xs font-medium border ${offerNotice.kind === 'ok' ? 'bg-teal-50 border-teal-200 text-teal-800' : offerNotice.kind === 'existing' ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
-                      {offerNotice.text}
+                  {offerBar(preboardingNotices).map((bar) => (
+                    <div key="offer-notice" className={`mt-4 p-3 rounded-xl text-xs font-medium border flex items-start justify-between gap-3 ${bar.kind === 'ok' ? 'bg-teal-50 border-teal-200 text-teal-800' : bar.kind === 'existing' ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+                      <span>{bar.text}</span>
+                      <button type="button" aria-label="Dismiss this notice"
+                        onClick={() => dispatchPreboardingNotices({ type: OFFER_DISMISSED })}
+                        className="shrink-0 text-lg font-light leading-none opacity-60 hover:opacity-100">&times;</button>
                     </div>
-                  )}
+                  ))}
                 </div>
 
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
@@ -3036,11 +3077,14 @@ export default function App() {
                       })}
                     </div>
                   )}
-                  {checklistNotice && (
-                    <div className={`mt-4 p-3 rounded-xl text-xs font-medium border ${checklistNotice.kind === 'ok' ? 'bg-teal-50 border-teal-200 text-teal-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
-                      {checklistNotice.text}
+                  {checklistBar(preboardingNotices).map((bar) => (
+                    <div key="checklist-notice" className={`mt-4 p-3 rounded-xl text-xs font-medium border flex items-start justify-between gap-3 ${bar.kind === 'ok' ? 'bg-teal-50 border-teal-200 text-teal-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+                      <span>{bar.text}</span>
+                      <button type="button" aria-label="Dismiss this notice"
+                        onClick={() => dispatchPreboardingNotices({ type: CHECKLIST_DISMISSED })}
+                        className="shrink-0 text-lg font-light leading-none opacity-60 hover:opacity-100">&times;</button>
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
             </div>
