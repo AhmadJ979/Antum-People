@@ -127,18 +127,21 @@ before(() => {
   insertUser.run(randomUUID(), EMPLOYEE_ACCOUNT, bcrypt.hashSync(PASSWORD, 4), access.ROLES.EMPLOYEE, OVERDUE);
   insertUser.run(randomUUID(), FINANCE_ACCOUNT, bcrypt.hashSync(PASSWORD, 4), access.ROLES.FINANCE, null);
 
+  // `data_residency_country` is in the fixture because the panel is market-scoped (owner decision
+  // 2026-11-04): every hire here is UAE except the one who is KSA -- ENDED -- so a scoped read can be
+  // told apart from an unscoped one by WHICH rows come back, not merely by how many.
   const insertEmployee = handle.prepare(`INSERT INTO employees
-    (id, first_name, last_name, email, department, role, manager_id, start_date, probation_end_date, status, salary, basic_salary)
-    VALUES (?, ?, 'Person', ?, 'Operations', 'Analyst', ?, ?, ?, ?, 1000, 500)`);
-  insertEmployee.run(BIG_BOSS, 'Big', `${BIG_BOSS}@example.invalid`, null, day(-400), null, 'active');
-  insertEmployee.run(BOSS, 'Line', `${BOSS}@example.invalid`, BIG_BOSS, day(-300), null, 'active');
-  insertEmployee.run(OVERDUE, 'Ola', `${OVERDUE}@example.invalid`, BOSS, day(-70), day(20), 'onboarding');
-  insertEmployee.run(DONE, 'Dana', `${DONE}@example.invalid`, BOSS, day(-70), day(20), 'onboarding');
-  insertEmployee.run(DUE_TODAY, 'Tarek', `${DUE_TODAY}@example.invalid`, BOSS, day(-30), day(60), 'onboarding');
-  insertEmployee.run(ENDED, 'Eman', `${ENDED}@example.invalid`, BOSS, day(-100), day(-10), 'onboarding');
-  insertEmployee.run(NO_LINE, 'Nour', `${NO_LINE}@example.invalid`, null, day(-70), day(20), 'onboarding');
-  insertEmployee.run(TERMINATED, 'Tariq', `${TERMINATED}@example.invalid`, BOSS, day(-70), day(20), 'terminated');
-  insertEmployee.run(OTHERWISE_DONE, 'Omar', `${OTHERWISE_DONE}@example.invalid`, BOSS, day(-70), day(20), 'onboarding');
+    (id, first_name, last_name, email, department, role, manager_id, start_date, probation_end_date, status, salary, basic_salary, data_residency_country)
+    VALUES (?, ?, 'Person', ?, 'Operations', 'Analyst', ?, ?, ?, ?, 1000, 500, ?)`);
+  insertEmployee.run(BIG_BOSS, 'Big', `${BIG_BOSS}@example.invalid`, null, day(-400), null, 'active', 'AE');
+  insertEmployee.run(BOSS, 'Line', `${BOSS}@example.invalid`, BIG_BOSS, day(-300), null, 'active', 'AE');
+  insertEmployee.run(OVERDUE, 'Ola', `${OVERDUE}@example.invalid`, BOSS, day(-70), day(20), 'onboarding', 'AE');
+  insertEmployee.run(DONE, 'Dana', `${DONE}@example.invalid`, BOSS, day(-70), day(20), 'onboarding', 'AE');
+  insertEmployee.run(DUE_TODAY, 'Tarek', `${DUE_TODAY}@example.invalid`, BOSS, day(-30), day(60), 'onboarding', 'AE');
+  insertEmployee.run(ENDED, 'Eman', `${ENDED}@example.invalid`, BOSS, day(-100), day(-10), 'onboarding', 'SA');
+  insertEmployee.run(NO_LINE, 'Nour', `${NO_LINE}@example.invalid`, null, day(-70), day(20), 'onboarding', 'AE');
+  insertEmployee.run(TERMINATED, 'Tariq', `${TERMINATED}@example.invalid`, BOSS, day(-70), day(20), 'terminated', 'AE');
+  insertEmployee.run(OTHERWISE_DONE, 'Omar', `${OTHERWISE_DONE}@example.invalid`, BOSS, day(-70), day(20), 'onboarding', 'AE');
 
   // P3-2's completion state, written the way the product writes it (the submission IS the completion).
   handle.prepare(`INSERT INTO probation_evaluations
@@ -415,6 +418,69 @@ describe('P3-3 · the route — HR reads when it fired and to whom', () => {
     assert.strictEqual(r.status, 200);
     assert.deepStrictEqual([...new Set(r.json.escalations.map((e) => e.employee_id))], [OVERDUE]);
     assert.strictEqual(r.json.count, 2);
+  });
+
+  test('the panel reads the market its header says: `?jurisdiction=AE` never shows the KSA hire', async () => {
+    const total = countWhere('SELECT COUNT(*) AS n FROM probation_escalations');
+    const all = await api('GET', '/api/probation/escalations', { token: await tokenFor(HR_ACCOUNT) });
+    assert.strictEqual(all.status, 200);
+    assert.strictEqual(all.json.count, total, 'without a market the read is the whole table, as it always was');
+
+    const uae = await api('GET', '/api/probation/escalations?jurisdiction=AE', { token: await tokenFor(HR_ACCOUNT) });
+    assert.strictEqual(uae.status, 200, `the scoped read must answer 200 (got ${uae.status}: ${uae.text})`);
+    const uaeHires = [...new Set(uae.json.escalations.map((e) => e.employee_id))];
+    assert.ok(uaeHires.includes(OVERDUE), 'the UAE hire is on the UAE panel');
+    assert.ok(!uaeHires.includes(ENDED),
+      'the KSA hire is NOT on the UAE panel — the whole defect is that every market used to be listed here');
+    assert.strictEqual(uae.json.count, uae.json.escalations.length, 'the count still describes the rows that came back');
+
+    const ksa = await api('GET', '/api/probation/escalations?jurisdiction=SA', { token: await tokenFor(HR_ACCOUNT) });
+    assert.strictEqual(ksa.status, 200);
+    assert.deepStrictEqual([...new Set(ksa.json.escalations.map((e) => e.employee_id))], [ENDED],
+      'the KSA panel lists the KSA hire and no one else');
+    assert.deepStrictEqual(ksa.json.escalations.map((e) => e.milestone_index).sort(), [1, 2, 3],
+      'and all three of the ended window\u2019s missed milestones — the KSA half is not thinned out');
+
+    // The two panels are DISJOINT and together they are the whole table: a filter that quietly
+    // dropped rows would satisfy either half alone, so each is also measured against the total.
+    assert.strictEqual(uae.json.count + ksa.json.count, total,
+      'AE + SA = the table: nothing dropped, nothing double-counted');
+  });
+
+  test('an unrelated market value filters nothing, exactly as the timelines route treats it', async () => {
+    const total = countWhere('SELECT COUNT(*) AS n FROM probation_escalations');
+    const xx = await api('GET', '/api/probation/escalations?jurisdiction=XX', { token: await tokenFor(HR_ACCOUNT) });
+    assert.strictEqual(xx.status, 200, 'an unknown market is not an error — the timelines route ignores it too');
+    assert.strictEqual(xx.json.count, total, 'and it filters nothing');
+    assert.ok(xx.json.escalations.some((e) => e.employee_id === ENDED) && xx.json.escalations.some((e) => e.employee_id === OVERDUE),
+      'both markets are present, which is what "no filter" has to mean');
+
+    const lower = await api('GET', '/api/probation/escalations?jurisdiction=ae', { token: await tokenFor(HR_ACCOUNT) });
+    const upper = await api('GET', '/api/probation/escalations?jurisdiction=AE', { token: await tokenFor(HR_ACCOUNT) });
+    assert.deepStrictEqual(lower.json.escalations.map((e) => e.id), upper.json.escalations.map((e) => e.id),
+      'the value is upper-cased before it is compared — the timelines route\u2019s own rule');
+  });
+
+  test('`employee_id` still filters on its own, and composes with the market', async () => {
+    const ksaHire = await api('GET', `/api/probation/escalations?employee_id=${ENDED}&jurisdiction=SA`, { token: await tokenFor(HR_ACCOUNT) });
+    assert.strictEqual(ksaHire.status, 200);
+    assert.strictEqual(ksaHire.json.count, 3, 'the KSA hire\u2019s own rows come back under the KSA market');
+    const wrongMarket = await api('GET', `/api/probation/escalations?employee_id=${ENDED}&jurisdiction=AE`, { token: await tokenFor(HR_ACCOUNT) });
+    assert.strictEqual(wrongMarket.status, 200);
+    assert.strictEqual(wrongMarket.json.count, 0, 'the same hire under the wrong market is an empty list, not an error');
+  });
+
+  // The module-level half of the same contract, so the scope is enforced where the SQL is built rather
+  // than only at the one route that passes the option today: a second caller cannot get an unscoped
+  // read by forgetting a query string. Runs here, after the rule suite has recorded the rows.
+  test('listEscalations: the market option scopes the read, and its absence does not', async () => {
+    const all = await escalation.listEscalations({});
+    const ksa = await escalation.listEscalations({ jurisdiction: 'SA' });
+    const uae = await escalation.listEscalations({ jurisdiction: 'AE' });
+    assert.ok(all.length > ksa.length, 'the unfiltered read is strictly wider than the scoped one');
+    assert.deepStrictEqual([...new Set(ksa.map((r) => r.employee_id))], [ENDED], 'SA is the KSA hire alone');
+    assert.ok(uae.every((r) => r.employee_id !== ENDED), 'and AE never carries the KSA hire');
+    assert.strictEqual(uae.length + ksa.length, all.length, 'the two markets partition the table');
   });
 
   test('finance reaches it too — its `employees:read` scope is the company-wide one', async () => {

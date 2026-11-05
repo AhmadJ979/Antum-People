@@ -334,12 +334,30 @@ function shape(row) {
  */
 async function listEscalations(options = {}) {
   const employeeId = options.employee_id ? String(options.employee_id) : null;
-  const clause = employeeId ? ` WHERE e.employee_id = ${db.escapeString(employeeId)}` : '';
+  // SCOPE (owner decision 2026-11-04). The panel this feeds sits directly under the probation
+  // timelines, inside a header whose market is the reader's, and it used to list every market's
+  // hires: a KSA hire appeared on the UAE screen. `jurisdiction` is the same contract as
+  // `GET /api/probation/timelines` (`server/index.js`), character for character — upper-cased,
+  // `AE`/`SA` filter on the hire's own `data_residency_country`, absent or anything else means NO
+  // filter, so every existing caller keeps the rows it had.
+  const jurisdiction = String(options.jurisdiction || '').toUpperCase();
+  const conditions = [];
+  if (employeeId) conditions.push(`e.employee_id = ${db.escapeString(employeeId)}`);
+  if (jurisdiction === 'AE' || jurisdiction === 'SA') {
+    conditions.push(`emp.data_residency_country = ${db.escapeString(jurisdiction)}`);
+  }
+  const clause = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : '';
   const rows = await db.query(
     `SELECT e.*, p.submitted_at AS completed_at, p.submitted_by AS completed_by,
             (SELECT COUNT(*) FROM probation_evaluation_corrections c
               WHERE c.evaluation_id = p.id) AS correction_count
        FROM probation_escalations e
+       -- Joined for ONE column: which market the hire is in. The escalation row records who it was
+       -- addressed to, never where the hire sits, so the filter has nowhere else to read it from.
+       -- LEFT, because an escalation is a record and must not vanish from the unfiltered read if an
+       -- employee row is missing; under a filter the WHERE clause drops it, exactly as
+       -- data_residency_country = 'AE' drops a countryless hire on the timelines route.
+       LEFT JOIN employees emp ON emp.id = e.employee_id
        LEFT JOIN probation_evaluations p
          ON p.employee_id = e.employee_id AND p.milestone_index = e.milestone_index
        ${clause}

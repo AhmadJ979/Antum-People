@@ -1719,7 +1719,15 @@ const escalationWatcher = probationEscalation.createEscalationWatcher({
 app.get('/api/probation/escalations', async (req, res) => {
   try {
     if (req.accessScope !== access.SCOPE.ALL) return res.status(403).end();
-    const escalations = await probationEscalation.listEscalations({ employee_id: req.query.employee_id });
+    // SCOPE (owner decision 2026-11-04): `?jurisdiction=` travels exactly as it does on the
+    // timelines route above -- upper-cased there, `AE`/`SA` filter, anything else no filter -- so
+    // the panel directly under that one reads the same market the header says the reader is in.
+    // The authorization above is unchanged: this narrows WHICH escalations a granted reader
+    // sees, never who may see them.
+    const escalations = await probationEscalation.listEscalations({
+      employee_id: req.query.employee_id,
+      jurisdiction: req.query.jurisdiction,
+    });
     const status = escalationWatcher.status();
     res.json({
       escalations,
