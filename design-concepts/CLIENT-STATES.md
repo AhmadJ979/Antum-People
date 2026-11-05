@@ -61,7 +61,7 @@ authenticated call, and `App.tsx` routes all of them through it:
 - The wrapper (`:113`) classifies only for 401/403 (`:124`), calls `onSessionInvalid` and **throws
   `SessionExpiredError` on a 403-with-body** (`:133`) so no caller parses an error payload as data, and calls
   `onRefusal` and **throws `RefusalError`** (`:138`) on a refusal — keeping the session.
-- `App.tsx`: the refusal is **one global banner above the content** (`:1760`–`:1760`), `role="alert"`, amber,
+- `App.tsx`: the refusal is **one global banner above the content** (`:1798`–`:1811`), `role="alert"`, amber,
   a lock icon, dismissible, and retired when the tab or jurisdiction changes (`:739`).
 
 **Three things it does not do**, all still measured on `main`:

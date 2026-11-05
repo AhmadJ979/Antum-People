@@ -16,7 +16,7 @@ before quoting them (see the anchor recipe in the spec's header).
 
 | Piece | Where |
 |---|---|
-| Nav entry, fifth tab — **Pre-boarding**, between Transitions Hub and Strategic Intelligence | `NAV_ITEMS`, `App.tsx:464`–`:457` |
+| Nav entry, fifth tab — **Pre-boarding**, between Transitions Hub and Strategic Intelligence | `NAV_ITEMS`, `App.tsx:464`–`:468` |
 | The tab: header card + case count, intake form, case list | `{activeTab === 'preboarding' && (`, `App.tsx:2494`–`:2613` |
 | "Record an accepted offer" form → `POST /api/preboarding/cases` | handler `App.tsx:972`–`:976` (`authedFetch` call at `:947`), form JSX `:2456`–`:2456` |
 | Case list → `GET /api/preboarding/cases` | `authedFetch` list call `App.tsx:974`, `setPreboardingCases` at `:959`, list render `:2613` |
@@ -28,7 +28,7 @@ before quoting them (see the anchor recipe in the spec's header).
   between Transitions Hub and Strategic Intelligence"; that is `Pre-boarding` at `App.tsx:468`.
 - **The count is allowed by the spec's own rule.** §2 forbids "any aggregate that reads as a
   benchmark" and then says explicitly that *"counts of cases are fine; comparisons are not"* — so
-  the `Cases open` counter (`preboardingCases.length`, `App.tsx:2510`–`:2473`) is inside the rule, and neither the badge nor
+  the `Cases open` counter (`preboardingCases.length`, `App.tsx:2510`–`:2511`) is inside the rule, and neither the badge nor
   the count is dressed up as a rate. (See F2 for the label, not the count.)
 - **No money, no score, no ranking.** §2 forbids a per-case cost, a risk rating and a
   percentage-complete ring on this surface. The tab shows name, role, department, jurisdiction
@@ -51,7 +51,7 @@ before quoting them (see the anchor recipe in the spec's header).
 
 ### F1 — the case list was the one screen in the product that is not jurisdiction-scoped *(decided by the owner 2026-10-07: scope it, keep the chip)*
 
-The client *then* called the list with no filter (the call now carries `status=open` at `App.tsx:947`; it was `@rev 75e3ff2` `App.tsx:365`), and the API filters only when a
+The client *then* called the list with no filter (the call now carries `status=open` at `App.tsx:974`; it was `@rev 75e3ff2` `App.tsx:365`), and the API filters only when a
 `jurisdiction` parameter is present (`server/preboarding.js:97`–`:106`, route
 `server/index.js:597`–`:600`). **Measured** on a scratch instance at `75e3ff2`, holding one AE case
 and one SA case:
@@ -144,7 +144,7 @@ deployment was left running and was not touched, tested against, or written to.
 **A side finding worth keeping:** re-posting the same offer reference returned
 `{"created":false, ...}` — the case already existed and nothing was created twice, which is Gate 1's
 idempotency visible from outside the product. The UI surfaces it honestly too ("nothing was created
-twice", the `already had a case` branch — `App.tsx:995`).
+twice", the `already had a case` branch — `App.tsx:1024`).
 
 ---
 
