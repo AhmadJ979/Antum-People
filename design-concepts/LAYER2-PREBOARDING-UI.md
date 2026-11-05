@@ -72,11 +72,11 @@ answers one more row of this table, marked in place.**
 
 | Thing the Layer 2 surface needs | What exists today | Where |
 |---|---|---|
-| A place to live in the nav | **Five** tabs: **Executive Dashboard, Employee Directory, Transitions Hub, Pre-boarding, Strategic Intelligence**. **Changed by P2-2:** the tabs are one list now, read by both the sidebar and the breadcrumb | `App.tsx:442`–`:451` (`NAV_ITEMS`), `:451` (`navLabel`); tab state `:632` |
+| A place to live in the nav | **Five** tabs: **Executive Dashboard, Employee Directory, Transitions Hub, Pre-boarding, Strategic Intelligence**. **Changed by P2-2:** the tabs are one list now, read by both the sidebar and the breadcrumb | `App.tsx:453`–`:462` (`NAV_ITEMS`), `:462` (`navLabel`); tab state `:643` |
 | A case to hang every item on | `preboarding_cases(id, offer_reference UNIQUE, candidate_name, candidate_email, role, department, reporting_line, jurisdiction, start_date, status, source, offered_at, created_by, created_at, updated_at)` — **exists since P2-1**; on `main`, **not deployed** | `schema.sql:177`–`:197` |
 | One case-creation path, not two | `recordOfferAcceptance` is the only writer (idempotent on `offer_reference`); `POST /api/preboarding/cases` reaches it, `GET` list and `GET :id` read it back | `server/preboarding.js:162` (`recordOfferAcceptance`), `:111` (`listCases`), `:147` (`getCase`); `server/index.js:598` (`POST`), `:622` (`GET` list), `:637` (`GET :id`) |
 | A Layer 2 tab to extend | The tab exists — an intake form and a case list, house-styled | `@rev 75e3ff2` `{activeTab === 'preboarding' && (` at `App.tsx:1184`–`:1321` (P2-1 as landed). **Changed by P2-2:** the tab is now the intake form plus an "HR roll-up — outstanding items" panel, in `@rev 7b073f8` `App.tsx:1765`–`:2356` (*re-measured 2026-10-14*); this tree's range is `App.tsx:2105`–`:2696` |
-| A checklist item that can carry an **owner** | `interface Task` has `id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone` — **no owner, no track, no Arabic text** | `App.tsx:72`–`:83` |
+| A checklist item that can carry an **owner** | `interface Task` has `id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone` — **no owner, no track, no Arabic text** | `App.tsx:83`–`:94` |
 | The same, in storage | `onboarding_tasks(id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone, created_at)` — **no owner, no track, no function** | `schema.sql:43`–`:59` |
 | **Any item at all, attached to a case** | **Built by P2-2:** `preboarding_items(id, case_id, item_key, label, category, jurisdiction, required, status, document_reference, note, requested_at, received_at, verified_at, last_actor, …)`, `UNIQUE (case_id, item_key)`. The AE set is 7 items, the SA set 6 and inactive this release. **Still absent: owner, due date, track** — so §3's per-item owner and due date, and §6's track split, are still waiting | `schema.sql:202`–`:227`; `server/preboarding-items.js:64`–`84` |
 | **A record to gate document collection on** | **Built — and it is not a consent record.** The gate reads the per-item record that the notice was **shown**: `preboarding_notice_acknowledgements(case_id, item_key, item_label, jurisdiction, instrument CHECK (instrument = 'notice_shown'), lawful_basis, notice_version, recorded_by, method, note, acknowledged_at)`, `UNIQUE (case_id, item_key)`. A document cannot reach `received`/`verified` until the record exists **for that item** (**428**), and an item the notice assigns no basis to is refused outright with the counsel question it waits on (**409**). The case-level `preboarding_consents` table is **retired** — no reader, no writer — because one row per case cannot carry seven lawful bases; `consent_records` stays for purpose-scoped consent, and its only writer was removed on 2026-10-13 (decision 17) | `schema.sql:302`–`:317` (the shipped table), `:254`–`:267` (the retired one's own reason); `server/preboarding-items.js:161`, `:466`–`:481` |
@@ -88,14 +88,14 @@ answers one more row of this table, marked in place.**
 | An in-process timer / scheduled check | **Nothing.** No cron, no working systemd on this host | plan §6; Gate 2 decision |
 | A demo dataset to look at | **Added by the L2 demo seed (PR #73, on `main`, not deployed):** three pre-boarding cases, one per flag state by construction — start = seed **+14** (`OFR-2026-DEMO-01`), seed **+1** (`-02`), seed **−1** (`-03`). Each carries the AE 7-item set with everything open, and **no consent record** (a seed test asserts that, deliberately: the presenter records consent on screen and watches the gate open). **Nothing stores a flag or a state** | `scripts/seed-demo.js`; evidence `docs/evidence/l2-demo-seed/`; states and their expected readings §5.1 |
 | Any derived "days remaining" or flag computation | **Built by P2-5 (PR #76), on `main` at `f3f2bac` — not deployed:** `server/preboarding-flag.js` derives the flag on every read from the start date and the open items, and returns the three states with both `days_to_start` and `hours_to_start`. **Nothing stores a state**, and the seed's own test still asserts that. **The copy beside it was fixed the same day: PR #77, merged, makes the row take the flag's own reading** (`relDays()`) — `· 14 d`, `· 7.5 h before 00:00 on the start date` or `· started 1 d ago`, the last also covering a *clear* case whose start date has passed with its items complete — where `f3f2bac` still printed the raw `days_to_start` (`14` / `1` / `-1`). The server side is untouched | `server/preboarding-flag.js`; §5, §5.1 |
-| The labels we must not lose | **"Sample Demo Data"** badge — in the **app-level header**, so it also covers the new Pre-boarding tab — and the **"Illustrative …"** markers | `App.tsx:720`; `:781`, `:783`, `:798`, `:842`, `:879`, `:1128`, `:1134`, `:1140`, `:1155`, `:1171`, `:1183`, `:1212` |
+| The labels we must not lose | **"Sample Demo Data"** badge — in the **app-level header**, so it also covers the new Pre-boarding tab — and the **"Illustrative …"** markers | `App.tsx:739`; `:800`, `:802`, `:817`, `:861`, `:898`, `:1147`, `:1153`, `:1159`, `:1174`, `:1190`, `:1202`, `:1231` |
 
 **Visual language to extend, not replace** (exact classes as served):
 
-- Checklist row — `flex items-start space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-teal-200 transition`; checkbox `mt-1 h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500 cursor-pointer`; done title `line-through text-slate-400`, open title `text-slate-800 text-sm font-bold`; description `text-xs text-slate-500` (`App.tsx:2039`–`:2049`).
-- Dark panel — `bg-slate-900 text-white p-6 rounded-xl shadow-lg`, section heading `font-bold text-teal-400 text-sm tracking-widest uppercase` (`App.tsx:1923`–`:1924`).
-- Small caps field label — `text-[10px] font-bold text-slate-400 uppercase tracking-widest` (`App.tsx:1928`, `:1955`) — P2-1's intake form reuses this class throughout (`App.tsx:2201`–`:2251`).
-- Empty state — `py-12 text-center text-slate-400 text-sm italic` (`App.tsx:2178`). P2-1's case list uses a dashed-border variant instead (`App.tsx:2582`–`:2583`).
+- Checklist row — `flex items-start space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-teal-200 transition`; checkbox `mt-1 h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500 cursor-pointer`; done title `line-through text-slate-400`, open title `text-slate-800 text-sm font-bold`; description `text-xs text-slate-500` (`App.tsx:2062`–`:2070`).
+- Dark panel — `bg-slate-900 text-white p-6 rounded-xl shadow-lg`, section heading `font-bold text-teal-400 text-sm tracking-widest uppercase` (`App.tsx:1949`–`:1950`).
+- Small caps field label — `text-[10px] font-bold text-slate-400 uppercase tracking-widest` (`App.tsx:1954`, `:1981`) — P2-1's intake form reuses this class throughout (`App.tsx:2222`–`:2272`).
+- Empty state — `py-12 text-center text-slate-400 text-sm italic` (`App.tsx:2199`). P2-1's case list uses a dashed-border variant instead (`App.tsx:2603`–`:2604`).
 - Status colours from `BRAND-IDENTITY.md`: **Success Green** `#22C55E` complete · **Warm Amber** `#F59E0B` due-soon / at-risk · **Coral Red** `#EF4444` overdue / blocking · **Sky Blue** `#3B82F6` onboarding/info · **Deep Teal** `#0F766E` primary action.
 
 ---
@@ -193,7 +193,7 @@ F1.)
 | **Flag chip** (🔴 / 🟠 / ⚪) | From the derived flag in §5. First thing scanned, always left-most. | **Nothing** — must be computed |
 | **Name** | Case subject. | `employees.first_name/last_name` |
 | **Job role · Department** | The role the offer was accepted for. | `employees.role`, `employees.department` |
-| **Jurisdiction** (UAE / KSA chip) | The case's **own** recorded value, right-aligned on the name line. **Kept by the owner's decision (2026-10-07)**, decided **knowingly** — he was told it is redundant on a scoped list and kept it, so revisiting it is his call, not a reviewer's. | `preboarding_cases.jurisdiction` — rendered as `row.jurisdiction === 'AE' ?` in the chip since P2-1 (`App.tsx:2613`–`:2614`) |
+| **Jurisdiction** (UAE / KSA chip) | The case's **own** recorded value, right-aligned on the name line. **Kept by the owner's decision (2026-10-07)**, decided **knowingly** — he was told it is redundant on a scoped list and kept it, so revisiting it is his call, not a reviewer's. | `preboarding_cases.jurisdiction` — rendered as `row.jurisdiction === 'AE' ?` in the chip since P2-1 (`App.tsx:2634`–`:2635`) |
 | **Start date** | The anchor of the whole surface. A case cannot exist without one (P2-1). | `employees.start_date` |
 | **Relative time** — one reading, from the flag | **The row renders the flag's own derivation, never a second computation** (lead ruling, 2026-10-07, §5) — so one row can never carry two distances that disagree. Derived from the start date **at read time**, never stored; whole days = `ceil((start_date 00:00 − now) / 24h)`. The three readings, exactly: **clear / not raised → whole days** (`· 14 d`) · **inside 48 hours → hours, one decimal** (`· 7.5 h before 00:00 on the start date`) · **start date passed → `started 1 d ago`**, absolute value, **never a bare negative** — and the same absolute branch catches the case a reader will not think of, a *clear* case whose start date has passed with every item complete (`· started 6 d ago`). §5's copy rules carry the arithmetic behind this. | **Nothing** — must be computed |
 | **Employee-track progress** | `n of m` items complete, plus a bar. Counts, not percentages-as-scores. | **Partly** — counts computable from `onboarding_tasks.status`; the *track split* has no column (§9 D2) |
@@ -427,7 +427,7 @@ The flag is a **state, not an event**. On this product there is no mailer, webho
 
 **Anchor check — re-read off `origin/main` = `404b29d`, 2026-10-08.** The client anchors this section rests on, each with the grep that finds it, run against the merged file rather than a branch:
 
-- `{row.flag.chip}` — `git show origin/main:client/src/App.tsx | grep -n "row.flag.chip"` -> on **this tree** `App.tsx:2355` (the guard), `:2361` (the span) and `:2364` (the `Open`/`Close` span). Re-read at `fabef59`, 2026-10-29: `@rev fabef59` `:2205` (the guard), `:2211` (the span) and `:2214` (the `Open`/`Close` span); and `@rev 404b29d` `:1690`, `:1696` and `:1699` when the grep was run at `404b29d`.
+- `{row.flag.chip}` — `git show origin/main:client/src/App.tsx | grep -n "row.flag.chip"` -> on **this tree** `App.tsx:2376` (the guard), `:2382` (the span) and `:2385` (the `Open`/`Close` span). Re-read at `fabef59`, 2026-10-29: `@rev fabef59` `:2205` (the guard), `:2211` (the span) and `:2214` (the `Open`/`Close` span); and `@rev 404b29d` `:1690`, `:1696` and `:1699` when the grep was run at `404b29d`.
 - the row's own distance — `... | grep -n "relDays(row.flag)"` -> **`:2453`**.
 - `h before 00:00 on the start date` — `... | grep -n "h before 00:00"` -> **two** hits, **`:197`** (the flag's own derivation in `relDays`) and **`:1733`** (the panel's own line). It is **not** a unique anchor: quote the hit you mean.
 
@@ -466,7 +466,7 @@ where PR #76 has since moved it:
    clear.**
    **Changed by PR #76 (re-read 2026-10-07):** the flag has since merged on `main` at `f3f2bac` —
    `server/preboarding-flag.js`, and the chip, headline and open-item block it derives at
-   `App.tsx:2356` and `{row.flag.chip}` at `App.tsx:2361`; re-read at `fabef59`, 2026-10-29 as `@rev fabef59` `App.tsx:2206` and `:2211`; and `@rev 404b29d` `App.tsx:1690` and `:1696` on `origin/main` = `404b29d`, 2026-10-08 (the `1581` this document carried is a case-detail field there, not the chip). It draws **inside the built HR roll-up**, not yet on §2's list row or
+   `App.tsx:2377` and `{row.flag.chip}` at `App.tsx:2382`; re-read at `fabef59`, 2026-10-29 as `@rev fabef59` `App.tsx:2206` and `:2211`; and `@rev 404b29d` `App.tsx:1690` and `:1696` on `origin/main` = `404b29d`, 2026-10-08 (the `1581` this document carried is a case-detail field there, not the chip). It draws **inside the built HR roll-up**, not yet on §2's list row or
    §3's detail header, and the live deployment still runs `5ed731e`, which draws none. The three
    readings in the table above are therefore now the acceptance line for a **built** component rather
    than for one still to be built — **and none of the three changes.**
@@ -604,7 +604,7 @@ not a checkbox buried in a settings panel — and what it gates on is a record t
   for P2-6 is exactly that request.
 - The screen reads the gate from the record, and the **shipped** strings are: the case's own panel
   prints `The notice has not been shown on this case yet, so no document can be collected on it.` in
-  amber while no document on the case has a record (`client/src/App.tsx:2214`–`:2215`; the roll-up
+  amber while no document on the case has a record (`client/src/App.tsx:2235`–`:2236`; the roll-up
   row carries the same sentence at `:2106`–`:2107`); each item prints
   `· the notice has not been shown for this document yet` until it has its own record (`:2242`), and
   once recorded prints `· shown <acknowledged_at> by <recorded_by> against <notice_version>`
@@ -612,7 +612,7 @@ not a checkbox buried in a settings panel — and what it gates on is a record t
   notice has been opened in that session (`:2080`–`:2084`). The screen shows **that** the notice was
   shown, **by whom**, and **against which version** — it never claims a consent, and never shows the
   notice's contents.
-  *(Corrected 2026-10-09, and the strings it quotes are gone: the block now reads `Notice-based — recorded per pre-boarding case` at `App.tsx:2200`. This bullet previously cited `@rev 75e3ff2` `App.tsx:1008`–`:1009` for `✓ Recorded <date>`
+  *(Corrected 2026-10-09, and the strings it quotes are gone: the block now reads `Notice-based — recorded per pre-boarding case` at `App.tsx:2221`. This bullet previously cited `@rev 75e3ff2` `App.tsx:1008`–`:1009` for `✓ Recorded <date>`
   / `✗ Missing / required`. Those lines are offboarding code, and the strings cited belong to a
   different object — the **employee** record's `consent_granted` flag, shown as `✓ GRANTED ON
   <consent_date>` / `✗ MISSING / REQUIRED` at `:1407`–`:1408`. A later pass replaced the pair that
@@ -638,7 +638,7 @@ second copy of this one.
 **And the version recorded is the notice's own — the promise is kept.** *(Until 2026-10-13 this
 paragraph read that the HR-side button posts
 `{ consent_type: 'pdpl_notice', lawful_basis: 'consent', consent_version: 'v1' }` hard-coded in the
-client — the live `lawful_basis` sites are the type at `App.tsx:112` and the display at `:2468`; the literal was `@rev 5087136` `App.tsx:622` (this document cites it as `790`–`793`, which is a `catch` block on that tree) — "so `v1` names a text the product has never shown". Both
+client — the live `lawful_basis` sites are the type at `App.tsx:123` and the display at `:2489`; the literal was `@rev 5087136` `App.tsx:622` (this document cites it as `790`–`793`, which is a `catch` block on that tree) — "so `v1` names a text the product has never shown". Both
 halves are answered: that literal is gone, and the only `lawful_basis` left in `client/src/App.tsx`
 is the **record's own** value as displayed (`:87`, `:2146`); the version is read from the notice the
 server serves, never taken from the caller (`server/preboarding-items.js:355`; the rule is stated in
@@ -694,7 +694,7 @@ no basis to, **428** for an item whose notice has not been shown).
 The state machine is the server's and stays the server's: `ITEM_STATUSES` at
 `server/preboarding-items.js:49`, the transitions at `:58`–`:63`, `verified` terminal. The hire
 must not read the HR keys, and must not see HR's verbs — today's HR surface shows `Request`,
-`Mark received`, `Cancel`, `Verify`, `Send back` (`client/src/App.tsx:2800`–`:2813`, with `Mark received` at `:2800` and `Send back` at `:2813`) and
+`Mark received`, `Cancel`, `Verify`, `Send back` (`client/src/App.tsx:2821`–`:2834`, with `Mark received` at `:2821` and `Send back` at `:2834`) and
 `Requested` / `Received` / `Verified` on the workspace rows (`:2326`–`:2337`).
 *(All four numbers re-derived on `9ce469d` on 2026-10-13; the previous set pointed at offboarding
 copy and at the roll-up tiles.)*
@@ -737,7 +737,7 @@ would therefore be a lie, and building one is out of scope (D5).
 Two consequences of Option B that the build must respect: the reference is **untrusted user text**
 — never rendered as markup, length enforced server-side (it already is), and it can be typed in
 Arabic, so it must be bidi-isolated wherever it is shown (§8B.3); and it currently renders on the
-HR row as a suffix (`client/src/App.tsx:2011`), which is the surface that will show a hire's
+HR row as a suffix (`client/src/App.tsx:2037`), which is the surface that will show a hire's
 typed text to an HR user.
 
 ### 8A.5 The pre-reading package and the acknowledgement — the three honesty traps
@@ -776,7 +776,7 @@ compliance memo at this boundary (row `5c0a9ceb`) — see §8, §8C and Q8–Q10
 
 **S4b — the document list.** States: *notice not shown* (rows visible and readable, collection
 disabled, the record control offered — the shipped message is *"The notice has not been shown on this
-case yet, so no document can be collected on it."*, `client/src/App.tsx:2214`–`:2215`); *notice shown,
+case yet, so no document can be collected on it."*, `client/src/App.tsx:2235`–`:2236`); *notice shown,
 items outstanding*; *everything
 collected*; *start date passed with items open* (the hire reads "these were due before day one",
 never a negative count — §5's rule); and *the jurisdiction's set is not active* (a case outside
@@ -807,7 +807,7 @@ workspace track with its owner names; and any illustrative figure without its la
   **jurisdiction**, not language — there is no language switch in the product at all.
 - **Numbers and dates are convention-pinned — amended 2026-10-29.** The owner's numeral ruling
   (Latin digits throughout) is implemented: the seven figure sites now read `formatAmount(...)`
-  (`App.tsx:1808`, `{formatAmount(analytics.avgCostPerHireAE)}`), and the convention it applies is
+  (`App.tsx:1834`, `{formatAmount(analytics.avgCostPerHireAE)}`), and the convention it applies is
   the server's own `Number(v).toFixed(2)` — two decimals and Latin digits — with a comma every three
   integer digits; that grouping is the one difference from the served documents. Until that pass money and counts were formatted
   with the ambient locale (a `undefined` where a locale belongs), so on a machine set to Arabic the
@@ -816,9 +816,9 @@ workspace track with its owner names; and any illustrative figure without its la
   enforces by walking the tree.
 - **Dates are printed in one shape, not raw — amended 2026-10-29.** Every reader-facing date goes
   through the same module, `formatDate`, so the workspace row prints
-  `due {formatDate(line.due_date)} ({line.due_rule})` — it renders as, say, `due 9 October 2026 (D-3) · in 2 d` (`App.tsx:2899`, with its distance at `:2900`–`:2900`), the shape the served
+  `due {formatDate(line.due_date)} ({line.due_rule})` — it renders as, say, `due 9 October 2026 (D-3) · in 2 d` (`App.tsx:2920`, with its distance at `:2921`–`:2921`), the shape the served
   documents already use. The roster still prints `Day 49` from
-  `Math.ceil((Date.now() - new Date(emp.start_date).getTime()) / (1000*60*60*24))` (`App.tsx:2256`) —
+  `Math.ceil((Date.now() - new Date(emp.start_date).getTime()) / (1000*60*60*24))` (`App.tsx:2277`) —
   a count, computed and printed in Latin digits, so it is unaffected by the reader's machine.
 - **The layout is written with physical utilities.** `space-x-*` **28** with
   `space-x-reverse` **0**; `border-r-*` **2**; `ml-*` **4** and `mr-*` **5**; `text-left` **6**
@@ -883,7 +883,7 @@ numeral/date decision the product has not yet made.
    a chevron points the wrong way in one of the two directions and reads as "next".
 6. **Dates.** Not ISO any more, and not raw: every reader-facing date goes through `formatDate`
    (§8B.1) and renders `en-GB`, long month — `9 October 2026` — in both languages, in Latin digits
-   (`App.tsx:2899`, the row printing `due {formatDate(line.due_date)} ({line.due_rule})`). The earlier
+   (`App.tsx:2920`, the row printing `due {formatDate(line.due_date)} ({line.due_rule})`). The earlier
    recommendation to keep ISO for the hire's due dates is **withdrawn**; ISO stays the *stored and
    transported* shape (`2026-10-09` in a record, the `D-3` token, an audit line) and never the
    reader's form. A numeric `09/10/2026` stays rejected (§8B.3.4).
@@ -1129,7 +1129,7 @@ not re-dated:** the pass was resolved on `main` = `501d5fa`, and no code has mer
   list — `@rev 75e3ff2` `{activeTab === 'preboarding' && (` at `App.tsx:1184`–`:1321` — are built on `main`, but they are not these screens: §3's case
   detail and §4's function view do not exist anywhere, and §2's list is a superset of what P2-1
   renders. **§5's flag has since been built** — `server/preboarding-flag.js`, PR #76 — **and draws
-  inside the built HR roll-up** (`App.tsx:2356`, `{row.flag.chip}` at `:2361`; `@rev fabef59` `:2206`/`:2211`, and `@rev 404b29d` `:1690`/`:1696` on `origin/main` = `404b29d`), *not* on §2's list row or §3's detail
+  inside the built HR roll-up** (`App.tsx:2377`, `{row.flag.chip}` at `:2382`; `@rev fabef59` `:2206`/`:2211`, and `@rev 404b29d` `:1690`/`:1696` on `origin/main` = `404b29d`), *not* on §2's list row or §3's detail
   header, and not on the live deployment, which still runs `5ed731e`; §5.1 carries the re-read.)
 - **No figure here is a reading.** The mock rows are invented placeholders, deliberately not the
   seeded records, and are marked as such on the face of every screen.
@@ -1211,12 +1211,12 @@ this pass adds, and §12 records what still does not exist. The consent notice's
 this document: it comes from the compliance expert's memo at the portal boundary (task `5c0a9ceb`),
 and nothing here may be used to invent it.*
 *The same pass re-read every citation it touched and **corrected two**: §8's consent-line citation
-the case's own line is `App.tsx:2200`, while `@rev 75e3ff2` (`App.tsx:1008`–`:1009`) pointed at offboarding code and at the wrong object,
+the case's own line is `App.tsx:2221`, while `@rev 75e3ff2` (`App.tsx:1008`–`:1009`) pointed at offboarding code and at the wrong object,
 where the block reads `Notice-based — recorded per pre-boarding case`, and `:1467`, while `:1463`–`:1464` is the **employee** flag — and the workspace due-date
-row is the `line.due_date` / `line.due_rule` print at `App.tsx:2899`, with its distance at `:2900`–`:2900`, not the range this document carried. §8
+row is the `line.due_date` / `line.due_rule` print at `App.tsx:2920`, with its distance at `:2921`–`:2921`, not the range this document carried. §8
 also now names the two consent stores (`preboarding_consents` for the case; `consent_records` +
 `employees.consent_granted` at Layer 1) and the gap that `consent_version: 'v1'` is hard-coded in the
-client with no notice behind it — the control that carries that sentence now is `Record that the notice was shown` at `App.tsx:2492`; the literal was `@rev 5087136` `App.tsx:622` (cited here as `790`–`793`, a `catch` block on that tree) and occurs nowhere now).*
+client with no notice behind it — the control that carries that sentence now is `Record that the notice was shown` at `App.tsx:2513`; the literal was `@rev 5087136` `App.tsx:622` (cited here as `790`–`793`, a `catch` block on that tree) and occurs nowhere now).*
 *Amended 2026-10-09, after P2-3, P2-4 and P2-5 merged and this document's own §§8A–8C went in (PR #89): **three places here said the workspace track did not exist, and all three are now false** — §5's track-agnostic bullet ("today that is the employee track, because it is the only one that exists; when P2-4 lands…"), §5's owner bullet ("owners exist only on the workspace track (P2-4), which does not exist yet") and §2's open-now row ("owner does not exist"). They are corrected in place and each quotes what it replaced, because this document is the design of record rather than a dated snapshot; the snapshot beside it, `LAYER2-P2-2-IMPLEMENTATION-NOTES.md`, carries a superseded-note instead, because rewriting a reading taken on a named revision is worse than a stale line. What did **not** change is the point of the exercise: §5's rule is the same rule and both tracks obey it — the merge added items to it and altered nothing, which the flag module's own note records (`server/preboarding-flag.js:43`) — and no count anywhere in this document moved. **Checked and deliberately left:** §4's note that the chip draws inside the built HR roll-up and not yet on §2's list row or §3's detail header is dated to a re-read on `404b29d` (2026-10-08) and still describes where it draws; re-dating a reading to a tree it was not taken on is the failure this pass exists to avoid.*
 
 
@@ -1296,7 +1296,7 @@ re-derived on `9ce469d`, in the sections this row owns — the failing ones were
 pass rewrote, so leaving them would have put wrong pointers in new text): §8A.2 and §8B.4's
 `DOCUMENT_SETS` range `:66`–`:100`/`:99` → `:65`–`:97` (the old end landed in the *next* docblock);
 §8A.3's `ITEM_STATUSES` `:44` → `:49`, its transitions `:53`–`:58` → `:58`–`:63`, the HR action
-buttons `App.tsx:1945`–`:1958` → `:2190`–`:2207` and the workspace status words `:2041`–`:2052` →
+buttons `App.tsx:1971`–`:1984` → `:2211`–`:2228` and the workspace status words `:2062`–`:2073` →
 `:2326`–`:2337` (the old ranges pointed at a deleted-claim comment and at the roll-up tiles); §8A.4's
 120-character cap `:283`–`:284` → `:418`–`:419`; §8A.6's inactive-set rule `:293`/`:302` → `:437`–`:442`
 (the old numbers are the acknowledgement reads now). **One more was left alone and is reported
@@ -1350,7 +1350,7 @@ wrong *before* the merge and is not #186's doing:
 | One case-creation path, not two | `server/index.js:580`, `:597`, `:606` | `:592`, `:616`, `:631` | **`:598`, `:622`, `:637`** |
 | same row | `server/preboarding.js:119`, `:97`, `:104` | `listCases` at `:111`, not `:97` | **`:162`, `:111`, `:147`** |
 | A place to live in the nav | lines 115–125, 272 (as landed) | `@rev 9ce469d` `NAV_ITEMS` at `:265` | `@rev ee4722b` `:265`–`:271`, `:274`, `:436` |
-| A checklist item that can carry an owner | `App.tsx:63`–`:73` | `@rev 9ce469d` `interface Task` at `:34`–`:44` | `@rev ee4722b` `:34`–`:44` |
+| A checklist item that can carry an owner | `App.tsx:74`–`:84` | `@rev 9ce469d` `interface Task` at `:34`–`:44` | `@rev ee4722b` `:34`–`:44` |
 
 **3. Corrected for a third reason — a sentence that stopped being true.** The closing paragraph's
 "booked for the next cutover beside the `server/db.js` fix" describes work #186 had already done. It now
@@ -1360,9 +1360,9 @@ records that the served-file comment and the `db.js` refusal landed together in 
 
 - **The §8 tab row's JSX ranges** — measured 2026-10-14, so this bullet is **no longer a "reported, not
   changed" item**: the live half is corrected in the row above. `:1184`–`:1321` is declared historical by
-  that row itself and stays as written. The live half, `App.tsx:1414`–`:1667`, was stale — at `:1414` the
+  that row itself and stays as written. The live half, `App.tsx:1435`–`:1693`, was stale — at `:1435` the
   file renders the dashboard's pipeline card and line 1650 lands inside the *analytics* block that opens at line
-  1635 — and is now **`App.tsx:2432`–`:3023`**: the `{activeTab === 'preboarding' && (` line at `:2432`,
+  1635 — and is now **`App.tsx:2453`–`:3044`**: the `{activeTab === 'preboarding' && (` line at `:2453`,
   closed by its matching `)}` at `:2886`, found by brace-matching rather than by plausible arithmetic, and
   holding the intake form (`:2323`) and the `HR roll-up — outstanding items` heading at **`:2395`**. The
   bounds are unambiguous, so they are applied rather than flagged. The same stale pair is cited twice more
@@ -1430,7 +1430,7 @@ never described one block at all.
 **3. The class, not only the reported sites.** The same stale pair is cited twice more in this document:
 `:108`–`:109`, a blockquote that pins P2-1's placement to PR #66 and its date; and `:1098`, an unpinned
 claim that P2-1's intake form and case list "are built on `main`". Both are recorded here with the measured
-value the tab is — **`App.tsx:1826`–`:2417`** — and **neither is edited**: the first is a pinned historical
+value the tab is — **`App.tsx:1852`–`:2438`** — and **neither is edited**: the first is a pinned historical
 record, which this note's own rule leaves as written (a pinned-revision cite is not a defect; an unpinned one
 is), and the second would have to be re-cast rather than renumbered, because the tab now also holds P2-2's
 roll-up panel and P2-1's contribution is no longer the whole of it.

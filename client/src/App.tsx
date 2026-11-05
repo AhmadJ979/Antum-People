@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import { createAuthedFetch } from './httpStatus.js';
 import { callPanel, settlePanels, refusalNoticeFor } from './panelResults.js';
 // P3-1 -- the probation timeline's vocabulary (labels, chips, date format, summary). The DATES come
@@ -26,6 +26,17 @@ import {
   correctionsSoFarLine, correctionPayload, effectiveText, effectiveCorrectionCount,
   correctionRecordedLine, correctionOutcome, canSubmitCorrection,
 } from './probationEvaluationCopy.js';
+// The probation card's notice slot: ONE value, and every event that can end it, in one switch.
+// Two independent notice states (App.tsx:657/:673 at `22a4093`) meant a second action could only
+// ADD a bar -- opening the correction modal cleared the correction line and orphaned the
+// evaluation one, with no timeout and no clear on a market switch (`probationNotice.test.js`).
+import {
+  NO_NOTICE, probationNoticeReducer, noticeBars,
+  EVALUATION_RECORDED, CORRECTION_RECORDED,
+  EVALUATION_FORM_OPENED, CORRECTION_FORM_OPENED,
+  EVALUATION_SUBMITTED, CORRECTION_SUBMITTED,
+  JURISDICTION_CHANGED, NOTICE_DISMISSED,
+} from './probationNotice.js';
 // P3-3 -- the escalation record as a READING. A refusal and an empty list are different facts and
 // must not render alike; `probationEscalations.js` is where that distinction is made, and tested.
 import {
@@ -632,6 +643,13 @@ export default function App() {
   // jurisdiction's records the dashboard, employee list and transitions screens query
   // for, and it stays reachable so the KSA surface can still be served and tested.
   const [jurisdiction, setJurisdiction] = useState<'AE' | 'SA'>('AE');
+  // Changing the market changes which rows the card is describing, so a line about a write on the
+  // other market must not stand over it. One handler, because there are two buttons and a fix for
+  // one of them is not a fix for the class.
+  const switchJurisdiction = (next: 'AE' | 'SA') => {
+    setJurisdiction(next);
+    dispatchProbationNotice({ type: JURISDICTION_CHANGED });
+  };
 
   // P3-1 -- the probation timelines of the active view, and the server's own note saying what makes
   // a milestone read `completed` (COMPLETION_NOTE, server/probation-timeline.js:209). Both are read
@@ -652,9 +670,13 @@ export default function App() {
   // The refusal is rendered IN PLACE inside the modal. It is never a console.error: a refusal that
   // only reaches the console leaves the reader looking at a form that appears to have done nothing.
   const [evaluationRefusal, setEvaluationRefusal] = useState<string | null>(null);
-  // The success line at the foot of the panel. It says what the RE-READ shows, never what the 201
-  // answered with -- see `handleRecordEvaluation`.
-  const [evaluationNotice, setEvaluationNotice] = useState<string | null>(null);
+  // THE PROBATION CARD'S ONE NOTICE SLOT. It says what the RE-READ shows, never what the 201
+  // answered with -- see `handleRecordEvaluation`. One value, not one per form: two pieces of state
+  // meant two bars could stand on the card at once, each cleared only by its own modal, and the
+  // orphaned one never left (measured on a rendered screen, 2026-11-04). `probationNoticeReducer`
+  // owns every transition -- recording replaces whatever was there, and opening either form,
+  // submitting either form, changing jurisdiction or the x all empty it.
+  const [probationNotice, dispatchProbationNotice] = useReducer(probationNoticeReducer, NO_NOTICE);
 
   // P3-4 (screen 2) -- the correction form. `correctionFor` is the COMPLETION the modal was opened
   // from: the hire, the milestone, and the `evaluation_id` the route takes as a PATH parameter
@@ -668,9 +690,6 @@ export default function App() {
   // Rendered IN PLACE inside the modal, never a console.error: a refusal that only reaches the
   // console leaves the reader looking at a form that appears to have done nothing.
   const [correctionRefusal, setCorrectionRefusal] = useState<string | null>(null);
-  // The success line at the foot of the panel. It says what the RE-READ shows; the wording in it is
-  // the 201's own `effective` text, which is what the reader just typed.
-  const [correctionNotice, setCorrectionNotice] = useState<string | null>(null);
 
   // P3-3 -- the escalation records, held as ONE reading rather than as a list. A refusal, a
   // failed read and an empty list must not render alike; `probationEscalations.js` decides which
@@ -1405,7 +1424,9 @@ export default function App() {
     setEvaluationFor(timeline);
     setEvaluationForm({ milestone_index: defaultMilestoneIndex(timeline), text: '' });
     setEvaluationRefusal(null);
-    setEvaluationNotice(null);
+    // Opening either form ends whatever line was standing: a bar that survives the reader opening a
+    // different form is describing a screen they have already left.
+    dispatchProbationNotice({ type: EVALUATION_FORM_OPENED });
   };
 
   const closeEvaluationForm = () => {
@@ -1424,6 +1445,10 @@ export default function App() {
     const submittedText = evaluationForm.text;
     setEvaluationSubmitting(true);
     setEvaluationRefusal(null);
+    // Emptied at the START of the submission, so a refusal can never leave the previous success line
+    // standing over it: the reader sees the refusal, or the new line, never the old one and a refusal
+    // together.
+    dispatchProbationNotice({ type: EVALUATION_SUBMITTED });
     try {
       // EXACTLY the two fields the route reads. `submitted_by`/`submitted_at` are stamped from the
       // token and the clock, and the milestone's day and due date are copied from the server's own
@@ -1456,7 +1481,7 @@ export default function App() {
       setEvaluationFor(null);
       setEvaluationForm({ milestone_index: '', text: '' });
       await fetchData();
-      setEvaluationNotice(evaluationRecordedLine(day));
+      dispatchProbationNotice({ type: EVALUATION_RECORDED, text: evaluationRecordedLine(day) });
     } catch (err) {
       // A refusal arrives THROWN -- `authedFetch` throws `RefusalError` for a 403 with an empty body
       // and `SessionExpiredError` for a dead session (httpStatus.js). Falling through to a
@@ -1484,7 +1509,7 @@ export default function App() {
     });
     setCorrectionForm({ text: '', why: '' });
     setCorrectionRefusal(null);
-    setCorrectionNotice(null);
+    dispatchProbationNotice({ type: CORRECTION_FORM_OPENED });
   };
 
   const closeCorrectionForm = () => {
@@ -1503,6 +1528,7 @@ export default function App() {
     const submittedWhy = correctionForm.why;
     setCorrectionSubmitting(true);
     setCorrectionRefusal(null);
+    dispatchProbationNotice({ type: CORRECTION_SUBMITTED });
     try {
       // EXACTLY the two fields the route reads. `milestone_index` is deliberately NOT sent: the row
       // being corrected already carries it (`server/index.js:1765-1766`), and a second source could
@@ -1536,7 +1562,7 @@ export default function App() {
       setCorrectionFor(null);
       setCorrectionForm({ text: '', why: '' });
       await fetchData();
-      setCorrectionNotice(correctionRecordedLine(shownText, shownCount));
+      dispatchProbationNotice({ type: CORRECTION_RECORDED, text: correctionRecordedLine(shownText, shownCount) });
     } catch (err) {
       // A refusal arrives THROWN -- `authedFetch` throws `RefusalError` for a 403 with an empty body
       // and `SessionExpiredError` for a dead session (httpStatus.js).
@@ -1697,13 +1723,13 @@ export default function App() {
           <div className="flex items-center space-x-4">
             <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 text-xs font-bold" title="Active demo surface is UAE-first; KSA stays reachable here for testing the Phase 2 surface.">
               <button
-                onClick={() => setJurisdiction('AE')}
+                onClick={() => switchJurisdiction('AE')}
                 className={`px-3 py-1 rounded-md transition ${jurisdiction === 'AE' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 🇦🇪 UAE
               </button>
               <button
-                onClick={() => setJurisdiction('SA')}
+                onClick={() => switchJurisdiction('SA')}
                 className={`px-3 py-1 rounded-md transition ${jurisdiction === 'SA' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 🇸🇦 KSA
@@ -2027,21 +2053,16 @@ export default function App() {
                 {probationNote && (
                   <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500">{probationNote}</div>
                 )}
-                {evaluationNotice && (
-                  <div className="px-4 py-2 bg-teal-50 border-t border-teal-200 text-[10px] text-teal-800 font-medium flex items-center justify-between gap-4">
-                    <span>{evaluationNotice}</span>
-                    <button onClick={() => setEvaluationNotice(null)} className="text-teal-600 hover:text-teal-800 font-bold text-sm leading-none">&times;</button>
+                {/* ONE bar, in the same place, with the same palette. The line names WHICH write
+                    landed (an evaluation or a correction) because the sentence itself does; what is
+                    gone is the second slot, and with it the possibility of two of these standing at
+                    once. `noticeBars` is [] or one element -- never two. */}
+                {noticeBars(probationNotice).map((bar) => (
+                  <div key={bar.kind} className="px-4 py-2 bg-teal-50 border-t border-teal-200 text-[10px] text-teal-800 font-medium flex items-center justify-between gap-4">
+                    <span>{bar.text}</span>
+                    <button onClick={() => dispatchProbationNotice({ type: NOTICE_DISMISSED })} className="text-teal-600 hover:text-teal-800 font-bold text-sm leading-none">&times;</button>
                   </div>
-                )}
-                {/* Screen 2's own line. Kept separate from the one above: a correction is not a
-                    submission, and one notice standing for both would say the wrong thing about
-                    which write landed. */}
-                {correctionNotice && (
-                  <div className="px-4 py-2 bg-teal-50 border-t border-teal-200 text-[10px] text-teal-800 font-medium flex items-center justify-between gap-4">
-                    <span>{correctionNotice}</span>
-                    <button onClick={() => setCorrectionNotice(null)} className="text-teal-600 hover:text-teal-800 font-bold text-sm leading-none">&times;</button>
-                  </div>
-                )}
+                ))}
               </div>
               {/* P3-3 -- the escalation records. BEGIN: the block between this marker and END is
                   read by client/src/probationEscalations.test.js, which asserts that the list is
