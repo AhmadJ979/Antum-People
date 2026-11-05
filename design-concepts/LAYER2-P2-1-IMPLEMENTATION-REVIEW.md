@@ -16,19 +16,19 @@ before quoting them (see the anchor recipe in the spec's header).
 
 | Piece | Where |
 |---|---|
-| Nav entry, fifth tab — **Pre-boarding**, between Transitions Hub and Strategic Intelligence | `NAV_ITEMS`, `App.tsx:442`–`:446` |
-| The tab: header card + case count, intake form, case list | `{activeTab === 'preboarding' && (`, `App.tsx:2432`–`:2589` |
-| "Record an accepted offer" form → `POST /api/preboarding/cases` | handler `App.tsx:923`–`:954` (`authedFetch` call at `:925`), form JSX `:2432`–`:2432` |
-| Case list → `GET /api/preboarding/cases` | `authedFetch` list call `App.tsx:925`, `setPreboardingCases` at `:937`, list render `:2589` |
+| Nav entry, fifth tab — **Pre-boarding**, between Transitions Hub and Strategic Intelligence | `NAV_ITEMS`, `App.tsx:453`–`:457` |
+| The tab: header card + case count, intake form, case list | `{activeTab === 'preboarding' && (`, `App.tsx:2453`–`:2610` |
+| "Record an accepted offer" form → `POST /api/preboarding/cases` | handler `App.tsx:942`–`:973` (`authedFetch` call at `:944`), form JSX `:2453`–`:2453` |
+| Case list → `GET /api/preboarding/cases` | `authedFetch` list call `App.tsx:944`, `setPreboardingCases` at `:956`, list render `:2610` |
 | The case model and its single writer | `schema.sql:177`–`:197`; `server/preboarding.js:119` |
 
 ## 2. What matches the spec — checked, not assumed
 
 - **§1 placement is exact.** The spec recommended "a fifth top-level nav item — `Pre-boarding` —
-  between Transitions Hub and Strategic Intelligence"; that is `Pre-boarding` at `App.tsx:446`.
+  between Transitions Hub and Strategic Intelligence"; that is `Pre-boarding` at `App.tsx:457`.
 - **The count is allowed by the spec's own rule.** §2 forbids "any aggregate that reads as a
   benchmark" and then says explicitly that *"counts of cases are fine; comparisons are not"* — so
-  the `Cases open` counter (`preboardingCases.length`, `App.tsx:2448`–`:2449`) is inside the rule, and neither the badge nor
+  the `Cases open` counter (`preboardingCases.length`, `App.tsx:2469`–`:2470`) is inside the rule, and neither the badge nor
   the count is dressed up as a rate. (See F2 for the label, not the count.)
 - **No money, no score, no ranking.** §2 forbids a per-case cost, a risk rating and a
   percentage-complete ring on this surface. The tab shows name, role, department, jurisdiction
@@ -36,13 +36,13 @@ before quoting them (see the anchor recipe in the spec's header).
 - **No delivery claim anywhere.** §5's copy rules — a pre-boarding state may never say
   "sent/notified/emailed", because the product has no delivery channel (Gate 2, 2026-10-06) — hold
   on the shipped tab: the intake form says *"recording it here is what opens the case"*
-  (`recording it here is what opens the case`, `App.tsx:2458`) and the tab never implies anything was sent to the candidate.
+  (`recording it here is what opens the case`, `App.tsx:2479`) and the tab never implies anything was sent to the candidate.
 - **UAE-first default on the intake form.** `offerForm.jurisdiction` initialises to `'AE'`, with
-  AE and SA both offered (`'AE'`, `App.tsx:769`; the options at `:2505`–`:2505`). The *case* is recorded in the jurisdiction on
+  AE and SA both offered (`'AE'`, `App.tsx:788`; the options at `:2526`–`:2526`). The *case* is recorded in the jurisdiction on
   the accepted offer, not in whatever the header switch says — which is a reasonable reading of
   UAE-first, but it is the reason F1 matters.
 - **The demo badge still covers it.** "Sample Demo Data" sits in the app-level header
-  (`Sample Demo Data`, `App.tsx:1692`), outside the tab switch, so the new tab inherits it.
+  (`Sample Demo Data`, `App.tsx:1718`), outside the tab switch, so the new tab inherits it.
 - **Correctly absent:** the derived 48-hour flag (§5), the two tracks (§3), the function view
   (§4), EN/AR (§7) and the consent gate (§8). Those are P2-2/P2-4/P2-5/P2-6, and nothing on the
   shipped tab pretends otherwise.
@@ -51,7 +51,7 @@ before quoting them (see the anchor recipe in the spec's header).
 
 ### F1 — the case list was the one screen in the product that is not jurisdiction-scoped *(decided by the owner 2026-10-07: scope it, keep the chip)*
 
-The client *then* called the list with no filter (the call now carries `status=open` at `App.tsx:925`; it was `@rev 75e3ff2` `App.tsx:365`), and the API filters only when a
+The client *then* called the list with no filter (the call now carries `status=open` at `App.tsx:944`; it was `@rev 75e3ff2` `App.tsx:365`), and the API filters only when a
 `jurisdiction` parameter is present (`server/preboarding.js:97`–`:106`, route
 `server/index.js:597`–`:600`). **Measured** on a scratch instance at `75e3ff2`, holding one AE case
 and one SA case:
@@ -76,7 +76,7 @@ the row is removed: S1's row anatomy now names it as a field (spec §2), and S2 
 on the case itself (spec §3).
 
 **Status, 2026-10-07 — closed in PR #70 (`5ed731e`).** The owner's decision is implemented: the
-list call now carries `?jurisdiction=${jurisdiction}&status=open` (`client/src/App.tsx:925`, with
+list call now carries `?jurisdiction=${jurisdiction}&status=open` (`client/src/App.tsx:944`, with
 the reasoning at `:847`), and both the row's jurisdiction chip and the detail header keep the case's
 own value. The engineer's committed run carries the endpoint's side of it — step 22 of
 `docs/evidence/p2-2/http-acceptance.txt`: `?jurisdiction=AE&status=open` → 1 case,
@@ -94,13 +94,13 @@ status filter at all (`server/preboarding.js:97`–`:102`). Measured: with one c
 label it `Cases` until a closed state exists. A one-line change, worth doing when case closing
 lands — not worth a PR on its own.
 
-**Status (confirmed by the lead on `main`, 2026-10-07):** the `Cases open` tile renders `client/src/App.tsx:2448`
+**Status (confirmed by the lead on `main`, 2026-10-07):** the `Cases open` tile renders `client/src/App.tsx:2469`
 `preboardingCases.length` under the label at `:2122`, and `listCases` filters by nothing
 (`server/preboarding.js:97`–`:102`) — so the number and the label disagree the moment a case can
 close. It is latent rather than live-visible today, because nothing writes a status other than
 `'open'` yet, which is exactly why testing it with a closed row was worth doing.
 **Fixed in PR #70 (`5ed731e`).** The list is now requested with `status=open`
-(`client/src/App.tsx:925` — the call carries `status=open`, comment at `:925`), so the tile counts open cases, and the endpoint
+(`client/src/App.tsx:944` — the call carries `status=open`, comment at `:944`), so the tile counts open cases, and the endpoint
 refuses a status it does not write with **400** instead of answering an empty list — the engineer's
 committed run, steps 20–21 of `docs/evidence/p2-2/http-acceptance.txt`. The tile still renders
 `preboardingCases.length`, which is honest exactly as long as the list it counts is the open one —
@@ -109,14 +109,14 @@ which it now is.
 ### F3 — the breadcrumb spells the tab differently from the nav *(cosmetic)*
 
 The header *then* rendered `{activeTab} Panel` (`@rev 75e3ff2` `App.tsx:657`), which printed "Preboarding Panel". The breadcrumb now reads
-`{navLabel(activeTab)}` (`App.tsx:1689`) for a nav entry labelled `Pre-boarding` (`App.tsx:446`). Every other tab's id happens to match its label, so
+`{navLabel(activeTab)}` (`App.tsx:1715`) for a nav entry labelled `Pre-boarding` (`App.tsx:457`). Every other tab's id happens to match its label, so
 this is the first one where it shows. Fix by mapping ids to labels for the breadcrumb, or by
 choosing one spelling; it should match the nav.
 
 **Status (lead, 2026-10-07):** confirmed on `main` and fixed. Root cause as above — the breadcrumb
 prints the tab's **id**, so a nav label that differs from its id spells differently in the header.
 Same defect class as the settlement header still reading "UAE / KSA".
-**Closed in PR #70 (`5ed731e`):** the nav is now one list, `NAV_ITEMS` (`client/src/App.tsx:442`),
+**Closed in PR #70 (`5ed731e`):** the nav is now one list, `NAV_ITEMS` (`client/src/App.tsx:453`),
 and the header reads the entry through `navLabel` (`:426`) — so the sidebar and the breadcrumb read
 the same label by construction, not by two strings agreeing by hand.
 
@@ -144,7 +144,7 @@ deployment was left running and was not touched, tested against, or written to.
 **A side finding worth keeping:** re-posting the same offer reference returned
 `{"created":false, ...}` — the case already existed and nothing was created twice, which is Gate 1's
 idempotency visible from outside the product. The UI surfaces it honestly too ("nothing was created
-twice", the `already had a case` branch — `App.tsx:973`).
+twice", the `already had a case` branch — `App.tsx:992`).
 
 ---
 
