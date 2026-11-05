@@ -16,7 +16,7 @@ Everything below is copied output, not assertion. Raw files sit beside this one.
 | `POST /api/compliance/consent` | **0** | 0 | 0 | 0 |
 
 The path `/api/employees/` has four client hits, and the roles are what matter, not the count:
-`App.tsx:985,986` are `/api/employees/:id/onboarding` and `…/offboarding`, and `App.tsx:1092,1112`
+`App.tsx:1014,986` are `/api/employees/:id/onboarding` and `…/offboarding`, and `App.tsx:1121,1112`
 are both **`method: 'PUT'`** (`handleMarkProductive`, `handleTransitionToOffboarding`) — i.e. the
 live `PUT /api/employees/:id`. **No client call site issues a GET on that path.**
 Source: `enumeration-and-route-table.txt`.

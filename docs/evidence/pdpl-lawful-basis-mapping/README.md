@@ -160,7 +160,7 @@ $ git show origin/main:server/eosb.js | md5sum
   and legal obligation (purpose table, above) — **consent only for biometrics and certain sensitive data**,
   and no pre-boarding document is either.
 - **What the product records** for every case: `lawful_basis:'consent'`, `consent_version:'v1'` — three
-  hardcoded literals in the client, independent of the documents (`App.tsx:849`).
+  hardcoded literals in the client, independent of the documents (`App.tsx:876`).
 - **What can act**: the signed-in username **or the string `'system'`** (`index.js:728`, and the module's own
   fallback at `preboarding-items.js:242`) — while the sibling acknowledgement module **refuses** an unnamed
   actor (`preboarding-package.js:196-202`). Two standards, one product surface.

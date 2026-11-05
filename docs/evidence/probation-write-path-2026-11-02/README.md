@@ -171,7 +171,7 @@ at `7b073f8`): they describe older trees, and shifting them would make them desc
 neither tree.
 
 **The pin control was red for a reason that had nothing to do with pins.** Plant P4
-cites `App.tsx:1580` for `{formatAmount(analytics.avgCostPerHireAE)}`; that symbol is
+cites `App.tsx:1618` for `{formatAmount(analytics.avgCostPerHireAE)}`; that symbol is
 at 1585 now, so the plant's own citation stopped landing and P4 exited 1 where it
 must exit 0. The plant's number moved to the line that carries the symbol it names.
 **No expectation changed** - P4 is still (exit 0, `UNUSED-PIN`, unused pin == 1), and

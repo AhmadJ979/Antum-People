@@ -15,7 +15,7 @@ four-count line the plan and the tracker quote —
    module's own exports and emits the `raw:` JSON line above.
 2. `DEAD_END_ITEMS` gets its own section (`ITEMS OFFERED A MOVE THEY CAN NEVER COMPLETE`), listing
    each item, its reason, its owner, and the guards that make it a dead end
-   (`requestControlGuard()` — the Request control at `App.tsx:2129` is **not** guarded, `Mark received`
+   (`requestControlGuard()` — the Request control at `App.tsx:2167` is **not** guarded, `Mark received`
    at `:2133` is disabled unless collectible, and the collect gate fires only for collected statuses).
 3. The summary is checked **in both directions** against the register module's actual exports, before
    anything else is printed. A declared category the register no longer exports, or an export the

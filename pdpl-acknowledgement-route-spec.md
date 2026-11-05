@@ -27,13 +27,13 @@
 
 ## 0. What changes, in one paragraph
 
-Today one row per case records `lawful_basis:'consent'`, `consent_version:'v1'`, typed by the client (`client/src/App.tsx:849`) and written with `input.actor || 'system'` (`server/preboarding-items.js:242`); the gate blocks collection on that row's existence (`server/preboarding-items.js:326-332`). Option B replaces the **instrument** — the case records that the notice was shown, per document, naming the person who showed it, against the notice version actually shown — and moves the basis from one case-level literal to the basis the notice assigns to each document. The gate keeps working the same way and the same documents stay blocked until the record exists **for that item**.
+Today one row per case records `lawful_basis:'consent'`, `consent_version:'v1'`, typed by the client (`client/src/App.tsx:876`) and written with `input.actor || 'system'` (`server/preboarding-items.js:242`); the gate blocks collection on that row's existence (`server/preboarding-items.js:326-332`). Option B replaces the **instrument** — the case records that the notice was shown, per document, naming the person who showed it, against the notice version actually shown — and moves the basis from one case-level literal to the basis the notice assigns to each document. The gate keeps working the same way and the same documents stay blocked until the record exists **for that item**.
 
 ---
 
 ## 1. The record's values — one row per document type
 
-Item set: `server/preboarding-items.js:71-77`. Notice purposes: `templates/privacy-notice.md:43-50`. Today's product value is the same for all seven (`App.tsx:849`).
+Item set: `server/preboarding-items.js:71-77`. Notice purposes: `templates/privacy-notice.md:43-50`. Today's product value is the same for all seven (`App.tsx:876`).
 
 | # | `item_key` | Label · category (cite) | **Basis the record must carry** | The notice line for it | The notice names the document? |
 |---|---|---|---|---|---|
@@ -76,7 +76,7 @@ Item set: `server/preboarding-items.js:71-77`. Notice purposes: `templates/priva
 ## 3. The version — the server reads it, the client never sends it
 
 - **The value:** the notice's own version string, `templates/privacy-notice.md:6` — **`v2.2`** at this tree (its acknowledgement block reads v2.2 too, `:247`).
-- **What fixes it there:** the notice is already a file the server serves (`GET /api/compliance/templates/:templateName/:employeeId`, `server/index.js:350`). The server must read the version from that same file, so the record cannot disagree with the notice a client could have downloaded. **The client stops sending it** — `client/src/App.tsx:849` sends the literal `'v1'`, which matches no document, and that literal is the defect.
+- **What fixes it there:** the notice is already a file the server serves (`GET /api/compliance/templates/:templateName/:employeeId`, `server/index.js:350`). The server must read the version from that same file, so the record cannot disagree with the notice a client could have downloaded. **The client stops sending it** — `client/src/App.tsx:876` sends the literal `'v1'`, which matches no document, and that literal is the defect.
 - **The rule that keeps it true:** changing the notice's content means bumping that header line; a recorded acknowledgement keeps the version it was shown against and is never rewritten.
 - **Read state to make visible:** if the notice's current version is newer than a case's acknowledgement, the UI must show *which* version that case was acknowledged against rather than present it as current.
 
@@ -114,7 +114,7 @@ Item set: `server/preboarding-items.js:71-77`. Notice purposes: `templates/priva
 
 | Surface | Today | What it must read |
 |---|---|---|
-| The control that records it | `Record PDPL consent` (`client/src/App.tsx:1942`), posting three consent literals (`:849`) | *Record that the notice was shown* — and the notice itself must be openable from the gate before the control is usable. **Today the notice is only a download on an employee record** (`client/src/App.tsx:1479`), never at the point of collection; that is the real gap and the gate must close it |
+| The control that records it | `Record PDPL consent` (`client/src/App.tsx:1980`), posting three consent literals (`:849`) | *Record that the notice was shown* — and the notice itself must be openable from the gate before the control is usable. **Today the notice is only a download on an employee record** (`client/src/App.tsx:1517`), never at the point of collection; that is the real gap and the gate must close it |
 | The recorded state | `PDPL consent recorded {date}` (`:1938`) | the notice was shown on `{date}`, against notice `{version}`, recorded by `{name}` |
 | The empty state on a case | `No PDPL consent record — no document can be collected on this case yet.` (`:1916`) | the notice has not been shown on this case yet, so no document can be collected |
 | The roll-up label | `Without consent` (`:1804`) | *notice not shown* — the count is unchanged, its meaning is not. This is the label that replaces the demo's "3 WITHOUT CONSENT", and the demo documents must be re-grounded with it |
@@ -131,7 +131,7 @@ Item set: `server/preboarding-items.js:71-77`. Notice purposes: `templates/priva
 
 1. Add the acknowledgement record's missing values (§1) — per **item**, not per case.
 2. Add the route: record a notice acknowledgement for a case's item; `recorded_by` from the session; refuse when unnamed (§2); refuse when the item is one of §4's non-collectible two.
-3. Server reads `notice_version` from `templates/privacy-notice.md:6`; remove the client literal (`App.tsx:849`).
+3. Server reads `notice_version` from `templates/privacy-notice.md:6`; remove the client literal (`App.tsx:876`).
 4. Replace the gate's consent check (`server/preboarding-items.js:326-332`) with the acknowledgement check, per item; keep HTTP 428.
 5. Copy: the four surfaces in §6 (designer's wording).
 6. Seed: named actor, per-item acknowledgements, the two §4 items left uncollectible — so the demo's counts still read 7 per case.

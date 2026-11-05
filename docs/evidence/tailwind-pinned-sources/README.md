@@ -64,7 +64,7 @@ addition is the same universal block minus five variables, not a new rule.
 
 | rule that left | where its word actually occurs | why losing it is safe |
 |---|---|---|
-| `.collapse{visibility:collapse}` | `src/httpStatus.js:54` (docstring sentence), `src/httpStatus.test.js:58` (test name) | No markup uses the class. The only markup mention is the **different** class `border-collapse` (`App.tsx:1498`), whose rule `.border-collapse{border-collapse:collapse}` is present in **both** builds — measured. This is the 30-byte defect itself, now gone. |
+| `.collapse{visibility:collapse}` | `src/httpStatus.js:54` (docstring sentence), `src/httpStatus.test.js:58` (test name) | No markup uses the class. The only markup mention is the **different** class `border-collapse` (`App.tsx:1536`), whose rule `.border-collapse{border-collapse:collapse}` is present in **both** builds — measured. This is the 30-byte defect itself, now gone. |
 | `.transform{transform:var(--tw-rotate-x,)…}` | `src/App.css:45,54` — `transform: perspective(…)` **declarations** in the hand-written stylesheet | Emitted because Tailwind read the *word* `transform` in a CSS declaration, not because any element has the class. Nothing in markup carries `transform`. |
 | `@property --tw-rotate-x` · `--tw-rotate-y` · `--tw-rotate-z` · `--tw-skew-x` · `--tw-skew-y` (5) | same | These registrations exist only to back `.transform`; with it gone they are dead weight. |
 | — the universal `*,:before,:after,::backdrop` block | — | Reported as "removed + added" because its text changed: it loses exactly the five rotate/skew variables above. Not a new rule. |

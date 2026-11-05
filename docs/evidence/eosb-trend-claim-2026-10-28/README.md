@@ -6,7 +6,7 @@ something its source cannot establish. This one is generated in the **client** a
 ## 1. The claim, and where it is really read from
 
 Served bundle `client/dist/assets/index-CNpLMWLD.js`, fetched over the public URL:
-283703 B, md5 `62f0fae0baf2b71f7607d86f6834dab1`. Source: `client/src/App.tsx:1889`, the
+283703 B, md5 `62f0fae0baf2b71f7607d86f6834dab1`. Source: `client/src/App.tsx:1927`, the
 **LIABILITY EXPOSURE (ILLUSTRATIVE)** card in the Executive Summary Banner, inside
 `{activeTab === 'analytics' && (`, rendered from the nav button **"Strategic Intelligence"**.
 

@@ -327,7 +327,7 @@ Three things a grep would not tell you:
   whole (`res.json({ …, alerts })`), so wiring that route would ship a plaintext national ID for every employee
   whose visa expires within 60 days. Remove, or project the columns, before wiring.
 - **`GET /api/employees/:id` looks called and is not.** The path string `api/employees/<id>` appears twice in the
-  client, at `client/src/App.tsx:1090` and `:1110` — **both are `method: 'PUT'`**. Two hits on the path, neither
+  client, at `client/src/App.tsx:1119` and `:1110` — **both are `method: 'PUT'`**. Two hits on the path, neither
   one reaching this handler.
 - **The report route's headline figure is not fit to display anyway.** Its `consentGranted` is the
   seeder-written flag (owner decision 17), so wiring the route unchanged would put a fabricated number on a

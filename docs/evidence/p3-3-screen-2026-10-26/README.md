@@ -42,7 +42,7 @@ that data (see the finding).
 
 ## The walk, and what is on screen
 
-Dashboard → **Employee Directory** (the probation panel lives on that tab, `App.tsx:1639`). Screenshot:
+Dashboard → **Employee Directory** (the probation panel lives on that tab, `App.tsx:1677`). Screenshot:
 `screens/02-employee-directory-probation.png`.
 
 What a reader sees, quoted from the DOM (`04-probation-panel.txt`):
@@ -117,7 +117,7 @@ and the register's own rule is that a fixed orphan leaves the register in the sa
 So rendering the chain needs a **new client change** — a call to
 `GET /api/probation/escalations` (registered at `server/access.js:340` under `employees:read`, handler
 `server/index.js:1320`) plus a rendering block, most naturally inside the existing panel at
-`client/src/App.tsx:1639`, with its vocabulary (state chips, day labels) beside
+`client/src/App.tsx:1677`, with its vocabulary (state chips, day labels) beside
 `client/src/probationTimeline.js`. **Movement owed by that change: one** — a `client/` delta owes a bundle
 rebuild *and* a deployment movement, and the served asset's md5 will move. It belongs to the slice the
 register already names (P3-4's follow-up), not to the correction of a sentence. (This pack is docs-only and

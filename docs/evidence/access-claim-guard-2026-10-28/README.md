@@ -6,7 +6,7 @@
 ## The defect
 
 `server/preboarding-workspace.js` built the note that travels in `view.note` of every workspace
-board — returned at `:421` (`note: VIEW_NOTE`) and drawn by the client at `client/src/App.tsx:2443`:
+board — returned at `:421` (`note: VIEW_NOTE`) and drawn by the client at `client/src/App.tsx:2481`:
 
 > This narrows the board to one function. It is a filter, not access control: everyone signed in can
 > still open any case and see every line. Per-user scoping — "My lines" — ships with per-user

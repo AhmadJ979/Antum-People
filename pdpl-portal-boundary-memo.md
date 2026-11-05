@@ -20,9 +20,9 @@ Seven facts. Nothing in the sections that follow makes sense without them.
 | 1 | **Antum is the processor; each client (employer) is the controller.** The notice is therefore *the employer's* notice, presented in Antum's product. The controller-side `[dpo_name]` placeholder in the notice belongs to the client's own DPO and is deliberately unfilled. | `legal-signoff-checklist.md:15,17` |
 | 2 | **The gate is server-side, on the item transition to `received`/`verified`** (`COLLECTED_STATUSES`), not in the UI, so a direct API call cannot bypass it. A refusal is HTTP 428. | `server/preboarding-items.js:47`, and the gate at `:326-332` |
 | 3 | **The pre-boarding consent record is per case, one row, no withdrawal.** `preboarding_consents(id, case_id UNIQUE, consent_type, lawful_basis, consent_version, granted_at, recorded_by, created_at)` — no `revoked_at`, no notice text, no notice hash. | `server/schema.sql:258-267` |
-| 4 | **The client sends three literals.** Every consent record today says `consent_type:'pdpl_notice'`, `lawful_basis:'consent'`, `consent_version:'v1'` — regardless of which documents the case carries. | `client/src/App.tsx:849` |
+| 4 | **The client sends three literals.** Every consent record today says `consent_type:'pdpl_notice'`, `lawful_basis:'consent'`, `consent_version:'v1'` — regardless of which documents the case carries. | `client/src/App.tsx:876` |
 | 5 | **The acting party can be nobody.** The route sends `actor` = the signed-in username **or the literal `'system'`** (`server/index.js:728`, route at `:721`), and the module falls back to `'system'` itself when writing the `recorded_by` column (`server/preboarding-items.js:242`). One shared admin account until Layer 3 makes the username a shared identity in any case. | cited |
-| 6 | **The notice is never shown at the point of collection.** A "Record PDPL consent" button sits on the case card; the notice itself is reachable only as a *template download* in the documents area, keyed to an employee. | `client/src/App.tsx:1942` (button), `:1963` (tooltip), `:1914-1916` (row copy), `:1479` (template download) |
+| 6 | **The notice is never shown at the point of collection.** A "Record PDPL consent" button sits on the case card; the notice itself is reachable only as a *template download* in the documents area, keyed to an employee. | `client/src/App.tsx:1980` (button), `:1963` (tooltip), `:1914-1916` (row copy), `:1479` (template download) |
 | 7 | **The product holds a reference, not bytes.** An item carries `document_reference` (≤120 chars), a file name or the reference the hire quoted; it never enters the audit trail, and there is no file storage in this release. | `server/preboarding-items.js:29-31`, limit at `:284` |
 
 Two further facts that shape the answers:
@@ -101,7 +101,7 @@ Emergency-contact data is **third-party personal data**: the contact is not the 
 
 ### 3.4 What must change in the copy
 
-The UI string "✗ MISSING / REQUIRED" on the employee record (`client/src/App.tsx:1464`) asserts a *requirement* to record consent. That is the unsourced-qualifier class we have already removed once (`statutory-claims-determination.md`). Recommended: "Not recorded", and, for the case card, "No notice acknowledgement on this case yet — documents cannot be collected until it is recorded."
+The UI string "✗ MISSING / REQUIRED" on the employee record (`client/src/App.tsx:1502`) asserts a *requirement* to record consent. That is the unsourced-qualifier class we have already removed once (`statutory-claims-determination.md`). Recommended: "Not recorded", and, for the case card, "No notice acknowledgement on this case yet — documents cannot be collected until it is recorded."
 
 ---
 
@@ -279,6 +279,6 @@ In order, on the hire's document step:
 - `server/preboarding-items.js:29-31` (no bytes, reference only) · `:47` (`COLLECTED_STATUSES`) · `:284` (reference ≤120) · `:206` (`hasConsent`) · `:327-328` (the gate) · `DOCUMENT_SETS` (AE set: passport, visa/entry permit, Emirates ID, education certificate, experience certificate, bank details, emergency contact)
 - `server/schema.sql:258-267` (`preboarding_consents`) · `:93-105` (legacy `consent_records`, unused `ip_address`/`revoked_at`)
 - `server/index.js:713` / `:721` (the two pre-boarding consent routes) · `:728` (`actor` = username **or `'system'`**) · `:340` (the older `/api/compliance/consent`) · `:771` (the acknowledgement route's `recorded_by`, `server/preboarding-package.js:196-205` requires it)
-- `client/src/App.tsx:849` (the three literals) · `:1914-1963` (case card, button, tooltip) · `:1464` ("MISSING / REQUIRED") · `:1479` (notice reachable only as a template download)
+- `client/src/App.tsx:876` (the three literals) · `:1914-1963` (case card, button, tooltip) · `:1464` ("MISSING / REQUIRED") · `:1479` (notice reachable only as a template download)
 - `templates/privacy-notice.md:6,247` (v2.2) · `:28-37` (categories) · `:41-51` (purposes ↔ bases) · `:54-65` (retention) · `:125` (Arabic version) · `:237-248` (acknowledgement block — blanket consent box at `:245`, signature row at `:248`)
 - `compliance-requirements.md` §5.3 (notice content list) · `:391` (§6.4, the KSA Arabic claim) · `legal-signoff-checklist.md:15,17,27` (processor/controller, DPO, wordmark) · `compliance-dpia-vendor-risk.md:26-30,47` (article set + its own citation caveat)

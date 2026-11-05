@@ -127,8 +127,8 @@ subset; `:243` and `:368` are internal reads.
 | site | text | role |
 |---|---|---|
 | `client/src/App.tsx:25-26` | `consent_granted: number;` / `consent_date: string \| null;` | the `Employee` interface still admits both keys; **zero consumers** |
-| `client/src/App.tsx:1560` | `Notice-based — recorded per pre-boarding case` | what replaced the retired tile |
-| `client/src/App.tsx:1563` | `… No consent flag is held on the employee record.` | the tile's claim — see §4.3 for the one word worth watching |
+| `client/src/App.tsx:1598` | `Notice-based — recorded per pre-boarding case` | what replaced the retired tile |
+| `client/src/App.tsx:1601` | `… No consent flag is held on the employee record.` | the tile's claim — see §4.3 for the one word worth watching |
 
 ### 1.5 Checks that hold the retirement in place
 
@@ -248,7 +248,7 @@ The reasons, in order of weight:
   written by nothing, read by nothing, value `DEFAULT 0`/`NULL`. (Wording must not delete the columns from the
   doc — an absent row would read as a dropped column.)
 - `demo-walkthrough-script.md` — retire the four stale spots: `:165`, `:170`, `:175`, `:364`. Step 3 should
-  point at the **Compliance Center's notice-shown tile** instead (`App.tsx:1560`), which is what the product
+  point at the **Compliance Center's notice-shown tile** instead (`App.tsx:1598`), which is what the product
   actually prints; the "Consent capture" table row should name the 15(b) notice-shown record, not the removed
   route.
 - The **enumeration itself** (this document) is the record for the two columns; §3.2 (the seeder's
@@ -304,7 +304,7 @@ what breaks in each. Measured this session at `origin/main` = `f05ebc4` (`git lo
 | **writes** | **0** | `git grep -n -E "(INSERT\|UPDATE\|SET)[^;']*(consent_granted\|consent_date)" origin/main -- server` | only match is `server/index.js:360`, a **tombstone comment** quoting the removed statement. The shipped check agrees: `[fenced] consent_granted` / `[fenced] consent_date`. |
 | **reads** | **0** | `git grep -c -E 'consent_granted\|consent_date' origin/main -- server client scripts` → 7 files / 18 hits; then every other `server/*.js` listed | 24 of the 30 `server/*.js` files contain **no occurrence at all** (`auth.js`, `db.js`, `eosb.js`, `preboarding*.js`, `compliance_engine.js`, `document-store.js`, `privacy-notice.js`, all their tests…). The 6 exceptions: `index.js` (5 comments), `schema.sql` (DDL), `reachability-register.js`, `reachability.test.js` (2 assertions), `reachability-report.js` (1), and not a reader among them. |
 | **gates** | **0** | `git grep -n -E '(consent_granted\|consent_date)[[:space:]]*(===\|==\|!==\|!=\|&&\|\|\|\|\?)' origin/main -- server client scripts` | `none anywhere in server/ client/ scripts/`. A gate needs a read; there is no read. |
-| **displays** | **0 in code** | `git grep -n 'GRANTED ON' origin/main -- client/src` → no match; `git grep -n -E 'consent_granted\|consent_date' origin/main -- client/src` → `App.tsx:25-26` only | the two lines are a **TS interface declaration with zero consumers**; the replacing tile is notice-based (`App.tsx:1560`, claim `:1563`). |
+| **displays** | **0 in code** | `git grep -n 'GRANTED ON' origin/main -- client/src` → no match; `git grep -n -E 'consent_granted\|consent_date' origin/main -- client/src` → `App.tsx:25-26` only | the two lines are a **TS interface declaration with zero consumers**; the replacing tile is notice-based (`App.tsx:1598`, claim `:1563`). |
 | **counts / asserts** | 2 | `scripts/reachability-report.js` (`columnWritePaths`), `server/reachability.test.js:164-177` | the report **counts** write paths (prints `[fenced]`, i.e. zero); the test **asserts** the count is `[]` **and** that the column is still in the schema — its own message: *"the column was dropped: decision 17 keeps it (enumerated first, recommended later) — dropping it is a separate decision, not a tidy-up"*. |
 | **declares** | 1 | `client/src/App.tsx:25-26` | shape only, no reader. |
 | **carries** | 1 | `server/index.js:156-157` (`SELECT *`) → `:164` (`res.json`) | **not a read and not a display**: both keys still travel inside the roster payload to any authenticated client. This is the one live exposure a bare hit count hides — and it is why "nothing reads them" is true while "nothing carries them" is not. |

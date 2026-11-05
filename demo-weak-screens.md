@@ -84,7 +84,7 @@ Two documents describing the same weak screens differently is a credibility prob
 | This audit | Walkthrough script | Agreement |
 | --- | --- | --- |
 | 1 — settlement header generic (`UAE / KSA`, `Antum Regional Hub`) | Caveat 5 | same fact, same reading date; the audit adds that the waiver clause names the placeholder twice more and that the document carries **no EOSB-basis line and no counsel marker** |
-| 2 — exit-interview data never surfaced | Caveat 8 | identical, including the client-only-as-a-type detail (`App.tsx:224`) and today's `exitsByReason` reading |
+| 2 — exit-interview data never surfaced | Caveat 8 | identical, including the client-only-as-a-type detail (`App.tsx:235`) and today's `exitsByReason` reading |
 | 3 — UAE offboarding 8 steps vs KSA 10 | Caveat 10 | identical |
 | 4 — H1 2023 at 50% (lift −33%) | Caveat 4 | identical |
 | 5 — roster 8 rows (5/1/1/1) and the pre-hire in the headcount | Caveat 11 | identical |
@@ -95,7 +95,7 @@ Two documents describing the same weak screens differently is a credibility prob
 | 10 — the forecast's all-zero `KSA: 0.00 SAR` column | **added to the script's list this session (Caveat 16)** | new finding; the script now carries it |
 | F1–F4, the chip, the package | Caveats 13 and 14, and Segment 3 | same limits in the same words: no delivery channel, no hire-facing portal, nothing "sent", an acknowledgement **recorded in the product** |
 
-**One script line was corrected to match this audit's measurement.** The script's provenance table listed the Compliance Center's **"Basic Salary (UAE Rule)"** line as *carried from 2026-10-06 and not re-opened on this pass*. It **was** re-opened on the screen on 2026-10-08 — it renders on the offboarding record's Compliance Center (`App.tsx:1337`) — so the script now says so, and the audit carries the reading.
+**One script line was corrected to match this audit's measurement.** The script's provenance table listed the Compliance Center's **"Basic Salary (UAE Rule)"** line as *carried from 2026-10-06 and not re-opened on this pass*. It **was** re-opened on the screen on 2026-10-08 — it renders on the offboarding record's Compliance Center (`App.tsx:1375`) — so the script now says so, and the audit carries the reading.
 
 ---
 
@@ -121,8 +121,8 @@ Each item was re-opened this pass rather than restated. "Closed" means **seen on
    - **Seen:** Employee Directory and Executive Dashboard, 2026-10-08; values re-read from the API the same minute.
 9. **Offboarding pipeline shows an exit date.** The departing record reads **`Exit 2026-10-10`**, not a blank.
    - **Seen:** Executive Dashboard → Offboarding Pipeline, 2026-10-08 (screenshot `01-dashboard.png`).
-10. **"Day 193" is gone — but the arithmetic behind it is not guarded.** The in-flight hire renders a plausible count (Omar: Day 49). The formula is still `Math.ceil((now − start_date) / 24h)` with no floor (`App.tsx:1383`), which is why it can go negative — see **item 9**, where the arithmetic is newly known to be unguarded (the audit that closed `Day 193` did not know that).
-    - **Seen:** day counts computed for all 8 UAE rows this pass (49, 859, 911, 966, 997, 1272, 1308, 1682); formula read in the client at `App.tsx:1383`.
+10. **"Day 193" is gone — but the arithmetic behind it is not guarded.** The in-flight hire renders a plausible count (Omar: Day 49). The formula is still `Math.ceil((now − start_date) / 24h)` with no floor (`App.tsx:1421`), which is why it can go negative — see **item 9**, where the arithmetic is newly known to be unguarded (the audit that closed `Day 193` did not know that).
+    - **Seen:** day counts computed for all 8 UAE rows this pass (49, 859, 911, 966, 997, 1272, 1308, 1682); formula read in the client at `App.tsx:1421`.
 
 ### Also closed: the `Origin` / blank-page / stack-trace hole (2026-10-06, re-checked anonymously today)
 
@@ -137,8 +137,8 @@ These are the audit doing its job. Each was found by re-reading running code aga
 
 | # | What was wrong | Fixed by | What it reads now (measured 2026-10-08, `main` = `2584361`) |
 | --- | --- | --- | --- |
-| **F1** | The pre-boarding case list was the one screen **not** scoped to the header's jurisdiction — a UAE header could list KSA cases | PR #70 (`5ed731e`); owner decision 2026-10-07 to scope the list and keep the row's chip | the list call carries `?jurisdiction=AE&status=open` (`App.tsx:518`). **Proved on the scratch database this pass:** the seeded demo holds AE cases only, so a filtered and an unfiltered read agree by construction — so one **SA** case was opened through the product's own path and the reads then differ: `?jurisdiction=AE` → **3 cases**; unfiltered → **4** (the three AE plus `AUDIT-KSA-CHECK-01/SA`). The filter does its job (`06-scope-probe.txt`) |
-| **F2** | The tile labelled **"Cases open" counted rows**, not open cases | PR #70 (`5ed731e`) | the tile reads from the same endpoint it counts (comment at `App.tsx:516`); screen reads **3 / CASES OPEN** with exactly three rows beneath |
+| **F1** | The pre-boarding case list was the one screen **not** scoped to the header's jurisdiction — a UAE header could list KSA cases | PR #70 (`5ed731e`); owner decision 2026-10-07 to scope the list and keep the row's chip | the list call carries `?jurisdiction=AE&status=open` (`App.tsx:529`). **Proved on the scratch database this pass:** the seeded demo holds AE cases only, so a filtered and an unfiltered read agree by construction — so one **SA** case was opened through the product's own path and the reads then differ: `?jurisdiction=AE` → **3 cases**; unfiltered → **4** (the three AE plus `AUDIT-KSA-CHECK-01/SA`). The filter does its job (`06-scope-probe.txt`) |
+| **F2** | The tile labelled **"Cases open" counted rows**, not open cases | PR #70 (`5ed731e`) | the tile reads from the same endpoint it counts (comment at `App.tsx:527`); screen reads **3 / CASES OPEN** with exactly three rows beneath |
 | **F3** | The breadcrumb spelled the tab differently from the nav (`Preboarding Panel`) | PR #70 (`5ed731e`) | sidebar and breadcrumb read one list; screen reads **Pre-boarding** in both |
 | **F4** | The roll-up row printed a **bare negative day count** (`· -1 d`) for a case already started | PR #77 (`one-distance rule`), documented in the spec | the row reads **`· started 1 d ago`** for the started case, **`· 14 d`** for the clear case and **`· 14.6 h before 00:00 on the start date`** for the inside-48-hours case — one derivation, absolute, never signed |
 
@@ -156,12 +156,12 @@ These are the audit doing its job. Each was found by re-reading running code aga
 - **Screen:** Employee Directory → an offboarding record → Compliance Center → **Settlement Statement**.
 - **What a prospect sees:** engine figures and a 2-decimal net total, above **"Jurisdiction: UAE / KSA"** and employer **"Antum Regional Hub"** — for a UAE employee. The waiver clause in section 4 names the same placeholder twice more, so the artefact a prospect's counsel reads **looks like a template that has not been filled in**, at the point where it is most persuasive.
 - **Verdict:** unchanged from 2026-10-06 and still the first thing a lawyer looks at. Frame it out loud as a draft template with live figures, and say that the header resolves to the client's entity once registration and the entity record exist (IFZA registration is a hard gate on signing).
-- **Design spec (mine to specify, engineering's to build) — unchanged, still the ask:** (1) employer line from the client's own entity record, never a name that reads like a real company; (2) **one** jurisdiction, derived from the employee record, reading *"United Arab Emirates — Federal Decree-Law No. 33 of 2021"*; (3) employee block from the record; (4) the status chip on the document itself in the wording already shipped in Document Preview — **"Pilot-ready draft — subject to your counsel's review"**; (5) the EOSB line names its basis. **Confirmed this pass:** the Compliance Center does render **"Basic Salary (UAE Rule)"** as the EOSB basis (`App.tsx:1337`), but the **document itself carries no basis line and no counsel marker at all** — so 5 is still open, on the artefact that travels.
+- **Design spec (mine to specify, engineering's to build) — unchanged, still the ask:** (1) employer line from the client's own entity record, never a name that reads like a real company; (2) **one** jurisdiction, derived from the employee record, reading *"United Arab Emirates — Federal Decree-Law No. 33 of 2021"*; (3) employee block from the record; (4) the status chip on the document itself in the wording already shipped in Document Preview — **"Pilot-ready draft — subject to your counsel's review"**; (5) the EOSB line names its basis. **Confirmed this pass:** the Compliance Center does render **"Basic Salary (UAE Rule)"** as the EOSB basis (`App.tsx:1375`), but the **document itself carries no basis line and no counsel marker at all** — so 5 is still open, on the artefact that travels.
 
 ### 2. Exit-interview data is still captured and never shown
 - **Screen:** nowhere in the UI.
 - **What a prospect sees:** nothing. The API returns `exitsByReason` for the surface the demo uses — **Career Change 1, Better Opportunity 1** (unfiltered: Better Opportunity 2, Career Change 1, Relocation 1) — and **no view renders it**.
-- **Re-checked this pass:** `exitsByReason` appears in the client exactly once, as a TypeScript type (`App.tsx:224`); no component reads it. Filed, still open.
+- **Re-checked this pass:** `exitsByReason` appears in the client exactly once, as a TypeScript type (`App.tsx:235`); no component reads it. Filed, still open.
 - **Verdict:** a headline retention story with no visible backing. Say **"Phase 2 view"** if asked; the intake is already recording. The design direction from the 2026-10-06 spec stands: a small breakdown panel beside Retention Lift, departure reason **and** the separate preventable-attrition flag, a real empty state ("No exit interviews recorded for this period"), and the offered-salary field shown to HR leadership only — with the compliance expert confirming the PDPL position before it is surfaced at all.
 
 ### 3. The UAE offboarding showcase is shorter than the KSA one it replaces
@@ -199,7 +199,7 @@ These are the audit doing its job. Each was found by re-reading running code aga
 - **Verdict:** change one line; the product underneath already does more than the line says.
 
 ### 9. **New — the roster's day count has no floor, so a future-dated hire prints `Day -n`** *(new as a reclassification: the 2026-10-06 audit listed the `Day 193` symptom as closed — what is new is that the arithmetic behind it is unguarded)*
-- **Screen:** the day-count badge the dashboard renders per in-flight hire (`App.tsx:1383`).
+- **Screen:** the day-count badge the dashboard renders per in-flight hire (`App.tsx:1421`).
 - **What a prospect would see:** a **negative** day count (`Day -2`) for anyone whose start date is in the future — raw arithmetic, not a labelled state. `Math.ceil((now − start_date) / 24h)` has no guard below zero.
 - **Measured 2026-10-08:** **not visible on this seed** — every one of the 8 UAE rows has a past start date (day counts 49, 859, 911, 966, 997, 1272, 1308, 1682), so nothing renders negative today. The exposure is the direction the demo is heading: the pre-boarding hires (start **+1 day** and **+14 days**) are exactly the records that would be added to a roster to show pre-boarding in the same view. This is a **code-level** finding, stated as one.
 - **Verdict:** guard it the way the row distance was guarded (F4) — an absolute value plus a word ("starts in 2 d"), never a bare signed number. Cheap; do it before a future-dated hire appears in a demo.
