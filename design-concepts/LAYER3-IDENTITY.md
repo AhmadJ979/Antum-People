@@ -71,7 +71,7 @@ Two findings, both worth fixing in this slice because slice 1 is what makes them
 **Proposed card (same classes, same place, no restyle):**
 
 ```
-Placed where the card is today — sidebar, under the brand row (`@rev 48da36e` `App.tsx:1706`, the `<div className="flex items-center space-x-3">` brand row; `:1215` at `@rev ab7e9c3`)
+Placed where the card is today — sidebar, under the brand row (`@rev 48da36e` `App.tsx:1706`, the `<div className="flex items-center space-x-3">` brand row; `:1215` at `ab7e9c3`)
   ┌──────────────────────────────────────────────┐
   │  [avatar]  Layla Haddad                      │   ← person's name, when the account carries one
   │            HR · Pre-boarding                 │   ← role, as the access model names it (open)
@@ -118,11 +118,11 @@ Three different readers read the same record, and the design must serve all thre
 - The checklist tick — **measured here, and there are two of them**: `server/index.js:801`–`:819`
   (`PUT /api/onboarding-tasks/:id`) and `:838`–`:851` (`PUT /api/offboarding-tasks/:id`) both write
   `completed_at = datetime('now')` on completion **and `completed_by`** — decision 22, which has since landed:
-  a completion with no named actor is refused 400 (`:814`–`:816`, `:846`–`:848`). *(At `@rev 7b073f8` the same
+  a completion with no named actor is refused 400 (`:814`–`:816`, `:846`–`:848`). *(At `7b073f8` the same
   two routes were `:315`–`:318` and `:321`–`:324` and wrote no actor; the engineer's row cited `:317`–`330`.)*
 - **The model found a worse case than a missing actor, and it strengthens rule 2 below.** Its **§5.2.1**:
   `POST /api/employees` and `PUT /api/employees/:id` recorded the literal `'system'` as the actor (`server/index.js:224`,
-  `:292` at `@rev 7b073f8`) — *"a field that exists and holds a false name is a record a future reader will trust."*
+  `:292` at `7b073f8`) — *"a field that exists and holds a false name is a record a future reader will trust."*
   That is this document's rule stated better than I had it: **an actor field that is present and wrong is worse than
   one that is absent.** **Corrected since:** both paths now refuse an unnamed actor (`server/index.js:538`, `:645`).
 - **The policy for the tick is now settled:** `docs/access-model.md` **§5.2.3** — the tick gains
@@ -203,7 +203,7 @@ No Arabic copy ships with this slice (decision 15(c) is open). The requirement i
 | `ml-` / `mr-` | **4** / **5** | → `ms-` / `me-` when the pass runs |
 | `text-left` / `text-right` | **6** / **3** | → `text-start` / `text-end` |
 | `text-start` / `text-end`, `border-s-`/`-e-`, `rounded-s-`/`-e-` | **0** | nothing logical is used yet |
-| `border-r-*` | **2** | both are **chart rule lines**, not chrome: a benchmark marker (`:1681`) and a target marker (`:1711`) at `@rev 7b073f8` — `:2399` and `:2429` at `@rev 48da36e`, still 2 — each drawn with an inline `left:`. Neither is on these surfaces, and whether a chart mirrors is a real decision, not a bug — flagged here only so it is not mistaken for spacing. |
+| `border-r-*` | **2** | both are **chart rule lines**, not chrome: a benchmark marker (`:1681`) and a target marker (`:1711`) at `7b073f8` — `:2399` and `:2429` at `48da36e`, still 2 — each drawn with an inline `left:`. Neither is on these surfaces, and whether a chart mirrors is a real decision, not a bug — flagged here only so it is not mistaken for spacing. |
 | `dir=` / `lang=` | **0** / **0** | no direction handling exists |
 
 **The two surfaces added here are the ones with the most physical markup in the product**, measured in place:
@@ -219,7 +219,7 @@ new:
    mirrors; the handle does not. Wrap handles, emails and IDs in `<bdi>` so a Latin run cannot reorder
    inside an Arabic sentence.
 4. **A name is not a string to be uppercased.** The card's role line is `uppercase` today
-   (`App.tsx:1727` at `@rev 48da36e`; `:1197` at `@rev 7b073f8`); keep that only for values that are Latin-cased
+   (`App.tsx:1727`; `:1197` at `7b073f8`); keep that only for values that are Latin-cased
    vocabulary from the access model, and drop it for a person's name.
 5. **The refusal banner wraps, it does not truncate.** Arabic is longer; the refusal is the one message that
    must stay readable in full. No `truncate` on it (the identity card's name may truncate; the refusal may
