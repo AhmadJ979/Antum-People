@@ -158,7 +158,7 @@ if (status === 403) return hasBody ? SESSION_INVALID : REFUSAL;
 
 and the docstring states the rule as a choice (`:28`–`:31`): *"`403` + ANY body → `SESSION_INVALID` → sign
 out … signing out is the recoverable mistake."* **The reasoning is sound —
-and the enumeration behind it is short by one.** Every 403 producer in `server/` at `0e401cf`:
+and the enumeration behind it is short by one.** Every 403 producer in `server/`, re-read at `48da36e` (the set is unchanged since `0e401cf`; the lines are not):
 
 | # | Site | Body | What it actually means |
 |---|---|---|---|
@@ -353,7 +353,7 @@ sentence, which is the seat that was missing. Four sets already exist and each k
   defect (§4, with the test that would catch it), one contradiction to close (§3), one unhandled event (§5).
 - **It does not place code or copy in the app** — the document is design; the sentence it adopts is already
   shipped.
-- **It carries no render proof.** Every statement is a reading of a code path at `0e401cf`, not a photograph.
+- **It carries no render proof.** Every statement is a reading of a code path, re-read at `48da36e`, not a photograph.
   The before-state worth capturing, by whoever builds §3's fix: *a refusal on `/api/employees` with six
   `No data yet` tiles underneath it* — the two claims, on one screen, in one image.
 - **It does not touch**: JWT-in-`localStorage` (open by design), the 400 actor refusal (decision 22, done),
