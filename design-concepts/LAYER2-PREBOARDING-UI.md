@@ -820,8 +820,8 @@ workspace track with its owner names; and any illustrative figure without its la
 
 ### 8B.1 What exists today, measured on `main` at `b7630cb` (`client/src/App.tsx`)
 
-- **No i18n layer and no direction handling.** `dir=` appears **0** times, there is no `lang`
-  attribute and no language state, and every UI string is an English literal. The header switches
+- **No i18n layer; direction groundwork exists, and it is narrower than an RTL interface.** At `b7630cb` this bullet read `dir=` **0** times — true of that tree, **false of the product at `cb819d7`**: four elements in `client/src` declare their own direction — the served-document container and each table cell carry the `dir` prop (`markdownView.js:151`, `markdownView.js:107`, `markdownView.js:120`, asserted by `markdown.test.js:336`–`346`), and the unrecorded-reason note under the preview carries `dir="auto"` (`App.tsx:3388`) — while the print pipeline separates the two languages with `dir="ltr"`/`dir="rtl"` (`templates/build-html.js:245`, `templates/build-html.js:250`, read by `typefaces.test.js:191`). That is a declaration on four elements, not a layout:
+  no `lang` attribute, no language state, no switch, no mirrored layout and no Arabic UI string — the four Arabic characters in `client/src` are the wordmark, inside a `typefaces.test.js` comment. §8B.2–§8B.4 below describe the design intent, and it is still unbuilt. The header switches
   **jurisdiction**, not language — there is no language switch in the product at all.
 - **Numbers and dates are convention-pinned — amended 2026-10-29.** The owner's numeral ruling
   (Latin digits throughout) is implemented: the seven figure sites now read `formatAmount(...)`
@@ -1024,7 +1024,7 @@ fails the same evidence standard the acknowledgement already keeps (`UNAVAILABLE
 | **D4** | **Per-user accounts / function identity** | "IT/Admin see only their own lines" (P2-4) has no account model behind it | Product, then engineering (§4) |
 | **D5** | A **document store** | P2-2 collects passports, Emirates IDs, certificates and bank details, and stores **no bytes**: an item carries a reference and a status. **Decided by the owner, 2026-10-07 — Option D is the product now, and Option C (an S3-compatible object store) is built when the entity is registered.** Building it is then a change behind one interface (`saveDocument`/`readDocument`), with the PDPL work the compliance expert owes on the chosen store | Engineering (built when IFZA registration completes) + PDPL (compliance expert) |
 | **D6** | An **acknowledgement record** for the JD and NDA | **Built (P2-3, PR #79).** The record is written by the signed-in user on the hire's behalf, `recorded_by` required, method `in_product_record`; an item reads `acknowledged` only when the row exists; signature-implying methods are refused by name (lead ruling, 2026-10-08). Remaining dependency is the **actor's identity**, not the record: today that is one shared admin account, so per-user accounts at Layer 3 are what make "who" trustworthy | Engineering + PDPL |
-| **D7** | **EN/AR strings and an i18n/RTL layer** | Bilingual is a standing quality standard; the client has no i18n layer today, and §8B.1 measures how far that reaches (`dir=` 0, no language state, 28 physical `space-x-*` against 0 `space-x-reverse`, no logical-direction utilities) | Design (the layout consequences are specified in §8B and the pointer language carries forward from `INTERACTIVE-CONSENT-SPECS.md` §1.1–§1.3) + a translator/owner for the AR copy, tracked by §8B.5's provenance markers |
+| **D7** | **EN/AR strings and an i18n/RTL layer** | Bilingual is a standing quality standard; the client has no i18n layer today, and §8B.1 measures how far that reaches (no language state, 28 physical `space-x-*` against 0 `space-x-reverse`, no logical-direction utilities, and only the direction groundwork §8B.1 now records — four `dir="auto"` elements, no layout) | Design (the layout consequences are specified in §8B and the pointer language carries forward from `INTERACTIVE-CONSENT-SPECS.md` §1.1–§1.3) + a translator/owner for the AR copy, tracked by §8B.5's provenance markers |
 | **D8** | The **derived flag computation** | §5's definition, computed on read | Engineering (P2-5) |
 | **D9** | An **in-process timer + startup catch-up** for the unprompted notice | Gate 2, owner-decided 2026-10-06; only affects *whether the app speaks first*, never correctness | Engineering |
 | **D10** | **A delivery channel** — mailer, webhook or SMS | Without it, the flag can never say "notified", and the pre-reading package's "sent" state has no mechanism | Product; the spec is worded so nothing breaks if it never arrives |
@@ -1220,7 +1220,7 @@ that no existing section number, and therefore no citation in another document, 
 `main` at **`b7630cb`** (the merge of PR #86, P2-4) on 2026-10-09: §8A states the hire's three
 screens, the four status words the hire reads, and what the product can honestly show while storage
 is a reference string and nothing has a delivery channel; §8B names the EN/AR and RTL consequences and
-measures the client as it stands (`dir=` 0, no language state, `space-x-*` 28 against
+measures the client as it stands (`dir=` 0 — **superseded 2026-11-06 at `cb819d7`: four elements carry `dir="auto"`, §8B.1** — no language state, `space-x-*` 28 against
 `space-x-reverse` 0, no logical-direction utilities, `toLocaleString(undefined, …)` in 7 places, ISO
 dates printed raw — **both of the last two since amended 2026-10-29: 0 ambient-locale calls, one
 date shape**); §8C lays out five identity options with their consequences and **decides none of
