@@ -79,7 +79,7 @@ answers one more row of this table, marked in place.**
 | A checklist item that can carry an **owner** | `interface Task` has `id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone` — **no owner, no track, no Arabic text** | `App.tsx:105`–`:115` |
 | The same, in storage | `onboarding_tasks(id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone, created_at)` — **no owner, no track, no function** | `schema.sql:43`–`:56` |
 | **Any item at all, attached to a case** | **Built by P2-2:** `preboarding_items(id, case_id, item_key, label, category, jurisdiction, required, status, document_reference, note, requested_at, received_at, verified_at, last_actor, …)`, `UNIQUE (case_id, item_key)`. The AE set is 7 items, the SA set 6 and inactive this release. **Still absent: owner, due date, track** — so §3's per-item owner and due date, and §6's track split, are still waiting | `schema.sql:225`–`:259`; `server/preboarding-items.js:71`–`:97` (`DOCUMENT_SETS`) |
-| **A record to gate document collection on** | **Built — and it is not a consent record.** The gate reads the per-item record that the notice was **shown**: `preboarding_notice_acknowledgements(case_id, item_key, item_label, jurisdiction, instrument CHECK (instrument = 'notice_shown'), lawful_basis, notice_version, recorded_by, method, note, acknowledged_at)`, `UNIQUE (case_id, item_key)`. A document cannot reach `received`/`verified` until the record exists **for that item** (**428**), and an item the notice assigns no basis to is refused outright with the counsel question it waits on (**409**). The case-level `preboarding_consents` table is **retired** — no reader, no writer — because one row per case cannot carry seven lawful bases; `consent_records` stays for purpose-scoped consent, and its only writer was removed on 2026-10-13 (decision 17) | `schema.sql:325`–`:340` (the shipped table), `:291`–`:300` (the retired one itself; its reason is the docblock above it); `server/preboarding-items.js:161`, `:466`–`:481` |
+| **A record to gate document collection on** | **Built — and it is not a consent record.** The gate reads the per-item record that the notice was **shown**: `preboarding_notice_acknowledgements(case_id, item_key, item_label, jurisdiction, instrument CHECK (instrument = 'notice_shown'), lawful_basis, notice_version, recorded_by, method, note, acknowledged_at)`, `UNIQUE (case_id, item_key)`. A document cannot reach `received`/`verified` until the record exists **for that item** (**428**), and an item the notice assigns no basis to is refused outright with the counsel question it waits on (**409**). The case-level `preboarding_consents` table is **retired** — no reader, no writer — because one row per case cannot carry seven lawful bases; `consent_records` stays for purpose-scoped consent, and its only writer was removed on 2026-10-13 (decision 17) | `schema.sql:325`–`:340` (the shipped table), `:291`–`:300` (the retired one itself; its reason is the docblock above it); `server/preboarding-items.js:161`, `:486`–`:503` |
 | Per-function identity ("IT sees only its own lines") | `users(id, username, password_hash, role, created_at)` exists, but the product seeds **one shared account** — no per-user login to scope a view by | `schema.sql:187`–`:194` |
 | Somewhere to put a collected document | **Nothing — deliberately, and now by the owner's decision.** P2-2 records a short `document_reference` (a file name, or the reference HR quoted) and refuses the bytes: `server/document-store.js` throws **501** behind `saveDocument`/`readDocument` and names `ANTUM_DOCUMENT_STORE` as the one door. **The owner decided the shape on 2026-10-07: Option D ships now — reference string only, no bytes — and Option C (an S3-compatible object store) is built when the entity is registered; IFZA registration is the gate, an event rather than a date. No real document bytes before it.** The pointer is therefore the personal data: the item says *which* document, whose, when recorded and where it lives, and the content stays where HR already keeps it | `server/document-store.js`; spec §10 Q5 |
 | A record of an acknowledgement (JD, NDA) | **Built by P2-3 (PR #79, `main` = `404b29d`):** `preboarding_acknowledgements`, written only by `recordAcknowledgement` — `recorded_by` required, method `in_product_record`, signature-implying methods refused by name, and nothing reads `acknowledged` without the row (lead ruling, 2026-10-08) | `server/preboarding-package.js` |
@@ -605,21 +605,21 @@ not a checkbox buried in a settings panel — and what it gates on is a record t
   offered, since it collects nothing. It is scoped to the **employee** track in the code,
   deliberately — a provisioning line is not the hire's personal document, and gating IT's work on a
   notice about the hire's data would invent a rule nobody stated
-  (`server/preboarding-items.js:462`–`:465`).
+  (`server/preboarding-items.js:482`–`:485`).
 - **Nothing may be collected without the record** — the gate is on the transition, not just on the
   button: a write that would move a document to `received` or `verified` is refused unless the
   notice's record exists for **that item**, and it is checked for every caller
-  (`server/preboarding-items.js:466`–`:481`); an item the notice assigns no basis to is refused
-  outright, naming the counsel question it waits on (`:468`–`:473`, **409**). The acceptance test
+  (`server/preboarding-items.js:486`–`:503`); an item the notice assigns no basis to is refused
+  outright, naming the counsel question it waits on (`:488`–`:495`, **409**). The acceptance test
   for P2-6 is exactly that request.
 - The screen reads the gate from the record, and the **shipped** strings are: the case's own panel
   prints `The notice has not been shown on this case yet, so no document can be collected on it.` in
   amber while no document on the case has a record (`client/src/App.tsx:2800`–`:2802`; the roll-up
-  row carries the same sentence at `:2106`–`:2107`); each item prints
-  `· the notice has not been shown for this document yet` until it has its own record (`:2242`), and
+  row carries the same sentence at `:2752`–`:2756`); each item prints
+  `· the notice has not been shown for this document yet` until it has its own record (`:2850`), and
   once recorded prints `· shown <acknowledged_at> by <recorded_by> against <notice_version>`
-  (`:2241`). The control is `Record that the notice was shown` (`:2210`), offered only after the
-  notice has been opened in that session (`:2080`–`:2084`). The screen shows **that** the notice was
+  (`:2849`). The control is `Record that the notice was shown` (`:2818`), offered only after the
+  notice has been opened in that session (`:2813`–`:2814`, `disabled={!noticeOpened[row.case_id]}`). The screen shows **that** the notice was
   shown, **by whom**, and **against which version** — it never claims a consent, and never shows the
   notice's contents.
   *(Corrected 2026-10-09, and the strings it quotes are gone: the block now reads `Notice-based — recorded per pre-boarding case` at `App.tsx:2262`. This bullet previously cited `@rev 75e3ff2` `App.tsx:1008`–`:1009` for `✓ Recorded <date>`
@@ -631,15 +631,15 @@ not a checkbox buried in a settings panel — and what it gates on is a record t
   strings above on 2026-10-13; the correction stands as the record of its own moment.)*
 **One record gates collection, it is per document, and it is not a consent.** The case path is the
 per-item acknowledgement: `POST /api/preboarding/cases/:id/notice-acknowledgements`
-(`server/index.js:740`) → `preboarding_notice_acknowledgements` (`server/schema.sql:302`–`:317`),
-written by `recordNoticeAcknowledgement` (`server/preboarding-items.js:322`) and read by the gate
-(`:466`–`:481`). *(Until 2026-10-13 this paragraph cited `POST /api/preboarding/cases/:id/consent` →
+(`server/index.js:1418`) → `preboarding_notice_acknowledgements` (`server/schema.sql:325`–`:340`),
+written by `recordNoticeAcknowledgement` (`server/preboarding-items.js:339`) and read by the gate
+(`:486`–`:503`). *(Until 2026-10-13 this paragraph cited `POST /api/preboarding/cases/:id/consent` →
 `preboarding_consents` at `server/index.js:718`–`:729` and the gate at
 `server/preboarding-items.js:321`–`:332`. **Both citations are stranded**: the case consent route and
 its table were retired with the instrument, and that line is no longer the gate.)* Layer 1's
 **employee**-level consent path — `POST /api/compliance/consent`, writing `consent_records` and
 setting `employees.consent_granted` — **was removed on 2026-10-13** (owner decision 17), and it had
-no caller; the removal is recorded where it stood (`server/index.js:358`–`:363`), and the
+no caller; the removal is recorded where it stood (`server/index.js:907`–`:912`), and the
 `consent_records` table stays for purpose-scoped consent. A pre-hire has no employee row yet, so the
 portal binds to the **notice-shown record** and to nothing else, and nothing mirrors it into the
 employee flag — one act, one record. If an accepted offer later needs a consent recorded against the
@@ -696,7 +696,7 @@ Each row carries: the item's name, what is needed, **the item's own status in th
 (8A.3), the due date and its distance, and the single action available. The document list is
 readable **before the notice has been shown** — it is the hire's own list of what they will be asked
 for — and its items cannot be collected until the notice has been shown **for that item** (§8, and the
-shipped refusals at `server/preboarding-items.js:466`–`:481`: **409** for an item the notice assigns
+shipped refusals at `server/preboarding-items.js:486`–`:503`: **409** for an item the notice assigns
 no basis to, **428** for an item whose notice has not been shown).
 
 ### 8A.3 The hire's vocabulary for the four statuses
@@ -997,7 +997,7 @@ fails the same evidence standard the acknowledgement already keeps (`UNAVAILABLE
    to record on the portal path.
 3. **Whether the notice record gains `notice_language`** (D15). The per-item granularity this
    question used to leave open is **shipped**: the record is one row per document and carries the
-   notice's own version (`server/schema.sql:302`–`:317`). What remains open is the language the hire
+   notice's own version (`server/schema.sql:325`–`:340`). What remains open is the language the hire
    read it in, which the record does not carry. My recommendation is additive on the one record; the
    requirement is the memo's.
 4. **Whether a read event may be recorded at all** — a data-minimisation question (8A.5.2). The
@@ -1032,7 +1032,7 @@ fails the same evidence standard the acknowledgement already keeps (`UNAVAILABLE
 | **D12** | A decision on **how the three flag states are shown in a demo** | Three states need three cases at different distances from their start dates | Owner (§10 Q3) |
 | **D13** | **How a Manager owner is identified** | `employees.manager_id` exists, but the case must name the manager **for the accepted offer**, which may differ from the current record | P2-1's case model |
 | **D14** | **An identity for the hire** | The portal (§8A) and both records that would carry the hire's own act (§8C) need one; today there is a single shared admin account and no role model — which is also why "the hire can never move an item to `verified`" has to be a server-side rule rather than a hidden button | **Product — the lead/owner decision on §8C's options, §10 Q8** — then engineering |
-| **D15** | **The notice language on the notice record** | The shipped row carries `case_id`, `item_key`, `item_label`, `jurisdiction`, `instrument`, `lawful_basis`, `notice_version`, `recorded_by`, `method`, `acknowledged_at` — **one row per document** — and **no language** (`server/schema.sql:302`–`:317`; written at `server/preboarding-items.js:357`–`:375`); what a person agreed to includes the language they read it in, and the older bilingual design already recorded `language` (`INTERACTIVE-CONSENT-SPECS.md` §5.3). *(Until 2026-10-13 this row described the retired case-consent row's columns at `server/preboarding-items.js:233`–`:252` — now `listAllItems` — and left per-item granularity open; that half is shipped, the language is not.)* | Compliance memo (row `5c0a9ceb`) decides the requirement; engineering adds it **to the one record**, never as a second store |
+| **D15** | **The notice language on the notice record** | The shipped row carries `case_id`, `item_key`, `item_label`, `jurisdiction`, `instrument`, `lawful_basis`, `notice_version`, `recorded_by`, `method`, `acknowledged_at` — **one row per document** — and **no language** (`server/schema.sql:325`–`:340`; written at `server/preboarding-items.js:357`–`:375`); what a person agreed to includes the language they read it in, and the older bilingual design already recorded `language` (`INTERACTIVE-CONSENT-SPECS.md` §5.3). *(Until 2026-10-13 this row described the retired case-consent row's columns at `server/preboarding-items.js:233`–`:252` — now `listAllItems` — and left per-item granularity open; that half is shipped, the language is not.)* | Compliance memo (row `5c0a9ceb`) decides the requirement; engineering adds it **to the one record**, never as a second store |
 | **D16** | **A read event for the pre-reading package** | §8A.5.2: the package's label says "not tracked — no hire portal" (`server/preboarding-package.js:83`–`:90`). A portal makes that reason false while the conclusion stays true unless reading is recorded — and recording it is a data-minimisation question | Product/PDPL — and the honest default is **not to record it** and re-word the label instead |
 
 ---
@@ -1114,7 +1114,7 @@ not re-dated:** the pass was resolved on `main` = `501d5fa`, and no code has mer
    wordmark is still `[TO CONFIRM]` — Arabic strings use the Latin "Antum" until you confirm it.
 10. **Does the notice record gain `notice_language`?** The shipped row is **one row per document**
     and carries the notice's own version, and it has **no language field**
-    (`server/schema.sql:302`–`:317`; written at `server/preboarding-items.js:357`–`:375`) — so today the
+    (`server/schema.sql:325`–`:340`; written at `server/preboarding-items.js:357`–`:375`) — so today the
     product cannot say *which language the hire read the notice in*. The per-item granularity the
     earlier wording of this question left open is shipped. My recommendation is one additive column on
     the same record; the requirement is the compliance memo's (row `5c0a9ceb`).
@@ -1136,7 +1136,7 @@ not re-dated:** the pass was resolved on `main` = `501d5fa`, and no code has mer
 | **P2-3** — each item shows sent/read/acknowledged; JD and NDA have a recorded acknowledgement | §3 pre-reading strip; the record itself is D6; "sent" is blocked by D10 |
 | **P2-4** — assignment derived from the role, not typed; each line has a responsible function; IT/Admin see only their own lines | §6 derivation; §2 owner chips; the last clause is D4 (and is not claimable until then) |
 | **P2-5** — fires on the 48-hour boundary; names the incomplete items and their owners; clears when the items complete | §5 definition (inclusive boundary), copy rules, and three states; **§5.1 holds the three seeded cases' expected readings to build against; the derivation is **track-agnostic**, and no surface prints a negative `days_to_start` or invents an item owner**. **Two lead rulings of 2026-10-07 are folded in: the row and the chip share one derivation** (§2's relative-time row: whole days / hours to one decimal / `started n d ago`, so one row cannot carry two distances), **and the amber headline reads *"n items open · start in 48 hours or less"***, because the boundary is inclusive at exactly 48.00 h and "under 48 hours" is false there |
-| **P2-6** — EN/AR documents and portal; no document collected before the notice has been shown for it | §7 (the standing standard) and §8 (the gate is on the transition, not only on the button) for the **HR** surface; **§8A the portal's three screens and the hire's own vocabulary, §8B the EN/AR and RTL consequences, §8C the identity options** for the portal itself. **Acceptance tests this specification adds:** a write that would move a document to `received` or `verified` without a notice-shown record **for that item** must be refused (**shipped** — `server/preboarding-items.js:466`–`:481`, 428; and 409 for an item the notice assigns no basis to); the portal must not create a **second** record for one item (recording is replay-safe, `:352`–`:353`); the hire must never move an item to `verified` (D14); no portal string may say "sent", "delivered", "signed" or "e-signed" (§8A.5); and every AR string renders with its provenance marker (§8B.5) |
+| **P2-6** — EN/AR documents and portal; no document collected before the notice has been shown for it | §7 (the standing standard) and §8 (the gate is on the transition, not only on the button) for the **HR** surface; **§8A the portal's three screens and the hire's own vocabulary, §8B the EN/AR and RTL consequences, §8C the identity options** for the portal itself. **Acceptance tests this specification adds:** a write that would move a document to `received` or `verified` without a notice-shown record **for that item** must be refused (**shipped** — `server/preboarding-items.js:486`–`:503`, 428; and 409 for an item the notice assigns no basis to); the portal must not create a **second** record for one item (recording is replay-safe, `:352`–`:353`); the hire must never move an item to `verified` (D14); no portal string may say "sent", "delivered", "signed" or "e-signed" (§8A.5); and every AR string renders with its provenance marker (§8B.5) |
 
 ---
 
