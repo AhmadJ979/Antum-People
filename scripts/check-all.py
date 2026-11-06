@@ -157,6 +157,23 @@ CHECKS = [
     # and shipped. `--selftest` is part of the same script rather than a second entry, so the
     # proof and the check cannot drift apart; it is the reason the entry can be trusted to
     # redden, and it is what a reader should run first if they doubt the green.
+    dict(id="cross-doc-citations", mode="default", expect="green",
+         home="operator CLI (bare) + this entry point; it reads git objects, so the movement does not run it",
+         cmd=[PY, "scripts/check-cross-doc-citations.py"],
+         what="judges a citation into ANOTHER document (`SOMEDOC.md:12`, `:12`-`:18`) against THAT "
+              "document at HEAD, requiring the citing SENTENCE's own quotation to land on the cited line - "
+              "the class both older citation gates decline to judge (one marks it OTHER-FILE, the other only "
+              "asks whether a range ascends). It does NOT judge a citation whose sentence quotes nothing, nor "
+              "an ASCENDING citation that lands on the wrong line with no quotation to anchor it: those are "
+              "UNJUDGEABLE and NAMED, so a green here means every QUOTATION-ANCHORED citation lands - never "
+              "that the pointers are correct. Zero citations found is a REFUSAL (exit 2), not a pass. "
+              "THE MEASURED LIMIT, carried here rather than implied: of 122 cross-document citations under "
+              "its roots, 16 are anchored and land, 0 are DRIFT, 0 are OUT-OF-BOUNDS and 106 are "
+              "UNJUDGEABLE - that 106 is what this instrument does NOT judge, and a green says nothing "
+              "about it. The two drifts its FIRST run reported, at bf9a484, were pdpl-portal-boundary-memo.md "
+              "pointing at line 391 of compliance-requirements.md for a sentence on line 420; they were "
+              "fixed in the TREE (the pointer moved to 420, the claim untouched) and this row became green, "
+              "because a known-red row left standing is a row the team learns to ignore."),
     dict(id="doc-citation-ranges", mode="default", expect="green",
          home="operator CLI (bare) + this entry point; it reads git objects, so the movement does not run it",
          cmd=[PY, "scripts/check-doc-citation-ranges.py"],

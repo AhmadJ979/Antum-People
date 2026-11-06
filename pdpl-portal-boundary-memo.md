@@ -114,14 +114,14 @@ The UI string "✗ MISSING / REQUIRED" on the employee record (`client/src/App.t
 | Our notice template is **bilingual (EN + AR)**, Arabic version complete (`templates/privacy-notice.md` AR version from `:125`, acknowledgement block at `:237`). | **Sourced** — our own document, our own choice. |
 | EN/AR in the portal is a **product decision** already in the plan (P2-6: "the hire-facing portal, EN/AR"). | **Sourced** — the plan. |
 | The product's KSA checklist string demands Arabic-first: "Capture explicit consent for KSA PDPL compliance (Arabic first)." | **In the product** (`server/compliance_engine.js:38`) — the claim inside it is **[UNCONFIRMED]**. |
-| "The KSA PDPL requires the privacy notice to be in Arabic (can be bilingual)." | **[UNCONFIRMED]** — `compliance-requirements.md` §6.4 (`:391`) states it with no article. Our DPIA cites KSA Art. 7/10 for "publish a privacy policy in Arabic" — with its own caveat that numbering must be re-confirmed (`compliance-dpia-vendor-risk.md:47,28`). |
+| "The KSA PDPL requires the privacy notice to be in Arabic (can be bilingual)." | **[UNCONFIRMED]** — `compliance-requirements.md` §6.4 (`:420`) states it with no article. Our DPIA cites KSA Art. 7/10 for "publish a privacy policy in Arabic" — with its own caveat that numbering must be re-confirmed (`compliance-dpia-vendor-risk.md:47,28`). |
 | **No citation found** for a UAE requirement that a notice be in Arabic. | **Absence of evidence, stated as absence** — not a guess in either direction. |
 
 **Where that was searched (so "no citation found" has provenance):** our own requirements doc (`compliance-requirements.md`), the DPIA's UAE article set (`compliance-dpia-vendor-risk.md` §1.1 — processor, security, DPO, rights, breach, transfers; **no language provision**), the notice template, and a repo-wide `grep` for language requirements. What it found that bears on language — and all of it is about something other than a UAE notice:
 
 | Found | What it is | Why it does not answer this question |
 |---|---|---|
-| `compliance-requirements.md:391` (§6.4) | "The KSA PDPL requires the privacy notice to be in Arabic (can be bilingual)." | **KSA**, and uncited — see the row above. |
+| `compliance-requirements.md:420` (§6.4) | "The KSA PDPL requires the privacy notice to be in Arabic (can be bilingual)." | **KSA**, and uncited — see the row above. |
 | `compliance-requirements.md:74` (§2.2, a KSA onboarding row) | The employment contract "Must be in Arabic (bilingual contracts permitted)", with the UAE column noted as "similar — Arabic as mandatory language". | A **contract**, not a notice; a passing assertion with no citation; and it is the sort of UAE claim that would need sourcing before it appeared in copy. **Flagged, not relied on.** |
 | `compliance-dpia-vendor-risk.md:359,380` | "Is there an Arabic-first privacy notice…" (a DPIA question) and a target state. | A question and an aspiration, not a legal requirement. |
 
@@ -281,4 +281,4 @@ In order, on the hire's document step:
 - `server/index.js:713` / `:721` (the two pre-boarding consent routes) · `:728` (`actor` = username **or `'system'`**) · `:340` (the older `/api/compliance/consent`) · `:771` (the acknowledgement route's `recorded_by`, `server/preboarding-package.js:196-205` requires it)
 - `client/src/App.tsx:876` (the three literals) · `:1914-1963` (case card, button, tooltip) · `:1464` ("MISSING / REQUIRED") · `:1479` (notice reachable only as a template download)
 - `templates/privacy-notice.md:6,247` (v2.2) · `:28-37` (categories) · `:41-51` (purposes ↔ bases) · `:54-65` (retention) · `:125` (Arabic version) · `:237-248` (acknowledgement block — blanket consent box at `:245`, signature row at `:248`)
-- `compliance-requirements.md` §5.3 (notice content list) · `:391` (§6.4, the KSA Arabic claim) · `legal-signoff-checklist.md:15,17,27` (processor/controller, DPO, wordmark) · `compliance-dpia-vendor-risk.md:26-30,47` (article set + its own citation caveat)
+- `compliance-requirements.md` §5.3 (notice content list) · `:420` (§6.4, the KSA Arabic claim) · `legal-signoff-checklist.md:15,17,27` (processor/controller, DPO, wordmark) · `compliance-dpia-vendor-risk.md:26-30,47` (article set + its own citation caveat)
