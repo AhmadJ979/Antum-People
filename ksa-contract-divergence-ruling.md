@@ -86,7 +86,7 @@ it is not a reason to hold the cutover — the repository text is the safer of t
 
 14 pairs, **12 byte-identical, 2 differ, none host-only or repo-only.** Ranked by client-visibility, measured from the
 code rather than assumed: the product serves exactly four templates, through
-`client/src/App.tsx:1564` (PDPL Privacy Notice), `:1571` (Employment Contract — KSA or UAE by the employee's
+`client/src/App.tsx:1602` (PDPL Privacy Notice), `:1571` (Employment Contract — KSA or UAE by the employee's
 `data_residency_country`) and `:1579` (Final Settlement), all via
 `GET /api/compliance/templates/:templateName/:employeeId` (`server/index.js:369`), which now resolves through
 `server/privacy-notice.js` → the repository's `templates/`.
@@ -278,7 +278,7 @@ is the plan's, recorded rather than chosen by me.
 - Prior determinations: `eosb-engine-gaps-spec.md:15,36,46,58,100,178-179` · `eosb-review-report.md:137-147` ·
   `statutory-claims-determination.md:50-51` · `compliance-requirements.md:241,244,280,513` · `tech-stack.md:145` ·
   `compliance-audit-enhancement.md:30,50,89`.
-- Serving path: `client/src/App.tsx:1564,1571,1579` · `server/index.js:369,414-416` · `server/privacy-notice.js:10,31,51`
+- Serving path: `client/src/App.tsx:1602,1571,1579` · `server/index.js:369,414-416` · `server/privacy-notice.js:10,31,51`
   · `server/privacy-notice.test.js:35-38` · `server/eosb.js` (no notice parameter).
 - **Addendum §7–§9 (2026-10-12), read at `origin/main` = `fa69750`:** the pre-2026-10-12 host-first resolution —
   `d618a96:14,36-45`; the repository-first resolution — `3712822` (`server/privacy-notice.js`, `templatePath()`); the

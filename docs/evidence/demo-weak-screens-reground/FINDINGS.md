@@ -45,7 +45,7 @@ and fold in the Layer 2 findings. Docs-only: no client or server file changed, s
   captured the roll-up with all three rows, their chips and their distances; the click meant to expand a row
   into the pre-reading strip resolved to a different control, so the strip's rendered copy is **not** claimed
   from this pass. The payload that the strip renders from is quoted instead, and says which file it is in.
-- **No screen evidence for the `Day -n` finding.** It is a code-level finding (`App.tsx:1383`, unguarded
+- **No screen evidence for the `Day -n` finding.** It is a code-level finding (`App.tsx:1421`, unguarded
   arithmetic) and the audit says so. On this seed no row can render negative: all 8 UAE start dates are in
   the past (day counts 49 … 1682, in `02-http-pass.txt`).
 - **The probe wrote to the scratch database only** — one extra `SA` case (`AUDIT-KSA-CHECK-01`) that exists

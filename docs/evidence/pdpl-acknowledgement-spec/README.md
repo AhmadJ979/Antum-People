@@ -149,11 +149,11 @@ $ git show origin/main:client/src/App.tsx | sed -n '849p'
 
 ```bash
 $ git grep -n "Without consent\|Record PDPL consent\|No PDPL consent record\|PDPL consent recorded" origin/main -- client/src/App.tsx
-origin/main:client/src/App.tsx:860:      setChecklistNotice({ kind: 'ok', text: data.created ? 'PDPL consent recorded — documents can now be collected on this case.' : 'This case already had a PDPL consent record; nothing was recorded twice.' });
-origin/main:client/src/App.tsx:1804:                        <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Without consent</div>
-origin/main:client/src/App.tsx:1916:                                  No PDPL consent record — no document can be collected on this case yet.
-origin/main:client/src/App.tsx:1938:                                        <span className="text-[10px] text-teal-700 font-semibold">PDPL consent recorded {detail.consent.granted_at}</span>
-origin/main:client/src/App.tsx:1942:                                          Record PDPL consent
+origin/main:client/src/App.tsx:887:      setChecklistNotice({ kind: 'ok', text: data.created ? 'PDPL consent recorded — documents can now be collected on this case.' : 'This case already had a PDPL consent record; nothing was recorded twice.' });
+origin/main:client/src/App.tsx:1842:                        <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Without consent</div>
+origin/main:client/src/App.tsx:1954:                                  No PDPL consent record — no document can be collected on this case yet.
+origin/main:client/src/App.tsx:1976:                                        <span className="text-[10px] text-teal-700 font-semibold">PDPL consent recorded {detail.consent.granted_at}</span>
+origin/main:client/src/App.tsx:1980:                                          Record PDPL consent
 ```
 
 ## The notice version header, and the acknowledgement block
@@ -182,7 +182,7 @@ $ git show origin/main:templates/privacy-notice.md | sed -n '43,50p'
 
 ```bash
 $ git grep -n "compliance/templates" origin/main -- server/index.js client/src/App.tsx
-origin/main:client/src/App.tsx:920:      const res = await authedFetch(`${API_BASE}/api/compliance/templates/${templateName}/${selectedEmployee.id}`);
+origin/main:client/src/App.tsx:947:      const res = await authedFetch(`${API_BASE}/api/compliance/templates/${templateName}/${selectedEmployee.id}`);
 origin/main:server/index.js:350:app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) => {
 ```
 
@@ -200,4 +200,4 @@ origin/main:server/preboarding-items.js:89:      { item_key: 'emergency_contact'
 |---|---|
 | The record cannot stay one-row-per-case | `preboarding_consents` is `UNIQUE(case_id)` in effect (`schema.sql:258-267`); the seven bases differ, so the basis must be per item |
 | A stricter actor rule already exists in this codebase | `preboarding-package.js:196-206` refuses an unnamed actor; `preboarding-items.js:242` and `index.js:728` fall back to `'system'` — the spec adopts the former |
-| The notice is never shown at the point of collection | the only route that serves it is `GET /api/compliance/templates/:templateName/:employeeId` (`index.js:350`), called from an employee record (`App.tsx:1479`) — not from the pre-boarding gate |
+| The notice is never shown at the point of collection | the only route that serves it is `GET /api/compliance/templates/:templateName/:employeeId` (`index.js:350`), called from an employee record (`App.tsx:1517`) — not from the pre-boarding gate |

@@ -15,7 +15,7 @@ and were not rewritten.
 
 ## The defect
 
-`client/src/App.tsx:1722–1726` carried a hard-coded paragraph above the HR roll-up, telling the reader:
+`client/src/App.tsx:1760–1726` carried a hard-coded paragraph above the HR roll-up, telling the reader:
 
 > "The 48-hour chip is derived from every item on a case, whatever track created it. Today that is the
 > employee-track documents only, because the workspace track (P2-4) is not built yet — when it lands, its
@@ -74,7 +74,7 @@ frame** so the comparison is string-equal, not visual.
 - `rig-before-setup.txt` / `rig-after-setup.txt` — the rig transcripts, including the tree-hash check that
   the rig tree **is** the merge result. `rig-after-setup.txt` also contains my first, failed probe of a
   guessed route name; the real route is the one the client calls
-  (`client/src/App.tsx:621`) and is what the payload files hold. Left in rather than cleaned up.
+  (`client/src/App.tsx:632`) and is what the payload files hold. Left in rather than cleaned up.
 - `probes/` — the rig scripts and the browser probes, so the reads can be re-run.
 - `build-proof.txt` — `cd client && npx tsc -b` exit **0**, `cd client && npx vite build` exit **0**, with
   the tree SHA in the header.

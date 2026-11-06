@@ -115,15 +115,15 @@ Four facts about it, all measured:
 
 | served path | what it does |
 |---|---|
-| `client/src/App.tsx:401,408,409` | the payload's types, including `eosbLiabilitySeries` |
-| `client/src/App.tsx:1549-1561` | renders `eosbByJurisdiction.AE` / `.SA` as two liability cards |
-| `client/src/App.tsx:1889` | **generates a sentence**: "EOSB liability forecast shows a {rise\|steady} trend into 2027." — a claim derived from points [2] and [0] of the series, with the year hard-coded |
-| `client/src/App.tsx:1973-1974` | the chart of the series |
+| `client/src/App.tsx:412,408,409` | the payload's types, including `eosbLiabilitySeries` |
+| `client/src/App.tsx:1587-1599` | renders `eosbByJurisdiction.AE` / `.SA` as two liability cards |
+| `client/src/App.tsx:1927` | **generates a sentence**: "EOSB liability forecast shows a {rise\|steady} trend into 2027." — a claim derived from points [2] and [0] of the series, with the year hard-coded |
+| `client/src/App.tsx:2011-2012` | the chart of the series |
 
 `server/access.js:267` — `['GET', '/analytics/dashboard', 'analytics:read']`.
 
 **Shown, not assumed: the client reads the series.** A change to the payload's shape or meaning owes a
-`client/` movement (section 8), and the sentence at `App.tsx:1889` is a served claim that must be
+`client/` movement (section 8), and the sentence at `App.tsx:1927` is a served claim that must be
 re-examined whenever the rule changes — it asserts a trend about a number that today means
 "undiscounted, resignation-basis, no departures, everyone still here".
 
@@ -281,7 +281,7 @@ they can disagree about time itself (2.2). Either recompute the headline at read
   assumptions"**, and the phrase *finance-ready for CFO booking* is dropped.
 - **And the failure mode to design out, in the row's words:** a CFO acting on a number our product called
   finance-ready when it is a projection. The product's own sentence today — "EOSB liability forecast shows
-  a rise into 2027" (`App.tsx:1889`) — asserts a trend about a resignation-basis, no-departure,
+  a rise into 2027" (`App.tsx:1927`) — asserts a trend about a resignation-basis, no-departure,
   everyone-still-here number, and would read to a CFO as an accrual trend. Any change to the rule owns that
   sentence.
 
@@ -292,7 +292,7 @@ they can disagree about time itself (2.2). Either recompute the headline at read
 - `server/` — **yes.** The rule changes `server/index.js` (the series at `:770-787`, the window, the
   basis and departure arguments, the honesty layer, the headline's derivation at `:689`/`:797`) and may
   touch `server/eosb.js` (KSA cap, if the compliance expert rules it; unpaid-leave input). One movement.
-- `client/` — **yes, and shown rather than assumed**: `client/src/App.tsx:1549-1561` (the two buckets),
+- `client/` — **yes, and shown rather than assumed**: `client/src/App.tsx:1587-1599` (the two buckets),
   `:1889` (a generated trend sentence), `:1973-1974` (the chart), with the payload types at `:401,408,409`.
   A changed payload shape or a re-labelled number changes rendered text, which is a served-text change and
   therefore owes a movement. If the build changes only *values* and not the shape, the movement is still

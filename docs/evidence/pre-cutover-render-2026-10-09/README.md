@@ -4,7 +4,7 @@
 (`7d95fbb`) builds to exactly the bundle three of us have been quoting — `assets/index-Dt2oLspq.js`,
 **270,962 bytes, md5 `5720cd6fbeca1966cb642f9cf6338a9c`** — and that build, served on a rig, renders: the
 Pre-boarding case list shows **three cases**, its "Cases open" tile reads **3** (that tile is the *only*
-consumer of the `#125` envelope, `client/src/App.tsx:1682` ← `:586`), the same surface survives an empty
+consumer of the `#125` envelope, `client/src/App.tsx:1720` ← `:586`), the same surface survives an empty
 jurisdiction without an error, and the five surfaces' labels are **unchanged at 5 · 15** on this new bundle.
 The cutover can run as sequenced.
 
@@ -81,7 +81,7 @@ a count difference).
 
 ## 4. The envelope consumer — why this gate existed
 
-`#125` changed one client line (`client/src/App.tsx:586`) to `setPreboardingCases(data.cases)`, with **no
+`#125` changed one client line (`client/src/App.tsx:597`) to `setPreboardingCases(data.cases)`, with **no
 fallback to a bare array on purpose**, and that array feeds exactly one place: the `Cases open` tile
 (`:1682`, `preboardingCases.length`). Rendered on the built bundle:
 

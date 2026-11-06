@@ -26,7 +26,7 @@ nothing in the document was edited afterwards.
    the same 72-claim checker re-run at each holds **72/72** with its control reddening at **71/72**.
 4. **The lead reported a fifth state at the served tree `ea6a531`** — a screen partly allowed rendering empty
    because one refused sibling rejects a two-item `Promise.all`. **Verified by me, not restated:** the mechanism
-   is at `App.tsx:594`/`:598` and `:997`/`:1000` at `ea6a531` **and** `8ec9f69`. Specified in §5a; the notice's
+   is at `App.tsx:605`/`:598` and `:997`/`:1000` at `ea6a531` **and** `8ec9f69`. Specified in §5a; the notice's
    wording (the lead's second point) is set in §5c.
 5. **The draft itself merged as PR #244 at `8ec9f69`**, one second before its withdrawal could land. `main`
    therefore **carried** the refuted sentences from that merge until this correction landed as **PR #246**

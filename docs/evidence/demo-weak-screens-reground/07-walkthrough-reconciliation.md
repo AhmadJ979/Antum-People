@@ -10,7 +10,7 @@ files: the audit carries a mapping table, and the script's footer points back at
 | Audit item | Script caveat | Checked for agreement on |
 | --- | --- | --- |
 | 1 settlement header generic | 5 | the exact strings (`UAE / KSA`, `Antum Regional Hub`), that the figures are the engine's, and the draft framing |
-| 2 exit-interview data never surfaced | 8 | `exitsByReason` = Career Change 1 / Better Opportunity 1, and that the client uses the field only as a type (`App.tsx:224`) |
+| 2 exit-interview data never surfaced | 8 | `exitsByReason` = Career Change 1 / Better Opportunity 1, and that the client uses the field only as a type (`App.tsx:235`) |
 | 3 UAE offboarding 8 steps vs KSA 10 | 10 | the two counts and the instruction not to pad the list |
 | 4 H1 2023 at 50% (lift −33%) | 4 | the reading and the "do not hide it" instruction |
 | 5 roster 8 rows, 5/1/1/1, the pre-hire in the headcount | 11 | the status split and the counting caveat |
@@ -26,11 +26,11 @@ to match, never the other way round.
 
 1. **The script's provenance table listed the Compliance Center's `Basic Salary (UAE Rule)` line as
    "carried from the 2026-10-06 walk … not re-opened this pass". That was wrong as of today** — the line
-   was re-opened on the rendered offboarding record's Compliance Center (the EOSB basis row, `App.tsx:1337`)
+   was re-opened on the rendered offboarding record's Compliance Center (the EOSB basis row, `App.tsx:1375`)
    on the scratch instance of `2584361`. **Fixed in the script**, and the audit carries the reading
    (`03-dom-settlement.txt`, `screenshots/06-settlement-modal.png`).
 2. **The script's `Day -n` line named only `404b29d`.** The same arithmetic was re-read the same day on
-   `2584361` — same line, `App.tsx:1383` — so the script now names both revisions, and both documents now
+   `2584361` — same line, `App.tsx:1421` — so the script now names both revisions, and both documents now
    say the same thing about the seed (no row shows it; all 8 UAE counts are positive, 49 … 1682).
 3. **Two findings existed only in the audit.** The sign-in screen's "HR Onboarding/Offboarding Intelligence
    Platform" line and the EOSB forecast's all-zero `KSA: 0.00 SAR` column were in the audit and absent from

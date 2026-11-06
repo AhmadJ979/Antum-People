@@ -104,7 +104,7 @@ the length matching this register's prior reading. That was an inference. It is 
 
 **Two probe faults found and disqualified** (both would have let a capture be captioned wrongly):
 - `probes/identity.js` `dir_heading` (`/Employee Directory/i` over body text) is **true on all five
-  surfaces** — the sidebar carries that label on every screen (client/src/App.tsx:213; sidebar is a
+  surfaces** — the sidebar carries that label on every screen (client/src/App.tsx:224; sidebar is a
   real `<aside>` at :1080 wrapping `<nav>` at :1108).
 - `probes/identity.js` `active_nav` listed the three **non-selected** nav labels on every surface:
   the `[aria-current]` selector matched nothing and the class fallback matched inactive buttons.

@@ -23,17 +23,17 @@ the entry point was never wired.
    the identifier is a `false`:
 
    ```
-   client/src/App.tsx:407   const [showExitModal, setShowExitModal] = useState(false);
-   client/src/App.tsx:1014  setShowExitModal(false);        // after a successful submit
-   client/src/App.tsx:2193  {showExitModal && (             // the render guard
-   client/src/App.tsx:2198  <button onClick={() => setShowExitModal(false)} ...   // the close button
+   client/src/App.tsx:418   const [showExitModal, setShowExitModal] = useState(false);
+   client/src/App.tsx:1043  setShowExitModal(false);        // after a successful submit
+   client/src/App.tsx:2231  {showExitModal && (             // the render guard
+   client/src/App.tsx:2236  <button onClick={() => setShowExitModal(false)} ...   // the close button
    ```
 
    This has been true since the **initial commit** (`git log -S setShowExitModal` returns only
    `3259bf5`), so no opener was ever removed — there is no "it moved" story to reconstruct.
 
 2. **The modal is the route's only caller.** The string `exit-interviews` appears **once** in the whole client:
-   `client/src/App.tsx:997`, inside `handleExitSubmit` (declared `:993`), which the modal's own `<form>` binds
+   `client/src/App.tsx:1026`, inside `handleExitSubmit` (declared `:993`), which the modal's own `<form>` binds
    (`:2200`). No other screen, menu, card or list calls it.
 
 3. **Nothing else records an exit either.** The offboarding surfaces that *do* work are separate and do not
@@ -62,7 +62,7 @@ decision to be made by someone who owns the surface. The two candidates, with th
 
 | candidate | argument for | argument against |
 |---|---|---|
-| **The employee detail panel's transition action row** (`client/src/App.tsx:1378`–`:1385`) — where `Mark Productive` and `Initiate Exit` already live | it is already the lifecycle control row, and it is the next step of the same flow (`active → Initiate Exit → offboarding checklist → … → terminated`); **checked on the tree:** while a case is in `offboarding` that row currently renders *no* button at all (both existing buttons are gated to `onboarding`/`active`), so a third button here is additive rather than crowding | the placement competes with the Transitions Hub candidate below for the same decision, and the designer may want one entry point, not two |
+| **The employee detail panel's transition action row** (`client/src/App.tsx:1416`–`:1385`) — where `Mark Productive` and `Initiate Exit` already live | it is already the lifecycle control row, and it is the next step of the same flow (`active → Initiate Exit → offboarding checklist → … → terminated`); **checked on the tree:** while a case is in `offboarding` that row currently renders *no* button at all (both existing buttons are gated to `onboarding`/`active`), so a third button here is additive rather than crowding | the placement competes with the Transitions Hub candidate below for the same decision, and the designer may want one entry point, not two |
 | **The Transitions Hub's `Departing Employees (Offboarding)` list** (`:1474`–`:1483`) | it is the surface HR scans for everyone leaving; a per-row action reads naturally as "finish this offboarding" | the row click already navigates to the employee, so a per-row action trades against that click target |
 
 A third possibility, which is a product decision rather than a placement one: **decide the capability is not in

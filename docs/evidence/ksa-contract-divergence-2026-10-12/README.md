@@ -32,7 +32,7 @@ command -v pdftotext mutool qpdf gs; python3 -c 'import pypdf'  # all absent
 | `privacy-notice.html` (both copies) | md5 `68c8478a0e5aa1a1988e60ca08fc7800`; contains `statutory retention` x2 and `v2.2` x4 while the repo `.md` reads "retention period" |
 | UAE contract | md5 `f28dc42aa50e9b9ea3262af636f2d822` **in both** — proves a resolution change, not a content refresh |
 | engine | `server/eosb.js` has no `notice` parameter at all — neither contract wording describes computed behaviour |
-| serving path | `client/src/App.tsx:1564,1571,1579` → `GET /api/compliance/templates/:templateName/:employeeId` (`server/index.js:369`) → `server/privacy-notice.js` → repo `templates/` |
+| serving path | `client/src/App.tsx:1602,1571,1579` → `GET /api/compliance/templates/:templateName/:employeeId` (`server/index.js:369`) → `server/privacy-notice.js` → repo `templates/` |
 
 ## Not verified, and said so
 

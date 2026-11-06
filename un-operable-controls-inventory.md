@@ -44,8 +44,8 @@ This is the same defect class as the pre-15(b) consent gate and the pre-#151 hos
 | 4 | `GET /api/compliance/report` | `server/index.js:424` | route — no caller | known (decision 21) |
 | 5 | `GET /api/preboarding/cases/:id` | `server/index.js:646` | route — no caller | **new here** |
 | 6 | `GET /api/preboarding/flag-watch` | `server/index.js:840` | route — no caller | **new here** |
-| 7 | `showExitModal` — Exit Intelligence Intake | `client/src/App.tsx:459` (declaration) | control — never opened | known (decision 16) |
-| 8 | the "✓ GRANTED ON {date}" tile | `client/src/App.tsx:1549` | value — no reachable writer | known (decision 17) |
+| 7 | `showExitModal` — Exit Intelligence Intake | `client/src/App.tsx:470` (declaration) | control — never opened | known (decision 16) |
+| 8 | the "✓ GRANTED ON {date}" tile | `client/src/App.tsx:1587` | value — no reachable writer | known (decision 17) |
 
 Elements 3 and 8 are **the same instrument** seen from its two ends: the route nothing calls, and the tile
 whose value only the seeder writes. They share decision 17, and they should be retired or rewired together.
@@ -68,7 +68,7 @@ operate, or a figure with no producer. Wire, remove, or write down the choice �
 an answer once it is in this table.
 
 1. **`GET /api/employees/:id`** — the roster is what the UI reads and the detail view takes its employee from
-   that list, so this route is dead: the two client hits on that path (`client/src/App.tsx:1090`, `:1110`) are
+   that list, so this route is dead: the two client hits on that path (`client/src/App.tsx:1119`, `:1110`) are
    both `method: 'PUT'` (`handleMarkProductive`, `handleTransitionToOffboarding`), and the client contains no
    `method: 'GET'` call at all — a hit count does not know a string's role. It also **decrypts the national ID**
    and answers `res.json(emp)`: the plaintext identifier is not an incidental field, it **is** the response
@@ -122,7 +122,7 @@ definition file, and this check's own three files) for occurrences of `/api/…`
   reports reachability that does not exist.
 
 **Found.** 28 `/api` routes. 20 reachable from a client call site; 2 reachable *only* through one dynamic call
-site (`client/src/App.tsx:1068`, `/api/${endpoint}/${taskId}`, which the ternary at `:1067` resolves to the two
+site (`client/src/App.tsx:1097`, `/api/${endpoint}/${taskId}`, which the ternary at `:1067` resolves to the two
 task routes); 6 with no caller anywhere. No client call site names a route that does not exist, and no route is
 registered after the SPA catch-all.
 
@@ -180,7 +180,7 @@ returned green and clean afterwards. Raw output:
 `docs/evidence/un-operable-controls-2026-10-12/negative-controls-2026-10-12.txt`.
 
 **One false alarm was found and fixed while building it, and it is worth recording:** the first version pinned
-`client/src/App.tsx:1068` as the dynamic call site, so inserting an *unrelated line above it* turned the check
+`client/src/App.tsx:1097` as the dynamic call site, so inserting an *unrelated line above it* turned the check
 red — a false alarm about a call site that had not moved. Every register anchor is now located by its **text**
 (`findOne`), not by a line number. A recorded line number goes stale on its own; this repository has been bitten
 by that repeatedly.
@@ -224,8 +224,8 @@ let you leave.**
 
 | where | what it does | line read |
 |---|---|---|
-| `client/src/App.tsx:2115` | `Request` — **no condition at all** | `sed -n '2115,2119p' client/src/App.tsx` |
-| `client/src/App.tsx:2119` | `Mark received` — `disabled={!collectible || !ack}` | same read |
+| `client/src/App.tsx:2153` | `Request` — **no condition at all** | `sed -n '2115,2119p' client/src/App.tsx` |
+| `client/src/App.tsx:2157` | `Mark received` — `disabled={!collectible || !ack}` | same read |
 | `server/preboarding-items.js` (`setItemStatus`) | the collect gate fires **only** for `COLLECTED_STATUSES` — `not_started → requested` is not gated | the `COLLECTED_STATUSES.indexOf(status) !== -1` branch |
 | `server/preboarding-items.js` (`NOTICE_BASES`) | `education_certificate`, `experience_certificate` (counsel **Q1**) and `emergency_contact` (**Q5**) are `basis: null, collectible: false` | the table, read as data by `parseNoticeBases()` |
 

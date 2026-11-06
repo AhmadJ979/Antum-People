@@ -123,7 +123,7 @@ deployment on **port 3000 answered 200 before and after** the pass and was never
   - `compliance-requirements.md:300` — "for HR processing (contractual necessity), Art. 4(2) allows processing without consent": that is a statement about **PDPL lawful bases**, not the retired product label. Editing it would corrupt the baseline the mapping document cites.
   - `roadmap-board-index.md:202` — the tracker index quotes **the lead's own measurement** ("3 without consent"). It is a dated record in another owner's document; it is flagged to the lead rather than edited here.
 - **One finding, not fixed (needs an owner decision):** the employee record still shows a consent badge —
-  `✓ GRANTED ON {date}` / `✗ MISSING / REQUIRED` (`client/src/App.tsx:1548-1549`), written by a *different* route
+  `✓ GRANTED ON {date}` / `✗ MISSING / REQUIRED` (`client/src/App.tsx:1586-1587`), written by a *different* route
   (`server/index.js:365`, `UPDATE employees SET consent_granted = 1`). That is Layer 1's employee-level consent
   capture, not the pre-boarding gate, so this rename does not touch it — but it is a prospect-facing string that
   says "consent", and whether option B also retires that instrument is the owner's call (Layer 1 is frozen).

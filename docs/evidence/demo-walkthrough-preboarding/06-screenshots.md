@@ -23,4 +23,4 @@ Paths are relative to this directory. Every shot was read back and looked at, no
 * The Compliance Center line `Basic Salary (UAE Rule)` was **not** re-opened on this pass:
   clicking the roster row did not surface a panel carrying that string, so it stays marked in the
   script as carried from the 2026-10-06 walk, with the rendering condition cited
-  (`App.tsx:1337`) rather than claimed as a fresh reading.
+  (`App.tsx:1375`) rather than claimed as a fresh reading.
