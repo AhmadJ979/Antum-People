@@ -67,9 +67,12 @@ quotation is the whole anchor, so a wrong line whose citation happens to quote a
 occurs on the cited line reads green here. Matching is case-folded and whitespace-collapsed, which
 is what lets a quote a citing document opened mid-sentence ("*\"an empty state never shows a red...")
 match the target's own capitalised "An empty state..."; the same leniency means a case-only
-difference is not a defect. Measured on the tree this was written against: of 122 cross-document
-citations, 14 are anchored and judged, 106 are UNJUDGEABLE and 2 are DRIFT - so this gate's reach is
-as wide as the documents' habit of quoting, and no wider. The two other gates keep their own
+difference is not a defect. Measured on the CORRECTED tree: of 122 cross-document citations, 16 are
+anchored and judged and every one of them lands, 106 are UNJUDGEABLE and 0 are DRIFT - so this
+gate's reach is as wide as the documents' habit of quoting, and no wider. Its FIRST run, at
+`bf9a484`, read 14 anchored / 106 UNJUDGEABLE / 2 DRIFT: both drifts were
+`pdpl-portal-boundary-memo.md` pointing at `compliance-requirements.md` line 391 for a sentence that
+is on line 420, and the TREE was corrected rather than the finding suppressed. The two other gates keep their own
 questions, and a green from this one is a green about landing by quotation only.
 
 WHICH TREE IT JUDGES, AND WHICH DOCUMENTS. Documents are read from a GIT REVISION
@@ -653,10 +656,12 @@ def _plants(clone, base, instrument, probe, keep):
         if not cond:
             print("       %s" % detail.replace("\n", "\n       "))
 
-    # S0 - the baseline. It is judged as a DELTA, not against a fixed zero: this instrument's own
-    # tree carries a recorded defect (see the module docstring), and a harness that demanded exit 0
-    # here would either fail forever or tempt someone to delete the finding. What S0 must prove is
-    # that the scan SEES its subject.
+    # S0 - the baseline. It is judged as a DELTA, not against a fixed zero, so one harness holds on
+    # both trees: it read 2 DRIFT on the tree this instrument was written against (see the module
+    # docstring) and reads 0 on the corrected one. A harness that demanded exit 0 would have failed
+    # on the tree carrying the finding; one that demanded exit 1 would have made the fix impossible.
+    # What S0 must prove is that the scan SEES its subject - and the plant below is what proves it
+    # can redden, so nothing here needs the tree to stay red.
     code, out = _run(instrument, base, *ROOT_ARGS)
     b_total = _count(out, "cross-document citations:")
     b_ok = _count(out, "OK (quotation lands):")
