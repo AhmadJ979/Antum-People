@@ -5,23 +5,25 @@ after it. This file covers the **identity surfaces**: how a person signs in as t
 says who is signed in, what a reader sees when a **record names the person who made it** (decision 22), and
 what an **unnamed-actor refusal** looks like on screen.
 
+- **Re-measured 2026-11-06 onto `origin/main` = `48da36e`** (`client/src/App.tsx`, **3,400 lines**; `server/index.js`
+  1,856; `server/schema.sql` 474) — the fifth doc-truth pass. Every pointer below was re-derived **by content**
+  against those files, not by arithmetic; a pointer that moved is re-numbered, one that still lands is left alone.
+  A pointer carrying `@rev <sha>` is a **record at that tree** and is not re-numbered to today's lines. A sentence
+  saying a screen **is** X is a claim and was judged against the code; one saying it **should** be X is design intent
+  and is left as intent — not marked false for being unbuilt, but not left reading as though it were built either.
 - **Re-measured 2026-10-20 onto `origin/main` = `ab7e9c3`** (`client/src/App.tsx`, **2,539 lines**) — the **third tree in one day**: **PR #254 merged at
   09:37:41, one minute before this document merged at 09:38:21**, and moved `App.tsx` again (+10 lines). A
   re-measurement is only as fresh as the tree it is measured against, so this branch ships **`check-doc-citations.py`**
   (in `docs/evidence/no-403-claim-sweep-2026-10-20/`), which **fails** when an `App.tsx:<n>` citation here does not
-  land on the content it names. Readings: `7a4e00a` 2,529 lines, `7b073f8` 2,494. The
-  justification this file used for leaving its citations un-re-dated — that
-  `git diff --name-only 7b073f8 origin/main -- client server` was **empty** — **is no longer true**: that diff
-  now lists **21 paths** (`client/src/httpStatus.js` and `client/src/httpStatus.test.js` were added
-  by **PR #241**; `client/src/App.tsx` grew **+45 lines**), so **every citation below was
+  land on the content it names. Readings: `7a4e00a` 2,529 lines, `7b073f8` 2,494. The justification this file
+  used for leaving its citations un-re-dated — that `git diff --name-only 7b073f8 origin/main -- client server` was
+  **empty** — **is no longer true**: that diff now lists **21 paths** (`client/src/httpStatus.js` and
+  `client/src/httpStatus.test.js` by **PR #241**; `App.tsx` grew **+45 lines**), so **every citation below was
   re-measured and re-numbered**, and the identity card's role field is now `access_role`.
-  The instruments and their raw output are filed in `docs/evidence/no-403-claim-sweep-2026-10-20/`.
 - **Measured at `origin/main` = `7b073f8`** (`client/src/App.tsx`, 2,494 lines). The login card, the sidebar
   identity block and the checklist record line are read from the shipped file, not from a sketch.
-- **Re-grounded 2026-10-19 onto `8b32d45`**, after `docs/access-model.md` merged (PR #220, row `6071930d`) —
-  the document this file was written against while it was still in progress. **The measurements were not re-dated then — that judgement was refuted on 2026-10-20, see the bullet above:** `git diff --name-only 7b073f8 origin/main -- client server` is **empty**,
-  so every `file:line` below still describes the surface it measured. What changed is the **policy**
-  citations: what was `(open)` is now answered, and each answer is cited to its section.
+- **Re-grounded 2026-10-19 onto `8b32d45`**, after `docs/access-model.md` merged (PR #220, row `6071930d`) — the
+  document this file was written against while it was still in progress. That pass changed the **policy** citations only: what was `(open)` is now answered, and each answer is cited to its section.
 - **What this file does not do:** it does not decide permissions. The roles and the roles × resources matrix
   are the compliance expert's (`docs/access-model.md`, row `6071930d`, in progress) and the mechanism that
   enforces them is the engineer's (row `7d54faac`). Every place the surface depends on either is marked
@@ -35,16 +37,16 @@ what an **unnamed-actor refusal** looks like on screen.
 | # | Surface | State today | This slice |
 |---|---------|-------------|------------|
 | **S-L1** | Sign-in | `App.tsx:554` (card opens), its `Sign In` button at `:627` (the block was `@rev 7b073f8` `:327`–`431`) — a username field, a password field, `Sign In`, a recovery note | unchanged in shape; the copy stops implying the account *is* the person |
-| **S-L2** | Who am I / sign out | `App.tsx:1712` (icon-only `Sign Out`), `:1674`–`:1674` identity card | the card shows a **person's name and role**, and its two fallbacks are removed |
-| **S-L3** | The named actor on a record | `App.tsx:2794` prints `recorded by {ack.recorded_by} · basis {ack.lawful_basis}`; the second site `:2997` prints `{item.acknowledgement.recorded_by}` without the words; the checklist tick stores `completed_at` and **no actor** | every record reads as *made by a person*, and says **which kind of person** |
-| **S-L4** | The unnamed-actor refusal | the server answers **400**; the client shows a generic error banner | the refusal says what is missing and what to do, in the product's words |
+| **S-L2** | Who am I / sign out | `App.tsx:1712` (icon-only `Sign Out`), `:1718`–`:1730` identity card | the card shows a **person's name and role**, and its two fallbacks are removed |
+| **S-L3** | The named actor on a record | `App.tsx:2794` prints `recorded by {ack.recorded_by} · basis {ack.lawful_basis}`; the second site `:3038` prints `{item.acknowledgement.recorded_by}` without the words; the checklist tick stores `completed_at` **and** `completed_by` (`server/schema.sql:50`, `:65`) and refuses a completion with no named actor (`server/index.js:814`–`:816`, `:846`–`:848`) | every record reads as *made by a person*, and says **which kind of person** |
+| **S-L4** | The unnamed-actor refusal | the server answers **400**; the client renders the server's own sentence in a checklist notice bar (`App.tsx:3080`–`:3081`) | the refusal says what is missing and what to do, in the product's words |
 
 ---
 
 ## 2. S-L2 — who am I, and the two fallbacks that must go
 
 **Today, read from the shipped file.** The sidebar card renders two fallback divs,
-`{user?.username || 'Admin User'}` and `{user?.access_role || 'Administrator'}` — read at `@rev ab7e9c3` `App.tsx:1222`–`1223`;
+`{user?.username || 'Admin User'}` and `{user?.access_role || 'Administrator'}` — at `@rev 48da36e` `App.tsx:1726`–`1727`; at `@rev ab7e9c3` `App.tsx:1222`–`1223`;
 at `@rev 7a4e00a` `App.tsx:1212`–`1213`, the same `{user?.access_role || 'Administrator'}` pair;
 at `@rev 7b073f8` `App.tsx:1196`/`App.tsx:1197` — `{user?.username || 'Admin User'}`, then `{user?.role || 'Administrator'}` (the role fallback there reads `role`, not `access_role`):
 
@@ -61,17 +63,15 @@ Two findings, both worth fixing in this slice because slice 1 is what makes them
    A default must never be the most privileged value. **Proposed:** no name → no name. Render the handle
    with a visible qualifier (see 2 below) and, if the role is absent, render nothing rather than a role.
 2. **A login handle is displayed where a person's name belongs.** `username` is an identifier
-   (`scratch-admin`); it is not a name. Measured: `users` carries `id, username, password_hash, role,
-   created_at` (`server/schema.sql`) — **no display name, no email, no link to `employees`.** So "sign in as
-   a real person" needs a field the schema does not have. **`(open)` — which field, decided by the
-   access-model row and the engineer's slice, not by this design.** The design's requirement is only this:
+   (`scratch-admin`); it is not a name. Measured at `@rev 48da36e`: `users` carries `id, username, password_hash, access_role, created_at, employee_id` (`server/schema.sql:187`–`:194`) — **still no display name, no email**, but the link to `employees` now exists. So "sign in as
+   a real person" needs a **display-name** field the schema does not have; the link is decided (`users.employee_id`, §2.2), the name is not. The design's requirement is only this:
    the card must be able to read as a person, and when it cannot, it must say what it is instead of
    guessing.
 
 **Proposed card (same classes, same place, no restyle):**
 
 ```
-Placed where the card is today — sidebar, under the brand row (`@rev ab7e9c3` `App.tsx:1215`, the `<div className="flex items-center space-x-3">` brand row)
+Placed where the card is today — sidebar, under the brand row (`@rev 48da36e` `App.tsx:1706`, the `<div className="flex items-center space-x-3">` brand row; `:1215` at `ab7e9c3`)
   ┌──────────────────────────────────────────────┐
   │  [avatar]  Layla Haddad                      │   ← person's name, when the account carries one
   │            HR · Pre-boarding                 │   ← role, as the access model names it (open)
@@ -94,7 +94,7 @@ Placed where the card is today — sidebar, under the brand row (`@rev ab7e9c3` 
   `preboarding_cases.role` (both **job titles**), and recommends renaming it to `access_role`. A card that
   renders the bare word *manager* beside a person whose job title is also Manager is the collision, on the
   one screen whose job is to say who you are. **Requirement: label it as an access role, and read
-  `access_role` once the rename lands** — until then the value is the one the login response returns.
+  `access_role`.** The rename has landed (`server/schema.sql:191`; `server/index.js:299`), so the card reads it today.
 
 ---
 
@@ -115,16 +115,16 @@ Three different readers read the same record, and the design must serve all thre
   `notice_version`, `acknowledged_at`, `method`, `note`. The record already carries the basis and the notice
   version; it is the *actor* that is a bare string.
 - `preboarding_items.last_actor TEXT` — also a string (the seeded rows read `demo-seed`).
-- The checklist tick — **measured here, and there are two of them**: `server/index.js:315`–`318`
-  (`PUT /api/onboarding-tasks/:id`) and `:321`–`324` (`PUT /api/offboarding-tasks/:id`) both write
-  `completed_at = datetime('now')` on completion and **no actor** — decision 22, which this slice closes,
-  and both routes need it. *(The engineer's slice-1 row cites the same tick as `:317`–`330`; the range above
-  is what I read on `7b073f8`. Either way it is the same two routes.)*
+- The checklist tick — **measured here, and there are two of them**: `server/index.js:801`–`:819`
+  (`PUT /api/onboarding-tasks/:id`) and `:838`–`:851` (`PUT /api/offboarding-tasks/:id`) both write
+  `completed_at = datetime('now')` on completion **and `completed_by`** — decision 22, which has since landed:
+  a completion with no named actor is refused 400 (`:814`–`:816`, `:846`–`:848`). *(At `7b073f8` the same
+  two routes were `:315`–`:318` and `:321`–`:324` and wrote no actor; the engineer's row cited `:317`–`330`.)*
 - **The model found a worse case than a missing actor, and it strengthens rule 2 below.** Its **§5.2.1**:
-  `POST /api/employees` and `PUT /api/employees/:id` record the literal `'system'` as the actor
-  (`server/index.js:224`, `:292`) — *"a field that exists and holds a false name is a record a future reader
-  will trust."* That is this document's rule stated better than I had it: **an actor field that is present
-  and wrong is worse than one that is absent.**
+  `POST /api/employees` and `PUT /api/employees/:id` recorded the literal `'system'` as the actor (`server/index.js:224`,
+  `:292` at `7b073f8`) — *"a field that exists and holds a false name is a record a future reader will trust."*
+  That is this document's rule stated better than I had it: **an actor field that is present and wrong is worse than
+  one that is absent.** **Corrected since:** both paths now refuse an unnamed actor (`server/index.js:538`, `:645`).
 - **The policy for the tick is now settled:** `docs/access-model.md` **§5.2.3** — the tick gains
   `completed_by` (decision 22) with **the same 400** as the pre-boarding side. §5.2.2 adds that the
   `|| 'system'` fallbacks become `|| null` plus that refusal, and §5.2.4 makes the autonomous actor an
@@ -149,8 +149,8 @@ Three rules the design asks for, each traceable to something already decided:
    (`docs/access-model.md` **§7**: the acknowledgement's actor *"is the HR user showing the notice, not the
    hire, and that stays true until 14 is decided"*). The surface may not say anything stronger than that.
 2. **A record with no actor renders as incomplete, never as anonymous.** After this slice, an absent actor is
-   a defect; the surface says *"no actor recorded"* in the gap rather than showing only a date. (Until the
-   schema change lands, existing rows have no actor — that is what `(open)` above is about.)
+   a defect; the surface says *"no actor recorded"* in the gap rather than showing only a date. (The tick's
+   schema change has landed; rows written before it still carry no actor, which is what §6.2 now asks.)
 3. **The stored value and the displayed label are not the same string.** Display *name (role)* when the
    account carries them; otherwise display the stored handle **with its nature visible** — e.g.
    `recorded by scratch-admin (account — not linked to a person)`. This is the same defect decision 20's
@@ -166,9 +166,9 @@ Three rules the design asks for, each traceable to something already decided:
 > HTTP **400** — *"recorded_by is required: there is no new-hire login in this release, so the record must
 > name the person who showed the notice, on the hire's behalf"*
 
-**Measured, from the client** (`App.tsx`): failures render into one banner (`checklistNotice`,
-`:2477`–`:2478`) with `data.error` if the server sent one. So the honest sentence **does** reach the screen —
-the design question is whether it reads correctly and is attributed to the right act.
+**Measured, from the client at `@rev 48da36e`** (`App.tsx`): a failure is dispatched into `preboardingNoticesReducer` and
+rendered by `checklistBar` (`:3080`–`:3081`) with `data.error` if the server sent one — the `checklistNotice` banner measured
+at `@rev 7b073f8` is gone. So the honest sentence **does** reach the screen; the question is whether it reads right.
 
 **Proposed behaviour:**
 
@@ -184,10 +184,10 @@ the design question is whether it reads correctly and is attributed to the right
   previous state. A refusal that leaves the screen looking as if it succeeded is the failure this rule
   exists to prevent.
 
-**Why this is a design item and not only a server one:** today the checklist tick writes `completed_at`
-server-side with no actor, so the *only* actor refusal in the product is the pre-boarding 400. This slice
-makes the tick refuse the same way — and the moment it does, a person can hit it. The UI has to be ready to
-say why.
+**Why this is a design item and not only a server one:** at `@rev 7b073f8` the checklist tick wrote `completed_at`
+server-side with no actor, so the *only* actor refusal in the product was the pre-boarding 400. The tick now refuses
+the same way (`server/index.js:814`–`:816`), so a person can hit it — and the UI has to be ready to say why.
+Its sentence is *"a named actor is required to complete a task"*, which names the gap but not the remedy.
 
 ---
 
@@ -203,7 +203,7 @@ No Arabic copy ships with this slice (decision 15(c) is open). The requirement i
 | `ml-` / `mr-` | **4** / **5** | → `ms-` / `me-` when the pass runs |
 | `text-left` / `text-right` | **6** / **3** | → `text-start` / `text-end` |
 | `text-start` / `text-end`, `border-s-`/`-e-`, `rounded-s-`/`-e-` | **0** | nothing logical is used yet |
-| `border-r-*` | **2** | both are **chart rule lines**, not chrome: a benchmark marker (`:1681`) and a target marker (`:1711`), each drawn with an inline `left:`. Neither is on these surfaces, and whether a chart mirrors is a real decision, not a bug — flagged here only so it is not mistaken for spacing. |
+| `border-r-*` | **2** | both are **chart rule lines**, not chrome: a benchmark marker (`:1681`) and a target marker (`:1711`) at `7b073f8` — `:2399` and `:2429` at `48da36e`, still 2 — each drawn with an inline `left:`. Neither is on these surfaces, and whether a chart mirrors is a real decision, not a bug — flagged here only so it is not mistaken for spacing. |
 | `dir=` / `lang=` | **0** / **0** | no direction handling exists |
 
 **The two surfaces added here are the ones with the most physical markup in the product**, measured in place:
@@ -219,8 +219,8 @@ new:
    mirrors; the handle does not. Wrap handles, emails and IDs in `<bdi>` so a Latin run cannot reorder
    inside an Arabic sentence.
 4. **A name is not a string to be uppercased.** The card's role line is `uppercase` today
-   (`:1197`); keep that only for values that are Latin-cased vocabulary from the access model, and drop it
-   for a person's name.
+   (`App.tsx:1727`; `:1197` at `7b073f8`); keep that only for values that are Latin-cased
+   vocabulary from the access model, and drop it for a person's name.
 5. **The refusal banner wraps, it does not truncate.** Arabic is longer; the refusal is the one message that
    must stay readable in full. No `truncate` on it (the identity card's name may truncate; the refusal may
    not).
@@ -236,11 +236,11 @@ adds only what the two new surfaces change.
 1. **Narrowed, not closed: what field carries a person's *name*?** The *link* is now decided —
    `docs/access-model.md` **§2.2** adds `users.employee_id` (nullable, unique when set) and **§8.7** assigns
    it to slice 2. But a **display name** is still unmodelled: `users` is
-   `(id, username, password_hash, role, created_at)`, so until a name field exists the card shows a handle
+   `(id, username, password_hash, access_role, created_at, employee_id)` (`server/schema.sql:187`–`:194`), so until a name field exists the card shows a handle
    plus a qualifier — which is exactly what §2 below specifies.
-2. **`(open)` Does the checklist tick's actor need a schema change?** The engineer's row asks it explicitly
-   (`server/index.js:315`–`324` → `completed_by`, on **two** routes). The design needs only to know *whether
-   an actor is always present* — that decides whether §3.2's "no actor recorded" state ever renders.
+2. **Answered: the checklist tick's actor did need a schema change, and it has landed.** `completed_by` is on both
+   task tables (`server/schema.sql:50`, `:65`) and both routes refuse a completion with no named actor
+   (`server/index.js:814`–`:816`, `:846`–`:848`), so §3.2's "no actor recorded" state renders only for older rows.
 3. **Answered for the vocabulary, still the model's for the matrix:** `docs/access-model.md` **§2.1** names
    the five roles and **§3** is the allow-list. The card shows one of the five; this design coins none. Open
    only in that the model's **§8.5** and **§8.6** are owner questions (`compliance_viewer` in the minimum
@@ -253,8 +253,8 @@ adds only what the two new surfaces change.
 
 ## 7. What this document does not claim
 
-- It does **not** claim any of it is built. Slice 1 is in flight (rows `7d54faac`, `6071930d`); this is the
-  design it should be built against, delivered ahead of it on purpose.
+- It does **not** claim any of it is built. Parts have since shipped (the `access_role` rename, the tick's
+  `completed_by`, the unnamed-actor 400, the refusal screen) and are marked so above; the rest is still design.
 - It does **not** claim the identity card is a security boundary. It is a **display** of who is signed in;
   the boundary is the deny-by-default mechanism the engineer is building, and the matrix behind it.
 - It does **not** restyle anything. Every proposal reuses the shipped classes and the shipped placement; the
