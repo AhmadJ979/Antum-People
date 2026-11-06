@@ -166,10 +166,9 @@ Three rules the design asks for, each traceable to something already decided:
 > HTTP **400** — *"recorded_by is required: there is no new-hire login in this release, so the record must
 > name the person who showed the notice, on the hire's behalf"*
 
-**Measured, from the client at `@rev 48da36e`** (`App.tsx`): a failure is dispatched into `preboardingNoticesReducer`
-and rendered by `checklistBar` (`:3080`–`:3081`) with `data.error` if the server sent one. So the honest sentence
-**does** reach the screen — the question is whether it reads correctly and is attributed to the right act. *(The
-`checklistNotice` banner this file measured at `@rev 7b073f8` is gone; `:2477`–`:2478` are a bar chart today.)*
+**Measured, from the client at `@rev 48da36e`** (`App.tsx`): a failure is dispatched into `preboardingNoticesReducer` and
+rendered by `checklistBar` (`:3080`–`:3081`) with `data.error` if the server sent one — the `checklistNotice` banner measured
+at `@rev 7b073f8` is gone. So the honest sentence **does** reach the screen; the question is whether it reads right.
 
 **Proposed behaviour:**
 
@@ -188,6 +187,7 @@ and rendered by `checklistBar` (`:3080`–`:3081`) with `data.error` if the serv
 **Why this is a design item and not only a server one:** at `@rev 7b073f8` the checklist tick wrote `completed_at`
 server-side with no actor, so the *only* actor refusal in the product was the pre-boarding 400. The tick now refuses
 the same way (`server/index.js:814`–`:816`), so a person can hit it — and the UI has to be ready to say why.
+Its sentence is *"a named actor is required to complete a task"*, which names the gap but not the remedy.
 
 ---
 
