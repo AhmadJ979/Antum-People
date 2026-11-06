@@ -47,7 +47,7 @@
 > `grep -n "h before 00:00" client/src/App.tsx` (the row's distance copy) ·
 > `grep -n "start in 48 hours or less" server/preboarding-flag.js` (the amber headline). When PR #66 landed
 > `App.tsx` grew by 245 lines and every `App.tsx:` citation in this file had to be re-read, which
-> is why this note now names the revision it was read at.
+> is why this note now names the revision it was read at. **Which numbers here a reader may trust, by class, re-measured 2026-11-06 at `48da36e`:** a citation that names its file *and* its revision (`@rev …`) is judged against that revision and left as written; a bare `:N` on a continuation line is judged only when its block names exactly one file, and in §8B.1 the four numbers belong to `design-concepts/intelligence-dashboard-prototype.html`, which the citation instrument does not recognise as a file (its name pattern carries no `.html`), so it reads them as `App.tsx` and reports two failures that are its own; the movement note’s two tables are `9ce469d`’s numbering of **this** file and 21 of their 24 values no longer open on the text they name, so a row is found by its **text**; and the three pass records each name the tree they were read at, which is what makes them records rather than claims. **The class that is not judgeable at all:** a number that names neither a file nor a revision, whose own line has since been rewritten in place, cannot be recovered by any re-reading — those are named where they sit, not renumbered.
 >
 > **P2 criteria** quoted below (P2-2, P2-3, P2-4, P2-5, P2-6) are from the team's roadmap,
 > `phase-roadmap-2-4.md`, which is held in the shared team directory rather than in this repo —
@@ -80,7 +80,7 @@ answers one more row of this table, marked in place.**
 | The same, in storage | `onboarding_tasks(id, employee_id, title, description, due_date, completed_at, status, category, ttv_milestone, created_at)` — **no owner, no track, no function** | `schema.sql:43`–`:56` |
 | **Any item at all, attached to a case** | **Built by P2-2:** `preboarding_items(id, case_id, item_key, label, category, jurisdiction, required, status, document_reference, note, requested_at, received_at, verified_at, last_actor, …)`, `UNIQUE (case_id, item_key)`. The AE set is 7 items, the SA set 6 and inactive this release. **Still absent: owner, due date, track** — so §3's per-item owner and due date, and §6's track split, are still waiting | `schema.sql:225`–`:259`; `server/preboarding-items.js:71`–`:97` (`DOCUMENT_SETS`) |
 | **A record to gate document collection on** | **Built — and it is not a consent record.** The gate reads the per-item record that the notice was **shown**: `preboarding_notice_acknowledgements(case_id, item_key, item_label, jurisdiction, instrument CHECK (instrument = 'notice_shown'), lawful_basis, notice_version, recorded_by, method, note, acknowledged_at)`, `UNIQUE (case_id, item_key)`. A document cannot reach `received`/`verified` until the record exists **for that item** (**428**), and an item the notice assigns no basis to is refused outright with the counsel question it waits on (**409**). The case-level `preboarding_consents` table is **retired** — no reader, no writer — because one row per case cannot carry seven lawful bases; `consent_records` stays for purpose-scoped consent, and its only writer was removed on 2026-10-13 (decision 17) | `schema.sql:325`–`:340` (the shipped table), `:291`–`:300` (the retired one itself; its reason is the docblock above it); `server/preboarding-items.js:161`, `:486`–`:503` |
-| Per-function identity ("IT sees only its own lines") | `users(id, username, password_hash, role, created_at)` exists, but the product seeds **one shared account** — no per-user login to scope a view by | `schema.sql:187`–`:194` |
+| Per-function identity ("IT sees only its own lines") | `users(id, username, password_hash, access_role, created_at, employee_id)` exists, but the product seeds **one shared account** — no per-user login to scope a view by. `access_role` is a **permission** (`hr_admin`, `manager`, …), not a job function, and it was named `role` until Layer 3 slice 2; `employee_id` is the account → person link (*re-read 2026-11-06 at `48da36e`; this cell listed `role` and omitted `employee_id`*) | `schema.sql:187`–`:194` |
 | Somewhere to put a collected document | **Nothing — deliberately, and now by the owner's decision.** P2-2 records a short `document_reference` (a file name, or the reference HR quoted) and refuses the bytes: `server/document-store.js` throws **501** behind `saveDocument`/`readDocument` and names `ANTUM_DOCUMENT_STORE` as the one door. **The owner decided the shape on 2026-10-07: Option D ships now — reference string only, no bytes — and Option C (an S3-compatible object store) is built when the entity is registered; IFZA registration is the gate, an event rather than a date. No real document bytes before it.** The pointer is therefore the personal data: the item says *which* document, whose, when recorded and where it lives, and the content stays where HR already keeps it | `server/document-store.js`; spec §10 Q5 |
 | A record of an acknowledgement (JD, NDA) | **Built by P2-3 (PR #79, `main` = `404b29d`):** `preboarding_acknowledgements`, written only by `recordAcknowledgement` — `recorded_by` required, method `in_product_record`, signature-implying methods refused by name, and nothing reads `acknowledged` without the row (lead ruling, 2026-10-08) | `server/preboarding-package.js` |
 | Bilingual / RTL rendering | **No i18n layer in the client.** The bilingual reference is the AR prototype and the EN/AR mockups | `design-concepts/intelligence-dashboard-prototype.html`, `intelligence-dashboard-{ar,en}-mockup.png` |
@@ -315,10 +315,10 @@ why this is a spec change and not a code change.
 This is the surface P2-4 asks for in its acceptance line *"IT/Admin see only their own lines."*
 **It cannot be built as written today, and the spec says so plainly.**
 
-- `users` does carry a `role` column (`schema.sql:165`), but the product seeds **one shared
-  account** — so "who is looking" is not knowable at request time. A function filter with no
-  account model is a **view convenience, not an access boundary**, and must never be described as
+- `users` does carry a permission column, `access_role` (`server/schema.sql:191`; it was `role` until Layer 3 slice 2, and it names a **permission** — `hr_admin`, `manager`, … — not a job function), but the product seeds **one shared
+  account** — so there is no per-function attribute to key a view on. A function filter with no such attribute is a **view convenience, not an access boundary**, and must never be described as
   one: HR would still see every line, and IT could still open any case.
+  *(Re-read 2026-11-06 at `48da36e`: the column this bullet named, `role`, no longer exists, and `schema.sql:165` is the `);` that closes `audit_logs`. The bullet’s conclusion stands — one account, no function attribute — but it now rests on the column that is there.)*
 - **What the design needs from that decision (not for me to make):** per-user accounts with a
   function attribute, and a decision on whether the four functions are *permission scopes* or
   merely *default filters*. Until then:
@@ -834,7 +834,7 @@ workspace track with its owner names; and any illustrative figure without its la
   enforces by walking the tree.
 - **Dates are printed in one shape, not raw — amended 2026-10-29.** Every reader-facing date goes
   through the same module, `formatDate`, so the workspace row prints
-  `due {formatDate(line.due_date)} ({line.due_rule})` — it renders as, say, `due 9 October 2026 (D-3) · in 2 d` (`App.tsx:2964`, with its distance at `:2924`–`:2924`), the shape the served
+  `due {formatDate(line.due_date)} ({line.due_rule})` — it renders as, say, `due 9 October 2026 (D-3) · in 2 d` (`App.tsx:2964`, with its distance at `:2965`–`:2969` (*re-measured 2026-11-06 at `48da36e`; this line carried `:2924`–`:2924`, and `:2924` is a comment inside the `All`-chip count block, forty lines above the print it was meant to name*)), the shape the served
   documents already use. The roster still prints `Day 49` from
   `Math.ceil((Date.now() - new Date(emp.start_date).getTime()) / (1000*60*60*24))` (`App.tsx:2318`) —
   a count, computed and printed in Latin digits, so it is unaffected by the reader's machine.
@@ -847,9 +847,9 @@ workspace track with its owner names; and any illustrative figure without its la
   `items-` and `name-`, so that is measured per component during the pass, not quoted here.)
 - **The only AR precedent in the repository is a prototype, not the product.**
   `design-concepts/intelligence-dashboard-prototype.html` sets
-  `document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr'` (`:300`), swaps the font stack
-  (`body.ar{font-family: … 'Noto Naskh Arabic' …}`, `:26`) and converts numerals with a
-  `toArabic()` helper (`:313`, `:317`). **Follow its direction and font handling; do not invent a second convention — its numeral conversion is the one part not followed (item 4).**
+  `document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr'` (line 290), swaps the font stack
+  (`body.ar{font-family: … 'Noto Naskh Arabic' …}`, `:16`) and converts numerals with a
+  `toArabic()` helper (`:313`, `:317`). **Follow its direction and font handling; do not invent a second convention — its numeral conversion is the one part not followed (item 4).** *(Re-read 2026-11-06 at `48da36e`: these are the **prototype’s** lines, not the client’s. The `dir =` assignment sits on line 290 of `design-concepts/intelligence-dashboard-prototype.html` (this passage carried 300, a blank line) and `body.ar{font-family…}` on line 16 (it carried 26, which is `.nav-item.active`); 313 and 317 land, as the `toArabic()` call site and its definition. The citation instrument reads all four as the client’s because its file-name pattern carries no `.html`, so its two failures on this passage are its own, not the document’s.)*
 
 **Why this is not a strings file:** the components were written with physical spacing and with the
 *browser* deciding how numbers look. "Adding Arabic" here is a direction-aware layout pass plus a
@@ -1147,7 +1147,7 @@ not re-dated:** the pass was resolved on `main` = `501d5fa`, and no code has mer
   list — `@rev 75e3ff2` `{activeTab === 'preboarding' && (` at `App.tsx:1184`–`:1321` — are built on `main`, but they are not these screens: §3's case
   detail and §4's function view do not exist anywhere, and §2's list is a superset of what P2-1
   renders. **§5's flag has since been built** — `server/preboarding-flag.js`, PR #76 — **and draws
-  inside the built HR roll-up** (`App.tsx:2681`, `{row.flag.chip}` at `:2687` (*re-measured at `3d79663`, 2026-11-06*); `@rev fabef59` `:2206`/`:2211`, and `@rev 404b29d` `:1690`/`:1696` on `origin/main` = `404b29d`), *not* on §2's list row or §3's detail
+  inside the built HR roll-up** (`App.tsx:2681`, `{row.flag.chip}` at `:2687` (*re-measured at `3d79663`, 2026-11-06*); `@rev fabef59` `:2205`/`:2211` (*corrected 2026-11-06: `:2206` on that revision is the chip span’s first line, and the guard is at `:2205` — the same pair §5’s anchor check carries*), and `@rev 404b29d` `:1690`/`:1696` on `origin/main` = `404b29d`), *not* on §2's list row or §3's detail
   header, and it was not on the live deployment, which then ran `5ed731e` — *corrected 2026-11-06: the served tree is `ff7b01a` and draws it*; §5.1 carries the re-read.)
 - **No figure here is a reading.** The mock rows are invented placeholders, deliberately not the
   seeded records, and are marked as such on the face of every screen.
@@ -1231,10 +1231,10 @@ and nothing here may be used to invent it.*
 *The same pass re-read every citation it touched and **corrected two**: §8's consent-line citation
 the case's own line is `App.tsx:2262`, while `@rev 75e3ff2` (`App.tsx:1008`–`:1009`) pointed at offboarding code and at the wrong object,
 where the block reads `Notice-based — recorded per pre-boarding case`, and `:1467`, while `:1463`–`:1464` is the **employee** flag — and the workspace due-date
-row is the `line.due_date` / `line.due_rule` print at `App.tsx:2964`, with its distance at `:2924`–`:2924`, not the range this document carried. §8
+row is the `line.due_date` / `line.due_rule` print at `App.tsx:2964`, with its distance at `:2965`–`:2969`, not the range this document carried. §8
 also now names the two consent stores (`preboarding_consents` for the case; `consent_records` +
 `employees.consent_granted` at Layer 1) and the gap that `consent_version: 'v1'` is hard-coded in the
-client with no notice behind it — the control that carries that sentence now is `Record that the notice was shown` at `App.tsx:2516`; the literal was `@rev 5087136` `App.tsx:622` (cited here as `790`–`793`, a `catch` block on that tree) and occurs nowhere now).*
+client with no notice behind it — the control that carries that sentence now is `Record that the notice was shown` at `App.tsx:2818`; the literal was `@rev 5087136` `App.tsx:622` (cited here as `790`–`793`, a `catch` block on that tree) and occurs nowhere now).* *(Re-measured 2026-11-06 at `48da36e`: the control is at `:2818` (the `:2516` this record carried is the offer-intake grid) and the distance print at `:2965`–`:2969`; the `:2924`–`:2924` this record carried, here and in §8B.1, is a comment in the `All`-chip count block. The record’s own numbers had already been overwritten by the mechanical re-tips of 2026-11-05, so they described no tree; these describe `48da36e`.)*
 *Amended 2026-10-09, after P2-3, P2-4 and P2-5 merged and this document's own §§8A–8C went in (PR #89): **three places here said the workspace track did not exist, and all three are now false** — §5's track-agnostic bullet ("today that is the employee track, because it is the only one that exists; when P2-4 lands…"), §5's owner bullet ("owners exist only on the workspace track (P2-4), which does not exist yet") and §2's open-now row ("owner does not exist"). They are corrected in place and each quotes what it replaced, because this document is the design of record rather than a dated snapshot; the snapshot beside it, `LAYER2-P2-2-IMPLEMENTATION-NOTES.md`, carries a superseded-note instead, because rewriting a reading taken on a named revision is worse than a stale line. What did **not** change is the point of the exercise: §5's rule is the same rule and both tracks obey it — the merge added items to it and altered nothing, which the flag module's own note records (`server/preboarding-flag.js:43`) — and no count anywhere in this document moved. **Checked and deliberately left:** §4's note that the chip draws inside the built HR roll-up and not yet on §2's list row or §3's detail header is dated to a re-read on `404b29d` (2026-10-08) and still describes where it draws; re-dating a reading to a tree it was not taken on is the failure this pass exists to avoid.*
 
 
@@ -1267,7 +1267,7 @@ that measurement, so the file in front of you is longer and hashes differently: 
 the commit message and the PR**, because a note cannot contain the hash of the file it is part of
 without changing it.
 
-**Sites rewritten in place** (line numbers: before → after; before-numbering is `a48668d`'s):
+**Sites rewritten in place** (line numbers: before → after; before-numbering is `a48668d`'s): *(Re-measured 2026-11-06 at `48da36e`: the "after" column is **this file’s numbering at `9ce469d`**, not today’s, and of its sixteen values only **three** — `82`, `539`, `546` — still open on the row the map describes. The other thirteen were moved by passes that landed after this note, and the file has grown from 1,189 to 1,473 lines since. Find a row by its **text**: this is a record of a move, and a record renumbered to today’s lines would be a measurement that never happened.)*
 
 | was | is now | what it said → what it says |
 |---|---|---|
@@ -1296,7 +1296,7 @@ without changing it.
 **Citations into this file from elsewhere — where they land now.** Measured by matching the old line's
 own text in this tree, so anyone can re-run it; the four documents holding them are **dated
 transcripts and are not re-written** (a transcript records what a surface said on a named tree, and
-editing one to match a later reading falsifies the record):
+editing one to match a later reading falsifies the record). **At `48da36e` none of the eight values in the table below lands on the text it names** (*re-measured 2026-11-06*: `694`, `690` and `993` are blank lines, `74` is a table rule, `1107` is a different paragraph, and `966` and `252` are other sections), because the column is `9ce469d`’s numbering of this file. The external citations are stale for the same reason and stay as written, being transcripts; six files in this repository cite into this one by line number.
 
 | held by | line here then | line here now |
 |---|---|---|
@@ -1387,15 +1387,15 @@ records that the served-file comment and the `db.js` refusal landed together in 
   changed" item**: the live half is corrected in the row above. `:1184`–`:1321` is declared historical by
   that row itself and stays as written. The live half, `App.tsx:1476`–`:1696`, was stale — at `:1438` the
   file renders the dashboard's pipeline card and line 1650 lands inside the *analytics* block that opens at line
-  1635 — and is now **`App.tsx:2494`–`:3047`**: the `{activeTab === 'preboarding' && (` line at `:2456`,
-  closed by its matching `)}` at `:2886`, found by brace-matching rather than by plausible arithmetic, and
-  holding the intake form (`:2323`) and the `HR roll-up — outstanding items` heading at **`:2395`**. The
-  bounds are unambiguous, so they are applied rather than flagged. The same stale pair is cited twice more
-  in this document — recorded with the measured value in the pass record below, and **neither is edited**
-  (one is pinned to PR #66; the other needs its sentence re-cast, not its number swapped).
-- **The header's own cross-reference** to "lines `:60`, `:79`, `:80`" as the pre-cutover records no longer
-  lands on the rows it names (by the current numbering those are `:76`, `:79` and `:80`) — noted, not
-  renumbered, because the declaration is a historic record in its own right.
+  1635. **Re-measured 2026-11-06 at `48da36e`, the live half is `App.tsx:2494`–`:3091`** — the
+  `{activeTab === 'preboarding' && (` line at `:2494`, closed by its matching `)}` at `:3091`, found by
+  brace-matching rather than by plausible arithmetic, and holding the `Pre-boarding Intelligence` heading at `:2500`,
+  the intake form at `:2522` (under its own heading at `:2518`) and the `HR roll-up — outstanding items` heading
+  at **`:2597`**. **The five numbers this bullet carried before this re-read — `:3047`, `:2456`, `:2886`, `:2323`, `:2395` —
+  open on no tree:** `f46b7a9`, the tree the pass record below measured, holds the block at `:1765`–`:2356`, the intake form at `:1793` and the heading at `:1865`, so they were a re-tip's arithmetic, not a measurement. The bounds are unambiguous, so they are applied rather than flagged. The same stale pair is cited twice more in this document — recorded with the measured value in the pass record below, and **neither is edited** (one is pinned to PR #66; the other needs its sentence re-cast, not its number swapped).
+- **The header's own cross-reference** to "lines `:60`, `:79`, `:80`" as the pre-cutover records no longer lands on the rows it names, and **neither do `:76`, `:79`, `:80`, the numbers this bullet offered as their current ones**
+  (*re-measured 2026-11-06 at `48da36e`*: `:76` is the case row, but `:79` is the checklist-item row and `:80` the storage row; the pre-cutover rows are the P2-5 paragraph at `:70`–`:71`, the case row `:76`, the seed row `:89` and the flag row `:90`). Noted, not renumbered, because the declaration is a historic record in its own right — and the header now carries its own dated note saying the numbers no longer address them.
+  **The rule this bullet is an instance of:** a cross-reference that was right when it was written is kept, and a dated note at its site says what it no longer addresses — never a silent renumber.
 - **§8B's cites are pinned by declaration** — that section is headed "measured on `main` at
   `b7630cb`" — so its `@rev b7630cb` `App.tsx:1183`/`:1970`/`:1461` cites — `{analytics.avgCostPerHireAE.toLocaleString(...)}`, `{line.due_date} (${line.due_rule})`, `Math.ceil((Date.now() - new Date(emp.start_date).getTime()) / (1000*60*60*24))` — are correctly stale *for that revision* and
   are left as written. A pinned-revision cite is not a defect; an unpinned one is.
@@ -1453,9 +1453,9 @@ dashboard's pipeline card and `:1650` is inside the *analytics* block, so the ra
 never described one block at all.
 
 **3. The class, not only the reported sites.** The same stale pair is cited twice more in this document:
-`:108`–`:109`, a blockquote that pins P2-1's placement to PR #66 and its date; and `:1098`, an unpinned
+`:108`–`:109`, a blockquote that pins P2-1's placement to PR #66 and its date; and `:1147`, an unpinned
 claim that P2-1's intake form and case list "are built on `main`". Both are recorded here with the measured
-value the tab is — **`App.tsx:1893`–`:2441`** — and **neither is edited**: the first is a pinned historical
+value the tab is — **`App.tsx:2494`–`:3091`** (*re-measured 2026-11-06 at `48da36e`; this line carried `:1893`–`:2441`, which opens on the dashboard’s pipeline card, not on the tab*) — and **neither is edited**: the first is a pinned historical
 record, which this note's own rule leaves as written (a pinned-revision cite is not a defect; an unpinned one
 is), and the second would have to be re-cast rather than renumbered, because the tab now also holds P2-2's
 roll-up panel and P2-1's contribution is no longer the whole of it.
