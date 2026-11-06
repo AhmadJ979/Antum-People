@@ -437,9 +437,9 @@ The flag is a **state, not an event**. On this product there is no mailer, webho
 
 **Anchor check — re-read off `origin/main` = `404b29d`, 2026-10-08.** The client anchors this section rests on, each with the grep that finds it, run against the merged file rather than a branch:
 
-- `{row.flag.chip}` — `git show origin/main:client/src/App.tsx | grep -n "row.flag.chip"` -> on **this tree** `App.tsx:2379` (the guard), `:2385` (the span) and `:2388` (the `Open`/`Close` span). Re-read at `fabef59`, 2026-10-29: `@rev fabef59` `:2205` (the guard), `:2211` (the span) and `:2214` (the `Open`/`Close` span); and `@rev 404b29d` `:1690`, `:1696` and `:1699` when the grep was run at `404b29d`.
-- the row's own distance — `... | grep -n "relDays(row.flag)"` -> **`:2453`**.
-- `h before 00:00 on the start date` — `... | grep -n "h before 00:00"` -> **two** hits, **`:197`** (the flag's own derivation in `relDays`) and **`:1733`** (the panel's own line). It is **not** a unique anchor: quote the hit you mean.
+- `{row.flag.chip}` — `git show origin/main:client/src/App.tsx | grep -n "row.flag.chip"` -> on **this tree** at `3d79663` (*re-measured 2026-11-06*) `App.tsx:2681` (the guard), `:2687` (the span) and `:2690` (the `Open`/`Close` span). Re-read at `fabef59`, 2026-10-29: `@rev fabef59` `:2205` (the guard), `:2211` (the span) and `:2214` (the `Open`/`Close` span); and `@rev 404b29d` `:1690`, `:1696` and `:1699` when the grep was run at `404b29d`.
+- the row's own distance — `... | grep -n "relDays(row.flag)"` -> **`:2655`** (*re-measured at `3d79663`, 2026-11-06*).
+- `h before 00:00 on the start date` — `... | grep -n "h before 00:00"` -> **two** hits at `3d79663` (*re-measured 2026-11-06*), **`:484`** (the flag's own derivation, inside `relDays` at `:481`) and **`:2733`** (the panel's own line). It is **not** a unique anchor: quote the hit you mean.
 
 An earlier submission cited line 1624 for the third of these and line 1605 for the first. Both were carried rather than re-read: line 1605 was this span when the review ran against `5087136`, line 1624 was never right, and **PR #79 (2026-10-08) added 165 lines to this file, none deleted** (`git diff --numstat 5087136 404b29d -- client/src/App.tsx` -> the diffstat reads 165 added and 0 deleted; 1887 lines -> 2052), which is why no single offset describes the move: 157 -> 197 (+40) but 1602 -> 1696 (+94). That is why the anchors above are pinned to the commit they were read from and given with their greps.
 
@@ -476,8 +476,8 @@ where PR #76 has since moved it:
    clear.**
    **Changed by PR #76 (re-read 2026-10-07):** the flag has since merged on `main` at `f3f2bac` —
    `server/preboarding-flag.js`, and the chip, headline and open-item block it derives at
-   `App.tsx:2380` and `{row.flag.chip}` at `App.tsx:2385`; re-read at `fabef59`, 2026-10-29 as `@rev fabef59` `App.tsx:2206` and `:2211`; and `@rev 404b29d` `App.tsx:1690` and `:1696` on `origin/main` = `404b29d`, 2026-10-08 (the `1581` this document carried is a case-detail field there, not the chip). It draws **inside the built HR roll-up**, not yet on §2's list row or
-   §3's detail header, and the live deployment still runs `5ed731e`, which draws none. The three
+   `App.tsx:2681` and `{row.flag.chip}` at `App.tsx:2687` (*re-measured at `3d79663`, 2026-11-06*); re-read at `fabef59`, 2026-10-29 as `@rev fabef59` `App.tsx:2206` and `:2211`; and `@rev 404b29d` `App.tsx:1690` and `:1696` on `origin/main` = `404b29d`, 2026-10-08 (the `1581` this document carried is a case-detail field there, not the chip). It draws **inside the built HR roll-up**, not yet on §2's list row or
+   §3's detail header, and the live deployment then ran `5ed731e`, which drew none — *corrected 2026-11-06: it has served `ff7b01a` since that day and the roll-up with the chip is on the public surface*. The three
    readings in the table above are therefore now the acceptance line for a **built** component rather
    than for one still to be built — **and none of the three changes.**
 2. **`-1 d` must not survive — and it was the row, not the chip, that printed it.** See the copy
@@ -1147,8 +1147,8 @@ not re-dated:** the pass was resolved on `main` = `501d5fa`, and no code has mer
   list — `@rev 75e3ff2` `{activeTab === 'preboarding' && (` at `App.tsx:1184`–`:1321` — are built on `main`, but they are not these screens: §3's case
   detail and §4's function view do not exist anywhere, and §2's list is a superset of what P2-1
   renders. **§5's flag has since been built** — `server/preboarding-flag.js`, PR #76 — **and draws
-  inside the built HR roll-up** (`App.tsx:2380`, `{row.flag.chip}` at `:2385`; `@rev fabef59` `:2206`/`:2211`, and `@rev 404b29d` `:1690`/`:1696` on `origin/main` = `404b29d`), *not* on §2's list row or §3's detail
-  header, and not on the live deployment, which still runs `5ed731e`; §5.1 carries the re-read.)
+  inside the built HR roll-up** (`App.tsx:2681`, `{row.flag.chip}` at `:2687` (*re-measured at `3d79663`, 2026-11-06*); `@rev fabef59` `:2206`/`:2211`, and `@rev 404b29d` `:1690`/`:1696` on `origin/main` = `404b29d`), *not* on §2's list row or §3's detail
+  header, and it was not on the live deployment, which then ran `5ed731e` — *corrected 2026-11-06: the served tree is `ff7b01a` and draws it*; §5.1 carries the re-read.)
 - **No figure here is a reading.** The mock rows are invented placeholders, deliberately not the
   seeded records, and are marked as such on the face of every screen.
 - **No checklist length is specified here.** The `n of m` counts in the mocks are placeholder
