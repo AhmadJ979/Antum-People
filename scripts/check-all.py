@@ -152,6 +152,25 @@ CHECKS = [
               "A counter nobody has watched move is a comment - this is the watch. `--mutant <name>` is the "
               "second half: it weakens the instrument and requires a named plant to catch it"),
 
+    # Wired in 2026-11-06. It exists because the instrument above cannot see this class at all:
+    # a citation GROUP passes when ANY of its numbers lands, so `:2103`-`:2073` passed the gate
+    # and shipped. `--selftest` is part of the same script rather than a second entry, so the
+    # proof and the check cannot drift apart; it is the reason the entry can be trusted to
+    # redden, and it is what a reader should run first if they doubt the green.
+    dict(id="doc-citation-ranges", mode="default", expect="green",
+         home="operator CLI (bare) + this entry point; it reads git objects, so the movement does not run it",
+         cmd=[PY, "scripts/check-doc-citation-ranges.py"],
+         what="every `:N`-`:M` range in design-concepts/ ASCENDS - the class check-doc-citations.py "
+              "structurally cannot judge, because a citation group is satisfied when any ONE of its numbers "
+              "lands and a reversed range still contains one that does. Equal endpoints (`:2456`-`:2456`, a "
+              "legitimate one-line span), `->` movement arrows and clock times are not ranges and are not "
+              "flagged. It reads a git revision (`git show <rev>:<path>`, HEAD by default) and prints the tree "
+              "it judged; an ASCENDING range that lands on the wrong line is a different defect and is NOT this "
+              "instrument's question, which its header states so a green is not read as 'the pointers are "
+              "correct'. `--selftest` commits plants into a scratch clone, requires the clone's own copy to "
+              "redden on a reversed range naming file:line, requires the three non-findings to stay quiet, and "
+              "re-runs the real pre-#365 tree, which is known to carry reversed ranges"),
+
     dict(id="reachability-report", mode="default", expect="green", report_only=True,
          home="operator CLI (bare) + suite gate",
          cmd=["node", "scripts/reachability-report.js"],
