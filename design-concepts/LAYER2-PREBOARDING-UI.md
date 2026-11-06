@@ -274,6 +274,16 @@ header dropped it, the row still carries the case's jurisdiction and nothing els
 └──────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+*(Annotated 2026-11-06: the right-hand tile in this mock is the pre-2026-10-13 consent tile, and
+none of its four strings is rendered any more — there is no `Consent (PDPL)` tile, no `✓ Recorded`,
+no per-case consent date and no `Documents unlocked` state, because decision 17 retired the case
+consent record in favour of a per-document notice-shown record. The shipped case-detail screen
+shows `Open the notice` carrying the notice's own version, the count of documents the notice has
+been shown for, the control `Record that the notice was shown` at `client/src/App.tsx:2818`, and,
+until it has been shown, the amber line `The notice has not been shown on this case yet` at
+`client/src/App.tsx:2801`. The mock is left as drawn: it draws the screen's shape, not a
+quotation of its strings.)*
+
 **Item-row anatomy** (extends the served checklist row, does not replace it): checkbox ·
 title · status · **owner chip** · **due date** · an optional one-line qualifier. The owner chip is
 a small pill (`text-[10px] font-bold uppercase tracking-widest`) carrying one of **IT · Admin ·
@@ -694,10 +704,18 @@ no basis to, **428** for an item whose notice has not been shown).
 The state machine is the server's and stays the server's: `ITEM_STATUSES` at
 `server/preboarding-items.js:49`, the transitions at `:58`–`:63`, `verified` terminal. The hire
 must not read the HR keys, and must not see HR's verbs — today's HR surface shows `Request`,
-`Mark received`, `Cancel`, `Verify`, `Send back` (`client/src/App.tsx:2865`–`:2878`, with `Mark received` at `:2865` and `Send back` at `:2878`) and
-`Requested` / `Received` / `Verified` on the workspace rows (`:2326`–`:2337`).
-*(All four numbers re-derived on `9ce469d` on 2026-10-13; the previous set pointed at offboarding
-copy and at the roll-up tiles.)*
+`Mark received`, `Cancel`, `Verify`, `Send back` on a case's expanded document rows
+(`client/src/App.tsx:2861`–`:2882`: `Request` at `:2861`, `Mark received` at `:2865`, `Cancel` at `:2872`, `Verify` at `:2877`, `Send back` at `:2878`, the plain `verified` label at `:2882`)
+and `Requested` / `Received` / `Verified` on the workspace rows
+(`client/src/App.tsx:2974`–`:2985`: `Requested` at `:2974`, `Received` at `:2978`, `Cancel` at `:2979`, `Verified` at `:2984`, `Send back` at `:2985`).
+*(Both ranges re-derived by content at `ff7b01a` on 2026-11-06, and each now spans the whole
+group it names — the spans they replace stopped at `Mark received` and `Send back`, so they
+excluded `Request` at `:2861` and the `verified` label at `:2882`. **The pair being replaced was
+wrong from the day it was installed on `9ce469d`:** at that revision `:2214`–`:2231` was the
+workspace-read block and `:2326`–`:2337` the package note, while the action buttons were at
+`:2133`–`:2146` and the workspace words at `:2242`–`:2253`. At `ff7b01a` the same two old ranges
+land on the transition-task checklist and the offboarding list — the offboarding copy the note
+that installed them said it was moving the reader away from.)*
 
 The mapping is **derived from the key**, never a second state machine:
 
@@ -1302,6 +1320,13 @@ buttons `App.tsx:1974`–`:1987` → `:2214`–`:2231` and the workspace status 
 (the old numbers are the acknowledgement reads now). **One more was left alone and is reported
 instead:** `server/preboarding-package.js:83`–`:90` cites the `READING` object, which is `:83`–`:88` —
 two lines of slack, no wrong target, and not in a paragraph this pass touched.
+
+*(Annotated 2026-11-06: the two `App.tsx` ranges this pass installed in §8A.3 were wrong when it
+wrote them. At `9ce469d` — the revision the pass measured against — `:2214`–`:2231` was the
+workspace-read block and `:2326`–`:2337` the package note; the action buttons were at
+`:2133`–`:2146` and the workspace status words at `:2242`–`:2253`. §8A.3 now cites the live lines
+and records the correction there. This paragraph keeps its text, because it is a record of what
+that pass did, and what it did was install two wrong numbers — the class it was meant to remove.)*
 
 **Nothing outside this file changed.** `git diff --name-only 9ce469d..HEAD` is this one path under
 `design-concepts/` — no `client/`, no `server/`, no asset, no route, no template. **No cutover is
