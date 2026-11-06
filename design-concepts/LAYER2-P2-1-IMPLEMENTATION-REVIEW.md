@@ -5,10 +5,10 @@
 `design-concepts/LAYER2-PREBOARDING-UI.md`. It records what the shipped tab already does the
 spec's way, and the three places where the two disagree.
 **What this is not:** a design of anything new, a demo script, or a statement about the live
-deployment. **Nothing here is live** — the deployed build is older than #66, and every figure in
-this file comes from a scratch instance, never from the running product (WORKFLOW rule 14).
-**Author / date:** Product Designer, 2026-10-07. Read at `75e3ff2`; re-derive the line numbers
-before quoting them (see the anchor recipe in the spec's header).
+deployment. **Nothing here was live when it was written** — the deployed build was then older than #66,
+and every figure in this file came from a scratch instance, never from the running product (WORKFLOW rule 14). **All of it has since shipped**: the pointers below are re-grounded by content at `3d79663` (2026-11-06), and the sentences that are a record of the earlier tree keep their `@rev` pins.
+**Author / date:** Product Designer, 2026-10-07. Read at `75e3ff2`, re-grounded at `3d79663`
+(2026-11-06); re-derive the line numbers before quoting them (see the anchor recipe in the spec's header).
 
 ---
 
@@ -17,10 +17,10 @@ before quoting them (see the anchor recipe in the spec's header).
 | Piece | Where |
 |---|---|
 | Nav entry, fifth tab — **Pre-boarding**, between Transitions Hub and Strategic Intelligence | `NAV_ITEMS`, `App.tsx:464`–`:468` |
-| The tab: header card + case count, intake form, case list | `{activeTab === 'preboarding' && (`, `App.tsx:2494`–`:2613` |
-| "Record an accepted offer" form → `POST /api/preboarding/cases` | handler `App.tsx:972`–`:976` (`authedFetch` call at `:947`), form JSX `:2456`–`:2456` |
-| Case list → `GET /api/preboarding/cases` | `authedFetch` list call `App.tsx:974`, `setPreboardingCases` at `:959`, list render `:2613` |
-| The case model and its single writer | `schema.sql:177`–`:197`; `server/preboarding.js:119` |
+| The tab: header card + case count, intake form, case list | `{activeTab === 'preboarding' && (`, `App.tsx:2494`–`:3091` |
+| "Record an accepted offer" form → `POST /api/preboarding/cases` | handler `App.tsx:996`–`:1032` (`authedFetch` POST at `:1005`), form JSX `:2522`–`:2584` |
+| Case list → `GET /api/preboarding/cases` | `authedFetch` list call `App.tsx:974`, `setPreboardingCases` at `:986`, list render `:2654` — the visible list is `checklistOverview.cases`, not `preboardingCases` |
+| The case model and its single writer | `schema.sql:195`–`:216`; `server/preboarding.js:162` |
 
 ## 2. What matches the spec — checked, not assumed
 
@@ -38,7 +38,7 @@ before quoting them (see the anchor recipe in the spec's header).
   on the shipped tab: the intake form says *"recording it here is what opens the case"*
   (`recording it here is what opens the case`, `App.tsx:2520`) and the tab never implies anything was sent to the candidate.
 - **UAE-first default on the intake form.** `offerForm.jurisdiction` initialises to `'AE'`, with
-  AE and SA both offered (`'AE'`, `App.tsx:810`; the options at `:2529`–`:2529`). The *case* is recorded in the jurisdiction on
+  AE and SA both offered (`'AE'`, `App.tsx:810`; the options at `:2569`–`:2570`). The *case* is recorded in the jurisdiction on
   the accepted offer, not in whatever the header switch says — which is a reasonable reading of
   UAE-first, but it is the reason F1 matters.
 - **The demo badge still covers it.** "Sample Demo Data" sits in the app-level header
@@ -51,9 +51,9 @@ before quoting them (see the anchor recipe in the spec's header).
 
 ### F1 — the case list was the one screen in the product that is not jurisdiction-scoped *(decided by the owner 2026-10-07: scope it, keep the chip)*
 
-The client *then* called the list with no filter (the call now carries `status=open` at `App.tsx:974`; it was `@rev 75e3ff2` `App.tsx:365`), and the API filters only when a
-`jurisdiction` parameter is present (`server/preboarding.js:97`–`:106`, route
-`server/index.js:597`–`:600`). **Measured** on a scratch instance at `75e3ff2`, holding one AE case
+The client *then* called the list with no filter (the call now carries `status=open` at `App.tsx:974`; it was `@rev 75e3ff2` `App.tsx:355`), and the API filters only when a
+`jurisdiction` parameter is present (`server/preboarding.js:111`–`:115`, route
+`server/index.js:1292`–`:1297`). **Measured** on a scratch instance at `75e3ff2`, holding one AE case
 and one SA case:
 
 ```
@@ -77,16 +77,16 @@ on the case itself (spec §3).
 
 **Status, 2026-10-07 — closed in PR #70 (`5ed731e`).** The owner's decision is implemented: the
 list call now carries `?jurisdiction=${jurisdiction}&status=open` (`client/src/App.tsx:974`, with
-the reasoning at `:847`), and both the row's jurisdiction chip and the detail header keep the case's
+the reasoning at `:970`), and both the row's jurisdiction chip and the detail header keep the case's
 own value. The engineer's committed run carries the endpoint's side of it — step 22 of
 `docs/evidence/p2-2/http-acceptance.txt`: `?jurisdiction=AE&status=open` → 1 case,
 `?jurisdiction=SA&status=open` → 1 case, from two cases held at once.
 
 ### F2 — "Cases open" counts rows, not open cases *(low today; wrong the day a case can close)*
 
-`status` exists and defaults to `'open'` (`schema.sql:187`), and no code writes any other value
-yet (`server/preboarding.js:133` sets it only on insert, from the default). The list query has no
-status filter at all (`server/preboarding.js:97`–`:102`). Measured: with one case moved to
+`status` exists and defaults to `'open'` (`schema.sql:210`), and no code writes any other value
+yet (`server/preboarding.js:191` writes the literal `'open'`, on insert only). The list query has no
+status filter of its own, then — it takes one now (`server/preboarding.js:116`–`:122`). Measured: with one case moved to
 `status='closed'` in the scratch DB, the client's own call still returned **2 rows** — so the label
 `Cases open` would read 2 while only one case is open.
 
@@ -95,12 +95,12 @@ label it `Cases` until a closed state exists. A one-line change, worth doing whe
 lands — not worth a PR on its own.
 
 **Status (confirmed by the lead on `main`, 2026-10-07):** the `Cases open` tile renders `client/src/App.tsx:2510`
-`preboardingCases.length` under the label at `:2122`, and `listCases` filters by nothing
-(`server/preboarding.js:97`–`:102`) — so the number and the label disagree the moment a case can
+`preboardingCases.length` under the label at `:2511`, and `listCases` filters by nothing
+(`server/preboarding.js:111` then; it filters `status` at `:116` now) — so the number and the label disagree the moment a case can
 close. It is latent rather than live-visible today, because nothing writes a status other than
 `'open'` yet, which is exactly why testing it with a closed row was worth doing.
 **Fixed in PR #70 (`5ed731e`).** The list is now requested with `status=open`
-(`client/src/App.tsx:974` — the call carries `status=open`, comment at `:947`), so the tile counts open cases, and the endpoint
+(`client/src/App.tsx:974` — the call carries `status=open`, comment at `:972`), so the tile counts open cases, and the endpoint
 refuses a status it does not write with **400** instead of answering an empty list — the engineer's
 committed run, steps 20–21 of `docs/evidence/p2-2/http-acceptance.txt`. The tile still renders
 `preboardingCases.length`, which is honest exactly as long as the list it counts is the open one —
@@ -117,13 +117,13 @@ choosing one spelling; it should match the nav.
 prints the tab's **id**, so a nav label that differs from its id spells differently in the header.
 Same defect class as the settlement header still reading "UAE / KSA".
 **Closed in PR #70 (`5ed731e`):** the nav is now one list, `NAV_ITEMS` (`client/src/App.tsx:464`),
-and the header reads the entry through `navLabel` (`:426`) — so the sidebar and the breadcrumb read
+and the header reads the entry through `navLabel` (`:473`) — so the sidebar and the breadcrumb read
 the same label by construction, not by two strings agreeing by hand.
 
 ### F4 — the KSA switch's tooltip already answers half of owner decision #5 *(note, not a defect)*
 
 The switch carries a `title` that reads: `"Active demo surface is UAE-first; KSA stays reachable here for testing
-the Phase 2 surface."` (`title="Active demo surface is UAE-first…"` at `App.tsx:1525`). That copy leans to the "testing-only flag" option while
+the Phase 2 surface."` (`title="Active demo surface is UAE-first…"` at `App.tsx:1762`). That copy leans to the "testing-only flag" option while
 the owner's decision on the visible switch is still open — and it has been there since the UAE-first
 commit (`34fdd63`, 2026-10-02), so it predates this work rather than coming from it. Flagging it
 only so the copy and the decision do not drift apart; no change recommended without the owner's
