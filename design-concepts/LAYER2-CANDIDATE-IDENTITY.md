@@ -38,7 +38,7 @@ repeatable*. So a join on it is not a relation, it is a **string match** — and
 this is* is the defect class this team fixed three times in one day: **a string's shape is not the role it plays.**
 `candidate_email` may be absent (that is what the schema permits), so the match has no rule to be right by.
 
-**How a case is born.** `POST /api/preboarding/cases` (`server/index.js:822`) calls
+**How a case is born.** `POST /api/preboarding/cases` (`server/index.js:1262`; `:822` was stale — re-derived 2026-11-06 at `3d79663`) calls
 `preboarding.recordOfferAcceptance(req.body, { actor, source: 'intake_form' })`, refuses an unnamed actor with
 **400** (`index.js:828`-`:829`), and is written as *"two callers of one function"* — the second being a future ATS
 adapter (`index.js:819`-`:821`). So the candidate's identity arrives in a payload, and what the payload carries is a
@@ -47,7 +47,7 @@ name and an *optional* email.
 ## 2. The moment they become an employee
 
 **There is no such moment in the product.** Measured: nothing writes an `employees` row from a case — the only
-`INSERT INTO employees` in the server is the employee-issue path (`server/index.js:364`) and two test fixtures
+`INSERT INTO employees` in the server is the employee-issue path (`server/index.js:585`; `:364` was stale — re-derived 2026-11-06 at `3d79663`) and two test fixtures
 (`access.test.js`, `schema-migration.test.js`). Pre-boarding and employment are two tables with no event between them.
 
 That is not a gap in plumbing, it is the premise of the feature: **a pre-boarding candidate may have no `employees` row
