@@ -51,7 +51,7 @@ a basis the notice does not assign. Waiting on counsel's answer about qualificat
 refusal is the feature; it should read as a decision, not an error code.
 
 ### 4. The record names the signed-in account, and pre-RBAC that is one account for everyone
-**Server:** `server/index.js:753` — `const recordedBy = (req.user && req.user.username) || null`. A body
+**Server:** `server/index.js:1421` — `const recordedBy = (req.user && req.user.username) || null` (`:753` was stale — re-derived 2026-11-06 at `3d79663`). A body
 `recorded_by` is ignored (verified: a record posted with `recorded_by: "Someone Else"` came back
 `recorded_by: "scratch-admin"`). That is the right property — a record cannot be made to name someone who
 was not there — but it means the audit trail names the **account**, and until Layer 3 there is one shared
