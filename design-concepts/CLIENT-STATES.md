@@ -31,6 +31,13 @@ correction rather than a proposal:
   renders below are derived from the path, and §9 says who owes the photograph.
 - **No `client/` or `server/` file is changed by this document.** Where a change is needed it is said, and it
   becomes its own row.
+- **Re-measured 2026-11-06 onto `origin/main` = `48da36e`** — the sixth doc-truth pass, and the first since the
+  files this document cites grew away from the tree it was written on: `client/src/App.tsx` is **3,400 lines**
+  there, `client/src/httpStatus.js` **183**, `client/src/httpStatus.test.js` **196**, `server/index.js`
+  **1,856**, `server/access.js` **483**. The `0e401cf` counts above still describe that tree; **every pointer
+  below was re-derived by content** against the current files. A number that moved is re-numbered, one that
+  still lands is left alone, and a sentence the code has overtaken is corrected rather than re-numbered (the
+  control in section 4 now names the Origin gate).
 
 ---
 
@@ -52,25 +59,25 @@ of them are live on `main`:
 
 ## 1. What landed in #241, and what it does not do
 
-**It landed, and it is good work.** `client/src/httpStatus.js` (142 lines) classifies once for every
+**It landed, and it is good work.** `client/src/httpStatus.js` (183 lines at `48da36e`; 142 when #241 landed) classifies once for every
 authenticated call, and `App.tsx` routes all of them through it:
 
-- `classifyHttpStatus(status, bodyText)` (`:59`) — `401` → `SESSION_INVALID`; **`403` → `hasBody ?
-  SESSION_INVALID : REFUSAL`** (`:62`); 2xx → `OK`; else `OTHER`.
-- `actionFor` (`:42`) — `SESSION_INVALID` → `'sign-out'`, `REFUSAL` → `'refusal-notice'` (`:47`).
-- The wrapper (`:113`) classifies only for 401/403 (`:124`), calls `onSessionInvalid` and **throws
-  `SessionExpiredError` on a 403-with-body** (`:133`) so no caller parses an error payload as data, and calls
-  `onRefusal` and **throws `RefusalError`** (`:138`) on a refusal — keeping the session.
+- `classifyHttpStatus(status, bodyText)` (`:100`) — `401` → `SESSION_INVALID`; **`403` → `hasBody ?
+  SESSION_INVALID : REFUSAL`** (`:103`); 2xx → `OK`; else `OTHER`.
+- `actionFor` (`:83`) — `SESSION_INVALID` → `'sign-out'`, `REFUSAL` → `'refusal-notice'` (`:88`).
+- The wrapper (`:152`) classifies only for 401/403 (`:165`), calls `onSessionInvalid` and **throws
+  `SessionExpiredError` on a 403-with-body** (`:174`) so no caller parses an error payload as data, and calls
+  `onRefusal` and **throws `RefusalError`** (`:179`) on a refusal — keeping the session.
 - `App.tsx`: the refusal is **one global banner above the content** (`:1798`–`:1811`), `role="alert"`, amber,
-  a lock icon, dismissible, and retired when the tab or jurisdiction changes (`:739`).
+  a lock icon, dismissible, and retired when the tab or jurisdiction changes (`:847`).
 
 **Three things it does not do**, all still measured on `main`:
 
-1. **The dashboard's call site still has no failure branch.** `fetchData` (`:594`) fetches `/api/employees`
-   (`:599`) and the analytics dashboard, tests nothing but the wrapper's throws, then coerces
-   (`safeEmpData = Array.isArray(empData) ? empData : []` `:612`; `setAnalytics(anaData && !anaData.error ?
-   anaData : null)` `:614`), and swallows everything in `catch (err)` (`:624`, logging at `:625`). `employees`
-   starts as `[]` (`:443`) and `analytics` as `null` (`:447`).
+1. **The dashboard's call site still has no failure branch.** `fetchData` (`App.tsx:900`) fetches `/api/employees`
+   (`:917`) and the analytics dashboard, tests nothing but the wrapper's throws, then coerces
+   (`safeEmpData = Array.isArray(empData) ? empData : []` `:938`; `setAnalytics(anaData && !anaData.error ?
+   anaData : null)` `:952`), and swallows everything in `catch (err)` (`:957`, logging at `:958`). `employees`
+   starts as `[]` (`:642`) and `analytics` as `null` (`:649`).
 2. **A refused region still asserts emptiness** — §3.
 3. **A request that never completed still renders as `No data yet`** — §5.
 
@@ -83,9 +90,9 @@ fails for a colour-blind reader, in Arabic, in a screenshot, and in a printout.
 
 | # | Trigger (measured) | What is true | The sentence | Form | Action |
 |---|---|---|---|---|---|
-| **1** | **401** — `auth.js:26` | the caller never presented a session | *(the existing sign-in card, `App.tsx:627`, its `Sign In` button at `:616`)* | the **whole surface** is replaced | sign in |
+| **1** | **401** — `auth.js:26` | the caller never presented a session | *(the existing sign-in card, `App.tsx:554`, its `Sign In` button at `:627`)* | the **whole surface** is replaced | sign in |
 | **2** | **403 + body** — `auth.js:31` | a session existed and is over | **"Your session has ended. Sign in again to continue."** (proposed — #241 reaches the card but states no reason) | the card, plus that line | sign in |
-| **3** | **403, empty** — `server/access.js:376`, `server/access.js:378`, `server/index.js:166` | the session is **fine**; this request was refused | **shipped: "You don't have access to that. Nothing was changed, and you are still signed in."** (`REFUSAL_NOTICE`, `App.tsx:69`) | a banner above the content | dismiss |
+| **3** | **403, empty** — `server/access.js:446`, `server/access.js:448`, `server/index.js:337` | the session is **fine**; this request was refused | **shipped: "You don't have access to that. Nothing was changed, and you are still signed in."** (`REFUSAL_NOTICE`, `App.tsx:69`) | a banner above the content | dismiss |
 | **4** | **200** + empty result | genuinely nothing there | the sentences already shipped — §6 | sentence only, italic slate, **no heading, no action** | none |
 
 **The three structural discriminators** — all four are distinguishable with styling removed:
@@ -98,7 +105,7 @@ fails for a colour-blind reader, in Arabic, in a screenshot, and in a printout.
 **On the shipped copy for state 3 — I am adopting it, not replacing it.** *"Nothing was changed, and you are
 still signed in"* does two things the draft's alternative did not: it satisfies §7's rule that a refusal says
 the record is untouched (*"both refusals leave the record untouched and say so"*, `LAYER3-IDENTITY.md` §4
-`:170`–`:172`), and it states the one fact that distinguishes state 3 from state 2. The only thing it does not
+`:183`–`:185`), and it states the one fact that distinguishes state 3 from state 2. The only thing it does not
 carry is **what would** — who to ask — which §7 keeps open for the owner. **States 1 and 2 must render
 identically; #241 reaches state 2 for the first time.**
 
@@ -110,13 +117,13 @@ identically; #241 reaches state 2 for the first time.**
 gap it left open.** Measured from the code path:
 
 1. The gate refuses `/api/employees` for the signed-in role → `403` with an empty body.
-2. `createAuthedFetch` calls `onRefusal` (`httpStatus.js:137`) → `setRefusal(refusalNoticeFor(url, REFUSAL_NOTICE))` (`App.tsx:842`)
-   → **the banner renders** (`:1503`).
-3. Then it **throws** `RefusalError` (`:138`).
-4. `fetchData`'s `catch (err)` (`:624`) swallows it; `setEmployees` never runs, so `employees` stays `[]`
-   (`:443`); `setAnalytics` never runs, so `analytics` stays `null` (`:447`).
-5. The dashboard below the banner therefore renders **six `No data yet` tiles** (`:1321`, `:1339`, `:1371`,
-   `:1375`, `:1408`, `:1412`) plus `No active onboardings.` (`:1449`) and `No active offboardings.` (`:1477`).
+2. `createAuthedFetch` calls `onRefusal` (`httpStatus.js:178`) → `setRefusal(refusalNoticeFor(url, REFUSAL_NOTICE))` (`App.tsx:842`)
+   → **the banner renders** (`:1797`).
+3. Then it **throws** `RefusalError` (`:179`).
+4. `fetchData`'s `catch (err)` (`App.tsx:957`) swallows it; `setEmployees` never runs, so `employees` stays `[]`
+   (`:642`); `setAnalytics` never runs, so `analytics` stays `null` (`:649`).
+5. The dashboard below the banner therefore renders **six `No data yet` tiles** (`:1835`, `:1853`, `:1885`,
+   `:1889`, `:1922`, `:1926`) plus `No active onboardings.` (`:1977`) and `No active offboardings.` (`:2005`).
 
 **One screen, two contradictory statements:** *"You don't have access to that"* above four panels saying
 *"there is no data"*. Corollary 1 of §0, exactly. And the second statement is the dangerous one, because it is
@@ -131,44 +138,44 @@ the banner must not contradict each other:**
   statement to contradict. Cost: a per-region refusal surface rather than one global banner.
 - **(b) Suppress the empty state under an active refusal for that region.** Cheapest; keeps one banner. Cost:
   needs the banner to know *which* region it came from, which today's `onRefusal(url, status)` already
-  receives (`:684` hands it to `refusalNoticeFor`; only the composed sentence reaches the state).
+  receives (`:842` hands it to `refusalNoticeFor`; only the composed sentence reaches the state).
 - **(c) Change the empty copy** so it cannot read as data-absence. Weakest: it treats the symptom in every
   string rather than the cause in one place.
 
 **Recommendation: (b)** — the wrapper already passes the url to `onRefusal`, so keeping the *last refused
 route* instead of a boolean is a one-line state change, and it makes "the notice must not outlive the request
-that raised it" (the author's own comment at `:575`–`:577`) true for the region as well as for the tab.
+that raised it" (the author's own comment at `:845`–`:846`) true for the region as well as for the tab.
 
 ---
 
 ## 4. The one 403 the classifier gets wrong — and why its own control misses it
 
-`httpStatus.js:62` reads:
+`httpStatus.js:103` reads:
 
 ```js
 if (status === 403) return hasBody ? SESSION_INVALID : REFUSAL;
 ```
 
-and the docstring states the rule as a choice (`:21`–`:25`): *"a 403 carrying ANY body is treated as a dead
-session… Where the split is ambiguous, signing out is the recoverable mistake."* **The reasoning is sound —
-and the enumeration behind it is short by one.** Every 403 producer in `server/` at `0e401cf`:
+and the docstring states the rule as a choice (`:28`–`:31`): *"`403` + ANY body → `SESSION_INVALID` → sign
+out … signing out is the recoverable mistake."* **The reasoning is sound —
+and the enumeration behind it is short by one.** Every 403 producer in `server/`, re-read at `48da36e` (the set is unchanged since `0e401cf`; the lines are not):
 
 | # | Site | Body | What it actually means |
 |---|---|---|---|
 | 1 | `server/auth.js:31` | `{"error":"Invalid or expired token"}` | `jwt.verify` failed — **the session is over** ✅ |
-| 2 | **`server/index.js:65`** | **`{"error":"Forbidden"}`** | **the CORS origin guard** — the session is fine ❌ |
-| 3 | `server/access.js:376` | *(empty)* | the resource is unnamed, or nobody may use it |
-| 4 | `server/access.js:378` | *(empty)* | the caller's `access_role` is not in the resource's list |
-| 5 | `server/index.js:166` | *(empty)* | the per-row **scope** refusal (`refuse`; named on 7 lines of that file) |
+| 2 | **`server/index.js:222`** | **`{"error":"Forbidden"}`** | **the CORS origin guard** — the session is fine ❌ |
+| 3 | `server/access.js:446` | *(empty)* | the resource is unnamed, or nobody may use it |
+| 4 | `server/access.js:448` | *(empty)* | the caller's `access_role` is not in the resource's list |
+| 5 | `server/index.js:337` | *(empty)* | the per-row **scope** refusal (`refuse`; named on 8 lines of that file) |
 
-`httpStatus.js:8` names #1 as *the* body-carrying 403. **#2 was not in the list**, and it is the one the
+`httpStatus.js:11` names #1 as *the* body-carrying 403. **#2 was not in the list**, and it is the one the
 classifier gets backwards: a valid session, on a refusal, is signed out.
 
 **Why "signing out is the recoverable mistake" does not cover this one.** A sign-out is recoverable when the
 next sign-in can succeed. For the CORS producer it cannot: the guard refuses **every** request from that
 origin, so the user signs in and is signed out again, on a loop, with nothing on screen explaining why. A
 recoverable mistake that recurs is not recoverable — it is a lockout, and the cause (a foreign `Origin`) is
-invisible in the UI and only in the server's `console.warn` (`index.js:64`).
+invisible in the UI and only in the server's `console.warn` (`index.js:220`).
 
 **And it is reachable in the product's own dev topology, not just a hypothetical.** `API_BASE`, `App.tsx:71`:
 
@@ -178,7 +185,7 @@ const API_BASE = window.location.port === '5173' ? 'http://localhost:3000' : '';
 
 When the client is served by Vite on **:5173** and the API is on **:3000**, the request carries
 `Origin: http://localhost:5173` while `Host` is `localhost:3000`, so the same-host passthrough at
-`index.js:60` **does not** apply, and unless `ALLOWED_ORIGINS` names `http://localhost:5173` the guard answers
+`index.js:214` **does not** apply, and unless `ALLOWED_ORIGINS` names `http://localhost:5173` the guard answers
 `403 {"error":"Forbidden"}` — a body — for **every** call. On the served product (one host, no foreign Origin)
 the branch is dead; in the dev configuration the client itself documents, it is live. *(I have not read the
 deployed `ALLOWED_ORIGINS`; that is a one-line check for whoever takes this, and it decides whether this is a
@@ -195,16 +202,19 @@ the per-call-site wiring all still hold.
 client keys on, and the fallback for an unclassifiable 403 must be **state 3** — never a sign-out and never
 silence. A body-shaped guess cannot be made safe, only made lucky.
 
-**The control already exists and has one named hole.** `httpStatus.test.js:61` is titled
-*"the anti-vacuous control: a refusal must never be wired to a sign-out"* — the right instinct, already
-written. What it does not do is send a **403 that carries a body and is not the session error**: the only
-bodies in the file are `{"error":"Invalid or expired token"}` (`:32`) and a **404's** `{"error":"Employee not
-found"}` (`:56`, `:123` — correctly `OTHER`). `Forbidden` appears nowhere. So:
+**The control already exists — and it now asserts the hole instead of missing it.** `httpStatus.test.js:91`
+is titled *"the anti-vacuous control: a refusal must never be wired to a sign-out"* — the right instinct.
+But the file **does** send a 403 carrying a body that is not the session error: `:43`–`:58` drives
+`{"error":"Forbidden"}` through `classifyHttpStatus` and asserts it takes **`SESSION_INVALID`** — *"the Origin
+gate is NOT the session error, and it takes the session branch deliberately"* (`:50`–`:51`). So the shape is
+named and the outcome is pinned; what is missing is the assertion that it must **not** sign anyone out:
 
 > **the test owed is one line — a 403 carrying `{"error":"Forbidden"}` must not sign anyone out.**
 
-That single case is the difference between a control that proves the refusal path and one that proves the
-classifier.
+Written today that test would **fail**, and that is the point: it is the test for this section's server change
+(`auth.js:31` → `401`), not a test of the client. Until the server moves, the case in the file is the honest
+record of the tie-break. (The 404 body it also uses, `:86`, `:153`, is correctly `OTHER` and is a different
+thing.)
 
 ---
 
@@ -216,8 +226,8 @@ classifier.
 from, and this branch's base): both loaders fetch **two things in one `Promise.all`** — `fetchData`
 paired the roster with the analytics roll-up, `fetchTasks` onboarding with offboarding. **One refused sibling
 rejected the pair, so the sibling that was granted was never applied.** *That half has since been fixed:* row
-`bd008d23` moved both loaders onto `const settled = settlePanels(await Promise.all([` (`App.tsx:909`, and
-`:1212` in `fetchTasks`), which settles each leg on its own — a granted panel keeps its data and a refused one
+`bd008d23` moved both loaders onto `const settled = settlePanels(await Promise.all([` (`App.tsx:916`, and
+`:1346` in `fetchTasks`), which settles each leg on its own — a granted panel keeps its data and a refused one
 contributes none. **The defect it removed was real:** a region the caller was entitled to rendered empty,
 under a notice saying they were not entitled to something. For a `manager` — roster cell allowed, analytics
 cell not, per the matrix itself — **that was the whole dashboard.**
@@ -243,8 +253,8 @@ the area exists at all* to a caller who did not ask for it.
 ### 5b. **Event 6 — the request that never came back**
 
 Server down, connection dropped, non-JSON body. Measured: the wrapper does not catch a rejected `fetch`
-(`client/src/httpStatus.js:113`), so it propagates to the callers' swallows — `catch (err)` at `App.tsx:957`
-in `fetchData` and `:1228` in `fetchTasks` — state is kept, and the dashboard
+(`client/src/httpStatus.js:152`), so it propagates to the callers' swallows — `catch (err)` at `App.tsx:957`
+in `fetchData` and `:1362` in `fetchTasks` — state is kept, and the dashboard
 reads **`No data yet` while the server is unreachable**. **Proposed: "We couldn't load this."** with a
 **Retry**. This is the one of the six that **is** a fault, so it is the one that may carry a fault colour;
 states 3 and 5a must not. **Still unhandled by #241**, and I am not folding it in silently — a fix for the
@@ -272,7 +282,7 @@ owner's (§8) — but the copy and the chrome must not say opposite things.
 This document adds **no new empty-state vocabulary**, and #241 adds none either — it adds one refusal
 sentence, which is the seat that was missing. Four sets already exist and each keeps its job:
 
-- **`LAYER3-IDENTITY.md` §4 (S-L4, `:149`–`:177`)** specs the 403 on a **write** — *"Your account cannot
+- **`LAYER3-IDENTITY.md` §4 (S-L4, `:162`–`:182`)** specs the 403 on a **write** — *"Your account cannot
   record this."* plus what would, client-owned, never the raw body, both refusals leaving the record untouched
   and saying so. **#241's sentence is that spec's read-side sibling** and satisfies the "untouched" clause
   verbatim. The two differ in exactly the second clause, and whoever touches one touches both.
@@ -283,9 +293,9 @@ sentence, which is the seat that was missing. Four sets already exist and each k
 - **The HR surface's shipped state-4 sentences** stay: `No data yet` (×6), `No active onboardings.`,
   `No active offboardings.`, `No tasks generated for this stage.`, and the pre-boarding panel's
   *"No open {jurisdiction} pre-boarding cases — nothing outstanding to show for this jurisdiction. Record an
-  accepted offer to open one."* (`:1951`). **§3 is where they collide with the new banner.**
+  accepted offer to open one."* (`:2648`–`:2650`). **§3 is where they collide with the new banner.**
 - **One existing rule looks like it forbids the client owning a sentence, and does not.** `App.tsx:2609` (inside the
-  `:2406`–`:2415` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
+  `:2608`–`:2617` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
   the structure that produced the drift… Nothing is composed here, and with no cases there is no sentence to
   state rather than a page-level claim about a list that is not on screen."* The distinction it was making:
   the client must not **assert facts about the data or about scope** — that is the server's (`scope_note`). A
@@ -315,24 +325,24 @@ sentence, which is the seat that was missing. Four sets already exist and each k
 - **Colour and mark.** `App.tsx:1798` is `bg-amber-50 border-b border-amber-200 text-amber-900 text-sm` with **a lock icon**.
   The product's own rule for a non-fault state is slate, not amber, and it says so with an example: *"the
   product's own flag already does this correctly — the `clear` state is slate, not rose"*
-  (`LAYER3-EMPLOYEE-OWN-VIEW.md` §4 `:213`–`:214`). The author's own comment (`:5`–`:7`) says a refusal *"is
+  (`LAYER3-EMPLOYEE-OWN-VIEW.md` §4 `:212`–`:213`). The author's own comment (`:5`–`:7`) says a refusal *"is
   not an error"* — **so the copy and the treatment disagree, and the treatment is the louder of the two.**
   The counter-argument is real: a refusal is worth interrupting for, and amber is not red. **It is the owner's
   call (§7.3); what is not arguable is that the copy and the chrome should not say opposite things.**
-- **`role="alert"`** (`:1284`) makes a screen reader announce it as it appears. Correct for a fault;
+- **`role="alert"`** (`:1798`) makes a screen reader announce it as it appears. Correct for a fault;
   **questionable for a correct refusal**, and it will interrupt whatever the user was reading. If the
   treatment stays amber, this is the right role; if it goes neutral, `role="status"` is the honest one.
-- **Dismissible, and retired on tab/jurisdiction change** (`:577`, `:1293`) — good, and it matches the design
+- **Dismissible, and retired on tab/jurisdiction change** (`:847`, `:1807`) — good, and it matches the design
   rule that a notice must not become furniture. **§3(b) extends it: it must also not outlive *the region* it
   was about.**
-- **The sentence wraps and never truncates** — `LAYER3-IDENTITY.md` §5 `:212` already rules this for the
+- **The sentence wraps and never truncates** — `LAYER3-IDENTITY.md` §5 `:224`–`:226` already rules this for the
   refusal banner, and it is the one message that must be readable in full. It is also the one place a Latin
   token could enter an Arabic sentence (a role name, if §7.1 adds one) and would need `<bdi>`; the shipped
   sentence contains no dates, versions, names or IBANs, so it needs none today.
 - **No state may differ from another by colour alone** — hence the three structural discriminators in §2. This
   is an accessibility requirement and an RTL one: a mirrored layout must not be the only thing separating
   *"nothing here"* from *"not yours"*.
-- **State 4's existing sentences carry the jurisdiction label** (`UAE`/`KSA`, `:1951`) — a Latin token in
+- **State 4's existing sentences carry the jurisdiction label** (`UAE`/`KSA`, `:2648`) — a Latin token in
   Arabic copy, already the canary `LAYER3-EMPLOYEE-OWN-VIEW.md` §5 names.
 
 ---
@@ -343,7 +353,7 @@ sentence, which is the seat that was missing. Four sets already exist and each k
   defect (§4, with the test that would catch it), one contradiction to close (§3), one unhandled event (§5).
 - **It does not place code or copy in the app** — the document is design; the sentence it adopts is already
   shipped.
-- **It carries no render proof.** Every statement is a reading of a code path at `0e401cf`, not a photograph.
+- **It carries no render proof.** Every statement is a reading of a code path, re-read at `48da36e`, not a photograph.
   The before-state worth capturing, by whoever builds §3's fix: *a refusal on `/api/employees` with six
   `No data yet` tiles underneath it* — the two claims, on one screen, in one image.
 - **It does not touch**: JWT-in-`localStorage` (open by design), the 400 actor refusal (decision 22, done),
