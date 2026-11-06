@@ -555,15 +555,21 @@ def _probe(clone, base):
         if not s or s.startswith("#") or s.startswith("|") or s.startswith("-") or s.startswith("*"):
             continue
         s = re.sub(r"[`*]", "", s)
-        if len(s) >= 60 and " " in s:
-            best = (i, s)
+        if len(s) < 60 or " " not in s:
+            continue
+        # The QUOTE is what the plant anchors on, so it must clear the same bar the instrument
+        # sets for a fragment (12 characters, a space, a letter) with room to spare. Measured:
+        # without this, the probe took the first sentence of a long line and got "after it" -
+        # a plant the instrument could only call UNJUDGEABLE, which reads as a broken harness.
+        quote = s.split(". ")[0].rstrip(".")
+        if len(quote) > 120:
+            quote = quote[:120].rsplit(" ", 1)[0]
+        if len(quote) >= 40 and re.search(r"[A-Za-z]{4}", quote):
+            best = (i, quote)
             break
     if not best:
         return None
-    lineno, sentence = best
-    quote = sentence.split(". ")[0].rstrip(".")
-    if len(quote) > 120:
-        quote = quote[:120].rsplit(" ", 1)[0]
+    lineno, quote = best
     wrong = lineno + 40 if lineno + 40 <= len(lines) else max(1, lineno - 40)
     return target, quote, lineno, wrong
 
