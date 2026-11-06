@@ -157,6 +157,20 @@ CHECKS = [
     # and shipped. `--selftest` is part of the same script rather than a second entry, so the
     # proof and the check cannot drift apart; it is the reason the entry can be trusted to
     # redden, and it is what a reader should run first if they doubt the green.
+    dict(id="cross-doc-citations", mode="default", expect="known-red",
+         home="operator CLI (bare) + this entry point; it reads git objects, so the movement does not run it",
+         cmd=[PY, "scripts/check-cross-doc-citations.py"],
+         what="judges a citation into ANOTHER document (`SOMEDOC.md:12`, `:12`-`:18`) against THAT "
+              "document at HEAD, requiring the citing SENTENCE's own quotation to land on the cited line - "
+              "the class both older citation gates decline to judge (one marks it OTHER-FILE, the other only "
+              "asks whether a range ascends). It does NOT judge a citation whose sentence quotes nothing, nor "
+              "an ASCENDING citation that lands on the wrong line with no quotation to anchor it: those are "
+              "UNJUDGEABLE and NAMED, so a green here means every QUOTATION-ANCHORED citation lands - never "
+              "that the pointers are correct. Zero citations found is a REFUSAL (exit 2), not a pass. "
+              "RED-KNOWN is a MEASUREMENT, not a waiver: at bf9a484 it reports 2 drifts, both in "
+              "pdpl-portal-boundary-memo.md, where compliance-requirements.md :391 is cited for a sentence "
+              "that is on :420. Re-derive those two and delete this exception - the row then prints "
+              "STALE-EXCEPTION until it is removed."),
     dict(id="doc-citation-ranges", mode="default", expect="green",
          home="operator CLI (bare) + this entry point; it reads git objects, so the movement does not run it",
          cmd=[PY, "scripts/check-doc-citation-ranges.py"],
