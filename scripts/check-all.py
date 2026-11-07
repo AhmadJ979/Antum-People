@@ -294,6 +294,43 @@ CHECKS = [
               "or declared with its md5 in scripts/host-design-concepts-baseline.tsv, and the run prints "
               "entries / pointers / declared debt / violations"),
 
+    # Wired in 2026-11-07. The UAE counsel letter was the LAST live document of this business
+    # still outside the repository: a `.md` twin and the `.txt` that actually gets sent, plus
+    # the cover email, the send index, the D1-D5 record and the two verifiers that judge them -
+    # all in /home/team/shared, with no history and no check. Rev 237 queues the move; this row
+    # is what makes the move worth having, because a document nobody checks drifts.
+    #
+    # `absent_exit=3` is the SAME declaration workflow-mirror makes, for the same shape of
+    # reason: the appendix verifier's SUBJECT - the checklist-strings document its B/K rows are
+    # quoted from - was NOT moved with the package and is still outside the repository, so a
+    # fresh clone or CI has nothing for that half to judge. That must print SKIP-FLAGGED and be
+    # counted as SKIPPED, never OK. It is NOT a licence to skip the rest: a missing file OF THE
+    # PACKAGE is exit 1 and RED, because the package is part of the tree and its absence is a
+    # defect in the tree. An argument the runner does not understand is exit 2, so nobody buys
+    # a green by guessing a flag.
+    dict(id="counsel-letter", mode="default", expect="green", absent_exit=3,
+         home="IN the repository (counsel/uae-2026-11/ + scripts/check-counsel-letter.py) - a PR "
+              "carries it; the movement does not run it",
+         absent_reason="the APPENDIX half judged NOTHING: the checklist-strings document its B/K rows "
+                       "are quoted from (default /home/team/shared/uae-appendix-b-checklist-strings.md, "
+                       "overridable with APPENDIX_DOC) is not on this machine - a fresh clone or CI. The "
+                       "WORD-STREAM half was still judged and holds; Appendix B was NOT judged and this "
+                       "row is not a pass for it. On the team's machine: python3 scripts/check-counsel-letter.py",
+         cmd=[PY, "scripts/check-counsel-letter.py"],
+         what="the UAE counsel letter package is IN the repository and still says what it said when it "
+              "was approved. Three assertions, each with its own counts: (1) all 7 files of the package "
+              "are present in counsel/uae-2026-11/ - a missing one is RED and named, never a skip; (2) the "
+              "`.md` twin and the `.txt` send copy are WORD-IDENTICAL once `##`, `**` and backticks are "
+              "stripped, so a one-word edit shows up as a differing region with its position (1681 tokens "
+              "either side when green); (3) Appendix B is still true - every quoted B/K row is the "
+              "`description` field of the line it cites in server/compliance_engine.js, the row set still "
+              "covers every citation-bearing description, and the letter's two md5 pins (89b2bd58... send "
+              "copy, 7bd134df... twin) still hold. It reads its claims OUT OF the documents, so a stale or "
+              "hand-edited copy cannot score green. WHAT IT DOES NOT JUDGE: whether the letter is correct "
+              "in law or ready to send - only that its bytes are the bytes that were approved, that the "
+              "twins agree, and that its citations still land. `--letter-dir <dir>` judges a copy "
+              "elsewhere, which is how the red is reproduced without touching the tree"),
+
     # Added 2026-11-02, the same day the false claim it catches was corrected in three documents.
     # A DEFAULT check: it reads 161 tracked .md files and 26,866 lines in well under a second, and it
     # touches nothing but the tree.

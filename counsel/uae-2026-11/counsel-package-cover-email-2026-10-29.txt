@@ -1,0 +1,77 @@
+Subject: Request for confirmation — four short letters on UAE and KSA labour law and UAE PDPL
+
+Dear [recipient name],
+
+I am writing to [firm] on behalf of Antum People. Antum People is an early-stage HR
+software product for employers in the GCC, built for the UAE first. Antum's legal
+entity is not yet registered — there is no registration or trade licence we can point
+to — and no client uses the product today: every figure and screen in it is exercised
+on labelled sample data. We hold no certification of any kind. I am not writing to
+sell you anything, or to ask you to act for a client of ours.
+
+What we need is a specific written answer to a small set of questions. Our product
+states things about the law — how end-of-service benefit is calculated in the UAE and
+in Saudi Arabia, and what the UAE PDPL requires of a privacy notice and of a record
+that a notice was shown — and we want it to state only what the law provides. We are
+not asking for general compliance advice. We are asking you to confirm or correct the
+particular points below, with the article numbers, and with the Arabic wording
+wherever the wording is what matters.
+
+Where a letter names an article, that article is our own reading of the provision,
+placed there so that you can correct it; we assert no article number of our own. In
+the two schedule appendices and the notice appendix, every number is quoted from our
+own template or notice, not proposed by us.
+
+Attached are four letters. Each is self-contained and numbered, so you can answer one
+letter on its own, or a single item within one, and the appendix schedules row by row:
+
+  1. uae-counsel-confirmation-request--send-ready.txt
+     UAE end-of-service benefit — 7 numbered items (basis and rate; the resignation
+     reduction; forfeiture; unpaid leave; notice and early resignation; offboarding
+     deadlines; the statutory schedule in Appendix A). Appendix A lists 17 claims our
+     UAE contract template states with no article we can source, plus the settlement
+     waiver row.
+
+  2. ksa-counsel-confirmation-request--send-ready.txt
+     KSA end-of-service benefit — 6 numbered items (resignation with no reduction; the
+     wage base; forfeiture; notice; offboarding deadlines; the statutory schedule in
+     Appendix A). Appendix A lists 15 claims our KSA contract template states with no
+     article we can source, plus the settlement waiver row.
+
+  3. pdpl-counsel-request--send-ready.txt
+     UAE PDPL — the privacy notice and the lawful-basis record: 5 numbered items
+     (notice content; Arabic; the instrument for recording a notice as shown; emergency
+     contact; retention). Appendix A lists 15 citations our notice itself makes, which
+     we cannot source from our own materials.
+
+  4. access-model-counsel-request--send-ready.txt
+     Access to personnel records — 3 numbered items (aggregates that could identify a
+     person; a candidate's contact details before the start date; what a person sees of
+     their own pre-boarding record).
+
+If it helps you to sequence the work, please take the two end-of-service-benefit
+letters first: the amounts the product shows an employer for a leaving employee rest
+on those two answers, and we have deliberately frozen one part of the UAE calculation
+(the resignation reduction, item 2 of that letter) rather than keep computing on a
+rule we are not certain survived the 2021 law.
+
+On fees: we have not discussed them, and we have no budget or retainer in mind. Please
+tell us how you would prefer to handle it — a quote for the set, an hourly or fixed
+arrangement, or a smaller first step on the two EOSB letters — and what you need from
+us in order to quote.
+
+We are under no deadline of our own, and we are not asking you for one. If a date
+would help you plan, suggest one and we will work to it. Partial answers are welcome.
+We are also unable to sign any agreement until our registration completes — including
+a data-processing agreement — so nothing in this package asks you to sign anything.
+
+If you would like the underlying documents the appendices refer to — our UAE and KSA
+employment-contract templates, the final settlement statement, and the privacy notice
+— say so and we will send them straight away.
+
+Yours sincerely,
+
+Ahmad Aljairoudi
+Antum People
+Dubai, United Arab Emirates
+hello@antum.ae · [telephone]
