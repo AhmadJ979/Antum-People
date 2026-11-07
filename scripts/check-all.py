@@ -88,6 +88,24 @@ def classify(expect, code):
 
 FAILING_WORDS = ("BROKEN", "BROKEN-EXIT", "CANNOT-JUDGE", "STALE-EXCEPTION", "RIG-INCOMPLETE")
 
+def classify_check(c, code):
+    """classify() plus the ONE case a check may declare about its own environment.
+
+    A check whose SUBJECT can legitimately be absent from this machine must not be able to
+    print OK - that is a skip that reads like a pass, the defect this file exists to close.
+    `scripts/check-workflow-mirror.py` compares this tree's WORKFLOW.md with
+    `/home/team/shared/WORKFLOW.md`, which is outside the repository: a fresh clone and CI have
+    no such file, and nothing was compared there. It exits 3 for exactly that and declares
+    `absent_exit=3`, so the row prints SKIP-FLAGGED and is counted as SKIPPED, never run.
+
+    Only the declared code maps this way: the same check exiting 0, 1 or 2 is judged by
+    classify() as usual, and any other code is still a BROKEN-EXIT crash. `--selftest` asserts
+    all four.
+    """
+    if c.get("absent_exit") is not None and code == c["absent_exit"]:
+        return "SKIP-FLAGGED"
+    return classify(c["expect"], code)
+
 def fails_run(word):
     """The ONE predicate the verdict uses. The self-test below asserts against this same
     function, so the classifier's documentation and the exit code cannot drift apart."""
@@ -103,14 +121,35 @@ def selftest():
         ("known-red", 0, "STALE-EXCEPTION"),
     ]
     words = [("OK", False), ("RED-KNOWN", False), ("BROKEN", True), ("BROKEN-EXIT-137", True),
-             ("CANNOT-JUDGE", True), ("STALE-EXCEPTION", True), ("RIG-INCOMPLETE", True)]
-    total = len(cases) + len(words)
+             ("CANNOT-JUDGE", True), ("STALE-EXCEPTION", True), ("RIG-INCOMPLETE", True),
+             ("SKIP-FLAGGED", False)]
+    # The declared-absence case. A check whose subject can be absent from this machine exits
+    # its own declared code; that code must print SKIP-FLAGGED - never OK (a skip that reads
+    # like a pass) and never BROKEN-EXIT-3 (which would call a fresh clone a broken tree).
+    # Everything else about the same check is classified as usual, asserted here so the
+    # declaration cannot quietly widen.
+    absent = dict(id="absent-check", expect="green", absent_exit=3)
+    absent_cases = [
+        (dict(absent), 3, "SKIP-FLAGGED"),
+        (dict(absent), 0, "OK"),
+        (dict(absent), 1, "BROKEN"),
+        (dict(absent), 2, "CANNOT-JUDGE"),
+        (dict(absent), 4, "BROKEN-EXIT-4"),
+        (dict(id="no-declaration", expect="green"), 3, "BROKEN-EXIT-3"),
+    ]
+    total = len(cases) + len(words) + len(absent_cases)
     bad = 0
     for expect, code, want in cases:
         got = classify(expect, code)
         if got != want:
             bad += 1
         print("  %s  classify(%-9s, exit=%-4s) -> %s" % ("ok " if got == want else "BAD", expect, code, got))
+    for c, code, want in absent_cases:
+        got = classify_check(c, code)
+        if got != want:
+            bad += 1
+        print("  %s  classify_check(absent_exit=%s, exit=%-3s) -> %s (must be %s)"
+              % ("ok " if got == want else "BAD", c.get("absent_exit", "-"), code, got, want))
     for word, must_fail in words:
         got = fails_run(word)
         if got != must_fail:
@@ -187,6 +226,35 @@ CHECKS = [
               "correct'. `--selftest` commits plants into a scratch clone, requires the clone's own copy to "
               "redden on a reversed range naming file:line, requires the three non-findings to stay quiet, and "
               "re-runs the real pre-#365 tree, which is known to carry reversed ranges"),
+
+    # Wired in 2026-11-06, with the resync it guards. `WORKFLOW.md` here is a DECLARED MIRROR of
+    # `/home/team/shared/WORKFLOW.md` - the file the team actually maintains - and nothing
+    # compared the two. Measured on 2026-11-06, the mirror was stale three ways at once: rules
+    # 42 and 43 were missing entirely (a fresh clone carried neither the merge policy nor the
+    # client-build rule), a sentence still said the off-host check "does not exist yet" after
+    # it had shipped, and the header claimed a sync date, revision and rule range the file no
+    # longer matched. `absent_exit=3` is the reason this entry needs the classifier above: the
+    # live file is OUTSIDE the repository, so a fresh clone and CI have nothing to compare, and
+    # that must print SKIP-FLAGGED rather than OK.
+    dict(id="workflow-mirror", mode="default", expect="green", absent_exit=3,
+         home="operator CLI (bare) + this entry point; it reads a file outside the repository, so the movement does not run it",
+         absent_reason="no live file at the path this check reads (default /home/team/shared/WORKFLOW.md, "
+                       "overridable with ANTUM_LIVE_WORKFLOW) - a fresh clone or CI. NOTHING WAS COMPARED: "
+                       "the mirror's body was not judged. On the team's machine: "
+                       "python3 scripts/check-workflow-mirror.py",
+         cmd=[PY, "scripts/check-workflow-mirror.py"],
+         what="this tree's WORKFLOW.md with its `>`-prefixed header lines stripped must be BYTE-IDENTICAL "
+              "to /home/team/shared/WORKFLOW.md, and every differing line is printed with both sides. It is "
+              "stricter than the `diff -B` the mirror's header documents: a blank-line-only difference is "
+              "DRIFT here, because the mirror is built by inserting its header between two live lines, which "
+              "makes exact identity achievable. A body with no content lines is a REFUSAL (exit 2), not a "
+              "clean 0-diff. WHAT IT DOES NOT JUDGE: the header's own claims (sync date, revision, rule "
+              "range) - it knows only that the body matches - and which live file is authoritative; it "
+              "compares against the path it prints. `--selftest` builds a scratch pair from this tree's own "
+              "file and requires: OK reachable; a one-line plant in the live file -> DRIFT quoting it; a "
+              "one-line plant in the mirror's body -> DRIFT; a blank-line-only difference -> DRIFT; a new "
+              "`>` header line -> still OK; an absent live file -> exit 3 and never OK; an empty body -> "
+              "exit 2. Every plant is removed before the next case."),
 
     dict(id="reachability-report", mode="default", expect="green", report_only=True,
          home="operator CLI (bare) + suite gate",
@@ -519,7 +587,7 @@ def main(argv):
         except subprocess.TimeoutExpired:
             code, out = 124, "TIMED OUT"
         dt = time.time() - t0
-        word = classify(c["expect"], code)
+        word = classify_check(c, code)
         if c.get("suite") and code is not None:
             # Read the TAP totals out of the suite's own report. Do NOT take the last `# `
             # line: node's ExperimentalWarning about SQLite also opens with `# ` and sits in
@@ -561,6 +629,9 @@ def main(argv):
             print("                 ends when   : %s" % c.get("known_ends_when", ""))
         if word == "RIG-INCOMPLETE":
             print("                 THIS RIG CANNOT JUDGE IT (see the two lines above)")
+        if word == "SKIP-FLAGGED" and c.get("absent_reason"):
+            print("                 NOT JUDGED  : %s" % c["absent_reason"])
+            print("                 counted as  : SKIPPED, never run - this row is not a pass")
 
     if not only:
         print()
