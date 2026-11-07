@@ -1,5 +1,20 @@
 # Counsel package — send index, 2026-10-29
 
+> **2026-11-07 — custody note.** The text below is the **2026-10-29 record** of a four-letter
+> package, and it is left exactly as it was written on that day. What has changed is where the
+> letters live: all four are now **in this repository**, each in a directory of its own beside
+> this one — `counsel/uae-2026-11/` (this one), `counsel/ksa-2026-11/`, `counsel/pdpl-2026-11/`,
+> `counsel/access-2026-11/` — and `/home/team/shared` holds a one-line **pointer** at each old
+> path, never a second copy of the text. Two sentences of the record no longer read against the
+> tree, and are named here rather than rewritten: **"the files in this directory"** (the
+> preamble) meant the 2026-10-29 shared directory; and **§2's "the twins are word-identical to
+> their `.txt` by construction"** holds for the UAE and KSA pairs but not for PDPL and access,
+> whose `.md` is a working document that *contains* the letter — measured 2026-11-07 at 2316 md /
+> 1412 txt tokens (pdpl, 70 differing regions) and 1628 / 720 (access, 38), and the PDPL draft
+> before the 2026-10-29 appendix was not word-identical either (1599 / 752). `counsel/README.md`
+> says which pair is which shape and why; `scripts/check-counsel-letter.py` judges all four
+> pairs and the md5 pins in §6 below, which are untouched by this note.
+
 **Status: NOTHING SENT.** No recipient exists (owner decision 15a). This file exists so that naming a recipient is the *only* thing between that decision and the email going out.
 
 Prepared by the Compliance Expert (read-only pass, 2026-10-29), verified and filed by the lead. Every claim below was checked against the files in this directory; where something could not be checked it is listed as a question, not asserted.
