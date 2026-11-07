@@ -194,17 +194,17 @@ Its sentence is *"a named actor is required to complete a task"*, which names th
 ## 5. EN/AR and RTL — what these surfaces cost
 
 No Arabic copy ships with this slice (decision 15(c) is open). The requirement is that nothing added here
-**blocks** the pass. Read on `main` at `7b073f8`:
+**blocks** the pass. Read on `main` at `cb819d7`, with each row's `7b073f8` figure kept wherever it has moved:
 
-| Pattern | Count in `client/src/App.tsx` (`@rev 7b073f8`) | Note |
+| Pattern | Count in `client/src/App.tsx` (`@rev cb819d7`) | Note |
 |---------|------------------------------|------|
-| `space-x-*` | **28** | physical; `space-x-reverse` is used **0** times |
-| `gap-*` | **23** | direction-agnostic — use it for new groups |
-| `ml-` / `mr-` | **4** / **5** | → `ms-` / `me-` when the pass runs |
-| `text-left` / `text-right` | **6** / **3** | → `text-start` / `text-end` |
-| `text-start` / `text-end`, `border-s-`/`-e-`, `rounded-s-`/`-e-` | **0** | nothing logical is used yet |
-| `border-r-*` | **2** | both are **chart rule lines**, not chrome: a benchmark marker (`:1681`) and a target marker (`:1711`) at `7b073f8` — `:2399` and `:2429` at `48da36e`, still 2 — each drawn with an inline `left:`. Neither is on these surfaces, and whether a chart mirrors is a real decision, not a bug — flagged here only so it is not mistaken for spacing. |
-| `dir=` / `lang=` | **0** / **0** | no direction handling exists |
+| `space-x-*` | **30** | physical; `space-x-reverse` is used **0** times — was **28** at `7b073f8` |
+| `gap-*` | **32** | direction-agnostic — use it for new groups; was **23** at `7b073f8` |
+| `ml-` / `mr-` | **4** / **6** | → `ms-` / `me-` when the pass runs; `mr-` was **5** at `7b073f8`, `ml-` is unchanged |
+| `text-left` / `text-right` | **7** / **3** | → `text-start` / `text-end`; `text-left` was **6** at `7b073f8`, `text-right` is unchanged |
+| `text-start` / `text-end`, `border-s-`/`-e-`, `rounded-s-`/`-e-` | **0** | nothing logical is used yet — still **0** at `cb819d7` |
+| `border-r-*` | **2** | both are **chart rule lines**, not chrome: a benchmark marker (`:1681`) and a target marker (`:1711`) at `7b073f8` — `:2399` and `:2429` at `48da36e`, and the same two lines at `cb819d7`, still 2 — each drawn with an inline `left:`. Neither is on these surfaces, and whether a chart mirrors is a real decision, not a bug — flagged here only so it is not mistaken for spacing. |
+| `dir=` / `lang=` | **1** / **0** in `App.tsx` — **4** / **0** in `client/src` | The groundwork exists; the interface does not. **4** elements carry `dir="auto"` in the rendered DOM: `markdownView.js:107` (a `th`), `:120` (a `td`) and `:151` (the served-document container `div`), written as `dir: 'auto'` props so a `dir=` grep of that file returns only prose — plus `App.tsx:3388` (a `<p>`; the file's other `dir=` match, `:3383`, is a comment). `lang=` is genuinely **0**. What does **not** exist: no language state, no switch, no mirrored layout, no Arabic UI string — the only Arabic in `client/src` is the wordmark in a comment at `typefaces.test.js:33`. |
 
 **The two surfaces added here are the ones with the most physical markup in the product**, measured in place:
 the identity block (`App.tsx:1718`–`:1730`, `space-x-3` at `:1719`) and the login card (opens `:554`) use `justify-end` (`:596`), `ml-3` (the dismiss button, `:614`) and `mr-2` (the error icon, `:567`); the card's block was `@rev 7b073f8` `:357`–`431`. Rules for anything
