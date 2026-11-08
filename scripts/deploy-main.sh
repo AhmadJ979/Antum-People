@@ -57,6 +57,15 @@ PW_FILE="${ANTUM_PW_FILE:-/home/team/shared/.demo-admin-password}"
 PORT="${ANTUM_PORT:-3000}"
 ENVFILE="${ANTUM_ENV_FILE:-/etc/profile.d/cto-env-vars.sh}"
 HOOK_DST="${ANTUM_HOOK_DST:-/etc/profile.d/zz-antum-product-guard.sh}"
+# The public gate's two host files (server/public-gate.js). Neither is in the repository, and
+# neither is ever printed: the passcode file holds a bcrypt hash at cost 12, the secret file the
+# HMAC key the gate cookie is signed with. Created in step 0 below when absent.
+GATE_PASSCODE_FILE="${ANTUM_GATE_PASSCODE_FILE:-/home/team/shared/.antum-gate-passcode}"
+GATE_SECRET_FILE="${ANTUM_GATE_SECRET_FILE:-/home/team/shared/.antum-gate-secret}"
+GATE_SHOWN_ONCE="${ANTUM_GATE_SHOWN_ONCE:-/home/team/shared/.antum-gate-passcode.shown-once}"
+# Sent as `Cookie:` on every request this script makes to the public URL. Empty until step 0 mints
+# it, and `antum_gate=` (an invalid cookie, i.e. no cookie) on a tree that predates the gate.
+GATE_COOKIE_HEADER="antum_gate="
 
 # --- the mode ----------------------------------------------------------------------
 RESTART_ONLY=0
@@ -173,7 +182,7 @@ authenticate() { # $1 = the stage auth_fail reports
 
   LOGIN_BODY=$(mktemp /tmp/antum-login-XXXXXX.json) || cannot_judge "a scratch file for the login response"
   LOGIN_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$LOGIN_BODY" -w '%{http_code}' \
-    -X POST -H 'Content-Type: application/json' \
+    -X POST -H 'Content-Type: application/json' -H "Cookie: $GATE_COOKIE_HEADER" \
     --data-binary "{\"username\":\"admin\",\"password\":\"$PW_VALUE\"}" "$PUBLIC/api/login")
   case "$LOGIN_CODE" in
     200)     : ;;
@@ -193,7 +202,7 @@ authenticate() { # $1 = the stage auth_fail reports
   # the same measurement — there is no second, unproven read to disagree with it.
   ROSTER_BODY=$(mktemp /tmp/antum-roster-XXXXXX.json) || cannot_judge "a scratch file for the roster response"
   ROSTER_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$ROSTER_BODY" -w '%{http_code}' \
-    -H "Authorization: Bearer $TOK" "$PUBLIC/api/employees")
+    -H "Authorization: Bearer $TOK" -H "Cookie: $GATE_COOKIE_HEADER" "$PUBLIC/api/employees")
   case "$ROSTER_CODE" in
     200) : ;;
     401) auth_fail "the token was REJECTED by an authenticated read (GET /api/employees -> HTTP 401): the credential file and the product's own user table disagree" ;;
@@ -215,6 +224,73 @@ print(len(d), (d[0].get("id") if d else "-"))
   ROSTER_FIRST=${ROSTER_SUM#* }
   echo "  roster:     HTTP $ROSTER_CODE, $ROSTER_N record(s) — the token is PROVEN by an authenticated read"
 }
+
+# ---------------------------------------------------------------------------------------------
+# STEP 0 — THE PUBLIC GATE'S TWO HOST FILES, AND THE COOKIE THIS SCRIPT JUDGES WITH.
+#
+# The owner ruled that the product must not be reachable by a stranger, and the platform proxies port
+# 3000, so `server/public-gate.js` sits in front of the shell, the assets and the API. It reads two
+# files at boot: a bcrypt hash (cost 12, the same shape as the admin credential) and an HMAC key. This
+# step creates whichever is absent, mode 600, so a fresh host comes up gated rather than answering 503
+# — and it runs in --restart-only too, because a restart is exactly when a missing file would show up.
+#
+# NEITHER FILE'S CONTENTS IS EVER PRINTED. The passcode itself cannot be derived from the hash, so the
+# generated one is written ONCE to $GATE_SHOWN_ONCE for the owner to record and delete; this script
+# prints only paths. The cookie this script then judges with is minted from the SIGNING KEY, not from
+# the passcode — anything that can read that key is already on this host, which is the right boundary.
+# ---------------------------------------------------------------------------------------------
+ensure_gate_credential() {
+  if [ ! -s "$GATE_SECRET_FILE" ]; then
+    ( umask 077; head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$GATE_SECRET_FILE" )
+    chmod 600 "$GATE_SECRET_FILE" 2>/dev/null
+    echo "  gate signing key: CREATED at $GATE_SECRET_FILE (mode 600; contents never printed)"
+  else
+    echo "  gate signing key: present at $GATE_SECRET_FILE"
+  fi
+  if [ ! -s "$GATE_PASSCODE_FILE" ]; then
+    if [ ! -d "$DEPLOY_DIR/server/node_modules" ]; then
+      echo "FAIL: $GATE_PASSCODE_FILE does not exist and $DEPLOY_DIR/server/node_modules is missing, so"
+      echo "      the passcode cannot be hashed. Nothing was changed and the product was not touched."
+      exit 1
+    fi
+    PLAIN="$(head -c 18 /dev/urandom | base64 | tr -d '/+=' | cut -c1-20)"
+    if [ -z "$PLAIN" ]; then
+      echo "FAIL: could not generate a passcode (no entropy from /dev/urandom). Nothing was changed."
+      exit 1
+    fi
+    # The value travels in the ENVIRONMENT, never in argv: argv is world-readable in `ps`.
+    ( umask 077; PASS="$PLAIN" node -e "const b=require('$DEPLOY_DIR/server/node_modules/bcryptjs');process.stdout.write(b.hashSync(process.env.PASS,12))" > "$GATE_PASSCODE_FILE" )
+    chmod 600 "$GATE_PASSCODE_FILE" 2>/dev/null
+    ( umask 077; printf '%s\n' "$PLAIN" > "$GATE_SHOWN_ONCE" )
+    chmod 600 "$GATE_SHOWN_ONCE" 2>/dev/null
+    unset PLAIN
+    echo "  gate passcode:    CREATED at $GATE_PASSCODE_FILE (mode 600, bcrypt cost 12; hash never printed)"
+    echo "                    the passcode itself is in $GATE_SHOWN_ONCE — record it, then delete that file"
+  else
+    echo "  gate passcode:    present at $GATE_PASSCODE_FILE"
+  fi
+}
+
+mint_gate_cookie() {
+  if [ ! -f "$DEPLOY_DIR/server/public-gate.js" ]; then
+    echo "  gate cookie:      not minted — this tree predates the public gate, so nothing is gated"
+    return 0
+  fi
+  MINTED=$(node -e "process.stdout.write(require('$DEPLOY_DIR/server/public-gate').mintCookieHeader('$GATE_SECRET_FILE'))" 2>/dev/null)
+  if [ -n "$MINTED" ]; then
+    GATE_COOKIE_HEADER="$MINTED"
+    unset MINTED
+    echo "  gate cookie:      minted from $GATE_SECRET_FILE (the cookie itself is never printed)"
+  else
+    echo "  gate cookie:      COULD NOT BE MINTED from $GATE_SECRET_FILE — every public check below sees"
+    echo "                    the gate page instead of the product. Fix the key before trusting this run."
+    GATE_COOKIE_HEADER="antum_gate="
+  fi
+}
+
+echo "--- 0. the public gate's host credential ---"
+ensure_gate_credential
+mint_gate_cookie
 
 # ---------------------------------------------------------------------------------------------
 # --preflight: the entitlement to judge, and nothing else. This mode is why the fix is provable
@@ -371,8 +447,8 @@ echo "--- 5. verify the live demo end to end ---"
 # below runs on an empty token. The roster reported here is that same proven read, not a second,
 # unchecked one: the proof and the reported count are one measurement.
 authenticate post-restart
-echo "public status/title: $(curl -s --noproxy '*' -o /tmp/cutover-page -w '%{http_code}' --max-time 25 "$PUBLIC") $(grep -o '<title>[^<]*</title>' /tmp/cutover-page | head -1)"
-echo "bad-password path: $(curl -s --noproxy '*' -o /dev/null -w '%{http_code}' --max-time 20 -X POST -H 'Content-Type: application/json' --data-binary '{"username":"admin","password":"nope"}' "$PUBLIC/api/login") (expect 401)"
+echo "public status/title: $(curl -s --noproxy '*' -H "Cookie: $GATE_COOKIE_HEADER" -o /tmp/cutover-page -w '%{http_code}' --max-time 25 "$PUBLIC") $(grep -o '<title>[^<]*</title>' /tmp/cutover-page | head -1)"
+echo "bad-password path: $(curl -s --noproxy '*' -H "Cookie: $GATE_COOKIE_HEADER" -o /dev/null -w '%{http_code}' --max-time 20 -X POST -H 'Content-Type: application/json' --data-binary '{"username":"admin","password":"nope"}' "$PUBLIC/api/login") (expect 401)"
 echo "roster: $ROSTER_CODE"
 echo "  employees: $ROSTER_N | first id: $ROSTER_FIRST"
 # The re-seed exists to leave the demo in three distinct flag states, so the RUN must prove it
@@ -382,7 +458,7 @@ echo "  employees: $ROSTER_N | first id: $ROSTER_FIRST"
 # lets the next run overwrite this one's bytes.
 echo "pre-boarding demo state as the live API serves it (expect three distinct flag states):"
 PB_JSON="/tmp/cutover-$STAMP-pb-overview.json"
-PB_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$PB_JSON" -w '%{http_code}' -H "Authorization: Bearer $TOK" \
+PB_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$PB_JSON" -w '%{http_code}' -H "Authorization: Bearer $TOK" -H "Cookie: $GATE_COOKIE_HEADER" \
   "$PUBLIC/api/preboarding/checklist/overview?jurisdiction=AE")
 [ "$PB_CODE" = "200" ] || cannot_judge "the pre-boarding checklist overview (HTTP $PB_CODE): there is no checklist to read the flag states out of"
 python3 - "$PB_JSON" <<'PY' 2>/dev/null || cannot_judge "the pre-boarding overview body (HTTP $PB_CODE): it is not the JSON this check reads"
@@ -405,7 +481,7 @@ print("  distinct flag states:", states, "(expect 3: clear, inside_48_hours, sta
 PY
 echo "KSA offboarding checklist as the live API serves it:"
 OFF_JSON="/tmp/cutover-$STAMP-offboarding.json"
-OFF_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$OFF_JSON" -w '%{http_code}' -H "Authorization: Bearer $TOK" \
+OFF_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$OFF_JSON" -w '%{http_code}' -H "Authorization: Bearer $TOK" -H "Cookie: $GATE_COOKIE_HEADER" \
   "$PUBLIC/api/employees/demo-emp-sarah/offboarding")
 [ "$OFF_CODE" = "200" ] || cannot_judge "the KSA offboarding checklist for demo-emp-sarah (HTTP $OFF_CODE)"
 python3 - "$OFF_JSON" <<'PY' 2>/dev/null || cannot_judge "the offboarding checklist body (HTTP $OFF_CODE): it is not the JSON list this check reads"
@@ -443,7 +519,7 @@ echo "settlement statement: the served document vs the employee record (an ISSUE
 # assertion. rc=2 (CANNOT-JUDGE: the payload or the record could not be read) fails the run too: a
 # run that judged nothing is not a pass. The payload path is run-stamped, like the other evidence.
 SETTLE="/tmp/cutover-$STAMP-settlement.json"
-SETTLE_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$SETTLE" -w '%{http_code}' -H "Authorization: Bearer $TOK" \
+SETTLE_CODE=$(curl -s --noproxy '*' --max-time 25 -o "$SETTLE" -w '%{http_code}' -H "Authorization: Bearer $TOK" -H "Cookie: $GATE_COOKIE_HEADER" \
   "$PUBLIC/api/compliance/templates/final-settlement-statement/demo-emp-sarah")
 # THE STATUS IS CHECKED BEFORE THE CHECK IS ASKED TO JUDGE. This is the incident's exact seam: on
 # 2026-11-02 the 401 body was written to this file, the settlement script correctly answered rc=2
@@ -625,7 +701,7 @@ HOOK_DST="${ANTUM_HOOK_DST:-/etc/profile.d/zz-antum-product-guard.sh}"
 # because "the public URL answers 200" is exactly what the platform's placeholder also does.
 if [ "$RESTART_ONLY" -eq 1 ]; then
   echo "--- the served bytes vs the on-disk bundle ---"
-  SERVED_NAME=$(curl -s --noproxy '*' --max-time 25 "$PUBLIC/" | grep -o 'assets/index-[A-Za-z0-9_-]*\.js' | head -1)
+  SERVED_NAME=$(curl -s --noproxy '*' -H "Cookie: $GATE_COOKIE_HEADER" --max-time 25 "$PUBLIC/" | grep -o 'assets/index-[A-Za-z0-9_-]*\.js' | head -1)
   if [ -z "$SERVED_NAME" ]; then
     echo "FAIL: the public HTML names no asset — the placeholder is being served, not the product"
     exit 1
@@ -633,7 +709,7 @@ if [ "$RESTART_ONLY" -eq 1 ]; then
     echo "FAIL: the served asset $SERVED_NAME is not in $DEPLOY_DIR/client/dist — it cannot be the shipped bundle"
     exit 1
   else
-    SERVED_MD5=$(curl -s --noproxy '*' --max-time 30 "$PUBLIC/$SERVED_NAME" | md5sum | cut -d' ' -f1)
+    SERVED_MD5=$(curl -s --noproxy '*' -H "Cookie: $GATE_COOKIE_HEADER" --max-time 30 "$PUBLIC/$SERVED_NAME" | md5sum | cut -d' ' -f1)
     DISK_MD5=$(md5sum < "$DEPLOY_DIR/client/dist/$SERVED_NAME" | cut -d' ' -f1)
     echo "  $SERVED_NAME  served md5 $SERVED_MD5 / on-disk md5 $DISK_MD5 (both measured now)"
     if [ "$SERVED_MD5" != "$DISK_MD5" ]; then
