@@ -66,12 +66,72 @@
 const { execFile } = require("node:child_process");
 const { promisify } = require("node:util");
 const http = require("node:http");
+const path = require("node:path");
 
 const pexec = promisify(execFile);
 
 const BIN = process.env.AGENT_BROWSER_BIN || "agent-browser";
 const MOUNT = "#root";
 const MAXBUF = 32 * 1024 * 1024;
+
+// ---------------------------------------------------------------- the gate credential
+/*
+  server/public-gate.js sits in front of every page path and every file under client/dist, so a
+  cookieless fetch of our own surface no longer measures the product: it measures the gate page -
+  status 200, title `Antum People - access`, no `#root`, no `assets/*.js`. Every assertion below would
+  then be either FALSE (no asset is served) or VACUOUS (the gate page is a 200 too), and the row would
+  read RED for a reason that is not a defect, or GREEN on a page nobody can use.
+
+  So this file asks `scripts/gate-cookie.js` for a credential - the ONE minter, never a signature
+  re-implemented here - and sends it to each target's origin. Two outcomes are NOT a pass:
+    * the minter exits 3 (ABSENT): no gate credential exists in this context. If a target then turns
+      out to be GATED, that target is REFUSED and the run exits 3. If the target is NOT gated (the
+      gate is not deployed there), the product is measured normally - the absence of a credential is
+      only a refusal when something actually stands in the way.
+    * the minter exits 2 (its own tree is broken): its reason is printed, and the run continues
+      WITHOUT a credential - so a gated target reads REFUSED and an ungated one is measured. Nothing
+      is bought by refusing here: a missing credential can only ever make a target unjudgeable, never
+      green.
+  A REFUSED row must never render like an outage: the gate is not the product failing.
+*/
+const GATE_COOKIE_SCRIPT = path.join(__dirname, "gate-cookie.js");
+const TREE = path.join(__dirname, "..");
+
+/** The gate page's own markers, read from THIS tree's gate module so no string is duplicated. */
+const GATE_MARKERS = (() => {
+  try {
+    const g = require(path.join(TREE, "server", "public-gate.js"));
+    const page = g.gatePage("");
+    const title = (page.match(/<title>([^<]*)<\/title>/) || [])[1] || null;
+    const body = (page.match(/<p>([^<]*)<\/p>/) || [])[1] || null;
+    return { title, body };
+  } catch (_) {
+    return { title: null, body: null };
+  }
+})();
+
+async function mintGateCookie() {
+  try {
+    const { stdout } = await pexec(process.execPath, [GATE_COOKIE_SCRIPT, "--tree", TREE], {
+      timeout: 20000,
+      encoding: "utf8",
+    });
+    const header = String(stdout || "").trim();
+    if (!/^antum_gate=v1\.\d+\.[A-Za-z0-9_-]+$/.test(header)) {
+      return { status: "error", message: `the minter printed something that is not the gate's cookie shape` };
+    }
+    return { status: "minted", header };
+  } catch (e) {
+    const said = String(e.stderr || e.message || "")
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .join(" | ");
+    if (e.code === 3) return { status: "absent", message: said || "scripts/gate-cookie.js exited 3" };
+    return { status: "error", message: said || `scripts/gate-cookie.js exited ${e.code}` };
+  }
+}
+
 
 // ---------------------------------------------------------------- the checked set
 
@@ -155,6 +215,7 @@ const PROBE = `(() => {
     children: r ? r.children.length : -1,
     text: r ? (r.innerText || '').replace(/\\s+/g, ' ').trim() : '',
     bodyLen: document.body ? (document.body.innerText || '').length : -1,
+    bodyStart: document.body ? (document.body.innerText || '').slice(0, 300) : '',
     title: document.title,
     named: named
   });
@@ -219,6 +280,35 @@ async function measure(t, opts) {
     m.title = (open.json.data && open.json.data.title) || null;
     m.finalUrl = (open.json.data && open.json.data.url) || t.url;
 
+    // 1b. the gate credential, if one could be minted. Set it on THIS origin only, then clear the
+    //     network log and reload: the note's own measurement is that the log holds two Document
+    //     entries after open -> cookies set -> reload, and reading the first would read the gate
+    //     page's 200 and call it the shell.
+    if (opts.gateCookie) {
+      const eq = opts.gateCookie.indexOf("=");
+      const cname = opts.gateCookie.slice(0, eq);
+      const cvalue = opts.gateCookie.slice(eq + 1);
+      const origin = originOf(t.url);
+      const cargs = [
+        "--session", session, "cookies", "set", cname, cvalue,
+        "--url", origin, "--path", "/", "--httpOnly", "--sameSite", "Lax",
+      ];
+      // `--secure` is a transport policy, not part of the credential, and Chrome refuses it on an
+      // http:// origin (CDP: Invalid cookie fields). Send it only where the transport is https.
+      if (/^https:/i.test(t.url)) cargs.push("--secure");
+      const set = await ab(cargs, Math.min(stepTimeout, left()));
+      if (!set.ok) {
+        m.error = `could not set the gate cookie on ${origin}: ${set.err || (set.timedOut ? "timed out" : "failed")}`;
+        return m;
+      }
+      await abJson(["--session", session, "--json", "network", "requests", "--clear"], Math.min(stepTimeout, left()));
+      const reload = await abJson(["--session", session, "--json", "reload"], Math.min(stepTimeout, left()));
+      if (!reload.ok) {
+        m.error = `reload after setting the gate cookie failed: ${reload.err}`;
+        return m;
+      }
+    }
+
     // 2. wait for the mount, up to opts.waitMs. A page that never paints must not read as a
     //    zero measured on a page that did (the pre-paint trap).
     const waitUntil = Math.min(started + opts.waitMs, deadline);
@@ -242,6 +332,22 @@ async function measure(t, opts) {
     if (!m.dom) {
       m.cannotJudge = true;
       m.error = `could not evaluate the probe: ${lastErr || "no result"}`;
+      return m;
+    }
+    if (m.dom.title) m.title = m.dom.title;
+
+    // 2b. IS THIS THE GATE PAGE RATHER THAN THE PRODUCT? Both markers come from this tree's own
+    //     gate module, so no sentence is duplicated here. Only a target measured WITHOUT a
+    //     credential can be REFUSED this way: with a credential, a gate page means the credential
+    //     did not work, and that is a real failure judged below, never a refusal.
+    const gated =
+      (GATE_MARKERS.title && m.dom.title === GATE_MARKERS.title) ||
+      (GATE_MARKERS.body && String(m.dom.bodyStart || "").includes(GATE_MARKERS.body));
+    if (gated && !opts.gateCookie) {
+      m.refused = true;
+      m.error =
+        `REFUSED: this target answered the GATE PAGE, not the product - no gate credential was available, ` +
+        `so nothing about the product was measured`;
       return m;
     }
 
@@ -382,6 +488,8 @@ function printTarget(m, verdict, failures) {
       (m.crossOriginSkipped ? `  crossOriginSkipped=${m.crossOriginSkipped}` : "")
   );
   for (const f of failures) console.log(`                  FAILED: ${m.id}: ${f}`);
+  // A refusal prints its reason as a reason, not as a failed assertion: no assertion was made.
+  if (m.refused) console.log(`                  WHY: ${m.error}`);
 }
 
 // ---------------------------------------------------------------- the run
@@ -441,17 +549,20 @@ async function runTargets(targets, opts) {
       if (e instanceof CannotJudge) throw e;
       throw e;
     }
-    const { failures, total } = m.dom ? judge(m) : { failures: [], total: 0 };
-    if (m.error) failures.unshift(m.error);
+    // A REFUSED target is not judged at all: judging the gate page would report the product's
+    // assertions as failures, which is exactly the false red this branch exists to remove.
+    const { failures, total } = m.dom && !m.refused ? judge(m) : { failures: [], total: 0 };
+    if (m.error && !m.refused) failures.unshift(m.error);
     rows.push({ t, m, failures, total });
     if (opts.json) continue;
 
-    if (m.cannotJudge) printTarget(m, "CANNOT-JUDGE", failures);
+    if (m.refused) printTarget(m, "REFUSED", failures);
+    else if (m.cannotJudge) printTarget(m, "CANNOT-JUDGE", failures);
     else if (failures.length === 0) printTarget(m, "GREEN", []);
     else if (t.declaredRed) printTarget(m, "RED-KNOWN", failures);
     else printTarget(m, "RED", failures);
 
-    if (t.declaredRed && !m.cannotJudge && failures.length === 0) {
+    if (t.declaredRed && !m.cannotJudge && !m.refused && failures.length === 0) {
       console.log(`                  STALE-DECLARATION: ${t.id} was declared RED and measured GREEN.`);
       console.log(`                  recorded at : ${t.declaredRed.pointer}`);
       console.log(`                  delete the declaration in scripts/check-served-render.js - an exception that no longer fires is a lie.`);
@@ -471,21 +582,23 @@ function summarize(rows) {
     declared = 0,
     stale = 0,
     cannot = 0,
+    refused = 0,
     passed = 0,
     failed = 0,
     failedInDeclared = 0;
   for (const { t, m, failures, total } of rows) {
     passed += Math.max(0, total - failures.length);
     failed += failures.length;
-    if (m.cannotJudge) cannot += 1;
+    if (m.refused) refused += 1;
+    else if (m.cannotJudge) cannot += 1;
     else if (failures.length === 0) green += 1;
     else if (t.declaredRed) {
       declared += 1;
       failedInDeclared += failures.length;
     } else red += 1;
-    if (t.declaredRed && !m.cannotJudge && failures.length === 0) stale += 1;
+    if (t.declaredRed && !m.cannotJudge && !m.refused && failures.length === 0) stale += 1;
   }
-  return { green, red, declared, stale, cannot, passed, failed, failedInDeclared };
+  return { green, red, declared, stale, cannot, refused, passed, failed, failedInDeclared };
 }
 
 async function main(argv) {
@@ -521,6 +634,17 @@ async function main(argv) {
     `served-render: ${targets.length} target(s), driver=${BIN} (${version}), ` +
       `mount=${MOUNT}, wait<=${opts.waitMs}ms, targetTimeout=${opts.targetTimeoutMs}ms`
   );
+
+  // The gate credential, minted once for the whole run by the ONE minter. Its absence is not a
+  // verdict: it only becomes one if a target turns out to be behind the gate.
+  const mint = await mintGateCookie();
+  if (mint.status === "minted") {
+    opts.gateCookie = mint.header;
+    console.log(`served-render: gate credential minted by scripts/gate-cookie.js (sent to each target's origin)`);
+  } else {
+    console.log(`served-render: NO gate credential - ${mint.message}`);
+    console.log(`served-render: a target behind the gate will read REFUSED and this run will exit 3, never 0`);
+  }
 
   let rows;
   try {
@@ -567,7 +691,7 @@ async function main(argv) {
   console.log("");
   const counts =
     `${rows.length} target(s): ${s.green} GREEN, ${s.red} RED, ${s.declared} RED-KNOWN (declared), ` +
-    `${s.stale} STALE-DECLARATION, ${s.cannot} CANNOT-JUDGE` +
+    `${s.stale} STALE-DECLARATION, ${s.cannot} CANNOT-JUDGE, ${s.refused} REFUSED` +
     `  |  assertions: ${s.passed} passed, ${s.failed} failed` +
     (s.failedInDeclared ? ` (${s.failedInDeclared} of them inside declared-red targets)` : "");
   console.log(counts);
@@ -575,6 +699,16 @@ async function main(argv) {
   // The LAST line repeats the counts on purpose: check-all shows one line of an OK check, and a
   // verdict with no numbers behind it is the "verdict instead of counts" defect this file answers to.
   const tail = `  [${rows.length} target(s), ${s.passed}/${s.passed + s.failed} assertions passed]`;
+  if (s.refused > 0) {
+    // EXIT 3, the team's ABSENT code (#266). The gate answered instead of the product and there was
+    // no credential to get past it: NOTHING was measured, so this must not print as a red verdict
+    // (which would send someone after a product defect) and must never print as a pass.
+    const ids = rows.filter((r) => r.m.refused).map((r) => r.t.id);
+    console.log(`VERDICT: REFUSED - ${ids.join(", ")} answered the GATE PAGE, not the product, and no gate`);
+    console.log(`credential was available here (${mint.message}). Nothing about the product was measured;`);
+    console.log(`this is not an outage and not a pass.${tail} exit 3`);
+    return 3;
+  }
   if (s.cannot > 0) {
     console.log(`VERDICT: CANNOT-JUDGE - the instrument could not measure every target; this is not a green run.${tail} exit 2`);
     return 2;
