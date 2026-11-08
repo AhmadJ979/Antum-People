@@ -1,0 +1,44 @@
+UAE PDPL — privacy notice and lawful basis: confirmation request
+
+From: Antum People, an early-stage HR software product (legal entity not yet registered). Contact: Ahmad Aljairoudi, Dubai, UAE.
+
+Our product is built for HR teams in the UAE. Before a hire's first day it asks for a small set of documents and shows the hire a privacy notice, and it records that the notice was shown — per document, with the lawful basis and the notice version, and with the name of the person who showed it. We want that notice and that record to state only what the law requires. There are five points we cannot settle from our own materials. Please confirm or correct each, with the article and the Arabic wording where it matters.
+
+1. Notice content. Our notice covers: controller identity, purposes of processing, categories of personal data, data-subject rights, retention periods, and cross-border transfers. Are those the elements a UAE privacy notice must contain, and is that list complete — or does the PDPL require something further? Please cite the article. Related, because it decides what we may collect: our notice currently has no purpose row covering qualification certificates, so we do not collect them at pre-boarding. Our category list does state Background & Onboarding Data — including qualifications and certifications — while the purpose table has no matching row, so the notice names a collection we do not perform. Should the category row stand, and what purpose and lawful basis should the matching purpose row state — or should the category row drop what we do not collect?
+
+2. Arabic. Our notice is published in English and Arabic. Must a UAE privacy notice be in Arabic — and if so, must the Arabic be a certified legal translation, or is an in-house translation acceptable?
+
+3. The instrument. For the documents whose lawful basis is performance of the employment contract or a legal obligation (passport, entry permit, Emirates ID, and payroll bank details), we do not ask the hire for consent. Instead we record that the notice was shown, per document, with the basis, the notice version, and the person who showed it. Is that sufficient to discharge the duty to inform for those documents, and is consent ever required for them? And where the hire cannot yet hold an account in our system, is a record kept by the employer on the hire's behalf acceptable?
+
+   Our paper version of the notice is not consistent with that. Its final page asks the hire to sign and carries two separate lines: "I confirm I have read and understood this Privacy Notice", and "I consent to the processing of my personal data as described, including [sensitive categories, where applicable]", with a signature and a field labelled "Consent Version". Our software records that the notice was shown; the paper form collects consent. Which is the right instrument for the paper form? If a consent line should stay, for which categories must it be given — and what must the wording and the version field say, given that what we version is the notice and not a consent document?
+
+4. Emergency contact. Our checklist carries an emergency contact — a third person's personal data, and a person who has no relationship with us at the time. We do not currently record it: the notice assigns no basis, so it stays out of the product until you answer. Our category list does state emergency contact details under Contact Data, while the purpose table assigns it nothing. Whose personal data is it, what lawful basis would permit collecting it before the first day, and who is entitled to give that basis: the hire, or the contact?
+
+5. Retention. Our notice states a minimum of two years post-termination for employment and payroll records. Does that floor hold under UAE law, and does a retention floor attach specifically to the acknowledgement record itself — the record that the notice was shown, carrying its version and basis?
+
+Until you confirm, we will not describe our notice or our acknowledgement process as "compliant", the article numbers in our own privacy notice stay unconfirmed until you answer — that notice already flags them itself, as drawn from our compliance reference set and pending official translations — and we will not collect the two qualification certificates or the emergency contact — those stay out of the product until you answer.
+
+Appendix A carries the notice's own citations. The notice states fifteen things of its own about the law — the PDPL articles it names, the conditions it applies, one rights-response period, and the DIFC/ADGM carve-out — and we cannot source any of them from our own materials; none of the five points above puts them in question. Appendix A lists them one per row, with the line of the notice that carries each, and the ask for each row. **We assert no article number of our own**: every number in that table is the notice's, quoted, not ours.
+
+Please reply with (1) your confirmation or correction on each point with pin-cites, and (2) your fee and turnaround.
+
+Appendix A — the notice's own citations (P1–P15)
+Row references are `file:line` in our privacy notice; the line numbers are those of commit `2ff2891`, which the notice has not moved from. Each row is a citation our privacy notice carries that we cannot source from our own materials, and that none of the five numbered points above puts in question. No article number in the table below is ours: each is the notice's own, quoted from the row beside it, and where the notice states something we cannot source the question is the only thing we add. The last column is the ask for that row.
+
+| # | Where | The citation as our notice carries it | What we ask |
+|---|---|---|---|
+| P1 | `templates/privacy-notice.md:4` | jurisdictions: UAE PDPL (FDL 45/2021) and KSA PDPL (Royal Decree M/148, as amended 2023) | confirm this states the law correctly / identify the correct article |
+| P2 | `templates/privacy-notice.md:22` | processing under UAE PDPL and/or KSA PDPL as applicable | confirm this states the law correctly / identify the correct article |
+| P3 | `templates/privacy-notice.md:43` | payroll/administration lawful basis: UAE PDPL Art. 4(2); KSA PDPL Art. 6 | confirm this states the law correctly / identify the correct article |
+| P4 | `templates/privacy-notice.md:87` | UAE transfers per UAE PDPL Arts. 22–23 and Cabinet Decision No. 65 of 2022 | confirm this states the law correctly / identify the correct article |
+| P5 | `templates/privacy-notice.md:88` | KSA transfers per KSA PDPL Art. 29 (as amended 2023), and SDAIA conditions for sensitive data | confirm this states the law correctly / identify the correct article |
+| P6 | `templates/privacy-notice.md:93` | rights response within 30 days, extendable to 60 days in complex cases | confirm this states the law correctly / identify the correct article |
+| P7 | `templates/privacy-notice.md:97` | access right: UAE PDPL Arts. 7–14; KSA PDPL Art. 12 | confirm this states the law correctly / identify the correct article |
+| P8 | `templates/privacy-notice.md:98` | rectification: UAE Arts. 7–14; KSA Art. 12 | confirm this states the law correctly / identify the correct article |
+| P9 | `templates/privacy-notice.md:99` | erasure/destruction: UAE Arts. 7–14; KSA Art. 12 (explicit right to destruction) | confirm this states the law correctly / identify the correct article |
+| P10 | `templates/privacy-notice.md:100` | restriction: UAE Arts. 7–14; KSA Art. 12 | confirm this states the law correctly / identify the correct article |
+| P11 | `templates/privacy-notice.md:101` | portability: UAE Arts. 7–14; KSA Art. 12 | confirm this states the law correctly / identify the correct article |
+| P12 | `templates/privacy-notice.md:102` | objection: UAE Arts. 7–14; KSA Art. 12 | confirm this states the law correctly / identify the correct article |
+| P13 | `templates/privacy-notice.md:103` | automated-processing disclosure: UAE PDPL Art. 14; KSA Art. 12 / SDAIA rules | confirm this states the law correctly / identify the correct article |
+| P14 | `templates/privacy-notice.md:113` | security measures in line with UAE PDPL Art. 11 and KSA PDPL requirements | confirm this states the law correctly / identify the correct article |
+| P15 | `templates/privacy-notice.md:117` | DIFC/ADGM employees governed by DIFC Law No. 5 of 2020 / ADGM DP Regulations 2021, not federal PDPL | confirm this states the law correctly / identify the correct article |

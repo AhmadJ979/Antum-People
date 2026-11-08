@@ -1,0 +1,44 @@
+KSA end-of-service benefit (EOSB) — confirmation request
+
+From: Antum People, an early-stage HR software product (legal entity not yet registered). Contact: Ahmad Aljairoudi, Dubai, UAE.
+
+Our product calculates end-of-service benefit for Saudi employees. We want it to state only what the law provides. Please confirm each point below with the current article number and statutory wording (Arabic and English). Where we name an article, that is the one we believe applies.
+
+1. Resignation = full EOSB, no reduction. We pay EOSB in full on resignation, with no 1/3 or 2/3 "tier". We read Art. 84, Royal Decree M/51 as: half a month's wage for each of the first five years, a full month's wage for each later year, pro-rated for partial years, with no distinction between resignation and termination. Is that right — and is it still Art. 84 in the current consolidated text, or has a later amendment renumbered it?
+
+2. Base = total wage, not basic wage. We calculate on total monthly wage including allowances when the total is recorded — and where it is not, our engine falls back to the basic wage, which halves the same three-year case: 15,003.42 where the total wage of 10,000 is recorded, 7,501.71 where only the basic wage of 5,000 is. Reading Art. 84's "wage" (الأجر) as the full wage rather than the basic wage, is that fallback acceptable, or must a case with no recorded total be refused rather than substituted? Please quote the wording.
+
+3. Forfeiture. We return zero EOSB only on summary dismissal, reading Art. 80 as the gross-misconduct forfeiture. Our own materials disagree on the article: our KSA contract template — whose body the product now withholds, answering "not issued" until the employer facts it states are recorded — and our KSA model brief name Art. 80, and our requirements record — which elsewhere says that work in violation of Arts. 80/81 forfeits EOSB — names Art. 77 for the misconduct grounds and Art. 74 for the employer's right of summary dismissal, while that same record, this letter and our checklist use Arts. 74–75 for notice. We read the record's naming as the error, not the template's. What does Art. 80 cover, and what does it not cover?
+
+4. Notice. Our records hold notice periods of 30 days for fixed-term and 60 days for indefinite contracts, with 30 days (non-Saudi) or 60 days (Saudi) on the employee's side, and they record an unserved notice period as a separate settlement line equal to the wage for the unserved days, never deducted from EOSB (we read Arts. 74–75 for notice). Our software does not yet compute either: the offboarding checklist asks a person to confirm the notice was served or compensated, and no amount is calculated. Please give the current article(s), the correct periods, and the correct measure for unserved notice.
+
+5. Offboarding deadlines. Our records say final settlement is payable within two weeks (seven days if employer-initiated), a service certificate within two weeks, and the Iqama must be cancelled or transferred within 90 days — but we have no article number for any of them. Which article governs each, and what are the correct deadlines?
+
+6. Statutory schedule (Appendix A). Appendix A lists 15 claims our KSA contract template states with no article we can source, plus the waiver of future claims in our settlement statement template. Please confirm the article for each row, or say which claim is wrong — we assert no article number of our own. The waiver row is S16: our template records the amount as full and final settlement of all dues, states that no further claims remain against the employer, and waives any rights to future claims related to the employment or its termination, in English and Arabic. Is a waiver of that breadth effective in Saudi Arabia, and what wording would you use? To be clear, no one has signed or received that statement: the product withholds it today, and our question is about the wording, not about an act.
+
+Until you confirm, we will not describe the KSA calculation as "compliant" and we will not treat any article number in our own materials as confirmed. The article numbers already reach a reader through the KSA offboarding checklist (Art. 84, Arts. 74–75) and through our KSA contract template (Art. 80, Art. 84, and its termination table's Arts. 74, 75, 77, 82) — although the product now withholds that contract's body, answering "not issued" until the employer facts it states are recorded — and each stays unconfirmed until counsel answers.
+
+Please reply with (1) your confirmation or correction on each point with pin-cites, and (2) your fee and turnaround.
+
+Appendix A — statutory schedule (KSA)
+
+Row references are `file:line` in our template set; the line numbers are those of commit `2ff2891`, which the templates have not moved from. Each row is a claim our KSA contract template carries with no article we can source, and which no numbered item above puts in question. Please answer each row: the article that governs it, or that no article does, or that the claim is wrong.
+
+| # | Where | The claim as our template carries it |
+|---|---|---|
+| S1 | `templates/ksa-employment-contract.md:4` | governing law: Saudi Labor Law (Royal Decree M/51), as amended — no article named |
+| S2 | `templates/ksa-employment-contract.md:7` | must be registered with the Qiwa portal; Arabic is the primary legal language; contracts for non-Saudi nationals must be fixed-term — no article named |
+| S3 | `templates/ksa-employment-contract.md:92` | overtime rate: 150% of normal pay, 200% on weekends and public holidays |
+| S4 | `templates/ksa-employment-contract.md:93` | Ramadan working hours: 6 hours per day |
+| S5 | `templates/ksa-employment-contract.md:116` | annual leave: 21 working days per year (minimum) |
+| S6 | `templates/ksa-employment-contract.md:117` | sick leave: 120 days per year (30 at full pay, 60 at 75% pay, 30 unpaid) |
+| S7 | `templates/ksa-employment-contract.md:118` | maternity leave: 10 weeks at full pay |
+| S8 | `templates/ksa-employment-contract.md:119` | paternity leave: 3 days |
+| S9 | `templates/ksa-employment-contract.md:120` | Hajj leave: up to 15 days, unpaid, once per employment |
+| S10 | `templates/ksa-employment-contract.md:170` | termination ground — mutual agreement: Art. 74 |
+| S11 | `templates/ksa-employment-contract.md:171` | termination ground — expiry of the fixed term: Art. 74 |
+| S12 | `templates/ksa-employment-contract.md:172` | termination ground — resignation by the employee: Arts. 75, 77 |
+| S13 | `templates/ksa-employment-contract.md:174` | termination ground — force majeure: Art. 82 |
+| S14 | `templates/ksa-employment-contract.md:180` | internal grievance: written grievance to HR within 14 days |
+| S15 | `templates/ksa-employment-contract.md:186` | data processing stated as under the KSA PDPL (Royal Decree M/148) |
+| S16 | `templates/final-settlement-statement.md:53` (English) and `templates/final-settlement-statement.md:55` (Arabic) | settlement waiver: the amount acknowledged as full and final settlement of all dues, no further claims against the employer, and waiver of rights to future claims related to the employment or its termination |

@@ -294,11 +294,13 @@ CHECKS = [
               "or declared with its md5 in scripts/host-design-concepts-baseline.tsv, and the run prints "
               "entries / pointers / declared debt / violations"),
 
-    # Wired in 2026-11-07. The UAE counsel letter was the LAST live document of this business
-    # still outside the repository: a `.md` twin and the `.txt` that actually gets sent, plus
-    # the cover email, the send index, the D1-D5 record and the two verifiers that judge them -
-    # all in /home/team/shared, with no history and no check. Rev 237 queues the move; this row
-    # is what makes the move worth having, because a document nobody checks drifts.
+    # Wired in 2026-11-07. The counsel letters were the LAST live documents of this business
+    # still outside the repository: each a `.md` companion and the `.txt` that actually gets sent,
+    # and for the UAE letter also the cover email, the send index, the D1-D5 record and the two
+    # verifiers that judge them - all in /home/team/shared, with no history and no check. Rev 237
+    # queues the move; this row is what makes the move worth having, because a document nobody
+    # checks drifts. WIDENED the same day (#379) from the UAE package to all FOUR: uae, ksa, pdpl
+    # and access, each judged per pair with its own counts, never as one aggregate.
     #
     # `absent_exit=3` is the SAME declaration workflow-mirror makes, for the same shape of
     # reason: the appendix verifier's SUBJECT - the checklist-strings document its B/K rows are
@@ -309,27 +311,35 @@ CHECKS = [
     # defect in the tree. An argument the runner does not understand is exit 2, so nobody buys
     # a green by guessing a flag.
     dict(id="counsel-letter", mode="default", expect="green", absent_exit=3,
-         home="IN the repository (counsel/uae-2026-11/ + scripts/check-counsel-letter.py) - a PR "
-              "carries it; the movement does not run it",
+         home="IN the repository (counsel/ + scripts/check-counsel-letter.py) - a PR carries it; "
+              "the movement does not run it",
          absent_reason="the APPENDIX half judged NOTHING: the checklist-strings document its B/K rows "
                        "are quoted from (default /home/team/shared/uae-appendix-b-checklist-strings.md, "
                        "overridable with APPENDIX_DOC) is not on this machine - a fresh clone or CI. The "
-                       "WORD-STREAM half was still judged and holds; Appendix B was NOT judged and this "
+                       "FOUR PAIRS were still judged and hold; Appendix B was NOT judged and this "
                        "row is not a pass for it. On the team's machine: python3 scripts/check-counsel-letter.py",
          cmd=[PY, "scripts/check-counsel-letter.py"],
-         what="the UAE counsel letter package is IN the repository and still says what it said when it "
-              "was approved. Three assertions, each with its own counts: (1) all 7 files of the package "
-              "are present in counsel/uae-2026-11/ - a missing one is RED and named, never a skip; (2) the "
-              "`.md` twin and the `.txt` send copy are WORD-IDENTICAL once `##`, `**` and backticks are "
-              "stripped, so a one-word edit shows up as a differing region with its position (1681 tokens "
-              "either side when green); (3) Appendix B is still true - every quoted B/K row is the "
+         what="the FOUR counsel letter packages are IN the repository and still say what they said when "
+              "they were approved. Four assertions, each with its own counts: (1) all 7 files of the UAE "
+              "package are present in counsel/uae-2026-11/ - a missing one is RED and named, never a skip; "
+              "(2) EACH OF THE FOUR PAIRS is judged on its own with its counts printed PER PAIR, never as "
+              "one aggregate (an aggregate hides which letter moved): a `twin` pair - uae 1681/1681 tokens, "
+              "ksa 1154/1154 - must be WORD-IDENTICAL once `##`, `**` and backticks are stripped, so a "
+              "one-word edit shows up as a differing region with its position; a `document+letter` pair - "
+              "pdpl 2316 md / 1412 txt, access 1628/720, which were never twins - must still NAME the "
+              "letter it wraps, because its `.md` is a working document containing the letter. The shapes "
+              "are measured and declared with their evidence, not assumed; requiring identity of the last "
+              "two would be a red no edit could clear. (3) the send index's four md5 pins still hold - a "
+              "letter whose bytes move without its pin moving is RED, and the fix is to re-hash and record, "
+              "never to loosen the pin. (4) Appendix B is still true - every quoted B/K row is the "
               "`description` field of the line it cites in server/compliance_engine.js, the row set still "
               "covers every citation-bearing description, and the letter's two md5 pins (89b2bd58... send "
               "copy, 7bd134df... twin) still hold. It reads its claims OUT OF the documents, so a stale or "
-              "hand-edited copy cannot score green. WHAT IT DOES NOT JUDGE: whether the letter is correct "
+              "hand-edited copy cannot score green. WHAT IT DOES NOT JUDGE: whether any letter is correct "
               "in law or ready to send - only that its bytes are the bytes that were approved, that the "
-              "twins agree, and that its citations still land. `--letter-dir <dir>` judges a copy "
-              "elsewhere, which is how the red is reproduced without touching the tree"),
+              "twins agree and the document+letter documents still point at their letters, and that its "
+              "citations still land. `--root <dir>` judges a whole scratch copy and `--letter-dir <dir>` "
+              "just the UAE package, which is how the red is reproduced without touching the tree"),
 
     # Added 2026-11-02, the same day the false claim it catches was corrected in three documents.
     # A DEFAULT check: it reads 161 tracked .md files and 26,866 lines in well under a second, and it
