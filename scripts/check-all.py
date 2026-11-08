@@ -540,6 +540,20 @@ CHECKS = [
          cmd=["bash", "scripts/keep-alive-deploypath-test.sh"],
          what="keep-alive.sh's BOTH arming paths - the regression the hardened loop of 2026-10-06 needed"),
 
+    dict(id="guard-rebuild-path", mode="full", expect="green", home="operator CLI, off-host",
+         cmd=["bash", "scripts/guard-rebuild-path-test.sh"],
+         what="the GUARD CANNOT BUILD IN THE DEPLOYED TREE (rule 43). The unit that replaced "
+              "rebuild_client() is extracted whole from scripts/keep-alive.sh and driven against a "
+              "scratch deployed tree: with a bundle present it does nothing, and with the bundle gone "
+              "it REFUSES - naming the tree, the exact npm ci && npm run build it would have run and "
+              "the sanctioned path (deploy-main.sh) - while client/dist stays byte-identical (md5) and "
+              "mtime-identical. Mutations that must redden: (a) the OLD implementation extracted from "
+              "this repository's own history, (b) a rebuild in a scratch tree COPIED into the deployed "
+              "tree with no merge, (d) a refusal that is silent. Control: the fixed path, plus an "
+              "END-TO-END run of the real loop against a real scratch tree on its own port that "
+              "restores a kill -9ed listener in under 60 s with client/dist untouched, and with no "
+              "bundle on disk refuses, still restores, builds nothing and never invokes npm"),
+
     dict(id="observe-serve-pair", mode="full", expect="green", home="operator CLI, off-host",
          cmd=["bash", "scripts/observe-serve-pair-test.sh"],
          what="the public-URL observer does what it claims, off-host, without touching the live tree"),
