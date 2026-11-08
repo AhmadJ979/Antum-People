@@ -37,7 +37,7 @@ what an **unnamed-actor refusal** looks like on screen.
 | # | Surface | State today | This slice |
 |---|---------|-------------|------------|
 | **S-L1** | Sign-in | `App.tsx:583` (card opens), its `Sign In` button at `:656` (the block was `@rev 7b073f8` `:327`–`431`) — a username field, a password field, `Sign In`, a recovery note | unchanged in shape; the copy stops implying the account *is* the person |
-| **S-L2** | Who am I / sign out | `App.tsx:1740` (icon-only `Sign Out`), `:1746`–`:1758` identity card | the card shows a **person's name and role**, and its two fallbacks are removed |
+| **S-L2** | Who am I / sign out | `App.tsx:1758` (icon-only `Sign Out`), `:1764`–`:1776` identity card | the card shows a **person's name and role**, and its two fallbacks are removed |
 | **S-L3** | The named actor on a record | `App.tsx:2880` prints `recorded by {ack.recorded_by} · basis {ack.lawful_basis}`; the second site `:3124` prints `{item.acknowledgement.recorded_by}` without the words; the checklist tick stores `completed_at` **and** `completed_by` (`server/schema.sql:50`, `:66`) and refuses a completion with no named actor (`server/index.js:814`–`:825`, `:855`–`:857`) | every record reads as *made by a person*, and says **which kind of person** |
 | **S-L4** | The unnamed-actor refusal | the server answers **400**; the client renders the server's own sentence in a checklist notice bar (`App.tsx:3117`–`:3118`) | the refusal says what is missing and what to do, in the product's words |
 

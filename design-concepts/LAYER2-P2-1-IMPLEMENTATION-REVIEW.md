@@ -18,7 +18,7 @@ and every figure in this file came from a scratch instance, never from the runni
 |---|---|
 | Nav entry, fifth tab — **Pre-boarding**, between Transitions Hub and Strategic Intelligence | `NAV_ITEMS`, `App.tsx:493`–`:497` |
 | The tab: header card + case count, intake form, case list | `{activeTab === 'preboarding' && (`, `App.tsx:2559`–`:3177` |
-| "Record an accepted offer" form → `POST /api/preboarding/cases` | handler `App.tsx:1024`–`:1060` (`authedFetch` POST at `:1033`), form JSX `:2559`–`:2621` |
+| "Record an accepted offer" form → `POST /api/preboarding/cases` | handler `App.tsx:1041`–`:1077` (`authedFetch` POST at `:1050`), form JSX `:2600`–`:2662` |
 | Case list → `GET /api/preboarding/cases` | `authedFetch` list call `App.tsx:1021`, `setPreboardingCases` at `:1029`, list render `:2740` — the visible list is `checklistOverview.cases`, not `preboardingCases` |
 | The case model and its single writer | `schema.sql:195`–`:216`; `server/preboarding.js:162` |
 
