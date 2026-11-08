@@ -10,7 +10,53 @@ The server requires these variables to be set in the environment:
 - `PORT`: Default is 3000.
 - `PRODUCT_DB_PATH`: Absolute path to the product-owned SQLite database (e.g., `/home/team/.data/antum-product.db`).
 
+- `ANTUM_GATE_PASSCODE_FILE` / `ANTUM_GATE_SECRET_FILE`: where the public gate reads its two host
+  files (defaults below). Both are overrides; a scratch rig points them at its own.
+
 **Hardening**: The server is configured to fail-fast and refuse to start if `ENCRYPTION_KEY` or `JWT_SECRET` is missing.
+
+## The public gate — why a stranger with the URL gets nothing
+
+Both platform URLs proxy port 3000, so whatever the Express app serves IS the public product. The
+platform's proxy is not ours to change, so the gate is the FIRST middleware in `server/index.js` and
+the code is `server/public-gate.js`. What it does:
+
+- A request with no valid gate cookie gets the gate page (`/gate`) on every page path — and **no file
+  under `client/dist` is served, assets included**. On `/api/*` it gets the API's own refusal,
+  `401 {"error":"Authentication token required"}`, never a 500: `scripts/keep-alive.sh` judges the
+  product healthy by exactly those bytes.
+- A correct passcode sets `antum_gate`, an `HttpOnly; SameSite=Lax; Secure` cookie good for 180 days,
+  HMAC-signed with the secret file below. `GET` or `POST /gate/logout` clears it.
+- The passcode endpoint is limited like `/api/login`: 25 failures in 60 s from one address → 429, and
+  every failure returns the same generic page.
+- With the cookie, the shell is served **byte-identical to `client/dist/index.html`** and the admin
+  login is still a second layer. No client code changed and no bundle was rebuilt.
+
+**The two host files — never in the repository, never printed:**
+
+| file | default | contents |
+|---|---|---|
+| passcode | `/home/team/shared/.antum-gate-passcode` | one line: a bcrypt hash, cost 12 (the admin credential's shape) |
+| secret | `/home/team/shared/.antum-gate-secret` | one line: hex, ≥32 chars — the cookie's HMAC key |
+
+`scripts/deploy-main.sh` step 0 creates whichever is absent (mode 600) and runs in `--restart-only`
+too, so a fresh host comes up gated. The passcode it generates **cannot be derived from the hash**, so
+it is written once to `/home/team/shared/.antum-gate-passcode.shown-once` (mode 600) for the owner to
+record — then delete that file. No script prints either file's contents.
+
+- **To change the passcode:** hash the new one at cost 12 into the passcode file
+  (`PASS=… node -e "process.stdout.write(require('bcryptjs').hashSync(process.env.PASS,12))"` from
+  `server/`) and **restart** — the file is read at boot.
+- **A 503 gate page means the gate is NOT CONFIGURED** (a file is missing, empty or unreadable). The
+  server's log carries one `[gate] NOT CONFIGURED — <file> …` line naming it, and no shell is served.
+  The `/api` routes keep their pre-gate answers in that state; fix the file and restart.
+- **Instruments that fetch the shell need the cookie.** Nothing can derive the passcode from the hash,
+  but anything on this host can mint the credential from the signing key — which is the right boundary,
+  since reading that key already means being on the host:
+  `node -e "process.stdout.write(require('./server/public-gate').mintCookieHeader('/home/team/shared/.antum-gate-secret'))"`.
+  As of this change `scripts/check-served-provenance.py` (disk only) is unaffected, and the instruments
+  that DO fetch the shell — `scripts/observe-serve-pair.sh`, `scripts/check-served-render.js`,
+  `scripts/cors-error-contract-test.sh` and the movement's own step 5 — are the next piece of work.
 
 ## Build and Deployment
 1. **Frontend**:
