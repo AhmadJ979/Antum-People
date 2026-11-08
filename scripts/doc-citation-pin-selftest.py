@@ -85,7 +85,11 @@ REPORT = re.compile(r"^(ok|FAIL|UNCHECKED|UNUSED-PIN|CONTINUATION|OTHER-FILE)\s"
 # -> 1884 (the EOSB card's own 18 inserted lines, 2026-11-08, where that symbol is on
 # :1884 - measured, not re-tipped) -> 1907 (the cost-per-hire card fix, 2026-11-08: the
 # expression moved INTO the new `CostPerHireFigure` call, +19 below the component, and the
-# two row divs it used to sit in were replaced - measured at 711804f, not re-tipped); the
+# two row divs it used to sit in were replaced - measured at 711804f, not re-tipped)
+# -> 1925 (the refusal-not-empty fix, 2026-11-08: +18 lines above the analytics tab; measured
+# at 08a9ca9, not re-tipped - and this is the link that reddened: at 08a9ca9 the plant still
+# said 1907, so P4 reported `exit 1, expected 0` while its UNUSED-PIN was still printed,
+# exactly the failure mode recorded below); the
 # example line moved 1212 -> 1216 for the
 # same reason. A stale P4 number does not read as "re-tip me": the citation stops landing,
 # and P4 reports `exit 1, expected 0` while its UNUSED-PIN is still printed. Re-measure the
@@ -113,7 +117,7 @@ P3 = """
 P4 = """
 # pin selftest plant
 
-- `App.tsx:1907` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
+- `App.tsx:1925` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
 """
 P5 = """
 # pin selftest plant
