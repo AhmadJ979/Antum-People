@@ -58,11 +58,15 @@ ROOT="${ANTUM_TEST_ROOT:-$(mktemp -d /tmp/guard-install-test.XXXXXX)}"
 PORT="${ANTUM_TEST_PORT:-4872}"
 PASS=0
 FAIL=0
+SKIP=0
 SCRATCH_TREE=""
 LOOP_PID=""
 
 ok()   { echo "  PASS  $*"; PASS=$((PASS+1)); }
 bad()  { echo "  FAIL  $*"; FAIL=$((FAIL+1)); }
+# A case that CANNOT RUN must never read as a pass: it is counted and printed SKIP-FLAGGED, and the
+# run exits 3 (the code check-all.py declares via absent_exit=3), never 0.
+skip() { echo "  SKIP  $*"; SKIP=$((SKIP+1)); }
 check(){ if eval "$1"; then ok "$2"; else bad "$2"; fi; }
 
 stop_loop() {
@@ -295,7 +299,7 @@ check "grep -q 'REFUSAL: $FIX/server/node_modules is missing' '$ROOT/case.log'" 
       "(iii) deps missing: the refusal NAMES the tree and the directory it wanted"
 check "grep -q 'will NOT install in the deployed tree' '$ROOT/case.log'" \
       "(iii) deps missing: the refusal says what it will not do"
-check "grep -q 'cd \$DEPLOY_DIR/server && npm install' '$ROOT/case.log'" \
+check "grep -q \"cd $FIX/server && npm install\" '$ROOT/case.log'" \
       "(iii) deps missing: the refusal names the exact install it would have run"
 check "grep -q 'WORKFLOW rule 43' '$ROOT/case.log'" \
       "(iii) deps missing: the refusal cites the rule it is the sibling of"
@@ -396,11 +400,11 @@ check "! grep -q 'REFUSAL: ' '$ROOT/case.log'" \
 echo
 echo "== (v) end to end: the real loop against a real scratch tree =="
 if [ -n "$(listener)" ]; then
-    bad "(v) port $PORT is already in use - refusing to run the end-to-end half against a stranger"
+    skip "(v) port $PORT is already in use - the end-to-end half CANNOT RUN against a stranger's listener"
 else
     SCRATCH_TREE="$ROOT/tree"
     if ! git -C "$REPO" worktree add --detach "$SCRATCH_TREE" HEAD >/dev/null 2>&1; then
-        bad "(v) could not create the scratch worktree"
+        skip "(v) could not create the scratch worktree under $ROOT - the end-to-end half CANNOT RUN"
     else
         ln -sfn "$REPO/server/node_modules" "$SCRATCH_TREE/server/node_modules"
         mkdir -p "$SCRATCH_TREE/client/dist/assets" "$ROOT/creds"
@@ -501,6 +505,7 @@ EOS
 fi
 
 echo
-echo "=== result: $PASS passed, $FAIL failed ==="
+echo "=== result: $PASS passed, $FAIL failed, $SKIP skip-flagged ==="
 [ "$FAIL" -eq 0 ] || exit 1
+[ "$SKIP" -eq 0 ] || { echo "  a case that could not run is NOT a pass: exit 3 (SKIP-FLAGGED)"; exit 3; }
 exit 0
