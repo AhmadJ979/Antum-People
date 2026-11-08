@@ -62,6 +62,7 @@ import { MarkdownDocument } from './markdownView.js';
 // through `src/format.js`, so none of them depends on the machine the reader sits at (`src/format.test.js`).
 import { money, formatAmount, formatDate } from './format.js';
 import { eosbFigureFontSize } from './eosbFigureSize.js';
+import { costPerHireFigureFontSize, COST_PER_HIRE_ROW_EM } from './costPerHireFigureSize.js';
 
 // Unified API Base URL helper
 // Row d2328d67: what a refusal says. Plain on purpose, and reassuring on purpose — a refusal is not
@@ -388,6 +389,24 @@ type EosbBasis = {
  */
 const EosbFigure = ({ figure }: { figure: string }) => (
   <span className="whitespace-nowrap" style={{ fontSize: eosbFigureFontSize(figure) }}>{figure}</span>
+);
+/**
+ * THE COST-PER-HIRE CARD'S FIGURE — complete, never truncated, and now the whole row with it.
+ *
+ * This figure is a ROW (market mark, figure, currency code), so sizing the figure alone would still
+ * leave the row wider than the card: measured at 08b5d41a, the figure alone was 148.05 px in a 108 px
+ * box at 1024x768 and the card carried 198 px of content in a 156 px box. The row's font size is the
+ * computed one and the two marks are sized in `em` of it (`COST_PER_HIRE_ROW_EM`), so the row scales as
+ * one unit and the arithmetic in `costPerHireFigureSize.js` holds at every width. `whitespace-nowrap`
+ * keeps the currency code on the figure's line instead of letting it wrap away from the number it
+ * belongs to. No truncation, no rounding, no abbreviation: the string is passed through untouched.
+ */
+const CostPerHireFigure = ({ market, currency, figure }: { market: string; currency: string; figure: string }) => (
+  <div className="whitespace-nowrap" style={{ fontSize: costPerHireFigureFontSize(figure) }}>
+    <span className="text-slate-400 uppercase" style={{ fontSize: `${COST_PER_HIRE_ROW_EM.marketMark}em` }}>{market}</span>
+    <span style={{ marginLeft: `${COST_PER_HIRE_ROW_EM.gap}em` }}>{figure}</span>
+    <span className="font-bold text-slate-400" style={{ fontSize: `${COST_PER_HIRE_ROW_EM.currency}em`, marginLeft: `${COST_PER_HIRE_ROW_EM.gap}em` }}>{currency}</span>
+  </div>
 );
 /** One line, only where the basis has something a reader must not have to guess at. */
 const EosbBasisNote = ({ basis }: { basis?: EosbBasis | null }) => {
@@ -1868,7 +1887,13 @@ export default function App() {
                 </div>
 
                 {/* Cost-per-Hire */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                {/* THE CARD IS A SIZE CONTAINER, for the same reason the EOSB card beside it is: the
+                    figure must never be truncated, rounded or abbreviated to fit, so the type gets
+                    smaller against the card's own inner width (`cqw`) instead. Measured on the tree
+                    before this fix (2026-11-08, seeded scratch DB, both markets): at 1024x768 the card
+                    carried 198 px of content in a 156 px box and the figure ran 65.53 px (AE) /
+                    65.98 px (SA) past the card's inner right edge, across the neighbouring card. */}
+                <div className="@container bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                   <div className="flex items-center justify-between text-slate-400 mb-3">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cost-per-Hire</span>
                     <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1879,16 +1904,10 @@ export default function App() {
                     {analytics ? (
                       <div className="space-y-1">
                         {analytics.avgCostPerHireAE > 0 && (
-                          <div className="flex items-baseline space-x-2">
-                            <span className="text-xs text-slate-400 uppercase">AE</span>
-                            <span>{formatAmount(analytics.avgCostPerHireAE)} <span className="text-sm font-bold text-slate-400">AED</span></span>
-                          </div>
+                          <CostPerHireFigure market="AE" currency="AED" figure={formatAmount(analytics.avgCostPerHireAE)} />
                         )}
                         {analytics.avgCostPerHireSA > 0 && (
-                          <div className="flex items-baseline space-x-2">
-                            <span className="text-xs text-slate-400 uppercase">SA</span>
-                            <span>{formatAmount(analytics.avgCostPerHireSA)} <span className="text-sm font-bold text-slate-400">SAR</span></span>
-                          </div>
+                          <CostPerHireFigure market="SA" currency="SAR" figure={formatAmount(analytics.avgCostPerHireSA)} />
                         )}
                         {!analytics.avgCostPerHireAE && !analytics.avgCostPerHireSA && (
                           <span className="text-sm font-medium text-slate-400 italic">No data yet</span>
