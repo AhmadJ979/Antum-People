@@ -7,7 +7,8 @@
 #   401 contract on PORT (default 3000). Nothing listening  -> start the server.
 #   Something else holding the port                        -> evict it (port-claim convention)
 #                                                            and start ours.
-#   client/dist/index.html missing                         -> rebuild the bundle first.
+#   client/dist/index.html missing                         -> REFUSE to build it (rule 43) and still
+#                                                             start the server; a bundle is a movement's job.
 #
 # ARMING THE LOOP:
 #   nohup bash scripts/keep-alive.sh &
@@ -593,17 +594,49 @@ wait_for_health() {
     return 1
 }
 
-rebuild_client() {
-    log "client/dist/index.html missing - rebuilding bundle"
-    ( cd "$DEPLOY_DIR/client" && \
-      with_timeout 900 npm ci --no-fund --no-audit 9>&- && \
-      NODE_OPTIONS=--max-old-space-size=560 with_timeout 900 npm run build 9>&- ) >> "$LOG_FILE" 2>&1
-    if [ -f "$DEPLOY_DIR/client/dist/index.html" ]; then
-        log "client bundle rebuilt"
-    else
-        log "ERROR: rebuild finished without $DEPLOY_DIR/client/dist/index.html"
-    fi
+# >>> ANTUM GUARD REBUILD DECISION
+# A MISSING BUNDLE IS A MOVEMENT'S JOB, NOT THE GUARD'S (WORKFLOW rule 43, 2026-11-08).
+#
+# WHAT THIS REPLACES, measured at f4729f3 (scripts/keep-alive.sh:596-607), called from the recovery
+# branch as `[ -f "$DEPLOY_DIR/client/dist/index.html" ] || rebuild_client` (line 650):
+#     rebuild_client() { ( cd "$DEPLOY_DIR/client" && npm ci && npm run build ) ... }
+# It ran `npm ci` and `npm run build` INSIDE the deployed tree - the tree the server serves - so a
+# recovery could replace the live bundle with bytes that no PR, no merge and no movement had ever
+# seen. That is the exact defect rule 43 records from #353: the tree served index-B3KFG1-j.js,
+# 295,549 B, built at 22:55:44 from an unmerged branch, and nothing but a person reading a served
+# string found it. `client/dist` is untracked, so a checkout would not have undone it either.
+#
+# It was also a restore-time bomb. `npm ci` wipes and reinstalls node_modules and the build follows,
+# each with a 900 s timeout, inside the path whose whole job is to put the listener back in well
+# under a minute (measured: 59.08 s unaided after kill -9).
+#
+# SO THE GUARD REFUSES, AND STILL RESTORES. The guard's job is the LISTENER. Producing a bundle is
+# the movement's job: deploy-main.sh pulls origin/main, resets the tree to it and builds THAT
+# revision (step 2), and `--restart-only` refuses outright when client/dist holds no bundle. A
+# missing bundle therefore gets a REFUSAL that names the command it would have run and the path that
+# would actually fix it - never a silent skip, never a build. The restart below still happens, and
+# the server answers /api without a bundle, so the 401 contract (and the guard's own health check)
+# keeps working while a person runs the movement.
+guard_bundle_state() {   # 0 = a bundle is on disk; 1 = there is none
+    [ -f "$DEPLOY_DIR/client/dist/index.html" ]
 }
+
+refuse_rebuild_in_deployed_tree() {   # $1 = why the bundle is wanted
+    log "REFUSAL: $DEPLOY_DIR/client/dist/index.html is missing${1:+ ($1)} - this loop will NOT build in the deployed tree"
+    log "REFUSAL: the build it would have run, and will not: ( cd $DEPLOY_DIR/client && npm ci --no-fund --no-audit && npm run build )"
+    log "REFUSAL: a build here writes the bytes the live product serves with no PR, no merge and no movement (WORKFLOW rule 43)"
+    log "REFUSAL: the sanctioned path is a full movement - bash $DEPLOY_DIR/scripts/deploy-main.sh - which pulls origin/main and builds that revision; --restart-only cannot restore a missing bundle"
+    log "REFUSAL: the server is started anyway, so /api keeps answering; a browser gets the SPA shell until a movement builds the bundle"
+    return 1
+}
+
+# Never builds, never blocks the restart. 0 = bundle present, 1 = absent and refused.
+guard_ensure_bundle() {
+    if guard_bundle_state; then return 0; fi
+    refuse_rebuild_in_deployed_tree "recovery with no bundle on disk"
+    return 1
+}
+# <<< ANTUM GUARD REBUILD DECISION
 
 # --- the loop ------------------------------------------------------------------------
 started_at="pid $$ since $(date -Iseconds)"
@@ -647,7 +680,9 @@ while true; do
         fi
     else
         log "port $PORT is empty - recovering"
-        [ -f "$DEPLOY_DIR/client/dist/index.html" ] || rebuild_client
+        # Rule 43: a missing bundle is a REFUSAL to build here, never a build (see the unit above).
+        # Deliberately not fatal - the restart below is what restores the listener.
+        guard_ensure_bundle || true
 
         pids="$(server_pids)"
         if [ -z "$pids" ]; then
