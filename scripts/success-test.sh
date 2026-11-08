@@ -31,8 +31,21 @@
 # route, the router answering a registered route for an id that does not exist, and the gate's refusal of
 # an unregistered one - with and without a token. Nothing here is a route census.
 # Bodies are never dumped whole; codes and byte counts only.
+#
+# GATE-AWARE 2026-11-08. server/public-gate.js answers every page path and every asset under
+# client/dist, so a cookieless GET of $B returns the GATE PAGE - status 200, title
+# `Antum People - access`, no `assets/index-*.js`. TEST 1's whole subject is the served page and the
+# asset it names, so without a credential this run would either fail a product that is serving
+# perfectly well or, worse, hash the gate page and report it as our build. The credential comes from
+# scripts/gate-cookie.js - the ONE minter, never a signature re-implemented here - and is sent to
+# $B's PAGE and ASSET requests only. Every /api probe stays COOKIELESS: /api is passed straight
+# through to the app, and the guard's health contract (401 plus its exact body) is only observable
+# with no credential in the way. A credential that cannot be minted is NOT a verdict until a page
+# proves to be the gate's (see TEST 1): where the gate is off - as on this host today - the page IS
+# the product and TEST 1 is judged normally.
 set -u
 FAILED=0
+SKIP_GATE=0
 L="${1:-unlabelled}"
 E="${ANTUM_EVIDENCE_DIR:-/home/team/shared/cutover-$(date -u +%Y-%m-%d)}"
 D="${ANTUM_DEPLOY_DIR:-/home/team/shared/probable-octo-sniffle}"
@@ -44,6 +57,31 @@ B="${ANTUM_PUBLIC:-https://b974147c03228029e277d1cbe6646fe6.ctonew.app}"
 # page of zeros and a proxy's 301). One bad run, discarded, not filed.
 g() { curl -s --noproxy '*' "$@"; }
 mkdir -p "$E"
+# THE GATE CREDENTIAL. Minter: this script's own tree (the repository instrument that ships beside
+# it). Gate module: the tree that is SERVING - $D - because that is the module whose title and cookie
+# format the URL answers with; if $D predates the gate, this tree's own module is the only one there is.
+# The cookie is NEVER printed: it is a 180-day credential. Only the minter's one-line refusal, which
+# names the file it looked for, reaches the transcript.
+SELF_TREE=$(cd "$(dirname "$0")/.." && pwd)
+GATE_TREE="$D"
+[ -f "$D/server/public-gate.js" ] || GATE_TREE="$SELF_TREE"
+GATE_MINER="$SELF_TREE/scripts/gate-cookie.js"
+[ -f "$GATE_MINER" ] || GATE_MINER="$GATE_TREE/scripts/gate-cookie.js"
+GATE_COOKIE=""
+GATE_MINT_NOTE=""
+GATE_ERR=$(mktemp /tmp/st-gate-XXXXXX)
+if GATE_COOKIE=$(node "$GATE_MINER" --tree "$GATE_TREE" 2>"$GATE_ERR"); then
+  [ -n "$GATE_COOKIE" ] || { GATE_MINT_NOTE="the minter printed nothing"; GATE_COOKIE=""; }
+else
+  GATE_MINT_NOTE=$(tr '\n' ' ' < "$GATE_ERR" 2>/dev/null | sed 's/  */ /g; s/ $//')
+  GATE_COOKIE=""
+fi
+rm -f "$GATE_ERR"
+# The gate page's own title, read from the gate module so the sentence is not duplicated here.
+GATE_TITLE=$(node -e 'try{const g=require(process.argv[1]);const m=g.gatePage("").match(/<title>([^<]*)<\/title>/);process.stdout.write(m?m[1]:"")}catch(e){}' \
+  "$GATE_TREE/server/public-gate.js" 2>/dev/null)
+AUTH=()
+[ -n "$GATE_COOKIE" ] && AUTH=(-H "Cookie: $GATE_COOKIE")
 {
   echo "=== success test: $L ==="
   echo "taken: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -56,12 +94,44 @@ mkdir -p "$E"
   echo "tree dirty: $(git -C "$D" status --porcelain 2>/dev/null | grep -vc 'node_modules' || echo 0) non-node_modules change(s)"
   echo
   echo "TEST 1 — the served HTML names OUR asset, with its measured size and md5"
-  code=$(g -o /tmp/st-page -w '%{http_code}' --max-time 25 "$B/")
-  echo "  GET / -> $code  ($(wc -c < /tmp/st-page) B)  $(grep -o '<title>[^<]*</title>' /tmp/st-page | head -1)"
-  asset=$(grep -o 'assets/index-[A-Za-z0-9_-]*\.js' /tmp/st-page | head -1)
+  if [ -n "$GATE_COOKIE" ]; then
+    echo "  gate credential: MINTED by $GATE_MINER --tree $GATE_TREE"
+    echo "                   sent to $B's page and asset requests ONLY; every /api probe below is cookieless"
+  else
+    echo "  gate credential: NONE - ${GATE_MINT_NOTE:-scripts/gate-cookie.js exited non-zero}"
+  fi
+  code=$(g -o /tmp/st-page -w '%{http_code}' --max-time 25 "${AUTH[@]}" "$B/")
+  TITLE=$(sed -n 's/.*<title>\(.*\)<\/title>.*/\1/p' /tmp/st-page 2>/dev/null | head -1)
+  echo "  GET / -> $code  ($(wc -c < /tmp/st-page) B)  title: ${TITLE:-<none>}"
+  # IS THIS THE GATE PAGE? Without a credential it means nothing about the product was observable from
+  # here: SKIP-FLAGGED, naming the file the minter looked for - never a FAIL, and never an OK. With a
+  # credential in hand a gate page means the credential was refused, and that IS a failure.
+  asset=""
+  if [ -n "$GATE_TITLE" ] && [ "$TITLE" = "$GATE_TITLE" ]; then
+    if [ -z "$GATE_COOKIE" ]; then
+      SKIP_GATE=1
+      echo "  SKIP-FLAGGED  the URL answered the PUBLIC GATE's page (title: $TITLE), not the product"
+      echo "                no gate credential: ${GATE_MINT_NOTE:-scripts/gate-cookie.js exited non-zero}"
+      echo "                NOT JUDGED: the served page, the asset it names, and the served==deployed bytes."
+      echo "                This is NOT a product failure - the gate answering is not the product failing."
+    else
+      FAILED=1
+      echo "  *** WITH a credential in hand the GATE's page still answered (title: $TITLE). The minted"
+      echo "      credential was refused: the gate secret read here is not the one the gate verifies."
+    fi
+  fi
+  [ "$SKIP_GATE" = "0" ] && asset=$(grep -o 'assets/index-[A-Za-z0-9_-]*\.js' /tmp/st-page | head -1)
   echo "  HTML names: ${asset:-NONE FOUND}"
+  if [ "$SKIP_GATE" = "0" ] && [ -z "$asset" ]; then
+    # A 200 document that names no bundle is not our product: it is a placeholder, an SPA shell
+    # served in place of a missing asset, or somebody else's page. Until 2026-11-08 this branch
+    # printed NONE FOUND and carried on with FAILED=0 - TEST 1 could be green having judged nothing.
+    FAILED=1
+    echo "  *** the served document names NO assets/index-*.js. TEST 1's subject is absent: this is"
+    echo "      not a built product answering (a placeholder or a shell answers 200 too)."
+  fi
   if [ -n "$asset" ]; then
-    g -o /tmp/st-asset -w '  asset fetched: %{http_code}, %{size_download} B\n' --max-time 30 "$B/$asset"
+    g -o /tmp/st-asset -w '  asset fetched: %{http_code}, %{size_download} B\n' --max-time 30 "${AUTH[@]}" "$B/$asset"
     echo "  asset md5: $(md5sum < /tmp/st-asset | cut -d' ' -f1)"
     echo "  on-disk bundle: $(wc -c < "$D/client/dist/$asset" 2>/dev/null) B  md5 $(md5sum < "$D/client/dist/$asset" 2>/dev/null | cut -d' ' -f1)"
     # Decision 2: the served bytes ARE the deployed tree's bytes. That is the check this line makes now.
@@ -150,17 +220,27 @@ mkdir -p "$E"
   echo "  hook installed (WHOLE FILE: body + the installer's provenance block): $([ -f /etc/profile.d/zz-antum-product-guard.sh ] && echo "YES md5 $(md5sum < /etc/profile.d/zz-antum-product-guard.sh | cut -d' ' -f1)" || echo NO)"
   echo "  hook source in tree (BARE BODY the install step compares, not the installed bytes): $(md5sum < "$D/scripts/antum-product-guard-hook.sh" | cut -d' ' -f1)"
   echo
-  if [ "$FAILED" = "0" ]; then
-    echo "RESULT: OK — the control read 200; TEST 3's gate pair read as the gate runs."
-  else
+  if [ "$FAILED" != "0" ]; then
     echo "RESULT: FAILED — see the CONTROL line above. The gated readings in this file are not readings."
+  elif [ "$SKIP_GATE" != "0" ]; then
+    echo "RESULT: SKIP-FLAGGED — TEST 1 was NOT judged: the URL answered the gate's page and no gate"
+    echo "        credential could be minted (${GATE_MINT_NOTE:-scripts/gate-cookie.js exited non-zero})."
+    echo "        TESTs 2-4 and SURVIVAL were measured; the served page, the asset it names and the"
+    echo "        served==deployed bytes were not. Not OK, and not a product failure."
+  else
+    echo "RESULT: OK — the control read 200; TEST 3's gate pair read as the gate runs."
   fi
 } > "$OUT" 2>&1
 unset TOK_TOK TOK 2>/dev/null
-if [ "$FAILED" = "0" ]; then
-  echo "wrote $OUT"
-else
+if [ "$FAILED" != "0" ]; then
   echo "wrote $OUT  — RESULT: FAILED (exit 1)"
   exit 1
 fi
+if [ "$SKIP_GATE" != "0" ]; then
+  # exit 3, the team's third code: nothing behind the gate was measured. check-all's --live row
+  # declares absent_exit=3 for this, so it prints SKIP-FLAGGED and never OK.
+  echo "wrote $OUT  — RESULT: SKIP-FLAGGED (exit 3: TEST 1 not judged, no gate credential)"
+  exit 3
+fi
+echo "wrote $OUT"
 
