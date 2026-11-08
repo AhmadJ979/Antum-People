@@ -414,7 +414,11 @@ CHECKS = [
     # CANNOT-JUDGE and FAILS the run - a skip that reads like a pass is the defect it answers to.
     # The `.cto.site` hostname is declared RED inside the check, per target, not here: a
     # check-level known-red would swallow a real failure of the other two targets.
-    dict(id="served-render", mode="default", expect="green",
+    dict(id="served-render", mode="default", expect="green", absent_exit=3,
+         absent_reason="the target answered the PUBLIC GATE's page instead of the product and no gate "
+                       "credential could be minted here (scripts/gate-cookie.js exit 3 names the file it "
+                       "looked for: ANTUM_GATE_SECRET_FILE, default /home/team/shared/.antum-gate-secret). "
+                       "Nothing about the rendered product was measured - this is not an outage.",
          home="operator CLI (bare) + this entry point",
          cmd=["node", "scripts/check-served-render.js"],
          what="does the SERVED product RENDER? For each target: the document's status from the "
@@ -425,7 +429,12 @@ CHECKS = [
               "and does not fail the run, and a declaration that stops firing exits 1. NO target is "
               "declared red today: the .cto.site one was withdrawn on 2026-11-02 when its stated cause "
               "- an edge refusing every Origin-bearing request - turned out to be this repository's "
-              "own CORS middleware, fixed in server/index.js. Drives agent-browser headless "
+              "own CORS middleware, fixed in server/index.js. GATE-AWARE since 2026-11-08: the run "
+              "mints a credential through scripts/gate-cookie.js and sends it to each target's origin, "
+              "because server/public-gate.js answers a cookieless fetch with the gate page - a 200 "
+              "that names no asset, which would read RED for a reason that is not a defect. A target "
+              "that IS the gate page with no credential to get past it prints REFUSED and exits 3 "
+              "(SKIP-FLAGGED here), never a pass and never an outage. Drives agent-browser headless "
               "with a per-target timeout, so a browser that will not start fails instead of hanging"),
 
     dict(id="served-render-controls", mode="full", expect="green", home="operator CLI, off-host",
@@ -461,9 +470,18 @@ CHECKS = [
               "the unit printed as MARKED and still `unreviewed`; a manifest claiming a review is REFUSED; and "
               "an unknown flag exits 2 rather than buying a green run"),
 
-    dict(id="cors-error-contract", mode="full", expect="green", home="operator CLI, off-host",
+    dict(id="cors-error-contract", mode="full", expect="green", absent_exit=3,
+         absent_reason="the rig could not mint a gate credential (scripts/gate-cookie.js exit 3), so "
+                       "nothing was measured - the CORS contract is unjudged, not green",
          cmd=["bash", "scripts/cors-error-contract-test.sh"],
-         what="the CORS + error-handling contract of server/index.js, booted off-host on its own port with a throwaway database"),
+         what="the CORS + error-handling contract of server/index.js, booted off-host on its own port "
+              "with a throwaway database AND a gate of its own (throwaway passcode hash and signing key). "
+              "GATE-AWARE since 2026-11-08: every ASSET fetch carries a cookie minted by "
+              "scripts/gate-cookie.js - without it a 200 would be the gate page, which is why the row now "
+              "also asserts the cookieless asset IS the gate page and that the cooked asset's BYTES are "
+              "the built bundle. Every /api fetch deliberately sends NO cookie: /api is passed straight "
+              "through to the app, so test 1's 403 for a foreign Origin is the assertion that the gate "
+              "does not answer /api before the CORS middleware - the exact defect the first cut had"),
 
     dict(id="guard-deploy-marker", mode="full", expect="green", home="operator CLI, off-host",
          cmd=["bash", "scripts/guard-deploy-marker-test.sh"],

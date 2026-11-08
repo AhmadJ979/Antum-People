@@ -189,6 +189,34 @@ derive() { # fills DERIVED (name|bytes|md5 per line) or refuses
 
 # --------------------------------------------------------------------------------------------
 # one run: measure, print, record, alert
+
+# THE GATE CREDENTIAL (2026-11-08). server/public-gate.js answers every page path and every asset
+# under client/dist, so a cookieless GET of the public URL returns the GATE PAGE - status 200, title
+# `Antum People - access`, no `assets/index-*.js`. This observer's whole judgement is "does the page
+# name OUR asset", so without a credential it would report PAIR BROKEN - a false outage alarm about a
+# product that is serving perfectly well. That is the one failure mode an alerting observer must not
+# have, so the gate page is its own verdict here: REFUSED (exit 3), never BROKEN (exit 1).
+#
+# The credential comes from scripts/gate-cookie.js - the ONE minter, never a signature re-implemented
+# here - and its absence is not a verdict until a page proves to be the gate's.
+GATE_COOKIE=""
+GATE_MINT_NOTE=""
+GATE_ERR=""
+mint_gate() {
+  local out rc
+  out=$(node "$TREE/scripts/gate-cookie.js" --tree "$TREE" 2>"$GATE_ERR"); rc=$?
+  if [ "$rc" -eq 0 ] && [ -n "$out" ]; then GATE_COOKIE="$out"; return 0; fi
+  GATE_MINT_NOTE=$(tr '\n' ' ' < "$GATE_ERR" 2>/dev/null | sed 's/  */ /g; s/ $//')
+  [ "$rc" -eq 3 ] && return 3
+  return 2
+}
+
+# The gate page's own title, read from THIS tree's gate module so the sentence is not duplicated here.
+gate_title() {
+  node -e 'try{const g=require(process.argv[1]);const m=g.gatePage("").match(/<title>([^<]*)<\/title>/);process.stdout.write(m?m[1]:"")}catch(e){}' \
+    "$TREE/server/public-gate.js" 2>/dev/null
+}
+
 run_once() {
   local started ts dur rc=0
   started=$(date -u +%s)
@@ -196,6 +224,14 @@ run_once() {
   echo "  script: $0 | $(stat -c %s "$0" 2>/dev/null) B | sha256 $(sha256sum "$0" 2>/dev/null | cut -c1-16)"
   echo "  url:    $URL"
   echo "  tree:   $TREE"
+
+  local mint_rc=0
+  mint_gate || mint_rc=$?
+  if [ "$mint_rc" -eq 0 ]; then
+    echo "  gate:   credential minted by $TREE/scripts/gate-cookie.js (sent to $URL only)"
+  else
+    echo "  gate:   NO credential (scripts/gate-cookie.js exit $mint_rc) - $GATE_MINT_NOTE"
+  fi
 
   # -- liveness, read BEFORE this run is appended: the gap is the observer's own death made visible
   local prev_ts="" prev_v="" gap=""
@@ -249,7 +285,9 @@ run_once() {
 
   # -- 1. the page
   local code title found
-  code=$(curl -sS -o "$TMP/page.html" -w '%{http_code}' --max-time "$TIMEOUT" "$URL/" 2>"$TMP/curlerr") || true
+  local -a AUTH=()
+  [ -n "$GATE_COOKIE" ] && AUTH=(-H "Cookie: $GATE_COOKIE")
+  code=$(curl -sS -o "$TMP/page.html" -w '%{http_code}' --max-time "$TIMEOUT" "${AUTH[@]}" "$URL/" 2>"$TMP/curlerr") || true
   if [ ! -s "$TMP/page.html" ] && [ "${code:-0}" = "000" ]; then
     echo
     echo "PAIR BROKEN (exit 1) — GET $URL/ could not be reached ($(head -1 "$TMP/curlerr" 2>/dev/null))"
@@ -261,6 +299,23 @@ run_once() {
   found=$(grep -oE 'assets/[A-Za-z0-9._-]+\.(js|css)' "$TMP/page.html" | sort -u | tr '\n' ' ')
   echo "  measured: GET / → $code | title: ${title:-<none>} | page bytes: $(stat -c %s "$TMP/page.html")"
   echo "            the page names: ${found:-<nothing>}"
+
+  # -- 1a. IS THIS THE GATE PAGE? A distinct verdict, not an outage. With a credential in hand a gate
+  #        page would mean the credential failed, and that IS a broken pair; without one it means
+  #        nothing about the product was observable from here.
+  local gt; gt=$(gate_title)
+  if [ -n "$gt" ] && [ "$title" = "$gt" ]; then
+    if [ -z "$GATE_COOKIE" ]; then
+      echo
+      echo "REFUSED (exit 3) — $URL/ answered the PUBLIC GATE's page (title: ${title}), not the product."
+      echo "  no gate credential was available: ${GATE_MINT_NOTE:-scripts/gate-cookie.js exited non-zero}"
+      echo "  nothing was compared, and this is NOT a broken pair — the gate is not the product failing."
+      record "$(now)" "REFUSED" "$code" "$title" "$found" "$JS_ASSET" "$dm" "" "" "gate page, no credential"
+      return 3
+    fi
+    echo "            NOTE: the gate page answered WITH a credential in hand — that is a real failure below"
+  fi
+
   if [ "$code" != "200" ]; then
     echo
     echo "PAIR BROKEN (exit 1) — GET / returned $code, not 200"
@@ -288,7 +343,7 @@ run_once() {
   while IFS='|' read -r n b m; do
     [ -n "$n" ] || continue
     local acode abytes amd5
-    acode=$(curl -sS -o "$TMP/asset.bin" -w '%{http_code}' --max-time "$TIMEOUT" "$URL/$n" 2>/dev/null) || true
+    acode=$(curl -sS -o "$TMP/asset.bin" -w '%{http_code}' --max-time "$TIMEOUT" "${AUTH[@]}" "$URL/$n" 2>/dev/null) || true
     abytes=$(stat -c %s "$TMP/asset.bin" 2>/dev/null || echo 0)
     amd5=$(md5sum < "$TMP/asset.bin" 2>/dev/null | cut -d' ' -f1)
     echo "            $n → $acode, $abytes B, md5 $amd5"

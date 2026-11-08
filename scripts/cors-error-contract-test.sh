@@ -40,6 +40,44 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# ── THE GATE IS IN FRONT OF THIS RIG, SO THIS RIG CONFIGURES ONE OF ITS OWN ──────────────────────
+# server/public-gate.js now answers every page path and every file under client/dist, so a rig that
+# leaves it unconfigured measures 503s instead of assets, and a rig that leaves it configured but
+# sends no cookie measures the GATE PAGE — a 200 that names no bundle and serves no bytes. Both read
+# as "the asset check" while judging something else. So: a throwaway passcode hash and signing key of
+# this run's own (never the host's, never printed), and one cookie minted by scripts/gate-cookie.js —
+# the single authority on the cookie's shape. Nothing here re-implements the signature.
+#
+# WHERE THE COOKIE GOES, AND WHERE IT DELIBERATELY DOES NOT: every ASSET fetch below sends it, because
+# an asset is what the gate guards. Every `/api` fetch sends NO cookie, because `/api` is passed
+# straight through to the app and this file's job is to assert the app's own CORS behaviour — test 1
+# (a foreign Origin must be refused with the app's 403) is exactly the assertion that caught the
+# gate's first cut answering `/api` itself with a 401 before the CORS middleware could run.
+GATE_PASSCODE="$TMP/gate-passcode"
+GATE_SECRET="$TMP/gate-secret"
+node -e 'require(process.argv[1]).hash(require("crypto").randomBytes(18).toString("base64url"), 10).then(h=>process.stdout.write(h))' \
+  "$ROOT/server/node_modules/bcryptjs" > "$GATE_PASSCODE" 2>/dev/null \
+  || node -e 'process.stdout.write(require(process.argv[1]).hashSync(require("crypto").randomBytes(18).toString("base64url"), 10))' \
+       "$ROOT/server/node_modules/bcryptjs" > "$GATE_PASSCODE"
+head -c 48 /dev/urandom | base64 | tr -d '\n' > "$GATE_SECRET"
+chmod 600 "$GATE_PASSCODE" "$GATE_SECRET"
+
+GATE_COOKIE=$(ANTUM_GATE_PASSCODE_FILE="$GATE_PASSCODE" ANTUM_GATE_SECRET_FILE="$GATE_SECRET" \
+  node "$ROOT/scripts/gate-cookie.js" --tree "$ROOT")
+mint_rc=$?
+if [ "$mint_rc" -ne 0 ]; then
+  # The team's code 3 (#266): the credential is ABSENT in this context, so nothing behind the gate
+  # can be measured from here. It must never read as a pass, and it must never read as a failure of
+  # the CORS contract either — no assertion below was run.
+  if [ "$mint_rc" -eq 3 ]; then
+    echo "SKIP-FLAGGED: scripts/gate-cookie.js could not mint a gate credential here (exit 3) - NOTHING was measured."
+    echo "  it names the file it looked for above; the CORS contract is unjudged, not green."
+    exit 3
+  fi
+  echo "ABORT: scripts/gate-cookie.js failed (exit $mint_rc) - the minter is broken, not the contract"
+  exit 1
+fi
+
 PASS=0; FAIL=0
 ok()  { PASS=$((PASS+1)); printf '  ok    %s\n' "$1"; }
 bad() { FAIL=$((FAIL+1)); printf '  FAIL  %s\n' "$1"; }
@@ -52,6 +90,7 @@ cd "$ROOT/server"
 JWT_SECRET=$(head -c 32 /dev/urandom | base64 | tr -d '\n') \
 ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64 | tr -d '\n' | cut -c1-32) \
 PORT=$PORT PRODUCT_DB_PATH="$TMP/db.sqlite" \
+ANTUM_GATE_PASSCODE_FILE="$GATE_PASSCODE" ANTUM_GATE_SECRET_FILE="$GATE_SECRET" \
   node index.js > "$TMP/server.log" 2>&1 &
 SRV_PID=$!
 
@@ -121,8 +160,23 @@ out=$(probe -H "Origin: $BASE" "$BASE/api/employees")
 check "Origin host == Host -> status" "$(field "$out" 1)" "401"
 if [ -f "$ROOT/client/dist/index.html" ]; then
   bundle=$(sed -n 's/.*src="\([^"]*\.js\)".*/\1/p' "$ROOT/client/dist/index.html" | head -1)
+  # FIRST, THE GATE IS PROVED TO BE ON IN THIS RIG: the same asset WITHOUT the cookie answers 200
+  # with the gate page. Without this line the asset assertions below could pass against a rig whose
+  # gate silently fell open, and the cookie's necessity would never be measured.
+  nogate="$TMP/nogate.html"
+  nogate_status=$(curl -s -o "$nogate" -w '%{http_code}' -H "Origin: $BASE" "$BASE$bundle")
+  check "the bundle WITHOUT the gate cookie -> status" "$nogate_status" "200"
+  if grep -q 'Enter the passcode' "$nogate"; then
+    ok "the bundle WITHOUT the gate cookie is the gate page, not the bundle ($(wc -c < "$nogate") B)"
+  else
+    bad "the gate did not answer the cookieless asset request - this rig is not gated, so the asset checks below judge nothing"
+  fi
   check "bundle $bundle with a same-origin Origin" \
-    "$(curl -s -o /dev/null -w '%{http_code}' -H "Origin: $BASE" "$BASE$bundle")" "200"
+    "$(curl -s -o /dev/null -w '%{http_code}' -H "Cookie: $GATE_COOKIE" -H "Origin: $BASE" "$BASE$bundle")" "200"
+  # …and it is the REAL asset, not a 200 of something else: the gate page is 200 too.
+  check "the bundle's bytes with the gate cookie" \
+    "$(curl -s -H "Cookie: $GATE_COOKIE" -H "Origin: $BASE" "$BASE$bundle" | wc -c | tr -d ' ')" \
+    "$(wc -c < "$ROOT/client/dist$bundle" | tr -d ' ')"
 else
   echo "  skip  client/dist is not built in this checkout"
 fi
@@ -147,7 +201,7 @@ check "Origin host == X-Forwarded-Host while Host differs -> body" \
   "$(cat "$(field "$out" 3)")" '{"error":"Authentication token required"}'
 if [ -f "$ROOT/client/dist/index.html" ]; then
   check "bundle with Origin host == X-Forwarded-Host" \
-    "$(curl -s -o /dev/null -w '%{http_code}' -H "Origin: $XFH_ORIGIN" \
+    "$(curl -s -o /dev/null -w '%{http_code}' -H "Cookie: $GATE_COOKIE" -H "Origin: $XFH_ORIGIN" \
         -H 'X-Forwarded-Host: antum.example.ae' "$BASE$bundle")" "200"
 fi
 out=$(probe -H "Origin: $XFH_ORIGIN" -H 'X-Forwarded-Host: edge-internal.example, antum.example.ae' \
@@ -175,7 +229,13 @@ echo "4. a thrown error answers JSON, not express's HTML page"
 out=$(probe -X POST -H 'Content-Type: application/json' -H "Origin: $DEV_ORIGIN" -d '{"username": ' "$BASE/api/login")
 check "malformed JSON body -> status" "$(field "$out" 1)" "400"
 body=$(field "$out" 3)
-check "malformed JSON body -> body" "$(cat "$body")" '{"error":"Bad Request"}'
+# The app's own sentence, re-grounded 2026-11-08: this assertion still said '{"error":"Bad Request"}'
+# from before commit 9489650 ("400 where the caller was wrong") replaced it, so this file was RED on
+# main for a reason unrelated to the gate. main at 8a4e1ac carries the sentence below
+# (server/index.js:1843) and this run measures it. The assertion keeps its point - a thrown parse
+# error answers JSON with a named cause, never express's HTML page - and it reddens again if the
+# sentence or the shape moves.
+check "malformed JSON body -> body" "$(cat "$body")" '{"error":"request body could not be parsed as a JSON object"}'
 if grep -qi '<!DOCTYPE' "$body"; then
   bad "malformed JSON body answered express's HTML error page"
 else
@@ -215,9 +275,9 @@ else
 fi
 if [ -f "$ROOT/client/dist/index.html" ]; then
   check "the -dev bundle (the blank page's cause) loads" \
-    "$(curl -s -o /dev/null -w '%{http_code}' -H "Origin: $DEV_SITE_ORIGIN" "$BASE$bundle")" "200"
+    "$(curl -s -o /dev/null -w '%{http_code}' -H "Cookie: $GATE_COOKIE" -H "Origin: $DEV_SITE_ORIGIN" "$BASE$bundle")" "200"
   check "the -dev stylesheet loads" \
-    "$(curl -s -o /dev/null -w '%{http_code}' -H "Origin: $DEV_SITE_ORIGIN" \
+    "$(curl -s -o /dev/null -w '%{http_code}' -H "Cookie: $GATE_COOKIE" -H "Origin: $DEV_SITE_ORIGIN" \
         "$BASE$(sed -n 's/.*href="\([^"]*\.css\)".*/\1/p' "$ROOT/client/dist/index.html" | head -1)")" "200"
 fi
 
@@ -245,10 +305,12 @@ refuse "bare app domain"                'https://ctonew.app'
 refuse "our id, a suffix we do not serve" "https://$BIZ.example.com"
 refuse "our id as a SUBdomain of the suffix" "https://$BIZ.foo.cto.site"
 refuse "plaintext Origin on our own name" "http://$BIZ.cto.site"
-# The asset the owner's page asks for, from a name we do not own: refused, short body.
+# The asset the owner's page asks for, from a name we do not own: refused, short body. The gate
+# cookie is SENT here on purpose — the question this line asks is what the CORS middleware does to a
+# foreign Origin, and a cookieless request would be answered by the gate before CORS ever ran.
 if [ -f "$ROOT/client/dist/index.html" ]; then
   check "foreign Origin on the bundle -> status" \
-    "$(curl -s -o /dev/null -w '%{http_code}' -H 'Origin: https://evil.example' "$BASE$bundle")" "403"
+    "$(curl -s -o /dev/null -w '%{http_code}' -H "Cookie: $GATE_COOKIE" -H 'Origin: https://evil.example' "$BASE$bundle")" "403"
 fi
 
 echo

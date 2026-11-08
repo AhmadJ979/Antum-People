@@ -7,15 +7,33 @@
 // WHAT A REQUEST WITHOUT A VALID GATE CREDENTIAL GETS — nothing of the product:
 //   * a page path (`/`, a deep link, any file under client/dist including `/assets/*.js`) -> the gate
 //     page: one input, one submit, no bundle name, no `#root`, no API hint.
-//   * an `/api/*` path -> the SAME refusal this API has always given an unauthenticated caller,
-//     byte for byte (`401 {"error":"Authentication token required"}`). That is deliberate and it is
-//     the brief's own requirement: the refusal must not become a 500, and it must not become a
-//     product response. It also keeps the keep-alive guard's health contract (`scripts/keep-alive.sh`
-//     `check_health`) meaningful — that guard judges a server healthy by exactly these bytes, and a
-//     gate that turned them into an HTML page would have the guard kill a healthy product every poll.
+//   * an `/api/*` path -> PASSED STRAIGHT THROUGH to the app, which answers exactly as it answered
+//     before this module existed. The gate does not touch it (see THE API IS NOT GATED below).
 //
 // WHAT A REQUEST WITH A VALID GATE CREDENTIAL GETS: exactly what it got before this module — the
-// built shell, the assets, the API, and the sign-in card with the admin login as a SECOND layer.
+// built shell, the assets, and the sign-in card with the admin login as a SECOND layer.
+//
+// THE API IS NOT GATED — and the first cut of this module was wrong about that (revised 2026-11-08).
+// That cut answered `/api` itself with a body it described as "byte-identical" to
+// `auth.authenticateToken`'s refusal. The BODY was identical; the ANSWER was not, and three of the
+// differences were reachable by a single request:
+//   * the gate ran BEFORE the CORS middleware, so a non-allowlisted `Origin` got `401` from the gate
+//     where the app answers `403` with its own body. `scripts/cors-error-contract-test.sh` test 1
+//     measured exactly this (401 where 403 was expected) on a rig with the gate configured.
+//   * it ran before the JSON body parser, so a malformed `POST /api/login` body got `401` where the
+//     app answers `400 {"error":"Bad Request"}`.
+//   * it ran before the routes, so `/api/login`'s own 25-failures/60 s limiter, `/api/health`'s 404
+//     and every other route's answer were replaced by a refusal for callers the app would have served.
+// A module header asserting sameness is a claim, and that claim was false. So the API is now passed
+// through untouched — same status, same bytes, same CORS behaviour, same preflight handling, same
+// limiter, BY CONSTRUCTION, because this module never writes to that response. The API carries its
+// own authentication (a JWT; 401 without one), so what this gate protects is the shell and the
+// assets, which is the whole of the owner's "keep it public or gate it" question.
+// It also keeps the keep-alive guard's health contract (`scripts/keep-alive.sh` `check_health`)
+// meaningful without any help from here: that guard judges the product healthy by the app's own
+// `401 {"error":"Authentication token required"}` bytes on `GET /api/employees`, which is what the
+// pass-through delivers — and what a gate-answered `/api` would have replaced with an HTML page,
+// putting the guard into a kill/restart loop against a state no restart repairs.
 //
 // THE TWO FILES THIS MODULE READS AT BOOT (never in the repository, never printed):
 //   ANTUM_GATE_PASSCODE_FILE  default /home/team/shared/.antum-gate-passcode  — one line, a bcrypt
@@ -26,11 +44,9 @@
 //
 // FAIL CLOSED, LOUDLY. If either file is missing, unreadable or empty the gate is NOT CONFIGURED and
 // says so once at boot, naming the file. A page request then answers 503 with a gate page that names
-// nothing; it never falls through to the shell, and no asset is served either. `/api` is the one
-// deliberate exception and the middleware below states it in full: with the gate unpassable the API
-// falls back to the posture it had before this module existed, because that refusal carries no data
-// and because `scripts/keep-alive.sh` judges the product healthy by exactly those bytes — a 503
-// there would put the guard into a kill/restart loop against a state no restart can repair.
+// nothing; it never falls through to the shell, and no asset is served either. `/api` is unaffected
+// by that state, because `/api` is never gated at all (see above) — so the guard's health probe still
+// reads the app's own 401 while the shell is sealed.
 //
 // THE COOKIE. `antum_gate=v1.<issuedAtMs>.<hmac>` — HttpOnly, SameSite=Lax, Secure, 180 days, signed
 // with the secret above so a forged, truncated or hand-edited cookie cannot pass, and refused if the
@@ -64,6 +80,10 @@ const DEFAULT_PASSCODE_FILE = '/home/team/shared/.antum-gate-passcode';
 const DEFAULT_SECRET_FILE = '/home/team/shared/.antum-gate-secret';
 
 const API_REFUSAL = { error: 'Authentication token required' };
+// The string above is the API's OWN refusal (`server/auth.js` `authenticateToken`), held here for one
+// reason: `server/public-gate.test.js` asserts that a `/api` request THROUGH the gate still carries
+// exactly these bytes, so a pass-through that quietly started reshaping the refusal would redden. The
+// gate never writes this body — it writes no `/api` response at all (see THE API IS NOT GATED).
 
 /** Where the two host files are. Every value is an override, so a scratch rig never reads the host's. */
 function filePaths(env = process.env) {
@@ -130,7 +150,7 @@ function notConfigured(paths, file, problem, log) {
     // ONE line, at boot, naming the file. It is the operator's first move and the only place the
     // state is announced: the request path stays silent so a stranger cannot make the log grow.
     log(`[gate] NOT CONFIGURED — ${file} ${problem}. The app shell and every static asset answer 503`
-      + ' until it exists (a restart re-reads it); /api keeps its pre-gate 401 refusal.');
+      + ' until it exists (a restart re-reads it); /api is not gated and is unaffected.');
   }
   return { configured: false, file, problem, passcodeFile: paths.passcodeFile, secretFile: paths.secretFile };
 }
@@ -350,26 +370,18 @@ function createGate(options = {}) {
    * catch-all.
    */
   const middleware = (req, res, next) => {
-    const isApi = req.path === '/api' || req.path.startsWith('/api/');
+    // THE ONE LINE THAT IS THE API DECISION: `/api` and everything under it is handed to the app
+    // before any gate state is consulted — configured or not, cookie or not. The app therefore
+    // answers exactly what it answered before this module existed, because nothing here touches
+    // that response. The header above names the three divergences the first cut introduced and this
+    // line removes; `server/public-gate.test.js` asserts the pass-through by asking for a shape the
+    // gate would never produce (a foreign Origin gets the app's 403, not a 401).
+    if (req.path === '/api' || req.path.startsWith('/api/')) return next();
     if (!config.configured) {
       // FAIL CLOSED ON THE PRODUCT: no shell, no asset, ever.
-      //
-      // `/api` is the one deliberate exception, and it is named here rather than implied: when the
-      // gate cannot be passed, the API falls back to the posture it had BEFORE this gate existed —
-      // a 401 from `auth.authenticateToken` for a caller without a token, the routes' own answers
-      // for a caller with one. Two reasons. (1) The refusal is not the product: those bytes carry no
-      // data, and they are exactly what `scripts/keep-alive.sh` judges the product healthy by, so a
-      // 503 here would put the guard into a kill/restart loop against a state no restart repairs.
-      // (2) The alternative leaves the process unable to answer the one route an operator needs to
-      // see working. What is NOT weakened: the shell and every asset answer 503, and the boot log
-      // says which file is missing. Fixing the file and restarting closes it again.
-      return isApi ? next() : sendPage(res, 503, NOTICE_UNAVAILABLE);
+      return sendPage(res, 503, NOTICE_UNAVAILABLE);
     }
     if (hasValidCookie(req)) return next();
-    if (isApi) {
-      // Byte-identical to `auth.authenticateToken`'s refusal, which is what this path answers today.
-      return res.status(401).json(API_REFUSAL);
-    }
     return sendPage(res, 200, '');
   };
 

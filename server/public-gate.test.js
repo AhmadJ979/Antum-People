@@ -13,8 +13,11 @@ process.env.PRODUCT_DB_PATH = `${require('node:os').tmpdir()}/antum-public-gate-
  *
  *   no cookie -> the gate page, and nothing of the product: no `<script>`, no `#root`, no
  *                `assets/index-*`, and the body is NOT `client/dist/index.html`;
- *   no cookie -> `/api/employees` refused exactly as it is refused today (401 with the same body),
- *                never a 500 — the keep-alive guard judges the product healthy by those bytes;
+ *   no cookie -> `/api/employees` is passed THROUGH to the app and refused by the app's own token
+ *                middleware (401, the same bytes), never a 500 and never a gate-shaped answer — the
+ *                keep-alive guard judges the product healthy by those bytes. A foreign `Origin` is
+ *                the discriminator: the app's CORS refuses it with 403, which no gate answer could
+ *                produce, so this asserts pass-through rather than merely a matching 401;
  *   no cookie -> an asset under `client/dist` is not served, although the path exists;
  *   a forged, truncated, tampered, future-dated or expired cookie -> the gate page;
  *   a wrong passcode -> the SAME generic page whatever was sent, and no oracle about the file;
@@ -199,10 +202,10 @@ test('an asset under client/dist is not served without a cookie', async (t) => {
 });
 
 // -------------------------------------------------------------
-// 2. no cookie: the API is refused exactly as it is refused today
+// 2. no cookie: the API is PASSED THROUGH and answered by the app itself
 // -------------------------------------------------------------
 
-test('without a cookie /api/employees is refused exactly as it is refused today — a 401, never a 500', async () => {
+test('without a cookie /api/employees is answered by the APP — 401 with its own bytes, never a gate answer', async () => {
   const res = await get(rig.base, '/api/employees');
   assert.strictEqual(res.status, 401);
   assert.strictEqual(res.body, JSON.stringify(gate.API_REFUSAL));
@@ -212,7 +215,22 @@ test('without a cookie /api/employees is refused exactly as it is refused today 
   assert.strictEqual(res.body, JSON.stringify({ error: 'Authentication token required' }));
 });
 
-test('without a cookie the login endpoint is refused too — the gate is the first layer, not a bypass', async () => {
+test('the API is passed through, not answered: a foreign Origin gets the app\'s 403, which the gate could not produce', async () => {
+  // THE DISCRIMINATOR. The gate's first cut answered every `/api` path itself, before the CORS
+  // middleware ran, so this request read 401 and `scripts/cors-error-contract-test.sh` test 1 went
+  // red on a rig with the gate configured. A 403 with the CORS middleware's own body can only come
+  // from the app, so this assertion is what makes "passed through" a measurement rather than a
+  // claim: a gate that started answering `/api` again would redden here first.
+  const res = await get(rig.base, '/api/employees', { Origin: 'http://evil.example' });
+  assert.strictEqual(res.status, 403, 'a foreign Origin must reach the CORS middleware (403), not the gate (401)');
+  assert.strictEqual(res.body, '{"error":"Forbidden"}');
+  // …and it holds with the gate UNCONFIGURED too, where the gate refuses every page with 503.
+  const off = await get(unconfigured.base, '/api/employees', { Origin: 'http://evil.example' });
+  assert.strictEqual(off.status, 403, 'the pass-through must not depend on the gate being configured');
+  assert.strictEqual(off.body, '{"error":"Forbidden"}');
+});
+
+test('without a cookie the login endpoint reaches the APP — its own body, its own limiter, not the gate', async () => {
   const res = await fetch(`${rig.base}/api/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -220,7 +238,12 @@ test('without a cookie the login endpoint is refused too — the gate is the fir
     signal: AbortSignal.timeout(10000),
   });
   assert.strictEqual(res.status, 401);
-  assert.strictEqual(await res.text(), JSON.stringify(gate.API_REFUSAL));
+  const body = await res.text();
+  // The app's own refusal for bad credentials. Asserting it — rather than a generic 401 — is what
+  // tells a pass-through from a gate answer, because the gate's body was a different sentence.
+  assert.strictEqual(body, '{"error":"Invalid username or password"}');
+  assert.notStrictEqual(body, JSON.stringify(gate.API_REFUSAL),
+    'the gate must not be the process answering /api/login');
 });
 
 // -------------------------------------------------------------
