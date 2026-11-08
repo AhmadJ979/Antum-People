@@ -579,8 +579,8 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 font-sans">
-      <div className="max-w-md w-full p-8 bg-white rounded-2xl shadow-2xl">
-        <div className="flex justify-center mb-8">
+      <div className="max-w-md w-full p-8 short:p-5 bg-white rounded-2xl shadow-2xl">
+        <div className="flex justify-center mb-8 short:mb-4">
           <div className="bg-teal-600 p-3 rounded-xl shadow-lg">
             <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -588,10 +588,10 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
           </div>
         </div>
         <h2 className="text-2xl font-extrabold text-center text-slate-900 mb-2">Antum People</h2>
-        <p className="text-slate-500 text-center mb-8 text-sm">HR Onboarding/Offboarding Intelligence Platform</p>
+        <p className="text-slate-500 text-center mb-8 short:mb-4 text-sm">HR Onboarding/Offboarding Intelligence Platform</p>
         
         {error && (
-          <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 text-sm rounded-lg font-medium flex items-center">
+          <div className="mb-6 p-4 short:mb-4 short:p-3 bg-rose-50 border border-rose-100 text-rose-600 text-sm rounded-lg font-medium flex items-center">
              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
              </svg>
@@ -599,7 +599,7 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5 short:space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2" htmlFor="login-username">Username</label>
             <input id="login-username"
@@ -631,7 +631,7 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
               </button>
             </div>
             {showRecoveryInfo && (
-              <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 flex items-start justify-between">
+              <div className="mt-3 p-3 short:mt-2 short:p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 flex items-start justify-between">
                 {/* Honest, present-tense copy only — no self-service reset flow exists yet.
                     A real reset flow needs email infrastructure we haven't connected —
                     that's a post-pilot item, not something to fake here. */}
@@ -655,7 +655,7 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
             {loading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
-        <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+        <div className="mt-8 pt-6 short:mt-5 short:pt-4 border-t border-slate-100 text-center">
           <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">Enterprise HR Intelligence</p>
         </div>
       </div>
