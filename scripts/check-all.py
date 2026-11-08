@@ -379,9 +379,19 @@ CHECKS = [
     # UNPROVEN and exits 1 - deliberately, because on 2026-11-02 there was no record and that is
     # exactly the state that must not read as a pass. It judges the DEPLOYED tree (WORKFLOW rule
     # 7) unless --tree names another, and it prints both sides of every comparison.
+    # THE TREE IS NAMED HERE (2026-11-08). Until this line passed `--tree`, the row was invoked
+    # bare, and `resolve_tree()` falls back to DEPLOYED_TREE (/home/team/shared/probable-octo-sniffle)
+    # - NEVER to the cwd - so inside a branch worktree this row judged the DEPLOYED tree and read
+    # PROVEN, correctly for that tree, while this run's own header said `tree judged: <branch sha>`.
+    # The aggregate could not see it: the row's output named a tree, the header named another, and
+    # nothing compared them. Naming ROOT (the tree THIS FILE is in, which is also every other row's
+    # cwd) makes the row line and the header agree by construction, and gives the two correct
+    # readings: a branch tree reddens `revision-mismatch` (its dist is the deployed build, its HEAD
+    # is the branch tip - the merge + a rebuild in the deployed tree is what closes it), and the
+    # deployed tree stays green.
     dict(id="served-provenance", mode="default", expect="green",
          home="operator CLI (bare) + this entry point",
-         cmd=[PY, "scripts/check-served-provenance.py"],
+         cmd=[PY, "scripts/check-served-provenance.py", "--tree", ROOT],
          what="do the bytes this tree SERVES prove where they came from? Reads dist/index.html, "
               "dist/build-provenance.json and dist/** - never source, never a status code (a missing "
               "asset answers 200 with the SPA shell). Asserts the asset index.html names is the entry "
@@ -390,7 +400,11 @@ CHECKS = [
               "that the provenance revision equals `git rev-parse HEAD` OF THE TREE BEING MEASURED (a "
               "merge without a rebuild, or --restart-only, or a build from elsewhere all land here); "
               "and that dist/assets/ holds nothing the build did not name. Prints bytes, md5 and "
-              "revision for BOTH sides of each comparison. NO record = UNPROVEN = exit 1, not a skip"),
+              "revision for BOTH sides of each comparison. NO record = UNPROVEN = exit 1, not a skip. "
+              "THE TREE IS NAMED BY THIS ENTRY POINT (`--tree` = the tree this file is in), so the row "
+              "line's `tree=` and the header's `tree judged` are the same tree: a branch worktree reddens "
+              "`revision-mismatch` because its dist is the deployed build and its HEAD is the branch tip - "
+              "that red is the row working, and the merge + a rebuild in the deployed tree closes it"),
 
     dict(id="served-provenance-controls", mode="full", expect="green", home="operator CLI, off-host",
          cmd=[PY, "scripts/check-served-provenance.py", "--selftest"],
@@ -414,7 +428,11 @@ CHECKS = [
     # CANNOT-JUDGE and FAILS the run - a skip that reads like a pass is the defect it answers to.
     # The `.cto.site` hostname is declared RED inside the check, per target, not here: a
     # check-level known-red would swallow a real failure of the other two targets.
-    dict(id="served-render", mode="default", expect="green",
+    dict(id="served-render", mode="default", expect="green", absent_exit=3,
+         absent_reason="the target answered the PUBLIC GATE's page instead of the product and no gate "
+                       "credential could be minted here (scripts/gate-cookie.js exit 3 names the file it "
+                       "looked for: ANTUM_GATE_SECRET_FILE, default /home/team/shared/.antum-gate-secret). "
+                       "Nothing about the rendered product was measured - this is not an outage.",
          home="operator CLI (bare) + this entry point",
          cmd=["node", "scripts/check-served-render.js"],
          what="does the SERVED product RENDER? For each target: the document's status from the "
@@ -425,7 +443,12 @@ CHECKS = [
               "and does not fail the run, and a declaration that stops firing exits 1. NO target is "
               "declared red today: the .cto.site one was withdrawn on 2026-11-02 when its stated cause "
               "- an edge refusing every Origin-bearing request - turned out to be this repository's "
-              "own CORS middleware, fixed in server/index.js. Drives agent-browser headless "
+              "own CORS middleware, fixed in server/index.js. GATE-AWARE since 2026-11-08: the run "
+              "mints a credential through scripts/gate-cookie.js and sends it to each target's origin, "
+              "because server/public-gate.js answers a cookieless fetch with the gate page - a 200 "
+              "that names no asset, which would read RED for a reason that is not a defect. A target "
+              "that IS the gate page with no credential to get past it prints REFUSED and exits 3 "
+              "(SKIP-FLAGGED here), never a pass and never an outage. Drives agent-browser headless "
               "with a per-target timeout, so a browser that will not start fails instead of hanging"),
 
     dict(id="served-render-controls", mode="full", expect="green", home="operator CLI, off-host",
@@ -461,9 +484,19 @@ CHECKS = [
               "the unit printed as MARKED and still `unreviewed`; a manifest claiming a review is REFUSED; and "
               "an unknown flag exits 2 rather than buying a green run"),
 
-    dict(id="cors-error-contract", mode="full", expect="green", home="operator CLI, off-host",
+    dict(id="cors-error-contract", mode="full", expect="green", absent_exit=3,
+         home="operator CLI, off-host",
+         absent_reason="the rig could not mint a gate credential (scripts/gate-cookie.js exit 3), so "
+                       "nothing was measured - the CORS contract is unjudged, not green",
          cmd=["bash", "scripts/cors-error-contract-test.sh"],
-         what="the CORS + error-handling contract of server/index.js, booted off-host on its own port with a throwaway database"),
+         what="the CORS + error-handling contract of server/index.js, booted off-host on its own port "
+              "with a throwaway database AND a gate of its own (throwaway passcode hash and signing key). "
+              "GATE-AWARE since 2026-11-08: every ASSET fetch carries a cookie minted by "
+              "scripts/gate-cookie.js - without it a 200 would be the gate page, which is why the row now "
+              "also asserts the cookieless asset IS the gate page and that the cooked asset's BYTES are "
+              "the built bundle. Every /api fetch deliberately sends NO cookie: /api is passed straight "
+              "through to the app, so test 1's 403 for a foreign Origin is the assertion that the gate "
+              "does not answer /api before the CORS middleware - the exact defect the first cut had"),
 
     dict(id="guard-deploy-marker", mode="full", expect="green", home="operator CLI, off-host",
          cmd=["bash", "scripts/guard-deploy-marker-test.sh"],
@@ -652,13 +685,26 @@ def main(argv):
         rows.append((c, word, code, shown, dt, hidden))
 
     if live_label is not None:
-        c = dict(id="success-test", expect="green", home="operator CLI, LIVE-facing",
+        # GATE-AWARE 2026-11-08: the script exits 3 when the URL answered the PUBLIC GATE's page and
+        # no gate credential could be minted (scripts/gate-cookie.js names the file it looked for).
+        # Declared here so that code prints SKIP-FLAGGED - never OK, and never BROKEN-EXIT-3, which
+        # would call a gated product a broken tree. This row is built inline, so it must call
+        # classify_check() rather than classify(): a declaration classify() cannot see is no
+        # declaration at all, and the row would have gone red on exit 3.
+        c = dict(id="success-test", expect="green", absent_exit=3,
+                 absent_reason="the public URL answered the PUBLIC GATE's page and no gate credential "
+                               "could be minted here (scripts/gate-cookie.js exit 3 names the file it "
+                               "looked for: ANTUM_GATE_SECRET_FILE, default "
+                               "/home/team/shared/.antum-gate-secret). TEST 1 - the served page, the "
+                               "asset it names and the served==deployed bytes - was NOT judged; "
+                               "TESTs 2-4 and SURVIVAL were. Not an outage.",
+                 home="operator CLI, LIVE-facing",
                  cmd=["bash", "scripts/success-test.sh", live_label],
                  what="the cutover's four success tests against whatever is public right now")
         t0 = time.time()
         p = subprocess.run(c["cmd"], cwd=ROOT, capture_output=True, text=True, timeout=600)
         shown, hidden = tail_lines(p.stdout + "\n" + p.stderr, TAIL_LINES)
-        rows.append((c, classify("green", p.returncode), p.returncode, shown, time.time() - t0, hidden))
+        rows.append((c, classify_check(c, p.returncode), p.returncode, shown, time.time() - t0, hidden))
 
     # --------------------------------------------------------------------- print per check
     for c, word, code, shown, dt, hidden in rows:

@@ -254,8 +254,39 @@ echo "--- the product is the thing answering, not the platform placeholder ---"
 # Private temp dir: /tmp/preflight-public.html was a FIXED name, and on a shared /tmp two runs (this tool
 # and the movement's own scripts) can tread on each other's file mid-read.
 TMPD=$(mktemp -d /tmp/preflight-XXXXXX); trap 'rm -rf "$TMPD"' EXIT
+# THE GATE CREDENTIAL (2026-11-08). server/public-gate.js answers every page path and every asset
+# under client/dist, so a cookieless GET of $PUBLIC returns the GATE PAGE - 200, title `Antum People
+# - access`, no `assets/index-*.js`. Every assertion in this block would then be about the gate, and
+# the preflight would FAIL the movement for a state the movement is supposed to install. So:
+#   * mint with scripts/gate-cookie.js - the ONE minter, never a signature re-implemented here;
+#   * send it to $PUBLIC's page and asset requests only (this is our own origin, nothing else);
+#   * if no credential can be minted AND the page proves to be the gate's, this block prints
+#     SKIP-FLAGGED and counts NO failure: an unjudged precondition is not a failed one.
+GATE_COOKIE=""
+GATE_MINT_NOTE=""
+SELF_DIR=$(cd "$(dirname "$0")" && pwd)
+if GATE_COOKIE=$(node "$SELF_DIR/gate-cookie.js" --tree "$(cd "$SELF_DIR/.." && pwd)" 2>"$TMPD/gateerr"); then
+  [ -n "$GATE_COOKIE" ] || { GATE_MINT_NOTE="the minter printed nothing"; GATE_COOKIE=""; }
+else
+  GATE_MINT_NOTE=$(tr '\n' ' ' < "$TMPD/gateerr" 2>/dev/null | sed 's/  */ /g; s/ $//')
+  GATE_COOKIE=""
+fi
+GATE_TITLE=$(node -e 'try{const g=require(process.argv[1]);const m=g.gatePage("").match(/<title>([^<]*)<\/title>/);process.stdout.write(m?m[1]:"")}catch(e){}' \
+  "$SELF_DIR/../server/public-gate.js" 2>/dev/null)
+AUTH=()
+[ -n "$GATE_COOKIE" ] && AUTH=(-H "Cookie: $GATE_COOKIE")
+[ -n "$GATE_COOKIE" ] && note "public reads carry a gate credential minted by scripts/gate-cookie.js" \
+  || note "no gate credential minted ($GATE_MINT_NOTE) - a gate page below prints SKIP-FLAGGED, never FAIL"
 # `Accept-Encoding: identity` so the bytes hashed below are the file's bytes, not a compressed variant.
-PUB_CODE=$(curl -s --noproxy '*' -H 'Accept-Encoding: identity' --max-time 25 -o "$TMPD/public.html" -w '%{http_code}' "$PUBLIC" 2>/dev/null)
+PUB_CODE=$(curl -s --noproxy '*' -H 'Accept-Encoding: identity' --max-time 25 "${AUTH[@]}" -o "$TMPD/public.html" -w '%{http_code}' "$PUBLIC" 2>/dev/null)
+PUB_TITLE=$(sed -n 's/.*<title>\(.*\)<\/title>.*/\1/p' "$TMPD/public.html" 2>/dev/null | head -1)
+if [ -z "$GATE_COOKIE" ] && [ -n "$GATE_TITLE" ] && [ "$PUB_TITLE" = "$GATE_TITLE" ]; then
+  # SKIP-FLAGGED, not FAIL: the gate answered instead of the product, so this block judged nothing.
+  echo "  SKIP-FLAGGED  the public URL answered the GATE's page (title: $PUB_TITLE), not the product"
+  echo "                no gate credential here ($GATE_MINT_NOTE)"
+  echo "                NOT JUDGED: the public page, its asset name, and the served-bytes identity"
+  PUB_CODE=""; PUB_ASSETS=""
+else
 PUB_ASSETS=$(grep -oE 'assets/index-[A-Za-z0-9_-]+\.js' "$TMPD/public.html" 2>/dev/null | sort -u | head -1)
 LIVE_ASSET="${PUB_ASSETS#assets/}"
 [ "$PUB_CODE" = "200" ] && ok "public GET / -> 200" || no "public GET / -> ${PUB_CODE:-none}"
@@ -269,7 +300,7 @@ else
   fi
   # THE NON-VACUOUS FORM (rule 2): the bytes the URL serves must BE this tree's own build of that asset.
   # A foreign server on 3000 answers 200 with a bundle this tree does not hold, and that is a FAIL here.
-  curl -s --noproxy '*' -H 'Accept-Encoding: identity' --max-time 40 -o "$TMPD/live.js" "$PUBLIC/assets/$LIVE_ASSET" 2>/dev/null
+  curl -s --noproxy '*' -H 'Accept-Encoding: identity' --max-time 40 "${AUTH[@]}" -o "$TMPD/live.js" "$PUBLIC/assets/$LIVE_ASSET" 2>/dev/null
   LIVE_MD5=$(md5sum "$TMPD/live.js" 2>/dev/null | cut -d' ' -f1)
   DIST_MD5=$(md5sum "$DIST/assets/$LIVE_ASSET" 2>/dev/null | cut -d' ' -f1)
   if [ -z "${DIST_MD5:-}" ]; then
@@ -279,6 +310,7 @@ else
   else
     no "the URL serves assets/$LIVE_ASSET md5 ${LIVE_MD5:-?} but this tree's dist file is $DIST_MD5 — what is served and what this tree built disagree"
   fi
+fi
 fi
 LPID=$(lsof -t -i :3000 -sTCP:LISTEN 2>/dev/null | head -1)
 LARGS=$(ps -p "${LPID:-0}" -o args= 2>/dev/null)
