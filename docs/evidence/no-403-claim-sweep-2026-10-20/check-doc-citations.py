@@ -59,6 +59,31 @@ ONE of four verdicts, always with its file:line:
     ok / FAIL      only with --judge-continuations (see the block below for why that is
                    opt-in: the symbol test misreads wrapped citations, measured)
 
+THE `.html` TARGET (added 2026-11-08). `design-concepts/` holds three prototypes, and the
+documents cite lines in them. The file-name pattern carried no `.html`, so
+`design-concepts/intelligence-dashboard-prototype.html` was not a file to this instrument:
+the walk for "the nearest file named above this number" went PAST it, to an `App.tsx`
+mention 12 lines earlier, and attributed the prototype's numbers to the client - a wrong
+answer stated with confidence, which is worse than the refusal. The `.html` name was
+harvested as a SYMBOL as well, so a citation could be judged against a file name.
+A number whose block names exactly one `.html` file is now attributed to that file, read at
+the revision governing the number (the `@rev` pin before it, else the run's code revision -
+the rule the pin already applies to `App.tsx`), and judged by the same symbol test:
+
+    ok          a symbol on the citing line appears on one of the cited lines
+    FAIL        none does - or a number is PAST THE END of that file at that revision
+    UNCHECKED   the citing line names no symbol - counted and printed, never passed over
+
+A number past the end is FAILING and not UNCHECKED: the line does not exist, so nothing can
+be checked there, and silence is how a stale pointer survives. A `.html` target that is not
+in the tree at the governing revision is a REFUSAL (exit 2), for the pin's reason - a
+citation into a file the tree does not hold is a claim this instrument cannot read.
+The symbol filter also admits a bare call site (`toArabic()`), measured: the old filter
+asked for one of `= {}<>-_"'`, so the identifier that proves this prototype's numeral
+citations was the one token dropped and the group was judged on the prose around it.
+STILL NOT JUDGED, and said rather than implied: a prototype number written in prose
+("(line 290)") is not a number this instrument sees - `:N` is its syntax.
+
 FOUR NUMBERS, ALWAYS PRINTED, so a change in the set cannot pass quietly:
 
     citations found: <discovered>  = judged + not-judged + other-file
@@ -111,11 +136,23 @@ if not repo or not doc_rev or git("rev-parse", "--verify", doc_rev + "^{commit}"
 tree = git("rev-parse", "--short", "HEAD").stdout.strip() or "UNKNOWN"
 def show(rev, path):
     return git("show", f"{rev}:{path}").stdout
-_code_cache = {}
+APP_TSX = "client/src/App.tsx"
+_lines_cache = {}
+def lines_at(rev, path=APP_TSX):
+    """The lines of `path` at `rev`, cached. One cache for every target: until 2026-11-08
+    the instrument judged exactly one file, and a `.html` prototype is now judged too."""
+    key = (rev, path)
+    if key not in _lines_cache:
+        _lines_cache[key] = show(rev, path).split("\n")
+    return _lines_cache[key]
 def code_at(rev):
-    if rev not in _code_cache:
-        _code_cache[rev] = show(rev, "client/src/App.tsx").split("\n")
-    return _code_cache[rev]
+    return lines_at(rev, APP_TSX)
+def nlines(rev, path):
+    """How many lines `path` really has at `rev`. `show()` returns text ending in a newline,
+    so `split("\\n")` leaves a trailing "" - and a message that says "329 line(s)" about a
+    328-line file is a number a reader can catch with `wc -l`."""
+    n = len(lines_at(rev, path))
+    return n - 1 if n and lines_at(rev, path)[-1] == "" else n
 code = code_at(code_rev)
 files = [f for f in git("ls-tree", "-r", "--name-only", doc_rev, "design-concepts").stdout.split("\n")
          if f.endswith(".md")]
@@ -128,12 +165,16 @@ if not files:
     sys.exit(2)
 print("tree %s - doc %s vs code %s - %d document(s)"
       % (tree, doc_rev[:12], code_rev[:12], len(files)))
+CALL_SITE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.]*\(\)$")
+INLINE_CITE = re.compile(r"^[\w./-]*\.html[:\uff1a]\d+$")
 def symbol(t):
     if not t or "App.tsx" in t: return False
     if re.match(r"^@rev [0-9a-f]{7,40}$", t): return False   # a pin MARKER is instrument syntax, not a symbol
     if re.match(r"^[:：]?[\d,]+$", t): return False
     if re.match(r"^[0-9a-f]{7,40}$", t): return False
-    if t.endswith((".md", ".tsx", ".js", ".json", ".css", ".sql")): return False
+    if t.endswith((".md", ".tsx", ".js", ".json", ".css", ".sql", ".html")): return False
+    if INLINE_CITE.match(t): return False   # `foo.html:313` is a CITATION, not a symbol
+    if CALL_SITE.match(t): return True   # `toArabic()` names code - see the header's html section
     return any(c in t for c in "= {}<>-_\"'")
 PIN = re.compile(r"@rev ([0-9a-f]{7,40})")
 def pin_at(line, pos):
@@ -202,7 +243,9 @@ CITATION_FLOOR_AT = "754031c (the documents; this PR changes none of them)"
 if FLOOR_OVERRIDE is not None:
     CITATION_FLOOR = FLOOR_OVERRIDE
 
-FILE_REF = re.compile(r"(?<![\w./-])([\w][\w./-]*\.(?:tsx|jsx|js|json|css|md|sql|py))\b")
+# `.html` joined this pattern on 2026-11-08. A name the pattern does not match is not a file
+# to `governing()`, which then walks PAST it and attributes the number to an older mention.
+FILE_REF = re.compile(r"(?<![\w./-])([\w][\w./-]*\.(?:tsx|jsx|js|json|css|md|sql|py|html))\b")
 CONT_REASON = ("reported, not judged: the symbol test is calibrated for a citation whose "
                "number and symbol share a line, and on wrapped ones it names prose or a glob "
                "instead of code (see --judge-continuations)")
@@ -220,6 +263,28 @@ def files_named(line):
         if b not in out:
             out.append(b)
     return out
+HTML_EXT = (".html",)
+def is_html(name):
+    return name.lower().endswith(HTML_EXT)
+_target_cache = {}
+def target_path(rev, name):
+    """The repository path a document's file name points at, at `rev` - or None.
+
+    A document writes the name as a reader would (`design-concepts/foo.html`, or a bare
+    `foo.html`), so the name as written and its basename under design-concepts/ are both
+    tried. `git cat-file -e` is the existence test because `git show` answers "" for BOTH an
+    absent path and an empty file, and judging a citation against an empty file is the
+    silent pass this instrument exists to refuse."""
+    key = (rev, name)
+    if key not in _target_cache:
+        b = os.path.basename(name.lstrip("./"))
+        found = None
+        for cand in dict.fromkeys([name.lstrip("./"), "design-concepts/" + b]):
+            if cand and git("cat-file", "-e", "%s:%s" % (rev, cand)).returncode == 0:
+                found = cand
+                break
+        _target_cache[key] = found
+    return _target_cache[key]
 def governing(lines, i):
     """The file(s) a bare `:n` on line i belongs to: named on the line itself, else on the
     nearest preceding line of the same block (a blank line ends the block)."""
@@ -248,8 +313,38 @@ def group_tokens(lines, i, span=2):
     toks = [t.strip() for t in re.findall(r"`([^`]+)`", win)]
     return [t for t in toks if symbol(t)][:12]
 
+# --- THE `.html` TARGET, CHECKED BEFORE ANYTHING IS JUDGED ---------------------------
+# A citation into a prototype is judged against that file at its governing revision. If the
+# file is not in the tree there, nothing below can judge the number, and a run that said
+# nothing about it would read as a pass - so it REFUSES, exactly as a pin naming a revision
+# with no App.tsx does. Measured on the documents at b4bed5b: 2 groups, 3 numbers, all of
+# them in a prototype that is in the tree, so this refusal is the fail-closed branch.
+html_need = {}
+for f in files:
+    _dl = show(doc_rev, f).split("\n")
+    for i, l in enumerate(_dl):
+        if not re.search(r"`[:\uff1a]\d+`", l):
+            continue
+        _gov, _gi = governing(_dl, i)
+        if len(_gov) != 1 or not is_html(_gov[0]):
+            continue
+        _inherit = pin_on(_dl[_gi]) or code_rev
+        for m in re.finditer(r"`[:\uff1a](\d+)`", l):
+            _rev = pin_at(l, m.start()) if pin_on(l) else _inherit
+            html_need.setdefault((_rev, _gov[0]), []).append("%s:%d" % (f, i + 1))
+bad_targets = [(rev, name, where) for (rev, name), where in sorted(html_need.items())
+               if target_path(rev, name) is None]
+if bad_targets:
+    print("REFUSED: nothing was checked - a citation names a .html file that is not in the tree:")
+    for rev, name, where in bad_targets:
+        print("  %s at %s (cited from %s)"
+              % (name, rev[:12], ", ".join(sorted(set(where))[:3])))
+    print("  A citation into a file the tree does not hold cannot be judged; it is not a skip.")
+    sys.exit(2)
+
 ok = fail = unchecked = pinned = unused = other = 0
-unch_plain = unch_cont = cont_groups = cont_nums = 0
+unch_plain = unch_cont = unch_html = cont_groups = cont_nums = 0
+html_groups = html_nums = html_ok = html_fail = html_unchecked = html_past = 0
 for f in files:
     lines = show(doc_rev, f).split("\n")
     for i, l in enumerate(lines):
@@ -258,6 +353,11 @@ for f in files:
                 for m in re.finditer(r"App\.tsx[:\uff1a](\d+)", l)]
         nums += [(int(m.group(1)), pin_at(l, m.start()))
                  for m in re.finditer(r"`[:\uff1a](\d+)`", l)]
+        # `name.html:290` written INLINE is the same citation as a bare `:290` below a line
+        # naming the file, and until 2026-11-08 it was a number this instrument did not see
+        # at all (the bare form's regex requires a backtick immediately before the colon).
+        inline_html = [(os.path.basename(m.group(1)), int(m.group(2)), m.start())
+                       for m in re.finditer(r"([\w][\w./-]*\.html)[:\uff1a](\d+)", l)]
         gi = None
         gov_note = ""
         if has_app:
@@ -265,6 +365,7 @@ for f in files:
             if not nums:
                 continue
         else:
+            nums += [(n, r) for _, n, r in inline_html]
             if not nums:
                 continue
             gov, gi = governing(lines, i)
@@ -275,6 +376,19 @@ for f in files:
                 kind = "ambiguous"
                 gov_note = ("line %d names %d files (%s), so a bare `:` number here cannot be "
                             "attributed to one of them" % (gi + 1, len(gov), ", ".join(gov)))
+            elif is_html(gov[0]):
+                # A `.html` prototype: these numbers are that file's, at the revision
+                # governing them - a pin before the number, else the pin on the line that
+                # names the file, else the run's code revision.
+                kind = "html"
+                target = gov[0]
+                inherit = pin_on(lines[gi]) or code_rev
+                nums = [(int(m.group(1)),
+                         pin_at(l, m.start()) if pin_on(l) else inherit)
+                        for m in re.finditer(r"`[:\uff1a](\d+)`", l)]
+                nums += [(n, pin_at(l, off) if pin_on(l) else inherit)
+                         for _, n, off in inline_html]
+                gov_note = "the file named at line %d is %s" % (gi + 1, target)
             elif gov[0] != "App.tsx":
                 kind = "other"
                 gov_note = "the file named at line %d is %s, not App.tsx" % (gi + 1, gov[0])
@@ -288,9 +402,15 @@ for f in files:
         if kind != "app":
             cont_groups += 1
             cont_nums += len(nums)
-        # a bare `:5173` (a port) or a wrapped time is not a citation - the same exclusion
-        # as before, now applied to continuation numbers too.
-        nums = [(n, r) for n, r in nums if 1 <= n <= len(code_at(r))]
+        if kind == "html":
+            html_groups += 1
+            html_nums += len(nums)
+            # NOT filtered by range: a number past the end of the prototype is a FAILING
+            # (below), not a number to drop. The port exclusion stays where it was needed.
+        else:
+            # a bare `:5173` (a port) or a wrapped time is not a citation - the same exclusion
+            # as before, now applied to continuation numbers too.
+            nums = [(n, r) for n, r in nums if 1 <= n <= len(code_at(r))]
         if not nums:
             continue
         if pin_unused(l):
@@ -310,6 +430,44 @@ for f in files:
             unchecked += 1
             unch_cont += 1
             print(f"CONTINUATION {f}:{i+1} App.tsx:{shown} - {gov_note}. {CONT_REASON}")
+            continue
+        if kind == "html":
+            toks = group_tokens(lines, i, span=1)
+            paths = {r: target_path(r, target) for _, r in nums}
+            past = [(n, r) for n, r in nums if n > nlines(r, paths[r])]
+            if past:
+                fail += 1
+                html_fail += 1
+                html_past += len(past)
+                n0, r0 = past[0]
+                print(f"FAIL      {f}:{i+1} {target}:{shown} - :{n0} is past the end of "
+                      f"{paths[r0]} at {r0[:12]} ({nlines(r0, paths[r0])} line(s)): "
+                      f"a citation to a line that does not exist cannot land"
+                      + (f"  [{gov_note}]" if gov_note else ""))
+                continue
+            if any(r != code_rev for _, r in nums):
+                pinned += 1
+            if not toks:
+                unchecked += 1
+                unch_html += 1
+                html_unchecked += 1
+                print(f"UNCHECKED {f}:{i+1} {target}:{shown} - the citing line names no symbol"
+                      + (f" ({gov_note})" if gov_note else ""))
+                continue
+            landed = [n for n, r in nums
+                      if any(hits(t, lines_at(r, paths[r])[n-1]) for t in toks)]
+            if landed:
+                ok += 1
+                html_ok += 1
+                print(f"ok        {f}:{i+1} {target}:{shown} -> landed {landed}"
+                      + (f"  [{gov_note}]" if gov_note else ""))
+            else:
+                fail += 1
+                html_fail += 1
+                n0, r0 = nums[0]
+                print(f"FAIL      {f}:{i+1} {target}:{shown} expects one of {toks[:4]} - :{n0} "
+                      f"at {r0[:12]} is {lines_at(r0, paths[r0])[n0-1].strip()[:70]!r}"
+                      + (f"  [{gov_note}]" if gov_note else ""))
             continue
         toks = group_tokens(lines, i, span=1 if kind == "cont" else 2)
         if not toks:
@@ -345,6 +503,10 @@ print(f"citations found: {discovered} group(s) - {judged} judged ({ok} ok, {fail
 print(f"continuation:   {cont_groups} citing line(s) carry {cont_nums} number(s) with no `App.tsx` "
       f"on the line - the class this instrument used to skip IN SILENCE"
       + ("   [--judge-continuations: they WERE judged]" if JUDGE_CONT else ""))
+print(f"html targets:   {html_groups} group(s) carry {html_nums} number(s) attributed to a .html "
+      f"file at its governing revision - {html_ok + html_fail} judged ({html_ok} ok, "
+      f"{html_fail} FAILING), {html_unchecked} unchecked (no symbol on the citing line), "
+      f"{html_past} past the file's end")
 print(f"floor:          {CITATION_FLOOR} group(s) discovered, recorded at {CITATION_FLOOR_AT}"
       + ("   [OVERRIDDEN by --floor]" if FLOOR_OVERRIDE is not None else ""))
 
