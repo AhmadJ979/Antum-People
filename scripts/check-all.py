@@ -519,6 +519,23 @@ CHECKS = [
               "record that disagrees prints AFTER-STATE MOVED naming both sides without failing the "
               "run. Never opens, creates or prints the host's gate credential"),
 
+    dict(id="gate-rotate", mode="full", expect="green", home="operator CLI, off-host",
+         cmd=["bash", "scripts/gate-rotate-test.sh"],
+         what="the ONE-COMMAND GATE ROTATION, driven through the real functions extracted from "
+              "scripts/gate-rotate.sh against a real HTTP rig that mounts the tree's OWN "
+              "server/public-gate.js and reads its credential files at BOOT. Asserts (c) the full "
+              "rotation: the pre-rotation cookie is REFUSED, a cookie minted from the new key works "
+              "byte-for-byte, the new passcode opens the gate and the old one does not, the "
+              "rendered-screen row holds, and the guard row holds by the LOCK's holder; (a) THE "
+              "MUTATION THAT MATTERS — rotate the passcode only, signing key unchanged — the "
+              "revocation row FAILS and the run says THE ROTATION REVOKED NOBODY; (b) both files "
+              "rotated with NO RESTART — the running server still honours the old cookie, so the row "
+              "fails again; (d) a deliberate row failure puts the OLD pair back and the old cookie "
+              "works again, measured; (e) with no old plaintext on the host the old-passcode row is "
+              "SKIP-FLAGGED and the run returns 3, never 0. Also asserts the passcode never reaches "
+              "argv and no credential reaches a log. Never reads, creates or prints the host's gate "
+              "credential"),
+
     dict(id="keep-alive-deploypath", mode="full", expect="green", home="operator CLI, off-host",
          cmd=["bash", "scripts/keep-alive-deploypath-test.sh"],
          what="keep-alive.sh's BOTH arming paths - the regression the hardened loop of 2026-10-06 needed"),
