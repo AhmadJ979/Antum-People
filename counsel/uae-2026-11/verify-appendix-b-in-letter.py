@@ -17,8 +17,17 @@ It exits 1 on any failure and prints counts, never a bare verdict. `--selftest` 
 en dash turned into a hyphen, a line number moved, a row deleted) and requires a red for each -- a
 check that cannot redden proves nothing.
 
+WHERE IT LIVES (re-grounded 2026-11-08, when it moved into the repository). Every path it
+reads is resolved from THIS FILE, never from a hardcoded /home/team/shared prefix, so it
+judges the tree it is checked out in: the two letters sit beside it in
+counsel/uae-2026-11/, and server/compliance_engine.js is two levels up in the same worktree.
+
+It is NOT the same instrument as `appendix-b-verify.py` in the same directory, and neither
+is a superset of the other: that one judges the DRAFT (the checklist-strings doc) against
+the engine; this one judges the COPY THAT GETS SENT. Different subjects, different checks.
+
 Usage:
-    python3 /home/team/shared/verify-appendix-b-in-letter.py [--selftest]
+    python3 counsel/uae-2026-11/verify-appendix-b-in-letter.py [--selftest]
 """
 
 import re
@@ -26,12 +35,13 @@ import sys
 import tempfile
 import os
 
-SHARED = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.dirname(os.path.dirname(HERE))
 LETTERS = [
-    os.path.join(SHARED, 'uae-counsel-confirmation-request.md'),
-    os.path.join(SHARED, 'uae-counsel-confirmation-request--send-ready.txt'),
+    os.path.join(HERE, 'uae-counsel-confirmation-request.md'),
+    os.path.join(HERE, 'uae-counsel-confirmation-request--send-ready.txt'),
 ]
-SOURCE = os.path.join(SHARED, 'probable-octo-sniffle', 'server', 'compliance_engine.js')
+SOURCE = os.path.join(REPO, 'server', 'compliance_engine.js')
 # The four lines of the UAE offboarding block that carry an article number or a stated deadline.
 LINES = (22, 23, 26, 27)
 QUESTION = 'Which article governs this, or is the claim wrong?'

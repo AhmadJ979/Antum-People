@@ -78,6 +78,25 @@ cd /home/team/shared/probable-octo-sniffle
   lines 22/23/26/27 still carry the four Appendix B strings verbatim
 ```
 
+**Custody note, added 2026-11-08 — the block above is a dated record and is left as it was run.**
+Rewriting its commands would falsify a record of a real run, so they stand; what changed is where
+the files are. **All four paths in it have since moved into the repository:**
+
+| the path the record used | where it is now |
+|---|---|
+| `/home/team/shared/uae-letter-wordstream-check.py` | `counsel/uae-2026-11/uae-letter-wordstream-check.py` (moved 2026-11-07) |
+| `/home/team/shared/verify-appendix-b-in-letter.py` | `counsel/uae-2026-11/verify-appendix-b-in-letter.py` (moved 2026-11-08) |
+| `/home/team/shared/appendix-b-verify.py` | `counsel/uae-2026-11/appendix-b-verify.py` (moved 2026-11-07) |
+| `/home/team/shared/uae-appendix-b-checklist-strings.md` (the subject of the 40 checks) | `counsel/uae-2026-11/uae-appendix-b-checklist-strings.md` (moved 2026-11-08) |
+
+`/home/team/shared` now holds a one-line `POINTER, not a copy` at each of the first three, so
+`python3 /home/team/shared/verify-appendix-b-in-letter.py` no longer runs anything — it is not a
+script any more, it is a signpost. Run it as
+`python3 counsel/uae-2026-11/verify-appendix-b-in-letter.py` (and `--selftest`), and the appendix
+verifier as `python3 counsel/uae-2026-11/appendix-b-verify.py`. Re-measured 2026-11-08 at
+`b4bed5b`: **21 checks / 0 failing, selftest 4 caught / 0 missed; 40 checks / 0 failing** — the
+same counts as above. The two letters and the engine did not move, so their md5s above still hold.
+
 Appendix B's four quotations and their line numbers (`:22`, `:23`, `:26`, `:27`) are unchanged and
 re-measured green. Appendix A's 18 `file:line` row references are untouched. The "17 + the waiver"
 arithmetic is unchanged. Nothing in the repository was edited.

@@ -4,19 +4,24 @@
 Reads the CLAIMS OUT OF THE DOCUMENT (never from the generator's variables), so a
 stale or hand-edited doc cannot score green.
 
-WHERE THINGS ARE (re-grounded 2026-11-07, when the letter package moved into the
-repository). Every path this instrument reads is resolved from THIS FILE, never from
-a hardcoded /home/team/shared prefix, so it judges the tree it is checked out in:
+WHERE THINGS ARE (re-grounded 2026-11-07 when the letter package moved into the
+repository, and again 2026-11-08 when the checklist-strings doc followed it). Every path
+this instrument reads is resolved from THIS FILE, never from a hardcoded
+/home/team/shared prefix, so it judges the tree it is checked out in:
 
   * the LETTER and its .md twin  -> this directory (counsel/uae-2026-11/)
+  * the checklist-strings doc    -> this directory, since 2026-11-08
   * server/compliance_engine.js  -> two levels up, in the same worktree
   * the revision the doc names   -> `git -C` the same worktree
 
-One input is still OUTSIDE the repository, because it was not moved with the package:
-the checklist-strings doc the B/K rows are quoted from. It is read from
-/home/team/shared/uae-appendix-b-checklist-strings.md (override with APPENDIX_DOC).
-When it is absent this instrument REFUSES with exit 3 and says nothing was judged -
-never a green zero. check-all prints that as SKIP-FLAGGED and counts it as skipped.
+UNTIL 2026-11-08 one input was OUTSIDE the repository - the checklist-strings doc the B/K
+rows are quoted from - and this instrument REFUSED with exit 3 when it was absent, which
+check-all printed as SKIP-FLAGGED and counted as skipped. The doc now lives here, so that
+refusal is GONE: a missing doc is a file OF THE TREE that is missing, i.e. RED with exit 1
+and its name printed, never a skip. /home/team/shared keeps a one-line POINTER at the old
+path, and judging the pointer as the document would judge nothing - so the default is this
+directory, and it is never the host path. APPENDIX_DOC still overrides it: that is how a
+mutation in a scratch copy is proved without dirtying the tree.
 """
 import os
 import re
@@ -24,22 +29,25 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
-DOC = os.environ.get("APPENDIX_DOC", "/home/team/shared/uae-appendix-b-checklist-strings.md")
+DOC = os.environ.get("APPENDIX_DOC", os.path.join(HERE, "uae-appendix-b-checklist-strings.md"))
 SRC = os.path.join(REPO, "server", "compliance_engine.js")
 
 if not os.path.isfile(DOC):
-    print("REFUSED: the document this instrument judges is not on this machine")
+    print("RED: the document this instrument judges is not in this tree")
     print("  doc  : %s" % DOC)
-    print("  why  : it was NOT moved with the letter package (it is the one input still outside the")
-    print("         repository). NOTHING WAS JUDGED - this is not a pass.")
-    print("  fix  : run on the team's machine, or point APPENDIX_DOC at a copy")
-    sys.exit(3)
+    print("  why  : it is part of the repository (counsel/uae-2026-11/) since 2026-11-08, so its")
+    print("         absence is a defect in the tree, not an absent environment. NOTHING WAS")
+    print("         JUDGED - this is not a pass, and it is not a skip either.")
+    print("  fix  : restore it from git. Do NOT point APPENDIX_DOC at the old /home/team/shared")
+    print("         path: that path holds a one-line POINTER, not a copy, and a pointer judged")
+    print("         as the document judges nothing.")
+    sys.exit(1)
 if not os.path.isfile(SRC):
-    print("REFUSED: no server/compliance_engine.js in the tree this instrument lives in")
+    print("RED: no server/compliance_engine.js in the tree this instrument lives in")
     print("  src  : %s" % SRC)
-    print("  why  : this file must sit at counsel/uae-2026-11/ inside the repository.")
-    print("         NOTHING WAS JUDGED - this is not a pass.")
-    sys.exit(3)
+    print("  why  : this file must sit at counsel/uae-2026-11/ inside the repository, two levels")
+    print("         below the tree root. NOTHING WAS JUDGED - this is not a pass.")
+    sys.exit(1)
 
 doc = open(DOC, encoding="utf-8").read()
 src = open(SRC, encoding="utf-8").read().splitlines()

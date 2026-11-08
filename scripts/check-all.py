@@ -302,25 +302,24 @@ CHECKS = [
     # checks drifts. WIDENED the same day (#379) from the UAE package to all FOUR: uae, ksa, pdpl
     # and access, each judged per pair with its own counts, never as one aggregate.
     #
-    # `absent_exit=3` is the SAME declaration workflow-mirror makes, for the same shape of
-    # reason: the appendix verifier's SUBJECT - the checklist-strings document its B/K rows are
-    # quoted from - was NOT moved with the package and is still outside the repository, so a
-    # fresh clone or CI has nothing for that half to judge. That must print SKIP-FLAGGED and be
-    # counted as SKIPPED, never OK. It is NOT a licence to skip the rest: a missing file OF THE
-    # PACKAGE is exit 1 and RED, because the package is part of the tree and its absence is a
-    # defect in the tree. An argument the runner does not understand is exit 2, so nobody buys
-    # a green by guessing a flag.
-    dict(id="counsel-letter", mode="default", expect="green", absent_exit=3,
+    # NO `absent_exit` ANY MORE (2026-11-08). Until then this row declared `absent_exit=3` - the
+    # same declaration workflow-mirror makes - because the appendix verifier's SUBJECT, the
+    # checklist-strings document its B/K rows are quoted from, was NOT in the repository, so a
+    # fresh clone had nothing for that half to judge and the row printed SKIP-FLAGGED. That
+    # document (and the letter verifier that judges the SENT copy) moved into
+    # counsel/uae-2026-11/ on 2026-11-08, so the row now has NO input outside the repository.
+    # The declaration is therefore REMOVED, not repointed: a missing checklist-strings document
+    # is now a file of the tree that is missing, which is exit 1 and RED with its name printed.
+    # Leaving `absent_exit=3` in place would have turned a tree defect into a skip, which is the
+    # one thing this row must never do. A missing file OF THE PACKAGE was already exit 1 and
+    # RED; an argument the runner does not understand is exit 2, so nobody buys a green by
+    # guessing a flag.
+    dict(id="counsel-letter", mode="default", expect="green",
          home="IN the repository (counsel/ + scripts/check-counsel-letter.py) - a PR carries it; "
               "the movement does not run it",
-         absent_reason="the APPENDIX half judged NOTHING: the checklist-strings document its B/K rows "
-                       "are quoted from (default /home/team/shared/uae-appendix-b-checklist-strings.md, "
-                       "overridable with APPENDIX_DOC) is not on this machine - a fresh clone or CI. The "
-                       "FOUR PAIRS were still judged and hold; Appendix B was NOT judged and this "
-                       "row is not a pass for it. On the team's machine: python3 scripts/check-counsel-letter.py",
          cmd=[PY, "scripts/check-counsel-letter.py"],
          what="the FOUR counsel letter packages are IN the repository and still say what they said when "
-              "they were approved. Four assertions, each with its own counts: (1) all 7 files of the UAE "
+              "they were approved. Five assertions, each with its own counts: (1) all 9 files of the UAE "
               "package are present in counsel/uae-2026-11/ - a missing one is RED and named, never a skip; "
               "(2) EACH OF THE FOUR PAIRS is judged on its own with its counts printed PER PAIR, never as "
               "one aggregate (an aggregate hides which letter moved): a `twin` pair - uae 1681/1681 tokens, "
@@ -331,10 +330,14 @@ CHECKS = [
               "are measured and declared with their evidence, not assumed; requiring identity of the last "
               "two would be a red no edit could clear. (3) the send index's four md5 pins still hold - a "
               "letter whose bytes move without its pin moving is RED, and the fix is to re-hash and record, "
-              "never to loosen the pin. (4) Appendix B is still true - every quoted B/K row is the "
-              "`description` field of the line it cites in server/compliance_engine.js, the row set still "
-              "covers every citation-bearing description, and the letter's two md5 pins (89b2bd58... send "
-              "copy, 7bd134df... twin) still hold. It reads its claims OUT OF the documents, so a stale or "
+              "never to loosen the pin. (4) Appendix B is still true of the DRAFT - every quoted B/K row is "
+              "the `description` field of the line it cites in server/compliance_engine.js, the row set "
+              "still covers every citation-bearing description, and the letter's two md5 pins (89b2bd58... "
+              "send copy, 7bd134df... twin) still hold. (5) Appendix B is still true INSIDE the two letters "
+              "- the letter verifier's 4 B rows per copy, each quote byte-identical to the source, the "
+              "single question, Appendix A's 18 U rows, the 7 numbered items, the two copies agreeing - and "
+              "its own `--selftest` must catch all 4 of its mutations, because an instrument that cannot "
+              "redden proves nothing. Both verifiers read their claims OUT OF the documents, so a stale or "
               "hand-edited copy cannot score green. WHAT IT DOES NOT JUDGE: whether any letter is correct "
               "in law or ready to send - only that its bytes are the bytes that were approved, that the "
               "twins agree and the document+letter documents still point at their letters, and that its "
