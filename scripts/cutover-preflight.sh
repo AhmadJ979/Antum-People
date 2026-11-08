@@ -265,7 +265,7 @@ TMPD=$(mktemp -d /tmp/preflight-XXXXXX); trap 'rm -rf "$TMPD"' EXIT
 GATE_COOKIE=""
 GATE_MINT_NOTE=""
 SELF_DIR=$(cd "$(dirname "$0")" && pwd)
-if GATE_COOKIE=$(node "$SELF_DIR/gate-cookie.js" --tree "$SELF_DIR" 2>"$TMPD/gateerr"); then
+if GATE_COOKIE=$(node "$SELF_DIR/gate-cookie.js" --tree "$(cd "$SELF_DIR/.." && pwd)" 2>"$TMPD/gateerr"); then
   [ -n "$GATE_COOKIE" ] || { GATE_MINT_NOTE="the minter printed nothing"; GATE_COOKIE=""; }
 else
   GATE_MINT_NOTE=$(tr '\n' ' ' < "$TMPD/gateerr" 2>/dev/null | sed 's/  */ /g; s/ $//')
