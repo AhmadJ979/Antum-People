@@ -61,6 +61,7 @@ import { MarkdownDocument } from './markdownView.js';
 // One figure, one reading - and one date shape: every amount and every date on this screen goes
 // through `src/format.js`, so none of them depends on the machine the reader sits at (`src/format.test.js`).
 import { money, formatAmount, formatDate } from './format.js';
+import { eosbFigureFontSize } from './eosbFigureSize.js';
 
 // Unified API Base URL helper
 // Row d2328d67: what a refusal says. Plain on purpose, and reassuring on purpose — a refusal is not
@@ -380,6 +381,14 @@ type EosbBasis = {
   factor: number | null;
   recognised: boolean;
 };
+/**
+ * THE CARD'S FIGURE — complete, never truncated. Its type size is computed from the figure's own
+ * length against the card's inner width (see `eosbFigureSize.js`), so the number never has to be
+ * rounded, abbreviated or cut to fit. Measured before this fix: 190 px of figure in a 172 px row.
+ */
+const EosbFigure = ({ figure }: { figure: string }) => (
+  <span className="whitespace-nowrap" style={{ fontSize: eosbFigureFontSize(figure) }}>{figure}</span>
+);
 /** One line, only where the basis has something a reader must not have to guess at. */
 const EosbBasisNote = ({ basis }: { basis?: EosbBasis | null }) => {
   if (!basis) return null;
@@ -1896,7 +1905,14 @@ export default function App() {
                 </div>
 
                 {/* EOSB Liability */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                {/* THE CARD IS A SIZE CONTAINER, and its figure is sized against the card's own inner
+                    width (`cqw` below) rather than the viewport: a currency amount must never be
+                    truncated, rounded or abbreviated to fit, so the type gets smaller instead.
+                    Measured on the tree before this fix (2026-11-08, seeded scratch DB, AE): at
+                    1280x576 the figure element was 190 px wide inside a 172 px row and ran 42.28 px
+                    past the card's inner edge; at 1024x768 it ran 106.28 px past it and the whole
+                    content column scrolled sideways (818 px of content in a 768 px box). */}
+                <div className="@container bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                   <div className="flex items-center justify-between text-slate-400 mb-3">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">EOSB Liability</span>
                     <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1907,15 +1923,17 @@ export default function App() {
                     {analytics ? (
                       <div className="space-y-1">
                         {analytics.eosbByJurisdiction.AE > 0 && (
-                          <div className="flex items-baseline space-x-2">
+                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                             <span className="text-xs text-slate-400 uppercase">AE</span>
-                            <span>{formatAmount(analytics.eosbByJurisdiction.AE)} <span className="text-sm font-bold text-slate-400">AED</span></span>
+                            <EosbFigure figure={formatAmount(analytics.eosbByJurisdiction.AE)} />
+                            <span className="text-sm font-bold text-slate-400">AED</span>
                           </div>
                         )}
                         {analytics.eosbByJurisdiction.SA > 0 && (
-                          <div className="flex items-baseline space-x-2">
+                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                             <span className="text-xs text-slate-400 uppercase">SA</span>
-                            <span>{formatAmount(analytics.eosbByJurisdiction.SA)} <span className="text-sm font-bold text-slate-400">SAR</span></span>
+                            <EosbFigure figure={formatAmount(analytics.eosbByJurisdiction.SA)} />
+                            <span className="text-sm font-bold text-slate-400">SAR</span>
                           </div>
                         )}
                         {!analytics.eosbByJurisdiction.AE && !analytics.eosbByJurisdiction.SA && (
