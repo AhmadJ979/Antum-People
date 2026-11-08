@@ -99,18 +99,23 @@ export const REFUSED_PANELS = Object.freeze({
   preboarding_cases: Object.freeze({
     label: 'the pre-boarding cases',
     sentence_subject: 'The pre-boarding cases',
+    plural: true,
     resource: 'preboarding:read',
     roles: Object.freeze(['hr_admin']),
   }),
   preboarding_overview: Object.freeze({
     label: 'the pre-boarding roll-up',
     sentence_subject: 'The pre-boarding roll-up',
+    // Singular: "the roll-up ARE read by" is the kind of sentence a refusal cannot afford, because the
+    // reader is already being told no. Asserted in panelReading.test.js.
+    plural: false,
     resource: 'preboarding:read:aggregate',
     roles: Object.freeze(['hr_admin', 'compliance_viewer']),
   }),
   probation: Object.freeze({
     label: 'the probation timelines',
     sentence_subject: 'The probation timelines',
+    plural: true,
     resource: 'employees:read',
     roles: Object.freeze(['hr_admin', 'manager', 'finance']),
   }),
@@ -137,8 +142,9 @@ export function refusalSentenceFor(name) {
   const panel = REFUSED_PANELS[name];
   if (!panel) throw new Error(`no refusal copy declared for panel ${JSON.stringify(name)}`);
   const who = joinWords(panel.roles.map((role) => ROLE_WORDS[role]));
+  const verb = panel.plural ? 'are' : 'is';
   return `You can't read ${panel.label} from this account. Nothing was changed, and you are still `
-    + `signed in. ${panel.sentence_subject} are read by ${who}.`;
+    + `signed in. ${panel.sentence_subject} ${verb} read by ${who}.`;
 }
 
 /**

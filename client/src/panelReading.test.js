@@ -80,6 +80,18 @@ describe('the sentence a refused panel says', () => {
     }
   });
 
+  test('the sentence AGREES with its subject — "the roll-up are read by" is a refusal nobody can read', () => {
+    for (const name of PANELS) {
+      const panel = REFUSED_PANELS[name];
+      const sentence = refusalSentenceFor(name);
+      const verb = panel.plural ? 'are' : 'is';
+      assert.ok(
+        sentence.includes(`${panel.sentence_subject} ${verb} read by`),
+        `${name}: expected "${panel.sentence_subject} ${verb} read by" in ${sentence}`
+      );
+    }
+  });
+
   test('it never claims the data is absent — that is the defect, in words', () => {
     for (const name of PANELS) {
       const sentence = refusalSentenceFor(name);
