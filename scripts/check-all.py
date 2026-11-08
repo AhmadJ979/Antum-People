@@ -379,9 +379,19 @@ CHECKS = [
     # UNPROVEN and exits 1 - deliberately, because on 2026-11-02 there was no record and that is
     # exactly the state that must not read as a pass. It judges the DEPLOYED tree (WORKFLOW rule
     # 7) unless --tree names another, and it prints both sides of every comparison.
+    # THE TREE IS NAMED HERE (2026-11-08). Until this line passed `--tree`, the row was invoked
+    # bare, and `resolve_tree()` falls back to DEPLOYED_TREE (/home/team/shared/probable-octo-sniffle)
+    # - NEVER to the cwd - so inside a branch worktree this row judged the DEPLOYED tree and read
+    # PROVEN, correctly for that tree, while this run's own header said `tree judged: <branch sha>`.
+    # The aggregate could not see it: the row's output named a tree, the header named another, and
+    # nothing compared them. Naming ROOT (the tree THIS FILE is in, which is also every other row's
+    # cwd) makes the row line and the header agree by construction, and gives the two correct
+    # readings: a branch tree reddens `revision-mismatch` (its dist is the deployed build, its HEAD
+    # is the branch tip - the merge + a rebuild in the deployed tree is what closes it), and the
+    # deployed tree stays green.
     dict(id="served-provenance", mode="default", expect="green",
          home="operator CLI (bare) + this entry point",
-         cmd=[PY, "scripts/check-served-provenance.py"],
+         cmd=[PY, "scripts/check-served-provenance.py", "--tree", ROOT],
          what="do the bytes this tree SERVES prove where they came from? Reads dist/index.html, "
               "dist/build-provenance.json and dist/** - never source, never a status code (a missing "
               "asset answers 200 with the SPA shell). Asserts the asset index.html names is the entry "
@@ -390,7 +400,11 @@ CHECKS = [
               "that the provenance revision equals `git rev-parse HEAD` OF THE TREE BEING MEASURED (a "
               "merge without a rebuild, or --restart-only, or a build from elsewhere all land here); "
               "and that dist/assets/ holds nothing the build did not name. Prints bytes, md5 and "
-              "revision for BOTH sides of each comparison. NO record = UNPROVEN = exit 1, not a skip"),
+              "revision for BOTH sides of each comparison. NO record = UNPROVEN = exit 1, not a skip. "
+              "THE TREE IS NAMED BY THIS ENTRY POINT (`--tree` = the tree this file is in), so the row "
+              "line's `tree=` and the header's `tree judged` are the same tree: a branch worktree reddens "
+              "`revision-mismatch` because its dist is the deployed build and its HEAD is the branch tip - "
+              "that red is the row working, and the merge + a rebuild in the deployed tree closes it"),
 
     dict(id="served-provenance-controls", mode="full", expect="green", home="operator CLI, off-host",
          cmd=[PY, "scripts/check-served-provenance.py", "--selftest"],
@@ -652,13 +666,26 @@ def main(argv):
         rows.append((c, word, code, shown, dt, hidden))
 
     if live_label is not None:
-        c = dict(id="success-test", expect="green", home="operator CLI, LIVE-facing",
+        # GATE-AWARE 2026-11-08: the script exits 3 when the URL answered the PUBLIC GATE's page and
+        # no gate credential could be minted (scripts/gate-cookie.js names the file it looked for).
+        # Declared here so that code prints SKIP-FLAGGED - never OK, and never BROKEN-EXIT-3, which
+        # would call a gated product a broken tree. This row is built inline, so it must call
+        # classify_check() rather than classify(): a declaration classify() cannot see is no
+        # declaration at all, and the row would have gone red on exit 3.
+        c = dict(id="success-test", expect="green", absent_exit=3,
+                 absent_reason="the public URL answered the PUBLIC GATE's page and no gate credential "
+                               "could be minted here (scripts/gate-cookie.js exit 3 names the file it "
+                               "looked for: ANTUM_GATE_SECRET_FILE, default "
+                               "/home/team/shared/.antum-gate-secret). TEST 1 - the served page, the "
+                               "asset it names and the served==deployed bytes - was NOT judged; "
+                               "TESTs 2-4 and SURVIVAL were. Not an outage.",
+                 home="operator CLI, LIVE-facing",
                  cmd=["bash", "scripts/success-test.sh", live_label],
                  what="the cutover's four success tests against whatever is public right now")
         t0 = time.time()
         p = subprocess.run(c["cmd"], cwd=ROOT, capture_output=True, text=True, timeout=600)
         shown, hidden = tail_lines(p.stdout + "\n" + p.stderr, TAIL_LINES)
-        rows.append((c, classify("green", p.returncode), p.returncode, shown, time.time() - t0, hidden))
+        rows.append((c, classify_check(c, p.returncode), p.returncode, shown, time.time() - t0, hidden))
 
     # --------------------------------------------------------------------- print per check
     for c, word, code, shown, dt, hidden in rows:
