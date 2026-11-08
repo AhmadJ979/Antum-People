@@ -506,6 +506,19 @@ CHECKS = [
          cmd=["bash", "scripts/install-host-tools-test.sh"],
          what="the host-tooling installer does what it claims, entirely off the host"),
 
+    dict(id="deploy-main-gate", mode="full", expect="green", home="operator CLI, off-host",
+         cmd=["bash", "scripts/deploy-main-gate-test.sh"],
+         what="the movement's GATE DECISION and PRODUCT ASSERTION, driven through the real functions "
+              "extracted from scripts/deploy-main.sh against throwaway trees in /tmp, each served by a "
+              "rig built from that tree's OWN server/public-gate.js. Asserts (a) an ungated tree needs "
+              "no credential and the product assertion runs, (b) a gated tree with its credential files "
+              "mints a cookie and the served document names the built entry with bytes md5-identical to "
+              "disk, (c) THE 2026-11-08 MUTATION — a gated tree judged with no cookie — FAILS and names "
+              "what it could not prove, while the OLD bare status/title row is reproduced beside it "
+              "reading `200 <title>Antum People — access</title>`, and (d) a supplied ANTUM_MEASURED_* "
+              "record that disagrees prints AFTER-STATE MOVED naming both sides without failing the "
+              "run. Never opens, creates or prints the host's gate credential"),
+
     dict(id="keep-alive-deploypath", mode="full", expect="green", home="operator CLI, off-host",
          cmd=["bash", "scripts/keep-alive-deploypath-test.sh"],
          what="keep-alive.sh's BOTH arming paths - the regression the hardened loop of 2026-10-06 needed"),
