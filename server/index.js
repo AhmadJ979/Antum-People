@@ -47,6 +47,17 @@ app.set('trust proxy', 1);
 // Hardening: Remove X-Powered-By header
 app.disable('x-powered-by');
 
+// ── THE PUBLIC GATE RUNS FIRST, AND THAT ORDER IS THE WHOLE OF IT ───────────────────────────────
+// The platform proxies port 3000, so whatever this process serves IS the public product; until this
+// was added a stranger with the URL got the sign-in card. server/public-gate.js answers every path
+// except its own (`/gate`, `/gate/logout`) with a gate page unless the request carries the signed
+// cookie, so it must be registered BEFORE CORS, the API, express.static and the SPA catch-all --
+// below every other middleware is outside the gate. What a gated request gets, the two host files
+// it reads at boot, the 503 when they are absent and the API's unchanged 401 are documented there.
+const publicGate = require('./public-gate').createGate();
+app.use(publicGate.router);
+app.use(publicGate.middleware);
+
 // Hardening: Restrict CORS
 //
 // This must never throw. A throw from middleware does not get an HTTP response from the
