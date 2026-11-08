@@ -81,8 +81,9 @@ REPORT = re.compile(r"^(ok|FAIL|UNCHECKED|UNUSED-PIN|CONTINUATION|OTHER-FILE)\s"
 # -> 1703 (the probation evaluation screen, +101 more above the analytics tab) -> 1808 (the
 # correction screen, +105 more above the analytics tab; measured at a94bca9, where that
 # symbol is on :1808, and on :1703 at 2a23e43) -> 1875 (the pre-boarding notice lifecycle,
-# +67 more above the analytics tab; measured at 7a00a2d, where that symbol is on :1875);
-# the example line moved 1212 -> 1216 for the
+# +67 more above the analytics tab; measured at 7a00a2d, where that symbol is on :1875)
+# -> 1884 (the EOSB card's own 18 inserted lines, 2026-11-08, where that symbol is on
+# :1884 - measured, not re-tipped); the example line moved 1212 -> 1216 for the
 # same reason. A stale P4 number does not read as "re-tip me": the citation stops landing,
 # and P4 reports `exit 1, expected 0` while its UNUSED-PIN is still printed. Re-measure the
 # number before blaming the plant.
@@ -109,7 +110,7 @@ P3 = """
 P4 = """
 # pin selftest plant
 
-- `App.tsx:1875` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
+- `App.tsx:1884` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
 """
 P5 = """
 # pin selftest plant
