@@ -8,7 +8,7 @@ WHY THIS ROW EXISTS
   the last live documents outside it. Moving them in is only half the job: a document nobody
   checks drifts. This row is the check.
 
-WHAT IT ASSERTS (four separate things, each printed with its own counts)
+WHAT IT ASSERTS (five separate things, each printed with its own counts)
   1. Every file of the UAE package is PRESENT in counsel/uae-2026-11/. A missing one is RED and
      named - never a quiet skip. (The moved package is part of the tree, so its absence is a
      defect in the tree, not an absent environment.)
@@ -32,19 +32,27 @@ WHAT IT ASSERTS (four separate things, each printed with its own counts)
      cites in server/compliance_engine.js, the row set still covers every citation-bearing
      description, and the letter's two md5 pins still hold - the appendix verifier, which
      reads its claims out of the document rather than from a variable.
+  5. Appendix B as it sits INSIDE the two letters is still what it claims - the letter
+     verifier (`verify-appendix-b-in-letter.py`): 4 B rows per copy, each quote byte-identical
+     to the source `description`, the single question, Appendix A's 18 U rows, the 7 numbered
+     items, and the two copies carrying the same four strings. Its own `--selftest` is run too,
+     and a mutation it fails to catch is RED: an instrument that cannot redden proves nothing.
 
 WHERE THE PATHS COME FROM
   Every path is resolved from this file, so the row judges the tree it is run in - a
-  worktree, a clone, CI - and never a hardcoded /home/team/shared prefix. The one input
-  still outside the repository is the checklist-strings document the Appendix B rows are
-  quoted from (it was not moved with the package). When it is absent this row exits 3 and
-  check-all prints SKIP-FLAGGED and counts it as SKIPPED, never OK - the same declaration
-  `workflow-mirror` makes for its live file.
+  worktree, a clone, CI - and never a hardcoded /home/team/shared prefix.
+
+  UNTIL 2026-11-08 one input was outside the repository: the checklist-strings document the
+  Appendix B rows are quoted from, and this row exited 3 (check-all: SKIP-FLAGGED, counted as
+  SKIPPED) when it was absent. That document moved into counsel/uae-2026-11/ on 2026-11-08, so
+  the exit-3 half is GONE: a missing checklist-strings document is now a file of the tree that
+  is missing - exit 1, RED, named - and never a skip. APPENDIX_DOC still overrides the path;
+  it exists so a mutation in a scratch copy can be judged without dirtying the tree.
 
 EXIT CODES (the team's convention)
   0 green · 1 RED (a named defect in the tree) · 2 REFUSED (bad invocation - it did not
-  understand what it was asked to judge, so it refuses rather than buying a green) ·
-  3 the outside-repo input is absent: NOTHING WAS JUDGED by the appendix half.
+  understand what it was asked to judge, so it refuses rather than buying a green).
+  There is no exit 3 any more: this row has no input outside the repository.
 
 REPRODUCING THE RED
   Two overrides judge a copy somewhere else, which is how the row's ability to redden is
@@ -66,10 +74,11 @@ import difflib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-# The one input outside the repository: the doc the B/K rows are quoted from. Not moved with
-# the package (see counsel/README.md), so its absence is a skip, not a red.
-APPENDIX_DOC = os.environ.get("APPENDIX_DOC",
-                              "/home/team/shared/uae-appendix-b-checklist-strings.md")
+# The checklist-strings doc the B/K rows are quoted from lives in the package since
+# 2026-11-08, so the default is resolved from the package directory being judged (which
+# `--root` / `--letter-dir` can move). APPENDIX_DOC still overrides it, for judging a
+# mutated copy without dirtying the tree.
+APPENDIX_DOC_ENV = os.environ.get("APPENDIX_DOC")
 PY = sys.executable or "python3"
 
 # The UAE package. The two verifiers travel WITH it: a check that lives somewhere else can drift
@@ -81,6 +90,8 @@ REQUIRED = [
     "counsel-package-send-index-2026-10-29.md",
     "uae-counsel-letter-d1-d5-applied-2026-11-07.md",
     "appendix-b-verify.py",
+    "verify-appendix-b-in-letter.py",
+    "uae-appendix-b-checklist-strings.md",
     "uae-letter-wordstream-check.py",
 ]
 
@@ -116,12 +127,13 @@ SEND_INDEX = "counsel/uae-2026-11/counsel-package-send-index-2026-10-29.md"
 USAGE = ("usage: check-counsel-letter.py [--root <dir>] [--letter-dir <dir>]\n"
          "  judges the four counsel letter packages under <root>/counsel/ (default: this tree)\n"
          "  --letter-dir overrides only the UAE package directory\n"
-         "  exit 0 green / 1 RED / 2 refused / 3 appendix input absent (NOTHING JUDGED there)")
+         "  exit 0 green / 1 RED / 2 refused - there is no exit 3: this row has no input "
+         "outside the repository since 2026-11-08")
 
 
-def run(script):
+def run(script, *args):
     """Run a verifier from the package directory and hand back (exit, output)."""
-    p = subprocess.run([PY, script], capture_output=True, text=True, timeout=300)
+    p = subprocess.run([PY, script, *args], capture_output=True, text=True, timeout=300)
     return p.returncode, (p.stdout + p.stderr).strip()
 
 
@@ -131,6 +143,9 @@ def counts(text):
     runner invented."""
     out = {}
     for key, pat in (("checks", r"^checks run:\s*(\d+)"), ("failing", r"^FAILING:\s*(\d+)"),
+                     ("passed", r"^checks passed:\s*(\d+)"), ("failed", r"^failures:\s*(\d+)"),
+                     ("caught", r"^selftest:\s*(\d+) mutation\(s\) caught"),
+                     ("not_caught", r"^selftest:\s*\d+ mutation\(s\) caught,\s*(\d+) not caught"),
                      ("md_tokens", r"^md\s+tokens[^:]*:\s*(\d+)"),
                      ("txt_tokens", r"^txt tokens:\s*(\d+)"),
                      ("differing", r"^differing regions:\s*(\d+)")):
@@ -265,8 +280,11 @@ def main(argv):
             return 2
 
     uae_dir = letter_dir or os.path.join(root, "counsel", "uae-2026-11")
+    appendix_doc = APPENDIX_DOC_ENV or os.path.join(uae_dir, "uae-appendix-b-checklist-strings.md")
     print("tree judged      : %s" % root)
     print("uae package      : %s" % uae_dir)
+    print("checklist doc    : %s%s" % (appendix_doc,
+                                      "  (APPENDIX_DOC override)" if APPENDIX_DOC_ENV else ""))
 
     missing = [f for f in REQUIRED if not os.path.isfile(os.path.join(uae_dir, f))]
     print("package files    : %d/%d present" % (len(REQUIRED) - len(missing), len(REQUIRED)))
@@ -308,7 +326,7 @@ def main(argv):
     for line in pin_lines:
         print(line)
 
-    # ---- assertion 4: the UAE package's own two verifiers ----
+    # ---- assertion 4: the UAE package's own verifiers ----
     ws_code, ws_out = run(os.path.join(uae_dir, "uae-letter-wordstream-check.py"))
     ws = counts(ws_out)
     print()
@@ -318,36 +336,52 @@ def main(argv):
 
     ab_code, ab_out = run(os.path.join(uae_dir, "appendix-b-verify.py"))
     ab = counts(ab_out)
-    print("--- appendix-b-verify (quoted rows vs server/compliance_engine.js) ---")
+    print("--- appendix-b-verify (the DRAFT's quoted rows vs server/compliance_engine.js) ---")
     print(ab_out)
+    print()
+
+    # ---- assertion 5: the copy that actually gets sent ----
+    lv_code, lv_out = run(os.path.join(uae_dir, "verify-appendix-b-in-letter.py"))
+    lv = counts(lv_out)
+    print("--- verify-appendix-b-in-letter (Appendix B INSIDE the two letters) ---")
+    print(lv_out)
+    print()
+    st_code, st_out = run(os.path.join(uae_dir, "verify-appendix-b-in-letter.py"), "--selftest")
+    st = counts(st_out)
+    print("--- verify-appendix-b-in-letter --selftest (its own ability to redden) ---")
+    print(st_out)
     print()
 
     if ws_code != 0:
         red.append("uae: its own word-stream verifier exited %d" % ws_code)
-    if ab_code not in (0, 3):
-        red.append("appendix-b-verify exited %d" % ab_code)
+    if ab_code != 0:
+        red.append("appendix-b-verify exited %d - the checklist-strings document is a file of "
+                   "this tree, so a refusal here is a defect in the tree, never a skip" % ab_code)
+    if lv_code != 0:
+        red.append("verify-appendix-b-in-letter exited %d - Appendix B in the letters is not "
+                   "what it claims" % lv_code)
+    if st_code != 0 or st["not_caught"] not in (0, None) or st["caught"] is None:
+        red.append("verify-appendix-b-in-letter --selftest caught %s mutation(s), missed %s - an "
+                   "instrument that cannot redden proves nothing"
+                   % (st["caught"], st["not_caught"]))
 
     pins_holding = len([l for l in pin_lines if l.rstrip().endswith("holds")])
     print("counts: package %d/%d files; %d pairs judged per-pair above; send-index pins %d/%d hold; "
-          "appendix-b %s checks, %s failing"
+          "appendix-b %s checks, %s failing; in-letter %s checks, %s failing; "
+          "in-letter selftest %s caught / %s missed"
           % (len(REQUIRED) - len(missing), len(REQUIRED), len(PAIRS),
-             pins_holding, len(PAIRS), ab["checks"], ab["failing"]))
+             pins_holding, len(PAIRS), ab["checks"], ab["failing"],
+             lv["passed"], lv["failed"], st["caught"], st["not_caught"]))
 
     if red:
         print("VERDICT: RED - %s" % "; ".join(red))
         return 1
 
-    if ab_code == 3:
-        print("VERDICT: PARTIAL - the pairs and the pins were judged and hold; the appendix half")
-        print("         judged NOTHING: %s is not on this machine." % APPENDIX_DOC)
-        print("         Exiting 3 so this row prints SKIP-FLAGGED and is counted as SKIPPED.")
-        print("         This is NOT a pass for Appendix B.")
-        return 3
-
     print("VERDICT: OK - all four packages are complete in this tree, every `twin` pair is")
     print("         word-identical and every `document+letter` document still names its letter,")
-    print("         the send index's four pins hold, and every Appendix B quotation still lands")
-    print("         on the line it cites.")
+    print("         the send index's four pins hold, every Appendix B quotation in the draft still")
+    print("         lands on the line it cites, and Appendix B inside both letter copies is verbatim")
+    print("         and intact.")
     return 0
 
 
