@@ -471,6 +471,7 @@ CHECKS = [
               "an unknown flag exits 2 rather than buying a green run"),
 
     dict(id="cors-error-contract", mode="full", expect="green", absent_exit=3,
+         home="operator CLI, off-host",
          absent_reason="the rig could not mint a gate credential (scripts/gate-cookie.js exit 3), so "
                        "nothing was measured - the CORS contract is unjudged, not green",
          cmd=["bash", "scripts/cors-error-contract-test.sh"],
