@@ -152,15 +152,33 @@ test('App.tsx renders the EOSB figure through the sizing rule', () => {
   assert.deepStrictEqual(scanCard(appSource), []);
 });
 
+/**
+ * Apply a mutation INSIDE the EOSB card block only.
+ *
+ * Added 2026-11-08, when the cost-per-hire card became the SECOND size container in this file: a
+ * whole-source `replace('@container ', '')` then aims at whichever card comes first in the file, so
+ * the mutation stops testing the EOSB card and the guard stays green on a reverted one. A mutant aimed
+ * at the first of two identical strings proves nothing about the second.
+ */
+function mutateInCard(source, from, to) {
+  const start = source.indexOf('{/* EOSB Liability */}');
+  const end = source.indexOf('{/* Transition Funnels */}');
+  assert.ok(start > 0 && end > start, 'the EOSB card block could not be located in App.tsx');
+  const block = source.slice(start, end);
+  assert.ok(block.includes(from), `anchor not found inside the EOSB card block: ${from}`);
+  return source.slice(0, start) + block.replace(from, to) + source.slice(end);
+}
+
 test('the scan reddens on a reverted card (the guard is load-bearing)', () => {
   const mutations = [
-    { name: 'the size container is dropped', from: '@container ', to: '' },
+    { name: 'the size container is dropped', from: '@container ', to: '', inCard: true },
     { name: 'the AE figure is rendered bare', from: '<EosbFigure figure={formatAmount(analytics.eosbByJurisdiction.AE)} />', to: '{formatAmount(analytics.eosbByJurisdiction.AE)}' },
     { name: 'the sizing rule stops being imported', from: "import { eosbFigureFontSize } from './eosbFigureSize.js';", to: '' },
   ];
   for (const mutation of mutations) {
-    assert.ok(appSource.includes(mutation.from), `anchor not found for: ${mutation.name}`);
-    const mutated = appSource.replace(mutation.from, mutation.to);
+    const mutated = mutation.inCard
+      ? mutateInCard(appSource, mutation.from, mutation.to)
+      : (assert.ok(appSource.includes(mutation.from), `anchor not found for: ${mutation.name}`), appSource.replace(mutation.from, mutation.to));
     assert.notStrictEqual(mutated, appSource, `mutation did not apply: ${mutation.name}`);
     const violations = scanCard(mutated);
     assert.ok(violations.length >= 1, `the scan stayed green on: ${mutation.name}`);
