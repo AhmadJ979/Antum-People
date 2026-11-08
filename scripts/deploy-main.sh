@@ -45,6 +45,24 @@
 #   - a response body that is not the shape a check needs -> "CANNOT-JUDGE: <what it was> (<status>)"
 #     and exit 4, never a python traceback: a stack trace in the evidence file is the harness
 #     confessing it did not understand its own input
+#   - THE PUBLIC URL DOES NOT SERVE THE BUILT BUNDLE -> exit 1 at the END of the run (so the guard is
+#     already re-armed). Added 2026-11-08 after a movement recorded `200 <title>Antum People — access`
+#     as its public row and passed: that title is the PUBLIC GATE's page, i.e. the run verified the wall
+#     and called it the product. The row now asserts the product (step 5, verify_public_product), and a
+#     gated tree with no minted cookie is a REFUSAL rather than a pass.
+#
+# THE GATE DECISION IS TAKEN AGAINST THE TREE THAT WILL BE SERVED (2026-11-08). It used to run in step 0,
+# BEFORE the git pull: on the movement that deployed b8976b0 the deployed tree was still the ungated
+# 8a4e1ac, so no cookie was minted, and the run then pulled a GATED tree, built it, restarted it and
+# judged it with an empty cookie. Step 0 now runs the decision only in the modes that pull nothing
+# (--restart-only, --preflight); a full movement takes it as step 1c, after the pull, and prints the
+# revision it judged.
+#
+# THE AFTER-STATE IS NAMED (step 2b): the pulled revision plus the built entry/CSS with byte sizes and
+# md5s, from this run's own client/dist. If the operator supplied the preflight's record
+# (ANTUM_MEASURED_TIP / _ASSET / _ASSET_BYTES / _ASSET_MD5 / _CSS / _CSS_BYTES / _CSS_MD5) and it
+# disagrees, the run prints a loud AFTER-STATE MOVED block naming both sides and CONTINUES: a tree that
+# moved under the run is a fact to report, not a reason to abort a deploy that has already pulled.
 #
 # EVERY HOST VALUE IS AN OVERRIDE: the defaults below are this host's, and each can be replaced by an
 # ANTUM_* variable so the script can be exercised off the live tree (WORKFLOW rule 14).
@@ -57,15 +75,11 @@ PW_FILE="${ANTUM_PW_FILE:-/home/team/shared/.demo-admin-password}"
 PORT="${ANTUM_PORT:-3000}"
 ENVFILE="${ANTUM_ENV_FILE:-/etc/profile.d/cto-env-vars.sh}"
 HOOK_DST="${ANTUM_HOOK_DST:-/etc/profile.d/zz-antum-product-guard.sh}"
-# The public gate's two host files (server/public-gate.js). Neither is in the repository, and
-# neither is ever printed: the passcode file holds a bcrypt hash at cost 12, the secret file the
-# HMAC key the gate cookie is signed with. Created in step 0 below when absent.
-GATE_PASSCODE_FILE="${ANTUM_GATE_PASSCODE_FILE:-/home/team/shared/.antum-gate-passcode}"
-GATE_SECRET_FILE="${ANTUM_GATE_SECRET_FILE:-/home/team/shared/.antum-gate-secret}"
-GATE_SHOWN_ONCE="${ANTUM_GATE_SHOWN_ONCE:-/home/team/shared/.antum-gate-passcode.shown-once}"
-# Sent as `Cookie:` on every request this script makes to the public URL. Empty until step 0 mints
-# it, and `antum_gate=` (an invalid cookie, i.e. no cookie) on a tree that predates the gate.
-GATE_COOKIE_HEADER="antum_gate="
+# The public gate's host files, the cookie this script judges with, and the product assertion that says
+# whether what the public URL serves is the PRODUCT: all of it is ONE unit further down, bounded by the
+# `>>> ANTUM GATE DECISION` / `<<< ANTUM GATE DECISION` markers, because scripts/deploy-main-gate-test.sh
+# extracts that unit and drives these functions against a throwaway tree in /tmp. Nothing in this
+# script reads or prints a gate file's CONTENTS; see the unit's own header.
 
 # --- the mode ----------------------------------------------------------------------
 RESTART_ONLY=0
@@ -225,20 +239,48 @@ print(len(d), (d[0].get("id") if d else "-"))
   echo "  roster:     HTTP $ROSTER_CODE, $ROSTER_N record(s) — the token is PROVEN by an authenticated read"
 }
 
-# ---------------------------------------------------------------------------------------------
-# STEP 0 — THE PUBLIC GATE'S TWO HOST FILES, AND THE COOKIE THIS SCRIPT JUDGES WITH.
+# ===================================================================================================
+# >>> ANTUM GATE DECISION — ONE UNIT, extracted and exercised off-host by scripts/deploy-main-gate-test.sh
+#
+# THE PUBLIC GATE'S TWO HOST FILES, THE COOKIE THIS SCRIPT JUDGES WITH, AND THE ASSERTION THAT SAYS
+# WHETHER WHAT THE PUBLIC URL SERVES IS THE PRODUCT.
 #
 # The owner ruled that the product must not be reachable by a stranger, and the platform proxies port
 # 3000, so `server/public-gate.js` sits in front of the shell, the assets and the API. It reads two
-# files at boot: a bcrypt hash (cost 12, the same shape as the admin credential) and an HMAC key. This
-# step creates whichever is absent, mode 600, so a fresh host comes up gated rather than answering 503
-# — and it runs in --restart-only too, because a restart is exactly when a missing file would show up.
+# files at boot: a bcrypt hash (cost 12, the same shape as the admin credential) and an HMAC key.
+# gate_decision() creates whichever is absent, mode 600, so a fresh host comes up gated rather than
+# answering 503 — and it runs in --restart-only too, because a restart is exactly when a missing file
+# would show up.
 #
 # NEITHER FILE'S CONTENTS IS EVER PRINTED. The passcode itself cannot be derived from the hash, so the
 # generated one is written ONCE to $GATE_SHOWN_ONCE for the owner to record and delete; this script
 # prints only paths. The cookie this script then judges with is minted from the SIGNING KEY, not from
 # the passcode — anything that can read that key is already on this host, which is the right boundary.
-# ---------------------------------------------------------------------------------------------
+#
+# WHY THIS IS ONE BOUNDED UNIT: a unit can be extracted whole and driven against a throwaway tree in
+# /tmp, which is the only way the two assertions below are provable without a movement. The test
+# extracts the bytes between these two markers and calls THESE functions — it does not re-implement
+# them, so a fix here reaches the test, and a regression here reddens it.
+#
+# EVERY HOST VALUE BELOW IS AN ANTUM_* OVERRIDE (WORKFLOW rule 14): that property is what makes the
+# unit testable off-host, and nothing in it may name a real path except as a default.
+# ===================================================================================================
+GATE_PASSCODE_FILE="${ANTUM_GATE_PASSCODE_FILE:-/home/team/shared/.antum-gate-passcode}"
+GATE_SECRET_FILE="${ANTUM_GATE_SECRET_FILE:-/home/team/shared/.antum-gate-secret}"
+GATE_SHOWN_ONCE="${ANTUM_GATE_SHOWN_ONCE:-/home/team/shared/.antum-gate-passcode.shown-once}"
+# Sent as `Cookie:` on every request this script makes to the public URL. `antum_gate=` is an invalid
+# cookie, i.e. no cookie — which is the state a gated tree must never be judged in (see below).
+GATE_COOKIE_HEADER="antum_gate="
+# What the last gate_decision() decided. Recorded rather than inferred later, so the product assertion
+# can refuse to judge a gated tree it holds no credential for instead of measuring the gate page.
+GATE_DECISION_REV=""
+GATE_DECISION_GATED=0
+GATE_COOKIE_MINTED=0
+
+# IS THIS TREE GATED? Asked of the tree that will be SERVED, every time, and never of a remembered
+# fact — the answer moved mid-run on 2026-11-08 and that is the whole of the defect this unit closes.
+tree_is_gated() { [ -f "$DEPLOY_DIR/server/public-gate.js" ]; }
+
 ensure_gate_credential() {
   if [ ! -s "$GATE_SECRET_FILE" ]; then
     ( umask 077; head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$GATE_SECRET_FILE" )
@@ -272,25 +314,292 @@ ensure_gate_credential() {
 }
 
 mint_gate_cookie() {
-  if [ ! -f "$DEPLOY_DIR/server/public-gate.js" ]; then
+  if ! tree_is_gated; then
     echo "  gate cookie:      not minted — this tree predates the public gate, so nothing is gated"
+    GATE_COOKIE_MINTED=0
     return 0
   fi
+  local MINTED
   MINTED=$(node -e "process.stdout.write(require('$DEPLOY_DIR/server/public-gate').mintCookieHeader('$GATE_SECRET_FILE'))" 2>/dev/null)
   if [ -n "$MINTED" ]; then
     GATE_COOKIE_HEADER="$MINTED"
+    GATE_COOKIE_MINTED=1
     unset MINTED
     echo "  gate cookie:      minted from $GATE_SECRET_FILE (the cookie itself is never printed)"
   else
     echo "  gate cookie:      COULD NOT BE MINTED from $GATE_SECRET_FILE — every public check below sees"
     echo "                    the gate page instead of the product. Fix the key before trusting this run."
     GATE_COOKIE_HEADER="antum_gate="
+    GATE_COOKIE_MINTED=0
   fi
 }
 
+# THE DECISION, TAKEN AGAINST A NAMED TREE.
+#
+# $1 = one line saying WHY this is the tree that will be served (a full movement pulls a new one in
+# step 1; --restart-only and --preflight pull nothing, so there the tree on disk IS the served tree).
+#
+# THE REVISION IS PRINTED because the defect was a decision whose subject was never named: the 14:05Z
+# movement of 2026-11-08 took this decision against the PRE-pull 8a4e1ac (ungated, so "nothing is
+# gated" was true of it), then pulled the GATED b8976b0, built it, restarted it and verified it with an
+# empty cookie. Nothing in the run said which tree the "nothing is gated" answer had been about.
+gate_decision() {
+  GATE_DECISION_REV=$(git -C "$DEPLOY_DIR" rev-parse HEAD 2>/dev/null || echo '<not a git tree>')
+  echo "  judged against:   $GATE_DECISION_REV"
+  echo "                    ($1)"
+  if tree_is_gated; then
+    echo "  tree is gated:    YES — server/public-gate.js is in this tree"
+  else
+    echo "  tree is gated:    NO — no server/public-gate.js in this tree"
+  fi
+  ensure_gate_credential
+  mint_gate_cookie
+  GATE_DECISION_GATED=$(tree_is_gated && echo 1 || echo 0)
+  echo "  decision:         gated=$GATE_DECISION_GATED cookie_minted=$GATE_COOKIE_MINTED"
+}
+
+# THE ASSET NAMES THE BUILT DIST NAMES, read from client/dist/index.html — never remembered. The served
+# document must name the SAME one: that is the assertion that tells the product from a page that merely
+# answers 200, because the gate page names no asset at all.
+dist_named_asset() { # $1 = js|css -> the file name (without the `assets/` prefix), or empty
+  local idx="$DEPLOY_DIR/client/dist/index.html" pat
+  [ -f "$idx" ] || return 0
+  case "$1" in
+    css) pat='assets/index-[A-Za-z0-9_-]*\.css' ;;
+    *)   pat='assets/index-[A-Za-z0-9_-]*\.js' ;;
+  esac
+  grep -o "$pat" "$idx" 2>/dev/null | head -1 | sed 's#^assets/##'
+}
+
+# THE TWO TITLES, each DERIVED from the thing that produces it rather than typed here: the product's
+# from the built index.html, the gate's from the tree's own gate module. A title typed into this script
+# would drift the moment either page changed, and the assertion would then redden on a healthy
+# deployment — a check that cries wolf gets switched off.
+product_title() {
+  grep -o '<title>[^<]*</title>' "$DEPLOY_DIR/client/dist/index.html" 2>/dev/null | head -1 \
+    | sed -e 's#<title>##' -e 's#</title>##'
+}
+gate_title() {
+  node -e "const g=require('$DEPLOY_DIR/server/public-gate');const m=g.gatePage('').match(/<title>([^<]*)<\/title>/);process.stdout.write(m?m[1]:'')" 2>/dev/null
+}
+
+# ===================================================================================================
+# THE PRODUCT ASSERTION — what step 5 proves about the public URL.
+#
+# rc 0 = every assertion held, and the count is printed. rc 1 = it did not, each failure naming the two
+# sides it compared.
+#
+# WHAT IT REFUSES, and why (measured 2026-11-08, on the live URL): a gated tree with NO minted cookie
+# returns the GATE PAGE — 200, title `Antum People — access`, no `#root`, no asset — and the movement
+# that ran that night recorded exactly that as its public row and passed. So on a gated tree with no
+# cookie this function does not compare anything: it says it cannot prove the product and fails. A
+# green here is a green about the SERVED DOCUMENT and the SERVED BYTES being the built client/dist,
+# and nothing else.
+# ===================================================================================================
+verify_public_product() {
+  local entry css disk_md5 doc_ck doc_no asset_ck asset_no
+  local ck_code no_code ack_code ano_code
+  local title_ck title_no entry_no served_entry root_ck root_no gt
+  local held=0 failed=0 served_gated=0
+
+  # ASKED AGAIN, OF THE TREE BEING SERVED — not read off gate_decision()'s record. The 2026-11-08
+  # defect was precisely a recorded decision about a DIFFERENT tree: gated=0 was true of the pre-pull
+  # 8a4e1ac, and the assertion then ran against the gated tree the run had just deployed. Trusting the
+  # record here would reproduce that defect inside the fix.
+  tree_is_gated && served_gated=1
+
+  entry=$(dist_named_asset js)
+  css=$(dist_named_asset css)
+  echo "  built entry:      ${entry:-<none: client/dist/index.html names no assets/index-*.js>}${css:+   built css: $css}"
+  if [ -z "$entry" ]; then
+    echo "  FAIL: the built client/dist names no entry asset, so there is nothing to compare the served"
+    echo "        document against — the product cannot be proven from here."
+    return 1
+  fi
+  if [ ! -f "$DEPLOY_DIR/client/dist/assets/$entry" ]; then
+    echo "  FAIL: client/dist/index.html names $entry but that file is NOT on disk — the shell and the"
+    echo "        build disagree, so no byte comparison below could mean anything."
+    return 1
+  fi
+  disk_md5=$(md5sum < "$DEPLOY_DIR/client/dist/assets/$entry" | cut -d' ' -f1)
+
+  # THE REFUSAL, BEFORE ANY MEASUREMENT IS INTERPRETED. A gated tree judged with no cookie can only
+  # produce the gate page, and the gate page is a 200 with a title — everything the old row looked for.
+  if [ "$served_gated" -eq 1 ] && [ "$GATE_COOKIE_MINTED" -ne 1 ]; then
+    echo "  FAIL: this tree is GATED ($DEPLOY_DIR/server/public-gate.js) but NO gate cookie was minted."
+    echo "        Every fetch below would measure the GATE PAGE, and the gate page answers 200 with a"
+    echo "        <title> — which is exactly how the 2026-11-08 movement recorded the wall as a pass:"
+    echo "          public status/title: 200 <title>Antum People — access</title>"
+    echo "        (the gate decision recorded gated=$GATE_DECISION_GATED against $GATE_DECISION_REV —"
+    echo "         a DIFFERENT tree from the one being served, which is how it missed.)"
+    echo "        THE PRODUCT IS NOT PROVEN. Nothing about the served shell, the served asset or its"
+    echo "        bytes was judged here, and none of them is implicated."
+    return 1
+  fi
+
+  doc_ck=$(mktemp /tmp/antum-public-doc-XXXXXX.html) || { echo "  FAIL: no scratch file"; return 1; }
+  doc_no=$(mktemp /tmp/antum-public-nocookie-XXXXXX.html) || { echo "  FAIL: no scratch file"; return 1; }
+  asset_ck=$(mktemp /tmp/antum-public-asset-XXXXXX.js) || { echo "  FAIL: no scratch file"; return 1; }
+  asset_no=$(mktemp /tmp/antum-public-assetnocookie-XXXXXX.js) || { echo "  FAIL: no scratch file"; return 1; }
+
+  ck_code=$(curl -s --noproxy '*' -H "Cookie: $GATE_COOKIE_HEADER" -o "$doc_ck" -w '%{http_code}' --max-time 25 "$PUBLIC/")
+  title_ck=$(grep -o '<title>[^<]*</title>' "$doc_ck" | head -1)
+  served_entry=$(grep -o 'assets/index-[A-Za-z0-9_-]*\.js' "$doc_ck" | head -1 | sed 's#^assets/##')
+  root_ck=$(grep -c 'id="root"' "$doc_ck")
+  echo "  document WITH the gate cookie:    HTTP $ck_code  $(wc -c < "$doc_ck") B  ${title_ck:-<no title>}  names ${served_entry:-NO asset}  #root x$root_ck"
+
+  asrt() { # $1 = 1 held / 0 failed, $2 = the sentence, already carrying both sides
+    if [ "$1" -eq 1 ]; then held=$((held+1)); echo "  OK:   $2"
+    else failed=$((failed+1)); echo "  FAIL: $2"; fi
+  }
+  asrt $([ "$ck_code" = "200" ] && echo 1 || echo 0) \
+    "the document answers HTTP 200 with the cookie (got $ck_code)"
+  asrt $([ "$served_entry" = "$entry" ] && echo 1 || echo 0) \
+    "the served document names the entry the BUILT dist names: served ${served_entry:-<none>} / built $entry"
+  asrt $([ "$root_ck" -ge 1 ] && echo 1 || echo 0) \
+    "the served document carries #root — it is the product shell, not a page that merely answers 200"
+  local want_title
+  want_title=$(product_title)
+  asrt $([ -n "$want_title" ] && [ "$title_ck" = "<title>$want_title</title>" ] && echo 1 || echo 0) \
+    "the served document's title is the built shell's own: served ${title_ck:-<none>} / built '$want_title'"
+
+  ack_code=$(curl -s --noproxy '*' -H "Cookie: $GATE_COOKIE_HEADER" -o "$asset_ck" -w '%{http_code}' --max-time 30 "$PUBLIC/assets/$entry")
+  local asset_md5 ano_md5
+  asset_md5=$(md5sum < "$asset_ck" | cut -d' ' -f1)
+  echo "  asset WITH the gate cookie:       $entry  HTTP $ack_code  $(wc -c < "$asset_ck") B  md5 $asset_md5  (on disk $disk_md5)"
+  asrt $([ "$asset_md5" = "$disk_md5" ] && echo 1 || echo 0) \
+    "the bytes served for $entry ARE the file on disk: served md5 $asset_md5 / disk md5 $disk_md5"
+
+  # AND THE SAME URL WITH NO COOKIE. On a gated tree this must be the GATE — that is the half of the
+  # assertion that stops a gate page from ever being read as a product; on an ungated tree there is no
+  # gate to pass, so the same document must come back.
+  no_code=$(curl -s --noproxy '*' -H "Cookie: antum_gate=" -o "$doc_no" -w '%{http_code}' --max-time 25 "$PUBLIC/")
+  title_no=$(grep -o '<title>[^<]*</title>' "$doc_no" | head -1)
+  entry_no=$(grep -o 'assets/index-[A-Za-z0-9_-]*\.js' "$doc_no" | head -1 | sed 's#^assets/##')
+  root_no=$(grep -c 'id="root"' "$doc_no")
+  echo "  document WITHOUT a cookie:        HTTP $no_code  $(wc -c < "$doc_no") B  ${title_no:-<no title>}  names ${entry_no:-NO asset}  #root x$root_no"
+  if [ "$served_gated" -eq 1 ]; then
+    gt=$(gate_title)
+    asrt $([ -n "$gt" ] && [ "$title_no" = "<title>$gt</title>" ] && echo 1 || echo 0) \
+      "cookieless, the URL is the GATE PAGE: served ${title_no:-<none>} / the gate's own title '$gt'"
+    asrt $([ "$root_no" -eq 0 ] && echo 1 || echo 0) \
+      "cookieless, there is no #root — the product shell is behind the wall"
+    asrt $([ -z "$entry_no" ] && echo 1 || echo 0) \
+      "cookieless, the document names no entry asset (got ${entry_no:-none})"
+    ano_code=$(curl -s --noproxy '*' -H "Cookie: antum_gate=" -o "$asset_no" -w '%{http_code}' --max-time 30 "$PUBLIC/assets/$entry")
+    ano_md5=$(md5sum < "$asset_no" | cut -d' ' -f1)
+    asrt $([ "$ano_md5" != "$disk_md5" ] && echo 1 || echo 0) \
+      "cookieless, the ASSET url does not serve the product's bytes: got md5 $ano_md5 (HTTP $ano_code), the product is $disk_md5"
+  else
+    asrt $([ "$title_no" = "$title_ck" ] && [ "$root_no" -ge 1 ] && echo 1 || echo 0) \
+      "ungated, the same product document is served with and without a cookie (${title_no:-<none>}, #root x$root_no)"
+  fi
+
+  rm -f "$doc_ck" "$doc_no" "$asset_ck" "$asset_no" 2>/dev/null
+  echo "  ASSERTIONS: $held held, $failed failed (of $((held + failed)))"
+  if [ "$failed" -ne 0 ]; then
+    echo "  VERDICT: THE PRODUCT IS NOT PROVEN — this movement fails on this row."
+    return 1
+  fi
+  echo "  VERDICT: THE PRODUCT IS PROVEN — the served document and the served bytes are the built client/dist."
+  return 0
+}
+
+# ===================================================================================================
+# THE AFTER-STATE OF THIS RUN — the revision and the bundle that actually shipped, named from this
+# run's own pull and build, and compared with the preflight's record when one was supplied.
+#
+# WHY (2026-11-08): #387 merged at 14:03:09Z, between the preflight (14:02:36Z) and the movement's pull,
+# so what shipped was a tree nobody had measured — and nothing in the run said so. The after-state is
+# printed unconditionally (a run that cannot be compared with a record is a run whose figures are
+# unquotable), and a disagreement prints AFTER-STATE MOVED and CONTINUES: the pull has already
+# happened, and a deploy that aborted here would leave the product on the new tree with no guard.
+#
+# $1 = one line saying which kind of run this is (a full movement, or a restart-only recovery).
+# ===================================================================================================
+print_after_state() {
+  local rev entry css a bytes md5 supplied=0 moved="" entry_bytes="" entry_md5="" css_bytes="" css_md5=""
+  rev=$(git -C "$DEPLOY_DIR" rev-parse HEAD 2>/dev/null || echo '<not a git tree>')
+  echo "--- THE AFTER-STATE OF THIS RUN ($1) ---"
+  echo "  revision shipped: $rev"
+  echo "  $(git -C "$DEPLOY_DIR" log --oneline -1 2>/dev/null || echo '<no git history>')"
+  entry=$(dist_named_asset js)
+  css=$(dist_named_asset css)
+  for a in "$entry" "$css"; do
+    [ -n "$a" ] || continue
+    if [ -f "$DEPLOY_DIR/client/dist/assets/$a" ]; then
+      bytes=$(stat -c %s "$DEPLOY_DIR/client/dist/assets/$a")
+      md5=$(md5sum < "$DEPLOY_DIR/client/dist/assets/$a" | cut -d' ' -f1)
+      printf '  built: %s  %s B  md5 %s\n' "$a" "$bytes" "$md5"
+      if [ "$a" = "$entry" ]; then entry_bytes="$bytes"; entry_md5="$md5"; fi
+      if [ "$a" = "$css" ];   then css_bytes="$bytes";   css_md5="$md5";   fi
+    else
+      printf '  built: %s  MISSING from client/dist/assets — the shell names a file that is not on disk\n' "$a"
+    fi
+  done
+
+  # Only fields the operator SUPPLIED are compared: this script remembers no bundle, so an absent
+  # record is silence, never a match. cutover-preflight.sh is where a record is validated; here it is
+  # checked against what this run actually pulled and built.
+  same_rev() { case "$rev" in "$1"*) return 0 ;; esac; case "$1" in "$rev"*) return 0 ;; esac; return 1; }
+  note_moved() { moved="$moved
+    $1: the record says '$2'; this run measured '$3'"; }
+  if [ -n "${ANTUM_MEASURED_TIP:-}" ]; then
+    supplied=$((supplied + 1))
+    same_rev "$ANTUM_MEASURED_TIP" || note_moved "revision" "$ANTUM_MEASURED_TIP" "$rev"
+  fi
+  if [ -n "${ANTUM_MEASURED_ASSET:-}" ]; then
+    supplied=$((supplied + 1))
+    [ "$ANTUM_MEASURED_ASSET" = "$entry" ] || note_moved "entry asset" "$ANTUM_MEASURED_ASSET" "$entry"
+  fi
+  if [ -n "${ANTUM_MEASURED_ASSET_BYTES:-}" ]; then
+    supplied=$((supplied + 1))
+    [ "$ANTUM_MEASURED_ASSET_BYTES" = "$entry_bytes" ] || note_moved "entry bytes" "$ANTUM_MEASURED_ASSET_BYTES" "$entry_bytes"
+  fi
+  if [ -n "${ANTUM_MEASURED_ASSET_MD5:-}" ]; then
+    supplied=$((supplied + 1))
+    [ "$ANTUM_MEASURED_ASSET_MD5" = "$entry_md5" ] || note_moved "entry md5" "$ANTUM_MEASURED_ASSET_MD5" "$entry_md5"
+  fi
+  if [ -n "${ANTUM_MEASURED_CSS:-}" ]; then
+    supplied=$((supplied + 1))
+    [ "$ANTUM_MEASURED_CSS" = "$css" ] || note_moved "css asset" "$ANTUM_MEASURED_CSS" "$css"
+  fi
+  if [ -n "${ANTUM_MEASURED_CSS_BYTES:-}" ]; then
+    supplied=$((supplied + 1))
+    [ "$ANTUM_MEASURED_CSS_BYTES" = "$css_bytes" ] || note_moved "css bytes" "$ANTUM_MEASURED_CSS_BYTES" "$css_bytes"
+  fi
+  if [ -n "${ANTUM_MEASURED_CSS_MD5:-}" ]; then
+    supplied=$((supplied + 1))
+    [ "$ANTUM_MEASURED_CSS_MD5" = "$css_md5" ] || note_moved "css md5" "$ANTUM_MEASURED_CSS_MD5" "$css_md5"
+  fi
+
+  if [ -n "$moved" ]; then
+    echo ""
+    echo "  !!!!!!!!!!!!!!!!!!!!!!!!  AFTER-STATE MOVED  !!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "  THE TREE/BUNDLE THAT SHIPPED IS NOT THE ONE THE RECORD NAMES."
+    echo "  The pull has already happened, so this run CONTINUES rather than aborting a deploy of a"
+    echo "  tree that is now on disk. But every figure in that record belongs to the OTHER revision:"
+    echo "  re-measure before quoting either side, and say which one a number came from."
+    printf '%s\n' "$moved"
+    echo "  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  else
+    echo "  after-state record: $supplied field(s) supplied, 0 moved (nothing supplied = nothing compared)"
+  fi
+}
+# <<< ANTUM GATE DECISION
+
 echo "--- 0. the public gate's host credential ---"
-ensure_gate_credential
-mint_gate_cookie
+if [ "$RESTART_ONLY" -eq 1 ] || [ "$PREFLIGHT" -eq 1 ]; then
+  # THESE TWO MODES PULL NOTHING, so the tree on disk IS the tree that will be served and the decision
+  # taken here is taken against the right tree. --restart-only keeps it for a second reason: a restart
+  # is exactly when a missing host file surfaces as a 503, and it has to be repaired BEFORE the product
+  # comes back, not after.
+  gate_decision "no pull happens in this mode, so the tree on disk IS the tree being served"
+else
+  echo "  DEFERRED to step 1c: a full movement pulls a NEW tree in step 1, and the gate decision must be"
+  echo "  taken against the tree that will actually be served. Taken HERE it judged the PRE-pull tree on"
+  echo "  2026-11-08, minted no cookie, and then verified the gate page as though it were the product."
+fi
 
 # ---------------------------------------------------------------------------------------------
 # --preflight: the entitlement to judge, and nothing else. This mode is why the fix is provable
@@ -336,6 +645,10 @@ cd "$DEPLOY_DIR" || { echo "FAIL: deployed tree missing"; exit 1; }
 if [ "$RESTART_ONLY" -eq 1 ]; then
   echo "--- 1-3. SKIPPED (--restart-only): no fetch, no reset, no build, no re-seed ---"
   echo "         the tree stays at $(git -C "$DEPLOY_DIR" rev-parse --short HEAD 2>/dev/null || echo '<not a git tree>') and keeps the bundle already on disk"
+  # The after-state is still NAMED here — the tree did not move, and saying so is the point: a
+  # restart-only recovery ships whatever is on disk, and the record it is compared with must not be
+  # assumed to describe it. Nothing is rebuilt, so the bundle is the one the last movement built.
+  print_after_state "a restart-only recovery: the tree on disk, whose client/dist this run did NOT rebuild"
 else
 
 echo "--- 1. fetch and move the tree to origin/main ---"
@@ -372,6 +685,16 @@ else
   echo "WARNING: $HOST_TOOLS is missing — the host tooling was NOT refreshed (this tree predates it)"
 fi
 
+echo "--- 1c. the public gate's credential, judged against the tree that will be SERVED ---"
+# THE FIX FOR 2026-11-08. This decision used to be taken in step 0, BEFORE the pull: on the movement
+# that deployed b8976b0 the deployed tree was still the ungated 8a4e1ac, so mint_gate_cookie answered
+# "not minted — this tree predates the public gate" (which was TRUE of 8a4e1ac), and the run then
+# pulled a GATED tree, built it, restarted it and judged it with an EMPTY cookie. The decision is taken
+# HERE — after the pull, before the build and the restart — so the presence of server/public-gate.js in
+# the tree being deployed is what decides whether a credential is minted, and the revision it judged is
+# printed beside the answer.
+gate_decision "after the pull, before the build: this is the tree this run will serve"
+
 echo "--- 2. build the client (must succeed before anything is restarted) ---"
 ( cd client && NODE_OPTIONS=--max-old-space-size=700 npm run build ) > "$BUILD_LOG" 2>&1
 BUILD_RC=$?
@@ -381,6 +704,13 @@ if [ $BUILD_RC -ne 0 ]; then
   exit 1
 fi
 echo "client build OK"
+
+echo "--- 2b. THE AFTER-STATE OF THIS RUN ---"
+# Name the revision and the bytes that ACTUALLY shipped, from this run's own pull and build — and
+# compare them with the preflight's record when the operator supplied one. A movement that reports only
+# "client build OK" cannot be compared with anything, and on 2026-11-08 #387 merged between the
+# preflight (14:02:36Z) and the pull (14:03:09Z): the tree moved under the run and nothing said so.
+print_after_state "a full movement: the pulled revision and the bundle this run built"
 
 echo "--- 3. re-seed the demo dataset against the product database ---"
 # --force-clear is required or the seed only upserts: orphaned rows from an older
@@ -447,7 +777,28 @@ echo "--- 5. verify the live demo end to end ---"
 # below runs on an empty token. The roster reported here is that same proven read, not a second,
 # unchecked one: the proof and the reported count are one measurement.
 authenticate post-restart
-echo "public status/title: $(curl -s --noproxy '*' -H "Cookie: $GATE_COOKIE_HEADER" -o /tmp/cutover-page -w '%{http_code}' --max-time 25 "$PUBLIC") $(grep -o '<title>[^<]*</title>' /tmp/cutover-page | head -1)"
+# ===================================================================================================
+# THE PUBLIC URL, PROVEN TO BE THE PRODUCT — NOT MERELY TO ANSWER 200.
+#
+# This was ONE LINE until 2026-11-08:
+#   echo "public status/title: $(curl ... -w '%{http_code}' "$PUBLIC") $(grep -o '<title>...' ...)"
+# and on the movement that deployed b8976b0 it recorded
+#   public status/title: 200 <title>Antum People — access</title>
+# — the PUBLIC GATE's own title, read as if it were the product, because step 0 had minted no cookie
+# against the pre-pull tree. The row was green and the product had not been looked at once.
+#
+# verify_public_product() asserts the served document names the entry the BUILT client/dist names and
+# that the served bytes are the file on disk; on a gated tree it also asserts the cookieless URL is
+# the gate page and the cookieless asset is not the product's bytes; and on a gated tree with NO minted
+# cookie it refuses outright instead of comparing anything.
+#
+# The failure is CARRIED to the end of the run (PRODUCT_RC) rather than exiting here: step 6 re-arms
+# the guard from a running product, and a verification that leaves the site unguarded has done more
+# harm than the defect it found. Same shape as the settlement check below.
+# ===================================================================================================
+echo "--- 5a. is what the public URL serves THE PRODUCT? ---"
+PRODUCT_RC=0
+verify_public_product || PRODUCT_RC=$?
 echo "bad-password path: $(curl -s --noproxy '*' -H "Cookie: $GATE_COOKIE_HEADER" -o /dev/null -w '%{http_code}' --max-time 20 -X POST -H 'Content-Type: application/json' --data-binary '{"username":"admin","password":"nope"}' "$PUBLIC/api/login") (expect 401)"
 echo "roster: $ROSTER_CODE"
 echo "  employees: $ROSTER_N | first id: $ROSTER_FIRST"
@@ -696,35 +1047,26 @@ HOOK_DST="${ANTUM_HOOK_DST:-/etc/profile.d/zz-antum-product-guard.sh}"
   fi
     # <<< ANTUM FALLBACK HOOK SOURCE
 # --- the served bytes are the on-disk bytes -----------------------------------------
-# DERIVE-OR-REFUSE: no bundle hash is remembered here. The asset the public HTML names is fetched and
-# compared with the file of that name on disk — both measured now. A mismatch is a failure, not a note,
-# because "the public URL answers 200" is exactly what the platform's placeholder also does.
-if [ "$RESTART_ONLY" -eq 1 ]; then
-  echo "--- the served bytes vs the on-disk bundle ---"
-  SERVED_NAME=$(curl -s --noproxy '*' -H "Cookie: $GATE_COOKIE_HEADER" --max-time 25 "$PUBLIC/" | grep -o 'assets/index-[A-Za-z0-9_-]*\.js' | head -1)
-  if [ -z "$SERVED_NAME" ]; then
-    echo "FAIL: the public HTML names no asset — the placeholder is being served, not the product"
-    exit 1
-  elif [ ! -f "$DEPLOY_DIR/client/dist/$SERVED_NAME" ]; then
-    echo "FAIL: the served asset $SERVED_NAME is not in $DEPLOY_DIR/client/dist — it cannot be the shipped bundle"
-    exit 1
-  else
-    SERVED_MD5=$(curl -s --noproxy '*' -H "Cookie: $GATE_COOKIE_HEADER" --max-time 30 "$PUBLIC/$SERVED_NAME" | md5sum | cut -d' ' -f1)
-    DISK_MD5=$(md5sum < "$DEPLOY_DIR/client/dist/$SERVED_NAME" | cut -d' ' -f1)
-    echo "  $SERVED_NAME  served md5 $SERVED_MD5 / on-disk md5 $DISK_MD5 (both measured now)"
-    if [ "$SERVED_MD5" != "$DISK_MD5" ]; then
-      echo "FAIL: the served bytes are NOT the on-disk bundle — something rebuilt or the dist is stale"
-      exit 1
-    fi
-    echo "  OK: the served bytes ARE the on-disk shipped bundle — nothing was rebuilt"
-  fi
-fi
+# MOVED (2026-11-08) — this used to be a --restart-only-only block HERE, deriving the asset name from
+# the public HTML and comparing it with the file of that name on disk. It could not tell the gate page
+# from the product (the gate page names no asset, so it reported "the placeholder is being served"),
+# and it only ran on one of the two paths. It is now ONE mechanism for BOTH paths —
+# verify_public_product() in step 5a, which names the entry from the BUILT dist instead of from the
+# served document and is gate-aware. Its failure is carried to the end of the run (PRODUCT_RC), which
+# is what this block's position after step 6b was there to buy.
 
 echo "deployed commit: $(git log --oneline -1)"
+FAILED_WHY=""
 if [ "${SETTLE_RC:-0}" -ne 0 ]; then
+  FAILED_WHY="the settlement check (rc=$SETTLE_RC — $SETTLE_KIND)"
+fi
+if [ "${PRODUCT_RC:-0}" -ne 0 ]; then
+  FAILED_WHY="${FAILED_WHY:+$FAILED_WHY; }the public product assertion (rc=$PRODUCT_RC — the product was NOT proven; see step 5a)"
+fi
+if [ -n "$FAILED_WHY" ]; then
   # Deliberately the LAST thing, after step 6 and 6b: the guard is armed and the hook installed by
   # now, so a red verification can fail the run without leaving the product unguarded.
-  echo "=== cutover finished $(date -Iseconds) WITH A FAILED VERIFICATION (settlement check rc=$SETTLE_RC — $SETTLE_KIND) — run-stamped evidence: $OUT | build: $BUILD_LOG | seed: $SEED_LOG ==="
+  echo "=== cutover finished $(date -Iseconds) WITH A FAILED VERIFICATION ($FAILED_WHY) — run-stamped evidence: $OUT | build: $BUILD_LOG | seed: $SEED_LOG ==="
   exit 1
 fi
 echo "=== cutover finished $(date -Iseconds) — run-stamped evidence: $OUT | build: $BUILD_LOG | seed: $SEED_LOG ==="
