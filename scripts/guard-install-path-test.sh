@@ -313,6 +313,22 @@ snapshot "$FIX" "$ROOT/snap-b-after" server/node_modules
 check "tree_unchanged '$ROOT/snap-b-before' '$ROOT/snap-b-after'" \
       "(iii) deps missing: server/node_modules is still absent - the tree is untouched"
 
+# --- (iii-c) THE RESIDUAL, measured: a PARTIAL node_modules is not detected ------------------
+echo
+echo "== (iii-c) residual: node_modules present, but a required module missing =="
+FIX_PART="$ROOT/partial-tree"
+mk_fixture "$FIX_PART" yes
+rm -rf "$FIX_PART/server/node_modules/fixturedep"
+snapshot "$FIX_PART" "$ROOT/snap-g-before" server/node_modules
+run_case "$UNIT" start_server "$FIX_PART"
+check "[ $CASE_RC -eq 1 ]" "(iii-c) partial deps: the product does NOT start (rc=$CASE_RC) - node cannot load a dependency"
+check "! grep -q 'REFUSAL' '$ROOT/case.log'" \
+      "(iii-c) NAMED OPEN ITEM: no reason is logged - guard_deps_state tests '-d node_modules', which a PARTIAL tree passes"
+check "[ ! -s '$ROOT/npm-calls' ]" "(iii-c) partial deps: still no install - the guard writes nothing, by design"
+snapshot "$FIX_PART" "$ROOT/snap-g-after" server/node_modules
+check "tree_unchanged '$ROOT/snap-g-before' '$ROOT/snap-g-after'" "(iii-c) partial deps: the tree is untouched"
+stop_listener
+
 # --- (iv-a) MUTATION: the old implementation, from this repository's own history -------------
 echo
 echo "== (iv-a) MUTATION: the old start_server restored (extracted from git history) =="
