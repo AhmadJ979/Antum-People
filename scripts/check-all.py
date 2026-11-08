@@ -461,6 +461,35 @@ CHECKS = [
               "load-bearing and not just the asset one). An unknown flag exits 2 - a plausible "
               "invocation must never buy a green run"),
 
+    # Added 2026-11-08. The plan's rule - "an empty result and a refusal must never render the same" -
+    # had no instrument, and on the deployed tree `f4729f3` the Pre-boarding screen rendered
+    # `0 / CASES OPEN` and "nothing outstanding to show for this jurisdiction" over three open AE cases
+    # for the `demo` account, whose two routes the policy gate refuses. It reads SOURCE (client/src/App.tsx)
+    # and asserts, per declared panel, that the empty state sits inside a branch selected by
+    # `emptyArea(panelReading.<panel>)`, that the refusal sentence has exactly one place on the screen, and
+    # that the reading comes from a `callPanel('<panel>', ...)` record. A screen that decides "empty" from
+    # the length of a list reddens here, and so does a reworded empty state the check can no longer see
+    # (RED, never a silent skip). It does NOT judge what a browser paints: the rendered proof for this
+    # change is a screenshot pair on scratch rigs, and the semantics are asserted by panelReading.test.js.
+    # The declared set is printed every run, so an unjudged screen is stated rather than implied.
+    dict(id="refusal-not-empty", mode="default", expect="green",
+         home="operator CLI (bare) + this entry point",
+         cmd=["node", "scripts/check-refusal-not-empty.js"],
+         what="every declared client panel renders its EMPTY state only when its read was not refused and "
+              "not failed, renders its refusal sentence in exactly one place, and takes its reading from a "
+              "panel record. Green means the SHAPE of the screen holds - not that a browser paints it, and "
+              "not that the refusal itself is correct (server/access.js decides that, and "
+              "server/panel-reading-copy.test.js asserts the copy names the roles its cell allows)"),
+
+    dict(id="refusal-not-empty-controls", mode="default", expect="green",
+         home="operator CLI (bare) + this entry point",
+         cmd=["node", "scripts/check-refusal-not-empty.js", "--selftest"],
+         what="the refusal-not-empty check's own controls: four plants in a scratch copy of THIS tree's "
+              "App.tsx, each required to redden - the empty state losing its gate (the pre-fix shape), the "
+              "refusal sentence deleted, the reading taken from a bare fetch, and the empty-state text "
+              "reworded under the gate - plus the unplanted copy required to stay GREEN, so the plants are "
+              "measured against a copy that passes"),
+
     # Added 2026-10-29 (owner said yes to the counsel-string guard). It is a DEFAULT check
     # because it is cheap and reads nothing but a scratch instance of this tree: measured at
     # 1.65 s, own port, throwaway database, throwaway user - and it boots a rig of THIS tree, so
