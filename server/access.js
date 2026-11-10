@@ -206,13 +206,13 @@ const SCOPES = Object.freeze({
  * The columns that never reach a role, and the columns that are a person's pay. Named per resource
  * and role so the payload rule lives beside the route rule — "field" in the matrix's cells.
  *
- * An EMPTY LIST IS A STATEMENT: HR reads the roster as the product has always served it, and that is
- * asserted with a positive control (the columns are present for HR) so "removed for the manager"
- * cannot pass because the column was never there.
+ * NO ROLE IS SERVED THE IDENTIFIERS, HR INCLUDED: the national-ID group is removed for every role the
+ * roster cell allows, so the route neither decrypts those columns nor sends them; the positive control
+ * is the PAY columns, present for HR, so "removed for the manager" cannot pass vacuously.
  */
 const EMPLOYEE_FIELD_GROUPS = Object.freeze({
-  // §3.1/§4 — "National-ID columns never leave the HR boundary": encrypted at rest, and the roster
-  // read decrypts them, so encryption alone controls nothing about disclosure.
+  // §3.1/§4 — "National-ID columns never leave the database": encrypted at rest AND never decrypted
+  // for a roster read, because the group is removed for every role the cell allows — HR included.
   national_id: Object.freeze(['national_id_value', 'national_id_iqama']),
   // §4 — "Salary, allowances, EOSB accrued/paid": a manager must not see a report's pay; finance may.
   pay: Object.freeze([
@@ -223,7 +223,7 @@ const EMPLOYEE_FIELD_GROUPS = Object.freeze({
 });
 const FIELD_RULES = Object.freeze({
   'employees:read': Object.freeze({
-    [ROLES.HR_ADMIN]: Object.freeze([]),
+    [ROLES.HR_ADMIN]: Object.freeze(['national_id']),
     [ROLES.MANAGER]: Object.freeze(['national_id', 'pay']),
     [ROLES.FINANCE]: Object.freeze(['national_id']),
   }),
