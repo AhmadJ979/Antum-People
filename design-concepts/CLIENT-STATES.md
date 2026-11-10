@@ -68,7 +68,7 @@ authenticated call, and `App.tsx` routes all of them through it:
 - The wrapper (`:152`) classifies only for 401/403 (`:165`), calls `onSessionInvalid` and **throws
   `SessionExpiredError` on a 403-with-body** (`:174`) so no caller parses an error payload as data, and calls
   `onRefusal` and **throws `RefusalError`** (`:179`) on a refusal — keeping the session.
-- `App.tsx`: the refusal is **one global banner above the content** (`:1844`–`:1857`), `role="alert"`, amber,
+- `App.tsx`: the refusal is **one global banner above the content** (`:1853`–`:1866`), `role="alert"`, amber,
   a lock icon, dismissible, and retired when the tab or jurisdiction changes (`:885`).
 
 **Three things it does not do**, all still measured on `main`:
@@ -294,7 +294,7 @@ sentence, which is the seat that was missing. Four sets already exist and each k
   `No active offboardings.`, `No tasks generated for this stage.`, and the pre-boarding panel's
   *"No open {jurisdiction} pre-boarding cases — nothing outstanding to show for this jurisdiction. Record an
   accepted offer to open one."* (`:2648`–`:2650`). **§3 is where they collide with the new banner.**
-- **One existing rule looks like it forbids the client owning a sentence, and does not.** `App.tsx:2687` (inside the
+- **One existing rule looks like it forbids the client owning a sentence, and does not.** `App.tsx:2746` (inside the
   `:2686`–`:2695` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
   the structure that produced the drift… Nothing is composed here, and with no cases there is no sentence to
   state rather than a page-level claim about a list that is not on screen."* The distinction it was making:

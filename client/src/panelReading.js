@@ -118,8 +118,58 @@ export const REFUSED_PANELS = Object.freeze({
     plural: true,
     resource: 'employees:read',
     roles: Object.freeze(['hr_admin', 'manager', 'finance']),
+    // "a manager, for their own line" carries a comma, and `joinWords` joins with commas: in a list of
+    // three it reads "HR, a manager, for their own line and finance". The comma is dropped here so the
+    // sentence stays readable; the qualifier itself is kept, because a manager's reach is not HR's.
+    words: Object.freeze({ manager: 'a manager for their own line' }),
+  }),
+  // ---- The rest of the class (#392 fixed three panels and named these four as unfixed) ----------
+  // Each is a screen whose EMPTY state was rendered from the LENGTH of a list a refusal left behind.
+  employees: Object.freeze({
+    label: 'the roster',
+    sentence_subject: 'The roster',
+    plural: false,
+    resource: 'employees:read',
+    roles: Object.freeze(['hr_admin', 'manager', 'finance']),
+    words: Object.freeze({ manager: 'a manager for their own line' }),
+  }),
+  analytics: Object.freeze({
+    label: 'the dashboard figures',
+    sentence_subject: 'The dashboard figures',
+    plural: true,
+    resource: 'analytics:read',
+    roles: Object.freeze(['hr_admin', 'finance', 'compliance_viewer']),
+  }),
+  onboarding: Object.freeze({
+    label: 'the onboarding tasks',
+    sentence_subject: 'The onboarding tasks',
+    plural: true,
+    resource: 'onboarding:read',
+    roles: Object.freeze(['hr_admin', 'manager', 'employee']),
+    words: Object.freeze({ manager: "the hire's manager" }),
+  }),
+  offboarding: Object.freeze({
+    label: 'the offboarding tasks',
+    sentence_subject: 'The offboarding tasks',
+    plural: true,
+    resource: 'offboarding:read',
+    roles: Object.freeze(['hr_admin', 'employee']),
   }),
 });
+
+/**
+ * The word for one role IN ONE PANEL'S SENTENCE: the panel's own override where it declares one, else
+ * the generic `ROLE_WORDS` entry. A panel overrides a word when the generic one is true but reads badly
+ * inside a list ("a manager, for their own line" -> "HR, a manager, for their own line and finance"), or
+ * when the role is a different person on that screen (the onboarding list's manager is the HIRE'S).
+ * `server/panel-reading-copy.test.js` uses this function rather than the raw table, so the assertion
+ * "the sentence names every role the cell allows" is still made against the words the sentence uses.
+ */
+export function roleWordsFor(name, role) {
+  const panel = REFUSED_PANELS[name];
+  const override = panel && panel.words ? panel.words[role] : undefined;
+  return override || ROLE_WORDS[role];
+}
 
 /** `a`, `a and b`, `a, b and c` — the sentence reads as prose, never as a list of tokens. */
 function joinWords(words) {
@@ -141,7 +191,7 @@ function joinWords(words) {
 export function refusalSentenceFor(name) {
   const panel = REFUSED_PANELS[name];
   if (!panel) throw new Error(`no refusal copy declared for panel ${JSON.stringify(name)}`);
-  const who = joinWords(panel.roles.map((role) => ROLE_WORDS[role]));
+  const who = joinWords(panel.roles.map((role) => roleWordsFor(name, role)));
   const verb = panel.plural ? 'are' : 'is';
   return `You can't read ${panel.label} from this account. Nothing was changed, and you are still `
     + `signed in. ${panel.sentence_subject} ${verb} read by ${who}.`;

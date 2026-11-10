@@ -17,7 +17,7 @@ and every figure in this file came from a scratch instance, never from the runni
 | Piece | Where |
 |---|---|
 | Nav entry, fifth tab — **Pre-boarding**, between Transitions Hub and Strategic Intelligence | `NAV_ITEMS`, `App.tsx:493`–`:497` |
-| The tab: header card + case count, intake form, case list | `{activeTab === 'preboarding' && (`, `App.tsx:2559`–`:3177` |
+| The tab: header card + case count, intake form, case list | `{activeTab === 'preboarding' && (`, `App.tsx:2618`–`:3177` |
 | "Record an accepted offer" form → `POST /api/preboarding/cases` | handler `App.tsx:1041`–`:1077` (`authedFetch` POST at `:1050`), form JSX `:2600`–`:2662` |
 | Case list → `GET /api/preboarding/cases` | `authedFetch` list call `App.tsx:1021`, `setPreboardingCases` at `:1029`, list render `:2740` — the visible list is `checklistOverview.cases`, not `preboardingCases` |
 | The case model and its single writer | `schema.sql:195`–`:216`; `server/preboarding.js:162` |
@@ -28,7 +28,7 @@ and every figure in this file came from a scratch instance, never from the runni
   between Transitions Hub and Strategic Intelligence"; that is `Pre-boarding` at `App.tsx:497`.
 - **The count is allowed by the spec's own rule.** §2 forbids "any aggregate that reads as a
   benchmark" and then says explicitly that *"counts of cases are fine; comparisons are not"* — so
-  the `Cases open` counter (`preboardingCases.length`, `App.tsx:2586`–`:2589`) is inside the rule, and neither the badge nor
+  the `Cases open` counter (`preboardingCases.length`, `App.tsx:2586`–`:2648`) is inside the rule, and neither the badge nor
   the count is dressed up as a rate. (See F2 for the label, not the count.)
 - **No money, no score, no ranking.** §2 forbids a per-case cost, a risk rating and a
   percentage-complete ring on this surface. The tab shows name, role, department, jurisdiction
@@ -36,13 +36,13 @@ and every figure in this file came from a scratch instance, never from the runni
 - **No delivery claim anywhere.** §5's copy rules — a pre-boarding state may never say
   "sent/notified/emailed", because the product has no delivery channel (Gate 2, 2026-10-06) — hold
   on the shipped tab: the intake form says *"recording it here is what opens the case"*
-  (`recording it here is what opens the case`, `App.tsx:2598`) and the tab never implies anything was sent to the candidate.
+  (`recording it here is what opens the case`, `App.tsx:2657`) and the tab never implies anything was sent to the candidate.
 - **UAE-first default on the intake form.** `offerForm.jurisdiction` initialises to `'AE'`, with
   AE and SA both offered (`'AE'`, `App.tsx:839`; the options at `:2647`–`:2648`). The *case* is recorded in the jurisdiction on
   the accepted offer, not in whatever the header switch says — which is a reasonable reading of
   UAE-first, but it is the reason F1 matters.
 - **The demo badge still covers it.** "Sample Demo Data" sits in the app-level header
-  (`Sample Demo Data`, `App.tsx:1805`), outside the tab switch, so the new tab inherits it.
+  (`Sample Demo Data`, `App.tsx:1814`), outside the tab switch, so the new tab inherits it.
 - **Correctly absent:** the derived 48-hour flag (§5), the two tracks (§3), the function view
   (§4), EN/AR (§7) and the consent gate (§8). Those are P2-2/P2-4/P2-5/P2-6, and nothing on the
   shipped tab pretends otherwise.
@@ -94,7 +94,7 @@ status filter of its own, then — it takes one now (`server/preboarding.js:116`
 label it `Cases` until a closed state exists. A one-line change, worth doing when case closing
 lands — not worth a PR on its own.
 
-**Status (confirmed by the lead on `main`, 2026-10-07):** the `Cases open` tile renders `client/src/App.tsx:2586`
+**Status (confirmed by the lead on `main`, 2026-10-07):** the `Cases open` tile renders `client/src/App.tsx:2648`
 `preboardingCases.length` under the label at `:2589`, and `listCases` filters by nothing
 (`server/preboarding.js:111` then; it filters `status` at `:116` now) — so the number and the label disagree the moment a case can
 close. It is latent rather than live-visible today, because nothing writes a status other than

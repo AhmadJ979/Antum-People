@@ -14,7 +14,7 @@ import assert from 'node:assert';
 import {
   PENDING, EMPTY, REFUSAL_AREA, FAILED_AREA,
   emptyArea, mayRenderEmpty, panelReadings, emptyAreaSentence,
-  refusalSentenceFor, failedSentenceFor, REFUSED_PANELS, ROLE_WORDS,
+  refusalSentenceFor, failedSentenceFor, REFUSED_PANELS, ROLE_WORDS, roleWordsFor,
 } from './panelReading.js';
 import { GRANTED, REFUSED, FAILED } from './panelResults.js';
 
@@ -54,8 +54,9 @@ describe('the sentence a refused panel says', () => {
       const sentence = refusalSentenceFor(name);
       const panel = REFUSED_PANELS[name];
       for (const role of panel.roles) {
+        // The word the sentence uses, which is the panel's own override where it declares one.
         assert.ok(
-          sentence.includes(ROLE_WORDS[role]),
+          sentence.includes(roleWordsFor(name, role)),
           `${name}: the sentence does not name ${role} (${ROLE_WORDS[role]}): ${sentence}`
         );
       }
