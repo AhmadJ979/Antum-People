@@ -130,12 +130,29 @@ test('the helper only ever sizes the type — it cannot round, abbreviate or eli
   }
 });
 
+/**
+ * The card's bounds inside App.tsx, as ONE definition for both the scan and its mutation.
+ *
+ * The end anchor is the OPENING of the comment that follows the card, not the whole sentence. On
+ * 2026-11-10 (7273f27) that comment grew an explanatory tail ("— each card is fed by a DIFFERENT
+ * panel ..."), and an exact-string anchor then found nothing: `end` came back -1, the block could not
+ * be located, and both tests failed with `the EOSB card block could not be located in App.tsx` — the
+ * scan and its mutation both dead rather than wrong. Anchoring on the marker keeps the block located
+ * when the sentence after it is edited; what the block must contain is still asserted, below.
+ */
+const CARD_START = '{/* EOSB Liability */}';
+const CARD_END = '{/* Transition Funnels';
+
+function cardBlock(source) {
+  const start = source.indexOf(CARD_START);
+  const end = source.indexOf(CARD_END);
+  assert.ok(start > 0 && end > start, 'the EOSB card block could not be located in App.tsx');
+  return { start, end, block: source.slice(start, end) };
+}
+
 /** Violations of the card's shape in a given App.tsx source. Empty array = the fix is in place. */
 function scanCard(source) {
-  const start = source.indexOf('{/* EOSB Liability */}');
-  const end = source.indexOf('{/* Transition Funnels */}');
-  assert.ok(start > 0 && end > start, 'the EOSB card block could not be located in App.tsx');
-  const block = source.slice(start, end);
+  const { block } = cardBlock(source);
   const violations = [];
   if (!block.includes('@container')) violations.push('the card is not a size container (@container)');
   for (const market of ['AE', 'SA']) {
@@ -161,10 +178,7 @@ test('App.tsx renders the EOSB figure through the sizing rule', () => {
  * at the first of two identical strings proves nothing about the second.
  */
 function mutateInCard(source, from, to) {
-  const start = source.indexOf('{/* EOSB Liability */}');
-  const end = source.indexOf('{/* Transition Funnels */}');
-  assert.ok(start > 0 && end > start, 'the EOSB card block could not be located in App.tsx');
-  const block = source.slice(start, end);
+  const { start, end, block } = cardBlock(source);
   assert.ok(block.includes(from), `anchor not found inside the EOSB card block: ${from}`);
   return source.slice(0, start) + block.replace(from, to) + source.slice(end);
 }
