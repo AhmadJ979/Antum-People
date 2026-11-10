@@ -17,9 +17,9 @@ and every figure in this file came from a scratch instance, never from the runni
 | Piece | Where |
 |---|---|
 | Nav entry, fifth tab — **Pre-boarding**, between Transitions Hub and Strategic Intelligence | `NAV_ITEMS`, `App.tsx:493`–`:497` |
-| The tab: header card + case count, intake form, case list | `{activeTab === 'preboarding' && (`, `App.tsx:2618`–`:3177` |
-| "Record an accepted offer" form → `POST /api/preboarding/cases` | handler `App.tsx:1041`–`:1077` (`authedFetch` POST at `:1050`), form JSX `:2600`–`:2662` |
-| Case list → `GET /api/preboarding/cases` | `authedFetch` list call `App.tsx:1021`, `setPreboardingCases` at `:1029`, list render `:2740` — the visible list is `checklistOverview.cases`, not `preboardingCases` |
+| The tab: header card + case count, intake form, case list | `{activeTab === 'preboarding' && (`, `App.tsx:2637`–`:3255` |
+| "Record an accepted offer" form → `POST /api/preboarding/cases` | handler `App.tsx:1041`–`:1077` (`authedFetch` POST at `:1050`), form JSX `:2678`–`:2740` |
+| Case list → `GET /api/preboarding/cases` | `authedFetch` list call `App.tsx:1014`, `setPreboardingCases` at `:1029`, list render `:2818` — the visible list is `checklistOverview.cases`, not `preboardingCases` |
 | The case model and its single writer | `schema.sql:195`–`:216`; `server/preboarding.js:162` |
 
 ## 2. What matches the spec — checked, not assumed
@@ -28,7 +28,7 @@ and every figure in this file came from a scratch instance, never from the runni
   between Transitions Hub and Strategic Intelligence"; that is `Pre-boarding` at `App.tsx:497`.
 - **The count is allowed by the spec's own rule.** §2 forbids "any aggregate that reads as a
   benchmark" and then says explicitly that *"counts of cases are fine; comparisons are not"* — so
-  the `Cases open` counter (`preboardingCases.length`, `App.tsx:2586`–`:2648`) is inside the rule, and neither the badge nor
+  the `Cases open` counter (`preboardingCases.length`, `App.tsx:2660`–`:2667`) is inside the rule, and neither the badge nor
   the count is dressed up as a rate. (See F2 for the label, not the count.)
 - **No money, no score, no ranking.** §2 forbids a per-case cost, a risk rating and a
   percentage-complete ring on this surface. The tab shows name, role, department, jurisdiction
@@ -36,9 +36,9 @@ and every figure in this file came from a scratch instance, never from the runni
 - **No delivery claim anywhere.** §5's copy rules — a pre-boarding state may never say
   "sent/notified/emailed", because the product has no delivery channel (Gate 2, 2026-10-06) — hold
   on the shipped tab: the intake form says *"recording it here is what opens the case"*
-  (`recording it here is what opens the case`, `App.tsx:2657`) and the tab never implies anything was sent to the candidate.
+  (`recording it here is what opens the case`, `App.tsx:2676`) and the tab never implies anything was sent to the candidate.
 - **UAE-first default on the intake form.** `offerForm.jurisdiction` initialises to `'AE'`, with
-  AE and SA both offered (`'AE'`, `App.tsx:839`; the options at `:2647`–`:2648`). The *case* is recorded in the jurisdiction on
+  AE and SA both offered (`'AE'`, `App.tsx:839`; the options at `:2725`–`:2726`). The *case* is recorded in the jurisdiction on
   the accepted offer, not in whatever the header switch says — which is a reasonable reading of
   UAE-first, but it is the reason F1 matters.
 - **The demo badge still covers it.** "Sample Demo Data" sits in the app-level header
@@ -94,8 +94,8 @@ status filter of its own, then — it takes one now (`server/preboarding.js:116`
 label it `Cases` until a closed state exists. A one-line change, worth doing when case closing
 lands — not worth a PR on its own.
 
-**Status (confirmed by the lead on `main`, 2026-10-07):** the `Cases open` tile renders `client/src/App.tsx:2648`
-`preboardingCases.length` under the label at `:2589`, and `listCases` filters by nothing
+**Status (confirmed by the lead on `main`, 2026-10-07):** the `Cases open` tile renders `client/src/App.tsx:2664`
+`preboardingCases.length` under the label at `:2667`, and `listCases` filters by nothing
 (`server/preboarding.js:111` then; it filters `status` at `:116` now) — so the number and the label disagree the moment a case can
 close. It is latent rather than live-visible today, because nothing writes a status other than
 `'open'` yet, which is exactly why testing it with a closed row was worth doing.
@@ -109,7 +109,7 @@ which it now is.
 ### F3 — the breadcrumb spells the tab differently from the nav *(cosmetic)*
 
 The header *then* rendered `{activeTab} Panel` (`@rev 75e3ff2` `App.tsx:657`), which printed "Preboarding Panel". The breadcrumb now reads
-`{navLabel(activeTab)}` (`App.tsx:1802`) for a nav entry labelled `Pre-boarding` (`App.tsx:497`). Every other tab's id happens to match its label, so
+`{navLabel(activeTab)}` (`App.tsx:1811`) for a nav entry labelled `Pre-boarding` (`App.tsx:497`). Every other tab's id happens to match its label, so
 this is the first one where it shows. Fix by mapping ids to labels for the breadcrumb, or by
 choosing one spelling; it should match the nav.
 

@@ -122,7 +122,7 @@ gap it left open.** Measured from the code path:
 3. Then it **throws** `RefusalError` (`:179`).
 4. `fetchData`'s `catch (err)` (`App.tsx:997`) swallows it; `setEmployees` never runs, so `employees` stays `[]`
    (`:671`); `setAnalytics` never runs, so `analytics` stays `null` (`:678`).
-5. The dashboard below the banner therefore renders **six `No data yet` tiles** (`:1881`, `:1899`, `:1931`,
+5. The dashboard below the banner therefore renders **six `No data yet` tiles** (`:1894`, `:1912`, `:1944`,
    `:1917`, `:1959`, `:1963`) plus `No active onboardings.` (`:2014`) and `No active offboardings.` (`:2042`).
 
 **One screen, two contradictory statements:** *"You don't have access to that"* above four panels saying
@@ -226,7 +226,7 @@ thing.)
 from, and this branch's base): both loaders fetch **two things in one `Promise.all`** — `fetchData`
 paired the roster with the analytics roll-up, `fetchTasks` onboarding with offboarding. **One refused sibling
 rejected the pair, so the sibling that was granted was never applied.** *That half has since been fixed:* row
-`bd008d23` moved both loaders onto `settlePanels`, the roster now settling from a `records` array (`const settled = settlePanels(records)` at `App.tsx:964`, and
+`bd008d23` moved both loaders onto `settlePanels`, the roster now settling from a `records` array (`const settled = settlePanels(records)` at `App.tsx:954`, and
 `:1392` in `fetchTasks`), which settles each leg on its own — a granted panel keeps its data and a refused one
 contributes none. **The defect it removed was real:** a region the caller was entitled to rendered empty,
 under a notice saying they were not entitled to something. For a `manager` — roster cell allowed, analytics
@@ -294,8 +294,8 @@ sentence, which is the seat that was missing. Four sets already exist and each k
   `No active offboardings.`, `No tasks generated for this stage.`, and the pre-boarding panel's
   *"No open {jurisdiction} pre-boarding cases — nothing outstanding to show for this jurisdiction. Record an
   accepted offer to open one."* (`:2648`–`:2650`). **§3 is where they collide with the new banner.**
-- **One existing rule looks like it forbids the client owning a sentence, and does not.** `App.tsx:2746` (inside the
-  `:2686`–`:2695` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
+- **One existing rule looks like it forbids the client owning a sentence, and does not.** `App.tsx:2765` (inside the
+  `:2764`–`:2773` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
   the structure that produced the drift… Nothing is composed here, and with no cases there is no sentence to
   state rather than a page-level claim about a list that is not on screen."* The distinction it was making:
   the client must not **assert facts about the data or about scope** — that is the server's (`scope_note`). A
@@ -322,7 +322,7 @@ sentence, which is the seat that was missing. Four sets already exist and each k
 
 ## 8. The shipped refusal, measured against the product's own rules
 
-- **Colour and mark.** `App.tsx:1844` is `bg-amber-50 border-b border-amber-200 text-amber-900 text-sm` with **a lock icon**.
+- **Colour and mark.** `App.tsx:1853` is `bg-amber-50 border-b border-amber-200 text-amber-900 text-sm` with **a lock icon**.
   The product's own rule for a non-fault state is slate, not amber, and it says so with an example: *"the
   product's own flag already does this correctly — the `clear` state is slate, not rose"*
   (`LAYER3-EMPLOYEE-OWN-VIEW.md` §4 `:212`–`:213`). The author's own comment (`:5`–`:7`) says a refusal *"is
