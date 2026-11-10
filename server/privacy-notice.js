@@ -61,7 +61,11 @@
  * The ambiguity was in the *file claim* only: one number described two byte-strings. Re-labelling the
  * served text `v2.3` retrospectively would misdescribe every record written against the text that was
  * actually served, so `v2.2` stays attached to the text it named and the next number moves forward.
- * `v2.4` is the qualifications purpose row, behind counsel.
+ * `v2.4` is section 9, "Personal Data About Non-Employee Contacts" — the data protection contact and
+ * the authorised signatory the employer record holds, two people who are not employees and whom no
+ * section of this notice covered. Served from 2026-11-10; `v2.3` is the text served between
+ * 2026-10-12 and that change. The qualifications purpose row is still behind counsel and takes the
+ * next free number when it lands.
  *
  * Numbering rule: **one number = one byte-string.** Minted when a text lands, as the next free
  * integer; never reserved for planned work, never reused for a different text.
