@@ -325,7 +325,7 @@ proves the rule** — there the reader *is* the data subject, so the same access
 |---|---|---|---|
 | Employment record (name, job title, department, dates) | running the employment relationship | all roles, scoped to the relationship they hold | contract performance; the employer is controller |
 | Work contact details (`email`) | operational contact | hr_admin; manager for own reports | contract performance |
-| **National ID / Iqama** | statutory identity and right-to-work checks | **hr_admin only** — enforced: removed from the manager's and finance's payloads (`FIELD_RULES`) | statutory obligation. *(counsel)*: retention, and whether any manager flow has a lawful need |
+| **National ID / Iqama** | statutory identity and right-to-work checks | **no role reads them from the roster** — enforced: removed from hr_admin's, the manager's and finance's payloads (`FIELD_RULES`), so `GET /api/employees` never decrypts them | statutory obligation. *(counsel)*: retention, and whether any manager flow has a lawful need |
 | **Salary, allowances, EOSB accrued/paid** | payroll, settlement, statutory EOSB | hr_admin and finance; **a manager must not see a report's pay** — enforced | contract + statutory obligation. *(counsel)*: whether a manager may see a *band* |
 | Visa status and expiry, probation end, Emiratisation band, governing law | statutory workforce obligations | hr_admin; manager for own reports (dates only) | statutory obligation |
 | Candidate data (name, email, offer role) before start | pre-boarding | hr_admin; manager scoped to own line — **`⊘` until the case→person link exists** | **pre-contractual.** ⚖ *(counsel)*: candidate contact details to a hiring manager (§8 item 4) |
@@ -390,9 +390,9 @@ Each was reachable by **any** authenticated caller before #223. At `ca681dd` eac
 a role from a cell** — which is why they are asserted in `server/access.test.js` rather than commented.
 
 ### 6.1 One employee reading a colleague's national ID and pay — `GET /api/employees`
-The roster does `SELECT *` on `employees` (`index.js:321`), decrypts both national-ID columns (`:329-319`) and
-returns the row. **Refused for `employee` and `compliance_viewer` by their absence from the cell** (`access.js:95`);
-a manager is line-scoped and loses the national-ID and pay columns; finance keeps pay and loses the identifiers.
+The roster does `SELECT *` on `employees` (`index.js:321`) and decrypts a national-ID column only where the
+cell carries it — **since the roster fix no role does**. **Refused for `employee` and `compliance_viewer` by
+their absence from the cell** (`access.js:95`); a manager is line-scoped and loses pay too; finance keeps pay; hr_admin loses the identifiers.
 
 ### 6.2 A manager or employee reading a settlement document — `GET /api/compliance/templates/…`
 Reads one employee (`index.js:653-651`), decrypts their national IDs, and substitutes the person's identifiers

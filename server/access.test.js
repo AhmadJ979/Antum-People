@@ -451,11 +451,22 @@ describe('the per-row scope, against real accounts', () => {
 describe('the field half: the roster serves each role only what its cell says', () => {
   const rowFor = (body, id) => body.find((e) => e.id === id);
 
-  test('HR is served the row with the national ID decrypted — unchanged, and the positive control', async () => {
+  test('HR is served NO national ID either — the pay columns are the positive control', async () => {
+    // Re-decided: this used to assert the identifiers WERE present for HR, which is the exposure a
+    // prospect could read in devtools. The roster now removes them for every role the cell allows,
+    // so the assertion is reversed — and the control that keeps it from passing vacuously is the
+    // PAY columns, which HR must still be served: the projection is working, it is just not serving
+    // the identifiers. Checked over every row, not one, because a per-row strip is the defect class.
     const r = await api('GET', '/api/employees', { token: await tokenFor(ADMIN_NAME) });
+    assert.ok(r.json.length > 1, 'HR reads the company, so this is not one lucky row');
+    for (const row of r.json) {
+      for (const column of access.EMPLOYEE_FIELD_GROUPS.national_id) {
+        assert.ok(!(column in row), `HR's roster row must not carry ${column}`);
+      }
+    }
     const row = rowFor(r.json, REPORT);
-    assert.ok('national_id_value' in row, 'the column is present for HR, so "absent for the manager" means something');
-    assert.ok('salary' in row && 'eosb_accrued' in row, 'and so do the pay columns');
+    assert.ok('salary' in row && 'eosb_accrued' in row,
+      'HR keeps the pay columns, so "absent above" is the column and not an empty projection');
   });
 
   test('a manager\'s rows carry NO national ID and NO pay', async () => {
