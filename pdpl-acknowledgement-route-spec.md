@@ -75,7 +75,7 @@ Item set: `server/preboarding-items.js:71-77`. Notice purposes: `templates/priva
 
 ## 3. The version — the server reads it, the client never sends it
 
-- **The value:** the notice's own version string, `templates/privacy-notice.md:6` — **`v2.2`** at this tree (its acknowledgement block reads v2.2 too, `:247`).
+- **The value:** the notice's own version string, `templates/privacy-notice.md:6` — **`v2.2`** at this tree (its acknowledgement block reads v2.2 too, `:247`). **Dated record of v2.2; not renumbered (2026-11-10):** at **v2.4** (2026-11-10, #414) that acknowledgement block sits at `templates/privacy-notice.md:270-274` (its own `Consent Version` row reads `v2.4 (2026-11-10)`), and the notice gained §9, *Personal Data About Non-Employee Contacts*. `:6` still carries the version line. The `:247` citation above is kept as written, as the v2.2 state it recorded.
 - **What fixes it there:** the notice is already a file the server serves (`GET /api/compliance/templates/:templateName/:employeeId`, `server/index.js:350`). The server must read the version from that same file, so the record cannot disagree with the notice a client could have downloaded. **The client stops sending it** — `client/src/App.tsx:876` sends the literal `'v1'`, which matches no document, and that literal is the defect.
 - **The rule that keeps it true:** changing the notice's content means bumping that header line; a recorded acknowledgement keeps the version it was shown against and is never rewritten.
 - **Read state to make visible:** if the notice's current version is newer than a case's acknowledgement, the UI must show *which* version that case was acknowledged against rather than present it as current.
