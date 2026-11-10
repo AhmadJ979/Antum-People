@@ -154,6 +154,8 @@ Every cell is a decision, and at `ca681dd` every cell below is the code. **`✔`
 | `GET /api/probation/timelines` (`:1104`) | ✔ (`all`) | **✔ scoped `reports`** | ✔ (`all`) | **✖ (§6.1)** | ✖ |
 | `POST /api/employees/:id/probation-evaluations` (`:1257`) | ✔ (`all`) | **✔ scoped `reports`** | ✖ | ✖ | ✖ |
 | `GET /api/probation/escalations` (`:1320`) | ✔ (`all`) | **✖ — the record names the chain ABOVE the report (§3.1's reason, applied in the route)** | ✔ (`all`) | ✖ | ✖ |
+| `GET /api/employers` (`:565`) — the employer record | ✔ (`all`) | **✔ — the cell is `employees:read`, and the row scope is NOT applied (§3.1, the employer paragraph)** | ✔ (`all`) | ✖ | ✖ |
+| `PUT /api/employers/:id` (`:578`) | ✔ | ✖ | ✖ | ✖ | ✖ |
 
 **P3-1's probation timeline is a read over `employees`, and NOT a resource of its own** (`server/access.js`,
 the ROUTES entry for `GET /api/probation/timelines`; PR #287). Every date it returns is a function of
@@ -223,6 +225,21 @@ them (`index.js:336-326`) — encryption at rest discloses nothing if the read d
 this properly: the decrypt happens **only for a column the caller's role is served**, inside the projection
 (`index.js:327-326`), and `fieldsRemovedFor` returning `null` — policy silent about a role — is a **refusal**
 (`index.js:317`), not "serve everything".
+
+**The employer record rides the roster's two cells, and its ROW scope is deliberately not applied** (owner
+ruling 2026-11-10, option (b): a table, one row per legal entity, not a singleton). `GET /api/employers` is
+`employees:read` — the record exists to fill the facts the roster's own documents print (a contract, a
+settlement statement, the notice a hire is shown), so whoever may render those documents is who the facts are
+about, and `finance` reaches it because finance holds `employees:read` at `all`. `PUT /api/employers/:id` is
+`employees:write` — `hr_admin` only — because a legal name, a trade licence number and a signatory are the
+company's identity, and a manager editing them would be editing the party on every contract. **The row scope
+of `employees:read` is NOT applied to the read**: this is one company's own record, not another person's row,
+and a `reports`-scoped manager reading the company it works for discloses nothing about any employee — stated
+rather than left for a reader to infer. **No `employer:read`/`employer:write` pair was created**, for the
+reason P3-1, P3-2, P3-3, P4-1 and the correction route each gave: a new resource is a new cell in this matrix,
+and a new cell is the owner's call. The narrower reading (HR only) is raised in PR #410's body rather than
+taken silently here. **The two routes were appended at the end of the ROUTES list**, for the reason the P3-1
+paragraph gives: this file cites `file:line`, and inserting in the middle moves the instrument's checks.
 
 **A scope the table does not cover is a refusal, and that is asserted.** `scopeFor` returns `null` rather than
 falling back to `all` (`access.js:388`); the call sites refuse on it. The failure mode this prevents is the

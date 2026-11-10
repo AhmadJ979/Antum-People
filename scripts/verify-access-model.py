@@ -496,7 +496,10 @@ console.log(JSON.stringify(out));
         meas = m
         checks = [
             (m["resources"] == 17, f"17 resources (measured {m['resources']})"),
-            # 30 since this tree: P3-3 added `GET /api/probation/escalations`, mapped to the existing
+            # 33 since this tree: the employer record (PR #410) added `GET /api/employers` and
+            # `PUT /api/employers/:id`, both mapped to cells that already existed — `employees:read` and
+            # `employees:write` — so no new resource, but two new routes and two §3.1 rows, published as
+            # 31 -> 33 rather than moved silently. 31 since P3-3 added `GET /api/probation/escalations`, mapped to the existing
             # `employees:read` cell (docs/access-model.md §3.1, which carries its row in the same change
             # — rule 41's count, published as 29 -> 30 rather than moved silently). Before that, 29 since
             # 62665dc (PR #306): P3-2 added `POST /api/employees/:id/probation-evaluations`, mapped to
@@ -507,7 +510,7 @@ console.log(JSON.stringify(out));
             # which is what happened on 2026-10-22, when PR #287 landed a route and no §3 row, turning
             # this check from green (137/137 at 93de0bd) to red (80/137 at f4314d8) and check-all's
             # verdict to BROKEN. The row now exists and the number moves with it.
-            (m["routes"] == 31, f"31 routes declared (measured {m['routes']})"),
+            (m["routes"] == 33, f"33 routes declared (measured {m['routes']})"),
             (m["roles"] == 5, f"five roles exist (measured {m['roles']})"),
             (m["list"] == 1, f"the list cell covers 1 route (measured {m['list']})"),
             (m["own"] == 4, f"the own cell covers 4 routes (measured {m['own']})"),
