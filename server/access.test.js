@@ -501,9 +501,29 @@ describe('the field half: the roster serves each role only what its cell says', 
 
 describe('the settlement templates: finance gets the settlement, not the contracts (§6.2)', () => {
   test('finance renders the settlement statement', async () => {
+    // THE TITLE'S CLAIM, made falsifiable. This asserted `content.length > 0`, which a REFUSAL body
+    // satisfies — so it passed on a body that says "NOT ISSUED ... this response is not the document you
+    // asked for", and could not tell the statement from the refusal of it. What comes back has to be the
+    // settlement statement's answer FOR THIS RECORD, in one of the two forms the route can honestly
+    // produce: the issued statement (its own heading and net-payable line), or the document-level refusal
+    // that names the template, the record and the facts no record holds. The POLICY refusal looks
+    // different — 403 with an empty body — and the next test asserts it for the same account.
     const r = await api('GET', `/api/compliance/templates/final-settlement-statement/${REPORT}`, { token: await tokenFor('scope-finance') });
-    assert.strictEqual(r.status, 200);
-    assert.ok(r.json.content && r.json.content.length > 0, 'a document comes back');
+    assert.strictEqual(r.status, 200, 'finance is allowed this template (§6.2): the policy does not refuse it');
+    const body = r.json;
+    assert.ok(body && typeof body === 'object', 'a document body comes back, not an empty one');
+    assert.strictEqual(typeof body.issued, 'boolean', 'the answer states whether the document was issued');
+    if (body.issued) {
+      assert.match(body.content, /Final Settlement Statement/, 'an issued settlement statement is the statement');
+      assert.match(body.content, /NET PAYABLE AMOUNT/, 'and carries its own net-payable line');
+    } else {
+      assert.strictEqual(body.template, 'final-settlement-statement', 'the refusal names the document it is about');
+      assert.strictEqual(body.employee_id, REPORT, 'and the record it is about');
+      assert.ok(Array.isArray(body.missing_fields) && body.missing_fields.length > 0,
+        'the document-level refusal names the facts no record holds');
+      assert.match(body.content, /NOT ISSUED/, 'and says in its own body that it is not the document');
+      assert.strictEqual(/NET PAYABLE AMOUNT/.test(body.content), false, 'the refusal carries no part of the statement');
+    }
   });
 
   test('finance is refused an employment contract', async () => {

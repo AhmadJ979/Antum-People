@@ -937,8 +937,8 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
     const employees = await db.query(`SELECT * FROM employees WHERE id = ${db.escapeString(employeeId)}`);
     if (employees.length === 0) return res.status(404).json({ error: 'Employee not found' });
     const emp = employees[0];
-    emp.national_id_value = auth.decrypt(emp.national_id_value);
-    emp.national_id_iqama = auth.decrypt(emp.national_id_iqama);
+    // Neither national-ID column is decrypted here, and neither may start (owner ruling 2026-11-10,
+    // option A: finance keeps the settlement document, the ID comes off it) — served-document-facts holds it.
 
     // A figure the record does not hold is ABSENT, never 0.00: `(emp.salary || 0)` used to turn a
     // missing salary into a settlement of 0.00, which reads as a computed total, and the totals below
@@ -972,7 +972,7 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
     const templateData = {
       ...emp,
       full_name: `${emp.first_name} ${emp.last_name}`,
-      national_id: emp.national_id_value,
+      // No national-ID key: the statement's acknowledgment clause names none (see the note above).
       employee_id: emp.id,
       total_salary: heldAmount(emp.salary),
       basic_salary: heldAmount(emp.basic_salary),

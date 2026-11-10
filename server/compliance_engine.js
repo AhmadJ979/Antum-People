@@ -217,7 +217,10 @@ function unpopulatedPlaceholders(text) {
 function renderTemplate(templateContent, data = {}) {
   // The employee-record fields the templates name. `not calculated` is not a value either, but it is
   // the wording these fields have carried since before this change; what this change stops is a fact
-  // being INVENTED, and these are left alone deliberately (see the PR body's scope note).
+  // being INVENTED, and these are left alone deliberately (see the PR body's scope note) — except
+  // `national_id`, which is NOT here at all: a document that names one carries an identity number, and
+  // the settlement statement names none (owner ruling 2026-11-10). A template that still writes
+  // `[national_id]` (the two contracts) keeps its own visible blank rather than a value-shaped word.
   const values = {
     current_date: data.current_date || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
     full_name: data.full_name,
@@ -225,7 +228,6 @@ function renderTemplate(templateContent, data = {}) {
     dob: data.dob,
     nationality: data.nationality || 'not calculated',
     passport_no: data.passport_no || 'not calculated',
-    national_id: data.national_id || 'not calculated',
     start_date: data.start_date || 'not calculated',
     end_date: data.end_date || 'not calculated',
     employee_id: data.employee_id || 'not calculated',

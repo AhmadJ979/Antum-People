@@ -395,8 +395,8 @@ cell carries it — **since the roster fix no role does**. **Refused for `employ
 their absence from the cell** (`access.js:95`); a manager is line-scoped and loses pay too; finance keeps pay; hr_admin loses the identifiers.
 
 ### 6.2 A manager or employee reading a settlement document — `GET /api/compliance/templates/…`
-Reads one employee (`index.js:653-651`), decrypts their national IDs, and substitutes the person's identifiers
-and EOSB into a document. **Refused for `employee` and `manager`**; `finance` reaches settlements only
+Reads one employee (`index.js:653`) and substitutes the person's name, record id and EOSB into a document —
+it decrypts **neither** national-ID column, and the statement names no national ID (2026-11-10). **Refused for `employee` and `manager`**; `finance` reaches settlements only
 (`TEMPLATE_SCOPES`), and a role absent from that table gets `undefined` — a refusal, never `all`.
 
 ### 6.3 A manager reading company-wide pay through the dashboard — `GET /api/analytics/dashboard`

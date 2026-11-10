@@ -254,6 +254,72 @@ describe('the positive control: with the facts held, the document IS produced', 
   });
 });
 
+describe('the settlement statement identifies the employee without their national ID', () => {
+  // Owner ruling 2026-11-10, option A: finance keeps the document, the ID comes off it. Three places had
+  // to agree for that to be true — the template's acknowledgment clause, the renderer's fallback for the
+  // key, and the route, which must not decrypt the column at all. The first two are held here by
+  // rendering the repository's own template; the third by reading the route's own source, because a
+  // refusal body would hide a decrypted value that a day's held facts would print.
+  const SETTLEMENT = path.join(__dirname, '..', 'templates', 'final-settlement-statement.md');
+  // A value no record holds, in the Emirates-ID shape. Typed out here rather than imported from the code
+  // under test: a guard that reads its needle from the code it guards cannot notice the code changing.
+  const ID = '784-1990-1234567-1';
+  // Every fact the statement names, HELD — so the document is issued and this is about what it prints.
+  // `national_id` and `national_id_value` are both supplied, because the old payload carried the second
+  // through the row spread and the first as its own key: a regression can come back through either.
+  const FACTS = {
+    employer_name: 'Example Employment LLC',
+    basic_salary: '11000.00',
+    total_salary: '16000.00',
+    eosb_amount: '6415.79',
+    final_pro_rated_salary: '5161.29',
+    unused_leave_amount: '0.00',
+    notice_pay: '0.00',
+    ticket_allowance: '0.00',
+    other_payments: '0.00',
+    gross_settlement: '11577.08',
+    loan_deduction: '0.00',
+    assets_deduction: '0.00',
+    fine_deduction: '0.00',
+    total_deductions: '0.00',
+    net_settlement: '11577.08',
+    full_name: 'Amina Haddad',
+    employee_id: WITH_MONEY,
+    termination_reason: 'resignation',
+    end_date: '2026-10-10',
+    national_id: ID,
+    national_id_value: ID,
+  };
+
+  test('a rendered statement carries no national ID — and still identifies the person', () => {
+    const rendered = compliance.renderTemplate(fs.readFileSync(SETTLEMENT, 'utf8'), FACTS);
+    assert.deepStrictEqual(rendered.missing, [],
+      'every fact is held here, so this is a statement that IS issued — not a refusal standing in for one');
+    assert.strictEqual(rendered.content.indexOf(ID), -1, 'the statement printed the national ID');
+    assert.strictEqual(rendered.content.indexOf('784-1990'), -1, 'the statement printed part of the national ID');
+    assert.strictEqual(/national_id/i.test(rendered.content), false,
+      'the statement still leaves a national-ID placeholder in the document');
+    // The positive controls: this really is the statement, the waiver survived in both languages, and
+    // the person is still identified — by name and record id, which is all the document needs.
+    assert.ok(rendered.content.indexOf('hereby acknowledge receipt of the amount shown above') !== -1,
+      'the English acknowledgment clause is still there');
+    assert.ok(rendered.content.indexOf('\u0643\u0645\u062e\u0627\u0644\u0635\u0629 \u0646\u0647\u0627\u0626\u064a\u0629 \u0648\u0634\u0627\u0645\u0644\u0629') !== -1,
+      'the Arabic acknowledgment clause is still there');
+    assert.ok(rendered.content.indexOf(FACTS.full_name) !== -1 && rendered.content.indexOf(FACTS.employee_id) !== -1,
+      'the employee is identified by name and record id');
+  });
+
+  test('the templates route never decrypts a national ID', () => {
+    const source = fs.readFileSync(path.join(__dirname, 'index.js'), 'utf8');
+    const start = source.indexOf("app.get('/api/compliance/templates/");
+    const end = source.indexOf('// REMOVED 2026-10-13, owner decision 21 executed:', start);
+    assert.ok(start !== -1 && end > start,
+      'the templates route must be findable in server/index.js — a guard that cannot see its subject is RED, not green');
+    const found = source.slice(start, end).match(/[^\n]*national_id[^\n]*/);
+    assert.strictEqual(found, null, `the templates route names a national-ID column: ${found && found[0].trim()}`);
+  });
+});
+
 describe('the notice is served as its own text, and says which of its lines are blank', () => {
   test('the raw route serves the repository file byte for byte', async () => {
     const r = await api('/api/compliance/notice');

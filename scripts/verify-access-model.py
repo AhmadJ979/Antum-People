@@ -168,7 +168,12 @@ CLAIMS = [
     ("server/index.js", 653, "app.get('/api/compliance/templates/", "settlement documents"),
     ("server/index.js", 660, "templatesAllowedFor", "which documents a role may render"),
     ("server/index.js", 665, "SELECT * FROM employees", "templates read one employee"),
-    ("server/index.js", 668, "auth.decrypt(emp.national_id_value)", "templates decrypt the national ID"),
+    # RE-GROUNDED 2026-11-10 (the settlement statement). This claim pinned
+    # `auth.decrypt(emp.national_id_value)` and read "templates decrypt the national ID". The route no
+    # longer decrypts either identifier — the statement identifies the person by name and record id and
+    # names no national ID (owner ruling 2026-11-10, option A) — so that symbol is gone BY DESIGN, and a
+    # claim about it would now pin a defect. It pins the payload the route builds instead.
+    ("server/index.js", 972, "const templateData = {", "the document's payload — no national ID in it"),
     ("server/index.js", 769, "app.get('/api/analytics/dashboard'", "analytics route"),
     ("server/index.js", 776, "SELECT * FROM employees", "analytics reads the whole roster"),
     ("server/index.js", 954, "app.post('/api/exit-interviews'", "exit route"),
