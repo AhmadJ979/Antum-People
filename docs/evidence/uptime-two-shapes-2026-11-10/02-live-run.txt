@@ -1,0 +1,9 @@
+# run 42774559203 - the fix, probing the live URL (branch fix/uptime-two-shapes, 2026-11-10T07:20:09Z)
+# conclusion: success
+
+ http status   : 200
+ title seen    : <title>Antum People — access</title>
+ asset seen    : none
+ page shape    : gate page (passcode wall: our gate title, no asset by design)
+probe the public URL	Probe — three assertions, three attempts	2026-11-10T07:20:13.1582868Z RESULT: PASS after 1 attempt(s)
+probe the public URL	Comment the check is green again, and close the open alert issue	2026-11-10T07:20:15.6004918Z recovery recorded on issue #390
