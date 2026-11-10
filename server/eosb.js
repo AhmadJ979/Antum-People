@@ -181,4 +181,50 @@ function basisForRow(row) {
   return { reason: computed.reason, basis: computed.basis, factor: computed.factor, recognised: true };
 }
 
-module.exports = { calculateEOSB, calculateEOSBDetailed, basisForRow, recordedReason, storedReason, TERMINATION_REASONS, BASIS };
+/**
+ * WHAT A CANDIDATE REASON WOULD DO TO THIS ROW'S FIGURE — the engine's own answer, for the one screen
+ * that is about to RECORD a reason (decision 16: the exit form).
+ *
+ * Why it exists: a recorded resignation SHRINKS the benefit (the UAE 1/3 and 2/3 tiers below), so a
+ * form that saved a reason without showing the figure it moves would change a person's money with
+ * nothing on the screen saying so. The form must show the reason on file AND the figure each choice
+ * produces BEFORE it saves, and both numbers have to be the engine's — a client that computed them
+ * would have learned the tier thresholds, which `basisForRow`'s own note forbids.
+ *
+ * Three readings, all from `calculateEOSBDetailed` against THIS row's record:
+ *   * `current`  — the figure the record produces today, with the reason it holds. A stored reason the
+ *                  engine does not recognise is reported as such with NO amount, exactly as
+ *                  `basisForRow` reports it, rather than computed on a guess.
+ *   * `not_recorded` — the figure with no reason at all (the state a CLEAR returns the record to).
+ *   * `by_reason` — one figure per reason this engine recognises, keyed by the engine's own values.
+ */
+function previewForRow(row) {
+  const record = row || {};
+  const state = storedReason(record.termination_type);
+  const compute = (reason) => calculateEOSBDetailed(
+    record.start_date,
+    record.end_date || null,
+    record.basic_salary,
+    record.salary,
+    record.data_residency_country,
+    reason,
+    record.unpaid_leave_days || 0
+  );
+  const byReason = {};
+  for (const reason of TERMINATION_REASONS) byReason[reason] = compute(reason);
+  const current = state.recognised
+    ? { ...compute(state.reason), recognised: true }
+    : { amount: null, reason: state.reason, basis: 'unrecognised_reason', factor: null, recognised: false };
+  return { current, not_recorded: compute(null), by_reason: byReason };
+}
+
+module.exports = {
+  calculateEOSB,
+  calculateEOSBDetailed,
+  basisForRow,
+  previewForRow,
+  recordedReason,
+  storedReason,
+  TERMINATION_REASONS,
+  BASIS,
+};

@@ -68,8 +68,8 @@ authenticated call, and `App.tsx` routes all of them through it:
 - The wrapper (`:152`) classifies only for 401/403 (`:165`), calls `onSessionInvalid` and **throws
   `SessionExpiredError` on a 403-with-body** (`:174`) so no caller parses an error payload as data, and calls
   `onRefusal` and **throws `RefusalError`** (`:179`) on a refusal — keeping the session.
-- `App.tsx`: the refusal is **one global banner above the content** (`:1856`–`:1869`), `role="alert"`, amber,
-  a lock icon, dismissible, and retired when the tab or jurisdiction changes (`:888`).
+- `App.tsx`: the refusal is **one global banner above the content** (`:2038`–`:2051`), `role="alert"`, amber,
+  a lock icon, dismissible, and retired when the tab or jurisdiction changes (`:997`).
 
 **Three things it does not do**, all still measured on `main`:
 
@@ -90,7 +90,7 @@ fails for a colour-blind reader, in Arabic, in a screenshot, and in a printout.
 
 | # | Trigger (measured) | What is true | The sentence | Form | Action |
 |---|---|---|---|---|---|
-| **1** | **401** — `auth.js:26` | the caller never presented a session | *(the existing sign-in card, `App.tsx:583`, its `Sign In` button at `:656`)* | the **whole surface** is replaced | sign in |
+| **1** | **401** — `auth.js:26` | the caller never presented a session | *(the existing sign-in card, `App.tsx:685`, its `Sign In` button at `:758`)* | the **whole surface** is replaced | sign in |
 | **2** | **403 + body** — `auth.js:31` | a session existed and is over | **"Your session has ended. Sign in again to continue."** (proposed — #241 reaches the card but states no reason) | the card, plus that line | sign in |
 | **3** | **403, empty** — `server/access.js:446`, `server/access.js:448`, `server/index.js:337` | the session is **fine**; this request was refused | **shipped: "You don't have access to that. Nothing was changed, and you are still signed in."** (`REFUSAL_NOTICE`, `App.tsx:72`) | a banner above the content | dismiss |
 | **4** | **200** + empty result | genuinely nothing there | the sentences already shipped — §6 | sentence only, italic slate, **no heading, no action** | none |
@@ -117,11 +117,11 @@ identically; #241 reaches state 2 for the first time.**
 gap it left open.** Measured from the code path:
 
 1. The gate refuses `/api/employees` for the signed-in role → `403` with an empty body.
-2. `createAuthedFetch` calls `onRefusal` (`httpStatus.js:178`) → `setRefusal(refusalNoticeFor(url, REFUSAL_NOTICE))` (`App.tsx:883`)
-   → **the banner renders** (`:1797`).
+2. `createAuthedFetch` calls `onRefusal` (`httpStatus.js:178`) → `setRefusal(refusalNoticeFor(url, REFUSAL_NOTICE))` (`App.tsx:992`)
+   → **the banner renders** (`:2038`).
 3. Then it **throws** `RefusalError` (`:179`).
-4. `fetchData`'s `catch (err)` (`App.tsx:1000`) swallows it; `setEmployees` never runs, so `employees` stays `[]`
-   (`:671`); `setAnalytics` never runs, so `analytics` stays `null` (`:678`).
+4. `fetchData`'s `catch (err)` (`App.tsx:1109`) swallows it; `setEmployees` never runs, so `employees` stays `[]`
+   (`:773`); `setAnalytics` never runs, so `analytics` stays `null` (`:780`).
 5. The dashboard below the banner therefore renders **six `No data yet` tiles** (`:1897`, `:1915`, `:1947`,
    `:1920`, `:1962`, `:1966`) plus `No active onboardings.` (`:2017`) and `No active offboardings.` (`:2045`).
 
@@ -226,8 +226,8 @@ thing.)
 from, and this branch's base): both loaders fetch **two things in one `Promise.all`** — `fetchData`
 paired the roster with the analytics roll-up, `fetchTasks` onboarding with offboarding. **One refused sibling
 rejected the pair, so the sibling that was granted was never applied.** *That half has since been fixed:* row
-`bd008d23` moved both loaders onto `settlePanels`, the roster now settling from a `records` array (`const settled = settlePanels(records)` at `App.tsx:957`, and
-`:1395` in `fetchTasks`), which settles each leg on its own — a granted panel keeps its data and a refused one
+`bd008d23` moved both loaders onto `settlePanels`, the roster now settling from a `records` array (`const settled = settlePanels(records)` at `App.tsx:1076`, and
+`:1513` in `fetchTasks`), which settles each leg on its own — a granted panel keeps its data and a refused one
 contributes none. **The defect it removed was real:** a region the caller was entitled to rendered empty,
 under a notice saying they were not entitled to something. For a `manager` — roster cell allowed, analytics
 cell not, per the matrix itself — **that was the whole dashboard.**
@@ -253,8 +253,8 @@ the area exists at all* to a caller who did not ask for it.
 ### 5b. **Event 6 — the request that never came back**
 
 Server down, connection dropped, non-JSON body. Measured: the wrapper does not catch a rejected `fetch`
-(`client/src/httpStatus.js:152`), so it propagates to the callers' swallows — `catch (err)` at `App.tsx:1000`
-in `fetchData` and `:1362` in `fetchTasks` — state is kept, and the dashboard
+(`client/src/httpStatus.js:152`), so it propagates to the callers' swallows — `catch (err)` at `App.tsx:1109`
+in `fetchData` and `:1524` in `fetchTasks` — state is kept, and the dashboard
 reads **`No data yet` while the server is unreachable**. **Proposed: "We couldn't load this."** with a
 **Retry**. This is the one of the six that **is** a fault, so it is the one that may carry a fault colour;
 states 3 and 5a must not. **Still unhandled by #241**, and I am not folding it in silently — a fix for the
@@ -294,8 +294,8 @@ sentence, which is the seat that was missing. Four sets already exist and each k
   `No active offboardings.`, `No tasks generated for this stage.`, and the pre-boarding panel's
   *"No open {jurisdiction} pre-boarding cases — nothing outstanding to show for this jurisdiction. Record an
   accepted offer to open one."* (`:2648`–`:2650`). **§3 is where they collide with the new banner.**
-- **One existing rule looks like it forbids the client owning a sentence, and does not.** `App.tsx:2786` (inside the
-  `:2785`–`:2794` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
+- **One existing rule looks like it forbids the client owning a sentence, and does not.** `App.tsx:2982` (inside the
+  `:2981`–`:2990` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
   the structure that produced the drift… Nothing is composed here, and with no cases there is no sentence to
   state rather than a page-level claim about a list that is not on screen."* The distinction it was making:
   the client must not **assert facts about the data or about scope** — that is the server's (`scope_note`). A
@@ -322,7 +322,7 @@ sentence, which is the seat that was missing. Four sets already exist and each k
 
 ## 8. The shipped refusal, measured against the product's own rules
 
-- **Colour and mark.** `App.tsx:1856` is `bg-amber-50 border-b border-amber-200 text-amber-900 text-sm` with **a lock icon**.
+- **Colour and mark.** `App.tsx:2038` is `bg-amber-50 border-b border-amber-200 text-amber-900 text-sm` with **a lock icon**.
   The product's own rule for a non-fault state is slate, not amber, and it says so with an example: *"the
   product's own flag already does this correctly — the `clear` state is slate, not rose"*
   (`LAYER3-EMPLOYEE-OWN-VIEW.md` §4 `:212`–`:213`). The author's own comment (`:5`–`:7`) says a refusal *"is

@@ -115,19 +115,21 @@ const DYNAMIC_SITES = [
 ];
 
 /**
- * Boolean UI state that can never be turned on: the control it gates has no opener. Measured
- * 2026-10-12 — `setShowExitModal` is called twice in App.tsx and both times with `false`.
+ * Boolean UI state that can never be turned on: the control it gates has no opener.
+ *
+ * `showExitModal` USED TO SIT HERE, and its removal is the point of this register: from 2026-11-10
+ * the exit form is opened by the `Record exit` control on an offboarding or terminated roster row
+ * (`client/src/App.tsx`, the same file that declares
+ * `const [showExitModal, setShowExitModal] = useState(false);`), so the modal decision 16 named as
+ * unreachable is reachable, and a fixed defect that lingers here reads as an open one —
+ * `server/reachability.test.js` fails the moment an entry's state becomes openable.
+ *
+ * THE OBJECT IS EMPTY ON PURPOSE, and an empty register is not an omission here: the test still
+ * reddens on any NEW un-openable state (that is what `unregistered` is for), and the stale check is
+ * what stops this entry from coming back. Measured 2026-10-12 there was exactly one entry; measured
+ * 2026-11-10 there are zero.
  */
-const UNOPENABLE_CONTROLS = {
-  showExitModal: {
-    declaration: 'const [showExitModal, setShowExitModal] = useState(false);',
-    why: 'The Exit Intelligence Intake modal. Its setter is called twice — after a successful submit '
-       + '(App.tsx:1148 as measured 2026-10-12) and on the close button (:2424) — never with `true`, '
-       + 'so no click in the product opens it. Its route, POST /api/exit-interviews, IS reachable by '
-       + 'path; the control is not. That split is exactly what the route check alone cannot see.',
-    owner: 'decision 16 (wire it, or leave it and say so) — not yet ruled',
-  },
-};
+const UNOPENABLE_CONTROLS = {};
 
 /**
  * Values a tile displays, and whether anything that RUNS IN PRODUCTION writes them. A tile whose

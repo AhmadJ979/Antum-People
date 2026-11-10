@@ -155,3 +155,61 @@ describe('the termination reason is never defaulted (owner ruling 2026-10-29)', 
       'no_reason_recorded');
   });
 });
+
+describe('what a CANDIDATE reason would do to the figure (decision 16, 2026-11-10)', () => {
+  const { previewForRow, TERMINATION_REASONS } = require('./eosb.js');
+  const start = '2024-01-01';
+  const at = (years) => new Date(new Date(start).getTime() + years * 365.25 * 864e5).toISOString().split('T')[0];
+  const row = (extra) => ({
+    start_date: start, end_date: at(2), basic_salary: 6000, salary: 10000,
+    data_residency_country: 'AE', termination_type: null, ...extra,
+  });
+
+  test('every reason the ENGINE knows is priced, and the option list is the engine\'s own', () => {
+    const preview = previewForRow(row({}));
+    assert.deepStrictEqual(Object.keys(preview.by_reason).sort(), [...TERMINATION_REASONS].sort(),
+      'the form\'s options come from this object, so it must be exactly the engine\'s list');
+    for (const reason of TERMINATION_REASONS) {
+      assert.strictEqual(preview.by_reason[reason].reason, reason);
+      assert.ok(Number.isFinite(preview.by_reason[reason].amount), `${reason}: a figure, not a blank`);
+    }
+  });
+
+  test('the figure on file and the figure a resignation would produce are BOTH the engine\'s', () => {
+    // 2 UAE years on a 6,000 basic: 8,394.25 whole, and a recorded resignation keeps a THIRD (2,798.08).
+    const unreduced = previewForRow(row({}));
+    assert.strictEqual(unreduced.current.amount, 8394.25);
+    assert.strictEqual(unreduced.current.basis, 'no_reason_recorded');
+    assert.strictEqual(unreduced.not_recorded.amount, 8394.25);
+    assert.strictEqual(unreduced.by_reason.resignation.amount, 2798.08);
+    assert.strictEqual(unreduced.by_reason.resignation.basis, 'recorded_reduced');
+    assert.strictEqual(unreduced.by_reason.termination.amount, 8394.25);
+    assert.strictEqual(unreduced.by_reason.summary_dismissal.amount, 0);
+    // The reason ALREADY on the record is what `current` reports — never a reason this module chose.
+    const recorded = previewForRow(row({ termination_type: 'resignation' }));
+    assert.strictEqual(recorded.current.reason, 'resignation');
+    assert.strictEqual(recorded.current.amount, 2798.08);
+    assert.strictEqual(recorded.current.factor, 1 / 3);
+    assert.strictEqual(recorded.current.recognised, true);
+  });
+
+  test('a stored reason the engine does not recognise yields NO amount, and is not coerced', () => {
+    const preview = previewForRow(row({ termination_type: 'mutual_agreement' }));
+    assert.deepStrictEqual(preview.current,
+      { amount: null, reason: 'mutual_agreement', basis: 'unrecognised_reason', factor: null, recognised: false });
+    assert.strictEqual(preview.by_reason.resignation.amount, 2798.08, 'the candidates are still priced');
+  });
+
+  test('KSA reads the same way: no reason changes the figure, and the preview says so', () => {
+    const preview = previewForRow(row({ data_residency_country: 'SA', basic_salary: 5000, end_date: at(3) }));
+    assert.strictEqual(preview.by_reason.resignation.amount, preview.by_reason.termination.amount);
+    assert.strictEqual(preview.current.amount, preview.not_recorded.amount);
+  });
+
+  test('the preview does not write to the row it was given', () => {
+    const given = row({});
+    const before = JSON.stringify(given);
+    previewForRow(given);
+    assert.strictEqual(JSON.stringify(given), before);
+  });
+});
