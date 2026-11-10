@@ -181,13 +181,16 @@ CHECKS = [
     dict(id="doc-citation-pin-selftest", mode="default", expect="green",
          home="operator CLI (bare) + this entry point; it needs git objects to clone, so the movement does not run it",
          cmd=[PY, "scripts/doc-citation-pin-selftest.py"],
-         what="the `@rev` PIN control, not the citations themselves. Six plants are committed into a scratch "
+         what="the `@rev` PIN control, not the citations themselves. Eight plants are committed into a scratch "
               "clone and judged by the clone's own copy of the instrument (the instrument finds its repo from "
               "its own file, so the source's copy would judge the source tree and see nothing). Each plant must "
               "produce its documented outcome: a correct pin `ok` with `pinned` rising by 1; the same citation "
               "without the marker FAILING; an unresolvable pin REFUSED at exit 2 with no per-line report and no "
-              "footer; a marker governing nothing UNUSED-PIN; a bare backticked SHA in prose still UNCHECKED; "
-              "and a correct pin naming a symbol absent at that revision FAILING while `pinned` still rises. "
+              "footer; a marker governing nothing UNUSED-PIN; that same citation on a line carrying none of its "
+              "identifiers FAILING (P4's number is DERIVED from client/src/App.tsx every run, so a line shift "
+              "cannot redden it, and the control proves the derivation is not a rubber stamp); a bare backticked "
+              "SHA in prose still UNCHECKED; and a correct pin naming a symbol absent at that revision FAILING "
+              "while `pinned` still rises. "
               "A counter nobody has watched move is a comment - this is the watch. `--mutant <name>` is the "
               "second half: it weakens the instrument and requires a named plant to catch it"),
 
