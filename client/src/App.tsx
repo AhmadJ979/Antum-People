@@ -103,6 +103,11 @@ interface Employee {
   // returned for this row. Absent for a role that is not served the figure at all (S4: a manager
   // does not see a report's pay, and the basis is a fact about that pay, not about the person).
   eosb_basis?: EosbBasis | null;
+  // DECISION 16 (2026-11-10): the reason the record holds, and — for the exit form — the figure each
+  // candidate reason produces (`server/eosb.js#previewForRow`). Both ride on the figure's own field
+  // gate: a role that is not served the pay is not served what a reason would do to it either.
+  termination_type?: string | null;
+  eosb_preview?: EosbPreview | null;
 }
 
 interface Task {
@@ -384,6 +389,28 @@ type EosbBasis = {
   recognised: boolean;
 };
 /**
+ * ONE FIGURE the engine produced for one candidate reason (`server/eosb.js#calculateEOSBDetailed`).
+ * `basis` is the engine's own word for WHY: `recorded_reduced` means a tier was applied, and
+ * `no_reason_recorded` means nobody's reason is on the record and the figure is unreduced.
+ */
+type EosbReasonFigure = {
+  amount: number | null;
+  reason: string | null;
+  basis: EosbBasis['basis'];
+  factor: number | null;
+};
+/**
+ * THE EXIT FORM'S READINGS (decision 16, 2026-11-10). `current` is what the record produces today;
+ * `by_reason` holds one figure per reason the ENGINE recognises, so the form's options come from the
+ * engine rather than from a list written here; `not_recorded` is the figure with no reason at all —
+ * the state clearing the field returns the record to. Absent entirely for a role not served the pay.
+ */
+type EosbPreview = {
+  current: EosbReasonFigure & { recognised: boolean };
+  not_recorded: EosbReasonFigure;
+  by_reason: Record<string, EosbReasonFigure>;
+};
+/**
  * THE CARD'S FIGURE — complete, never truncated. Its type size is computed from the figure's own
  * length against the card's inner width (see `eosbFigureSize.js`), so the number never has to be
  * rounded, abbreviated or cut to fit. Measured before this fix: 190 px of figure in a 172 px row.
@@ -434,6 +461,81 @@ const EosbBasisNote = ({ basis }: { basis?: EosbBasis | null }) => {
     );
   }
   return null;
+};
+
+/**
+ * The engine's reason values, in words. The FORM'S OPTIONS are the payload's own keys — this only
+ * labels the values we know how to say in English, and an engine value with no label here still
+ * renders (as itself), so adding a reason to the engine cannot silently drop it from the form.
+ */
+const TERMINATION_REASON_LABEL: Record<string, string> = {
+  resignation: 'Resignation (employee-initiated)',
+  termination: 'Termination by the employer',
+  summary_dismissal: 'Summary dismissal (gross misconduct)',
+};
+const reasonWord = (reason: string | null): string =>
+  reason ? (TERMINATION_REASON_LABEL[reason] || reason) : 'no reason recorded';
+/** The engine's own basis word, said as a sentence a reader can act on. */
+const basisWord = (basis: EosbBasis['basis']): string => {
+  switch (basis) {
+    case 'recorded_reduced': return 'reduced for the recorded resignation';
+    case 'recorded_no_reduction': return 'unreduced — the recorded reason carries no reduction';
+    case 'no_reason_recorded': return 'unreduced — no reason recorded';
+    case 'forfeited': return 'forfeited in full';
+    case 'below_minimum_service': return 'nothing payable — below the minimum service';
+    case 'not_computable': return 'not computable from this record';
+    default: return 'not computed — the reason on file is not one the engine recognises';
+  }
+};
+/**
+ * WHAT SAVING WOULD DO TO THE FIGURE — rendered BEFORE the save, which is the point of it: a recorded
+ * resignation SHRINKS the end-of-service benefit (server/eosb.js, the UAE 1/3 and 2/3 tiers), so a
+ * form that overwrote a reason silently would change a person's money without saying so.
+ *
+ * Every number and every basis word here is the SERVER's (`eosb.previewForRow`, served on the row).
+ * Nothing is computed in this file: the client does not know the tiers and must not learn them.
+ */
+const ExitReasonEffect = ({ target, chosen }: { target: Employee; chosen: string }) => {
+  const preview = target.eosb_preview;
+  const currency = target.data_residency_country === 'SA' ? 'SAR' : 'AED';
+  if (!preview) {
+    // No preview means this account is not served the figure at all (§4: a manager does not see a
+    // report's pay). Said in place, never drawn as a zero.
+    return (
+      <p className="text-[11px] text-slate-500">
+        The end-of-service figure is not served to this account, so what a reason would do to it
+        cannot be shown here.
+      </p>
+    );
+  }
+  const now = preview.current;
+  const proposed = chosen === '' ? preview.not_recorded : preview.by_reason[chosen];
+  const changed = chosen !== (target.termination_type || '');
+  const figure = (f: EosbReasonFigure | null | undefined) =>
+    (f && f.amount !== null && f.amount !== undefined ? `${currency} ${formatAmount(f.amount)}` : 'no figure computed');
+  return (
+    <div className="space-y-1 text-[11px] text-slate-700" data-exit-eosb-effect="">
+      <div>
+        <span className="font-bold">On the record now: </span>
+        {now.recognised
+          ? <>{reasonWord(now.reason)} — {figure(now)} ({basisWord(now.basis)})</>
+          : <>{String(now.reason)} — not a reason this engine recognises, so no figure is computed from it</>}
+      </div>
+      <div>
+        <span className="font-bold">If saved: </span>
+        {proposed
+          ? <>{reasonWord(chosen || null)} — {figure(proposed)} ({basisWord(proposed.basis)})</>
+          : 'no figure computed'}
+      </div>
+      {changed && (
+        <div className="font-semibold text-rose-700">
+          {target.termination_type
+            ? 'This REPLACES the reason on file and re-computes the end-of-service figure above.'
+            : 'This records a reason where the record holds none, and re-computes the end-of-service figure above.'}
+        </div>
+      )}
+    </div>
+  );
 };
 // The flag the figure hangs on — the same two readings the server makes in `triggerOf`. There is no
 // performance flag in the schema (no column, no route), so this does not invent one.
@@ -781,6 +883,13 @@ export default function App() {
     new_employer: '',
     new_salary: ''
   });
+  // DECISION 16 (2026-11-10) -- the exit form. `exitTarget` is the ROW the form was opened from, so
+  // the reason recorded and the interview written can only be about the person the reader opened it
+  // on: the form used to read `selectedEmployee`, which any roster click re-points.
+  const [exitTarget, setExitTarget] = useState<Employee | null>(null);
+  const [exitReason, setExitReason] = useState('');
+  const [exitRefusal, setExitRefusal] = useState<string | null>(null);
+  const [exitSubmitting, setExitSubmitting] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Layer 2 — Pre-boarding (P2-1). The intake form below is where HR records that
@@ -1709,15 +1818,69 @@ export default function App() {
     }
   };
 
+  // The exit form's opener — the ONLY one in the product. It opens on the reason the record holds,
+  // so saving without touching the field writes no reason at all.
+  const openExitForm = (emp: Employee) => {
+    setExitTarget(emp);
+    setExitReason(emp.termination_type || '');
+    setExitRefusal(null);
+    setShowExitModal(true);
+  };
+  // Closed by Cancel, by the x, or by a successful save; nothing else closes it, so a refusal is
+  // never cleared by the act of failing.
+  const closeExitForm = () => {
+    setShowExitModal(false);
+    setExitTarget(null);
+    setExitRefusal(null);
+  };
+  const emptyExitForm = {
+    departure_reason: 'Compensation',
+    detailed_feedback: '',
+    satisfaction_score: '3',
+    preventable: '0',
+    new_employer: '',
+    new_salary: ''
+  };
+
+  /**
+   * TWO WRITES, in this order and for this reason. The REASON goes through the employee write path
+   * (`PUT /api/employees/:id` — the route that owns the actor gate, the known-reason check and the
+   * CLEAR), and the INTERVIEW through `POST /api/exit-interviews`, which moves the row to
+   * `terminated`. The interview is not attempted if the reason was refused, so a refused reason can
+   * never end someone's employment with the old reason still on file — and when the first write
+   * lands and the second does not, the refusal says exactly that instead of "nothing happened".
+   */
   const handleExitSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEmployee || !token) return;
+    const target = exitTarget;
+    if (!target || !token) return;
+    const reasonOnFile = target.termination_type || '';
+    let reasonRecorded = false;
+    setExitSubmitting(true);
+    setExitRefusal(null);
     try {
+      if (exitReason !== reasonOnFile) {
+        const put = await authedFetch(`${API_BASE}/api/employees/${target.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ termination_type: exitReason }),
+        });
+        if (!put.ok) {
+          const body = await put.json().catch(() => ({}));
+          setExitRefusal(
+            'The termination reason was not recorded'
+            + (body && body.error ? `: ${body.error}` : '')
+            + '. The exit interview was not recorded either, and nothing else was changed.'
+          );
+          return;
+        }
+        reasonRecorded = true;
+      }
       const res = await authedFetch(`${API_BASE}/api/exit-interviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          employee_id: selectedEmployee.id,
+          employee_id: target.id,
           interview_date: new Date().toISOString().split('T')[0],
           ...exitForm,
           satisfaction_score: parseInt(exitForm.satisfaction_score),
@@ -1729,20 +1892,39 @@ export default function App() {
         handleLogout();
         return;
       }
-      if (res.ok) {
-        setShowExitModal(false);
-        setExitForm({
-          departure_reason: 'Compensation',
-          detailed_feedback: '',
-          satisfaction_score: '3',
-          preventable: '0',
-          new_employer: '',
-          new_salary: ''
-        });
-        await fetchData();
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setExitRefusal(
+          (reasonRecorded
+            ? 'The termination reason WAS recorded, but the exit interview was not'
+            : 'The exit interview was not recorded')
+          + (body && body.error ? `: ${body.error}` : '')
+          + '. The employment record is otherwise unchanged.'
+        );
+        return;
       }
+      closeExitForm();
+      setExitForm(emptyExitForm);
+      await fetchData();
     } catch (err) {
-      console.error('Error submitting exit interview:', err);
+      // A refusal arrives THROWN -- `authedFetch` throws `RefusalError` for a 403 with an empty body
+      // and `SessionExpiredError` for a dead session (src/httpStatus.js). Falling through to a
+      // console.error would render nothing at all on a form the reader is looking at.
+      if (err instanceof Error && err.name === 'SessionExpiredError') {
+        handleLogout();
+        return;
+      }
+      if (err instanceof Error && err.name === 'RefusalError') {
+        setExitRefusal(
+          reasonRecorded
+            ? 'The termination reason was recorded, but this account may not record the exit interview. Nothing else was changed.'
+            : 'You do not have access to record an exit for this employee. Nothing was changed, and you are still signed in.'
+        );
+        return;
+      }
+      setExitRefusal('The exit was not recorded — the request failed. Nothing was changed.');
+    } finally {
+      setExitSubmitting(false);
     }
   };
 
@@ -2316,6 +2498,20 @@ export default function App() {
                           <EosbBasisNote basis={emp.eosb_basis} />
                         </td>
                         <td className="p-4 text-right">
+                          {/* DECISION 16 (2026-11-10): the exit form's opener, drawn on the rows it is
+                              about and on no other status. `stopPropagation` keeps the click from also
+                              reaching the row's own select handler, so opening the form cannot
+                              re-point the panel behind it. */}
+                          {(emp.status === 'offboarding' || emp.status === 'terminated') && (
+                            <button
+                              type="button"
+                              onClick={(ev) => { ev.stopPropagation(); openExitForm(emp); }}
+                              aria-label={`Record exit for ${emp.first_name} ${emp.last_name}`}
+                              className="text-rose-600 font-bold text-xs hover:underline mr-3"
+                            >
+                              Record exit &rarr;
+                            </button>
+                          )}
                           <button className="text-teal-600 font-bold text-xs hover:underline">Manage &rarr;</button>
                         </td>
                       </tr>
@@ -3510,15 +3706,35 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL: EXIT INTERVIEW */}
-      {showExitModal && (
+      {/* MODAL: EXIT INTAKE — DECISION 16, WIRED 2026-11-10. One act records TWO things: the
+          termination reason, through the employee write path, and the exit interview, through its own
+          route. The reason is shown AS IT STANDS on the record beside the figure the chosen reason
+          produces, both from the engine (the row's `eosb_preview`) — a recorded resignation SHRINKS
+          the benefit, so nothing is saved here without the reader having seen what it does to the
+          money, and a reason already on file is never overwritten silently. */}
+      {showExitModal && exitTarget && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-[100] backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
-             <div className="p-6 border-b border-slate-100 bg-rose-50 flex justify-between items-center">
-                <h3 className="font-bold text-rose-900 text-lg">Exit Intelligence Intake</h3>
-                <button onClick={() => setShowExitModal(false)} className="text-rose-400 hover:text-rose-600 text-2xl font-light">&times;</button>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
+             <div className="p-6 border-b border-slate-100 bg-rose-50 flex justify-between items-center shrink-0">
+                <div>
+                  <h3 className="font-bold text-rose-900 text-lg">Exit Intelligence Intake</h3>
+                  <p className="text-[10px] font-bold text-rose-700 uppercase tracking-widest mt-1">{exitTarget.first_name} {exitTarget.last_name}</p>
+                </div>
+                <button type="button" onClick={closeExitForm} aria-label="Close the exit form" className="text-rose-400 hover:text-rose-600 text-2xl font-light">&times;</button>
              </div>
-             <form onSubmit={handleExitSubmit} className="p-6 space-y-6">
+             <form onSubmit={handleExitSubmit} className="p-6 space-y-6 overflow-y-auto">
+                <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="exit-termination-reason">Termination reason on the record</label>
+                   {/* The options are the ENGINE's reasons, taken from the row's own preview, so this
+                       select cannot list a reason the engine does not compute or miss one it does. */}
+                   <select id="exit-termination-reason" value={exitReason} onChange={e => setExitReason(e.target.value)} className="w-full p-2.5 bg-white border border-slate-200 rounded-xl outline-none text-sm font-medium">
+                      <option value="">No reason recorded — benefit computed unreduced</option>
+                      {Object.keys((exitTarget.eosb_preview && exitTarget.eosb_preview.by_reason) || {}).map(reason => (
+                        <option key={reason} value={reason}>{reasonWord(reason)}</option>
+                      ))}
+                   </select>
+                   <ExitReasonEffect target={exitTarget} chosen={exitReason} />
+                </div>
                 <div className="space-y-1">
                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="exit-departure-reason">Primary Departure Driver</label>
                    <select id="exit-departure-reason" value={exitForm.departure_reason} onChange={e => setExitForm({...exitForm, departure_reason: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium">
@@ -3542,7 +3758,16 @@ export default function App() {
                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest" htmlFor="exit-feedback">Qualitative Feedback Context</label>
                    <textarea id="exit-feedback" rows={3} value={exitForm.detailed_feedback} onChange={e => setExitForm({...exitForm, detailed_feedback: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium" />
                 </div>
-                <button type="submit" className="w-full py-3 bg-rose-600 text-white rounded-xl font-bold text-xs hover:bg-rose-700 shadow-lg transition">Finalize Offboarding & Process EOSB</button>
+                {exitRefusal && (
+                  <div className="p-3 rounded-xl text-xs font-medium border bg-rose-50 border-rose-200 text-rose-800">
+                    {exitRefusal}
+                  </div>
+                )}
+                <button type="submit" disabled={exitSubmitting} className="w-full py-3 bg-rose-600 text-white rounded-xl font-bold text-xs hover:bg-rose-700 shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed">
+                  {exitSubmitting
+                    ? 'Recording…'
+                    : exitReason ? 'Record exit and process EOSB' : 'Record exit with no reason on file'}
+                </button>
              </form>
           </div>
         </div>

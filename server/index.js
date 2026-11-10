@@ -504,6 +504,13 @@ app.get('/api/employees', async (req, res) => {
       // about that pay, not a fact about the person. The basis is the engine's own output for this
       // row — never a sentence written here — so the screen cannot invent a reason for a number.
       if (removed.indexOf('eosb_accrued') === -1) row.eosb_basis = eosb.basisForRow(emp);
+      // WHAT A REASON WOULD DO TO THE FIGURE (decision 16, 2026-11-10). The exit form records a
+      // termination reason through `PUT /api/employees/:id`, and a recorded resignation SHRINKS the
+      // benefit -- so the form shows the reason on file and the figure each choice produces BEFORE it
+      // saves. Both readings are the engine's (`eosb.previewForRow`), served under the SAME field gate
+      // as the figure itself: this is a fact about that pay, and a role that may not see the pay may
+      // not see what a reason would do to it either.
+      if (removed.indexOf('eosb_accrued') === -1) row.eosb_preview = eosb.previewForRow(emp);
       return row;
     };
     res.json(employees.map(project));
