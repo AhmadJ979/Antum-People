@@ -359,9 +359,33 @@ function routesAfterCatchAll(src = read(ROUTE_FILE)) {
 }
 
 /**
- * Boolean UI state whose setter is never called with `true` gates a control that can never be
- * opened. Measured on 2026-10-12, this is exactly how the Exit Intelligence Intake modal presents:
- * `setShowExitModal` appears twice, both times with `false`.
+ * `setX((o) => !o)` / `setX(o => !o)`: a functional updater that negates the argument it is handed.
+ * Read on the text AFTER the setter's opening paren, so the parameter name is taken from the call
+ * and the negated name must be the SAME name — `(prev) => !other` is not an opener of this state.
+ */
+function negatesItsOwnArgument(text, setter) {
+  const at = text.indexOf(`${setter}(`);
+  if (at === -1) return false;
+  const arg = text.slice(at + setter.length + 1);
+  const m = /^\s*\(?\s*([A-Za-z_$][\w$]*)\s*\)?\s*=>\s*!\s*([A-Za-z_$][\w$]*)\s*\)/.exec(arg);
+  return !!m && m[1] === m[2];
+}
+
+/**
+ * Boolean UI state with no opener gates a control that can never be opened. Measured on 2026-10-12,
+ * this is exactly how the Exit Intelligence Intake modal presents: `setShowExitModal` appears twice,
+ * both times with `false`.
+ *
+ * An opener is one of TWO shapes, and the second one was added on 2026-11-10 because the first
+ * alone read a wired control as an orphan:
+ *   1. the setter called with `true` — `setX(true)`;
+ *   2. the setter called with a functional updater that NEGATES its own argument — `setX((o) => !o)`
+ *      or `setX(o => !o)`. From the `false` these states are declared with, that is a transition to
+ *      `true`: the click really does open the panel. This is how the escalation records panel's
+ *      `Show records` toggle is written (`App.tsx`, #400), and before this shape was read, the
+ *      report called that toggle a control nobody can open.
+ * The negation must be OF THE ARGUMENT ITSELF: `setX(() => true)` and `setX(prev => !other)` are not
+ * counted, because neither is proved to depend on the state's own value.
  * The honest limit: a panel can also be hidden by a non-boolean (a null `selectedX`, a list
  * length), which this cannot see.
  */
@@ -379,9 +403,10 @@ function uiStateReachability(src = read(path.join(CLIENT_GLOB_ROOT, 'App.tsx')))
     });
     const toTrue = calls.filter((c) => new RegExp(`${setter}\\s*\\(\\s*true`).test(c.text));
     const toFalse = calls.filter((c) => new RegExp(`${setter}\\s*\\(\\s*false`).test(c.text));
+    const toggles = calls.filter((c) => negatesItsOwnArgument(c.text, setter));
     out.push({
-      name, setter, init, line: idx + 1, calls, toTrue, toFalse,
-      openable: init === 'true' || toTrue.length > 0,
+      name, setter, init, line: idx + 1, calls, toTrue, toFalse, toggles,
+      openable: init === 'true' || toTrue.length > 0 || toggles.length > 0,
     });
   });
   return out;
