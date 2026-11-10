@@ -89,7 +89,10 @@ REPORT = re.compile(r"^(ok|FAIL|UNCHECKED|UNUSED-PIN|CONTINUATION|OTHER-FILE)\s"
 # -> 1925 (the refusal-not-empty fix, 2026-11-08: +18 lines above the analytics tab; measured
 # at 08a9ca9, not re-tipped - and this is the link that reddened: at 08a9ca9 the plant still
 # said 1907, so P4 reported `exit 1, expected 0` while its UNUSED-PIN was still printed,
-# exactly the failure mode recorded below); the
+# exactly the failure mode recorded below) -> 1938 (re-measured at fc5d705, 2026-11-10: the
+# rest of the refusal-not-empty fix, which merged after 08a9ca9, added 13 lines above the
+# analytics tab and moved the symbol down from the 1925 that reading recorded - measured,
+# not re-tipped); the
 # example line moved 1212 -> 1216 for the
 # same reason. A stale P4 number does not read as "re-tip me": the citation stops landing,
 # and P4 reports `exit 1, expected 0` while its UNUSED-PIN is still printed. Re-measure the
@@ -117,7 +120,7 @@ P3 = """
 P4 = """
 # pin selftest plant
 
-- `App.tsx:1925` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
+- `App.tsx:1938` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
 """
 P5 = """
 # pin selftest plant
