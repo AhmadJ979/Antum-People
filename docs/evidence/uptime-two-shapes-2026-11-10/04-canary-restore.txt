@@ -1,0 +1,10 @@
+# run 42774767178 - CANARY RESTORE, the production URL back (2026-11-10T07:21:53Z)
+# conclusion: success
+# alert issue #395 commented and CLOSED by this run
+
+ http status   : 200
+ title seen    : <title>Antum People — access</title>
+ asset seen    : none
+ page shape    : gate page (passcode wall: our gate title, no asset by design)
+probe the public URL	Probe — three assertions, three attempts	2026-11-10T07:21:57.7942563Z RESULT: PASS after 1 attempt(s)
+probe the public URL	Comment the check is green again, and close the open alert issue	2026-11-10T07:22:00.8932865Z recovery recorded on issue #395

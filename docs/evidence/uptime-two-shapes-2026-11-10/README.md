@@ -48,5 +48,15 @@ proof cannot drift from the thing it judges:
 - `https://example.com/` → FAIL, `B: page identity`
 - the gate page with an asset reference injected → FAIL, `B: page identity`
 
-Four cases, four matches. `02-live-run.txt` and `03-canary-*.txt` record the workflow's own
-runs on GitHub: the green run against the live URL, and the wrong-page canary that must redden.
+Four cases, four matches.
+
+## The workflow's own runs (02, 03, 04)
+
+| run | URL probed | conclusion | what it proves |
+| --- | --- | --- | --- |
+| `42774559203` | the live public URL | **success** | the wall no longer cries wolf: `page shape: gate page`, `RESULT: PASS after 1 attempt`, and it closed alert issue #390 |
+| `42774625590` | `https://example.com/` (canary) | **failure** | a wrong page still reddens: `FAILED on: B: page identity (… observed title <title>Example Domain</title> and asset none)`, three attempts, and it opened alert issue #395 |
+| `42774767178` | the production URL restored | **success** | the canary was reverted, not left in: `page shape: gate page`, and it commented on and CLOSED #395 |
+
+The canary commits (`CANARY (temporary)` and `CANARY (restore)`) are in this branch's history and
+the last one puts `UPTIME_URL_DEFAULT` back where it was — the file's own canary recipe, run as written.

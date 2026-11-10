@@ -1,0 +1,20 @@
+# run 42774625590 - CANARY, the probe pointed at https://example.com/ (2026-11-10T07:20:40Z)
+# conclusion: failure (required: a wrong page must still redden)
+# alert issue opened: https://github.com/AhmadJ979/Antum-People/issues/395
+
+ http status   : 200
+ title seen    : <title>Example Domain</title>
+ asset seen    : none
+ page shape    : none
+ FAILED on     : B: page identity (expected EITHER <title>Antum People — access</title> with NO asset reference, OR <title>Antum People</title> with an assets/index-<hash>.js reference; observed title <title>Example Domain</title> and asset none)
+ http status   : 200
+ title seen    : <title>Example Domain</title>
+ asset seen    : none
+ page shape    : none
+ FAILED on     : B: page identity (expected EITHER <title>Antum People — access</title> with NO asset reference, OR <title>Antum People</title> with an assets/index-<hash>.js reference; observed title <title>Example Domain</title> and asset none)
+ http status   : 200
+ title seen    : <title>Example Domain</title>
+ asset seen    : none
+ page shape    : none
+ FAILED on     : B: page identity (expected EITHER <title>Antum People — access</title> with NO asset reference, OR <title>Antum People</title> with an assets/index-<hash>.js reference; observed title <title>Example Domain</title> and asset none)
+probe the public URL	Probe — three assertions, three attempts	2026-11-10T07:21:25.0810009Z RESULT: FAILED after 3 attempt(s) — assertion B: page identity (expected EITHER <title>Antum People — access</title> with NO asset reference, OR <title>Antum People</title> with an assets/index-<hash>.js reference; observed title <title>Example Domain</title> and asset none)
