@@ -2,6 +2,12 @@
 
 Antum is a strategic workforce intelligence platform, and **Antum People** is our HR onboarding and offboarding intelligence product specifically tailored for the **GCC market (UAE, KSA, etc.)**.
 
+## If the product is not responding
+
+Run this one command on the host — it brings the guard back and exits 0 only when the product is
+verified running (idempotent; it never builds, seeds or stops anything):
+`bash /home/team/shared/probable-octo-sniffle/scripts/antum-arm-guard.sh`
+
 ## Overview
 
 Antum People transforms administrative transitions into strategic intelligence levers. We provide deep data capture and ensure compliance with regional labor laws and data privacy regulations (e.g., UAE PDPL, KSA PDPL).

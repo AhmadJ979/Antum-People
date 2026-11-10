@@ -219,6 +219,7 @@ jobs:
               printf '| page shape | %s |\n' "$shape_seen"
               printf '| failing assertion | %s |\n' "$failed"
               printf '| attempts | %s |\n' "$attempts_used"
+              printf '\n**First move:** `bash /home/team/shared/probable-octo-sniffle/scripts/antum-arm-guard.sh`\n'
             } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
@@ -356,7 +357,15 @@ jobs:
             printf '   after a boot it has **no exit line** (a boot gives it nothing to log), and the\n'
             printf '   product and guard are re-armed only by a login.\n'
             printf -- '3. the port holder: `lsof -t /home/team/shared/probable-octo-sniffle/server/keep-alive.lock`.\n\n'
-            printf 'Recovery path recorded for this failure mode is `bash /home/team/shared/deploy-main.sh --restart-only`\n'
+            printf '**First move — one command, in the repository at `/home/team/shared/probable-octo-sniffle`**\n'
+            printf '(the one directory a machine replacement does not wipe):\n\n'
+            printf '```\n'
+            printf 'bash /home/team/shared/probable-octo-sniffle/scripts/antum-arm-guard.sh\n'
+            printf '```\n\n'
+            printf 'It installs the login-shell guard hook from that tree, starts the guard, and exits 0 only when a\n'
+            printf 'guard is verified running. Idempotent — safe to run while the guard is healthy; it never builds,\n'
+            printf 'seeds or stops anything. A full movement, if the tree itself has to be rebuilt: `bash\n'
+            printf '/home/team/shared/probable-octo-sniffle/scripts/deploy-main.sh`\n'
             printf '(incident-2026-10-28-port3000-takeover.md).\n\n'
             printf '_Opened automatically by `.github/workflows/uptime.yml`. On the next green run this\n'
             printf 'issue is commented and closed — do not open a second one by hand._\n'
