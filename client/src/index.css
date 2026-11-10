@@ -36,9 +36,9 @@
  * Measured on the built tree at 1280x577: the sign-in card is 589 px tall with its natural vertical
  * rhythm (p-8, mb-8, space-y-5, mt-8 pt-6) while the window is 577 px, so `documentElement.scrollHeight`
  * was 589 against `innerHeight` 577 - 12 px of scroll, and the card's bottom edge sat below the fold.
- * The wrapper's `min-h-screen` does not help: a flex container's min-height cannot shrink a child that
- * is intrinsically taller than it, so the wrapper grew to the card instead of the card fitting the
- * window, which is why the page scrolled.
+ * A min-h-screen wrapper does not help: a flex container cannot shrink a child taller than itself,
+ * so the wrapper grew to the card instead of the card fitting the window, which is why the page
+ * scrolled.
  *
  * The fix is a compress of vertical rhythm at SHORT HEIGHTS - not a clamp on any text, and not a
  * truncation: every element on the card keeps its own size, its own copy and its own place, and only
@@ -51,9 +51,9 @@
  * shortest window it still fits in, are recorded in the PR that introduced this - measured on the
  * built tree, not assumed here.
  *
- * It is a variant rather than a one-off arbitrary value (`[@media(max-height:640px)]:p-5`) so the next
- * screen that overflows at a short window can use the same breakpoint instead of inventing a second
- * one: the five-screen sweep that found this defect measured others, and they are named in that PR.
+ * It is a variant rather than a one-off arbitrary value (an inline max-height media query on one
+ * utility) so the next screen that overflows at a short window can reuse the same breakpoint instead
+ * of inventing a second one: the five-screen sweep that found this defect measured others, named in its PR.
  * ================================================================================================== */
 @custom-variant short (@media (max-height: 640px));
 
