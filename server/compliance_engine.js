@@ -217,7 +217,11 @@ function unpopulatedPlaceholders(text) {
 function renderTemplate(templateContent, data = {}) {
   // The employee-record fields the templates name. `not calculated` is not a value either, but it is
   // the wording these fields have carried since before this change; what this change stops is a fact
-  // being INVENTED, and these are left alone deliberately (see the PR body's scope note).
+  // being INVENTED, and these are left alone deliberately (see the PR body's scope note) — except
+  // `national_id`, which has NO default: it is the value the route decrypts, and only for a document
+  // whose own text prints it (the two employment contracts). A contract the record holds no ID for
+  // keeps the template's visible `[national_id]` blank, and a document that names no ID never sees
+  // one. `'not calculated'` used to sit here and put a value-shaped word where an ID belongs.
   const values = {
     current_date: data.current_date || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
     full_name: data.full_name,
@@ -225,7 +229,7 @@ function renderTemplate(templateContent, data = {}) {
     dob: data.dob,
     nationality: data.nationality || 'not calculated',
     passport_no: data.passport_no || 'not calculated',
-    national_id: data.national_id || 'not calculated',
+    national_id: data.national_id,
     start_date: data.start_date || 'not calculated',
     end_date: data.end_date || 'not calculated',
     employee_id: data.employee_id || 'not calculated',

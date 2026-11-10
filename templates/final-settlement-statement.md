@@ -50,9 +50,9 @@
 
 ### 4. Acknowledgment & Waiver / إقرار وتنازل
 
-I, **[full_name]**, holder of **[national_id]**, hereby acknowledge receipt of the amount shown above as full and final settlement of all my dues from **[employer_name]**. I confirm that I have no further claims against the Company and I waive any rights to future claims related to my employment or its termination.
+I, **[full_name]**, hereby acknowledge receipt of the amount shown above as full and final settlement of all my dues from **[employer_name]**. I confirm that I have no further claims against the Company and I waive any rights to future claims related to my employment or its termination.
 
-أقر أنا **[full_name]**، حامل **[national_id]**، باستلام المبلغ المذكور أعلاه كمخالصة نهائية وشاملة لجميع مستحقاتي من شركة **[employer_name]**. وأؤكد أنه ليس لدي أي مطالبات أخرى تجاه الشركة، وأتنازل عن أي حقوق في مطالبات مستقبلية تتعلق بعملي أو انتهائه.
+أقر أنا **[full_name]** باستلام المبلغ المذكور أعلاه كمخالصة نهائية وشاملة لجميع مستحقاتي من شركة **[employer_name]**. وأؤكد أنه ليس لدي أي مطالبات أخرى تجاه الشركة، وأتنازل عن أي حقوق في مطالبات مستقبلية تتعلق بعملي أو انتهائه.
 
 | Employee Signature / توقيع الموظف | Employer Signature / توقيع صاحب العمل |
 |---|---|

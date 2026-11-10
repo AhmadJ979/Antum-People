@@ -231,6 +231,24 @@ const FIELD_RULES = Object.freeze({
 
 /** The document a settlement is: finance gets this, and not the contracts or the notices (§6.2). */
 const SETTLEMENT_TEMPLATES = Object.freeze(['final-settlement-statement']);
+
+/**
+ * The documents whose own text prints the national ID.
+ *
+ * This is NOT an access decision — `TEMPLATE_SCOPES` above says who may render what, and this says
+ * which of those documents names the number. The two employment contracts do, and must: an employer
+ * cannot register a contract with a blank where the Emirates ID / Iqama goes, so the route decrypts
+ * the column for them and for nothing else. The settlement statement names no ID (its acknowledgment
+ * clause identifies the employee by name and record id), so a blank there is a defect, not a gap —
+ * `server/served-document-facts.test.js` holds both directions against the templates' own text.
+ */
+const CONTRACT_TEMPLATES = Object.freeze(['uae-employment-contract', 'ksa-employment-contract']);
+
+/** Whether this document's text carries the national ID — the only reason to decrypt the column. */
+function templatePrintsNationalId(templateName) {
+  return CONTRACT_TEMPLATES.indexOf(templateName) !== -1;
+}
+
 const ALL_TEMPLATES = 'all';
 const TEMPLATE_SCOPES = Object.freeze({
   [ROLES.HR_ADMIN]: ALL_TEMPLATES,
@@ -467,6 +485,8 @@ module.exports = {
   EMPLOYEE_FIELD_GROUPS,
   FIELD_RULES,
   SETTLEMENT_TEMPLATES,
+  CONTRACT_TEMPLATES,
+  templatePrintsNationalId,
   ALL_TEMPLATES,
   TEMPLATE_SCOPES,
   ROUTES,
