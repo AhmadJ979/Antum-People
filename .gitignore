@@ -23,3 +23,8 @@ server/keep-alive.out
 # ignored by `*.log` while the status file was not: it rode a branch into a PR diff (measured
 # 2026-10-29). A runtime artifact of a host hook is not a repository file.
 *.log.status
+# The guard hook's log is capped by rotating it once (server/guard-hook.log -> .log.1). `*.log` matches
+# the live file and NOT its rotated sibling, so from 2026-11-10 the hook's own rotation would leave an
+# untracked 256 KiB file in `git status` forever — the same shape as the status file above, and the same
+# answer: a runtime artifact of a host hook is not a repository file.
+*.log.1

@@ -491,6 +491,24 @@ CHECKS = [
               "unplanted copy required to stay GREEN, so the plants are "
               "measured against a copy that passes"),
 
+    # Added 2026-11-10 with the cap itself. The guard hook appends a line or two to server/guard-hook.log on
+    # every shell command and nothing bounded it: the file stood at 11.6 MB on a /home that was 75% full.
+    # The hook now rotates it at a fixed size, and this check drives the REAL hook (sourced the way
+    # /etc/profile.d sources it) into a scratch tree - never the deployed one - and requires the cap to
+    # hold, the kept copy to be bounded, the rotation body to contain no loop, and the cap to be
+    # LOAD-BEARING: a copy with the rotation call removed must exceed the cap under the same notes, so the
+    # green cannot come from a log that nothing wrote.
+    dict(id="guard-hook-log-cap", mode="default", expect="green",
+         home="operator CLI (bare) + this entry point",
+         cmd=["bash", "scripts/guard-hook-log-cap-test.sh"],
+         what="the guard hook's own log cap, driven through the real hook in a scratch tree: below the cap "
+              "nothing rotates; at the cap the log becomes guard-hook.log.1 and BOTH files stay bounded; a "
+              "200000 B log is trimmed to the cap by one note; the rotation function's own body holds no "
+              "while/until/for and no recursion (the structural half of 'cannot spin'); 12 notes at a 1 B "
+              "cap each finish inside a 10 s timeout and the log still ends bounded; and the mutant with the "
+              "rotation call removed reaches 1296 B at a 512 B cap, so every bound here is measured against "
+              "a hook that fails it"),
+
     # Added 2026-10-29 (owner said yes to the counsel-string guard). It is a DEFAULT check
     # because it is cheap and reads nothing but a scratch instance of this tree: measured at
     # 1.65 s, own port, throwaway database, throwaway user - and it boots a rig of THIS tree, so
@@ -649,6 +667,7 @@ ACTORS = [
     ("scripts/rollback-to-9d2182a.sh", "reverts the host to the pre-cutover commit"),
     ("scripts/install-host-tools.sh", "installs the operator tooling into /home/team/shared"),
     ("scripts/antum-product-guard-hook.sh", "the login-shell hook re-arming the guard (/etc/profile.d/zz-antum-product-guard.sh)"),
+    ("scripts/antum-arm-guard.sh", "one command after a machine replacement: installs the login-shell hook from the tree and starts the guard (idempotent; never builds, seeds or stops anything)"),
     ("scripts/seed-demo.js", "rewrites the demo database (the labelled sample data every figure is read from)"),
     ("scripts/observe-serve-pair.sh", "probes the LIVE public URL; its off-host proof is scripts/observe-serve-pair-test.sh, listed above"),
 ]
