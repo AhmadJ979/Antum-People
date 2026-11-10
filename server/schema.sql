@@ -1,4 +1,46 @@
--- Antum People Product Schema
+-- THE EMPLOYER RECORD — a TABLE, not a singleton (owner ruling 2026-11-10, option (b)).
+--
+-- WHY A TABLE. Until this row existed the product stored no employer identity at all: no company,
+-- organisation, tenant or settings row in any of the tables below, so every document that names the
+-- employer printed a bracketed blank (`[employer_name]`, `[trade_license]`, `[employer_po_box]` …) or
+-- was withheld for the fact. A singleton would have made "the employer" a property of the deployment
+-- — one company per database, which is not what a mid-market GCC client with a mainland entity and a
+-- free-zone entity has. A table makes the employer a ROW an employee points at, so a second legal
+-- entity is a second row and no schema change.
+--
+-- EVERY COLUMN IS NULLABLE, AND THAT IS THE DECISION. A blank column is a fact no record holds, and
+-- the renderer reports it as missing (server/compliance_engine.js REQUIRED_FACTS) and the document is
+-- WITHHELD. A DEFAULT here would be the invented party name this file's sibling change exists to
+-- stop: `''` is not an employer, and neither is a plausible-looking licence number.
+--
+-- The facts are NOT encrypted and NOT per-role: a legal name, a trade licence number and a registered
+-- address are the employer's own public identity, printed on every contract it signs. The
+-- data-protection contact (`dpo_name`/`dpo_email`/`dpo_phone`) is the one part a data subject is
+-- told to write to, which is why the privacy notice prints it (PDPL Art. 13/14 contact duty).
+--
+-- `trade_license` is spelled the way the templates' placeholder spells it (`[trade_license]`), not the
+-- way this repository's prose spells the word, so the column and the fact it fills have one name.
+CREATE TABLE IF NOT EXISTS employers (
+  id TEXT PRIMARY KEY,
+  legal_name TEXT,
+  jurisdiction TEXT,
+  registered_address TEXT,
+  po_box TEXT,
+  city TEXT,
+  phone TEXT,
+  email TEXT,
+  signatory_name TEXT,
+  signatory_title TEXT,
+  trade_license TEXT,
+  mohre_code TEXT,
+  qiwa_id TEXT,
+  mudad_code TEXT,
+  dpo_name TEXT,
+  dpo_email TEXT,
+  dpo_phone TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE IF NOT EXISTS employees (
   id TEXT PRIMARY KEY,
@@ -37,7 +79,8 @@ CREATE TABLE IF NOT EXISTS employees (
   allowances_housing REAL DEFAULT 0.0,
   allowances_transport REAL DEFAULT 0.0,
   gave_proper_notice INTEGER DEFAULT 1,
-  termination_type TEXT
+  termination_type TEXT,
+  employer_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS onboarding_tasks (

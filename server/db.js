@@ -74,6 +74,16 @@ const COLUMN_MIGRATIONS = [
   // the single live `admin` row is left exactly as it is. Idempotent by construction (the column is
   // applied only when `PRAGMA table_info` does not list it), so a second boot changes nothing.
   { table: 'users', column: 'employee_id', ddl: 'TEXT' },
+  // The employer record (owner ruling 2026-11-10, option (b): a TABLE, not a singleton). A database
+  // that predates it has no `employees.employer_id`, and CREATE TABLE IF NOT EXISTS cannot add a
+  // column to a table that already exists — so the column is declared in schema.sql (fresh database)
+  // and migrated here (existing one), exactly as `completed_by` and `users.employee_id` were.
+  //
+  // NULLABLE WITH NO DEFAULT, deliberately: a row that predates the employer record points at no
+  // employer, and that is the truth about it. The renderer treats a missing employer link exactly as
+  // it treats a blank fact — every employer placeholder is missing and the document is withheld — so
+  // the absence is loud where it matters and is never filled in from a guess.
+  { table: 'employees', column: 'employer_id', ddl: 'TEXT' },
 ];
 
 function columnsOf(handle, table) {
