@@ -241,6 +241,39 @@ test('every boolean control state can be opened, or is registered as un-openable
   }
 });
 
+/**
+ * The opener detector reads TWO shapes, and this plant is what keeps the second one honest.
+ * Added 2026-11-10: `App.tsx`'s `Show records` toggle is written `setEscalationOpen((open) => !open)`,
+ * and a detector that only knew `setX(true)` called it a control nobody can open — the report
+ * printed it as a NEW finding on a panel a person opens with one click. The negation must be of the
+ * argument ITSELF, so the two negative plants below hold: a `false` call and a negation of a
+ * DIFFERENT name are both still no opener, and a plant that passes by exempting every call would
+ * fail on them.
+ */
+test('the opener detector: a negating toggle opens; a `false` call and a foreign negation do not', () => {
+  const planted = [
+    'const [toggleOpen, setToggleOpen] = useState(false);',
+    'const [bareArrow, setBareArrow] = useState(false);',
+    'const [closedOnly, setClosedOnly] = useState(false);',
+    'const [foreign, setForeign] = useState(false);',
+    'const [alreadyOn, setAlreadyOn] = useState(true);',
+    '<button onClick={() => setToggleOpen((open) => !open)} />',
+    '<button onClick={() => setBareArrow(o => !o)} />',
+    '<button onClick={() => setClosedOnly(false)} />',
+    '<button onClick={() => setForeign((prev) => !somethingElse)} />',
+    '<button onClick={() => setAlreadyOn(false)} />',
+  ].join('\n');
+  const states = r.uiStateReachability(planted);
+  const by = (n) => states.find((s) => s.name === n);
+  assert.strictEqual(by('toggleOpen').openable, true, 'setX((o) => !o) from false IS an opener');
+  assert.strictEqual(by('toggleOpen').toggles.length, 1, 'and it is recorded as the toggle it is');
+  assert.strictEqual(by('bareArrow').openable, true, 'setX(o => !o) is the same opener without the parens');
+  assert.strictEqual(by('closedOnly').openable, false, 'a `false` call is still no opener');
+  assert.strictEqual(by('foreign').openable, false,
+    'negating a DIFFERENT name proves nothing about this state — this is the plant that keeps the fix from being a loosening');
+  assert.strictEqual(by('alreadyOn').openable, true, 'declared `true` needs no call at all');
+});
+
 test('a value a tile displays has a writer in a route a user can reach — or is registered', () => {
   // -------------------------------------------------------------
   // THIS GUARD USED TO BE VACUOUS, AND THAT IS HOW THE PROBATION GAP SAT GREEN (2026-11-02).
