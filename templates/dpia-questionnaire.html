@@ -4,6 +4,17 @@
 <meta charset="utf-8"/>
 <title>DPIA Questionnaire</title>
 <style>
+  /* Arabic in these documents is Noto Naskh Arabic (owner decision 2026-10-29) - and only Arabic:
+     the unicode-range below keeps the face off every Latin character, so the Latin stacks further
+     down this stylesheet stay the ones that produced the current PDFs. A silent fall back is the
+     failure mode this whole change exists to avoid, so the build fails if the file is absent. */
+  @font-face {
+    font-family: 'Noto Naskh Arabic';
+    src: url('../client/public/fonts/noto-naskh-arabic/noto-naskh-arabic.woff2') format('woff2');
+    font-weight: 400 700;
+    font-display: swap;
+    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+  }
   :root {
     --teal:#0F766E; --teal2:#14B8A6; --slate900:#0F172A; --slate600:#475569;
     --slate50:#F8FAFC; --amber:#F59E0B; --red:#EF4444; --border:#E2E8F0;
@@ -16,7 +27,10 @@
     color: var(--slate900); font-size: 10.5pt; line-height: 1.5;
     background: #fff;
   }
-  .lang[dir="rtl"] body, .lang[dir="rtl"] { font-family: 'DejaVu Sans', 'Segoe UI', sans-serif; }
+  /* The Arabic face goes FIRST in the rtl stack only. Latin characters - including the Latin inside an
+     Arabic document, a number, a party's name, an English parenthetical - are not covered by the face's
+     unicode-range, so they land on the same 'DejaVu Sans', 'Segoe UI' tail as before: unchanged. */
+  .lang[dir="rtl"] body, .lang[dir="rtl"] { font-family: 'Noto Naskh Arabic', 'DejaVu Sans', 'Segoe UI', sans-serif; }
 
   .doc-header {
     background: var(--teal); color:#fff; border-radius: 8px;

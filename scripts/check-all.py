@@ -650,6 +650,24 @@ CHECKS = [
               "fixture and the live host folder to be byte-identical afterwards, and the clean run's counts "
               "(2 directories, 3 entries, 0 top-level, 3 quarantined, 0 violations) to be printed - a green "
               "with a zero count is the defect it asserts against"),
+
+    # Wired in 2026-11-10. The notice was SERVED as v2.4 while the pilot pack's own HTML still said
+    # "Version 2.2" and its PDF was dated 2026-09-18: every status instrument was green and a client
+    # would have been handed a notice two versions behind the product. The trio list is read out of
+    # templates/build-html.js's own document table, so a document added there is judged without this
+    # entry changing; the PDF half reads the printed header back out of the bytes (the header is
+    # letter-spaced and "fi" is a ligature, so it compares compacted text). A PDF the instrument cannot
+    # read is exit 2 (CANNOT-JUDGE), never a pass. `--selftest` plants each disagreement in a scratch
+    # copy - the HTML alone stale, the .md moved under its derivatives, the real pre-fix PDF from this
+    # repository's own history, and an unreadable PDF - and requires each to be reported on its own file.
+    dict(id="template-derivatives", mode="default", expect="green",
+         home="operator CLI (bare)",
+         cmd=["node", "scripts/check-template-derivatives.js"],
+         what="every pilot-pack derivative (HTML and PDF) carries the version and the date of the Markdown "
+              "it is built from. Per document: the .md's own \"**Version ...**\" line; the HTML's builder-written "
+              "meta line (Version <v> &middot; <date>) and footer (v<v>); the PDF's printed header, read back out "
+              "of the bytes with ligatures expanded and spacing removed. exit 2 = CANNOT-JUDGE when a PDF yields "
+              "no readable text at all"),
 ]
 
 SKIPS = [

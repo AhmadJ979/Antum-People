@@ -4,6 +4,17 @@
 <meta charset="utf-8"/>
 <title>Employee Privacy Notice</title>
 <style>
+  /* Arabic in these documents is Noto Naskh Arabic (owner decision 2026-10-29) - and only Arabic:
+     the unicode-range below keeps the face off every Latin character, so the Latin stacks further
+     down this stylesheet stay the ones that produced the current PDFs. A silent fall back is the
+     failure mode this whole change exists to avoid, so the build fails if the file is absent. */
+  @font-face {
+    font-family: 'Noto Naskh Arabic';
+    src: url('../client/public/fonts/noto-naskh-arabic/noto-naskh-arabic.woff2') format('woff2');
+    font-weight: 400 700;
+    font-display: swap;
+    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+  }
   :root {
     --teal:#0F766E; --teal2:#14B8A6; --slate900:#0F172A; --slate600:#475569;
     --slate50:#F8FAFC; --amber:#F59E0B; --red:#EF4444; --border:#E2E8F0;
@@ -16,7 +27,10 @@
     color: var(--slate900); font-size: 10.5pt; line-height: 1.5;
     background: #fff;
   }
-  .lang[dir="rtl"] body, .lang[dir="rtl"] { font-family: 'DejaVu Sans', 'Segoe UI', sans-serif; }
+  /* The Arabic face goes FIRST in the rtl stack only. Latin characters - including the Latin inside an
+     Arabic document, a number, a party's name, an English parenthetical - are not covered by the face's
+     unicode-range, so they land on the same 'DejaVu Sans', 'Segoe UI' tail as before: unchanged. */
+  .lang[dir="rtl"] body, .lang[dir="rtl"] { font-family: 'Noto Naskh Arabic', 'DejaVu Sans', 'Segoe UI', sans-serif; }
 
   .doc-header {
     background: var(--teal); color:#fff; border-radius: 8px;
@@ -70,13 +84,13 @@
 <div class="doc-header">
   <div class="brand">Antum People &middot; Compliance Pack</div>
   <div class="sub">Employee Privacy Notice (UAE & KSA)</div>
-  <div class="meta">Version 2.2 &middot; 2026-09-17 &middot; Pilot-ready &middot; EN / AR</div>
+  <div class="meta">Version 2.4 &middot; 2026-11-10 &middot; Pilot-ready &middot; EN / AR</div>
 </div>
 
 <h1 class="">Employee Privacy Notice — Antum People</h1>
 <h1 class="ar">إشعار خصوصية الموظفين — Antum People</h1>
 
-<blockquote><strong>Jurisdictions / النطاق القانوني:</strong> UAE (Federal Decree-Law No. 45 of 2021 — UAE PDPL) and KSA (Personal Data Protection Law — Royal Decree M/148, as amended 2023)<br/><strong>Status / الحالة:</strong> Template v2.2 — pilot-ready<br/><strong>Version / الإصدار:</strong> v2.2 (2026-09-17) — owner legal details applied (DPO name, partial address, entity status)<br/><strong>Usage / الاستخدام:</strong> Display to employee during onboarding. Capture consent acknowledgment in `consent_records` table.<br/><strong>Note / ملاحظة:</strong> Article references follow the Antum People compliance reference set. Confirm against final official translations before client-facing certification.<br/><strong>Arabic wordmark / العلامة العربية:</strong> Latin "Antum" used in Arabic text — [TO CONFIRM — Arabic wordmark transliteration]</blockquote>
+<blockquote><strong>Jurisdictions / النطاق القانوني:</strong> UAE (Federal Decree-Law No. 45 of 2021 — UAE PDPL) and KSA (Personal Data Protection Law — Royal Decree M/148, as amended 2023)<br/><strong>Status / الحالة:</strong> Template v2.4 — pilot-ready<br/><strong>Version / الإصدار:</strong> v2.4 (2026-11-10) — section 9 added: personal data about non-employee contacts. Previous: v2.3 (2026-10-12) — retention wording corrected: "statutory retention" → "retention period"<br/><strong>Usage / الاستخدام:</strong> Display to employee during onboarding. Capture consent acknowledgment in `consent_records` table.<br/><strong>Note / ملاحظة:</strong> Article references follow the Antum People compliance reference set. Confirm against final official translations before client-facing certification.<br/><strong>Arabic wordmark / العلامة العربية:</strong> Latin "Antum" used in Arabic text — [TO CONFIRM — Arabic wordmark transliteration]</blockquote>
 
 <div class="lang-en" dir="ltr" lang="en">
   <div class="section-divider">ENGLISH VERSION</div>
@@ -93,7 +107,7 @@
 <p>Where processing relies on <strong>consent</strong> (e.g., biometrics, certain sensitive data), you may withdraw consent at any time; withdrawal does not affect the lawfulness of processing before withdrawal.</p>
 <h3>2. Data Retention Periods</h3>
 <p>We retain personal data only as long as necessary for the purpose, then securely delete or anonymise it per an automated purge schedule.</p>
-<table><thead><tr><th>Record Type</th><th>UAE</th><th>KSA</th></tr></thead><tbody><tr><td>Employment &amp; payroll records</td><td>Minimum <strong>2 years</strong> post-termination (Labour Law)</td><td>Minimum <strong>2 years</strong> post-termination (Labour Law)</td></tr><tr><td>End-of-Service (EOSB) and financial/settlement records</td><td><strong>5 years</strong> (commercial/audit)</td><td><strong>6 years</strong> (ZATCA tax retention)</td></tr><tr><td>Consent records</td><td>Duration of employment + statutory retention</td><td>Duration of employment + statutory retention</td></tr><tr><td>Audit logs (compliance)</td><td>Per controller retention policy</td><td>Per controller retention policy</td></tr><tr><td>Visa/Iqama records</td><td>Per immigration requirements</td><td>Per immigration requirements</td></tr></tbody></table>
+<table><thead><tr><th>Record Type</th><th>UAE</th><th>KSA</th></tr></thead><tbody><tr><td>Employment &amp; payroll records</td><td>Minimum <strong>2 years</strong> post-termination (Labour Law)</td><td>Minimum <strong>2 years</strong> post-termination (Labour Law)</td></tr><tr><td>End-of-Service (EOSB) and financial/settlement records</td><td><strong>5 years</strong> (commercial/audit)</td><td><strong>6 years</strong> (ZATCA tax retention)</td></tr><tr><td>Consent records</td><td>Duration of employment + retention period</td><td>Duration of employment + retention period</td></tr><tr><td>Audit logs (compliance)</td><td>Per controller retention policy</td><td>Per controller retention policy</td></tr><tr><td>Visa/Iqama records</td><td>Per immigration requirements</td><td>Per immigration requirements</td></tr></tbody></table>
 <p>After the applicable period, identifiers are anonymised or erased while aggregated financial/statutory records are retained only as required by law (see "Anonymise identity, retain financial truth" principle).</p>
 <h3>3. Third-Party Sharing</h3>
 <p>We share your personal data only where necessary and under appropriate contractual protections ("flow-down" obligations requiring recipients to protect data to the same standard):</p>
@@ -114,6 +128,11 @@
 <p>If you are employed by an entity established in the <strong>Dubai International Financial Centre (DIFC)</strong> or the <strong>Abu Dhabi Global Market (ADGM)</strong>, your data is governed by <strong>DIFC Law No. 5 of 2020</strong> or the <strong>ADGM Data Protection Regulations 2021</strong> respectively, <strong>not</strong> the federal UAE PDPL. The rights and principles in this notice apply, and the applicable free-zone law and its commissioner/regulator govern any complaint.</p>
 <h3>8. Contact Us</h3>
 <p>For any questions about this notice or your data: <strong>[dpo_name]</strong> — <strong>[dpo_email]</strong> — <strong>[dpo_phone]</strong>.</p>
+<h3>9. Personal Data About Non-Employee Contacts</h3>
+<p>Sections 1–8 are about you as an employee or a candidate. This section is about two people who are <strong>not</strong> employees and whose details we hold because our employer record cannot be completed without them: the <strong>data protection contact</strong> we nominate, and the <strong>authorised signatory</strong> who signs our documents on our behalf. If you are one of them, this section is our notice to you.</p>
+<table><thead><tr><th>What we hold</th><th>Why we hold it</th><th>Lawful basis</th></tr></thead><tbody><tr><td><strong>Data protection contact</strong> — name, email, phone</td><td>To be named as the data protection contact in the documents we issue, and to receive requests from people whose data we hold and correspondence from the supervisory authority</td><td>Legal obligation / legitimate interest [TO CONFIRM — article-level basis, for counsel]</td></tr><tr><td><strong>Authorised signatory</strong> — name, title</td><td>To identify the person who signs an employment contract or a settlement statement on our behalf</td><td>Legal obligation / performance of the contract we sign</td></tr></tbody></table>
+<p>We do not use these details for marketing, profiling or automated decision-making, and we hold no sensitive data about either contact. We share them only as section 3 describes: with Antum People, which hosts the record, and with a person who receives a document that names the signatory. We keep them for as long as the employer record is in use and for the retention period that applies to the documents carrying them, then erase or anonymise them.</p>
+<p>You have the rights in section 5 — access, rectification, erasure, restriction, portability and objection — and you may exercise them by contacting us using the details in section 8.</p>
 <hr/>
 </div>
 
@@ -132,7 +151,7 @@
 <p>حيثما تستند المعالجة إلى <strong>الموافقة</strong> (مثل البيانات البيومترية وبعض البيانات الحساسة)، يجوز لك سحب الموافقة في أي وقت؛ ولا يؤثر السحب على قانونية المعالجة التي تمت قبل السحب.</p>
 <h3>2. فترات الاحتفاظ بالبيانات</h3>
 <p>نحتفظ بالبيانات الشخصية فقط للمدة اللازمة للغرض، ثم نحذفها أو نُخفي هويتها بشكل آمن وفق جدول حذف تلقائي.</p>
-<table><thead><tr><th>نوع السجل</th><th>الإمارات</th><th>السعودية</th></tr></thead><tbody><tr><td>سجلات التوظيف والرواتب</td><td>حد أدنى <strong>سنتان</strong> بعد انتهاء الخدمة (قانون العمل)</td><td>حد أدنى <strong>سنتان</strong> بعد انتهاء الخدمة (نظام العمل)</td></tr><tr><td>سجلات مكافأة نهاية الخدمة والسجلات المالية/المخالصة</td><td><strong>5 سنوات</strong> (تجاري/تدقيق)</td><td><strong>6 سنوات</strong> (متطلبات الزكاة والضريبة ZATCA)</td></tr><tr><td>سجلات الموافقة</td><td>مدة التوظيف + مدة الاحتفاظ القانونية</td><td>مدة التوظيف + مدة الاحتفاظ القانونية</td></tr><tr><td>سجلات التدقيق (الامتثال)</td><td>وفق سياسة الاحتفاظ لجهة التحكم</td><td>وفق سياسة الاحتفاظ لجهة التحكم</td></tr><tr><td>سجلات التأشيرة/الإقامة</td><td>وفق متطلبات الهجرة</td><td>وفق متطلبات الهجرة</td></tr></tbody></table>
+<table><thead><tr><th>نوع السجل</th><th>الإمارات</th><th>السعودية</th></tr></thead><tbody><tr><td>سجلات التوظيف والرواتب</td><td>حد أدنى <strong>سنتان</strong> بعد انتهاء الخدمة (قانون العمل)</td><td>حد أدنى <strong>سنتان</strong> بعد انتهاء الخدمة (نظام العمل)</td></tr><tr><td>سجلات مكافأة نهاية الخدمة والسجلات المالية/المخالصة</td><td><strong>5 سنوات</strong> (تجاري/تدقيق)</td><td><strong>6 سنوات</strong> (متطلبات الزكاة والضريبة ZATCA)</td></tr><tr><td>سجلات الموافقة</td><td>مدة التوظيف + مدة الاحتفاظ</td><td>مدة التوظيف + مدة الاحتفاظ</td></tr><tr><td>سجلات التدقيق (الامتثال)</td><td>وفق سياسة الاحتفاظ لجهة التحكم</td><td>وفق سياسة الاحتفاظ لجهة التحكم</td></tr><tr><td>سجلات التأشيرة/الإقامة</td><td>وفق متطلبات الهجرة</td><td>وفق متطلبات الهجرة</td></tr></tbody></table>
 <p>بعد انقضاء المدة المطبقة، تُخفى المعرفات أو تُحذف بينما تُحتفظ بالسجلات المالية/النظامية المجمعة فقط بالقدر المطلوب قانوناً (وفق مبدأ "إخفاء الهوية مع الاحتفاظ بالحقيقة المالية").</p>
 <h3>3. المشاركة مع الأطراف الثالثة</h3>
 <p>نشارك بياناتك الشخصية فقط عند الضرورة وبموجب حماية تعاقدية مناسبة (التزامات "تمرير" تُلزم الجهات المستقبلة بحماية البيانات بنفس المستوى):</p>
@@ -153,14 +172,19 @@
 <p>إذا كنت موظفاً لدى كيان مؤسس في <strong>مركز دبي المالي العالمي (DIFC)</strong> أو <strong>سوق أبوظبي العالمي (ADGM)</strong>، فإن بياناتك تخضع لـ<strong>قانون مركز دبي المالي العالمي رقم 5 لسنة 2020</strong> أو <strong>نظام حماية البيانات لسوق أبوظبي العالمي 2021</strong> على التوالي، <strong>وليس</strong> لقانون حماية البيانات الاتحادي الإماراتي. وتنطبق الحقوق والمبادئ الواردة في هذا الإشعار، ويحكم أي شكوى قانون المنطقة الحرة المعمول به وجهته التنظيمية.</p>
 <h3>8. التواصل معنا</h3>
 <p>لأي استفسار حول هذا الإشعار أو بياناتك: <strong>[dpo_name]</strong> — <strong>[dpo_email]</strong> — <strong>[dpo_phone]</strong>.</p>
+<h3>9. البيانات الشخصية لجهات الاتصال من غير الموظفين</h3>
+<p>الأقسام 1–8 تتعلق بك كموظف أو كمرشح. وهذا القسم يتعلق بشخصين <strong>ليسا من الموظفين</strong> نحتفظ ببياناتهما لأن سجل جهة العمل لا يكتمل بدونهما: <strong>جهة الاتصال لحماية البيانات</strong> التي نعينها، و<strong>المفوض بالتوقيع</strong> الذي يوقع مستنداتنا نيابة عنا. وإذا كنت أحد هذين الشخصين، فهذا القسم هو إشعارنا إليك.</p>
+<table><thead><tr><th>ما نحتفظ به</th><th>لماذا نحتفظ به</th><th>الأساس القانوني</th></tr></thead><tbody><tr><td><strong>جهة الاتصال لحماية البيانات</strong> — الاسم والبريد الإلكتروني والهاتف</td><td>لتُذكر كجهة اتصال لحماية البيانات في المستندات التي نصدرها، ولاستقبال طلبات من نحتفظ ببياناتهم ومراسلات الجهة الإشرافية</td><td>التزام قانوني / مصلحة مشروعة [TO CONFIRM — الأساس على مستوى المادة، للمستشار القانوني]</td></tr><tr><td><strong>المفوض بالتوقيع</strong> — الاسم والمسمى الوظيفي</td><td>لتحديد الشخص الذي يوقع عقد العمل أو بيان المخالصة النهائية نيابة عنا</td><td>التزام قانوني / تنفيذ العقد الذي نوقعه</td></tr></tbody></table>
+<p>لا نستخدم هذه البيانات للتسويق أو التنميط أو اتخاذ قرارات آلية، ولا نحتفظ بأي بيانات حساسة عن أي من هذين الشخصين. ولا نشاركها إلا كما يوضح القسم 3: مع منصة Antum People التي تستضيف السجل، ومع من يستلم مستنداً يذكر اسم المفوض بالتوقيع. ونحتفظ بها ما دام سجل جهة العمل قيد الاستخدام وطوال مدة الاحتفاظ المطبقة على المستندات التي تحملها، ثم نحذفها أو نخفي هويتها.</p>
+<p>لك الحقوق الواردة في القسم 5 — الاطلاع والتصحيح والمحو والتقييد وقابلية النقل والاعتراض — ويمكنك ممارستها بالتواصل معنا عبر البيانات الواردة في القسم 8.</p>
 <hr/>
 <h2>Consent Acknowledgment / إقرار الموافقة</h2>
-<table><thead><tr><th>Field / الحقل</th><th>Value / القيمة</th></tr></thead><tbody><tr><td>Employee Name / اسم الموظف</td><td>[full_name]</td></tr><tr><td>Employee ID / رقم الموظف</td><td>[employee_id]</td></tr><tr><td>Jurisdiction / الاختصاص</td><td>[jurisdiction] (UAE / KSA / DIFC / ADGM)</td></tr><tr><td>I confirm I have read and understood this Privacy Notice / أُقر بأنني اطلعت على إشعار الخصوصية هذا وفهمته</td><td>Yes / نعم</td></tr><tr><td>I consent to the processing of my personal data as described, including [sensitive categories, where applicable] / أوافق على معالجة بياناتي الشخصية كما هو موضح، بما في ذلك [الفئات الحساسة، عند الاقتضاء]</td><td>☐ Yes / نعم</td></tr><tr><td>Date / التاريخ</td><td>[current_date]</td></tr><tr><td>Consent Version / إصدار الموافقة</td><td>v2.2 (2026-09-17)</td></tr><tr><td>Signature / التوقيع</td><td>________________</td></tr></tbody></table>
+<table><thead><tr><th>Field / الحقل</th><th>Value / القيمة</th></tr></thead><tbody><tr><td>Employee Name / اسم الموظف</td><td>[full_name]</td></tr><tr><td>Employee ID / رقم الموظف</td><td>[employee_id]</td></tr><tr><td>Jurisdiction / الاختصاص</td><td>[jurisdiction] (UAE / KSA / DIFC / ADGM)</td></tr><tr><td>I confirm I have read and understood this Privacy Notice / أُقر بأنني اطلعت على إشعار الخصوصية هذا وفهمته</td><td>Yes / نعم</td></tr><tr><td>I consent to the processing of my personal data as described, including [sensitive categories, where applicable] / أوافق على معالجة بياناتي الشخصية كما هو موضح، بما في ذلك [الفئات الحساسة، عند الاقتضاء]</td><td>☐ Yes / نعم</td></tr><tr><td>Date / التاريخ</td><td>[current_date]</td></tr><tr><td>Consent Version / إصدار الموافقة</td><td>v2.4 (2026-11-10)</td></tr><tr><td>Signature / التوقيع</td><td>________________</td></tr></tbody></table>
 </div>
 
 <div class="doc-footer">
-  <span>Antum People &middot; Compliance Pack &middot; v2.2</span>
-  <span>2026-09-17 &middot; UAE PDPL &amp; KSA PDPL</span>
+  <span>Antum People &middot; Compliance Pack &middot; v2.4</span>
+  <span>2026-11-10 &middot; UAE PDPL &amp; KSA PDPL</span>
 </div>
 
 </body>

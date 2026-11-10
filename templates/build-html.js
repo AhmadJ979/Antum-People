@@ -5,7 +5,6 @@ const fs = require('fs');
 const path = require('path');
 
 const DIR = __dirname;
-const DATE = '2026-09-17';
 
 // ---------------- Markdown → HTML (small, dependency-free) ----------------
 function escapeHtml(s) {
@@ -186,13 +185,23 @@ function css(brand, version) {
 // header/footer read that value so they can never drift from the source.
 function extractVersion(md) {
   // The version is stated in a single "**Version ...**" metadata line (e.g.
-  // "> **Version / الإصدار:** v2.2 (2026-09-17)"). Pull the first "vX.Y"
+  // "> **Version / الإصدار:** v2.4 (2026-11-10)"). Pull the first "vX.Y"
   // token from that line and normalise it to the bare number.
   const line = md.split('\n').find(l => /\*\*Version\b/i.test(l));
   if (!line) return null;
   const m = line.match(/(v?\d+\.\d+(?:\.\d+)?)/);
   if (!m) return null;
-  return m[1].replace(/^v/i, ''); // normalise "v2.2" -> "2.2"
+  return m[1].replace(/^v/i, ''); // normalise "v2.4" -> "2.4"
+}
+
+// The DATE is read off the SAME line, for the same reason: the header and footer of the
+// derivative must say the date of the version it was built from. A date typed in here once
+// is what let the v2.4 HTML go on printing 2026-09-17 next to "Version 2.4".
+function extractVersionDate(md) {
+  const line = md.split('\n').find(l => /\*\*Version\b/i.test(l));
+  if (!line) return null;
+  const m = line.match(/\b(\d{4}-\d{2}-\d{2})\b/);
+  return m ? m[1] : null;
 }
 
 // ---------------- Build one document ----------------
@@ -201,6 +210,13 @@ function build(cfg) {
   const lines = md.split('\n');
   const version = extractVersion(md);
   if (!version) { throw new Error('No "Version" metadata line found in ' + cfg.md); }
+  const DATE = extractVersionDate(md);
+  if (!DATE) {
+    throw new Error(
+      'No date on the "Version" metadata line of ' + cfg.md + '\n'
+      + '  The header and footer of ' + cfg.html + ' print that date. Refusing to build: '
+      + 'a derivative dated from nowhere is a derivative whose version line cannot be trusted.');
+  }
 
   const enIdx = lines.findIndex(l => l.trim() === cfg.enMarker);
   const arIdx = lines.findIndex(l => l.trim() === cfg.arMarker);
