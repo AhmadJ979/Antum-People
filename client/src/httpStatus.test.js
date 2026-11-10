@@ -113,7 +113,7 @@ describe('createAuthedFetch — the wiring, with a fabricated transport', () => 
       fetchImpl,
       getToken: () => 'a-token',
       onSessionInvalid: () => { seen.sessionInvalid += 1; },
-      onRefusal: () => { seen.refusal += 1; },
+      onRefusal: (url, status, method) => { seen.refusal += 1; seen.refusalMethod = method; },
     });
     return { authedFetch, seen };
   };
@@ -147,6 +147,13 @@ describe('createAuthedFetch — the wiring, with a fabricated transport', () => 
     await assert.rejects(() => authedFetch('/api/preboarding/cases/abc/workspace'), RefusalError);
     assert.strictEqual(seen.refusal, 1);
     assert.strictEqual(seen.sessionInvalid, 0, 'THIS is the defect: a refusal must not sign a valid session out');
+    assert.strictEqual(seen.refusalMethod, 'GET', 'a call that names no method is a read');
+  });
+
+  test('the method travels with the refusal, so a refused WRITE is not named as a read', async () => {
+    const { authedFetch, seen } = harness(REFUSAL_BY_THE_GATE());
+    await assert.rejects(() => authedFetch('/api/employees', { method: 'post' }), RefusalError);
+    assert.strictEqual(seen.refusalMethod, 'POST', 'normalised, so the label lookup cannot miss a lower-case method');
   });
 
   test('a 404 and a 500 are nobody\'s business here — both are handed back', async () => {

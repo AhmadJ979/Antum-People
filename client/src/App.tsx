@@ -876,8 +876,11 @@ export default function App() {
     fetchImpl: fetch,
     getToken: () => token,
     onSessionInvalid: handleLogout,
-    // The url was arriving and being thrown away; it is what lets the notice name the panel.
-    onRefusal: (url: string) => setRefusal(refusalNoticeFor(url, REFUSAL_NOTICE)),
+    // The url was arriving and being thrown away; it is what lets the notice name the panel — and the
+    // method is what stops a refused WRITE being named as the read that shares its url (`POST
+    // /employees` is not "the roster", which this account can read).
+    onRefusal: (url: string, _status: number, method?: string) =>
+      setRefusal(refusalNoticeFor(url, REFUSAL_NOTICE, method)),
   });
 
   // A refusal is about the screen you asked for, so moving to another one retires it: the notice

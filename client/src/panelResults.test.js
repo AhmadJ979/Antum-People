@@ -108,6 +108,33 @@ describe('one screen, several panels: a refused sibling does not blank a granted
       'an unknown url falls back to the shipped sentence word for word');
   });
 
+  test('a refused WRITE is named as the act, never as the read that shares its url', () => {
+    // Measured 2026-11-10 as `finance`, which holds `employees:read` and not `employees:write`:
+    // pressing "Create Employee Profile" raised "You don't have access to the roster." with the
+    // roster rendered behind the notice. The same url, read, is still the roster.
+    assert.strictEqual(panelLabelOf('/api/employees', 'POST'), 'adding an employee');
+    assert.strictEqual(panelLabelOf('/api/employees', 'GET'), 'the roster');
+    assert.strictEqual(panelLabelOf('/api/employees/e-1', 'PUT'), "editing this employee's record");
+    assert.ok(/editing this employee's record/.test(refusalNoticeFor('/api/employees/e-1', undefined, 'PUT')));
+    assert.ok(/still signed in/.test(refusalNoticeFor('/api/employees', undefined, 'POST')),
+      'the reassuring half of the shipped sentence is kept for writes too');
+    assert.ok(!/the roster/.test(refusalNoticeFor('/api/employees', undefined, 'POST')),
+      'the read label must not describe a refused write');
+    // The nine sites #396 named, each named as an act rather than "that":
+    assert.strictEqual(panelLabelOf('/api/onboarding-tasks/t-1', 'PUT'), 'updating that onboarding task');
+    assert.strictEqual(panelLabelOf('/api/offboarding-tasks/t-1', 'PUT'), 'updating that offboarding task');
+    assert.strictEqual(panelLabelOf('/api/exit-interviews', 'POST'), 'recording an exit interview');
+    assert.strictEqual(panelLabelOf('/api/preboarding/cases', 'POST'), 'opening a pre-boarding case');
+    assert.strictEqual(panelLabelOf('/api/preboarding/cases/c/items/i/status', 'POST'), 'moving that checklist item');
+    assert.strictEqual(panelLabelOf('/api/preboarding/cases/c/package/i/acknowledgement', 'POST'), 'recording that acknowledgement');
+    // ...and their reads, which used to fall back to "that":
+    assert.strictEqual(panelLabelOf('/api/preboarding/cases/c/checklist'), 'the pre-boarding checklist');
+    assert.strictEqual(panelLabelOf('/api/preboarding/cases/c/package'), 'the pre-reading package');
+    assert.strictEqual(panelLabelOf('/api/compliance/templates/privacy-notice/e-1'), 'that document');
+    assert.strictEqual(panelLabelOf('/api/unknown', 'POST'), 'that',
+      'a url this module does not recognise still falls back to the shipped sentence');
+  });
+
   test('recordPanel tags by the error class, never by reading the body', () => {
     assert.strictEqual(recordPanel('x', '/u', { value: 1 }).status, GRANTED);
     assert.strictEqual(recordPanel('x', '/u', { error: new RefusalError('/u', 403) }).status, REFUSED);
