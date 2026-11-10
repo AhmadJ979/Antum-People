@@ -30,6 +30,15 @@
  * list length. The pre-fix tree is the mutation: `--tree` pointed at it reddens on every site it does not
  * have, which is how the class is proved rather than asserted.
  *
+ * WIDENED AGAIN 2026-11-10, by enumerating the class rather than by trusting the list: the Strategic
+ * Intelligence tab was in neither #392's enumeration nor the first pass over this file. Its executive
+ * summary banner is computed FROM the analytics payload, so a refused read rendered "Retention lift has
+ * stabilized in recent cohorts." and "Average Time-to-Value is 0 days." — a refusal drawn as a claim
+ * about data the account may not read — and its three charts drew an empty Retention Lift, "Insufficient
+ * productivity data." and a forecast grid with no bars. Both are declared below. The account that is
+ * refused this panel is `manager` (`analytics:read` excludes it); `demo` (finance) and `admin`
+ * (hr_admin) hold the cell, so for them these two sites are the CONTROL — the gate must not fire.
+ *
  * WHAT IT CANNOT SEE, so a green run never implies otherwise:
  *   - what a browser PAINTS. It reads source; the rendered proof is the DOM transcript in the PR, taken on
  *     scratch rigs. A screen whose gate is present but computed wrongly passes here and is caught by
@@ -202,6 +211,25 @@ const SITES = [
     anchor: "{emptyArea(panelReading.preboarding_overview) !== EMPTY ? (",
     marker: "nothing outstanding to show for this jurisdiction",
   },
+  {
+    site: "analytics_banner",
+    screen: "Strategic Intelligence — the executive summary banner",
+    panel: "analytics",
+    gate: "emptyArea(panelReading.analytics)",
+    anchor: "              {emptyArea(panelReading.analytics) === EMPTY ? (\n"
+      + "              <div className=\"bg-teal-900 text-white p-8 rounded-2xl shadow-xl\">",
+    marker: "Strategic Workforce Intelligence",
+  },
+  {
+    site: "analytics_charts",
+    screen: "Strategic Intelligence — the three charts",
+    panel: "analytics",
+    gate: "emptyArea(panelReading.analytics)",
+    anchor: "              {emptyArea(panelReading.analytics) === EMPTY ? (\n"
+      + "              <div className=\"grid grid-cols-1 lg:grid-cols-2 gap-8\">\n"
+      + "                {/* Retention Lift Chart */}",
+    marker: "Avg days to full productivity (Illustrative Target)",
+  },
 ];
 
 function parseArgs(argv) {
@@ -320,7 +348,7 @@ function run(tree) {
 }
 
 /**
- * Prove the judgement can redden, on THIS tree's own source. Five plants, each requiring its own
+ * Prove the judgement can redden, on THIS tree's own source. Six plants, each requiring its own
  * outcome, plus a control: the untouched copy must pass, or the plants prove nothing.
  */
 function selftest() {
@@ -397,6 +425,16 @@ function selftest() {
       ),
       expectRed: true,
       what: "the marker the check anchors on moving — a RED, never a silent skip",
+    },
+    {
+      name: "plant 6: the Strategic Intelligence banner loses its gate (the pre-fix shape)",
+      text: source.replace(
+        "              {emptyArea(panelReading.analytics) === EMPTY ? (\n"
+          + "              <div className=\"bg-teal-900 text-white p-8 rounded-2xl shadow-xl\">",
+        "              <div className=\"bg-teal-900 text-white p-8 rounded-2xl shadow-xl\">"
+      ),
+      expectRed: true,
+      what: "the banner deciding for itself that a refused read was an empty one",
     },
   ];
 

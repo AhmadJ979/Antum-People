@@ -2460,7 +2460,12 @@ export default function App() {
 
           {activeTab === 'analytics' && (
             <div className="space-y-8 animate-in fade-in duration-500 pb-12">
-              {/* Executive Summary Banner */}
+              {/* Executive Summary Banner — GATED ON THE READING of the analytics panel, for the same
+                  reason the dashboard's four cards are. Every sentence inside it is computed FROM the
+                  analytics payload, so a refused read used to render "Retention lift has stabilized in
+                  recent cohorts." and "Average Time-to-Value is 0 days." — a refusal drawn as a claim
+                  about data the account may not read (src/panelReading.js). */}
+              {emptyArea(panelReading.analytics) === EMPTY ? (
               <div className="bg-teal-900 text-white p-8 rounded-2xl shadow-xl">
                 <h3 className="text-xl font-bold mb-6">Strategic Workforce Intelligence</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -2500,8 +2505,17 @@ export default function App() {
                    </div>
                 </div>
               </div>
+              ) : (
+                <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-xs text-rose-800" data-refusal-panel="analytics">
+                  {emptyAreaSentence('analytics', panelReading.analytics)}
+                </div>
+              )}
 
-              {/* Charts Grid */}
+              {/* Charts Grid — gated on the SAME reading. A refused analytics read used to draw an
+                  empty Retention Lift chart, "Insufficient productivity data." where the Time-to-Value
+                  chart goes, and a forecast grid with no bars in it: three empty results standing
+                  where one refusal belongs. */}
+              {emptyArea(panelReading.analytics) === EMPTY ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Retention Lift Chart */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
@@ -2612,6 +2626,11 @@ export default function App() {
                   </div>
                 </div>
               </div>
+              ) : (
+                <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-xs text-rose-800" data-refusal-panel="analytics">
+                  {emptyAreaSentence('analytics', panelReading.analytics)}
+                </div>
+              )}
             </div>
           )}
 
