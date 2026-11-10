@@ -52,7 +52,7 @@ import {
 // P3-3 -- the escalation record as a READING. A refusal and an empty list are different facts and
 // must not render alike; `probationEscalations.js` is where that distinction is made, and tested.
 import {
-  escalationReading, escalationRowLine, loadingReading,
+  escalationReading, escalationRowLine, escalationSummary, loadingReading,
 } from './probationEscalations.js';
 // The document preview renders the SERVED markdown as a document instead of printing its markers.
 // `markdown.js` parses it to data, `markdownView.js` maps that data to React elements - no
@@ -734,10 +734,10 @@ export default function App() {
   // console leaves the reader looking at a form that appears to have done nothing.
   const [correctionRefusal, setCorrectionRefusal] = useState<string | null>(null);
 
-  // P3-3 -- the escalation records, held as ONE reading rather than as a list. A refusal, a
-  // failed read and an empty list must not render alike; `probationEscalations.js` decides which
-  // one this is, and its `rows` is null on every branch that is not a granted read.
+  // P3-3 -- the escalation records, held as ONE reading, not a list: `probationEscalations.js`
+  // decides refusal / failure / empty, and `rows` is null on every branch that is not a granted read.
   const [escalation, setEscalation] = useState<any>(loadingReading());
+  const [escalationOpen, setEscalationOpen] = useState(false); // collapsed by default (owner ruled 2026-11-10); drawn only on a granted read
 
   // Single source of truth for "who is mid-onboarding": derived from incomplete
   // onboarding tasks server-side, not from an employee status label, so the dashboard
@@ -2210,15 +2210,30 @@ export default function App() {
                   <div>
                     <h3 className="font-bold text-slate-900">Escalation records</h3>
                     <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight">
-                      {escalation.kind === 'granted'
-                        ? `${escalation.rows.length} recorded \u00b7 the record of what fired, and to whom`
-                        : 'the record of what fired, and to whom'}
+                      {escalationSummary(escalation)}
                     </p>
                   </div>
-                  <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded uppercase border border-teal-200">P3-3</span>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded uppercase border border-teal-200">P3-3</span>
+                    {escalation.kind === 'granted' && (
+                      <button
+                        type="button"
+                        onClick={() => setEscalationOpen((open) => !open)}
+                        aria-expanded={escalationOpen}
+                        className="px-2 py-0.5 text-[10px] font-bold rounded uppercase border border-slate-300 text-slate-600 hover:text-slate-900 hover:border-slate-400"
+                      >
+                        {escalationOpen ? 'Hide records' : 'Show records'}
+                      </button>
+                    )}
+                  </div>
                 </div>
+                {/* Collapsed (owner ruled 2026-11-10): on a granted reading the WHOLE body is behind
+                    the toggle, so the collapsed panel is the heading, the badge and the summary line.
+                    The empty-list sentence goes with it: it says the watch is "described underneath",
+                    and a sentence pointing at a line this panel is hiding would be the very defect
+                    the reading exists to prevent. Refused, failed and loading keep their body. */}
                 {escalation.kind === 'granted' ? (
-                  escalation.rows.length === 0 ? (
+                  !escalationOpen ? null : escalation.rows.length === 0 ? (
                     <div className="p-4 text-xs text-slate-500">{escalation.sentence}</div>
                   ) : (
                     <ul className="divide-y divide-slate-100">
@@ -2238,11 +2253,15 @@ export default function App() {
                 ) : (
                   <div className="p-4 text-xs text-slate-500">{escalation.sentence}</div>
                 )}
-                {escalation.watcherLine && (
-                  <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500">{escalation.watcherLine}</div>
-                )}
-                {escalation.note && (
-                  <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500">{escalation.note}</div>
+                {escalationOpen && (
+                  <>
+                    {escalation.watcherLine && (
+                      <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500">{escalation.watcherLine}</div>
+                    )}
+                    {escalation.note && (
+                      <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500">{escalation.note}</div>
+                    )}
+                  </>
                 )}
               </div>
               {/* P3-3 escalation records -- END */}

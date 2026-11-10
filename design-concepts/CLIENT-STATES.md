@@ -294,8 +294,8 @@ sentence, which is the seat that was missing. Four sets already exist and each k
   `No active offboardings.`, `No tasks generated for this stage.`, and the pre-boarding panel's
   *"No open {jurisdiction} pre-boarding cases — nothing outstanding to show for this jurisdiction. Record an
   accepted offer to open one."* (`:2648`–`:2650`). **§3 is where they collide with the new banner.**
-- **One existing rule looks like it forbids the client owning a sentence, and does not.** `App.tsx:2765` (inside the
-  `:2764`–`:2773` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
+- **One existing rule looks like it forbids the client owning a sentence, and does not.** `App.tsx:2784` (inside the
+  `:2783`–`:2792` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
   the structure that produced the drift… Nothing is composed here, and with no cases there is no sentence to
   state rather than a page-level claim about a list that is not on screen."* The distinction it was making:
   the client must not **assert facts about the data or about scope** — that is the server's (`scope_note`). A
