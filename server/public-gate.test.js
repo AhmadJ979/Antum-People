@@ -172,6 +172,21 @@ test('a request with no cookie gets the gate page and no shell', async () => {
   const res = await get(rig.base, '/');
   assert.strictEqual(res.status, 200, 'the gate page is a page a visitor is meant to see');
   assert.match(res.body, /<title>Antum People — access<\/title>/);
+  // THE WORDMARK (owner's decision, 2026-11-10): أنتم, drawn as vector paths cut from Cairo, so the
+  // mark needs no font on the visitor's machine. Asserted as a shape rather than as a picture: one
+  // inline <svg>, a real path, and NO webfont — a font request from this page would be answered by
+  // the gate itself, and a page that fell back to text would show empty boxes where no Arabic font
+  // is installed.
+  assert.match(res.body, /<svg class="mark" viewBox="0 0 1413 1295" role="img" aria-label="[^"]*أنتم[^"]*">/,
+    'the gate page carries the أنتم wordmark');
+  assert.match(res.body, /<path fill="#e2e8f0" d="M[0-9][^"]{1000,}Z"\/>/, 'the wordmark is drawn as a path');
+  assert.ok(!/@font-face|\.woff2?/i.test(res.body),
+    'the wordmark must not depend on a webfont — the gate would answer the font request with this page');
+  // The page's byte count is pinned deliberately: it is the first thing a stranger with the URL sees,
+  // and a wall that changed shape without its instrument moving is an unproven wall. Measured 1,628 B
+  // at 8f74177 (no wordmark); 3,308 B with the mark. A change here is a change to the wall.
+  assert.strictEqual(Buffer.byteLength(res.body), 3308,
+    'the gate page byte count moved — re-measure it and update this pin with the reason');
   assert.strictEqual((res.body.match(/<input/gi) || []).length, 1, 'exactly one input');
   assert.strictEqual((res.body.match(/<button/gi) || []).length, 1, 'exactly one submit');
   assert.match(res.body, /method="post"/i);
