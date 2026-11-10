@@ -592,12 +592,81 @@ const ReplacementCostOnFlag = ({ state }: { state?: ReplacementCostReading }) =>
   );
 };
 
+/**
+ * THE EMPLOYER RECORD (owner ruling 2026-11-10, option (b): a TABLE, not a singleton) — one row per
+ * legal entity, and an employee points at one (`employees.employer_id`). The screen below is where an
+ * employer's legal details are entered ONCE; the documents that name the employer print them.
+ *
+ * `not_held` is the SERVER's own list of the facts this record does not hold (`server/employers.js`),
+ * so the screen never re-derives which fields are blank from a second list that could drift: the
+ * sentence under the form and the refusal on a withheld document name the same facts.
+ */
+interface EmployerRecord {
+  id: string;
+  legal_name: string | null;
+  jurisdiction: string | null;
+  registered_address: string | null;
+  po_box: string | null;
+  city: string | null;
+  phone: string | null;
+  email: string | null;
+  signatory_name: string | null;
+  signatory_title: string | null;
+  trade_license: string | null;
+  mohre_code: string | null;
+  qiwa_id: string | null;
+  mudad_code: string | null;
+  dpo_name: string | null;
+  dpo_email: string | null;
+  dpo_phone: string | null;
+  not_held: string[];
+}
+
+/**
+ * The fields the form asks for, by the record's own COLUMN names — the write body is exactly the
+ * object the server's `normalise()` accepts, so no field is renamed on the way out and a typo cannot
+ * be silently dropped by a mapping layer.
+ *
+ * NOTHING HERE IS THE SIGNATORY. `signatory_name` / `signatory_title` are typed by a person and belong
+ * to the company; they are never pre-filled from the signed-in account, because the person entering
+ * the company's details is not the person who signs for it.
+ */
+const EMPLOYER_FIELDS: Array<{ column: string; label: string; group: string }> = [
+  { column: 'legal_name', label: 'Legal name', group: 'Who the employer is' },
+  { column: 'jurisdiction', label: 'Jurisdiction', group: 'Who the employer is' },
+  { column: 'registered_address', label: 'Registered address', group: 'Who the employer is' },
+  { column: 'po_box', label: 'PO box', group: 'Who the employer is' },
+  { column: 'city', label: 'City', group: 'Who the employer is' },
+  { column: 'phone', label: 'Phone', group: 'Who the employer is' },
+  { column: 'email', label: 'Email', group: 'Who the employer is' },
+  { column: 'trade_license', label: 'Trade licence number', group: 'Registrations' },
+  { column: 'mohre_code', label: 'MoHRE establishment code', group: 'Registrations' },
+  { column: 'qiwa_id', label: 'Qiwa establishment ID', group: 'Registrations' },
+  { column: 'mudad_code', label: 'Mudad establishment code', group: 'Registrations' },
+  { column: 'signatory_name', label: 'Signatory name', group: 'Signatory' },
+  { column: 'signatory_title', label: 'Signatory title', group: 'Signatory' },
+  { column: 'dpo_name', label: 'Data protection contact name', group: 'Data protection contact' },
+  { column: 'dpo_email', label: 'Data protection contact email', group: 'Data protection contact' },
+  { column: 'dpo_phone', label: 'Data protection contact phone', group: 'Data protection contact' },
+];
+
+/** The same fields, grouped the way a reader fills them in. Order comes from the list above. */
+const EMPLOYER_GROUPS = ['Who the employer is', 'Registrations', 'Signatory', 'Data protection contact']
+  .map((title) => ({ title, fields: EMPLOYER_FIELDS.filter((field) => field.group === title) }));
+
+/** What the form says when the server refuses the WRITE. The read has its own sentence, composed
+ *  from the policy cell (`panelReading.js`); a write is a different act and is named as one. */
+const EMPLOYER_WRITE_REFUSAL = "You don't have access to editing the employer record. Nothing was changed, and you are still signed in.";
+
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Executive Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
   { id: 'employees', label: 'Employee Directory', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
   { id: 'transitions', label: 'Transitions Hub', icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' },
   { id: 'preboarding', label: 'Pre-boarding', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-  { id: 'analytics', label: 'Strategic Intelligence', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' }
+  { id: 'analytics', label: 'Strategic Intelligence', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+  // The employer record: the company's own legal details, entered once and printed on the documents
+  // that name the employer. Last in the list because it is a settings surface, not a daily one.
+  { id: 'employer', label: 'Company Profile', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' }
 ];
 
 /** A tab's own name, from the one list that defines the tabs. */
@@ -769,7 +838,7 @@ function Login({ onLogin }: { onLogin: (token: string, user: any) => void }) {
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('antum_token'));
   const [user, setUser] = useState<any | null>(JSON.parse(localStorage.getItem('antum_user') || 'null'));
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'employees' | 'transitions' | 'analytics' | 'preboarding'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'employees' | 'transitions' | 'analytics' | 'preboarding' | 'employer'>('dashboard');
   const [employees, setEmployees] = useState<Employee[]>([]);
   // P4-1 — the replacement cost per flagged row. Keyed by employee id; each row is settled ON ITS
   // OWN (the rule the panels below follow), so a refusal on one row cannot blank another.
@@ -779,6 +848,78 @@ export default function App() {
   const [offboardingTasks, setOffboardingTasks] = useState<Task[]>([]);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // THE EMPLOYER RECORD (owner ruling 2026-11-10, option (b): a table, not a singleton). `null` is
+  // "not read yet"; an array is what the server holds — one row per legal entity. `employerForm` is the
+  // DRAFT being typed, seeded from the row when it is read and from the SAVED row after a write, so
+  // the form never shows a value the record does not hold.
+  const [employerRecords, setEmployerRecords] = useState<EmployerRecord[] | null>(null);
+  const [employerForm, setEmployerForm] = useState<Record<string, string>>({});
+  const [employerSaving, setEmployerSaving] = useState(false);
+  const [employerNotice, setEmployerNotice] = useState<{ kind: 'saved' | 'failed' | 'refused'; text: string } | null>(null);
+
+  /** The form's values for one record: a column the record does not hold becomes an EMPTY FIELD, which
+   *  is what a reader needs to see, and is never a placeholder that could be mistaken for a value. */
+  const employerFormFrom = (row: EmployerRecord): Record<string, string> => {
+    const form: Record<string, string> = {};
+    for (const field of EMPLOYER_FIELDS) {
+      const value = (row as any)[field.column];
+      form[field.column] = value === null || value === undefined ? '' : String(value);
+    }
+    return form;
+  };
+
+  // Settled through `callPanel`, like every other read on this screen: a refusal is a READING, not a
+  // console line, so the panel can say "not shown for this account" instead of rendering the empty
+  // state over a record that exists (`src/panelReading.js`, the defect measured 2026-11-08).
+  const loadEmployerRecord = async () => {
+    const record = await callPanel('employer_record',
+      `${API_BASE}/api/employers`,
+      authedFetch(`${API_BASE}/api/employers`));
+    keepReadings([record]);
+    const rows = record.status === GRANTED && record.value && Array.isArray(record.value.employers)
+      ? (record.value.employers as EmployerRecord[])
+      : null;
+    setEmployerRecords(rows);
+    if (rows && rows.length) setEmployerForm(employerFormFrom(rows[0]));
+  };
+
+  // THE WRITE. The body is the draft itself, keyed by the record's own column names, and a blank field
+  // is sent as a blank string — the server stores NULL for it, so clearing a fact CLEARS it rather than
+  // storing an empty cell that would print on a contract as though it were filled.
+  const saveEmployerRecord = async (employerId: string) => {
+    setEmployerSaving(true);
+    setEmployerNotice(null);
+    try {
+      const res = await authedFetch(`${API_BASE}/api/employers/${employerId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(employerForm),
+      });
+      const payload = await res.json().catch(() => null);
+      if (!res.ok) {
+        setEmployerNotice({ kind: 'failed', text: (payload && payload.error) || 'The server did not save this record.' });
+        return;
+      }
+      const saved: EmployerRecord | null = payload && payload.employer ? payload.employer : null;
+      if (saved) {
+        setEmployerRecords(prev => (prev || []).map(row => (row.id === saved.id ? saved : row)));
+        setEmployerForm(employerFormFrom(saved));
+        setEmployerNotice({
+          kind: 'saved',
+          text: saved.not_held.length === 0
+            ? 'Saved. Every fact the documents print is recorded.'
+            : `Saved. ${saved.not_held.length} fact${saved.not_held.length === 1 ? '' : 's'} still blank, so a document that prints ${saved.not_held.length === 1 ? 'it' : 'them'} stays withheld: ${saved.not_held.join(', ')}.`,
+        });
+      }
+    } catch (err) {
+      // A refusal is THROWN by `authedFetch` (403, the gate's empty body) and the notice at the top of
+      // the screen already names the panel; this line puts it beside the form that was just pressed.
+      setEmployerNotice({ kind: 'refused', text: EMPLOYER_WRITE_REFUSAL });
+    } finally {
+      setEmployerSaving(false);
+    }
+  };
 
   // UAE-first launch surface (owner direction, 2026-10-02): the active demo defaults
   // to UAE-only figures. KSA is not deleted anywhere — this switch just decides which
@@ -1015,6 +1156,12 @@ export default function App() {
       fetchChecklistOverview();
     }
   }, [token, activeTab, jurisdiction]);
+
+  // The employer record is one row and it changes when a person changes it — not with the market and
+  // not with the roster — so it is read when its own tab is opened, and not on every screen.
+  useEffect(() => {
+    if (token && activeTab === 'employer') loadEmployerRecord();
+  }, [token, activeTab]);
 
   // P4-1 — read the replacement cost for every row carrying a termination flag, automatically:
   // nobody opens a calculator, and the figure is on the flag itself. A refusal is NAMED on the row
@@ -3770,6 +3917,112 @@ export default function App() {
                 </button>
              </form>
           </div>
+        </div>
+      )}
+
+      {/* THE COMPANY PROFILE — the employer record (owner ruling 2026-11-10, option (b)). The legal
+          details are entered ONCE here and printed on every document that names the employer; a fact
+          left blank is not filled with a guess on the document, it withholds it, and this screen says
+          which facts those are. Nothing is hidden by role: every field and the Save control render for
+          every account, and the server refuses in place — the same rule the rest of this screen follows. */}
+      {activeTab === 'employer' && (
+        <div className="space-y-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Company Profile</h2>
+              <p className="text-xs text-slate-500 font-medium mt-1">
+                The employer's legal details, recorded once and printed on the documents that name the
+                employer. A blank fact is never filled with a guess — a document that prints it is withheld.
+              </p>
+            </div>
+          </div>
+
+          {emptyArea(panelReading.employer_record) !== EMPTY ? (
+            <div className="p-4 text-xs text-rose-800 bg-rose-50 border border-rose-200 rounded-xl" data-refusal-panel="employer_record">
+              {emptyAreaSentence('employer_record', panelReading.employer_record)}
+            </div>
+          ) : employerRecords === null ? (
+            <div className="p-4 text-xs text-slate-500 bg-white border border-slate-100 rounded-xl">Reading the employer record…</div>
+          ) : employerRecords.length === 0 ? (
+            <div className="p-4 text-xs text-slate-500 bg-white border border-slate-100 rounded-xl">
+              No employer record is held, so there is nothing on this screen to fill in yet.
+            </div>
+          ) : (
+            employerRecords.map(record => (
+              <div key={record.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+                <div className="p-6 border-b border-slate-100 flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="font-bold text-slate-900">{record.legal_name || 'Unnamed employer'}</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                      {record.jurisdiction || 'jurisdiction not set'} · record {record.id}
+                    </p>
+                  </div>
+                  <span className="px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded uppercase border border-amber-200 whitespace-nowrap">
+                    {record.not_held.length === 0 ? 'All facts recorded' : `${record.not_held.length} blank`}
+                  </span>
+                </div>
+
+                <div className="p-6 space-y-6">
+                  {EMPLOYER_GROUPS.map(group => (
+                    <div key={group.title}>
+                      <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">{group.title}</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {group.fields.map(field => (
+                          <div className="space-y-1" key={field.column}>
+                            <label htmlFor={`employer-${field.column}`} className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{field.label}</label>
+                            {field.column === 'jurisdiction' ? (
+                              <select
+                                id={`employer-${field.column}`}
+                                value={employerForm[field.column] || ''}
+                                onChange={e => setEmployerForm({ ...employerForm, [field.column]: e.target.value })}
+                                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
+                              >
+                                <option value="">Not set</option>
+                                <option value="UAE">UAE</option>
+                                <option value="KSA">KSA</option>
+                              </select>
+                            ) : (
+                              <input
+                                id={`employer-${field.column}`}
+                                type="text"
+                                value={employerForm[field.column] || ''}
+                                onChange={e => setEmployerForm({ ...employerForm, [field.column]: e.target.value })}
+                                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  <p className="text-[11px] text-slate-500">
+                    {record.not_held.length === 0
+                      ? 'Every fact the documents print is recorded.'
+                      : `Still blank, so any document that prints one of them is withheld rather than issued with a gap: ${record.not_held.join(', ')}.`}
+                  </p>
+
+                  {employerNotice && (
+                    <div className={`p-3 rounded-xl text-xs font-medium border ${
+                      employerNotice.kind === 'saved'
+                        ? 'bg-teal-50 border-teal-200 text-teal-800'
+                        : 'bg-rose-50 border-rose-200 text-rose-800'
+                    }`}>
+                      {employerNotice.text}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => saveEmployerRecord(record.id)}
+                    disabled={employerSaving}
+                    className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold text-xs hover:bg-teal-700 shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {employerSaving ? 'Saving…' : 'Save company profile'}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
 

@@ -105,7 +105,11 @@ async function logMutation(db, actorId, entityType, entityId, action, oldValue, 
  * (2026-10-28, on a scratch instance seeded from this repository's own scripts/seed-demo.js):
  *
  *   * 19 tables in `sqlite_master`, and NONE of them is a company / employer / organisation /
- *     tenant / settings row — so no employer identity, licence or registration is stored at all;
+ *     tenant / settings row — so no employer identity, licence or registration is stored at all.
+ *     SUPERSEDED 2026-11-10 (owner ruling, option (b)): `employers` is that row now, an employee
+ *     points at one, and `server/employers.js` maps it onto the placeholders below. The list above
+ *     is kept as the dated measurement it is — it is what the table below was built from, and the
+ *     reason every one of these facts is a REFUSAL rather than a default;
  *   * the 37 `employees` columns (`pragma_table_info('employees')`) carry no employer, trade-licence,
  *     MoHRE, Qiwa or data-protection field;
  *   * no row of ANY table contains any of the invented strings (`LIKE '%<literal>%'` over every text
@@ -122,12 +126,27 @@ const REQUIRED_FACTS = Object.freeze({
   // the party that issues the document, and its registrations
   employer_name: 'employer legal name',
   employer_address: 'employer registered address',
+  // THE FIVE THAT USED TO PRINT AS BRACKETED BLANKS (2026-11-10). The `employers` table fills them
+  // now, but until this change they were not in this table at all — so a document that reached a
+  // reader carried the literal `[employer_po_box]`, `[employer_city]`, `[employer_email]`,
+  // `[employer_phone]` and `[mudad_code]` in its party block. A placeholder on an ISSUED document is
+  // the same defect as an invented value: it tells the reader nothing and looks like a mail-merge
+  // failure. Each is now a fact a document cannot be issued without, so the document is withheld and
+  // the refusal names the field. `server/employers.test.js` holds the direction that matters — every
+  // placeholder the employer record fills is required here.
+  employer_po_box: 'employer PO box',
+  employer_city: 'employer city',
+  employer_phone: 'employer phone',
+  employer_email: 'employer email',
+  mudad_code: 'Mudad establishment code',
   employer_representative: 'employer signatory name',
   employer_representative_title: 'employer signatory title',
   trade_license: 'trade licence number',
   mohre_code: 'MoHRE establishment code',
   qiwa_id: 'Qiwa establishment ID',
+  dpo_name: 'data protection contact name',
   dpo_email: 'data protection contact email',
+  dpo_phone: 'data protection contact phone',
   // terms the document states as agreed
   probation_period: 'probation period',
   visa_status: 'visa status',

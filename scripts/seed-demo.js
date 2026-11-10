@@ -356,6 +356,22 @@ async function seed() {
     await db.query("DELETE FROM preboarding_cases WHERE offer_reference LIKE 'OFR-2026-DEMO-%'");
   }
 
+  // 0. THE EMPLOYER RECORD (owner ruling 2026-11-10, option (b): a TABLE, not a singleton).
+  //
+  // The demo seeds the ROW and none of its facts, deliberately. The facts are the company's legal
+  // identity — legal name, trade licence, MoHRE/Qiwa/Mudad registrations, registered address, the
+  // signatory and the data-protection contact — and every one of them is on the list this project
+  // does not invent: a seeded `Antum Regional Hub` / `TL-882733-G` is exactly the fabricated party
+  // name `server/compliance_engine.js` was changed to refuse. A blank row is the honest state of a
+  // demo that has not been told who the employer is, and the product says so out loud: the settings
+  // screen lists the blank facts, and a document that names one is withheld with the field named
+  // (`server/employers.js`, `REQUIRED_FACTS`).
+  //
+  // `INSERT OR IGNORE` and not `INSERT OR REPLACE`: a re-seed must not wipe what the owner typed into
+  // the settings screen. The employees below point at this id, so the row has to exist either way.
+  const DEMO_EMPLOYER_ID = 'demo-employer';
+  await db.query(`INSERT OR IGNORE INTO employers (id) VALUES (${db.escapeString(DEMO_EMPLOYER_ID)})`);
+
   console.log('Upserting demo employees...');
   for (const emp of allEmployees) {
     // Lead feedback: Match jurisdiction to data_residency_country and set total_salary
@@ -399,7 +415,7 @@ async function seed() {
         status, salary, basic_salary, recruitment_cost, data_residency_country,
         jurisdiction, total_salary, national_id_value,
         eosb_accrued, fully_productive_date, created_at, updated_at, probation_end_date, manager_id,
-        termination_type
+        termination_type, employer_id
       ) VALUES (
         ${db.escapeString(emp.id)}, ${db.escapeString(emp.first_name)}, ${db.escapeString(emp.last_name)},
         ${db.escapeString(emp.email)}, ${db.escapeString(emp.department)}, ${db.escapeString(emp.role)},
@@ -411,7 +427,8 @@ async function seed() {
         ${db.escapeString(emp.fully_productive_date)}, '2026-09-23 09:00:00', '2026-09-23 09:00:00',
         ${db.escapeString(emp.probation_end_date || null)},
         ${db.escapeString(emp.manager_id || null)},
-        ${seedTermination.terminationTypeSqlValue(seedTermination.SEEDED_TERMINATION_TYPE)}
+        ${seedTermination.terminationTypeSqlValue(seedTermination.SEEDED_TERMINATION_TYPE)},
+        ${db.escapeString(DEMO_EMPLOYER_ID)}
       )
     `;
     await db.query(sql);

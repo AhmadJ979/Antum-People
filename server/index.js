@@ -19,6 +19,11 @@ const eosbForecastWindow = require('./eosb-forecast-window');
 const preboarding = require('./preboarding');
 const preboardingItems = require('./preboarding-items');
 const privacyNotice = require('./privacy-notice');
+// The employer record: one row per legal entity, and the facts a document prints (owner ruling
+// 2026-11-10, option (b) — a table, not a singleton). The column → placeholder mapping lives in ONE
+// module so the screen that writes it, the route that serves it and the templates that print it
+// cannot disagree about a field name.
+const employers = require('./employers');
 // Caller-error validation: what a request got wrong, said in a sentence the caller can act on, and
 // answered 400 — see the module's own note. `400 = the caller's fault, 500 = ours`.
 const validation = require('./request-validation');
@@ -543,6 +548,53 @@ const EMPLOYEE_WRITE_SPEC = {
   numbers: ['salary', 'basic_salary', 'recruitment_cost', 'eosb_paid', 'unpaid_leave_days'],
 };
 
+// ============================== THE EMPLOYER RECORD ==============================
+// Owner ruling 2026-11-10, option (b): a TABLE, not a singleton. One row per legal entity, and an
+// employee points at one (`employees.employer_id`). The facts the documents print come from that row
+// and from nowhere else — see server/employers.js for the column → placeholder mapping and the three
+// refusals it encodes (no default, no session user as signatory, no fallback to the only employer).
+//
+// The cell is the roster's own (`employees:read` / `employees:write`, server/access.js), so a role
+// the policy does not grant is refused here by the gate with a 403 and no body — the same shape every
+// other route refuses with, and the reason this route carries no role check of its own.
+
+// THE READ. Served as the records themselves plus, per row, the facts the record does NOT hold:
+// the screen has to be able to say what is still blank without knowing the mapping, and a reader of
+// a withheld document gets the same words from `renderTemplate`'s `missing`. An empty list is a true
+// result here (no employer recorded yet), not a refusal — a refusal is the gate's 403.
+app.get('/api/employers', async (req, res) => {
+  try {
+    const rows = await db.query('SELECT * FROM employers ORDER BY created_at, id');
+    res.json({ employers: rows.map((row) => ({ ...row, not_held: employers.notHeld(row) })) });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// THE WRITE. A field this record does not hold is the caller's mistake and is named (400), never
+// dropped: a typo silently ignored is a field the reader believes they saved. A blank string CLEARS
+// the fact (stored NULL) rather than storing `''`, which would print as an empty cell on a contract
+// and read as filled. `updated_at` is the server's, not the caller's.
+app.put('/api/employers/:id', async (req, res) => {
+  try {
+    const { values, problem } = employers.normalise(req.body);
+    if (problem) return res.status(400).json({ error: problem });
+    const columns = Object.keys(values);
+    if (columns.length === 0) return res.status(400).json({ error: 'no field to write' });
+    const existing = await db.query(`SELECT id FROM employers WHERE id = ${db.escapeString(req.params.id)}`);
+    if (existing.length === 0) return res.status(404).json({ error: 'Employer not found' });
+    const assignments = columns
+      .map((column) => `${column} = ${values[column] === null ? 'NULL' : db.escapeString(values[column])}`)
+      .join(', ');
+    await db.query(`UPDATE employers SET ${assignments}, updated_at = CURRENT_TIMESTAMP WHERE id = ${db.escapeString(req.params.id)}`);
+    const updated = await db.query(`SELECT * FROM employers WHERE id = ${db.escapeString(req.params.id)}`);
+    const row = updated[0];
+    res.json({ employer: { ...row, not_held: employers.notHeld(row) } });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.post('/api/employees', async (req, res) => {
   try {
     const data = req.body;
@@ -596,6 +648,16 @@ app.post('/api/employees', async (req, res) => {
       return res.status(400).json({ error: probation.problem, field: probation.field });
     }
 
+    // THE EMPLOYER LINK (owner ruling 2026-11-10, option (b): a table, not a singleton). A record
+    // created here points at the deployment's employer row when there is EXACTLY ONE of them, and at
+    // nothing when there are none or several. This is a LINK, not a fact: it says which legal entity
+    // employs this person, and with one employer row the answer is not in doubt. With several it is a
+    // choice no form on this route asks for, so the row is left unlinked and the documents that name
+    // the employer are withheld (`server/employers.js` factsFrom(null) yields no facts) rather than
+    // signed by whichever company the query happened to return first.
+    const knownEmployers = await db.query('SELECT id FROM employers');
+    const employerId = knownEmployers.length === 1 ? knownEmployers[0].id : null;
+
     // Decision 17 fence (2026-10-13, lead's ruling): this INSERT no longer names
     // `consent_granted`. The company-visible column keeps its schema DEFAULT 0 — what is removed is
     // the product's second write path to a retired instrument, not the column.
@@ -605,7 +667,7 @@ app.post('/api/employees', async (req, res) => {
         recruitment_cost, national_id_type, national_id_value, national_id_iqama, data_residency_country, 
         jurisdiction, total_salary,
         visa_status, visa_expiry_date, eosb_accrued, eosb_paid, termination_type, unpaid_leave_days,
-        probation_end_date
+        probation_end_date, employer_id
       )
       VALUES (
         ${db.escapeString(id)}, ${db.escapeString(data.first_name)}, ${db.escapeString(data.last_name)},
@@ -619,7 +681,8 @@ app.post('/api/employees', async (req, res) => {
         ${db.escapeString(data.visa_status)},
         ${db.escapeString(data.visa_expiry_date)}, ${eosbAccrued}, 0,
         ${createReason.reason === null ? 'NULL' : db.escapeString(createReason.reason)}, ${parseFloat(data.unpaid_leave_days) || 0},
-        ${db.escapeString(probation.end_date)}
+        ${db.escapeString(probation.end_date)},
+        ${employerId === null ? 'NULL' : db.escapeString(employerId)}
       )
     `;
     await db.query(insertSql);
@@ -998,10 +1061,29 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
     const total_deductions = settlement.total_deductions;
     const net_settlement = settlement.net_settlement;
 
+    // THE EMPLOYER'S OWN FACTS (owner ruling 2026-11-10, option (b): a table, not a singleton).
+    //
+    // Read from the row `employees.employer_id` points at, and from nowhere else. Three refusals,
+    // each of them a defect this line could otherwise reintroduce:
+    //   * NO DEFAULT — `employers.factsFrom` omits every column that is blank, so a blank fact is
+    //     reported missing by `renderTemplate` and the instrument is withheld. Nothing here supplies
+    //     an empty string, a label, or a plausible party name.
+    //   * NO FALLBACK to "the only employer" when the row is unlinked: which legal entity employs
+    //     this person is a fact, and picking the single row would be a guess that prints the wrong
+    //     company on a contract.
+    //   * NEVER THE SESSION'S USER AS SIGNATORY — `req.user` is not read here at all. The signatory
+    //     is `employers.signatory_name` / `signatory_title`, because the person filling in the
+    //     company's details is not the person who signs for it.
+    const employerRow = emp.employer_id
+      ? (await db.query(`SELECT * FROM employers WHERE id = ${db.escapeString(emp.employer_id)}`))[0]
+      : null;
+    const employerFacts = employers.factsFrom(employerRow);
+
     const templateData = {
       ...emp,
       full_name: `${emp.first_name} ${emp.last_name}`,
       ...nationalIdFacts,
+      ...employerFacts,
       employee_id: emp.id,
       total_salary: heldAmount(emp.salary),
       basic_salary: heldAmount(emp.basic_salary),

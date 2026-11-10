@@ -273,6 +273,26 @@ const ROUTES = Object.freeze([
   ['GET', '/employees', 'employees:read'],
   ['POST', '/employees', 'employees:write'],
   ['PUT', '/employees/:id', 'employees:write'],
+  // THE EMPLOYER RECORD (owner ruling 2026-11-10, option (b): a table, not a singleton).
+  //
+  // Mapped to the roster's own cells and NOT to an `employer:read`/`employer:write` pair of its own,
+  // the same call P3-1, P3-2, P3-3, P4-1 and the correction route each made: a new resource means a new
+  // cell in the matrix docs/access-model.md (§3) mirrors, and that document is validated by an
+  // instrument outside this file. A new cell is the owner's call, not this change's.
+  //
+  // WHY THE ROSTER'S CELLS ARE THE RIGHT ONES: the record exists to fill the facts the roster's own
+  // documents print (a contract, a settlement statement, the notice a hire is shown), so whoever may
+  // render those documents is who the facts are about. The WRITE is `employees:write` — `hr_admin`
+  // only — because a legal name, a trade licence number and a signatory are the company's identity,
+  // and a manager editing them would be editing the party on every contract. The READ is
+  // `employees:read`, so finance can see the employer whose settlement statements it issues; the
+  // narrower reading (HR only) is raised in the PR body rather than taken silently here.
+  //
+  // The row scope of `employees:read` is NOT applied: this is one company's own record, not another
+  // person's row, and a `reports`-scoped manager reading the company it works for discloses nothing
+  // about any employee. That is stated rather than left for a reader to infer.
+  ['GET', '/employers', 'employees:read'],
+  ['PUT', '/employers/:id', 'employees:write'],
   ['GET', '/employees/:id/onboarding', 'onboarding:read'],
   ['PUT', '/onboarding-tasks/:id', 'onboarding:write'],
   ['GET', '/employees/:id/offboarding', 'offboarding:read'],

@@ -35,6 +35,10 @@ const PANEL_ROUTES = Object.freeze({
   employees: ['GET', '/api/employees'],
   onboarding: ['GET', '/api/employees/:id/onboarding'],
   offboarding: ['GET', '/api/employees/:id/offboarding'],
+  // The employer record (owner ruling 2026-11-10, option (b)): one row per legal entity, read through
+  // the roster's own cell rather than a resource of its own — so the refusal sentence names the roles
+  // `employees:read` allows, and this line is what makes a remap of the route redden the copy.
+  employer_record: ['GET', '/api/employers'],
 });
 
 const load = () => import(pathToFileURL(CLIENT_MODULE).href);

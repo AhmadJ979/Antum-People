@@ -127,6 +127,7 @@ export function panelLabelOf(url, method = 'GET') {
   if (last === 'onboarding') return 'the onboarding tasks';
   if (last === 'offboarding') return 'the offboarding tasks';
   if (last === 'employees') return 'the roster';
+  if (last === 'employers') return 'the employer record';
   // The reads that used to fall back to "that": a pre-boarding case's own panels, the served
   // documents, the accounts and the probation reads. "You don't have access to that." is true and
   // useless — it does not tell the reader which panel was refused, so it cannot be acted on.
@@ -153,6 +154,7 @@ export function panelLabelOf(url, method = 'GET') {
 function actLabelOf(segments, last, prev) {
   if (prev === 'employees') return "editing this employee's record";
   if (last === 'employees') return 'adding an employee';
+  if (prev === 'employers') return 'editing the employer record';
   if (prev === 'onboarding-tasks') return 'updating that onboarding task';
   if (prev === 'offboarding-tasks') return 'updating that offboarding task';
   if (last === 'exit-interviews') return 'recording an exit interview';

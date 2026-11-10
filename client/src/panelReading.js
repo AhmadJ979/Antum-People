@@ -112,6 +112,18 @@ export const REFUSED_PANELS = Object.freeze({
     resource: 'preboarding:read:aggregate',
     roles: Object.freeze(['hr_admin', 'compliance_viewer']),
   }),
+  // The employer record (owner ruling 2026-11-10, option (b)). Mapped to the roster's own read cell, so
+  // the sentence's roles are the roster's; the `words` override is what stops the generic manager word
+  // ("a manager, for their own line") claiming a row scope this route does not apply — the employer is
+  // the company itself, not another person's row.
+  employer_record: Object.freeze({
+    label: 'the employer record',
+    sentence_subject: 'The employer record',
+    plural: false,
+    resource: 'employees:read',
+    words: Object.freeze({ manager: 'a manager' }),
+    roles: Object.freeze(['hr_admin', 'manager', 'finance']),
+  }),
   probation: Object.freeze({
     label: 'the probation timelines',
     sentence_subject: 'The probation timelines',
