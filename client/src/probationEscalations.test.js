@@ -38,6 +38,7 @@ import {
   loadingReading,
   escalationReading,
   escalationRowLine,
+  escalationSummary,
   escalationWatcherLine,
 } from './probationEscalations.js';
 import { probationSubtitle } from './probationTimeline.js';
@@ -349,6 +350,59 @@ test('App.tsx renders the escalation list only inside a GRANTED reading', () => 
   // The server's own note is surfaced, not paraphrased.
   assert.match(block, /\{escalation\.note\}/);
   assert.match(block, /\{escalation\.watcherLine\}/);
+
+  // ---- The collapse (owner ruled 2026-11-10). The panel is COLLAPSED by default, and the toggle is
+  // drawn only on a granted reading: a refusal must never be hidden behind a control.
+  assert.match(block, /\{escalationSummary\(escalation\)\}/,
+    'the header must render the one-line summary in place of the old subtitle');
+  const toggleAt = block.indexOf('aria-expanded={escalationOpen}');
+  assert.ok(toggleAt > 0, 'the header must carry the collapse toggle');
+  assert.match(block, /'Hide records' : 'Show records'/, 'the expanded and collapsed labels must be the ruled ones');
+  assert.ok(block.lastIndexOf("escalation.kind === 'granted'", toggleAt) > 0,
+    'the toggle must sit inside a granted guard — on a refusal, a failed read or the loading state it is not drawn at all');
+
+  // The body really is behind the toggle: an `escalationOpen` test must appear before each thing the
+  // collapse hides. A control that leaves the rows drawn hides nothing.
+  assert.ok(block.indexOf('escalationOpen') > 0, 'the block must hold the open/closed state');
+  for (const hidden of ['escalation.rows.map(', '{escalation.watcherLine}', '{escalation.note}']) {
+    const at = block.indexOf(hidden);
+    assert.ok(at > 0, `${hidden} must still have its render site`);
+    assert.ok(block.lastIndexOf('escalationOpen', at) > 0,
+      `${hidden} is rendered outside the open/closed conditional — a collapsed panel would still show it`);
+  }
+});
+
+test('escalationSummary() counts a granted reading and names every other kind', () => {
+  const rows = [
+    { id: 1, resolved: false },
+    { id: 2, resolved: true },
+    { id: 3, resolved: false },
+  ];
+  assert.strictEqual(escalationSummary({ kind: GRANTED, rows }), '3 recorded \u00b7 2 open');
+  assert.strictEqual(escalationSummary({ kind: GRANTED, rows: [{ id: 1, resolved: true }] }), '1 recorded \u00b7 0 open');
+  assert.strictEqual(escalationSummary({ kind: GRANTED, rows: [] }), 'Nothing recorded');
+
+  // The load-bearing half: no count on a reading that carries no rows. A number there would be a
+  // claim about a record the reader may not see.
+  const notGranted = [
+    escalationReading({ status: REFUSED }),
+    // A payload arriving BESIDE a refusal must not become a count either.
+    escalationReading({ status: REFUSED, value: { escalations: [{ id: 1 }] } }),
+    escalationReading({ status: FAILED }),
+    loadingReading(),
+  ];
+  for (const reading of notGranted) {
+    const line = escalationSummary(reading);
+    assert.ok(!/[0-9]/.test(line), `the summary must not count on a ${reading.kind} reading: "${line}"`);
+  }
+  assert.strictEqual(escalationSummary(escalationReading({ status: REFUSED })), 'Not shown for your account');
+  assert.strictEqual(escalationSummary(escalationReading({ status: FAILED })), 'Could not be read');
+  assert.strictEqual(escalationSummary(loadingReading()), 'Reading\u2026');
+
+  // A shape this module does not understand is not an empty record.
+  assert.strictEqual(escalationSummary({ kind: GRANTED, rows: null }), 'Could not be read');
+  assert.strictEqual(escalationSummary({ kind: 'something-new', rows }), 'Could not be read');
+  assert.strictEqual(escalationSummary(null), 'Could not be read');
 });
 
 test('the block scan reddens when the list escapes the granted branch', () => {

@@ -62,6 +62,33 @@ export const EMPTY_SENTENCE =
 /** Before the first answer. Not an empty list either. */
 export const LOADING_SENTENCE = 'Reading the escalation records\u2026';
 
+/**
+ * The one line the panel shows when its body is collapsed — the summary that replaces the subtitle.
+ *
+ * KIND-AWARE, and that is the whole point: a refusal must never be drawn as a count. Only a GRANTED
+ * reading has rows to count, so only a granted reading produces a number; every other kind gets a
+ * sentence naming what it is. `rows` is null on those branches by construction (see the module note
+ * above), and an unknown kind is summarised as unreadable rather than as an empty record.
+ *
+ * It makes NO DELIVERY CLAIM: the product has no mailer, so a count of records is a count of rows
+ * this process wrote, never of messages that reached anyone. The footer note that says so is hidden
+ * with the body, which is why the summary stays silent about delivery instead of implying it.
+ */
+export function escalationSummary(reading) {
+  const kind = isObject(reading) ? reading.kind : null;
+  if (kind === GRANTED) {
+    const rows = Array.isArray(reading.rows) ? reading.rows : null;
+    if (rows === null) return 'Could not be read';
+    if (rows.length === 0) return 'Nothing recorded';
+    const open = rows.filter((row) => !(isObject(row) && row.resolved === true)).length;
+    return `${rows.length} recorded \u00b7 ${open} open`;
+  }
+  if (kind === REFUSED) return 'Not shown for your account';
+  if (kind === FAILED) return 'Could not be read';
+  if (kind === LOADING) return 'Reading\u2026';
+  return 'Could not be read';
+}
+
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 /** A reporting line as one clause, naming every link it could NOT resolve rather than omitting it. */
