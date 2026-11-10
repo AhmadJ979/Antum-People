@@ -975,16 +975,28 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
       final_pro_rated_salary = (emp.salary * (day / daysInMonth)).toFixed(2);
     }
 
-    const gross_val = (final_pro_rated_salary === undefined || eosb_amount === undefined)
-      ? undefined
-      : (parseFloat(final_pro_rated_salary) + parseFloat(eosb_amount)).toFixed(2);
-    // No deduction is recorded anywhere — no table, no column, no event — so `0.00` here would be an
-    // assertion that there are none, and the net would inherit it. The settlement statement carries
-    // both rows, so neither can be computed from an absent record.
-    const total_deductions = undefined;
-    const net_settlement = (gross_val === undefined || total_deductions === undefined)
-      ? undefined
-      : (parseFloat(gross_val) - parseFloat(total_deductions)).toFixed(2);
+    // THE SETTLEMENT'S ARITHMETIC IS NOT ONE POOL. The EOSB is its own entitlement line and is
+    // never reduced by a deduction; a deduction may only come out of the wage-derived dues, and may
+    // not exceed them. `settlementArithmetic` is the single place that says so — the split, the cap
+    // and the net all live there, so no route can get a different answer by writing the sum itself.
+    //
+    // No deduction is recorded anywhere — no table, no column, no event — so `total_deductions` is
+    // passed as `undefined`, which is not `0.00`. A zero would be an assertion that there are none
+    // and the net would inherit it. Nor are the leave, notice, ticket and other-payment amounts
+    // held, so the wage-derived subtotal is not held either: the statement stays WITHHELD for the
+    // facts it lacks, and this arithmetic does not change that.
+    const settlement = compliance.settlementArithmetic({
+      eosb_amount,
+      final_pro_rated_salary,
+      unused_leave_amount: heldAmount(emp.unused_leave_amount),
+      notice_pay: heldAmount(emp.notice_pay),
+      ticket_allowance: heldAmount(emp.ticket_allowance),
+      other_payments: heldAmount(emp.other_payments),
+      total_deductions: undefined
+    });
+    const gross_val = settlement.gross_settlement;
+    const total_deductions = settlement.total_deductions;
+    const net_settlement = settlement.net_settlement;
 
     const templateData = {
       ...emp,
@@ -995,8 +1007,10 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
       basic_salary: heldAmount(emp.basic_salary),
       eosb_amount,
       final_pro_rated_salary,
+      wage_derived_dues: settlement.wage_derived_dues,
       gross_settlement: gross_val,
       total_deductions,
+      deductions_not_applied: settlement.deductions_not_applied,
       net_settlement,
       // A reason no record holds is NOT printed, and it is not printed as "not calculated" either
       // (owner ruling 2026-10-29). `emp.termination_type || 'Resignation'` put an invented word on a

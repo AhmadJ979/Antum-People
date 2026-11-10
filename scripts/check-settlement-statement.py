@@ -22,7 +22,7 @@ WHY "NO AMOUNT" IS "NO FIGURE OTHER THAN THE LITERAL 0.00"
     honest, correct refusal DOES contain the token `0.00`. Asserting "no figure at all" would
     redden on the product being right - the exact defect this file exists to remove. A zero is
     not an amount the statement could be read out of; every real figure in the statement is
-    rendered into a table cell by the template (templates/final-settlement-statement.md:28).
+    rendered into a table cell by the template (templates/final-settlement-statement.md:32).
 
 Usage (as the movement calls it):
     python3 scripts/check-settlement-statement.py PAYLOAD.json PRODUCT_DB EMPLOYEE_ID
