@@ -37,8 +37,8 @@ what an **unnamed-actor refusal** looks like on screen.
 | # | Surface | State today | This slice |
 |---|---------|-------------|------------|
 | **S-L1** | Sign-in | `App.tsx:583` (card opens), its `Sign In` button at `:656` (the block was `@rev 7b073f8` `:327`–`431`) — a username field, a password field, `Sign In`, a recovery note | unchanged in shape; the copy stops implying the account *is* the person |
-| **S-L2** | Who am I / sign out | `App.tsx:1758` (icon-only `Sign Out`), `:1764`–`:1776` identity card | the card shows a **person's name and role**, and its two fallbacks are removed |
-| **S-L3** | The named actor on a record | `App.tsx:2880` prints `recorded by {ack.recorded_by} · basis {ack.lawful_basis}`; the second site `:3124` prints `{item.acknowledgement.recorded_by}` without the words; the checklist tick stores `completed_at` **and** `completed_by` (`server/schema.sql:50`, `:66`) and refuses a completion with no named actor (`server/index.js:814`–`:825`, `:855`–`:857`) | every record reads as *made by a person*, and says **which kind of person** |
+| **S-L2** | Who am I / sign out | `App.tsx:1767` (icon-only `Sign Out`), `:1764`–`:1776` identity card | the card shows a **person's name and role**, and its two fallbacks are removed |
+| **S-L3** | The named actor on a record | `App.tsx:2939` prints `recorded by {ack.recorded_by} · basis {ack.lawful_basis}`; the second site `:3183` prints `{item.acknowledgement.recorded_by}` without the words; the checklist tick stores `completed_at` **and** `completed_by` (`server/schema.sql:50`, `:66`) and refuses a completion with no named actor (`server/index.js:814`–`:825`, `:855`–`:857`) | every record reads as *made by a person*, and says **which kind of person** |
 | **S-L4** | The unnamed-actor refusal | the server answers **400**; the client renders the server's own sentence in a checklist notice bar (`App.tsx:3117`–`:3118`) | the refusal says what is missing and what to do, in the product's words |
 
 ---
@@ -83,10 +83,10 @@ Placed where the card is today — sidebar, under the brand row (`@rev 48da36e` 
   └──────────────────────────────────────────────┘
 ```
 
-- **Sign out stays one tap and stays icon-only** (`App.tsx:1758`, `title="Sign Out"`). Do not move it, do
+- **Sign out stays one tap and stays icon-only** (`App.tsx:1767`, `title="Sign Out"`). Do not move it, do
   not add a menu: a person must be able to leave the product without hunting, and the button already
   announces itself. Add an accessible name if the icon is ever unlabelled — today it relies on `title`.
-- **The `role` string is the access model's vocabulary, not invented here** (`user?.access_role` at `App.tsx:1773` — the field is no longer named `role`) — and it is no longer
+- **The `role` string is the access model's vocabulary, not invented here** (`user?.access_role` at `App.tsx:1782` — the field is no longer named `role`) — and it is no longer
   `(open)`: `docs/access-model.md` **§2.1** names the five (`hr_admin`, `manager`, `finance`, `employee`,
   `compliance_viewer`). The card displays one of those; it makes no claim about what it permits.
 - **The card must say *which* role it is showing.** The model's **§2.4** records a naming hazard this
@@ -204,7 +204,7 @@ No Arabic copy ships with this slice (decision 15(c) is open). The requirement i
 | `text-left` / `text-right` | **7** / **3** | → `text-start` / `text-end`; `text-left` was **6** at `7b073f8`, `text-right` is unchanged |
 | `text-start` / `text-end`, `border-s-`/`-e-`, `rounded-s-`/`-e-` | **0** | nothing logical is used yet — still **0** at `cb819d7` |
 | `border-r-*` | **2** | both are **chart rule lines**, not chrome: a benchmark marker (`:1681`) and a target marker (`:1711`) at `7b073f8` — `:2399` and `:2429` at `48da36e`, and the same two lines at `cb819d7`, still 2 — each drawn with an inline `left:`. Neither is on these surfaces, and whether a chart mirrors is a real decision, not a bug — flagged here only so it is not mistaken for spacing. |
-| `dir=` / `lang=` | **1** / **0** in `App.tsx` — **4** / **0** in `client/src` | The groundwork exists; the interface does not. **4** elements carry `dir="auto"` in the rendered DOM: `markdownView.js:107` (a `th`), `:121` (a `td`) and `:152` (the served-document container `div`), written as `dir: 'auto'` props so a `dir=` grep of that file returns only prose — plus `App.tsx:3474` (a `<p>`; the file's other `dir=` match, `:3469`, is a comment). `lang=` is genuinely **0**. What does **not** exist: no language state, no switch, no mirrored layout, no Arabic UI string — the only Arabic in `client/src` is the wordmark in a comment at `typefaces.test.js:33`. |
+| `dir=` / `lang=` | **1** / **0** in `App.tsx` — **4** / **0** in `client/src` | The groundwork exists; the interface does not. **4** elements carry `dir="auto"` in the rendered DOM: `markdownView.js:107` (a `th`), `:121` (a `td`) and `:152` (the served-document container `div`), written as `dir: 'auto'` props so a `dir=` grep of that file returns only prose — plus `App.tsx:3533` (a `<p>`; the file's other `dir=` match, `:3528`, is a comment). `lang=` is genuinely **0**. What does **not** exist: no language state, no switch, no mirrored layout, no Arabic UI string — the only Arabic in `client/src` is the wordmark in a comment at `typefaces.test.js:33`. |
 
 **The two surfaces added here are the ones with the most physical markup in the product**, measured in place:
 the identity block (`App.tsx:1764`–`:1776`, `space-x-3` at `:1765`) and the login card (opens `:583`) use `justify-end` (`:625`), `ml-3` (the dismiss button, `:643`) and `mr-2` (the error icon, `:596`); the card's block was `@rev 7b073f8` `:357`–`431`. Rules for anything

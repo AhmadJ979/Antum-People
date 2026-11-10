@@ -1389,12 +1389,16 @@ export default function App() {
     try {
       // Same rule as the roster (row bd008d23): each task panel is settled on its own, so a refused
       // one cannot blank the other. A panel that arrived keeps its tasks on the screen.
-      const settled = settlePanels(await Promise.all([
+      const records = await Promise.all([
         callPanel('onboarding', `${API_BASE}/api/employees/${employeeId}/onboarding`,
           authedFetch(`${API_BASE}/api/employees/${employeeId}/onboarding`)),
         callPanel('offboarding', `${API_BASE}/api/employees/${employeeId}/offboarding`,
           authedFetch(`${API_BASE}/api/employees/${employeeId}/offboarding`))
-      ]));
+      ]);
+      // The two task panels KEEP their readings, so the checklist's empty state can tell "this hire has
+      // no tasks at this stage" from "this account may not read them" (src/panelReading.js).
+      keepReadings(records);
+      const settled = settlePanels(records);
 
       if (settled.data.onboarding !== undefined) {
         setOnboardingTasks(Array.isArray(settled.data.onboarding) ? settled.data.onboarding : []);
@@ -1739,6 +1743,11 @@ export default function App() {
     }
   };
 
+  // Which task panel the selected employee's checklist is fed by: the SAME ternary the list below uses,
+  // so the empty state and the rows it stands in for can never be about different panels.
+  const selectedTaskPanel: 'onboarding' | 'offboarding' =
+    selectedEmployee?.status === 'offboarding' ? 'offboarding' : 'onboarding';
+
   if (!token) {
     return <Login onLogin={handleLogin} />;
   }
@@ -1841,7 +1850,7 @@ export default function App() {
         {/* Row d2328d67: a refusal is visible AS a refusal. Above the content so it holds for every
             tab, dismissible because it is about one request, and it never signs anyone out. */}
         {refusal && (
-          <div role="alert" className="flex items-start justify-between gap-4 px-8 py-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-sm">
+          <div role="alert" className="sticky top-0 z-[300] flex items-start justify-between gap-4 px-8 py-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-sm shadow-sm">
             <div className="flex items-start">
               <svg className="w-5 h-5 mr-2 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
@@ -1861,7 +1870,11 @@ export default function App() {
         <div className="flex-1 overflow-y-auto p-8">
           {activeTab === 'dashboard' && (
             <div className="space-y-8">
-              {/* Stat Cards */}
+              {/* Stat Cards — GATED ON THE READING of the analytics panel. A refused read used to
+                  render four cards each reading "No data yet", which is a refusal drawn as an absence
+                  (src/panelReading.js). The empty state is reachable only when the read was neither
+                  refused nor failed. */}
+              {emptyArea(panelReading.analytics) === EMPTY ? (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {/* Retention Lift */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
@@ -2003,9 +2016,17 @@ export default function App() {
                   ) : null}
                 </div>
               </div>
+              ) : (
+                <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-xs text-rose-800" data-refusal-panel="analytics">
+                  {emptyAreaSentence('analytics', panelReading.analytics)}
+                </div>
+              )}
 
-              {/* Transition Funnels */}
+              {/* Transition Funnels — each card is fed by a DIFFERENT panel, so each is gated on its
+                  own reading: the onboarding pipeline by the analytics panel, the offboarding pipeline
+                  by the roster. A refused read is never drawn as an empty pipeline. */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {emptyArea(panelReading.analytics) === EMPTY ? (
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                   <h3 className="font-bold text-slate-900 mb-4 flex justify-between items-center">
                     <span>Onboarding Pipeline</span>
@@ -2033,7 +2054,13 @@ export default function App() {
                     )}
                   </div>
                 </div>
+                ) : (
+                  <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-xs text-rose-800" data-refusal-panel="analytics">
+                    {emptyAreaSentence('analytics', panelReading.analytics)}
+                  </div>
+                )}
 
+                {emptyArea(panelReading.employees) === EMPTY ? (
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                   <h3 className="font-bold text-slate-900 mb-4 flex justify-between items-center">
                     <span>Offboarding Pipeline</span>
@@ -2061,6 +2088,11 @@ export default function App() {
                     )}
                   </div>
                 </div>
+                ) : (
+                  <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-xs text-rose-800" data-refusal-panel="employees">
+                    {emptyAreaSentence('employees', panelReading.employees)}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -2211,6 +2243,10 @@ export default function App() {
                 )}
               </div>
               {/* P3-3 escalation records -- END */}
+              {/* THE ROSTER — gated on the reading of the employees panel. A refused roster used to
+                  render a table with its headers and no rows, which reads as "this company has nobody
+                  in it" rather than as "this account may not see them". */}
+              {emptyArea(panelReading.employees) === EMPTY ? (
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <table className="w-full text-left border-collapse">
                   <thead>
@@ -2266,6 +2302,11 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
+              ) : (
+                <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-xs text-rose-800" data-refusal-panel="employees">
+                  {emptyAreaSentence('employees', panelReading.employees)}
+                </div>
+              )}
 
               {selectedEmployee && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-4 duration-300">
@@ -2302,7 +2343,17 @@ export default function App() {
                         </div>
                       ))}
                       {(selectedEmployee.status === 'onboarding' || selectedEmployee.status === 'active' ? onboardingTasks : offboardingTasks).length === 0 && (
-                        <div className="py-12 text-center text-slate-400 text-sm italic">No tasks generated for this stage.</div>
+                        /* The task panels are refused to some roles (finance is refused BOTH routes:
+                           `onboarding:read` and `offboarding:read`), so this empty state must consult
+                           the reading it came from -- "No tasks generated for this stage" over a
+                           refusal is the defect in its clearest form. */
+                        emptyArea(panelReading[selectedTaskPanel]) === EMPTY ? (
+                          <div className="py-12 text-center text-slate-400 text-sm italic">No tasks generated for this stage.</div>
+                        ) : (
+                          <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-xs text-rose-800" data-refusal-panel={selectedTaskPanel}>
+                            {emptyAreaSentence(selectedTaskPanel, panelReading[selectedTaskPanel])}
+                          </div>
+                        )
                       )}
                     </div>
                   </div>
@@ -2372,6 +2423,9 @@ export default function App() {
           )}
 
           {activeTab === 'transitions' && (
+            /* Both cards are filtered views of the SAME read (`GET /api/employees`), so one refusal
+               covers both: two empty cards used to be what a refused roster looked like here. */
+            emptyArea(panelReading.employees) === EMPTY ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Similar to before but more focused on transition lists */}
               <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
@@ -2397,6 +2451,11 @@ export default function App() {
                 </div>
               </div>
             </div>
+            ) : (
+              <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-xs text-rose-800" data-refusal-panel="employees">
+                {emptyAreaSentence('employees', panelReading.employees)}
+              </div>
+            )
           )}
 
           {activeTab === 'analytics' && (

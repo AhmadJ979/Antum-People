@@ -28,6 +28,13 @@ const PANEL_ROUTES = Object.freeze({
   preboarding_cases: ['GET', '/api/preboarding/cases'],
   preboarding_overview: ['GET', '/api/preboarding/checklist/overview'],
   probation: ['GET', '/api/probation/timelines'],
+  // The four panels #392 named as unfixed and this change closes: the dashboard, the roster, and the
+  // two task panels of the employee detail. Each is policed by its own cell, and the two task panels
+  // are the only place in the product where `finance` is refused a read it can reach a screen for.
+  analytics: ['GET', '/api/analytics/dashboard'],
+  employees: ['GET', '/api/employees'],
+  onboarding: ['GET', '/api/employees/:id/onboarding'],
+  offboarding: ['GET', '/api/employees/:id/offboarding'],
 });
 
 const load = () => import(pathToFileURL(CLIENT_MODULE).href);
@@ -72,7 +79,9 @@ test('the sentence names every allowed role in words, and says nothing changed',
     const panel = mod.REFUSED_PANELS[name];
     const sentence = mod.refusalSentenceFor(name);
     for (const role of access.POLICY[panel.resource]) {
-      assert.ok(sentence.includes(mod.ROLE_WORDS[role]),
+      // The word the SENTENCE uses: a panel may override the generic one where it reads badly inside a
+      // list, so the assertion follows the composer rather than a table the composer no longer reads.
+      assert.ok(sentence.includes(mod.roleWordsFor(name, role)),
         `${name}: "${sentence}" does not name the allowed role ${role}`);
     }
     assert.match(sentence, /Nothing was changed, and you are still signed in\./,
