@@ -74,7 +74,7 @@
     "at": "2026-11-10T18:04:53Z",
     "tree_revision": "8139efe",
     "by": "AhmadJ979",
-    "note": "a828c15 (#410) made five employer facts (PO box, city, phone, email, mudad code) facts that a document cannot be issued without, so the served refusal these three routes answer with now lists them; no template was edited (templates/uae-employment-contract.md, templates/ksa-employment-contract.md and templates/privacy-notice.md are byte-identical between 0c0b135 and 8139efe - only the refusal's list of missing facts moved); nobody read any of it: no counsel recipient exists, so all three stay unreviewed with counsel_question null.",
+    "note": "a828c15 (#410) added FIVE employer facts to the refusal this route serves: employer PO box, employer city, employer phone, employer email and Mudad establishment code - all five employer placeholders the KSA contract's party block prints. Seven facts were added to REQUIRED_FACTS in all; the other two, data protection contact name and data protection contact phone, land only in the privacy notice, and the UAE contract carries four of the five (it prints no Mudad code). No template was edited (templates/uae-employment-contract.md, templates/ksa-employment-contract.md and templates/privacy-notice.md are byte-identical between 0c0b135 and 8139efe - only the refusal's list of missing facts moved); nobody read any of it: no counsel recipient exists, so all three stay unreviewed with counsel_question null.",
     "from_sha256": "81f85893ba94108a53fce3d146c1d9b31920c10e7f430af20eb11cc605347371"
    }
   },
@@ -89,7 +89,7 @@
     "at": "2026-11-10T18:04:53Z",
     "tree_revision": "8139efe",
     "by": "AhmadJ979",
-    "note": "a828c15 (#410) made five employer facts (PO box, city, phone, email, mudad code) facts that a document cannot be issued without, so the served refusal these three routes answer with now lists them; no template was edited (templates/uae-employment-contract.md, templates/ksa-employment-contract.md and templates/privacy-notice.md are byte-identical between 0c0b135 and 8139efe - only the refusal's list of missing facts moved); nobody read any of it: no counsel recipient exists, so all three stay unreviewed with counsel_question null.",
+    "note": "a828c15 (#410) added TWO facts to the refusal this route serves: data protection contact name and data protection contact phone. The third data-protection fact, contact email, was already required and already listed in this refusal before the change, so it is not part of the movement. The five employer facts land in the two contracts (four in the UAE contract, five in the KSA contract), not here. No template was edited (templates/uae-employment-contract.md, templates/ksa-employment-contract.md and templates/privacy-notice.md are byte-identical between 0c0b135 and 8139efe - only the refusal's list of missing facts moved); nobody read any of it: no counsel recipient exists, so all three stay unreviewed with counsel_question null.",
     "from_sha256": "9a13bc570933835daedb4ba41fc40e14626927cb334460565548e12c71642cc0"
    }
   },
@@ -104,7 +104,7 @@
     "at": "2026-11-10T18:04:53Z",
     "tree_revision": "8139efe",
     "by": "AhmadJ979",
-    "note": "a828c15 (#410) made five employer facts (PO box, city, phone, email, mudad code) facts that a document cannot be issued without, so the served refusal these three routes answer with now lists them; no template was edited (templates/uae-employment-contract.md, templates/ksa-employment-contract.md and templates/privacy-notice.md are byte-identical between 0c0b135 and 8139efe - only the refusal's list of missing facts moved); nobody read any of it: no counsel recipient exists, so all three stay unreviewed with counsel_question null.",
+    "note": "a828c15 (#410) added FOUR employer facts to the refusal this route serves: employer PO box, employer city, employer phone and employer email - the four the UAE contract's party block prints. Seven facts were added to REQUIRED_FACTS in all; the fifth employer fact, Mudad establishment code, is NOT in this unit (the UAE template prints no [mudad_code]) and lands in the KSA contract, and the remaining two, data protection contact name and data protection contact phone, land only in the privacy notice. No template was edited (templates/uae-employment-contract.md, templates/ksa-employment-contract.md and templates/privacy-notice.md are byte-identical between 0c0b135 and 8139efe - only the refusal's list of missing facts moved); nobody read any of it: no counsel recipient exists, so all three stay unreviewed with counsel_question null.",
     "from_sha256": "e89164fed733eff6ff944c9ebf755e73b0271e1430f8111b9a9f2672c4924ec3"
    }
   },
