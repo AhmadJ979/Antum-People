@@ -13,12 +13,12 @@
   }
  ],
  "measured_from": {
-  "tree_revision": "414a007",
+  "tree_revision": "0c0b135",
   "revision_note": "414a007 is the revision the hashes were READ from - a hash must name the revision it was measured from. The branch that carries this manifest touches four files and every one of them is under `scripts/`; no served path loads any of them (`grep -c scripts server/index.js` = 0, and nothing in server/ or client/ references this guard or its manifest), so the served bytes at that branch's head are this revision's. The guard prints the revision it judged on every run, so a reader never takes that on trust.",
   "how": "booted a scratch instance of the tree (own port, throwaway database, throwaway hr_admin user), created the fixture through the product's own writers, and hashed the bytes of the HTTP responses",
   "fixture": "one UAE and one KSA employee created by POST /api/employees with fixed literals, each moved to `offboarding` by PUT so both task checklists exist, plus one pre-boarding case by POST /api/preboarding/cases. The record and case ids the product mints are masked out of the served bytes (see mask() in the guard): a refusal names the record it refused, and that uuid is fixture noise, not legal text.",
-  "generated_at": "2026-10-29T17:04:14Z",
-  "generated_by": "VantageHR Lead"
+  "generated_at": "2026-11-10T17:16:39Z",
+  "generated_by": "lead"
  },
  "units": [
   {
@@ -50,12 +50,18 @@
   },
   {
    "id": "doc:final-settlement-statement",
-   "sha256": "b59f71639d7fde940321b1e9c7821e35a1bfcff54d1a4167fa2f09ec106a1d21",
-   "bytes": 962,
+   "sha256": "9519c5640a135c5d1a4857538ace83bad0b56b9b507f16992fbf4d2b6555ba68",
+   "bytes": 982,
    "review": "unreviewed",
    "counsel_question": null,
    "where": "GET /api/compliance/templates/final-settlement-statement/<record> -> content (the served refusal - the document itself is withheld)",
-   "marked": null
+   "marked": {
+    "at": "2026-11-10T17:16:39Z",
+    "tree_revision": "0c0b135",
+    "by": "lead",
+    "note": "The settlement statement's traffic-fine deduction row is removed (a fine is owed to the police, not the employer) and the end-of-service benefit is no longer a pool a deduction is taken from: it is its own line, deductions are limited to the wage-derived dues. The served refusal therefore no longer names 'traffic fine deduction' among the facts it is waiting for. Owner ruling 2026-11-10, pending counsel.",
+    "from_sha256": "b59f71639d7fde940321b1e9c7821e35a1bfcff54d1a4167fa2f09ec106a1d21"
+   }
   },
   {
    "id": "doc:ksa-employment-contract",

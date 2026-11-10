@@ -146,10 +146,16 @@ const REQUIRED_FACTS = Object.freeze({
   notice_pay: 'notice-period pay',
   ticket_allowance: 'ticket allowance',
   other_payments: 'other payments',
+  // The dues a deduction may be taken from: every entitlement line EXCEPT the end-of-service
+  // benefit. It is its own fact because the statement prints it as its own line, and because the
+  // arithmetic below has to be able to say which side of the split a figure belongs to.
+  wage_derived_dues: 'wage-derived dues',
   gross_settlement: 'gross settlement total',
   loan_deduction: 'outstanding loan deduction',
   assets_deduction: 'unreturned assets deduction',
-  fine_deduction: 'traffic fine deduction',
+  // `fine_deduction` is NOT here, and it is not a default either: the traffic-fine row came off
+  // the statement on 2026-11-10. A fine is owed to the police, not to the employer, so it is not
+  // the employer's to deduct and the statement may not name it as one.
   total_deductions: 'total deductions',
   net_settlement: 'net settlement payable'
 });
@@ -262,6 +268,84 @@ function renderTemplate(templateContent, data = {}) {
   return { content: rendered, missing };
 }
 
+/** The entitlement lines a deduction may be taken from — every line except the EOSB. */
+const WAGE_DERIVED_FACT_KEYS = Object.freeze([
+  'final_pro_rated_salary',
+  'unused_leave_amount',
+  'notice_pay',
+  'ticket_allowance',
+  'other_payments'
+]);
+
+/**
+ * THE END-OF-SERVICE BENEFIT IS NOT COLLATERAL FOR A DEDUCTION
+ * -------------------------------------------------------------
+ * Owner's reading, 2026-11-10, pending counsel. The settlement statement used to have one pool: a
+ * gross total that carried the EOSB, a total of deductions, and a net that was the difference. That
+ * arithmetic lets an outstanding loan or an unreturned laptop be recovered out of the gratuity, and
+ * the gratuity is the employee's end-of-service entitlement rather than a fund the employer holds
+ * against a claim.
+ *
+ * So the statement has two sides, and this function is the one place that says which is which:
+ *
+ *   * the **EOSB** is its own entitlement line and is NEVER reduced by a deduction — not by one, not
+ *     by part of one, whatever the deductions add up to;
+ *   * a **deduction** may only be taken from the wage-derived dues (every other entitlement line),
+ *     and may not exceed them. An excess is not silently dropped and it is not taken from the EOSB:
+ *     it comes back as `deductions_not_applied`, which is a figure the reader is owed;
+ *   * `net = EOSB + (wage-derived dues − deductions applied)`.
+ *
+ * Nothing here invents a figure. Every input that is absent leaves its output `undefined`, so the
+ * renderer reports the fact as missing and the document is withheld — the same rule as everywhere
+ * else in this file. A wage-derived subtotal is produced only when EVERY component of it is held:
+ * a subtotal over the components that happen to exist is a figure no record supports.
+ *
+ * @returns {{eosb_amount: (string|undefined), wage_derived_dues: (string|undefined),
+ *   gross_settlement: (string|undefined), total_deductions: (string|undefined),
+ *   deductions_not_applied: (string|undefined), net_settlement: (string|undefined)}}
+ *   Amounts as 2-decimal strings, the form the templates print; `undefined` where not held.
+ */
+function settlementArithmetic(amounts = {}) {
+  const num = (v) => {
+    if (v === undefined || v === null || v === '') return undefined;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const money = (n) => (n === undefined ? undefined : n.toFixed(2));
+
+  const eosb = num(amounts.eosb_amount);
+  const components = WAGE_DERIVED_FACT_KEYS.map((key) => num(amounts[key]));
+  const wageDues = components.some((v) => v === undefined)
+    ? undefined
+    : components.reduce((sum, v) => sum + v, 0);
+  const deductions = num(amounts.total_deductions);
+
+  // The deduction is limited to the wage-derived dues. A negative deduction is not a deduction, so
+  // the floor of the allowance is 0 and the excess comes back as a figure rather than vanishing.
+  const allowance = wageDues === undefined ? undefined : Math.max(wageDues, 0);
+  const applied = (deductions === undefined || allowance === undefined)
+    ? undefined
+    : Math.min(deductions, allowance);
+  const notApplied = (deductions === undefined || applied === undefined)
+    ? undefined
+    : deductions - applied;
+
+  // The EOSB enters the total WHOLE. `eosb` is never a term in a subtraction below.
+  const gross = (eosb === undefined || wageDues === undefined) ? undefined : eosb + wageDues;
+  const net = (eosb === undefined || wageDues === undefined || applied === undefined)
+    ? undefined
+    : eosb + (wageDues - applied);
+
+  return {
+    eosb_amount: money(eosb),
+    wage_derived_dues: money(wageDues),
+    gross_settlement: money(gross),
+    total_deductions: money(applied),
+    deductions_not_applied: money(notApplied),
+    net_settlement: money(net)
+  };
+}
+
 /**
  * WHAT A READER GETS WHEN THE DOCUMENT CANNOT BE ISSUED: not the document.
  *
@@ -291,6 +375,8 @@ module.exports = {
   generateTasks,
   logMutation,
   renderTemplate,
+  settlementArithmetic,
+  WAGE_DERIVED_FACT_KEYS,
   refusalDocument,
   documentClassFor,
   unpopulatedPlaceholders,
