@@ -1,5 +1,22 @@
 # Deployment Documentation - Antum People
 
+## The product is not responding — run this
+
+```bash
+bash /home/team/shared/probable-octo-sniffle/scripts/antum-arm-guard.sh
+```
+
+That one command is the whole recovery for a product that is not answering. It lives **in the
+repository** — the one directory a machine replacement does not wipe — and it installs the
+login-shell guard hook from the tree, starts the guard, verifies it, and **exits 0 only when a guard
+is running**. It is idempotent (safe to run while the guard is healthy), and it never builds, never
+seeds, never stops anything and never touches the database.
+
+This host has no boot hook of ours (`/home/team/shared/boot-start-survey-2026-11-10.md`), so after a
+replacement nothing starts the product until a person runs that command — the number to quote is that
+person's reaction time, not a boot time. If the tree itself has to be rebuilt, reseeded or restarted,
+the full movement is `bash /home/team/shared/probable-octo-sniffle/scripts/deploy-main.sh`.
+
 ## Overview
 The platform is a Node.js backend serving a React frontend (Vite). The production environment is a 4GB RAM server without swap.
 
