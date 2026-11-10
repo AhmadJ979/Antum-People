@@ -202,6 +202,39 @@ function mintCookieHeader(secretFile) {
 
 // ── the pages ────────────────────────────────────────────────────────────────────────────────────
 
+// ── THE WORDMARK ────────────────────────────────────────────────────────────────────────────────
+// أنتم — the brand's Arabic wordmark — drawn as VECTOR PATHS, not as text in a font.
+//
+// Why paths: this page is the first thing a stranger with the URL sees, on a machine whose fonts we
+// cannot know. Text would need an Arabic-capable font on the visitor's machine and would show empty
+// boxes (tofu) where there is none; a webfont would need a second request that this gate would answer
+// with the gate page itself, and would dwarf the page. The outlines below are Cairo's (OFL, the brand
+// face, `client/public/fonts/cairo/cairo-arabic.woff2`), shaped with HarfBuzz for the connected forms
+// of أنتم and cut with fontTools, then committed here as path data — so the mark draws identically
+// with NO font installed, no network fetch and no extra byte of CSS.
+//
+// These numbers are generated, not hand-written. To regenerate after a brand change: shape the string
+// with HarfBuzz against the Cairo face, emit each glyph with fontTools' SVGPathPen (glyphs placed by
+// their HarfBuzz advances, y flipped for SVG, the ink box translated to the origin) and paste the
+// result here beside the viewBox. `server/public-gate.test.js` asserts the mark is on the page, that
+// it is a path, that no font is loaded, and pins the page's byte count.
+const WORDMARK_VIEWBOX = '0 0 1413 1295';
+const WORDMARK_PATH = 'M511 963V892H619V963ZM25 1295Q15 1238 8 1187Q0 1136 0 1100Q0 1035 22 988Q45 942 88 917Q130 892 189 892Q206 892 239'
+  + ' 892Q272 892 315 892Q358 892 404 892Q450 892 491 892L433 943V718Q433 648 417 608Q401 568 362 551Q324 534 258 534Q216'
+  + ' 534 174 540Q133 546 110 556L157 508Q151 532 145 568Q139 605 136 647Q132 689 132 731Q132 774 136 815Q139 856 144'
+  + ' 886Q149 916 152 928L78 949Q74 936 68 904Q63 872 58 827Q54 782 54 731Q54 682 58 636Q63 589 70 551Q76 513 82 490Q104'
+  + ' 481 152 472Q200 463 258 463Q308 463 348 472Q389 480 420 499Q450 518 470 548Q491 577 501 620Q511 662 511 718V963Q469'
+  + ' 963 420 963Q372 963 326 963Q279 963 242 963Q206 963 189 963Q173 963 154 968Q135 972 118 986Q100 999 89 1026Q78 1054'
+  + ' 78 1100Q78 1138 85 1187Q92 1236 101 1295ZM619 963V892Q625 892 629 894Q633 897 635 902Q637 906 638 912Q639 919 639'
+  + ' 927Q639 935 638 942Q637 949 635 954Q633 958 629 960Q625 963 619 963ZM805 963V892H913V963ZM913 963V892Q919 892 923'
+  + ' 894Q927 897 929 902Q931 906 932 912Q933 919 933 927Q933 935 932 942Q931 949 929 954Q927 958 923 960Q919 963 913'
+  + ' 963ZM619 963Q613 963 609 960Q605 958 603 954Q601 949 600 942Q599 935 599 927Q599 916 600 908Q602 901 606 896Q611 892'
+  + ' 619 892ZM619 963V892H763L727 921V463H805V963ZM659 373V283H737V373ZM796 373V283H874V373ZM913 963V892H1057L1021'
+  + ' 921V463H1099V963ZM913 963Q907 963 903 960Q899 958 897 954Q895 949 894 942Q893 935 893 927Q893 916 894 908Q896 901'
+  + ' 900 896Q905 892 913 892ZM1021 373V283H1099V373ZM1276 963V246H1353V963ZM1268 180Q1252 160 1244 141Q1235 122 1235'
+  + ' 101Q1235 72 1250 49Q1264 26 1288 13Q1312 0 1340 0Q1356 0 1372 4Q1388 9 1400 17L1374 62Q1366 57 1358 56Q1351 54 1343'
+  + ' 54Q1320 54 1306 67Q1293 80 1293 101Q1293 114 1298 126Q1304 138 1315 152ZM1216 180V127H1413V180Z';
+
 const PAGE_CSS = 'body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;'
   + 'background:#0f172a;color:#e2e8f0;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}'
   + 'main{width:min(92vw,22rem);padding:2rem;background:#1e293b;border-radius:.75rem}'
@@ -211,6 +244,9 @@ const PAGE_CSS = 'body{margin:0;min-height:100vh;display:flex;align-items:center
   + 'background:#0f172a;color:#e2e8f0;font-size:1rem}'
   + 'button{margin-top:.75rem;width:100%;padding:.625rem .75rem;border:0;border-radius:.5rem;'
   + 'background:#38bdf8;color:#0f172a;font-size:1rem;font-weight:600;cursor:pointer}'
+  + '.mark{display:block;width:6.5rem;height:auto;margin:0 0 .5rem}'
+  + '.name{margin:0 0 1.25rem;color:#94a3b8;font-size:.75rem;letter-spacing:.14em;'
+  + 'text-transform:uppercase}'
   + '.notice{margin:1rem 0 0;color:#fca5a5;font-size:.8125rem}';
 
 /**
@@ -230,6 +266,8 @@ function gatePage(notice = '') {
 </head>
 <body>
 <main>
+<svg class="mark" viewBox="${WORDMARK_VIEWBOX}" role="img" aria-label="أنتم — Antum People"><path fill="#e2e8f0" d="${WORDMARK_PATH}"/></svg>
+<p class="name">Antum People</p>
 <h1>Access</h1>
 <p>This site is restricted. Enter the passcode to continue.</p>
 <form method="post" action="${GATE_PAGE_PATH}" autocomplete="off">
