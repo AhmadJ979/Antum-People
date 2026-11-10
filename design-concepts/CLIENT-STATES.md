@@ -68,8 +68,8 @@ authenticated call, and `App.tsx` routes all of them through it:
 - The wrapper (`:152`) classifies only for 401/403 (`:165`), calls `onSessionInvalid` and **throws
   `SessionExpiredError` on a 403-with-body** (`:174`) so no caller parses an error payload as data, and calls
   `onRefusal` and **throws `RefusalError`** (`:179`) on a refusal — keeping the session.
-- `App.tsx`: the refusal is **one global banner above the content** (`:1826`–`:1839`), `role="alert"`, amber,
-  a lock icon, dismissible, and retired when the tab or jurisdiction changes (`:875`).
+- `App.tsx`: the refusal is **one global banner above the content** (`:1844`–`:1857`), `role="alert"`, amber,
+  a lock icon, dismissible, and retired when the tab or jurisdiction changes (`:885`).
 
 **Three things it does not do**, all still measured on `main`:
 
@@ -90,9 +90,9 @@ fails for a colour-blind reader, in Arabic, in a screenshot, and in a printout.
 
 | # | Trigger (measured) | What is true | The sentence | Form | Action |
 |---|---|---|---|---|---|
-| **1** | **401** — `auth.js:26` | the caller never presented a session | *(the existing sign-in card, `App.tsx:582`, its `Sign In` button at `:655`)* | the **whole surface** is replaced | sign in |
+| **1** | **401** — `auth.js:26` | the caller never presented a session | *(the existing sign-in card, `App.tsx:583`, its `Sign In` button at `:656`)* | the **whole surface** is replaced | sign in |
 | **2** | **403 + body** — `auth.js:31` | a session existed and is over | **"Your session has ended. Sign in again to continue."** (proposed — #241 reaches the card but states no reason) | the card, plus that line | sign in |
-| **3** | **403, empty** — `server/access.js:446`, `server/access.js:448`, `server/index.js:337` | the session is **fine**; this request was refused | **shipped: "You don't have access to that. Nothing was changed, and you are still signed in."** (`REFUSAL_NOTICE`, `App.tsx:71`) | a banner above the content | dismiss |
+| **3** | **403, empty** — `server/access.js:446`, `server/access.js:448`, `server/index.js:337` | the session is **fine**; this request was refused | **shipped: "You don't have access to that. Nothing was changed, and you are still signed in."** (`REFUSAL_NOTICE`, `App.tsx:72`) | a banner above the content | dismiss |
 | **4** | **200** + empty result | genuinely nothing there | the sentences already shipped — §6 | sentence only, italic slate, **no heading, no action** | none |
 
 **The three structural discriminators** — all four are distinguishable with styling removed:
@@ -117,12 +117,12 @@ identically; #241 reaches state 2 for the first time.**
 gap it left open.** Measured from the code path:
 
 1. The gate refuses `/api/employees` for the signed-in role → `403` with an empty body.
-2. `createAuthedFetch` calls `onRefusal` (`httpStatus.js:178`) → `setRefusal(refusalNoticeFor(url, REFUSAL_NOTICE))` (`App.tsx:870`)
+2. `createAuthedFetch` calls `onRefusal` (`httpStatus.js:178`) → `setRefusal(refusalNoticeFor(url, REFUSAL_NOTICE))` (`App.tsx:880`)
    → **the banner renders** (`:1797`).
 3. Then it **throws** `RefusalError` (`:179`).
-4. `fetchData`'s `catch (err)` (`App.tsx:985`) swallows it; `setEmployees` never runs, so `employees` stays `[]`
-   (`:670`); `setAnalytics` never runs, so `analytics` stays `null` (`:677`).
-5. The dashboard below the banner therefore renders **six `No data yet` tiles** (`:1863`, `:1881`, `:1913`,
+4. `fetchData`'s `catch (err)` (`App.tsx:997`) swallows it; `setEmployees` never runs, so `employees` stays `[]`
+   (`:671`); `setAnalytics` never runs, so `analytics` stays `null` (`:678`).
+5. The dashboard below the banner therefore renders **six `No data yet` tiles** (`:1881`, `:1899`, `:1931`,
    `:1917`, `:1959`, `:1963`) plus `No active onboardings.` (`:2014`) and `No active offboardings.` (`:2042`).
 
 **One screen, two contradictory statements:** *"You don't have access to that"* above four panels saying
@@ -177,7 +177,7 @@ origin, so the user signs in and is signed out again, on a loop, with nothing on
 recoverable mistake that recurs is not recoverable — it is a lockout, and the cause (a foreign `Origin`) is
 invisible in the UI and only in the server's `console.warn` (`index.js:220`).
 
-**And it is reachable in the product's own dev topology, not just a hypothetical.** `API_BASE`, `App.tsx:73`:
+**And it is reachable in the product's own dev topology, not just a hypothetical.** `API_BASE`, `App.tsx:74`:
 
 ```js
 const API_BASE = window.location.port === '5173' ? 'http://localhost:3000' : '';
@@ -226,8 +226,8 @@ thing.)
 from, and this branch's base): both loaders fetch **two things in one `Promise.all`** — `fetchData`
 paired the roster with the analytics roll-up, `fetchTasks` onboarding with offboarding. **One refused sibling
 rejected the pair, so the sibling that was granted was never applied.** *That half has since been fixed:* row
-`bd008d23` moved both loaders onto `const settled = settlePanels(await Promise.all([` (`App.tsx:944`, and
-`:1374` in `fetchTasks`), which settles each leg on its own — a granted panel keeps its data and a refused one
+`bd008d23` moved both loaders onto `settlePanels`, the roster now settling from a `records` array (`const settled = settlePanels(records)` at `App.tsx:964`, and
+`:1392` in `fetchTasks`), which settles each leg on its own — a granted panel keeps its data and a refused one
 contributes none. **The defect it removed was real:** a region the caller was entitled to rendered empty,
 under a notice saying they were not entitled to something. For a `manager` — roster cell allowed, analytics
 cell not, per the matrix itself — **that was the whole dashboard.**
@@ -253,7 +253,7 @@ the area exists at all* to a caller who did not ask for it.
 ### 5b. **Event 6 — the request that never came back**
 
 Server down, connection dropped, non-JSON body. Measured: the wrapper does not catch a rejected `fetch`
-(`client/src/httpStatus.js:152`), so it propagates to the callers' swallows — `catch (err)` at `App.tsx:985`
+(`client/src/httpStatus.js:152`), so it propagates to the callers' swallows — `catch (err)` at `App.tsx:997`
 in `fetchData` and `:1362` in `fetchTasks` — state is kept, and the dashboard
 reads **`No data yet` while the server is unreachable**. **Proposed: "We couldn't load this."** with a
 **Retry**. This is the one of the six that **is** a fault, so it is the one that may carry a fault colour;
@@ -294,8 +294,8 @@ sentence, which is the seat that was missing. Four sets already exist and each k
   `No active offboardings.`, `No tasks generated for this stage.`, and the pre-boarding panel's
   *"No open {jurisdiction} pre-boarding cases — nothing outstanding to show for this jurisdiction. Record an
   accepted offer to open one."* (`:2648`–`:2650`). **§3 is where they collide with the new banner.**
-- **One existing rule looks like it forbids the client owning a sentence, and does not.** `App.tsx:2646` (inside the
-  `:2645`–`:2654` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
+- **One existing rule looks like it forbids the client owning a sentence, and does not.** `App.tsx:2687` (inside the
+  `:2686`–`:2695` comment on the `scope_note` read) records that a client-composed *claim* about the data was deleted, because *"a client-side copy is
   the structure that produced the drift… Nothing is composed here, and with no cases there is no sentence to
   state rather than a page-level claim about a list that is not on screen."* The distinction it was making:
   the client must not **assert facts about the data or about scope** — that is the server's (`scope_note`). A
@@ -322,7 +322,7 @@ sentence, which is the seat that was missing. Four sets already exist and each k
 
 ## 8. The shipped refusal, measured against the product's own rules
 
-- **Colour and mark.** `App.tsx:1826` is `bg-amber-50 border-b border-amber-200 text-amber-900 text-sm` with **a lock icon**.
+- **Colour and mark.** `App.tsx:1844` is `bg-amber-50 border-b border-amber-200 text-amber-900 text-sm` with **a lock icon**.
   The product's own rule for a non-fault state is slate, not amber, and it says so with an example: *"the
   product's own flag already does this correctly — the `clear` state is slate, not rose"*
   (`LAYER3-EMPLOYEE-OWN-VIEW.md` §4 `:212`–`:213`). The author's own comment (`:5`–`:7`) says a refusal *"is

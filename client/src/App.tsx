@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useReducer } from 'react';
 import { createAuthedFetch } from './httpStatus.js';
 import { callPanel, settlePanels, refusalNoticeFor } from './panelResults.js';
+import { GRANTED, EMPTY, emptyArea, mayRenderEmpty, panelReadings, emptyAreaSentence } from './panelReading.js';
 // P3-1 -- the probation timeline's vocabulary (labels, chips, date format, summary). The DATES come
 // from the server; nothing in this file computes a milestone from a start date.
 import {
@@ -862,6 +863,15 @@ export default function App() {
   // as data, and the screen rendered empty — which reads as lost data rather than as a refusal.
   const [refusal, setRefusal] = useState<string | null>(null);
 
+  // WHAT EACH PANEL'S READ WAS, kept beside the data that read produced. A refusal and an empty
+  // result are different facts and must never render alike, so the screen branches on THIS through
+  // `emptyArea()` (src/panelReading.js) instead of on the length of the list a refusal left behind.
+  // The values come from the same records `callPanel`/`settlePanels` decide, so the data and the
+  // notice about the data can never be computed from different evidence.
+  const [panelReading, setPanelReading] = useState<Record<string, string>>({});
+  const keepReadings = (records: Array<{ name: string; status: string }>) =>
+    setPanelReading(prev => ({ ...prev, ...panelReadings(records) }));
+
   const authedFetch = createAuthedFetch({
     fetchImpl: fetch,
     getToken: () => token,
@@ -941,7 +951,7 @@ export default function App() {
       // market's escalations, so a KSA hire appeared on the UAE screen.
       const escalationCall = callPanel('escalations', `${API_BASE}/api/probation/escalations?jurisdiction=${jurisdiction}`,
         authedFetch(`${API_BASE}/api/probation/escalations?jurisdiction=${jurisdiction}`));
-      const settled = settlePanels(await Promise.all([
+      const records = await Promise.all([
         callPanel('employees', `${API_BASE}/api/employees?jurisdiction=${jurisdiction}`,
           authedFetch(`${API_BASE}/api/employees?jurisdiction=${jurisdiction}`)),
         callPanel('analytics', `${API_BASE}/api/analytics/dashboard?jurisdiction=${jurisdiction}`,
@@ -949,7 +959,9 @@ export default function App() {
         callPanel('probation', `${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`,
           authedFetch(`${API_BASE}/api/probation/timelines?jurisdiction=${jurisdiction}`)),
         escalationCall
-      ]));
+      ]);
+      keepReadings(records);
+      const settled = settlePanels(records);
       setEscalation(escalationReading(await escalationCall));
 
       // P3-1: settled on its own, like the two above -- a refusal of the probation panel cannot blank
@@ -999,19 +1011,24 @@ export default function App() {
       // same state the roster and the dashboard pass, not a second mechanism — and it asks
       // for the cases its tile counts. The tile is labelled "Cases open", so the endpoint is
       // asked for open cases; the count and the label can no longer disagree.
-      const res = await authedFetch(`${API_BASE}/api/preboarding/cases?jurisdiction=${jurisdiction}&status=open`);
-      if (res.status === 401) {
-        handleLogout();
-        return;
-      }
-      const data = await res.json();
+      // Settled through `callPanel` so a REFUSAL is a reading rather than a console line. The gate
+      // answers this route with `403` and an EMPTY body for a role outside `preboarding:read`, and
+      // `authedFetch` throws that as a `RefusalError`; caught into `console.error` -- which is what
+      // this call site used to do -- the state kept its initial `[]` and the tile below rendered
+      // `0 / CASES OPEN` over three open cases (measured 2026-11-08, `f4729f3`).
+      const record = await callPanel('preboarding_cases',
+        `${API_BASE}/api/preboarding/cases?jurisdiction=${jurisdiction}&status=open`,
+        authedFetch(`${API_BASE}/api/preboarding/cases?jurisdiction=${jurisdiction}&status=open`));
+      keepReadings([record]);
       // The list endpoint answers with the envelope `{ cases, totals }` — `preboarding.listCases`
       // builds it and the route serves it unchanged. This screen reads `cases`; the tile below
       // counts this array, which is the set this request asked for (`status=open` above), so the
       // count and its "Cases open" label still agree. There is no fallback to a bare array on
       // purpose: the client and the server ship from one tree and one bundle, which is why the
       // cutover for this change is owed rather than optional.
-      setPreboardingCases(data.cases);
+      setPreboardingCases(record.status === GRANTED && record.value && Array.isArray(record.value.cases)
+        ? record.value.cases
+        : []);
     } catch (err) {
       console.error('Error fetching pre-boarding cases:', err);
     } finally {
@@ -1070,15 +1087,16 @@ export default function App() {
       // same state the case list and the roster pass. It sits directly under the "Cases open"
       // tile, so an unscoped roll-up states a different total than the tile above it and, on
       // the other tab, shows one jurisdiction's cases on the other jurisdiction's surface.
-      const res = await authedFetch(
-        `${API_BASE}/api/preboarding/checklist/overview?jurisdiction=${jurisdiction}`
-      );
-      if (res.status === 401) {
-        handleLogout();
-        return;
-      }
-      const data = await res.json();
-      setChecklistOverview(data && Array.isArray(data.cases) ? data : null);
+      // The same defect as the list above, on the sibling route: `preboarding:read:aggregate` does
+      // not include `finance`, and the refusal used to reach the render as `null` -- the roll-up's
+      // "No open ... cases -- nothing outstanding to show" sentence over three open cases.
+      const record = await callPanel('preboarding_overview',
+        `${API_BASE}/api/preboarding/checklist/overview?jurisdiction=${jurisdiction}`,
+        authedFetch(`${API_BASE}/api/preboarding/checklist/overview?jurisdiction=${jurisdiction}`));
+      keepReadings([record]);
+      setChecklistOverview(record.status === GRANTED && record.value && Array.isArray(record.value.cases)
+        ? record.value
+        : null);
     } catch (err) {
       console.error('Error fetching the checklist roll-up:', err);
     } finally {
@@ -2058,13 +2076,23 @@ export default function App() {
                   <div>
                     <h3 className="font-bold text-slate-900">Probation timelines</h3>
                     <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight">
-                      {probationSubtitle(probationTimelines.length)}
+                      {/* A refused read must not be described as "0 hires on probation": the count is a
+                          fact about the data, a refusal is a fact about the account. */}
+                      {mayRenderEmpty(panelReading.probation)
+                        ? probationSubtitle(probationTimelines.length)
+                        : 'Not shown for this account'}
                     </p>
                   </div>
                   <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded uppercase border border-teal-200">P3-1</span>
                 </div>
                 {probationTimelines.length === 0 ? (
-                  <div className="p-4 text-xs text-slate-500">{EMPTY_PANEL_SENTENCE}</div>
+                  emptyArea(panelReading.probation) === EMPTY ? (
+                    <div className="p-4 text-xs text-slate-500">{EMPTY_PANEL_SENTENCE}</div>
+                  ) : (
+                    <div className="p-4 text-xs text-rose-800 bg-rose-50" data-refusal-panel="probation">
+                      {emptyAreaSentence('probation', panelReading.probation)}
+                    </div>
+                  )
                 ) : (
                   <ul className="divide-y divide-slate-100">
                     {probationTimelines.map((t: any) => (
@@ -2542,9 +2570,22 @@ export default function App() {
                       department, reporting line and jurisdiction, and it is opened through one case-creation path —
                       recording the same accepted offer twice opens nothing new.
                     </p>
+                    {/* A refusal is named where the screen's subject is, not left to the console. */}
+                    {emptyArea(panelReading.preboarding_cases) !== EMPTY && (
+                      <p className="mt-3 text-xs text-rose-800 bg-rose-50 border border-rose-200 rounded-xl p-3 max-w-2xl"
+                        data-refusal-panel="preboarding_cases">
+                        {emptyAreaSentence('preboarding_cases', panelReading.preboarding_cases)}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right shrink-0 ml-6">
-                    <div className="text-2xl font-extrabold text-slate-900">{preboardingCases.length}</div>
+                    {/* A refusal is not a count of zero. `emptyArea()` decides, from the reading the
+                        request produced -- the same decision the roll-up below makes. */}
+                    <div className="text-2xl font-extrabold text-slate-900">
+                      {emptyArea(panelReading.preboarding_cases) === EMPTY
+                        ? preboardingCases.length
+                        : <span className="text-base font-bold text-rose-700">Not shown</span>}
+                    </div>
                     <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cases open</div>
                   </div>
                 </div>
@@ -2680,7 +2721,15 @@ export default function App() {
                       </div>
                     </div>
                   )}
-                  {!checklistOverview || checklistOverview.cases.length === 0 ? (
+                  {/* The refusal arm comes FIRST: the empty-state sentence below is reachable only when
+                      the read was not refused and not failed (src/panelReading.js). */}
+                  {emptyArea(panelReading.preboarding_overview) !== EMPTY ? (
+                    <div className="p-4 rounded-xl border border-rose-200 bg-rose-50" data-refusal-panel="preboarding_overview">
+                      <p className="text-xs text-rose-800">
+                        {emptyAreaSentence('preboarding_overview', panelReading.preboarding_overview)}
+                      </p>
+                    </div>
+                  ) : !checklistOverview || checklistOverview.cases.length === 0 ? (
                     <div className="p-8 text-center border border-dashed border-slate-200 rounded-xl">
                       <p className="text-xs text-slate-400">No open {jurisdiction === 'AE' ? 'UAE' : 'KSA'} pre-boarding
                         cases — nothing outstanding to show for this jurisdiction. Record an accepted
