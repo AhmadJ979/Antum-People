@@ -13,11 +13,11 @@
   }
  ],
  "measured_from": {
-  "tree_revision": "8139efe",
-  "revision_note": "8139efe is the revision the hashes were READ from - a hash must name the revision it was measured from, and this field and this sentence name the same one. The commit that carries this manifest touches exactly one file, `scripts/counsel-strings-manifest.json`, and no served path loads it: nothing in `server/` or `client/` references this guard or its manifest, and the single occurrence of the word `scripts` in `server/index.js` is a comment naming `scripts/seed-demo.js` (line 636), not a load. So the served bytes at this commit's head are the bytes hashed here. The guard prints the revision it judged on every run, so a reader never takes that on trust.",
+  "tree_revision": "1d84e8a",
+  "revision_note": "1d84e8a is the revision the hashes were READ from - a hash must name the revision it was measured from, and this field and this sentence name the same one. 1d84e8a carries the served change itself (the notice's section 9 and its v2.4 lines); this manifest is committed on top of it, because a hash cannot be read from a commit that contains it. The commit that carries this manifest touches exactly one file, `scripts/counsel-strings-manifest.json`, and no served path loads it: nothing in `server/` or `client/` references this guard or its manifest, and the single occurrence of the word `scripts` in `server/index.js` is a comment naming `scripts/seed-demo.js` (line 636), not a load. So the served bytes at this commit's head are the bytes hashed here. The guard prints the revision it judged on every run, so a reader never takes that on trust.",
   "how": "booted a scratch instance of the tree (own port, throwaway database, throwaway hr_admin user), created the fixture through the product's own writers, and hashed the bytes of the HTTP responses",
   "fixture": "one UAE and one KSA employee created by POST /api/employees with fixed literals, each moved to `offboarding` by PUT so both task checklists exist, plus one pre-boarding case by POST /api/preboarding/cases. The record and case ids the product mints are masked out of the served bytes (see mask() in the guard): a refusal names the record it refused, and that uuid is fixture noise, not legal text.",
-  "generated_at": "2026-11-10T18:04:53Z",
+  "generated_at": "2026-11-10T18:24:23Z",
   "generated_by": "AhmadJ979"
  },
  "units": [
@@ -110,21 +110,33 @@
   },
   {
    "id": "notice:content",
-   "sha256": "348491967557649b8f6623f49c1a46f8be386ce82d2c918e05ecdcf58cc69b5d",
-   "bytes": 23525,
+   "sha256": "962249118668e2bd088a281d442e102135516fa80b793fc7539b8671ca7279d2",
+   "bytes": 27694,
    "review": "unreviewed",
-   "counsel_question": null,
+   "counsel_question": "Q1",
    "where": "GET /api/compliance/notice -> content (as published, no substitution)",
-   "marked": null
+   "marked": {
+    "at": "2026-11-10T18:24:23Z",
+    "tree_revision": "1d84e8a",
+    "by": "AhmadJ979",
+    "note": "Section 9, \"Personal Data About Non-Employee Contacts\", is added to the served notice and the notice moves v2.3 -> v2.4. It covers the data protection contact's name, email and phone and the authorised signatory's name and title, which the employer record (#410) holds and which no section of this Employee Privacy Notice covered: section 1.1's category table is about employees. Owner ruling 2026-11-10. Written in both languages, as every other section is. The article-level basis for the two contacts is marked [TO CONFIRM - for counsel] in the text: no article is asserted that this repository can source. notice:version moved with the text (v2.3 -> v2.4), which is why both units are marked. Nobody read it: no counsel recipient exists, so both stay unreviewed.",
+    "from_sha256": "348491967557649b8f6623f49c1a46f8be386ce82d2c918e05ecdcf58cc69b5d"
+   }
   },
   {
    "id": "notice:version",
-   "sha256": "5fb50206bfe939d4e940d30223cb65a5378d7cfe897cd0a4bf16b54f5d0f264b",
+   "sha256": "83a484db31c2f3433f506fbbf7bd032a1fbee092c5e03d14d03e4e9b3f82ddb7",
    "bytes": 4,
    "review": "unreviewed",
    "counsel_question": null,
    "where": "GET /api/compliance/notice -> version",
-   "marked": null
+   "marked": {
+    "at": "2026-11-10T18:24:23Z",
+    "tree_revision": "1d84e8a",
+    "by": "AhmadJ979",
+    "note": "Section 9, \"Personal Data About Non-Employee Contacts\", is added to the served notice and the notice moves v2.3 -> v2.4. It covers the data protection contact's name, email and phone and the authorised signatory's name and title, which the employer record (#410) holds and which no section of this Employee Privacy Notice covered: section 1.1's category table is about employees. Owner ruling 2026-11-10. Written in both languages, as every other section is. The article-level basis for the two contacts is marked [TO CONFIRM - for counsel] in the text: no article is asserted that this repository can source. notice:version moved with the text (v2.3 -> v2.4), which is why both units are marked. Nobody read it: no counsel recipient exists, so both stay unreviewed.",
+    "from_sha256": "5fb50206bfe939d4e940d30223cb65a5378d7cfe897cd0a4bf16b54f5d0f264b"
+   }
   },
   {
    "id": "basis:bank_details",

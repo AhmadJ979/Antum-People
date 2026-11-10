@@ -2,8 +2,8 @@
 # إشعار خصوصية الموظفين — Antum People
 
 > **Jurisdictions / النطاق القانوني:** UAE (Federal Decree-Law No. 45 of 2021 — UAE PDPL) and KSA (Personal Data Protection Law — Royal Decree M/148, as amended 2023)
-> **Status / الحالة:** Template v2.3 — pilot-ready
-> **Version / الإصدار:** v2.3 (2026-10-12) — retention wording corrected: "statutory retention" → "retention period"
+> **Status / الحالة:** Template v2.4 — pilot-ready
+> **Version / الإصدار:** v2.4 (2026-11-10) — section 9 added: personal data about non-employee contacts. Previous: v2.3 (2026-10-12) — retention wording corrected: "statutory retention" → "retention period"
 > **Usage / الاستخدام:** Display to employee during onboarding. Capture consent acknowledgment in `consent_records` table.
 > **Note / ملاحظة:** Article references follow the Antum People compliance reference set. Confirm against final official translations before client-facing certification.
 > **Arabic wordmark / العلامة العربية:** Latin "Antum" used in Arabic text — [TO CONFIRM — Arabic wordmark transliteration]
@@ -120,6 +120,19 @@ If you are employed by an entity established in the **Dubai International Financ
 
 For any questions about this notice or your data: **[dpo_name]** — **[dpo_email]** — **[dpo_phone]**.
 
+### 9. Personal Data About Non-Employee Contacts
+
+Sections 1–8 are about you as an employee or a candidate. This section is about two people who are **not** employees and whose details we hold because our employer record cannot be completed without them: the **data protection contact** we nominate, and the **authorised signatory** who signs our documents on our behalf. If you are one of them, this section is our notice to you.
+
+| What we hold | Why we hold it | Lawful basis |
+|---|---|---|
+| **Data protection contact** — name, email, phone | To be named as the data protection contact in the documents we issue, and to receive requests from people whose data we hold and correspondence from the supervisory authority | Legal obligation / legitimate interest [TO CONFIRM — article-level basis, for counsel] |
+| **Authorised signatory** — name, title | To identify the person who signs an employment contract or a settlement statement on our behalf | Legal obligation / performance of the contract we sign |
+
+We do not use these details for marketing, profiling or automated decision-making, and we hold no sensitive data about either contact. We share them only as section 3 describes: with Antum People, which hosts the record, and with a person who receives a document that names the signatory. We keep them for as long as the employer record is in use and for the retention period that applies to the documents carrying them, then erase or anonymise them.
+
+You have the rights in section 5 — access, rectification, erasure, restriction, portability and objection — and you may exercise them by contacting us using the details in section 8.
+
 ---
 
 ## النسخة العربية
@@ -232,6 +245,19 @@ For any questions about this notice or your data: **[dpo_name]** — **[dpo_emai
 
 لأي استفسار حول هذا الإشعار أو بياناتك: **[dpo_name]** — **[dpo_email]** — **[dpo_phone]**.
 
+### 9. البيانات الشخصية لجهات الاتصال من غير الموظفين
+
+الأقسام 1–8 تتعلق بك كموظف أو كمرشح. وهذا القسم يتعلق بشخصين **ليسا من الموظفين** نحتفظ ببياناتهما لأن سجل جهة العمل لا يكتمل بدونهما: **جهة الاتصال لحماية البيانات** التي نعينها، و**المفوض بالتوقيع** الذي يوقع مستنداتنا نيابة عنا. وإذا كنت أحد هذين الشخصين، فهذا القسم هو إشعارنا إليك.
+
+| ما نحتفظ به | لماذا نحتفظ به | الأساس القانوني |
+|---|---|---|
+| **جهة الاتصال لحماية البيانات** — الاسم والبريد الإلكتروني والهاتف | لتُذكر كجهة اتصال لحماية البيانات في المستندات التي نصدرها، ولاستقبال طلبات من نحتفظ ببياناتهم ومراسلات الجهة الإشرافية | التزام قانوني / مصلحة مشروعة [TO CONFIRM — الأساس على مستوى المادة، للمستشار القانوني] |
+| **المفوض بالتوقيع** — الاسم والمسمى الوظيفي | لتحديد الشخص الذي يوقع عقد العمل أو بيان المخالصة النهائية نيابة عنا | التزام قانوني / تنفيذ العقد الذي نوقعه |
+
+لا نستخدم هذه البيانات للتسويق أو التنميط أو اتخاذ قرارات آلية، ولا نحتفظ بأي بيانات حساسة عن أي من هذين الشخصين. ولا نشاركها إلا كما يوضح القسم 3: مع منصة Antum People التي تستضيف السجل، ومع من يستلم مستنداً يذكر اسم المفوض بالتوقيع. ونحتفظ بها ما دام سجل جهة العمل قيد الاستخدام وطوال مدة الاحتفاظ المطبقة على المستندات التي تحملها، ثم نحذفها أو نخفي هويتها.
+
+لك الحقوق الواردة في القسم 5 — الاطلاع والتصحيح والمحو والتقييد وقابلية النقل والاعتراض — ويمكنك ممارستها بالتواصل معنا عبر البيانات الواردة في القسم 8.
+
 ---
 
 ## Consent Acknowledgment / إقرار الموافقة
@@ -244,5 +270,5 @@ For any questions about this notice or your data: **[dpo_name]** — **[dpo_emai
 | I confirm I have read and understood this Privacy Notice / أُقر بأنني اطلعت على إشعار الخصوصية هذا وفهمته | Yes / نعم |
 | I consent to the processing of my personal data as described, including [sensitive categories, where applicable] / أوافق على معالجة بياناتي الشخصية كما هو موضح، بما في ذلك [الفئات الحساسة، عند الاقتضاء] | ☐ Yes / نعم |
 | Date / التاريخ | [current_date] |
-| Consent Version / إصدار الموافقة | v2.3 (2026-10-12) |
+| Consent Version / إصدار الموافقة | v2.4 (2026-11-10) |
 | Signature / التوقيع | ________________ |
