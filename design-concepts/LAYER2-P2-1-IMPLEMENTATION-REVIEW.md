@@ -51,7 +51,7 @@ and every figure in this file came from a scratch instance, never from the runni
 
 ### F1 — the case list was the one screen in the product that is not jurisdiction-scoped *(decided by the owner 2026-10-07: scope it, keep the chip)*
 
-The client *then* called the list with no filter (the call now carries `status=open` at `App.tsx:1014`; it was `@rev 75e3ff2` `App.tsx:355`), and the API filters only when a
+The client *then* called the list with no filter (the call now carries `status=open` at `App.tsx:1021`; it was `@rev 75e3ff2` `App.tsx:355`), and the API filters only when a
 `jurisdiction` parameter is present (`server/preboarding.js:111`–`:115`, route
 `server/index.js:1292`–`:1297`). **Measured** on a scratch instance at `75e3ff2`, holding one AE case
 and one SA case:
@@ -76,7 +76,7 @@ the row is removed: S1's row anatomy now names it as a field (spec §2), and S2 
 on the case itself (spec §3).
 
 **Status, 2026-10-07 — closed in PR #70 (`5ed731e`).** The owner's decision is implemented: the
-list call now carries `?jurisdiction=${jurisdiction}&status=open` (`client/src/App.tsx:1014`, with
+list call now carries `?jurisdiction=${jurisdiction}&status=open` (`client/src/App.tsx:1021`, with
 the reasoning at `:1010`), and both the row's jurisdiction chip and the detail header keep the case's
 own value. The engineer's committed run carries the endpoint's side of it — step 22 of
 `docs/evidence/p2-2/http-acceptance.txt`: `?jurisdiction=AE&status=open` → 1 case,
@@ -94,13 +94,13 @@ status filter of its own, then — it takes one now (`server/preboarding.js:116`
 label it `Cases` until a closed state exists. A one-line change, worth doing when case closing
 lands — not worth a PR on its own.
 
-**Status (confirmed by the lead on `main`, 2026-10-07):** the `Cases open` tile renders `client/src/App.tsx:2660`
+**Status (confirmed by the lead on `main`, 2026-10-07):** the `Cases open` tile renders `client/src/App.tsx:2664`
 `preboardingCases.length` under the label at `:2667`, and `listCases` filters by nothing
 (`server/preboarding.js:111` then; it filters `status` at `:116` now) — so the number and the label disagree the moment a case can
 close. It is latent rather than live-visible today, because nothing writes a status other than
 `'open'` yet, which is exactly why testing it with a closed row was worth doing.
 **Fixed in PR #70 (`5ed731e`).** The list is now requested with `status=open`
-(`client/src/App.tsx:1014` — the call carries `status=open`, comment at `:1012`), so the tile counts open cases, and the endpoint
+(`client/src/App.tsx:1021` — the call carries `status=open`, comment at `:1012`), so the tile counts open cases, and the endpoint
 refuses a status it does not write with **400** instead of answering an empty list — the engineer's
 committed run, steps 20–21 of `docs/evidence/p2-2/http-acceptance.txt`. The tile still renders
 `preboardingCases.length`, which is honest exactly as long as the list it counts is the open one —
