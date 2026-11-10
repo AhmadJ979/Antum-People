@@ -417,7 +417,9 @@ fi
 
 # --- single instance lock ------------------------------------------------------------
 # The lock is held on fd 9 of THIS process, and fd 9 is closed (9>&-) for every child that
-# outlives a check: the server it starts, the npm runs, and the poll sleeps. It used to be
+# outlives a check: the server it starts and the poll sleeps. (It also used to cover the `npm install`
+# this loop ran on its start path; since 2026-11-08 that install is a REFUSAL, see the INSTALL DECISION
+# unit below - so no npm process is started by this loop at all.) It used to be
 # inherited by those children, and a child then kept the flock alive after the loop was
 # gone. Observed live on 2026-10-06: the running product server held fd 9 on
 # server/keep-alive.lock, so any later re-arm was refused for good, in the name of the
@@ -569,17 +571,60 @@ check_health() {
     return 2 # listening, but not our contract
 }
 
+# >>> ANTUM GUARD INSTALL DECISION
+# A MISSING node_modules IS A MOVEMENT'S JOB, NOT THE GUARD'S (WORKFLOW rule 43's sibling, 2026-11-08).
+#
+# WHAT THIS REPLACES, measured at 8f74177 (scripts/keep-alive.sh:575-578, the top of start_server()):
+#     if [ ! -d "node_modules" ]; then
+#         log "server/node_modules missing - installing"
+#         with_timeout 600 npm install 9>&- >> "$LOG_FILE" 2>&1 || log "WARN: npm install failed; still attempting to start"
+#     fi
+# It ran `npm install` INSIDE the deployed tree - the tree the server EXECUTES from - and start_server is
+# reached from three places in the poll (the eviction branch at health==2, the empty-port branch, and the
+# "server processes exist but the port does not answer" branch). So a missing node_modules was installed by
+# the guard, unattended, under a running server, with no PR, no merge and no movement: the same class #391
+# closed for the bundle (rule 43), one directory over. It is worse than the bundle in two ways. `server/`
+# `package-lock.json` is TRACKED, and `npm install` may rewrite it - so the start path could leave the
+# deployed tree dirty as well as re-resolved. And it BLOCKS: a 600 s foreground `with_timeout` on the path
+# whose whole job is to put the listener back in well under a minute (measured: 59.08 s unaided after
+# kill -9).
+#
+# SO THE GUARD REFUSES, AND STILL STARTS. Producing dependencies is the movement's job, like producing a
+# bundle. A missing node_modules therefore gets a REFUSAL that names the install it would have run and the
+# path that actually fixes it - never a silent skip, never an install. The start below still happens, so a
+# host whose node_modules is present is unaffected, and a host whose is not gets a named reason in the log
+# instead of a ten-minute install nobody asked for.
+guard_deps_state() {   # 0 = server/node_modules is on disk; 1 = it is not
+    [ -d "$DEPLOY_DIR/server/node_modules" ]
+}
+
+refuse_install_in_deployed_tree() {   # $1 = why the dependencies are wanted
+    log "REFUSAL: $DEPLOY_DIR/server/node_modules is missing${1:+ ($1)} - this loop will NOT install in the deployed tree"
+    log "REFUSAL: the install it would have run, and will not: ( cd $DEPLOY_DIR/server && npm install )"
+    log "REFUSAL: an install here rewrites node_modules under the running server, and can rewrite the tracked server/package-lock.json, with no PR, no merge and no movement (WORKFLOW rule 43)"
+    log "REFUSAL: the sanctioned path is the movement - bash $DEPLOY_DIR/scripts/deploy-main.sh - which pulls origin/main and resets this tree to it; a fresh host's dependencies are installed once, by hand, from that tree: ( cd $DEPLOY_DIR/server && npm ci )"
+    log "REFUSAL: the server is started anyway; if node cannot load a dependency it says so in $SERVER_LOG, and the next poll retries"
+    return 1
+}
+
+# Never installs. 0 = dependencies present, 1 = absent and refused.
+guard_ensure_deps() {
+    if guard_deps_state; then return 0; fi
+    refuse_install_in_deployed_tree "start with no server/node_modules on disk"
+    return 1
+}
+
 start_server() {
     log "starting server: port $PORT, cwd $DEPLOY_DIR/server"
     cd "$DEPLOY_DIR/server" || { log "ERROR: cannot cd to $DEPLOY_DIR/server - not starting"; return 1; }
-    if [ ! -d "node_modules" ]; then
-        log "server/node_modules missing - installing"
-        with_timeout 600 npm install 9>&- >> "$LOG_FILE" 2>&1 || log "WARN: npm install failed; still attempting to start"
-    fi
+    # Rule 43's sibling: a missing node_modules is a REFUSAL, never an install here (see the unit above).
+    # Deliberately not fatal - the start below is what puts the listener back when the deps are present.
+    guard_ensure_deps || true
     # 9>&- : the server must NOT inherit the lock fd (that leak is the stale-lock bug).
     PORT="$PORT" setsid nohup node index.js >> "$SERVER_LOG" 2>&1 9>&- &
     wait_for_health
 }
+# <<< ANTUM GUARD INSTALL DECISION
 
 wait_for_health() {
     local i

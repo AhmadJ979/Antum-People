@@ -583,6 +583,27 @@ CHECKS = [
               "restores a kill -9ed listener in under 60 s with client/dist untouched, and with no "
               "bundle on disk refuses, still restores, builds nothing and never invokes npm"),
 
+    dict(id="guard-install-path", mode="full", expect="green", absent_exit=3,
+         home="operator CLI, off-host",
+         cmd=["bash", "scripts/guard-install-path-test.sh"],
+         what="the GUARD CANNOT INSTALL IN THE DEPLOYED TREE (rule 43's sibling, #391's follow-up). The "
+              "unit that replaced start_server()'s `with_timeout 600 npm install` is extracted whole from "
+              "scripts/keep-alive.sh, and a scanner that strips comments and quoted strings requires ZERO "
+              "executable npm invocations in that script - with anti-vacuity controls (a planted line, and "
+              "the pre-fix script from this repository's own history, which it must FIND). The real "
+              "start_server is driven against a scratch deployed tree: with server/node_modules present the "
+              "product STARTS and node_modules is byte-identical; with it absent start_server REFUSES - "
+              "naming the tree, the exact install it would have run, WORKFLOW rule 43 and the sanctioned "
+              "path (deploy-main.sh, plus the one-off `npm ci` a fresh host needs by hand) - and npm is "
+              "never invoked. Mutations that must redden: (a) the OLD start_server extracted from history "
+              "installs node_modules INTO the deployed tree, (b) an install in a scratch dir copied in, "
+              "(c) a refusal that is silent, (d) the scanner against the pre-fix script. Control plus an "
+              "END-TO-END run of the real loop against a real scratch worktree on its own port: a kill -9ed "
+              "listener is restored in under 60 s with client/dist and node_modules untouched and npm never "
+              "invoked, and with node_modules moved aside the loop REFUSES in its own log, installs "
+              "nothing, keeps holding its lock, and restores the listener once the dependencies are back. "
+              "exit 3 = SKIP-FLAGGED (the end-to-end half could not run), never a pass"),
+
     dict(id="observe-serve-pair", mode="full", expect="green", home="operator CLI, off-host",
          cmd=["bash", "scripts/observe-serve-pair-test.sh"],
          what="the public-URL observer does what it claims, off-host, without touching the live tree"),
