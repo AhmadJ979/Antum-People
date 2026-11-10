@@ -4,6 +4,10 @@
 # INSTALLED BY: /home/team/shared/deploy-main.sh, which copies this file and asserts the installed
 #               bytes equal this blob. Before 2026-10-13 the only copy was host state in
 #               /etc/profile.d — one lost machine away from gone.
+# RE-INSTALLED WITHOUT A DEPLOY BY: scripts/antum-arm-guard.sh — the one command an operator runs after
+#               a machine replacement, when /etc is gone and this file is not installed anywhere. It is
+#               in the repository (which lives in /home, the one thing a replacement keeps), and its own
+#               header says where to find it.
 # COMMITTED MODE: 644 — /etc/profile.d files are *sourced*, not executed.
 #
 # WHY THIS EXISTS
@@ -41,7 +45,9 @@
 #   - never swallows its own failure: every attempt and every outcome is appended to
 #     server/guard-hook.log, and "started it" is written only after the start is *verified* by that
 #     same lock + /proc check — a start that is not confirmed is not a repair
-#   - the log grows one line per shell; *.log is gitignored and the file can be truncated freely
+#   - the log grows one line per shell and is CAPPED by this file (256 KiB, one previous copy kept) —
+#     *.log is gitignored and the file can be truncated freely; before the cap it reached 11.6 MB
+#     (2026-11-10) on a /home that was 75% full. The cap's own proof is scripts/guard-hook-log-cap-test.sh.
 #   - testable off the live tree (WORKFLOW rule 14): ANTUM_DEPLOY_DIR redirects the tree, so a
 #     scratch run never touches the deployed guard. Only a test sets it.
 
@@ -94,7 +100,51 @@ if [ -z "${ANTUM_GUARD_HOOK_RAN:-}" ]; then
     return 0
   }
 
+  # THE LOG IS CAPPED IN THE FILE THAT WRITES IT (2026-11-10).
+  #   server/guard-hook.log gains one or two lines per shell command and nothing bounded it: it stood at
+  #   11.6 MB on a /home that was 75% full, and no reader of it needs more than the recent past. So every
+  #   note first asks how large the log is and, once it has reached the cap, rotates it ONCE: the log
+  #   becomes guard-hook.log.1 and a fresh, empty log is written to. ONE previous is kept, and that copy
+  #   is trimmed to the cap as well, so a legacy oversized log costs one turn of the cap, not its size.
+  #   The cap is 256 KiB; ANTUM_GUARD_HOOK_LOG_MAX overrides it (only a test sets it).
+  #
+  # WHY THIS CANNOT SPIN - the property, not a promise:
+  #   the size test is a single `if` and the function contains no `while`, `until`, `for` or recursion
+  #   (asserted structurally by scripts/guard-hook-log-cap-test.sh, which greps this function's own body).
+  #   One call therefore does a FIXED amount of work whatever the file's size: one stat, one rename, one
+  #   truncate, one bounded tail. If the rename fails the live log is truncated in place instead; if both
+  #   fail, nothing here can cap the file - and the append that follows fails too - so there is no state
+  #   in which this retries or grows the work it does.
+  #   Two shells rotating at the same moment both end bounded: one rename wins, the other truncates.
+  _antum_log_max="${ANTUM_GUARD_HOOK_LOG_MAX:-262144}"
+  case "$_antum_log_max" in '' | *[!0-9]*) _antum_log_max=262144 ;; esac
+  _antum_rotate_log() {
+    local _size _prev
+    _size=$(/usr/bin/stat -c %s "$_antum_log" 2>/dev/null) || return 0
+    case "$_size" in '' | *[!0-9]*) return 0 ;; esac
+    [ "$_size" -ge "$_antum_log_max" ] || return 0
+    if /usr/bin/mv -f "$_antum_log" "$_antum_log.1" 2>/dev/null; then
+      : >"$_antum_log" 2>/dev/null || :
+      # the kept copy is bounded too, so an oversized one costs the cap on the next rotation
+      _prev=$(/usr/bin/stat -c %s "$_antum_log.1" 2>/dev/null) || _prev=0
+      case "$_prev" in '' | *[!0-9]*) _prev=0 ;; esac
+      if [ "$_prev" -gt "$_antum_log_max" ]; then
+        if /usr/bin/tail -c "$_antum_log_max" "$_antum_log.1" >"$_antum_log.1.tmp" 2>/dev/null; then
+          /usr/bin/mv -f "$_antum_log.1.tmp" "$_antum_log.1" 2>/dev/null || /usr/bin/rm -f "$_antum_log.1.tmp"
+        else
+          /usr/bin/rm -f "$_antum_log.1.tmp"
+        fi
+      fi
+    else
+      # the rename could not happen (a read-only directory, a file replaced under us): truncate the same
+      # file this note is about to append to, which is the only copy we can still write
+      : >"$_antum_log" 2>/dev/null || :
+    fi
+    return 0
+  }
+
   _antum_note() {
+    _antum_rotate_log
     printf '%s hook: %s\n' "$(/usr/bin/date -u +%Y-%m-%dT%H:%M:%S+00:00)" "$1" >>"$_antum_log" 2>/dev/null
   }
 
@@ -149,6 +199,6 @@ if [ -z "${ANTUM_GUARD_HOOK_RAN:-}" ]; then
     unset _antum_new _antum_try
   fi
 
-  unset _antum_now _antum_dir _antum_lock _antum_log _antum_marker _antum_stand_down
-  unset -f _antum_guard_pid _antum_note 2>/dev/null
+  unset _antum_now _antum_dir _antum_lock _antum_log _antum_log_max _antum_marker _antum_stand_down
+  unset -f _antum_guard_pid _antum_rotate_log _antum_note 2>/dev/null
 fi

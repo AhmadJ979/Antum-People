@@ -35,6 +35,11 @@
 # TESTING OFF THE LIVE PATH (WORKFLOW rule 14)
 #   ANTUM_DEPLOY_DIR, ANTUM_HOOK_SRC, ANTUM_HOOK_DST, ANTUM_LOGIN_HOOK_LOG. Only a test sets them; the
 #   deployed tree uses the defaults. scripts/ensure-login-hook-test.sh exercises every branch.
+#
+# AFTER A MACHINE REPLACEMENT, RUN scripts/antum-arm-guard.sh — not this script
+#   This one only installs the hook; the guard still has to be started. scripts/antum-arm-guard.sh does
+#   both in one command (this installer, then the guard, then an independent check that it is up), and
+#   it is the command an operator reaches for when /etc has been wiped and the product is down.
 set -uo pipefail
 
 DEPLOY_DIR="${ANTUM_DEPLOY_DIR:-/home/team/shared/probable-octo-sniffle}"
