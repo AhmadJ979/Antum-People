@@ -5,6 +5,7 @@
 **Measured against:** `AhmadJ979/Antum-People` @ **`b7630cb`** (merged PR #86, P2-4), fetched 2026-10-09. Every `file:line` below is that tree.
 **Landed on:** `main` @ **`6221995`** (merged PR #93) — the tree the landing PR was rebased onto and every citation re-checked against. Six PRs merged while it was open (#84, #87, #88, #91, #92, #93), and the claim that matters is about their **class of files**, not the sha: `git diff --name-only b7630cb..6221995 | grep -c '^client/\|^server/'` → `0`, and the same filter over `compliance-requirements.md|legal-signoff-checklist.md|compliance-dpia-vendor-risk.md|templates/` → `0` lines. **If `main` has moved since, re-run those two commands before trusting a `file:line` here** — the merges were docs, evidence and images only (`roadmap-board-index.md`, `demo-weak-screens.md`, `demo-walkthrough-script.md`, `pilot-outreach-messages.md`, `design-concepts/**`, `docs/evidence/**`), which is why no citation moved. Stated as that reason, not a re-dating.
 **Re-grounded 2026-10-09 at `cd9daa8`:** those two commands now return non-zero — `client/src/App.tsx`, `server/index.js`, `server/preboarding.js` and `server/document-store.js` all changed after the landing — so facts 4-6 and the evidence index were re-read at `cd9daa8` and their citations updated. **Fact 5 was wrong, not merely stale**; the correction is stated in full under §5.1. The findings are unchanged.
+**Re-grounded 2026-11-10:** `templates/privacy-notice.md` gained §9 (personal data about non-employee contacts) above the acknowledgement block, which moved the block from `:237-248` to `:263-274`, its version row from `:247` to `:273` and the Arabic version heading from `:125` to `:138`. Those citations below are re-read at the tree that carries §9; the sentences they sit in are unchanged, and nothing else moved. The version row now reads `v2.4 (2026-11-10)` — the "v2.2" below is what the memo read on 2026-10-09.
 **Status:** working position, not legal advice. Each claim below is either **sourced** (to our own record, named), or marked **[UNCONFIRMED]**. Nothing here asserts that an existing claim is wrong — where our materials and this memo differ, the item is flagged for the lead.
 
 > **The discipline this memo follows** (settled by the team, `statutory-claims-determination.md`): a claim is cited or it is marked unconfirmed; a qualifier with no source behind it is **dropped, not kept for tone**; and no EOSB claim appears here. The UAE EOSB engine is frozen and is out of scope.
@@ -30,7 +31,7 @@ Two further facts that shape the answers:
 - **A second, older consent store exists** and is still writable: `consent_records(id, employee_id, consent_type, status, consent_date, ip_address, lawful_basis, granted_at, revoked_at, consent_version)` (`server/schema.sql:93-105`, written by `POST /api/compliance/consent`, `server/index.js:340`). It declares `ip_address` and `revoked_at` and **never writes either** (`git grep ip_address` → the schema line only). So the product has two consent records, two shapes, one meaning-word. Undecided, not wrong.
   
   **Superseded 2026-10-13 (decision 17, executed; live in the product from the 2026-10-14 cutover).** The route this bullet quotes — `POST /api/compliance/consent` — is **removed** (it answers 404), and the demo seeder no longer writes this table; every row now sits at the column defaults. The table and its shape remain, with **no writer, no reader and no display**. The quotation above stands as what this memo read on 2026-10-09; this note says only what has since stopped being true.
-- **The notice file is already bilingual and versioned: v2.2 (2026-09-17)**, and it carries its own "Consent Version / إصدار الموافقة" field reading **v2.2** (`templates/privacy-notice.md:6,247`). The product records `v1` (fact 4).
+- **The notice file is already bilingual and versioned: v2.2 (2026-09-17)**, and it carries its own "Consent Version / إصدار الموافقة" field reading **v2.2** (`templates/privacy-notice.md:6,273`). The product records `v1` (fact 4).
 
 ---
 
@@ -174,7 +175,7 @@ Do not call this a signature. The precedent is P2-3's acknowledgement wording (o
 
 ### 5.4 The notice template's own acknowledgement block must not be inherited as-is
 
-This is the finding that will otherwise reach the portal by default: `templates/privacy-notice.md:237-248` already ends with a bilingual `## Consent Acknowledgment / إقرار الموافقة` block, and its two operative rows are:
+This is the finding that will otherwise reach the portal by default: `templates/privacy-notice.md:263-274` already ends with a bilingual `## Consent Acknowledgment / إقرار الموافقة` block, and its two operative rows are:
 
 | Row | Why it cannot be reused by the portal |
 |---|---|
@@ -219,10 +220,10 @@ Per the standing discipline, that row's qualifier is a **DROP THE QUALIFIER** ca
 The list the portal's copy is checked against. Each line is a specific prohibition, not a theme.
 
 1. **No "required by law", "statutory", or "legally required"** attached to: the notice acknowledgement; the consent record; the Arabic version; the retention figures; or the document set. We hold no citable source for any of them.
-2. **No e-signature language** — no "signed", "electronically signed", "legally binding", "certified", "witnessed", "sealed". The acknowledgement is an in-product record (P2-3 precedent). The notice template's own `Signature / التوقيع` row (`templates/privacy-notice.md:248`) is **not** an exception, and §5.4 explains why it is not reused.
+2. **No e-signature language** — no "signed", "electronically signed", "legally binding", "certified", "witnessed", "sealed". The acknowledgement is an in-product record (P2-3 precedent). The notice template's own `Signature / التوقيع` row (`templates/privacy-notice.md:274`) is **not** an exception, and §5.4 explains why it is not reused.
 3. **No claim that Antum People stores the hire's documents.** It records a reference; the employer holds the document. No "uploaded to Antum People", no "stored securely in Antum People".
 4. **No "delete my documents" control**, and no claim that deleting the reference deletes the document.
-5. **No single blanket "I consent to the processing of my personal data"** presented as the basis for documents our own notice assigns to contract or legal obligation. Name the basis, or say the notice explains it. The template's own `I consent to the processing of my personal data as described` box (`templates/privacy-notice.md:245`) is exactly this pattern and is not reused (§5.4).
+5. **No single blanket "I consent to the processing of my personal data"** presented as the basis for documents our own notice assigns to contract or legal obligation. Name the basis, or say the notice explains it. The template's own `I consent to the processing of my personal data as described` box (`templates/privacy-notice.md:271`) is exactly this pattern and is not reused (§5.4).
 6. **No implication that the hire's acknowledgement covers the emergency contact's data** — a different person, basis [UNCONFIRMED].
 7. **No UAE PDPL article numbers in user-facing copy.** Our article set is a team reference with its own re-confirmation caveat (`compliance-dpia-vendor-risk.md:28`); the numbers belong in internal documents only.
 8. **No "compliant with UAE PDPL" / "PDPL certified" badge**, and no compliance certification claim of any kind.
@@ -280,5 +281,5 @@ In order, on the hire's document step:
 - `server/schema.sql:258-267` (`preboarding_consents`) · `:93-105` (legacy `consent_records`, unused `ip_address`/`revoked_at`)
 - `server/index.js:713` / `:721` (the two pre-boarding consent routes) · `:728` (`actor` = username **or `'system'`**) · `:340` (the older `/api/compliance/consent`) · `:771` (the acknowledgement route's `recorded_by`, `server/preboarding-package.js:196-205` requires it)
 - `client/src/App.tsx:876` (the three literals) · `:1914-1963` (case card, button, tooltip) · `:1464` ("MISSING / REQUIRED") · `:1479` (notice reachable only as a template download)
-- `templates/privacy-notice.md:6,247` (v2.2) · `:28-37` (categories) · `:41-51` (purposes ↔ bases) · `:54-65` (retention) · `:125` (Arabic version) · `:237-248` (acknowledgement block — blanket consent box at `:245`, signature row at `:248`)
+- `templates/privacy-notice.md:6,273` (v2.2) · `:28-37` (categories) · `:41-51` (purposes ↔ bases) · `:54-65` (retention) · `:138` (Arabic version) · `:263-274` (acknowledgement block — blanket consent box at `:271`, signature row at `:274`)
 - `compliance-requirements.md` §5.3 (notice content list) · `:420` (§6.4, the KSA Arabic claim) · `legal-signoff-checklist.md:15,17,27` (processor/controller, DPO, wordmark) · `compliance-dpia-vendor-risk.md:26-30,47` (article set + its own citation caveat)

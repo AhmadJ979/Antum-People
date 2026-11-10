@@ -20,7 +20,7 @@ is the cross-reference between the letter's items and the numbering already in t
 |---|---|---|---|
 | 1 — notice content | **Q1** | whether our six notice elements are the required set; **and both halves of the certificate question** (why the certificates are withheld): the notice's category list does name qualifications and certifications while its purpose table has no matching row — so should that category row stand, and what purpose and lawful basis should its purpose row state, or should the category row drop what we do not collect | `AhmadJ979/Antum-People · pdpl-lawful-basis-mapping.md` (repository root) §4 row 1; spec §8 rows 2 and 4 |
 | 2 — Arabic | **Q2** | whether the Arabic notice must be **certified** (the answer cannot change *whether* we ship Arabic — the template is already bilingual) | §4 row 2 |
-| 3 — the instrument | **Q4** | whether recording the notice as *shown* (per item, with basis, version and actor) discharges the duty to inform for contract/legal-obligation documents — and what an employer-kept record may be where the hire has no account; **plus the paper attestation block, which collects consent while the software records *shown*** | §4 row 4; **this is 15(b) itself**; the paper block is verified in the served v2.3 (`templates/privacy-notice.md:244-248`) |
+| 3 — the instrument | **Q4** | whether recording the notice as *shown* (per item, with basis, version and actor) discharges the duty to inform for contract/legal-obligation documents — and what an employer-kept record may be where the hire has no account; **plus the paper attestation block, which collects consent while the software records *shown*** | §4 row 4; **this is 15(b) itself**; the paper block is verified in the notice at `templates/privacy-notice.md:270-274` |
 | 4 — emergency contact | **Q5** | whose data, what basis pre-day-one, who may give it | §4 row 5; spec §8 ("not in this spec's gift") |
 | 5 — retention | **Q6** | whether the two-year floor holds, and whether a floor attaches to the acknowledgement record itself | §4 row 6 |
 
@@ -56,15 +56,15 @@ flag at the end.
 
 ## The paper attestation block — measured, and what it actually contains
 
-*2026-10-12.* Verified in the **served** v2.3 at `templates/privacy-notice.md:244-248` (and present in the pack's
+*2026-10-12; re-grounded 2026-11-10.* The block is in the notice at `templates/privacy-notice.md:270-274` — v2.3 as served on 2026-10-12, the same rows in the v2.4 tree, which inserts §9 above them (and present in the pack's
 `templates/privacy-notice.html`). It is more than "the block still collects consent", and the distinction decides what we ask:
 
 | line | what it says | which instrument |
 |---|---|---|
-| `:244` | "I confirm I have read and understood this Privacy Notice / أُقر بأنني اطلعت…" — pre-set `Yes / نعم` | an **acknowledgement** — the instrument 15(b) built |
-| `:245` | "I consent to the processing of my personal data as described, including [sensitive categories, where applicable]" — checkbox `☐ Yes / نعم` | **consent**, with a withdrawal path the product does not have |
-| `:247` | `Consent Version / إصدار الموافقة` = `v2.3 (2026-10-12)` | names **our notice version a "Consent Version"** |
-| `:248` | `Signature / التوقيع` | a hand-signed consent artefact |
+| `:270` | "I confirm I have read and understood this Privacy Notice / أُقر بأنني اطلعت…" — pre-set `Yes / نعم` | an **acknowledgement** — the instrument 15(b) built |
+| `:271` | "I consent to the processing of my personal data as described, including [sensitive categories, where applicable]" — checkbox `☐ Yes / نعم` | **consent**, with a withdrawal path the product does not have |
+| `:273` | `Consent Version / إصدار الموافقة` = `v2.4 (2026-11-10)` | names **our notice version a "Consent Version"** |
+| `:274` | `Signature / التوقيع` | a hand-signed consent artefact |
 
 Three consequences:
 
