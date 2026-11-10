@@ -147,7 +147,9 @@ async function bodyTextOf(res) {
  *                       centrally rather than by 21 separate checks.
  *   * 403 + body      → `onSessionInvalid()`, then `SessionExpiredError` is thrown: the body is an
  *                       error payload, not data, and the caller must not use it.
- *   * 403 empty       → `onRefusal()`, then `RefusalError` is thrown. **The session is not touched.**
+ *   * 403 empty       → `onRefusal(url, status, method)`, then `RefusalError` is thrown. **The session is
+ *                       not touched.** The method travels with the url because a refusal of a WRITE
+ *                       must not be described as a refusal of the READ that shares its url.
  */
 export function createAuthedFetch({ fetchImpl, getToken, onSessionInvalid, onRefusal }) {
   return async function authedFetch(url, options = {}) {
@@ -175,7 +177,7 @@ export function createAuthedFetch({ fetchImpl, getToken, onSessionInvalid, onRef
       return res;
     }
     if (action === 'refusal-notice') {
-      if (onRefusal) onRefusal(url, res.status);
+      if (onRefusal) onRefusal(url, res.status, String(options.method || 'GET').toUpperCase());
       throw new RefusalError(url, res.status);
     }
     return res;
