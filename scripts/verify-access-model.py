@@ -168,12 +168,13 @@ CLAIMS = [
     ("server/index.js", 653, "app.get('/api/compliance/templates/", "settlement documents"),
     ("server/index.js", 660, "templatesAllowedFor", "which documents a role may render"),
     ("server/index.js", 665, "SELECT * FROM employees", "templates read one employee"),
-    # RE-GROUNDED 2026-11-10 (the settlement statement). This claim pinned
-    # `auth.decrypt(emp.national_id_value)` and read "templates decrypt the national ID". The route no
-    # longer decrypts either identifier — the statement identifies the person by name and record id and
-    # names no national ID (owner ruling 2026-11-10, option A) — so that symbol is gone BY DESIGN, and a
-    # claim about it would now pin a defect. It pins the payload the route builds instead.
-    ("server/index.js", 972, "const templateData = {", "the document's payload — no national ID in it"),
+    # RE-GROUNDED 2026-11-10 (the settlement statement, then its follow-up). This claim pinned
+    # `auth.decrypt(emp.national_id_value)` and read "templates decrypt the national ID". The route now
+    # decrypts the column only behind `access.templatePrintsNationalId` — the two employment contracts,
+    # whose own text prints the number — so the decrypt is not gone, it is CONDITIONAL, and a claim that
+    # pinned it unconditionally would read as a permission the route does not have. This pins the
+    # decision itself: the predicate every national-ID fact on a document has to pass.
+    ("server/index.js", 947, "access.templatePrintsNationalId(templateName)", "the ID goes only to a document whose text prints it"),
     ("server/index.js", 769, "app.get('/api/analytics/dashboard'", "analytics route"),
     ("server/index.js", 776, "SELECT * FROM employees", "analytics reads the whole roster"),
     ("server/index.js", 954, "app.post('/api/exit-interviews'", "exit route"),

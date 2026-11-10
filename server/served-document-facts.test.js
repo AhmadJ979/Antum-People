@@ -37,18 +37,26 @@ const { randomUUID } = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
 const bcrypt = require('bcryptjs');
 const compliance = require('./compliance_engine');
+const access = require('./access');
 
 const SCRATCH_DB = path.join(os.tmpdir(), `antum-served-docs-${randomUUID()}.db`);
 const PORT = 31000 + Math.floor(Math.random() * 20000);
 const BASE = `http://127.0.0.1:${PORT}`;
 const JWT_SECRET = 'served-documents-test-secret-not-a-production-key';
 const ENCRYPTION_KEY = 'b'.repeat(32);
+// The server's own encryption module, so the ID this test plants is a ciphertext the ROUTE decrypts
+// with the same code — not a fixture that merely looks encrypted. `auth` refuses to load without keys.
+process.env.JWT_SECRET = JWT_SECRET;
+process.env.ENCRYPTION_KEY = ENCRYPTION_KEY;
+const auth = require('./auth');
 const ACCOUNT = 'docs-hr';
 const PASSWORD = 'scratch-instance-password-2';
 /** An employee whose record holds every amount the templates ask for. */
 const WITH_MONEY = 'docs-with-money';
 /** An employee whose record holds no salary at all — the row that used to print a 0.00 net. */
 const NO_MONEY = 'docs-no-money';
+/** The national ID the WITH_MONEY row holds, encrypted at rest — a value no real record carries. */
+const HELD_NATIONAL_ID = '784-1990-1234567-1';
 
 /**
  * The literals this change exists to remove. Typed out here rather than imported from the module
@@ -103,10 +111,10 @@ before(async () => {
   db.prepare('INSERT INTO users (id, username, password_hash, access_role) VALUES (?, ?, ?, ?)')
     .run(randomUUID(), ACCOUNT, bcrypt.hashSync(PASSWORD, 4), 'hr_admin');
   db.prepare(`INSERT INTO employees (id, first_name, last_name, email, department, role, start_date, end_date,
-      status, salary, basic_salary, eosb_accrued, data_residency_country, termination_type)
+      status, salary, basic_salary, eosb_accrued, data_residency_country, termination_type, national_id_value)
       VALUES (?, 'Amina', 'Haddad', ?, 'Finance', 'Analyst', '2024-01-15', '2026-10-10', 'offboarding',
-      16000, 11000, 6415.79, 'AE', 'resignation')`)
-    .run(WITH_MONEY, `${WITH_MONEY}@example.invalid`);
+      16000, 11000, 6415.79, 'AE', 'resignation', ?)`)
+    .run(WITH_MONEY, `${WITH_MONEY}@example.invalid`, auth.encrypt(HELD_NATIONAL_ID));
   db.prepare(`INSERT INTO employees (id, first_name, last_name, email, start_date, status, data_residency_country)
       VALUES (?, 'Bilal', 'Nasser', ?, '2026-09-01', 'onboarding', 'AE')`)
     .run(NO_MONEY, `${NO_MONEY}@example.invalid`);
@@ -254,69 +262,119 @@ describe('the positive control: with the facts held, the document IS produced', 
   });
 });
 
-describe('the settlement statement identifies the employee without their national ID', () => {
-  // Owner ruling 2026-11-10, option A: finance keeps the document, the ID comes off it. Three places had
-  // to agree for that to be true — the template's acknowledgment clause, the renderer's fallback for the
-  // key, and the route, which must not decrypt the column at all. The first two are held here by
-  // rendering the repository's own template; the third by reading the route's own source, because a
-  // refusal body would hide a decrypted value that a day's held facts would print.
-  const SETTLEMENT = path.join(__dirname, '..', 'templates', 'final-settlement-statement.md');
-  // A value no record holds, in the Emirates-ID shape. Typed out here rather than imported from the code
-  // under test: a guard that reads its needle from the code it guards cannot notice the code changing.
-  const ID = '784-1990-1234567-1';
-  // Every fact the statement names, HELD — so the document is issued and this is about what it prints.
-  // `national_id` and `national_id_value` are both supplied, because the old payload carried the second
-  // through the row spread and the first as its own key: a regression can come back through either.
-  const FACTS = {
-    employer_name: 'Example Employment LLC',
-    basic_salary: '11000.00',
-    total_salary: '16000.00',
-    eosb_amount: '6415.79',
-    final_pro_rated_salary: '5161.29',
-    unused_leave_amount: '0.00',
-    notice_pay: '0.00',
-    ticket_allowance: '0.00',
-    other_payments: '0.00',
-    gross_settlement: '11577.08',
-    loan_deduction: '0.00',
-    assets_deduction: '0.00',
-    fine_deduction: '0.00',
-    total_deductions: '0.00',
-    net_settlement: '11577.08',
-    full_name: 'Amina Haddad',
-    employee_id: WITH_MONEY,
-    termination_reason: 'resignation',
-    end_date: '2026-10-10',
-    national_id: ID,
-    national_id_value: ID,
+describe('the national ID reaches the employment contracts and nothing else', () => {
+  // Owner follow-up 2026-11-10. The ruling took the ID off the settlement statement (option A: finance
+  // keeps the document, the ID comes off it) and that removal over-reached: the two employment
+  // contracts legitimately print the number, and a contract an employer cannot register is not a
+  // document. So the rule is not "never decrypt" — it is "the contracts, and only a document whose own
+  // text names the number". Both directions are held here, against the templates' own bytes and the
+  // ciphertext the database holds: the same two inputs the route works from.
+  const CONTRACTS = ['uae-employment-contract', 'ksa-employment-contract'];
+  const SETTLEMENT = 'final-settlement-statement';
+  const templateText = (name) => fs.readFileSync(path.join(__dirname, '..', 'templates', `${name}.md`), 'utf8');
+
+  /** The employee row as the route reads it: `SELECT *`, the ID still encrypted at rest. */
+  const rowAsStored = () => {
+    const db = new DatabaseSync(SCRATCH_DB);
+    try {
+      return db.prepare('SELECT * FROM employees WHERE id = ?').get(WITH_MONEY);
+    } finally {
+      db.close();
+    }
   };
 
-  test('a rendered statement carries no national ID — and still identifies the person', () => {
-    const rendered = compliance.renderTemplate(fs.readFileSync(SETTLEMENT, 'utf8'), FACTS);
+  /** Every fact the engine calls required, held — so a document that names one is issued here. */
+  const heldFacts = () => {
+    const facts = {};
+    for (const key of Object.keys(compliance.REQUIRED_FACTS)) facts[key] = `held ${key}`;
+    return facts;
+  };
+
+  /** The national-ID step as the route performs it: decrypt only when the document's text names it. */
+  const nationalIdFactsFor = (templateName, row) => (access.templatePrintsNationalId(templateName)
+    ? { national_id: auth.decrypt(row.national_id_value) }
+    : {});
+
+  const render = (templateName, payload) => compliance.renderTemplate(templateText(templateName), {
+    ...heldFacts(),
+    ...nationalIdFactsFor(templateName, rowAsStored()),
+    ...payload,
+  });
+
+  test('a contract prints the ID the record holds, wherever its own text names it', () => {
+    const row = rowAsStored();
+    assert.ok(row.national_id_value && row.national_id_value !== HELD_NATIONAL_ID,
+      'the ID is held encrypted at rest, so decrypting it is a step this test can see fail');
+    for (const name of CONTRACTS) {
+      const places = templateText(name).split('[national_id]').length - 1;
+      assert.ok(places > 0, `${name} must name the national ID — that is why the column is decrypted at all`);
+      const rendered = render(name, {});
+      assert.deepStrictEqual(rendered.missing, [],
+        `${name}: every required fact is held, so this is a contract that IS issued`);
+      assert.strictEqual(rendered.content.split(HELD_NATIONAL_ID).length - 1, places,
+        `${name} must print the ID at each of its ${places} place(s)`);
+      assert.strictEqual(rendered.content.indexOf('[national_id]'), -1,
+        `${name} left a literal national-ID blank — a contract an employer cannot register`);
+    }
+  });
+
+  test('the statement cannot carry the ID, even when a payload hands it one', () => {
+    assert.strictEqual(access.templatePrintsNationalId(SETTLEMENT), false,
+      'the settlement statement is not a document the route decrypts the ID for');
+    const rendered = render(SETTLEMENT, {
+      national_id: HELD_NATIONAL_ID,
+      national_id_value: HELD_NATIONAL_ID,
+      full_name: 'Amina Haddad',
+      employee_id: WITH_MONEY,
+    });
     assert.deepStrictEqual(rendered.missing, [],
-      'every fact is held here, so this is a statement that IS issued — not a refusal standing in for one');
-    assert.strictEqual(rendered.content.indexOf(ID), -1, 'the statement printed the national ID');
+      'every required fact is held here, so this is a statement that IS issued — not a refusal standing in for one');
+    assert.strictEqual(rendered.content.indexOf(HELD_NATIONAL_ID), -1, 'the statement printed the national ID');
     assert.strictEqual(rendered.content.indexOf('784-1990'), -1, 'the statement printed part of the national ID');
     assert.strictEqual(/national_id/i.test(rendered.content), false,
-      'the statement still leaves a national-ID placeholder in the document');
+      'the statement left a national-ID placeholder in the document');
     // The positive controls: this really is the statement, the waiver survived in both languages, and
     // the person is still identified — by name and record id, which is all the document needs.
     assert.ok(rendered.content.indexOf('hereby acknowledge receipt of the amount shown above') !== -1,
       'the English acknowledgment clause is still there');
     assert.ok(rendered.content.indexOf('\u0643\u0645\u062e\u0627\u0644\u0635\u0629 \u0646\u0647\u0627\u0626\u064a\u0629 \u0648\u0634\u0627\u0645\u0644\u0629') !== -1,
       'the Arabic acknowledgment clause is still there');
-    assert.ok(rendered.content.indexOf(FACTS.full_name) !== -1 && rendered.content.indexOf(FACTS.employee_id) !== -1,
+    assert.ok(rendered.content.indexOf('Amina Haddad') !== -1 && rendered.content.indexOf(WITH_MONEY) !== -1,
       'the employee is identified by name and record id');
   });
 
-  test('the templates route never decrypts a national ID', () => {
+  test('the templates that name the ID and the list the route decrypts for are the same set', () => {
+    const naming = TEMPLATE_NAMES.filter((name) => templateText(name).indexOf('[national_id]') !== -1);
+    assert.deepStrictEqual(naming.slice().sort(), CONTRACTS.slice().sort(),
+      'a template that prints the national ID must be one the route decrypts for, and a contract must not lose the row it exists for');
+    assert.strictEqual(naming.indexOf(SETTLEMENT), -1, 'the settlement statement must not name a national ID');
+  });
+
+  test('the templates route decrypts only behind that predicate, in one place', () => {
     const source = fs.readFileSync(path.join(__dirname, 'index.js'), 'utf8');
     const start = source.indexOf("app.get('/api/compliance/templates/");
     const end = source.indexOf('// REMOVED 2026-10-13, owner decision 21 executed:', start);
     assert.ok(start !== -1 && end > start,
       'the templates route must be findable in server/index.js — a guard that cannot see its subject is RED, not green');
-    const found = source.slice(start, end).match(/[^\n]*national_id[^\n]*/);
-    assert.strictEqual(found, null, `the templates route names a national-ID column: ${found && found[0].trim()}`);
+    const route = source.slice(start, end);
+    const asked = route.match(/access\.templatePrintsNationalId\(templateName\)/g) || [];
+    assert.strictEqual(asked.length, 1, `the route must ask the predicate exactly once (it asks ${asked.length} time(s))`);
+    const keys = route.match(/national_id\s*:/g) || [];
+    assert.strictEqual(keys.length, 1, `the route builds a national-ID fact in ${keys.length} place(s)`);
+    assert.ok(/access\.templatePrintsNationalId\(templateName\)\s*\?\s*\{[^}]*national_id\s*:/.test(route),
+      "the one national-ID fact the route builds must sit inside the predicate's true branch");
+  });
+
+  test('the served statement carries no national ID', async () => {
+    const r = await api(`/api/compliance/templates/${SETTLEMENT}/${WITH_MONEY}`);
+    assert.strictEqual(r.status, 200);
+    const row = rowAsStored();
+    // This document is withheld on facts the record does not hold (no deduction is recorded anywhere,
+    // so no net is computed), so what a reader receives is the refusal. This is the floor of the
+    // statement direction, not its proof — the render test above is the proof.
+    assert.strictEqual(r.text.indexOf(HELD_NATIONAL_ID), -1, 'the served statement carried the national ID');
+    assert.strictEqual(r.text.indexOf(row.national_id_value), -1, 'the served statement carried the encrypted column');
+    assert.strictEqual(/national_id/i.test(r.text), false, 'the served statement names a national-ID column');
   });
 });
 
