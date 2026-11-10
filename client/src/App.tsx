@@ -2214,7 +2214,6 @@ export default function App() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded uppercase border border-teal-200">P3-3</span>
                     {escalation.kind === 'granted' && (
                       <button
                         type="button"
@@ -2228,7 +2227,7 @@ export default function App() {
                   </div>
                 </div>
                 {/* Collapsed (owner ruled 2026-11-10): on a granted reading the WHOLE body is behind
-                    the toggle, so the collapsed panel is the heading, the badge and the summary line.
+                    the toggle, so the collapsed panel is the heading and the summary line.
                     The empty-list sentence goes with it: it says the watch is "described underneath",
                     and a sentence pointing at a line this panel is hiding would be the very defect
                     the reading exists to prevent. Refused, failed and loading keep their body. */}
