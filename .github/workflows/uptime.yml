@@ -10,13 +10,26 @@
 # genuinely off this host — and asserts that the URL answers with OUR page, not merely that
 # something answered. A status-only check passes on the placeholder.
 #
-# The three assertions (all required): HTTP 200, the body contains <title>Antum People</title>,
-# the body names an asset matching assets/index-<hash>.js (the PATTERN — never a fixed hash,
-# which would redden on every client build).
+# The assertions (all required): HTTP 200, then the page must be ONE OF THE TWO SHAPES that are
+# legitimately ours — and BOTH halves of a shape must agree:
+#   - the GATE PAGE: exactly <title>Antum People — access</title> and NO asset reference. Since
+#     #386 the public URL is behind a passcode wall, so this is what a stranger sees, and it
+#     names no asset by design.
+#   - the PRODUCT SHELL: <title>Antum People</title> and an asset matching
+#     assets/index-<hash>.js (the PATTERN — never a fixed hash, which would redden on every
+#     client build). This is the shape behind a cookie, or if the wall is ever taken down.
+# Anything else — a platform placeholder ("My site"), a blank page, someone else's product —
+# reddens, and the alert names the title and the asset it actually saw.
+#
+# WHY BOTH SHAPES: on 2026-11-08T14:44Z the passcode wall went live and this check still asserted
+# the PRE-wall title alone, so it failed every scheduled run for two days on a healthy site
+# (last green 13:35:19Z, then 15:11Z, 19:44Z, 23:12Z, 02:43Z, 10:25Z, 21:00Z, 03:28Z — all red).
+# A monitor that cries wolf on a healthy page stops being read, and that is how a real outage
+# gets missed.
 #
 # Canary recipe (do this before trusting a green): change UPTIME_URL_DEFAULT to a URL that
 # answers 200 with the wrong page (https://example.com/) and push a commit touching this file;
-# the run must FAIL on the title assertion and open exactly one `uptime-alert` issue. Then a
+# the run must FAIL on the page-identity assertion and open exactly one `uptime-alert` issue. Then a
 # URL that never answers (http://192.0.2.1/) must FAIL on the status assertion. Then put the
 # production URL back: the green run comments on that issue and closes it.
 
@@ -55,7 +68,8 @@ env:
   ATTEMPTS: '3'
   ATTEMPT_TIMEOUT_S: '15'
   RETRY_SLEEP_S: '20'
-  EXPECTED_TITLE: '<title>Antum People</title>'
+  GATE_TITLE: '<title>Antum People — access</title>'
+  PRODUCT_TITLE: '<title>Antum People</title>'
   ASSET_PATTERN: 'assets/index-[A-Za-z0-9_-]+\.js'
   ALERT_LABEL: 'uptime-alert'
 
@@ -72,6 +86,7 @@ jobs:
       status: ${{ steps.probe.outputs.status }}
       title: ${{ steps.probe.outputs.title }}
       asset: ${{ steps.probe.outputs.asset }}
+      shape: ${{ steps.probe.outputs.shape }}
       assertion: ${{ steps.probe.outputs.assertion }}
       attempts: ${{ steps.probe.outputs.attempts }}
       run_url: ${{ steps.probe.outputs.run_url }}
@@ -106,13 +121,15 @@ jobs:
           attempts="${ATTEMPTS:-3}"
           timeout_s="${ATTEMPT_TIMEOUT_S:-15}"
           retry_sleep="${RETRY_SLEEP_S:-20}"
-          expected_title="$EXPECTED_TITLE"
+          gate_title="$GATE_TITLE"
+          product_title="$PRODUCT_TITLE"
           asset_re="$ASSET_PATTERN"
           run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
           status_seen='no HTTP response'
           title_seen='no <title>'
           asset_seen='none'
+          shape_seen='none'
           failed=''
           attempts_used=0
 
@@ -128,6 +145,7 @@ jobs:
             status_seen='no HTTP response'
             title_seen='no <title>'
             asset_seen='none'
+            shape_seen='none'
             failed=''
 
             if [ "$rc" -ne 0 ]; then
@@ -143,10 +161,16 @@ jobs:
               found_asset="$(grep -Eo "$asset_re" "$body" 2>/dev/null | head -n1 || true)"
               if [ -n "${found_asset:-}" ]; then asset_seen="$found_asset"; fi
 
-              if ! grep -qF -- "$expected_title" "$body"; then
-                failed="B: page title (body must contain ${expected_title})"
-              elif [ -z "${found_asset:-}" ]; then
-                failed='C: asset reference (body must name assets/index-<hash>.js)'
+              # Which of the two legitimate shapes is this? A page counts as OURS only if the
+              # title AND the asset reference agree with the SAME shape. A gate title carrying an
+              # asset, or a product title carrying none, is a shape we do not ship — it reddens,
+              # because it means the page changed in a way nobody decided.
+              if [ "${found_title:-}" = "$gate_title" ] && [ -z "${found_asset:-}" ]; then
+                shape_seen='gate page (passcode wall: our gate title, no asset by design)'
+              elif [ "${found_title:-}" = "$product_title" ] && [ -n "${found_asset:-}" ]; then
+                shape_seen="product shell (our product title, names ${found_asset})"
+              else
+                failed="B: page identity (expected EITHER ${gate_title} with NO asset reference, OR ${product_title} with an assets/index-<hash>.js reference; observed title ${found_title:-<none>} and asset ${found_asset:-none})"
               fi
             fi
 
@@ -156,6 +180,7 @@ jobs:
             printf '  http status   : %s\n' "$status_seen"
             printf '  title seen    : %s\n' "$title_seen"
             printf '  asset seen    : %s\n' "$asset_seen"
+            printf '  page shape    : %s\n' "$shape_seen"
             printf '  curl exit code: %s\n' "$rc"
             if [ -n "$failed" ]; then
               printf '  FAILED on     : %s\n' "$failed"
@@ -176,6 +201,7 @@ jobs:
             printf 'status=%s\n' "$(printf '%s' "$status_seen" | tr -d '\r\n')"
             printf 'title=%s\n' "$(printf '%s' "$title_seen" | tr -d '\r\n')"
             printf 'asset=%s\n' "$(printf '%s' "$asset_seen" | tr -d '\r\n')"
+            printf 'shape=%s\n' "$(printf '%s' "$shape_seen" | tr -d '\r\n')"
             printf 'assertion=%s\n' "$(printf '%s' "$failed" | tr -d '\r\n')"
             printf 'attempts=%s\n' "$attempts_used"
             printf 'run_url=%s\n' "$run_url"
@@ -190,6 +216,7 @@ jobs:
               printf '| HTTP status | %s |\n' "$status_seen"
               printf '| page title | `%s` |\n' "$title_seen"
               printf '| asset reference | `%s` |\n' "$asset_seen"
+              printf '| page shape | %s |\n' "$shape_seen"
               printf '| failing assertion | %s |\n' "$failed"
               printf '| attempts | %s |\n' "$attempts_used"
             } >> "$GITHUB_STEP_SUMMARY"
@@ -204,6 +231,7 @@ jobs:
             printf '| HTTP status | %s |\n' "$status_seen"
             printf '| page title | `%s` |\n' "$title_seen"
             printf '| asset reference | `%s` |\n' "$asset_seen"
+            printf '| page shape | %s |\n' "$shape_seen"
             printf '| attempts | %s |\n' "$attempts_used"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -215,6 +243,7 @@ jobs:
           STATUS_SEEN: ${{ steps.probe.outputs.status }}
           TITLE_SEEN: ${{ steps.probe.outputs.title }}
           ASSET_SEEN: ${{ steps.probe.outputs.asset }}
+          SHAPE_SEEN: ${{ steps.probe.outputs.shape }}
           ATTEMPTS: ${{ steps.probe.outputs.attempts }}
           URL_CHECKED: ${{ steps.probe.outputs.url }}
           RUN_URL: ${{ steps.probe.outputs.run_url }}
@@ -250,6 +279,7 @@ jobs:
             printf '| HTTP status | %s |\n' "${STATUS_SEEN:-(not reported)}"
             printf '| page title | `%s` |\n' "${TITLE_SEEN:-(not reported)}"
             printf '| asset reference | `%s` |\n' "${ASSET_SEEN:-(not reported)}"
+            printf '| page shape | %s |\n' "${SHAPE_SEEN:-(not reported)}"
             printf '| attempts used | %s |\n' "${ATTEMPTS:-(not reported)}"
             printf '| run | %s |\n\n' "${RUN_URL:-(not reported)}"
             printf 'This comment states only what the probe observed. It does not say what happened,\n'
@@ -280,6 +310,7 @@ jobs:
           STATUS_SEEN: ${{ needs.probe.outputs.status }}
           TITLE_SEEN: ${{ needs.probe.outputs.title }}
           ASSET_SEEN: ${{ needs.probe.outputs.asset }}
+          SHAPE_SEEN: ${{ needs.probe.outputs.shape }}
           ASSERTION: ${{ needs.probe.outputs.assertion }}
           ATTEMPTS: ${{ needs.probe.outputs.attempts }}
           RUN_URL: ${{ needs.probe.outputs.run_url }}
@@ -295,6 +326,7 @@ jobs:
           status="${STATUS_SEEN:-(not reported by the probe job)}"
           title="${TITLE_SEEN:-(not reported by the probe job)}"
           asset="${ASSET_SEEN:-(not reported by the probe job)}"
+          shape="${SHAPE_SEEN:-(not reported by the probe job)}"
           assertion="${ASSERTION:-(not reported — the probe job failed before naming an assertion)}"
           attempts="${ATTEMPTS:-(not reported)}"
           run="${RUN_URL:-$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID}"
@@ -306,6 +338,7 @@ jobs:
             printf '| HTTP status | %s |\n' "$status"
             printf '| page title | `%s` |\n' "$title"
             printf '| asset reference | `%s` |\n' "$asset"
+            printf '| page shape | %s |\n' "$shape"
             printf '| failing assertion | %s |\n' "$assertion"
             printf '| attempts used | %s |\n' "$attempts"
             printf '| workflow run | %s |\n' "$run"

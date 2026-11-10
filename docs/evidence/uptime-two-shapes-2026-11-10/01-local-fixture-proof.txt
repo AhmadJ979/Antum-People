@@ -1,0 +1,8 @@
+gate-page      want=PASS got=PASS shape=gate page (passcode wall: our gate title, no asset by design)
+product-shell  want=PASS got=PASS shape=product shell (our product title, names assets/index-NX5GUwrh.js)
+wrong-page     want=FAIL got=FAIL shape=none
+               B: page identity (expected EITHER <title>Antum People — access</title> with NO asset reference, OR <title>Antum People</title> with an assets/index-
+gate+asset     want=FAIL got=FAIL shape=none
+               B: page identity (expected EITHER <title>Antum People — access</title> with NO asset reference, OR <title>Antum People</title> with an assets/index-
+----
+ALL FOUR CASES MATCHED
