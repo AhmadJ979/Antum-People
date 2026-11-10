@@ -13,12 +13,12 @@
   }
  ],
  "measured_from": {
-  "tree_revision": "0c0b135",
-  "revision_note": "414a007 is the revision the hashes were READ from - a hash must name the revision it was measured from. The branch that carries this manifest touches four files and every one of them is under `scripts/`; no served path loads any of them (`grep -c scripts server/index.js` = 0, and nothing in server/ or client/ references this guard or its manifest), so the served bytes at that branch's head are this revision's. The guard prints the revision it judged on every run, so a reader never takes that on trust.",
+  "tree_revision": "8139efe",
+  "revision_note": "8139efe is the revision the hashes were READ from - a hash must name the revision it was measured from, and this field and this sentence name the same one. The commit that carries this manifest touches exactly one file, `scripts/counsel-strings-manifest.json`, and no served path loads it: nothing in `server/` or `client/` references this guard or its manifest, and the single occurrence of the word `scripts` in `server/index.js` is a comment naming `scripts/seed-demo.js` (line 636), not a load. So the served bytes at this commit's head are the bytes hashed here. The guard prints the revision it judged on every run, so a reader never takes that on trust.",
   "how": "booted a scratch instance of the tree (own port, throwaway database, throwaway hr_admin user), created the fixture through the product's own writers, and hashed the bytes of the HTTP responses",
   "fixture": "one UAE and one KSA employee created by POST /api/employees with fixed literals, each moved to `offboarding` by PUT so both task checklists exist, plus one pre-boarding case by POST /api/preboarding/cases. The record and case ids the product mints are masked out of the served bytes (see mask() in the guard): a refusal names the record it refused, and that uuid is fixture noise, not legal text.",
-  "generated_at": "2026-11-10T17:16:39Z",
-  "generated_by": "lead"
+  "generated_at": "2026-11-10T18:04:53Z",
+  "generated_by": "AhmadJ979"
  },
  "units": [
   {
@@ -65,30 +65,48 @@
   },
   {
    "id": "doc:ksa-employment-contract",
-   "sha256": "81f85893ba94108a53fce3d146c1d9b31920c10e7f430af20eb11cc605347371",
-   "bytes": 846,
+   "sha256": "b8ec45a41479d6eb288c40931b6f4a0302e4973913c98932eac3a1fbaf32a10c",
+   "bytes": 941,
    "review": "unreviewed",
    "counsel_question": null,
    "where": "GET /api/compliance/templates/ksa-employment-contract/<record> -> content (the served refusal - the document itself is withheld)",
-   "marked": null
+   "marked": {
+    "at": "2026-11-10T18:04:53Z",
+    "tree_revision": "8139efe",
+    "by": "AhmadJ979",
+    "note": "a828c15 (#410) made five employer facts (PO box, city, phone, email, mudad code) facts that a document cannot be issued without, so the served refusal these three routes answer with now lists them; no template was edited (templates/uae-employment-contract.md, templates/ksa-employment-contract.md and templates/privacy-notice.md are byte-identical between 0c0b135 and 8139efe - only the refusal's list of missing facts moved); nobody read any of it: no counsel recipient exists, so all three stay unreviewed with counsel_question null.",
+    "from_sha256": "81f85893ba94108a53fce3d146c1d9b31920c10e7f430af20eb11cc605347371"
+   }
   },
   {
    "id": "doc:privacy-notice",
-   "sha256": "9a13bc570933835daedb4ba41fc40e14626927cb334460565548e12c71642cc0",
-   "bytes": 780,
+   "sha256": "c718320eb3e6ffebf541650cac54453094653a71d3e1b0f79b18dff2299ef1c8",
+   "bytes": 843,
    "review": "unreviewed",
    "counsel_question": null,
    "where": "GET /api/compliance/templates/privacy-notice/<record> -> content (the served refusal - the document itself is withheld)",
-   "marked": null
+   "marked": {
+    "at": "2026-11-10T18:04:53Z",
+    "tree_revision": "8139efe",
+    "by": "AhmadJ979",
+    "note": "a828c15 (#410) made five employer facts (PO box, city, phone, email, mudad code) facts that a document cannot be issued without, so the served refusal these three routes answer with now lists them; no template was edited (templates/uae-employment-contract.md, templates/ksa-employment-contract.md and templates/privacy-notice.md are byte-identical between 0c0b135 and 8139efe - only the refusal's list of missing facts moved); nobody read any of it: no counsel recipient exists, so all three stay unreviewed with counsel_question null.",
+    "from_sha256": "9a13bc570933835daedb4ba41fc40e14626927cb334460565548e12c71642cc0"
+   }
   },
   {
    "id": "doc:uae-employment-contract",
-   "sha256": "e89164fed733eff6ff944c9ebf755e73b0271e1430f8111b9a9f2672c4924ec3",
-   "bytes": 863,
+   "sha256": "665925dcb80bb4a7582886164d3f61b2847cd268c01a8f3ef9a12eb09d52d344",
+   "bytes": 931,
    "review": "unreviewed",
    "counsel_question": null,
    "where": "GET /api/compliance/templates/uae-employment-contract/<record> -> content (the served refusal - the document itself is withheld)",
-   "marked": null
+   "marked": {
+    "at": "2026-11-10T18:04:53Z",
+    "tree_revision": "8139efe",
+    "by": "AhmadJ979",
+    "note": "a828c15 (#410) made five employer facts (PO box, city, phone, email, mudad code) facts that a document cannot be issued without, so the served refusal these three routes answer with now lists them; no template was edited (templates/uae-employment-contract.md, templates/ksa-employment-contract.md and templates/privacy-notice.md are byte-identical between 0c0b135 and 8139efe - only the refusal's list of missing facts moved); nobody read any of it: no counsel recipient exists, so all three stay unreviewed with counsel_question null.",
+    "from_sha256": "e89164fed733eff6ff944c9ebf755e73b0271e1430f8111b9a9f2672c4924ec3"
+   }
   },
   {
    "id": "notice:content",
