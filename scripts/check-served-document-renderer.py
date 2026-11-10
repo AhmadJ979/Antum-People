@@ -59,7 +59,10 @@ WHAT IT DOES NOT SEE (stated so nobody reads it as more)
     follow a document body through an alias (`const body = doc.content` then `<pre>{body}</pre>`): the
     alias's first read is a forbidden position and DOES redden, but a body that reaches a name this
     check never sees as a read is beyond it. It does not see a `.tsx` file outside `client/src`, nor
-    a runtime string built from a fetched payload.
+    a runtime string built from a fetched payload. The tokenizer tells JSX text from a string literal
+    by two JS rules (a `'`/`"` literal cannot span a newline and cannot open after an identifier
+    character); a JSX text apostrophe that obeys both, e.g. one sitting right after a `>`, is still
+    read as a literal and can still hide the comment below it.
   * Test files (`*.test.*`, `*.spec.*`) are excluded by the walk: they are not bundled, and a guard
     whose own mutants are read as violations would redden on a correct tree.
   * It judges BYTES ON DISK, working tree included - the header names the revision it measured and
@@ -68,8 +71,11 @@ WHAT IT DOES NOT SEE (stated so nobody reads it as more)
 
 PROVEN, NOT ASSERTED: `--selftest` plants violations in a scratch COPY of the tree and requires each
   to redden, with a clean-copy control that must stay green and a comment-only control that must not
-  false-positive. One plant is a filename no list names (a new `Preview.tsx`), which is the finding
-  itself: the guard is not a filename check. Exit 2 refuses to judge.
+  false-positive. The comment-only control puts an apostrophe in JSX text above the comment, because
+  that - not the comment - is what desynchronised the tokenizer at `8d1f508`: the old one reddens on
+  that control, the fixed one stays green. One plant is a filename no list names (a new
+  `Preview.tsx`), which is the finding itself: the guard is not a filename check. Exit 2 refuses to
+  judge.
 """
 import argparse
 import os
@@ -92,6 +98,46 @@ EXIT_OK, EXIT_RED, EXIT_CANNOT_JUDGE = 0, 1, 2
 
 
 # --------------------------------------------------------------------------------- tokenizer
+STRING_QUOTES = ('"', "'", "`")
+IDENT_CHARS = set("_$")
+
+
+def string_end(src, i, quote, prev):
+    """Index just past the closing `quote`, or None when this quote opens NO literal.
+
+    Two rules decide it, and both are JS/TS facts rather than heuristics about this file:
+
+      * a single- or double-quoted literal cannot contain a raw newline, and
+      * it cannot open immediately after an identifier character (`foo'bar'` is not JS).
+
+    JSX TEXT satisfies neither. `counsel's review` inside a `<p>` is an apostrophe whose
+    predecessor is a letter and whose "literal" runs to the end of the line - so reading it as
+    a string left the tokenizer inside a quote for every line after it, and the block comment
+    at `App.tsx:3788` that explains the `<pre>` defect was never blanked. The guard then flagged
+    its own explanation at `:3789` (measured at `8d1f508`, where #407 inserted ~180 lines above
+    it; the same comment was green while it sat at `:3564`). A backtick literal MAY span lines,
+    so only it is exempt from the newline rule.
+
+    Rejecting a quote is not skipping it: the caller treats it as an ordinary code character,
+    which is exactly what an apostrophe in JSX text is.
+    """
+    n = len(src)
+    if quote != "`" and (prev in IDENT_CHARS or prev.isalnum()):
+        return None
+    j = i + 1
+    while j < n:
+        ch = src[j]
+        if ch == "\\":
+            j += 2
+            continue
+        if ch == quote:
+            return j + 1
+        if ch == "\n" and quote != "`":
+            return None
+        j += 1
+    return None if quote != "`" else n
+
+
 def strip_comments(src):
     """Blank every comment, keeping the source EXACTLY the same length.
 
@@ -106,18 +152,15 @@ def strip_comments(src):
     prev = ""  # last significant code character seen (for regex-literal detection)
     while i < n:
         c = src[i]
-        if c in ('"', "'", "`"):
-            quote = c
-            i += 1
-            while i < n:
-                if src[i] == "\\":
-                    i += 2
-                    continue
-                if src[i] == quote:
-                    i += 1
-                    break
+        if c in STRING_QUOTES:
+            end = string_end(src, i, c, prev)
+            if end is None:
+                # Not a literal - an apostrophe or a stray quote in JSX text. Ordinary code char.
+                prev = c
                 i += 1
-            prev = quote
+                continue
+            i = end
+            prev = c
             continue
         if c == "/" and i + 1 < n and src[i + 1] == "/":
             while i < n and src[i] != "\n":
@@ -520,8 +563,14 @@ def selftest():
 
     def plant_comment(tmp):
         # The same text, inside a comment: must NOT redden (the fix explains itself in prose).
+        # The apostrophe in JSX text above it is the CONTROL'S OWN SUBJECT, not decoration: the
+        # tokenizer used to read `reader's` as an unterminated literal and then swallow every
+        # comment below it, which is how `App.tsx:3789` was flagged at 8d1f508. With the old
+        # tokenizer this case REDDENS; with the fix it stays green - so the control now
+        # discriminates the defect instead of merely passing beside it.
         _append(tmp, "client/src/App.tsx",
-                "\n/* <pre>{renderedTemplate.content}</pre> - the old defect, described only */\n")
+                "\n<p>The reader's copy of the document, described only:</p>\n"
+                "/* <pre>{renderedTemplate.content}</pre> - the old defect, described only */\n")
 
     def drop_premise(tmp):
         _replace(tmp, "server/compliance_engine.js", "return { content: rendered, missing };",

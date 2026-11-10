@@ -10,7 +10,7 @@ print `ok`, and the only thing separating them is a counter in the footer that n
 had a control for. A fix that cannot redden is a comment, and so is a counter nobody
 has watched move.
 
-WHAT IT DOES. Seven plants, each one committed into a SCRATCH CLONE and each one judged
+WHAT IT DOES. Eight plants, each one committed into a SCRATCH CLONE and each one judged
 by running the clone's own copy of the real instrument over that clone:
 
   P1  a correct pin lands        -> the plant line is `ok` AND `pinned` rises by 1
@@ -19,7 +19,13 @@ by running the clone's own copy of the real instrument over that clone:
                                     the line number
   P3  a pin that cannot resolve  -> `REFUSED: nothing was checked`, exit 2, NO per-line
                                     report and NO footer (a refusal prints no counts)
-  P4  a marker governing nothing -> `UNUSED-PIN` and `unused pin = 1`
+  P4  a marker governing nothing -> `UNUSED-PIN` and `unused pin = 1`. P4's cited number
+                                    is DERIVED from `client/src/App.tsx` at run time, not
+                                    typed: see P4_SYMBOL below.
+  P4-control  the same citation on a line carrying none of its identifiers
+                                 -> `FAIL` and exit 1. P4 alone could not tell "the
+                                    derived number lands" from "the derivation agreed
+                                    with itself"; this case separates them.
   P5  a bare backticked SHA in prose, no marker
                                  -> stays UNCHECKED: a prose pin is not a pin
   P6  a correct pin naming a symbol that is NOT on that line at that revision
@@ -52,7 +58,7 @@ the plants name (`7a4e00a`, `b7630cb`) is present. The source repository is neve
 written to. If the clone cannot be made, this EXITS NON-ZERO rather than skipping: a
 control that cannot run must not read as a pass.
 
-Exit 0 only when all seven plants produced exactly the documented outcome. Any mismatch
+Exit 0 only when all eight plants produced exactly the documented outcome. Any mismatch
 prints the plant, the expectation and the actual output, and exits 1.
 
 --mutant <name> is a second, separate proof: it weakens the instrument inside the clone
@@ -72,38 +78,33 @@ REPORT = re.compile(r"^(ok|FAIL|UNCHECKED|UNUSED-PIN|CONTINUATION|OTHER-FILE)\s"
 # The symbols below were read OUT OF THE TREES THEY ARE CITED AT, not guessed:
 #   7a4e00a:1212 -> {user?.username || 'Admin User'}
 #   tip:1216     -> `setChecklistNotice({ kind: 'error', ...`            (no `username`)
-#   tip:1808     -> {formatAmount(analytics.avgCostPerHireAE)}
-# The `tip:` entries are TIP readings - they say what the cited number holds at the tip of
-# THIS tree, which is why P2 (the same 1212, unpinned) FAILS: at this tip, `:1212` is
-# `handleLogout();`, and the `username` line has moved to :1453. They move whenever App.tsx
-# grows, and the plant's own number must move with them: 1580 -> 1597 (the escalation panel,
-# +61 lines above the analytics tab) -> 1602 (the probation write path, +5 more at that line)
-# -> 1703 (the probation evaluation screen, +101 more above the analytics tab) -> 1808 (the
-# correction screen, +105 more above the analytics tab; measured at a94bca9, where that
-# symbol is on :1808, and on :1703 at 2a23e43) -> 1875 (the pre-boarding notice lifecycle,
-# +67 more above the analytics tab; measured at 7a00a2d, where that symbol is on :1875)
-# -> 1884 (the EOSB card's own 18 inserted lines, 2026-11-08, where that symbol is on
-# :1884 - measured, not re-tipped) -> 1907 (the cost-per-hire card fix, 2026-11-08: the
-# expression moved INTO the new `CostPerHireFigure` call, +19 below the component, and the
-# two row divs it used to sit in were replaced - measured at 711804f, not re-tipped)
-# -> 1925 (the refusal-not-empty fix, 2026-11-08: +18 lines above the analytics tab; measured
-# at 08a9ca9, not re-tipped - and this is the link that reddened: at 08a9ca9 the plant still
-# said 1907, so P4 reported `exit 1, expected 0` while its UNUSED-PIN was still printed,
-# exactly the failure mode recorded below) -> 1938 (re-measured at fc5d705, 2026-11-10: the
-# rest of the refusal-not-empty fix, which merged after 08a9ca9, added 13 lines above the
-# analytics tab and moved the symbol down from the 1925 that reading recorded - measured,
-# not re-tipped) -> 1941 (re-measured at 348ae34, 2026-11-10: #399 added 3 lines at App.tsx:879,
-# above the analytics tab, and moved the symbol down from the 1938 that reading recorded -
-# measured, not re-tipped); the
-# example line moved 1212 -> 1216 for the
-# same reason. A stale P4 number does not read as "re-tip me": the citation stops landing,
-# and P4 reports `exit 1, expected 0` while its UNUSED-PIN is still printed. Re-measure the
-# number before blaming the plant.
+# The `tip:` entry is a TIP reading - it says what the cited number holds at the tip of THIS
+# tree, which is why P2 (the same 1212, unpinned) FAILS: at this tip, `:1212` is
+# `handleLogout();`, and the `username` line has moved to :1453.
 # The 1212 in P1/P2/P3/P6 is NOT a tip reading - it is the line at `7a4e00a`, where it holds
 # `{user?.username || 'Admin User'}`, and it stays 1212 because that tree does not move.
 # `{activeTab` is deliberately NOT used for P1: it is not on 7a4e00a:1212 (measured - it
 # lives at tip:2171). A plant naming a symbol that is not there would make P1 red for the
 # wrong reason. It appears in P6 instead, where its absence is the whole point.
+#
+# P4's TIP NUMBER IS DERIVED, NEVER TYPED (2026-11-10). It must be the line the cited
+# expression sits on at the tip, and while it was a hand-typed constant it was re-measured
+# ten times for the same reason - every commit that grew App.tsx above the analytics tab
+# moved it: 1580 -> 1597 -> 1602 -> 1703 -> 1808 -> 1875 -> 1884 -> 1907 -> 1925 -> 1938
+# -> 1941. The last of those failed at `8d1f508`, where #407's exit flow added ~180 lines
+# above it and the plant still said 1941: P4 reported `exit 1, expected 0` while its
+# UNUSED-PIN was still printed, which reads like a broken plant rather than a moved line.
+# A number that must be re-typed every time App.tsx grows is the defect, not the upkeep:
+# `symbol_line()` reads the line out of the clone's own `client/src/App.tsx`, and refuses
+# (CANNOT-JUDGE, exit 2) when the expression is absent or appears more than once. The
+# number is read from the FILE and never from the instrument's own report - a number copied
+# out of the instrument would make P4 agree with whatever the instrument did, which is the
+# definition of a plant that cannot redden. `P4-control` states the same citation on a line
+# that cannot satisfy it and must FAIL, so the derivation cannot quietly turn the plant into
+# a rubber stamp.
+P4_SYMBOL = "{formatAmount(analytics.avgCostPerHireAE)}"
+APP_TSX = "client/src/App.tsx"
+
 P1 = """
 # pin selftest plant
 
@@ -122,7 +123,18 @@ P3 = """
 P4 = """
 # pin selftest plant
 
-- `App.tsx:1941` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
+- `App.tsx:__LINE__` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
+"""
+# The same plant, on a line that cannot satisfy the citation: the nearest line ABOVE the
+# expression that carries none of the identifiers the expression is made of (the line
+# immediately above it carries `analytics.avgCostPerHireAE` and DOES land - measured, which
+# is why "one line off" is not a wrong plant). The instrument must print FAIL and exit 1,
+# and P4's own expectation (exit 0, UNUSED-PIN) must not be met by a plant whose number was
+# derived into agreement with itself.
+P4_CONTROL = """
+# pin selftest plant
+
+- `App.tsx:__WRONG_LINE__` renders `{formatAmount(analytics.avgCostPerHireAE)}`, and this marker governs nothing: `@rev 7a4e00a`
 """
 P5 = """
 # pin selftest plant
@@ -160,6 +172,10 @@ CASES = [
      "an unresolvable pin REFUSES: exit 2, no per-line report, no footer"),
     ("P4", P4, 0, "UNUSED-PIN", None, True,
      "a marker with no citation number after it is reported UNUSED-PIN and `unused pin` is 1"),
+    ("P4-control", P4_CONTROL, 1, None, None, True,
+     "the same citation on a line that carries none of its identifiers FAILS: P4's number is "
+     "derived from App.tsx, and this case proves the derivation cannot make the plant agree "
+     "with itself"),
     ("P5", P5, 0, "UNCHECKED", 0, True,
      "a bare backticked SHA in prose is NOT a pin: the line stays UNCHECKED"),
     ("P6", P6, 1, "FAIL", +1, True,
@@ -222,6 +238,39 @@ MUTANTS = {
 
 def run(cmd, cwd):
     return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+
+
+def symbol_line(tree, symbol, path=APP_TSX):
+    """The 1-based line `symbol` sits on in `tree/path`, how many lines carry it, and the lines.
+
+    Read from the FILE, never from the instrument's output: a number copied out of the
+    instrument would make P4 agree with whatever the instrument did, which is a plant that
+    cannot redden. Anything but exactly one hit is a broken premise, and the caller refuses.
+    """
+    try:
+        with open(os.path.join(tree, path), encoding="utf-8") as fh:
+            lines = fh.read().split("\n")
+    except OSError:
+        return None, 0, []
+    hits = [i for i, line in enumerate(lines, 1) if symbol in line]
+    return (hits[0] if len(hits) == 1 else None), len(hits), lines
+
+
+def wrong_line_near(lines, good_line, symbol):
+    """The nearest line ABOVE `good_line` that cannot satisfy the citation, or None.
+
+    "One line off" is not a wrong plant: at `8d1f508` the line above the expression carries
+    `analytics.avgCostPerHireAE`, which is one of the identifiers the cited expression is made
+    of, so that citation LANDS. A line that is genuinely wrong carries none of them, and the
+    reason is checkable by opening the file rather than trusting this harness.
+    """
+    frags = re.findall(r"[A-Za-z_][A-Za-z0-9_.-]{4,}", symbol)
+    if not frags:
+        return None
+    for n in range(good_line - 1, 0, -1):
+        if not any(f in lines[n - 1] for f in frags):
+            return n
+    return None
 
 
 def run_instrument(instrument, clone):
@@ -296,6 +345,25 @@ def main():
         print("scratch clone of %s at %s; judging with the clone's own copy of %s"
               % (repo, head, REL_INSTRUMENT))
 
+        # P4's number comes from the clone's own App.tsx (see P4_SYMBOL above). The plants below
+        # commit only design-concepts/PIN-SELFTEST-PLANT.md, so this file is the tip the plant
+        # will be judged against.
+        p4_line, p4_hits, app_lines = symbol_line(clone, P4_SYMBOL)
+        if p4_line is None:
+            print("CANNOT-JUDGE: %s appears %d time(s) in the clone's %s, not once - P4's citation "
+                  "number is derived from that file, so this is a broken premise and not a number "
+                  "to re-type." % (P4_SYMBOL, p4_hits, APP_TSX))
+            return 2
+        wrong_line = wrong_line_near(app_lines, p4_line, P4_SYMBOL)
+        if wrong_line is None:
+            print("CANNOT-JUDGE: no line above %d in %s is free of the identifiers %s is made of, "
+                  "so P4-control has nothing genuinely wrong to cite."
+                  % (p4_line, APP_TSX, P4_SYMBOL))
+            return 2
+        print("P4 target derived from %s: %s is on line %d; its control cites line %d, which "
+              "carries none of the expression's identifiers"
+              % (APP_TSX, P4_SYMBOL, p4_line, wrong_line))
+
         if mutant:
             if not apply_mutant(instrument, mutant, clone):
                 return 2
@@ -317,6 +385,7 @@ def main():
                   "meaningful, but that is its own defect.")
 
         for cid, text, want_exit, want_word, want_pin_delta, want_footer, why in CASES:
+            text = text.replace("__LINE__", str(p4_line)).replace("__WRONG_LINE__", str(wrong_line))
             with open(os.path.join(clone, PLANT), "w", encoding="utf-8") as fh:
                 fh.write(text.lstrip("\n"))
             err = commit(clone, [PLANT], "plant %s" % cid)
@@ -350,6 +419,13 @@ def main():
                                         % (g_pin - b_pin, want_pin_delta, b_pin, g_pin))
                     if cid == "P4" and g_unused != 1:
                         problems.append("unused pin = %d, expected 1" % g_unused)
+                    if cid == "P4-control" and not any(
+                            ln.startswith("FAIL") and PLANT + ":" in ln for ln in out.split("\n")):
+                        # P4-control's marker is unused exactly as P4's is, so the plant's FIRST
+                        # reported line is UNUSED-PIN either way. What separates a wrong number
+                        # from a right one is the FAIL line, and that is what this asserts.
+                        problems.append("no FAIL line for %s - the citation was not judged wrong"
+                                        % PLANT)
             else:
                 if foot:
                     problems.append("printed a footer (%r); a refusal must print no counts"
