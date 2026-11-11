@@ -24,6 +24,7 @@ const privacyNotice = require('./privacy-notice');
 // module so the screen that writes it, the route that serves it and the templates that print it
 // cannot disagree about a field name.
 const employers = require('./employers');
+const probationTerm = require('./probation-term');
 // Caller-error validation: what a request got wrong, said in a sentence the caller can act on, and
 // answered 400 — see the module's own note. `400 = the caller's fault, 500 = ours`.
 const validation = require('./request-validation');
@@ -570,6 +571,15 @@ const employerPayload = (row) => ({
   ...row,
   not_held: employers.notHeld(row),
   not_held_optional: employers.notHeldOptional(row),
+  // THE PROBATION TERM (owner ruling 2026-11-11). `probation` is the choice as it will be PRINTED —
+  // the stored number of days resolved into the unit the employer's own law counts in — and it is
+  // `null` when nobody has chosen, so the screen can say so instead of showing a default. The two
+  // options are labelled by the server for the same reason: the unit is a legal question, and the
+  // screen must not be the second place that decides it. `probation_not_held` is the part of the
+  // record that withholds a contract, by the same labels a refusal uses.
+  probation: probationTerm.reading(row),
+  probation_options: probationTerm.optionsFor(row ? row.jurisdiction : null),
+  probation_not_held: probationTerm.missingFrom(row),
 });
 
 app.get('/api/employers', async (req, res) => {
@@ -585,14 +595,29 @@ app.get('/api/employers', async (req, res) => {
 // dropped: a typo silently ignored is a field the reader believes they saved. A blank string CLEARS
 // the fact (stored NULL) rather than storing `''`, which would print as an empty cell on a contract
 // and read as filled. `updated_at` is the server's, not the caller's.
+// A write that would store a probation term the record cannot state lawfully is refused with 422 and
+// the reason named (`server/probation-term.js#saveProblem`) — see the block inside the route.
 app.put('/api/employers/:id', async (req, res) => {
   try {
     const { values, problem } = employers.normalise(req.body);
     if (problem) return res.status(400).json({ error: problem });
     const columns = Object.keys(values);
     if (columns.length === 0) return res.status(400).json({ error: 'no field to write' });
-    const existing = await db.query(`SELECT id FROM employers WHERE id = ${db.escapeString(req.params.id)}`);
+    const existing = await db.query(`SELECT * FROM employers WHERE id = ${db.escapeString(req.params.id)}`);
     if (existing.length === 0) return res.status(404).json({ error: 'Employer not found' });
+
+    // THE PROBATION RULE IS THE SERVER'S, not the screen's (owner ruling 2026-11-11). A term is only
+    // storable when the record can also say it lawfully: a jurisdiction to give it a unit, no
+    // extension evidence anywhere but KSA 180, and — for KSA 180 — the written extension agreement
+    // that makes the term hold past day 90. The check runs against the row AS IT WILL BE STORED, so a
+    // write that clears the evidence while leaving the 180-day term is refused exactly like one that
+    // sets the term without it. 422 with the reason named, because a rule only the client can enforce
+    // is a suggestion, and `field` says which control the reader has to change.
+    const merged = Object.assign({}, existing[0], values);
+    const probationProblem = probationTerm.saveProblem(merged);
+    if (probationProblem) {
+      return res.status(422).json({ error: probationProblem.error, field: probationProblem.field });
+    }
     const assignments = columns
       .map((column) => `${column} = ${values[column] === null ? 'NULL' : db.escapeString(values[column])}`)
       .join(', ');
@@ -1089,11 +1114,20 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
       : null;
     const employerFacts = employers.factsFrom(employerRow);
 
+    // THE PROBATION TERM (owner ruling 2026-11-11) — one stored number of days, printed in the unit the
+    // document's own jurisdiction counts in: "6 months" on a UAE contract, "180 days" on a KSA one, from
+    // the same `employers.probation_days = 180`. `server/probation-term.js` is the one place that decides
+    // the unit, so the templates' own words (`[probation_period] months` / ` days`) are fed a number in
+    // the unit they already name rather than a second phrase that could disagree with them. A term
+    // nobody chose supplies no fact, and the renderer names it — the contract is withheld, not defaulted.
+    const probationFacts = probationTerm.factsFrom(employerRow);
+
     const templateData = {
       ...emp,
       full_name: `${emp.first_name} ${emp.last_name}`,
       ...nationalIdFacts,
       ...employerFacts,
+      ...probationFacts,
       employee_id: emp.id,
       total_salary: heldAmount(emp.salary),
       basic_salary: heldAmount(emp.basic_salary),
@@ -1128,6 +1162,20 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
     const templateContent = fs.readFileSync(templatePath, 'utf8');
     const rendered = compliance.renderTemplate(templateContent, templateData);
 
+    // A 180-day KSA term also needs the written extension agreement, and that is NOT a placeholder in
+    // either contract: the term the document prints is the resolved one, and the evidence that makes it
+    // lawful sits behind it. So the fact is added to `missing` here, for exactly the documents that
+    // print a probation term — a statement that names none is not refused for it (a refusal drawn as a
+    // finding about a fact the document never asks for is the defect class this project has already
+    // closed twice). `server/probation-term.js` decides which facts are missing; this line only unions
+    // its answer with the renderer's, one label at a time, so the refusal names the extension rather
+    // than standing in for it with an empty list.
+    const probationMissing = templateContent.indexOf('[probation_period]') === -1
+      ? []
+      : probationTerm.missingFrom(employerRow);
+    const missing = rendered.missing.concat(
+      probationMissing.filter((label) => rendered.missing.indexOf(label) === -1));
+
     // A document that names a fact we do not hold is NOT ISSUED, and the mechanism is a refusal
     // BODY rather than a 4xx: this route has exactly one caller, `fetchTemplate` in
     // client/src/App.tsx, which renders `content` on 2xx and renders NOTHING on any other status
@@ -1135,19 +1183,19 @@ app.get('/api/compliance/templates/:templateName/:employeeId', async (req, res) 
     // reader clicking "Employment Contract" would see nothing at all, unable to tell a refusal from
     // a broken page. `issued: false` states it for any other caller, and the body carries no part
     // of the document (compliance_engine.refusalDocument), so it cannot be mistaken for one.
-    if (compliance.documentClassFor(templateName) === 'instrument' && rendered.missing.length > 0) {
+    if (compliance.documentClassFor(templateName) === 'instrument' && missing.length > 0) {
       return res.json({
         issued: false,
         template: templateName,
         employee_id: employeeId,
-        missing_fields: rendered.missing,
+        missing_fields: missing,
         eosb_basis: templateData.eosb_basis,
-        content: compliance.refusalDocument({ templateName, employeeId, missing: rendered.missing }),
+        content: compliance.refusalDocument({ templateName, employeeId, missing }),
       });
     }
     // A form (a working document a human fills in) is served with a legible blank where a fact is
     // missing — never a plausible-looking value — and names the blanks it carries.
-    res.json({ issued: true, unpopulated_fields: rendered.missing, eosb_basis: templateData.eosb_basis, content: rendered.content });
+    res.json({ issued: true, unpopulated_fields: missing, eosb_basis: templateData.eosb_basis, content: rendered.content });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error" });
   }

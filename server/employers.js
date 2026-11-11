@@ -38,6 +38,7 @@
  * document — the defect this change closes.
  */
 const { OPTIONAL_FACTS } = require('./compliance_engine');
+const probationTerm = require('./probation-term');
 
 const FIELDS = Object.freeze([
   { column: 'legal_name', fact: 'employer_name', label: 'employer legal name' },
@@ -58,8 +59,16 @@ const FIELDS = Object.freeze([
   { column: 'dpo_phone', fact: 'dpo_phone', label: 'data protection contact phone' },
 ]);
 
-/** The columns a write may set — every field above, and nothing else (no `id`, no timestamps). */
-const WRITABLE_COLUMNS = Object.freeze(FIELDS.map((f) => f.column));
+/**
+ * The columns a write may set — every field above, plus the probation term and its extension
+ * evidence, and nothing else (no `id`, no timestamps).
+ *
+ * The probation columns are NOT in `FIELDS` on purpose: `FIELDS` is the column → placeholder mapping
+ * for a fact that prints as itself, and a probation term does not. One stored number of days prints
+ * as "6 months" in a UAE contract and "180 days" in a KSA one, so the rendering is jurisdiction work
+ * (`server/probation-term.js`) and the raw column must never reach a template as a fact.
+ */
+const WRITABLE_COLUMNS = Object.freeze(FIELDS.map((f) => f.column).concat(probationTerm.COLUMNS));
 
 /** The two markets this record can name. Stored as the market, not as the employee residency code
  *  (`employees.jurisdiction` holds `AE`/`SA`, which is a residence question, not an entity one). */
@@ -142,12 +151,34 @@ function normalise(body) {
     if (!Object.prototype.hasOwnProperty.call(body, column)) continue;
     const raw = body[column];
     if (raw === null || raw === undefined) { values[column] = null; continue; }
+    // THE PROBATION TERM IS A NUMBER OF DAYS, and only the two the client may choose. It arrives as a
+    // JSON string from the screen's `<select>` and as a number from any other caller, so both are
+    // accepted and both are stored as the integer — one value, one type. Anything else is refused by
+    // name rather than stored: the database CHECK would refuse it too, and a rule the client alone
+    // enforces is not a rule.
+    if (column === 'probation_days') {
+      if (typeof raw !== 'string' && typeof raw !== 'number') {
+        return { values: null, problem: 'probation_days must be 90 or 180' };
+      }
+      const text = String(raw).trim();
+      if (text === '') { values[column] = null; continue; }
+      const days = Number(text);
+      if (probationTerm.TERMS.indexOf(days) === -1) {
+        return { values: null, problem: `probation_days must be one of ${probationTerm.TERMS.join(' / ')} — the two terms a client may choose` };
+      }
+      values[column] = days;
+      continue;
+    }
     if (typeof raw !== 'string') {
       return { values: null, problem: `${column} must be a string` };
     }
     const trimmed = raw.trim();
     if (column === 'jurisdiction' && trimmed !== '' && JURISDICTIONS.indexOf(trimmed) === -1) {
       return { values: null, problem: `jurisdiction must be one of ${JURISDICTIONS.join(' / ')}` };
+    }
+    if (column === 'probation_extension_date' && trimmed !== '') {
+      const problem = probationTerm.dateProblem(trimmed);
+      if (problem) return { values: null, problem: `probation_extension_date ${problem}` };
     }
     values[column] = trimmed === '' ? null : trimmed;
   }

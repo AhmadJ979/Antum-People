@@ -155,6 +155,14 @@ const REQUIRED_FACTS = Object.freeze({
   dpo_phone: 'data protection contact phone',
   // terms the document states as agreed
   probation_period: 'probation period',
+  // THE EVIDENCE A 180-DAY KSA TERM NEEDS (owner ruling 2026-11-11). The term itself is the fact
+  // above, read from `employers.probation_days`; these two are the written extension agreement that
+  // makes a KSA 180-day term lawful, and they are required facts for exactly one state — KSA, 180
+  // days — which is why no template names their placeholders and the route adds them to `missing`
+  // itself (`server/probation-term.js#missingFrom`). The UAE has no extension mechanism, so nothing
+  // may demand them there.
+  probation_extension_reference: 'probation extension agreement reference',
+  probation_extension_date: 'probation extension agreement date',
   visa_status: 'visa status',
   // WHY the employment ended, when the document states it. A reason is a record of an event, so a
   // blank row is a missing fact and not a default: the settlement statement's Reason for Termination
