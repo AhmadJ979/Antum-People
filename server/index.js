@@ -562,10 +562,20 @@ const EMPLOYEE_WRITE_SPEC = {
 // the screen has to be able to say what is still blank without knowing the mapping, and a reader of
 // a withheld document gets the same words from `renderTemplate`'s `missing`. An empty list is a true
 // result here (no employer recorded yet), not a refusal — a refusal is the gate's 403.
+// `not_held_optional` is the part of `not_held` that does NOT withhold a document (owner ruling
+// 2026-11-10, the KSA/Mudad question): a blank Mudad code is printed on the document as "not held"
+// instead of blocking it, so a screen that said every blank field withholds the document would be
+// false. Both lists come from `server/employers.js`; the screen derives neither.
+const employerPayload = (row) => ({
+  ...row,
+  not_held: employers.notHeld(row),
+  not_held_optional: employers.notHeldOptional(row),
+});
+
 app.get('/api/employers', async (req, res) => {
   try {
     const rows = await db.query('SELECT * FROM employers ORDER BY created_at, id');
-    res.json({ employers: rows.map((row) => ({ ...row, not_held: employers.notHeld(row) })) });
+    res.json({ employers: rows.map(employerPayload) });
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -589,7 +599,7 @@ app.put('/api/employers/:id', async (req, res) => {
     await db.query(`UPDATE employers SET ${assignments}, updated_at = CURRENT_TIMESTAMP WHERE id = ${db.escapeString(req.params.id)}`);
     const updated = await db.query(`SELECT * FROM employers WHERE id = ${db.escapeString(req.params.id)}`);
     const row = updated[0];
-    res.json({ employer: { ...row, not_held: employers.notHeld(row) } });
+    res.json({ employer: employerPayload(row) });
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' });
   }

@@ -12,9 +12,10 @@
  *     employer" when the employee points at none;
  *   * the WRITE refuses what it cannot store (an unknown field, a jurisdiction outside UAE/KSA), and a
  *     blank field CLEARS the fact instead of storing an empty cell;
- *   * every fact this record fills is one `compliance_engine.REQUIRED_FACTS` will withhold a document
- *     for — the direction that matters, because a fact the record fills and the engine does not
- *     require is a bracketed blank on an ISSUED document.
+ *   * every fact this record fills is one the engine KNOWS — either a `REQUIRED_FACTS` fact it
+ *     withholds a document for, or an `OPTIONAL_FACTS` fact it prints in words ("— (Mudad
+ *     establishment code — not held)", owner ruling 2026-11-10). The direction that matters: a fact
+ *     the record fills and the engine knows nothing about is a bracketed blank on an ISSUED document.
  *
  * It runs a REAL server on a scratch port against a throwaway database and never touches the live
  * service, the live database or the live credential (WORKFLOW rules 5, 10, 14).
@@ -245,20 +246,52 @@ describe('the cell is the roster\'s own', () => {
 });
 
 describe('the mapping is tied to the engine in the direction that matters', () => {
-  test('every fact the employer record fills is one a document is withheld for', () => {
+  test('every fact the employer record fills is one the engine knows: required, or printed in words', () => {
+    const known = Object.assign({}, compliance.REQUIRED_FACTS, compliance.OPTIONAL_FACTS);
     const missing = employers.FIELDS
-      .filter((field) => field.fact && !(field.fact in compliance.REQUIRED_FACTS))
+      .filter((field) => field.fact && !(field.fact in known))
       .map((field) => field.fact);
     assert.deepStrictEqual(missing, [],
-      'a fact this record fills and the engine does not require would print as a bracketed blank on an ISSUED document');
+      'a fact this record fills and the engine knows nothing about would print as a bracketed blank on an ISSUED document');
   });
 
-  test('the label the screen uses and the label a refusal names are the same words', () => {
+  test('the label the screen uses and the label the engine names are the same words', () => {
+    const known = Object.assign({}, compliance.REQUIRED_FACTS, compliance.OPTIONAL_FACTS);
     for (const field of employers.FIELDS) {
       if (!field.fact) continue;
-      assert.strictEqual(compliance.REQUIRED_FACTS[field.fact], field.label,
-        `${field.fact}: the screen says "${field.label}" and the refusal says "${compliance.REQUIRED_FACTS[field.fact]}"`);
+      assert.strictEqual(known[field.fact], field.label,
+        `${field.fact}: the screen says "${field.label}" and the engine says "${known[field.fact]}"`);
     }
+  });
+
+  // Owner ruling 2026-11-10, the KSA/Mudad question: "Mudad is required only where the employer is
+  // enrolled — the fact stops withholding a KSA contract, and the contract says so in words."
+  test('a blank Mudad code prints in words and does NOT withhold; a blank required fact still does', () => {
+    const template = 'Mudad: [mudad_code]\nLicence: [trade_license]\n';
+    const blank = compliance.renderTemplate(template, {});
+    assert.strictEqual(blank.missing.indexOf('Mudad establishment code'), -1,
+      'a blank Mudad code must not be a fact the document is withheld for');
+    assert.deepStrictEqual(blank.missing, ['trade licence number'],
+      'a blank fact the engine still requires must still withhold, or this test would pass on a renderer that withholds for nothing');
+    assert.strictEqual(blank.content.indexOf('[mudad_code]'), -1,
+      'the bracketed blank must never reach a reader');
+    assert.ok(blank.content.indexOf('\u2014 (Mudad establishment code \u2014 not held)') !== -1,
+      `the line must say it in words (got ${JSON.stringify(blank.content)})`);
+
+    const held = compliance.renderTemplate('Mudad: [mudad_code]\n', { mudad_code: 'MUDAD-0000001' });
+    assert.strictEqual(held.content, 'Mudad: MUDAD-0000001\n', 'a recorded code prints as the code, with no "not held" beside it');
+    assert.deepStrictEqual(held.missing, [], 'and nothing is missing');
+  });
+
+  test('the screen is told which blank facts do NOT withhold', () => {
+    const blank = {};
+    for (const column of employers.WRITABLE_COLUMNS) blank[column] = null;
+    const row = Object.assign({}, blank);
+    assert.deepStrictEqual(employers.notHeldOptional(row), ['Mudad establishment code'],
+      'exactly the optional fact, by the label the screen shows');
+    row.mudad_code = 'MUDAD-0000001';
+    assert.deepStrictEqual(employers.notHeldOptional(row), [],
+      'a recorded code is not a blank one');
   });
 
   test('a record with no row yields NO facts — no default, and no fallback to another employer', () => {
