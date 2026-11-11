@@ -31,11 +31,14 @@
 /**
  * Column → the placeholder it fills, in the order the record is laid out for a reader.
  *
- * `label` is the wording `compliance_engine.REQUIRED_FACTS` uses for the same fact, so the refusal a
- * reader gets names the field the screen names. The two lists are tied together by a test
- * (`server/employers.test.js`), because a fact this record fills and the engine does not require
- * would print as a bracketed blank on an issued document — the defect this change closes.
+ * `label` is the wording `compliance_engine.REQUIRED_FACTS` (or, for a fact that does not withhold a
+ * document, `OPTIONAL_FACTS`) uses for the same fact, so the refusal a reader gets names the field the
+ * screen names. The lists are tied together by a test (`server/employers.test.js`), because a fact
+ * this record fills and the engine knows nothing about would print as a bracketed blank on an issued
+ * document — the defect this change closes.
  */
+const { OPTIONAL_FACTS } = require('./compliance_engine');
+
 const FIELDS = Object.freeze([
   { column: 'legal_name', fact: 'employer_name', label: 'employer legal name' },
   { column: 'jurisdiction', fact: null, label: 'jurisdiction' },
@@ -101,6 +104,22 @@ function notHeld(row) {
 }
 
 /**
+ * The subset of `notHeld` that does NOT withhold a document.
+ *
+ * Owner ruling 2026-11-10 (the KSA/Mudad question): the Mudad establishment code is required only
+ * where the employer is enrolled, so a blank one stops nothing — a document that prints it says
+ * "not held" in words (`server/compliance_engine.js#OPTIONAL_FACTS`). The screen needs both lists to
+ * tell the truth: `not_held` is what is blank, and this is the part of it that does not withhold.
+ * Kept here, beside the mapping, so the screen never derives it from a second list that could drift.
+ */
+function notHeldOptional(row) {
+  return notHeld(row).filter((label) => {
+    const field = FIELDS.filter((f) => f.label === label)[0];
+    return Boolean(field && field.fact && Object.prototype.hasOwnProperty.call(OPTIONAL_FACTS, field.fact));
+  });
+}
+
+/**
  * Validate and normalise a write body into column values.
  *
  * Strings only, trimmed, and a blank string becomes SQL NULL — the same "blank is not a fact" rule
@@ -141,5 +160,6 @@ module.exports = {
   JURISDICTIONS,
   factsFrom,
   notHeld,
+  notHeldOptional,
   normalise,
 };

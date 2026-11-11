@@ -32,7 +32,7 @@
 | Email / البريد الإلكتروني | [employer_email] |
 | Phone / هاتف | [employer_phone] |
 | Qiwa Establishment ID / معرف المنشأة في Qiwa | [qiwa_id] |
-| Mudad Establishment Code / كود المنشأة في Mudad (if applicable) | [mudad_code] |
+| Mudad Establishment Code / كود المنشأة في Mudad | [mudad_code] |
 
 #### Employee / الموظف
 

@@ -600,6 +600,8 @@ const ReplacementCostOnFlag = ({ state }: { state?: ReplacementCostReading }) =>
  * `not_held` is the SERVER's own list of the facts this record does not hold (`server/employers.js`),
  * so the screen never re-derives which fields are blank from a second list that could drift: the
  * sentence under the form and the refusal on a withheld document name the same facts.
+ * `not_held_optional` is the part of that list which does NOT withhold a document — see
+ * `employerBlankReading` below.
  */
 interface EmployerRecord {
   id: string;
@@ -620,6 +622,10 @@ interface EmployerRecord {
   dpo_email: string | null;
   dpo_phone: string | null;
   not_held: string[];
+  /** The part of `not_held` that does NOT withhold a document (owner ruling 2026-11-10, the
+   *  KSA/Mudad question): a blank Mudad establishment code is printed on the contract as
+   *  "not held" in words instead of blocking it. Also the SERVER's list, never derived here. */
+  not_held_optional: string[];
 }
 
 /**
@@ -653,6 +659,27 @@ const EMPLOYER_FIELDS: Array<{ column: string; label: string; group: string }> =
 /** The same fields, grouped the way a reader fills them in. Order comes from the list above. */
 const EMPLOYER_GROUPS = ['Who the employer is', 'Registrations', 'Signatory', 'Data protection contact']
   .map((title) => ({ title, fields: EMPLOYER_FIELDS.filter((field) => field.group === title) }));
+
+/**
+ * WHAT THE BLANK FIELDS MEAN, in the two kinds the server distinguishes.
+ *
+ * A blank field withholds a document; a blank field in `not_held_optional` does not — the document
+ * prints "not held" in words and is issued (owner ruling 2026-11-10, the KSA/Mudad question: Mudad is
+ * required only where the employer is enrolled). One sentence built from both lists, so the screen
+ * can never say a blank field withholds a document the server will issue.
+ */
+const employerBlankReading = (record: EmployerRecord): string => {
+  const optional = record.not_held_optional || [];
+  const withholding = record.not_held.filter((label) => optional.indexOf(label) === -1);
+  const parts: string[] = [];
+  if (withholding.length > 0) {
+    parts.push(`${withholding.join(', ')} ${withholding.length === 1 ? 'is' : 'are'} still blank, so a document that prints ${withholding.length === 1 ? 'it' : 'one of them'} is withheld rather than issued with a gap.`);
+  }
+  if (optional.length > 0) {
+    parts.push(`${optional.join(', ')} ${optional.length === 1 ? 'is' : 'are'} still blank, but ${optional.length === 1 ? 'it does' : 'they do'} not withhold anything: a document that prints ${optional.length === 1 ? 'it' : 'them'} says "not held" in words.`);
+  }
+  return parts.join(' ');
+};
 
 /** What the form says when the server refuses the WRITE. The read has its own sentence, composed
  *  from the policy cell (`panelReading.js`); a write is a different act and is named as one. */
@@ -909,7 +936,7 @@ export default function App() {
           kind: 'saved',
           text: saved.not_held.length === 0
             ? 'Saved. Every fact the documents print is recorded.'
-            : `Saved. ${saved.not_held.length} fact${saved.not_held.length === 1 ? '' : 's'} still blank, so a document that prints ${saved.not_held.length === 1 ? 'it' : 'them'} stays withheld: ${saved.not_held.join(', ')}.`,
+            : `Saved. ${saved.not_held.length} fact${saved.not_held.length === 1 ? '' : 's'} still blank. ${employerBlankReading(saved)}`,
         });
       }
     } catch (err) {
@@ -3999,7 +4026,7 @@ export default function App() {
                   <p className="text-[11px] text-slate-500">
                     {record.not_held.length === 0
                       ? 'Every fact the documents print is recorded.'
-                      : `Still blank, so any document that prints one of them is withheld rather than issued with a gap: ${record.not_held.join(', ')}.`}
+                      : employerBlankReading(record)}
                   </p>
 
                   {employerNotice && (

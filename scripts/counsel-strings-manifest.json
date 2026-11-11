@@ -13,11 +13,11 @@
   }
  ],
  "measured_from": {
-  "tree_revision": "1d84e8a",
-  "revision_note": "1d84e8a is the revision the hashes were READ from - a hash must name the revision it was measured from, and this field and this sentence name the same one. 1d84e8a carries the served change itself (the notice's section 9 and its v2.4 lines); this manifest is committed on top of it, because a hash cannot be read from a commit that contains it. The commit that carries this manifest touches exactly one file, `scripts/counsel-strings-manifest.json`, and no served path loads it: nothing in `server/` or `client/` references this guard or its manifest, and the single occurrence of the word `scripts` in `server/index.js` is a comment naming `scripts/seed-demo.js` (line 636), not a load. So the served bytes at this commit's head are the bytes hashed here. The guard prints the revision it judged on every run, so a reader never takes that on trust.",
+  "tree_revision": "d95023d",
+  "revision_note": "d95023d is the revision the hashes were READ from - a hash must name the revision it was measured from, and this field and this sentence name the same one. d95023d carries the served change itself (the KSA refusal loses its 'Mudad establishment code' bullet, because that fact moved from REQUIRED_FACTS to OPTIONAL_FACTS); this manifest is committed on top of it, because a hash cannot be read from a commit that contains it. The commit that carries this manifest touches exactly one file, `scripts/counsel-strings-manifest.json`, and no served path loads it: nothing in `server/` or `client/` references this guard or its manifest, and the single occurrence of the word `scripts` in `server/index.js` is a comment naming `scripts/seed-demo.js`, not a load. So the served bytes at this commit's head are the bytes hashed here. Every other unit was re-measured at d95023d in the same run and came out byte-identical to the previous cut at 1d84e8a, so 47 of the 48 units still name bytes nobody has moved. The guard prints the revision it judged on every run, so a reader never takes that on trust.",
   "how": "booted a scratch instance of the tree (own port, throwaway database, throwaway hr_admin user), created the fixture through the product's own writers, and hashed the bytes of the HTTP responses",
   "fixture": "one UAE and one KSA employee created by POST /api/employees with fixed literals, each moved to `offboarding` by PUT so both task checklists exist, plus one pre-boarding case by POST /api/preboarding/cases. The record and case ids the product mints are masked out of the served bytes (see mask() in the guard): a refusal names the record it refused, and that uuid is fixture noise, not legal text.",
-  "generated_at": "2026-11-10T18:24:23Z",
+  "generated_at": "2026-11-11T09:17:05Z",
   "generated_by": "AhmadJ979"
  },
  "units": [
@@ -65,17 +65,17 @@
   },
   {
    "id": "doc:ksa-employment-contract",
-   "sha256": "b8ec45a41479d6eb288c40931b6f4a0302e4973913c98932eac3a1fbaf32a10c",
-   "bytes": 941,
+   "sha256": "825779ed6ef656773188bbf234e97f7e7d8faedbab8537f250d6c116ee5d85f0",
+   "bytes": 914,
    "review": "unreviewed",
    "counsel_question": null,
    "where": "GET /api/compliance/templates/ksa-employment-contract/<record> -> content (the served refusal - the document itself is withheld)",
    "marked": {
-    "at": "2026-11-10T18:04:53Z",
-    "tree_revision": "8139efe",
+    "at": "2026-11-11T09:17:05Z",
+    "tree_revision": "d95023d",
     "by": "AhmadJ979",
-    "note": "a828c15 (#410) added FIVE employer facts to the refusal this route serves: employer PO box, employer city, employer phone, employer email and Mudad establishment code - all five employer placeholders the KSA contract's party block prints. Seven facts were added to REQUIRED_FACTS in all; the other two, data protection contact name and data protection contact phone, land only in the privacy notice, and the UAE contract carries four of the five (it prints no Mudad code). No template was edited (templates/uae-employment-contract.md, templates/ksa-employment-contract.md and templates/privacy-notice.md are byte-identical between 0c0b135 and 8139efe - only the refusal's list of missing facts moved); nobody read any of it: no counsel recipient exists, so all three stay unreviewed with counsel_question null.",
-    "from_sha256": "81f85893ba94108a53fce3d146c1d9b31920c10e7f430af20eb11cc605347371"
+    "note": "Owner ruling 2026-11-10 on the KSA/Mudad question: mudad_code left REQUIRED_FACTS for OPTIONAL_FACTS, so this route no longer withholds the KSA contract on that fact and the served refusal no longer lists 'Mudad establishment code' among the facts it is waiting for - one bullet, one line shorter. It is still the served REFUSAL and not the document: probation_period is still required and held by no record, so the contract is still withheld for it. No template clause reaches this unit (templates/ksa-employment-contract.md:35 lost its '(if applicable)' hedge in the same change; a refusal carries no template text). Nobody read any of it: no counsel recipient exists, so the unit stays unreviewed with counsel_question null.",
+    "from_sha256": "b8ec45a41479d6eb288c40931b6f4a0302e4973913c98932eac3a1fbaf32a10c"
    }
   },
   {

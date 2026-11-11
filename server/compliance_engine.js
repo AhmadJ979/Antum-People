@@ -133,12 +133,18 @@ const REQUIRED_FACTS = Object.freeze({
   // the same defect as an invented value: it tells the reader nothing and looks like a mail-merge
   // failure. Each is now a fact a document cannot be issued without, so the document is withheld and
   // the refusal names the field. `server/employers.test.js` holds the direction that matters — every
-  // placeholder the employer record fills is required here.
+  // placeholder the employer record fills is either required here or printed in words from
+  // `OPTIONAL_FACTS` below.
+  //
+  // 2026-11-10, LATER THE SAME DAY: `mudad_code` LEFT this table for `OPTIONAL_FACTS` (below). It is
+  // still never a bracketed blank — it prints as "— (Mudad establishment code — not held)" — but it
+  // no longer withholds a document. The sentence above is kept as the record of what the four that
+  // remain were added for; it is not true of `mudad_code` any more, and this note is where that
+  // changed rather than a rewrite of the original.
   employer_po_box: 'employer PO box',
   employer_city: 'employer city',
   employer_phone: 'employer phone',
   employer_email: 'employer email',
-  mudad_code: 'Mudad establishment code',
   employer_representative: 'employer signatory name',
   employer_representative_title: 'employer signatory title',
   trade_license: 'trade licence number',
@@ -177,6 +183,26 @@ const REQUIRED_FACTS = Object.freeze({
   // the employer's to deduct and the statement may not name it as one.
   total_deductions: 'total deductions',
   net_settlement: 'net settlement payable'
+});
+
+/**
+ * FACTS A DOCUMENT PRINTS IN WORDS WHEN NOBODY HAS RECORDED THEM — AND IS NOT WITHHELD FOR.
+ *
+ * Owner ruling 2026-11-10, on the KSA/Mudad question: "Mudad is required only where the employer is
+ * enrolled — the fact stops withholding a KSA contract, and the contract says so in words."
+ *
+ * So a KSA employer outside Mudad is not blocked by this fact. The placeholder still never reaches a
+ * reader as a bracketed blank: `renderTemplate` fills it with `— (Mudad establishment code — not
+ * held)`, and the refusal does NOT list it, because nothing is being refused on its account. A
+ * contract that is withheld for some OTHER fact keeps this line legible while it waits.
+ *
+ * This is deliberately NOT a default. A default would put a value-shaped string ("Not applicable",
+ * "N/A") where a code belongs, on every document whose field is merely unfilled — the reader could
+ * not tell a recorded non-enrolment from an unrecorded one. Here the absence is printed as an
+ * absence, and the label is the same words the employer record and a refusal use.
+ */
+const OPTIONAL_FACTS = Object.freeze({
+  mudad_code: 'Mudad establishment code'
 });
 
 /**
@@ -267,6 +293,9 @@ function renderTemplate(templateContent, data = {}) {
     // come from. One value, one source: the record (owner ruling 2026-10-29).
   };
   for (const key of Object.keys(REQUIRED_FACTS)) values[key] = data[key];
+  // The optional facts are read from the record too — an employer who IS enrolled records a Mudad
+  // code, and it prints. What changes when it is absent is that the document is not withheld for it.
+  for (const key of Object.keys(OPTIONAL_FACTS)) values[key] = data[key];
 
   let rendered = templateContent;
   const missing = [];
@@ -278,7 +307,16 @@ function renderTemplate(templateContent, data = {}) {
       rendered = rendered.split(placeholder).join(String(value));
       continue;
     }
-    if (!Object.prototype.hasOwnProperty.call(REQUIRED_FACTS, key)) continue; // the template's own blank
+    if (!Object.prototype.hasOwnProperty.call(REQUIRED_FACTS, key)) {
+      // A fact a document prints in words when it is not held, and is NOT withheld for (owner ruling
+      // 2026-11-10: Mudad is required only where the employer is enrolled). The line stays legible —
+      // it never reaches a reader as `[mudad_code]` — and it is absent from `missing`, so the
+      // document issues.
+      if (Object.prototype.hasOwnProperty.call(OPTIONAL_FACTS, key)) {
+        rendered = rendered.split(placeholder).join('\u2014 (' + OPTIONAL_FACTS[key] + ' \u2014 not held)');
+      }
+      continue; // the template's own blank
+    }
     rendered = rendered.split(placeholder).join('\u2014 (' + REQUIRED_FACTS[key] + ' \u2014 not held)');
     if (missing.indexOf(REQUIRED_FACTS[key]) === -1) missing.push(REQUIRED_FACTS[key]);
   }
@@ -400,6 +438,7 @@ module.exports = {
   documentClassFor,
   unpopulatedPlaceholders,
   REQUIRED_FACTS,
+  OPTIONAL_FACTS,
   DOCUMENT_CLASS,
   checklistTemplates
 };
