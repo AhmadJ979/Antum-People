@@ -133,7 +133,7 @@ function md5(file) {
  * Runs every check against a client tree. `clientDir` lets the self-check point the whole thing at a
  * scratch copy; the real run uses this file's own client. Returns {checks, failures, fonts, revision}.
  */
-export function checkTypefaces({ clientDir = CLIENT, repoDir = REPO } = {}) {
+export function checkTypefaces({ clientDir = CLIENT, repoDir = REPO, buildHtmlText = null } = {}) {
   const checks = [];
   const failures = [];
   const notes = [];
@@ -144,7 +144,9 @@ export function checkTypefaces({ clientDir = CLIENT, repoDir = REPO } = {}) {
 
   const css = fs.readFileSync(path.join(clientDir, 'src', 'index.css'), 'utf8');
   const app = fs.readFileSync(path.join(clientDir, 'src', 'App.tsx'), 'utf8');
-  const buildHtml = fs.readFileSync(path.join(repoDir, 'templates', 'build-html.js'), 'utf8');
+  const buildHtml = buildHtmlText === null
+    ? fs.readFileSync(path.join(repoDir, 'templates', 'build-html.js'), 'utf8')
+    : buildHtmlText;
   const srcFaces = facesIn(css);
 
   // ---- 1-2-3: the roles, their ranges and their stacks, read from the source that declares them
@@ -188,10 +190,23 @@ export function checkTypefaces({ clientDir = CLIENT, repoDir = REPO } = {}) {
     + 'serif face for Arabic too.');
 
   // ---- the print pipeline: rtl stack head, Latin tail untouched, referenced file exists
-  const rtl = /\.lang\[dir="rtl"\]\s+body[^{]*\{[^}]*font-family:\s*([^;}]+)/.exec(buildHtml);
+  // THE SELECTOR MUST NAME THE CLASS THE ARABIC BLOCK CARRIES. This guard used to require
+  // `.lang[dir="rtl"] body { font-family: ... }` - and the builder's markup has never carried a `lang`
+  // class at all: the Arabic block is `<div class="lang-ar" dir="rtl">`. So the rule selected nothing, the
+  // Noto Naskh face was never requested, and every printed PDF drew its Arabic from the system DejaVu Sans
+  // while this check stayed green (measured 2026-11-11: all three PDFs embedded DejaVuSans only). The class
+  // is read off the markup here, so a font rule that stops naming it is a RED, not a silent fallback.
+  const arMarkup = /<div class="([^"]*)"[^>]*\bdir="rtl"/.exec(buildHtml);
+  const arClass = arMarkup
+    ? (arMarkup[1].split(/\s+/).find((c) => c.startsWith('lang-')) || 'lang-ar')
+    : 'lang-ar';
+  const rtl = new RegExp(`\\.${arClass}[^{}]*\\{[^}]*font-family:\\s*([^;}]+)`).exec(buildHtml);
   add('document-and-preview-arabic: the print rtl stack starts with Noto Naskh Arabic',
     rtl !== null && firstFamily(rtl[1]) === 'Noto Naskh Arabic',
-    `templates/build-html.js's rtl stack is ${rtl === null ? 'not found' : JSON.stringify(rtl[1])}`);
+    `templates/build-html.js has no font-family rule selecting .${arClass}, the class its Arabic block `
+    + `carries${arMarkup ? '' : ' (no dir="rtl" block with a class was found either)'}; `
+    + `the rtl stack is ${rtl === null ? 'not found' : JSON.stringify(rtl[1])}. A rule that selects a `
+    + 'class the markup does not carry requests no face at all, and the Arabic prints in a system fallback.');
   add('document-and-preview-arabic: the print rtl stack keeps its Latin tail',
     rtl !== null && normStack(rtl[1]).split(', ').slice(1).join(', ') === "'DejaVu Sans', 'Segoe UI', sans-serif",
     'the rtl stack\u2019s Latin tail in templates/build-html.js changed; Latin inside an Arabic '
@@ -348,7 +363,8 @@ test(`typeface roles hold: ${summarise(RESULT)}`, () => {
     'the typeface roles do not hold (each failing check is logged above with its reason)');
 });
 
-test('the guard can fail: a deleted unicode-range and a url() at a missing file both redden', () => {
+test('the guard can fail: a deleted unicode-range, a url() at a missing file and a font rule selecting a '
+  + 'class the markup does not carry all redden', () => {
   const root = fs.mkdtempSync(path.join('/tmp', 'typefaces-selftest-'));
   try {
     scratchCopy(root);
@@ -381,13 +397,25 @@ test('the guard can fail: a deleted unicode-range and a url() at a missing file 
       `plant (b) did not redden on the missing path; failures were: `
       + `${JSON.stringify(redB.failures.map((f) => f.name))}`);
     fs.writeFileSync(builtCss, builtText);
+    // PLANT (c): the historical defect, put back - the font rule selects `.lang[dir="rtl"]`, a class the
+    // Arabic block does not carry, so no face is requested and the Arabic prints in the system fallback.
+    // The builder text is passed in rather than written over the repository's own file.
+    const cleanHtmlText = fs.readFileSync(path.join(REPO, 'templates', 'build-html.js'), 'utf8');
+    const plantedC = cleanHtmlText.replace(/\.lang-ar,\s*\.lang\[dir="rtl"\]/, '.lang[dir="rtl"]');
+    assert.notStrictEqual(plantedC, cleanHtmlText, 'plant (c) changed nothing - check the pattern');
+    const redC = checkTypefaces({ buildHtmlText: plantedC });
+    assert.ok(redC.failures.some(
+      (f) => f.name === 'document-and-preview-arabic: the print rtl stack starts with Noto Naskh Arabic'),
+    `plant (c) did not redden on the print rtl stack; failures were: `
+      + `${JSON.stringify(redC.failures.map((f) => f.name))}`);
     // And the reverted copy is clean again, which is what makes the two reds attributable.
     const reverted = checkTypefaces({ clientDir: root });
     assert.deepStrictEqual(reverted.failures.map((f) => f.name), [],
       'the scratch copy is not clean after reverting both plants');
     console.log(`typefaces self-check: clean ${clean.failures.length} red / plant(a) `
-      + `${redA.failures.length} red / plant(b) ${redB.failures.length} red / reverted `
-      + `${reverted.failures.length} red, on ${clean.checks.length} checks`);
+      + `${redA.failures.length} red / plant(b) ${redB.failures.length} red / plant(c) `
+      + `${redC.failures.length} red / reverted ${reverted.failures.length} red, on `
+      + `${clean.checks.length} checks`);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

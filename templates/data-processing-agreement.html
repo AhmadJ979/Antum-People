@@ -29,8 +29,14 @@
   }
   /* The Arabic face goes FIRST in the rtl stack only. Latin characters - including the Latin inside an
      Arabic document, a number, a party's name, an English parenthetical - are not covered by the face's
-     unicode-range, so they land on the same 'DejaVu Sans', 'Segoe UI' tail as before: unchanged. */
-  .lang[dir="rtl"] body, .lang[dir="rtl"] { font-family: 'Noto Naskh Arabic', 'DejaVu Sans', 'Segoe UI', sans-serif; }
+     unicode-range, so they land on the same 'DejaVu Sans', 'Segoe UI' tail as before: unchanged.
+     THE SELECTOR NAMES THE CLASS THE MARKUP ACTUALLY CARRIES. The Arabic block below is written as
+     "<div class="lang-ar page-break" dir="rtl" lang="ar">"; this rule used to select .lang[dir="rtl"],
+     a class the builder never emits, so the @font-face was never requested and the Arabic printed in
+     the system DejaVu Sans. Measured on privacy-notice.pdf at ac8a956: the embedded BaseFont list held
+     DejaVuSans and DejaVuSans-Bold only. template-derivatives now reddens on that, so this rule and
+     the markup cannot drift apart again. */
+  .lang-ar, .lang[dir="rtl"] { font-family: 'Noto Naskh Arabic', 'DejaVu Sans', 'Segoe UI', sans-serif; }
 
   .doc-header {
     background: var(--teal); color:#fff; border-radius: 8px;

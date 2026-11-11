@@ -660,14 +660,22 @@ CHECKS = [
     # read is exit 2 (CANNOT-JUDGE), never a pass. `--selftest` plants each disagreement in a scratch
     # copy - the HTML alone stale, the .md moved under its derivatives, the real pre-fix PDF from this
     # repository's own history, and an unreadable PDF - and requires each to be reported on its own file.
+    # 2026-11-11: the PDF half also judges THE FACE ITS ARABIC IS PRINTED IN. All three PDFs embedded
+    # DejaVuSans and nothing else while the builder's Noto Naskh @font-face was never requested, so a
+    # client-facing document printed its Arabic in a fallback face and nothing went red. The declared
+    # face is read out of build-html.js (family + the file the @font-face points at); a document whose
+    # HTML carries Arabic must have that face embedded in its PDF. A builder with no @font-face at all is
+    # a FAILURE, not a skip - the instrument would be comparing against a face nobody declares.
     dict(id="template-derivatives", mode="default", expect="green",
          home="operator CLI (bare)",
          cmd=["node", "scripts/check-template-derivatives.js"],
          what="every pilot-pack derivative (HTML and PDF) carries the version and the date of the Markdown "
-              "it is built from. Per document: the .md's own \"**Version ...**\" line; the HTML's builder-written "
-              "meta line (Version <v> &middot; <date>) and footer (v<v>); the PDF's printed header, read back out "
-              "of the bytes with ligatures expanded and spacing removed. exit 2 = CANNOT-JUDGE when a PDF yields "
-              "no readable text at all"),
+              "it is built from, and prints its Arabic in the face the builder declares. Per document: the "
+              ".md's own \"**Version ...**\" line; the HTML's builder-written meta line (Version <v> &middot; "
+              "<date>) and footer (v<v>); the PDF's printed header, read back out of the bytes with ligatures "
+              "expanded and spacing removed; and the PDF's embedded font list, which must carry the @font-face "
+              "family declared by templates/build-html.js whenever the document's HTML carries Arabic. exit 2 = "
+              "CANNOT-JUDGE when a PDF yields no readable text at all"),
 ]
 
 SKIPS = [

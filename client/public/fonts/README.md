@@ -72,3 +72,18 @@ The ranges above are exactly the ranges the `@font-face` rules in `src/index.css
 `templates/build-html.js` declare, so a face never claims a character it cannot draw and never
 claims one it has no glyph for. `client/src/typefaces.test.js` reads both sides and fails if they
 drift apart.
+
+## The print pipeline reads these same bytes
+
+`templates/build-html.js` cuts its `@font-face` from `noto-naskh-arabic/noto-naskh-arabic.woff2` in this
+directory and throws if the file is absent, so the pilot pack's HTML and PDF are printed in the same face
+the product's document preview uses — there is no second copy of the font and no system font is named.
+
+The face only reaches a PDF if the stylesheet's font rule selects the class the Arabic block actually
+carries (`<div class="lang-ar" dir="rtl">`). That was wrong until 2026-11-11: the rule selected
+`.lang[dir="rtl"]`, a class the builder never emitted, so the face was never requested and all three PDFs
+embedded DejaVuSans and nothing else while every check stayed green. Two guards now cover it:
+`scripts/check-template-derivatives.js` reddens when a derivative's embedded font list does not carry the
+family `build-html.js` declares, and `client/src/typefaces.test.js` reddens when the print font rule stops
+selecting the class the markup carries. To reprint a PDF, the command is in the header of
+`scripts/check-template-derivatives.js`; it must run from the repository root so this relative path resolves.
