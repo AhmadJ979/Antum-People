@@ -84,6 +84,15 @@ const COLUMN_MIGRATIONS = [
   // it treats a blank fact — every employer placeholder is missing and the document is withheld — so
   // the absence is loud where it matters and is never filled in from a guess.
   { table: 'employees', column: 'employer_id', ddl: 'TEXT' },
+  // THE PROBATION TERM (owner ruling 2026-11-11). A database that predates it has an `employers` table
+  // with no `probation_days`, and CREATE TABLE IF NOT EXISTS cannot add a column to a table that
+  // already exists — so the column is declared in schema.sql (fresh database) and migrated here
+  // (existing one), exactly as `employer_id` was. The CHECK travels with it: SQLite permits a CHECK in
+  // `ALTER TABLE ... ADD COLUMN`, and every existing row gets NULL, which the constraint admits (an
+  // unset term is "nobody has chosen", not an invalid choice).
+  { table: 'employers', column: 'probation_days', ddl: 'INTEGER CHECK (probation_days IN (90, 180))' },
+  { table: 'employers', column: 'probation_extension_reference', ddl: 'TEXT' },
+  { table: 'employers', column: 'probation_extension_date', ddl: 'DATE' },
 ];
 
 function columnsOf(handle, table) {

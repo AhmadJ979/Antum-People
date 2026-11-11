@@ -621,6 +621,19 @@ interface EmployerRecord {
   dpo_name: string | null;
   dpo_email: string | null;
   dpo_phone: string | null;
+  /** THE PROBATION TERM (owner ruling 2026-11-11): the client's own policy, in DAYS — 90 or 180 — and
+   *  `null` when nobody has chosen. Never defaulted here or anywhere else. */
+  probation_days: number | null;
+  /** The written extension agreement a 180-day KSA term needs, and nothing else: the UAE has no
+   *  extension mechanism, so these are refused for a UAE employer by the server. */
+  probation_extension_reference: string | null;
+  probation_extension_date: string | null;
+  /** The choice as it will be PRINTED, resolved by the server into the unit the employer's own law
+   *  counts in ("6 months" for the UAE, "180 days" for KSA). `null` when nothing is chosen — the
+   *  screen must not derive this itself, or it becomes the second place that decides a legal unit. */
+  probation: { days: number; value: string; unit: string; text: string } | null;
+  /** The part of the probation record that withholds a contract, by the labels a refusal uses. */
+  probation_not_held: string[];
   not_held: string[];
   /** The part of `not_held` that does NOT withhold a document (owner ruling 2026-11-10, the
    *  KSA/Mudad question): a blank Mudad establishment code is printed on the contract as
@@ -656,6 +669,37 @@ const EMPLOYER_FIELDS: Array<{ column: string; label: string; group: string }> =
   { column: 'dpo_phone', label: 'Data protection contact phone', group: 'Data protection contact' },
 ];
 
+/**
+ * THE PROBATION TERM — the client's own policy, chosen once on this record (owner ruling 2026-11-11).
+ *
+ * Two options only, 90 or 180 days, and NO DEFAULT: `''` is "not chosen", which is a state the screen
+ * says out loud and the server withholds a contract for. These columns are not in `EMPLOYER_FIELDS`
+ * because they are not plain text boxes — the term is a two-option control and the extension evidence
+ * appears only for the one term that needs it.
+ */
+const EMPLOYER_PROBATION_FIELDS: Array<{ column: string; label: string }> = [
+  { column: 'probation_days', label: 'Probation term' },
+  { column: 'probation_extension_reference', label: 'Extension agreement reference' },
+  { column: 'probation_extension_date', label: 'Extension agreement date' },
+];
+
+/**
+ * THE TERM IN THE UNIT THE EMPLOYER'S OWN LAW COUNTS IT IN.
+ *
+ * The UAE statute counts probation in MONTHS (six is the cap, so 180 days reads "6 months"); the KSA
+ * statute counts DAYS (180 is the cap, and a calendar-month phrase is not a lawful way to say it, so
+ * it must never be printed there). The stored fact is one number of days either way — the unit is a
+ * property of the jurisdiction, not of the choice. The DOCUMENT's rendering of this same rule lives
+ * on the server (`server/probation-term.js`), because a document is printed by the server; this
+ * function exists so the two options read correctly while the reader is still choosing, including
+ * before the jurisdiction is saved.
+ */
+const probationTermLabel = (days: string, jurisdiction: string): string => {
+  const term = Number(days);
+  if (jurisdiction === 'UAE') return `${term / 30} months`;
+  return `${term} days`;
+};
+
 /** The same fields, grouped the way a reader fills them in. Order comes from the list above. */
 const EMPLOYER_GROUPS = ['Who the employer is', 'Registrations', 'Signatory', 'Data protection contact']
   .map((title) => ({ title, fields: EMPLOYER_FIELDS.filter((field) => field.group === title) }));
@@ -679,6 +723,28 @@ const employerBlankReading = (record: EmployerRecord): string => {
     parts.push(`${optional.join(', ')} ${optional.length === 1 ? 'is' : 'are'} still blank, but ${optional.length === 1 ? 'it does' : 'they do'} not withhold anything: a document that prints ${optional.length === 1 ? 'it' : 'them'} says "not held" in words.`);
   }
   return parts.join(' ');
+};
+
+/**
+ * WHAT THE PROBATION RECORD SAYS, in the states the server distinguishes.
+ *
+ * A term is recorded and prints on every contract this employer issues; or it is not recorded, and a
+ * contract that prints one is withheld. The labels come from `probation_not_held` — the SERVER's list —
+ * and are never re-derived here, so this sentence and the refusal a document returns name one fact
+ * with one set of words. The third state is the one that is easy to miss: a term IS recorded and the
+ * document is still withheld, because the evidence that makes it lawful is not.
+ */
+const probationReading = (record: EmployerRecord): string => {
+  const blank = record.probation_not_held || [];
+  const named = blank.join(', ');
+  if (record.probation) {
+    return blank.length === 0
+      ? `Recorded: ${record.probation.text}. Every contract this employer issues prints that term.`
+      : `Recorded: ${record.probation.text}, but a contract is still withheld: ${named} ${blank.length === 1 ? 'is' : 'are'} blank.`;
+  }
+  return blank.length === 0
+    ? 'No probation term is recorded, so a contract that prints one is withheld. This product does not assume a term.'
+    : `No probation term is recorded, so a contract that prints one is withheld: ${named} ${blank.length === 1 ? 'is' : 'are'} blank. This product does not assume a term.`;
 };
 
 /** What the form says when the server refuses the WRITE. The read has its own sentence, composed
@@ -889,7 +955,7 @@ export default function App() {
    *  is what a reader needs to see, and is never a placeholder that could be mistaken for a value. */
   const employerFormFrom = (row: EmployerRecord): Record<string, string> => {
     const form: Record<string, string> = {};
-    for (const field of EMPLOYER_FIELDS) {
+    for (const field of [...EMPLOYER_FIELDS, ...EMPLOYER_PROBATION_FIELDS]) {
       const value = (row as any)[field.column];
       form[field.column] = value === null || value === undefined ? '' : String(value);
     }
@@ -4001,7 +4067,18 @@ export default function App() {
                               <select
                                 id={`employer-${field.column}`}
                                 value={employerForm[field.column] || ''}
-                                onChange={e => setEmployerForm({ ...employerForm, [field.column]: e.target.value })}
+                                onChange={e => {
+                                  // A jurisdiction change can strand the probation record: extension
+                                  // evidence is accepted only for a KSA 180-day term, so it is cleared
+                                  // when the record stops being one — otherwise the next save would be
+                                  // refused for evidence the reader had no reason to think was there.
+                                  const next = e.target.value;
+                                  setEmployerForm({
+                                    ...employerForm,
+                                    [field.column]: next,
+                                    ...(next === 'KSA' ? {} : { probation_extension_reference: '', probation_extension_date: '' }),
+                                  });
+                                }}
                                 className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
                               >
                                 <option value="">Not set</option>
@@ -4022,6 +4099,83 @@ export default function App() {
                       </div>
                     </div>
                   ))}
+
+                  {/* THE PROBATION TERM (owner ruling 2026-11-11): the client's own policy, chosen
+                      once here and printed on every employment contract this employer issues. Two
+                      options only, 90 or 180 days, labelled in the unit the employer's own law counts
+                      in — the UAE statute counts months, the KSA one counts days. "Not chosen" is a
+                      real state and not a default: a contract that prints a probation term is
+                      withheld until one is chosen, and the server refuses a term the record cannot
+                      state lawfully. */}
+                  <div>
+                    <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Probation</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label htmlFor="employer-probation_days" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Probation term</label>
+                        <select
+                          id="employer-probation_days"
+                          value={employerForm.probation_days || ''}
+                          onChange={e => {
+                            const chosen = e.target.value;
+                            // Extension evidence belongs to the KSA 180-day term alone. Moving the term
+                            // away from it clears the evidence rather than leaving a record the server
+                            // would refuse on the next save.
+                            const keepsEvidence = chosen === '180' && employerForm.jurisdiction === 'KSA';
+                            setEmployerForm({
+                              ...employerForm,
+                              probation_days: chosen,
+                              ...(keepsEvidence ? {} : { probation_extension_reference: '', probation_extension_date: '' }),
+                            });
+                          }}
+                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
+                        >
+                          <option value="">Not chosen</option>
+                          {['90', '180'].map(days => (
+                            <option key={days} value={days}>{probationTermLabel(days, employerForm.jurisdiction || '')}</option>
+                          ))}
+                        </select>
+                        <p className="text-[11px] text-slate-500 pt-1">{probationReading(record)}</p>
+                      </div>
+
+                      {employerForm.jurisdiction === 'KSA' && employerForm.probation_days === '180' && (
+                        <>
+                          <div className="space-y-1">
+                            <label htmlFor="employer-probation_extension_reference" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Extension agreement reference</label>
+                            <input
+                              id="employer-probation_extension_reference"
+                              type="text"
+                              value={employerForm.probation_extension_reference || ''}
+                              onChange={e => setEmployerForm({ ...employerForm, probation_extension_reference: e.target.value })}
+                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label htmlFor="employer-probation_extension_date" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Extension agreement date</label>
+                            <input
+                              id="employer-probation_extension_date"
+                              type="date"
+                              value={employerForm.probation_extension_date || ''}
+                              onChange={e => setEmployerForm({ ...employerForm, probation_extension_date: e.target.value })}
+                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
+                            />
+                          </div>
+                          <p className="md:col-span-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                            A 180-day probation term in KSA holds only with a written extension agreement between the
+                            parties: probation starts at 90 days, and the written agreement is what makes the term
+                            enforceable to day 180. Its reference and date are required here and are what the contract
+                            stands on.
+                          </p>
+                        </>
+                      )}
+
+                      {employerForm.jurisdiction !== 'UAE' && employerForm.jurisdiction !== 'KSA' && (
+                        <p className="md:col-span-2 text-[11px] text-amber-700">
+                          Choose the jurisdiction first: the term is stored in days and printed in the unit that
+                          jurisdiction's law counts in — months in the UAE, days in KSA.
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
                   <p className="text-[11px] text-slate-500">
                     {record.not_held.length === 0

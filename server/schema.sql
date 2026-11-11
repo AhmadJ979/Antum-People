@@ -38,6 +38,24 @@ CREATE TABLE IF NOT EXISTS employers (
   dpo_name TEXT,
   dpo_email TEXT,
   dpo_phone TEXT,
+  -- THE PROBATION TERM (owner ruling 2026-11-11): the client's own policy, one term per employer,
+  -- stored in DAYS because the two jurisdictions' statutes count in different units — 180 days prints
+  -- "6 months" on a UAE contract and "180 days" on a KSA one (server/probation-term.js).
+  --
+  -- NULLABLE WITH NO DEFAULT, deliberately, and the CHECK is the whole point of the column: unset
+  -- means NOBODY HAS CHOSEN, and the contract is withheld exactly as for every other blank employer
+  -- fact. A default of 90 here would be the product deciding a client's probation policy, and the
+  -- owner's word "default" means the option clients most often pick, not a value this product assumes.
+  -- The CHECK admits only the two terms a client may choose, so a third value cannot be stored by any
+  -- path — not the route, not a script, not a hand-run INSERT.
+  probation_days INTEGER CHECK (probation_days IN (90, 180)),
+  -- THE EVIDENCE A 180-DAY KSA TERM NEEDS. KSA law starts probation at 90 days and permits a total of
+  -- 180 only by written agreement between the parties, so the written extension's reference and date
+  -- are stored beside the term. They are accepted ONLY for a KSA employer holding the 180-day term
+  -- (refused with 422 otherwise, server/probation-term.js#saveProblem): the UAE has no extension
+  -- mechanism, so there is no UAE equivalent of these two columns and there must not be one.
+  probation_extension_reference TEXT,
+  probation_extension_date DATE,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
