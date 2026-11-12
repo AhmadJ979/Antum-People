@@ -15,6 +15,17 @@
 //          ligature), so the PDF half compares COMPACTED text: all non-alphanumerics removed, ligatures
 //          expanded, then `version<v><date>` must appear. That is the header the builder writes, read back
 //          out of the printed bytes.
+//   pdf  - and THE FACE ITS ARABIC IS PRINTED IN. The builder declares one Arabic @font-face; a document
+//          whose HTML carries Arabic must have that face EMBEDDED in its PDF. Measured 2026-11-11 at
+//          ac8a956: all three PDFs embedded DejaVuSans and DejaVuSans-Bold and nothing else, because the
+//          font rule selected `.lang[dir="rtl"]` while the markup says `class="lang-ar"` - the face was
+//          never requested, so the Arabic column was drawn from a Latin-first fallback and the file looked
+//          perfectly current. A version check cannot see that, so it is judged here, from the bytes.
+//
+// THE DECLARED FACE IS READ OUT OF build-html.js, never typed here: the family name and the file its
+// @font-face points at. Renaming the family, swapping the file or dropping the @font-face cannot leave
+// this half of the check comparing against a face the builder no longer declares - the last of those is a
+// FAILURE, because a check that cannot see its own subject has not passed.
 //
 // EXIT: 0 all agree · 1 a derivative disagrees (or is missing, or is not in the builder's shape) ·
 //       2 CANNOT-JUDGE: a PDF is present but its text cannot be read at all - a file this instrument
@@ -256,6 +267,59 @@ function pdfText(file) {
   return { pages: pages.length, text: texts.join('\n') };
 }
 
+// ---------------------------------------------------------------- the face the builder declares
+// Read OUT of build-html.js's own @font-face block: the family and the file it points at. Nothing about
+// the face is typed here, so the check cannot go on requiring a name the builder stopped using.
+function declaredFace(dir) {
+  const src = fs.readFileSync(path.join(dir, 'build-html.js'), 'utf8');
+  const block = src.match(/@font-face\s*\{([\s\S]*?)\}/);
+  if (!block) return null;
+  const fam = block[1].match(/font-family:\s*'([^']+)'/);
+  if (!fam) return null;
+  // The src is written `url('${NASKH}')`, so an interpolated url is resolved through the builder's own
+  // `const NAME = fontUrl('<path>')` line - the file the face is cut from, named rather than guessed.
+  const url = block[1].match(/url\('([^']+)'\)/);
+  let file = '(no src url)';
+  if (url) {
+    let u = url[1];
+    const tpl = u.match(/^\$\{(\w+)\}$/);
+    if (tpl) {
+      const decl = src.match(new RegExp('const\\s+' + tpl[1] + "\\s*=\\s*fontUrl\\('([^']+)'\\)"));
+      if (decl) u = decl[1];
+    }
+    file = path.basename(u);
+  }
+  return { family: fam[1], file };
+}
+
+// ---------------------------------------------------------------- the fonts a PDF embeds
+// A PDF names a font twice - /FontName on the Type0 font, /BaseFont on the descendant CIDFont - and
+// Chromium writes the descendant dicts inside a COMPRESSED object stream, so scanning the raw bytes finds
+// half the answer. Every stream is inflated and scanned, and the six-letter subset prefix is stripped:
+// `/CAAAAA+NotoNaskhArabic-Regular` is the declared face, embedded.
+function embeddedFonts(file) {
+  const buf = fs.readFileSync(file);
+  const parts = [buf.toString('latin1')];
+  for (const [, o] of loadObjects(buf)) {
+    const b = streamBytes(o);
+    if (b) parts.push(b.toString('latin1'));
+  }
+  const names = new Set();
+  const re = /\/(?:BaseFont|FontName)\s*\/([A-Za-z0-9+,\-]+)/g;
+  let m;
+  for (const p of parts) {
+    re.lastIndex = 0;
+    while ((m = re.exec(p))) names.add(m[1].replace(/^[A-Z]{6}\+/, ''));
+  }
+  return [...names].sort();
+}
+
+// "Noto Naskh Arabic" (the CSS family) and "NotoNaskhArabic-Regular" (the PostScript name Chromium writes
+// into the PDF) are the same face spelled the way each format spells it.
+function faceKey(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
 // ---------------------------------------------------------------- comparison
 const LIGATURES = {
   '\uFB00': 'ff', '\uFB01': 'fi', '\uFB02': 'fl', '\uFB03': 'ffi',
@@ -286,8 +350,15 @@ function judge(dir) {
   const rows = [];
   const failures = [];
   const unjudgeable = [];
+  // The face the builder declares, once for the whole directory. No @font-face means there is nothing to
+  // require of the PDFs - which is not a pass: this instrument would be judging nothing.
+  const face = declaredFace(dir);
+  if (!face) {
+    failures.push('build-html.js declares no Arabic @font-face (no font-family in a @font-face block), so ' +
+      'no face can be required of the printed derivatives - this check cannot see its own subject');
+  }
   for (const t of trios(dir)) {
-    const row = { md: t.md, version: null, html: 'ok', pdf: 'ok' };
+    const row = { md: t.md, version: null, html: 'ok', pdf: 'ok', font: 'ok' };
     const mdPath = path.join(dir, t.md);
     if (!fs.existsSync(mdPath)) {
       failures.push(`${t.md}: the Markdown source is missing`);
@@ -307,11 +378,13 @@ function judge(dir) {
 
     // ---- HTML: the two places the builder writes the version.
     const htmlPath = path.join(dir, t.html);
+    let htmlHasArabic = false;
     if (!fs.existsSync(htmlPath)) {
       failures.push(`${t.html}: missing (the builder writes it from ${t.md})`);
       row.html = 'MISSING';
     } else {
       const html = fs.readFileSync(htmlPath, 'utf8');
+      htmlHasArabic = /[\u0600-\u06FF]/.test(html);
       const meta = html.match(/<div class="meta">Version ([0-9.]+) &middot; (\d{4}-\d{2}-\d{2})/);
       const foot = html.match(/<span>Antum People &middot; [^<]*&middot; v([0-9.]+)<\/span>/);
       if (!meta || !foot) {
@@ -349,17 +422,44 @@ function judge(dir) {
           `(v${v.version} of ${v.date}, as ${t.md} states)`);
         row.pdf = 'STALE';
       }
+
+      // ---- PDF: the face its Arabic is printed in.
+      if (row.pdf === 'UNREADABLE') {
+        // already CANNOT-JUDGE (exit 2): nothing about this file is a pass, and its font list would be empty
+        // for the same reason its text is.
+        row.font = 'NOT JUDGED';
+      } else if (face && htmlHasArabic) {
+        let fonts = [];
+        try { fonts = embeddedFonts(pdfPath); } catch (e) { fonts = []; }
+        const want = faceKey(face.family);
+        if (!fonts.length) {
+          row.font = 'NO FONTS READ';
+          failures.push(`${t.pdf}: no embedded font could be read out of it, so the declared Arabic face ` +
+            `"${face.family}" cannot be shown to be embedded`);
+        } else if (!fonts.some(f => faceKey(f).startsWith(want))) {
+          row.font = 'NO ARABIC FACE';
+          failures.push(`${t.pdf}: its embedded fonts are [${fonts.join(' ')}] - the Arabic face ` +
+            `"${face.family}" (${face.file}, declared by build-html.js) is NOT among them, so the Arabic ` +
+            `in this document printed in a fallback face. Reprint it: the print command is in this file's header`);
+        }
+      } else if (face && !htmlHasArabic) {
+        row.font = 'n/a';
+      } else {
+        row.font = 'NOT JUDGED';
+      }
     }
     rows.push(row);
   }
-  return { rows, failures, unjudgeable };
+  return { rows, failures, unjudgeable, face };
 }
 
 function report(res, label) {
   console.log(`template-derivatives - ${label}`);
   for (const r of res.rows) {
-    console.log(`  ${r.md.padEnd(28)} md ${String(r.version).padEnd(18)} html ${r.html.padEnd(18)} pdf ${r.pdf}`);
+    console.log(`  ${r.md.padEnd(28)} md ${String(r.version).padEnd(18)} html ${r.html.padEnd(18)} ` +
+      `pdf ${r.pdf.padEnd(18)} face ${r.font}`);
   }
+  if (res.face) console.log(`  declared Arabic face: "${res.face.family}" (${res.face.file})`);
   for (const u of res.unjudgeable) console.log('  CANNOT-JUDGE  ' + u);
   for (const f of res.failures) console.log('  FAIL  ' + f);
   console.log(`  ${res.rows.length} document(s) judged, ${res.failures.length} disagreement(s), ` +
@@ -416,10 +516,48 @@ function stalePdfFromHistory(t, wantToken) {
   return null;
 }
 
+function pdfWithoutFaceFromHistory(t, face) {
+  // The real pre-fix bytes for the FONT half: this repository's own history, the first revision of this PDF
+  // whose embedded font list does not carry the declared face. Derived every run, never a pinned hash - the
+  // defect this plant reproduces is the one measured on 2026-11-11, not a drawing of it.
+  let revs;
+  try {
+    revs = execFileSync('git', ['-C', ROOT, 'log', '--format=%H', '--', 'templates/' + t.pdf], { encoding: 'utf8' })
+      .trim().split('\n').filter(Boolean);
+  } catch (e) {
+    return null;
+  }
+  const want = faceKey(face.family);
+  for (const rev of revs) {
+    let bytes;
+    try {
+      bytes = execFileSync('git', ['-C', ROOT, 'show', rev + ':templates/' + t.pdf], { maxBuffer: 64 * 1024 * 1024 });
+    } catch (e) { continue; }
+    const tmp = path.join(os.tmpdir(), 'tpl-font-' + process.pid + '-' + rev.slice(0, 8) + '.pdf');
+    fs.writeFileSync(tmp, bytes);
+    let fonts = [];
+    try { fonts = embeddedFonts(tmp); } catch (e) { fonts = []; }
+    fs.unlinkSync(tmp);
+    if (fonts.length && !fonts.some(f => faceKey(f).startsWith(want))) return bytes;
+  }
+  return null;
+}
+
+function plantNoFontFace(dest) {
+  // The builder stops declaring the face at all: the instrument must say it cannot see its subject rather
+  // than go on comparing a PDF against a name nobody declares any more.
+  const p = path.join(dest, 'build-html.js');
+  let s = fs.readFileSync(p, 'utf8');
+  s = s.replace(/@font-face\s*\{[\s\S]*?\}\s*/, '');
+  fs.writeFileSync(p, s);
+}
+
 function selftest() {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'tpl-deriv-'));
   let bad = 0;
+  let controls = 0;
   const expect = (label, got, want) => {
+    controls++;
     const ok = got === want;
     if (!ok) bad++;
     console.log(`  ${ok ? 'ok ' : 'BAD'}  ${label.padEnd(52)} ${got} (must be ${want})`);
@@ -432,6 +570,7 @@ function selftest() {
     expect('P0 clean copy: disagreements', r0.failures.length, 0);
     expect('P0 clean copy: unreadable', r0.unjudgeable.length, 0);
     expect('P0 clean copy: documents judged', r0.rows.length, trios(TEMPLATES).length);
+    expect('P0 clean copy: a face was declared to judge', r0.face !== null, true);
 
     const t0 = trios(TEMPLATES)[0];
 
@@ -463,8 +602,10 @@ function selftest() {
       copyTrio(TEMPLATES, p3);
       fs.writeFileSync(path.join(p3, t0.pdf), stale);
       const r3 = judge(p3);
-      expect('P3 stale PDF: disagreements', r3.failures.length, 1);
-      expect('P3 stale PDF: names the pdf', r3.failures[0].split(':')[0], t0.pdf);
+      const header3 = r3.failures.filter(f => /its header reads/.test(f));
+      expect('P3 stale PDF: header disagreements', header3.length, 1);
+      expect('P3 stale PDF: names the pdf', header3[0].split(':')[0], t0.pdf);
+      expect('P3 stale PDF: names no other file', r3.failures.filter(f => !f.startsWith(t0.pdf + ':')).length, 0);
     }
 
     // P4 a PDF this instrument cannot read is CANNOT-JUDGE, never a pass.
@@ -474,10 +615,40 @@ function selftest() {
     const r4 = judge(p4);
     expect('P4 unreadable PDF: disagreements', r4.failures.length, 0);
     expect('P4 unreadable PDF: unreadable', r4.unjudgeable.length, 1);
+
+    // P5 the PDF prints its Arabic in a fallback face - THE REAL PRE-FIX BYTES, taken from this
+    // repository's own history: the first revision of this PDF whose embedded fonts do not carry the
+    // declared face. Only the pdf is named, and it is named for its face.
+    const face = declaredFace(TEMPLATES);
+    const noFace = face ? pdfWithoutFaceFromHistory(t0, face) : null;
+    if (!noFace) {
+      bad++;
+      console.log('  BAD  P5 no Arabic face: no PDF without the face found in history - the plant could not be built');
+    } else {
+      const p5 = path.join(base, 'p5');
+      copyTrio(TEMPLATES, p5);
+      fs.writeFileSync(path.join(p5, t0.pdf), noFace);
+      const r5 = judge(p5);
+      expect('P5 no Arabic face: disagreements', r5.failures.length, 1);
+      expect('P5 no Arabic face: names the pdf', r5.failures[0].split(':')[0], t0.pdf);
+      expect('P5 no Arabic face: names the missing face', /Arabic face/.test(r5.failures[0]), true);
+    }
+
+    // P6 the builder stops declaring the face at all: the instrument must say it cannot see its subject. A
+    // check that went on comparing PDFs against a name nobody declares has not passed - it stopped looking.
+    const p6 = path.join(base, 'p6');
+    copyTrio(TEMPLATES, p6);
+    plantNoFontFace(p6);
+    const r6 = judge(p6);
+    expect('P6 no @font-face: declared face', r6.face, null);
+    expect('P6 no @font-face: disagreements', r6.failures.length, 1);
+    expect('P6 no @font-face: says it cannot see its subject',
+      /cannot see its own subject/.test(r6.failures[0]), true);
   } finally {
     fs.rmSync(base, { recursive: true, force: true });
   }
-  console.log(bad === 0 ? 'selftest: every plant landed (5 controls)' : `selftest: ${bad} control(s) did not hold`);
+  console.log(bad === 0 ? `selftest: every plant landed (${controls} controls)`
+    : `selftest: ${bad} of ${controls} control(s) did not hold`);
   return bad === 0 ? 0 : 1;
 }
 
