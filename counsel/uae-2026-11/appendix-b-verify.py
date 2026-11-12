@@ -125,15 +125,18 @@ ck(qs == {"Which article governs this, or is the claim wrong?"},
    "the question cell is not the single uniform question: %s" % qs)
 
 # 6. the letter and its twin must be untouched by this draft
-#    The pin names a STATE, not a permanent hash: re-grounded 2026-11-07 after the D1-D5 wording
-#    fixes (points 3, 4, 5, 7 and the Appendix A preamble -- Appendix B itself untouched), so this
-#    row can still redden on an accidental edit. The earlier pin (md 873d643f..., txt 76351f76...) was
-#    correct for 2026-11-04 and was superseded by the letter's later edits, not wrong for its day.
+#    The pin names a STATE, not a permanent hash: re-grounded 2026-11-12 after the PROBATION ITEM
+#    was applied as the letter's new item 8 (the text of /home/team/shared/counsel-probation-item-
+#    draft-2026-11-11.md, inserted after item 7; Appendix B itself untouched), so this row can still
+#    redden on an accidental edit. The earlier pins (md 7bd134df..., txt 89b2bd58... re-grounded
+#    2026-11-07 for the D1-D5 wording fixes on points 3, 4, 5, 7 and the Appendix A preamble; before
+#    that md 873d643f..., txt 76351f76... on 2026-11-04) were correct for their day and were
+#    superseded by later edits, not wrong for theirs.
 #    Since the move of 2026-11-07 these are read from THIS directory (the repository copy), so the
 #    pin follows the letter into the repository instead of naming a shared-directory path.
 import hashlib
-for f, want in (("uae-counsel-confirmation-request.md", "7bd134df0e532950a7e1c5949927e660"),
-                ("uae-counsel-confirmation-request--send-ready.txt", "89b2bd58b1e8d33ef348a534cdb084ea")):
+for f, want in (("uae-counsel-confirmation-request.md", "67c70e31db4e19cb15c86c10cdc8a275"),
+                ("uae-counsel-confirmation-request--send-ready.txt", "7737c39222ab447c3094795b6519db2e")):
     p = os.path.join(HERE, f)
     got = hashlib.md5(open(p, "rb").read()).hexdigest() if os.path.isfile(p) else "MISSING"
     ck(got == want, "%s md5 is %s, not the %s this draft recorded" % (f, got, want))

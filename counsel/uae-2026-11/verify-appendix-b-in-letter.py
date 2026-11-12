@@ -10,7 +10,7 @@ What it asserts, in the letter AND its `--send-ready.txt` twin:
   1. exactly 4 B-rows, one per line number of `server/compliance_engine.js` that carries a citation;
   2. each row's quoted string is BYTE-IDENTICAL to that line's `description` field in the source;
   3. each row asks the identical single question;
-  4. Appendix A is intact (18 U-rows) and the letter still has its 7 numbered items;
+  4. Appendix A is intact (18 U-rows) and the letter still has its 8 numbered items;
   5. the two copies carry the same four strings (neither can drift from the other).
 
 It exits 1 on any failure and prints counts, never a bare verdict. `--selftest` mutates a COPY (an
@@ -100,8 +100,8 @@ def judge(path, want):
     else:
         ok += 1
     items = len([l for l in text.splitlines() if re.match(r'^(\d+\. |\*\*\d+\. )', l)])
-    if items != 7:
-        failures.append(f'letter has {items} numbered item(s), expected 7 - something was renumbered')
+    if items != 8:
+        failures.append(f'letter has {items} numbered item(s), expected 8 - something was renumbered')
     else:
         ok += 1
     return ok, failures, seen

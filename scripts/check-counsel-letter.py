@@ -8,7 +8,7 @@ WHY THIS ROW EXISTS
   the last live documents outside it. Moving them in is only half the job: a document nobody
   checks drifts. This row is the check.
 
-WHAT IT ASSERTS (five separate things, each printed with its own counts)
+WHAT IT ASSERTS (six separate things, each printed with its own counts)
   1. Every file of the UAE package is PRESENT in counsel/uae-2026-11/. A missing one is RED and
      named - never a quiet skip. (The moved package is part of the tree, so its absence is a
      defect in the tree, not an absent environment.)
@@ -34,9 +34,14 @@ WHAT IT ASSERTS (five separate things, each printed with its own counts)
      reads its claims out of the document rather than from a variable.
   5. Appendix B as it sits INSIDE the two letters is still what it claims - the letter
      verifier (`verify-appendix-b-in-letter.py`): 4 B rows per copy, each quote byte-identical
-     to the source `description`, the single question, Appendix A's 18 U rows, the 7 numbered
+     to the source `description`, the single question, Appendix A's 18 U rows, the 8 numbered
      items, and the two copies carrying the same four strings. Its own `--selftest` is run too,
      and a mutation it fails to catch is RED: an instrument that cannot redden proves nothing.
+  6. EACH `twin` LETTER STILL CARRIES ITS DECLARED NUMBERED-ITEM COUNT - uae 8, ksa 7, counted in
+     the `.md` AND the `.txt`. Added 2026-11-12: until then the KSA count was asserted NOWHERE,
+     because the in-letter verifier reads only the two UAE files and a deletion made in BOTH files
+     of a twin is invisible to word-identity. Every run plants that deletion in a scratch copy and
+     requires this checker to redden on the count, so the assertion is proved able to fail.
 
 WHERE THE PATHS COME FROM
   Every path is resolved from this file, so the row judges the tree it is run in - a
@@ -71,6 +76,8 @@ import re
 import subprocess
 import sys
 import difflib
+import shutil
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -97,8 +104,12 @@ REQUIRED = [
 
 # THE FOUR PAIRS. `shape` is measured, not assumed, and the evidence for each is recorded here
 # so a later reader can re-check the classification instead of trusting it:
-#   uae, ksa    -> twin.  Measured 2026-11-07: 1681/1681 and 1154/1154 tokens, 0 differing.
-#   pdpl,access -> document+letter.  Measured 2026-11-07: pdpl 2316 md / 1412 txt tokens and 70
+#   uae, ksa    -> twin.  Measured 2026-11-12: 1916/1916 and 1436/1436 tokens, 0 differing
+#                  (1912/1912 earlier the same day, before the probation item was re-stated in the
+#                  tense of the shipped control)
+#                  (2026-11-07, before the probation item was added as UAE item 8 / KSA item 7:
+#                  1681/1681 and 1154/1154).
+#   pdpl,access -> document+letter.  Measured 2026-11-12: pdpl 2337 md / 1412 txt tokens and 70
 #                  differing regions, access 1628/720 and 38. The `.md` of each carries a
 #                  cross-walk table and a premise audit and says so in its own text (access:
 #                  "Send-ready text: ... (the letter; line 1 is a status line, not part of the
@@ -106,13 +117,24 @@ REQUIRED = [
 #                  red no edit could ever clear - and a permanently red row is a row the team
 #                  learns to ignore. What is required of them instead: the document names its
 #                  letter, and the send index pins its bytes (assertion 3).
+#
+# THE NUMBERED-ITEM COUNT IS ASSERTED FOR THE TWO TWIN LETTERS (added 2026-11-12, closing a guard
+# gap of the "a check that cannot redden proves nothing" class). Until then the KSA letter's item
+# count was asserted NOWHERE: `verify-appendix-b-in-letter.py` reads only the two UAE files, so
+# deleting a KSA item - from BOTH files of the pair, which is what word-identity cannot see - would
+# have reddened no instrument at all, and the send index's pin would have been the only trace. The
+# count is declared per pair below and checked in the `.md` AND the `.txt`; `--plant` (run by
+# `main()` on every run, not only on request) deletes the last KSA item from a scratch copy of the
+# tree and requires this checker to redden, so the assertion is proved able to fail.
+# The two `document+letter` pairs carry no count: their `.md` is a working document, so a number
+# counted over it would describe the document, not the letter.
 PAIRS = [
     dict(id="uae", dir="counsel/uae-2026-11",
          md="uae-counsel-confirmation-request.md",
-         txt="uae-counsel-confirmation-request--send-ready.txt", shape="twin", pin="UAE"),
+         txt="uae-counsel-confirmation-request--send-ready.txt", shape="twin", pin="UAE", items=8),
     dict(id="ksa", dir="counsel/ksa-2026-11",
          md="ksa-counsel-confirmation-request.md",
-         txt="ksa-counsel-confirmation-request--send-ready.txt", shape="twin", pin="KSA"),
+         txt="ksa-counsel-confirmation-request--send-ready.txt", shape="twin", pin="KSA", items=7),
     dict(id="pdpl", dir="counsel/pdpl-2026-11",
          md="pdpl-counsel-request.md",
          txt="pdpl-counsel-request--send-ready.txt", shape="document+letter", pin="PDPL"),
@@ -168,6 +190,16 @@ def tokens(path, markdown):
     return text.split()
 
 
+# The numbered items of a letter, counted exactly the way the letter verifier counts them
+# (`^\d+\. ` or `^**\d+\. `), so the two instruments cannot disagree about what an item is.
+ITEM_LINE = re.compile(r"^(\d+\. |\*\*\d+\. )")
+
+
+def numbered_items(path):
+    return len([l for l in open(path, encoding="utf-8").read().splitlines()
+                if ITEM_LINE.match(l)])
+
+
 def md5(path):
     h = hashlib.md5()
     with open(path, "rb") as fh:
@@ -210,7 +242,19 @@ def judge_pair(root, pair, letter_dir_override):
                              % (tag, i1, i2, a[i1:i2][:10], j1, j2, b[j1:j2][:10]))
             if len(regions) > 8:
                 lines.append("      ... %d further region(s) not printed" % (len(regions) - 8))
-    else:
+    if "items" in pair:
+        for path in (md_path, txt_path):
+            got = numbered_items(path)
+            if got != pair["items"]:
+                red.append("%s: %s has %d numbered item(s), expected %d - an item was added or "
+                           "deleted" % (pid, os.path.basename(path), got, pair["items"]))
+                lines.append("      %s: %d numbered item(s), expected %d"
+                             % (os.path.basename(path), got, pair["items"]))
+            else:
+                lines.append("      %s: %d numbered item(s), as declared"
+                             % (os.path.basename(path), got))
+
+    if pair["shape"] != "twin":
         # document+letter: the document must still NAME the letter it wraps. This is the
         # assertion that can redden for this shape - a rename, a move, or a dropped pointer.
         if pair["txt"] not in open(md_path, encoding="utf-8").read():
@@ -251,6 +295,53 @@ def judge_pins(root, results):
         else:
             lines.append("  %-6s pin %s  FILE %s  holds" % (pid, pinned, actual))
     return red, lines
+
+
+def plant_deleted_item():
+    """Delete the last KSA item from BOTH files of a SCRATCH copy of the package and require this
+    checker to redden on the count. This is the proof the assertion added 2026-11-12 can fail: the
+    pair stays word-identical under that edit, which is precisely why word-identity alone never
+    saw a deleted KSA item, and why the KSA letter's item count was asserted nowhere until now.
+    It runs on every invocation of `main()`, not only when someone remembers a flag - a control
+    that is only reachable by a flag an operator does not know about is a false green.
+    Returns (failures, printable_lines)."""
+    pair = [p for p in PAIRS if p["id"] == "ksa"][0]
+    n = pair["items"]
+    lines = []
+    failures = []
+    tmp = tempfile.mkdtemp(prefix="counsel-plant-")
+    try:
+        shutil.copytree(os.path.join(ROOT, "counsel"), os.path.join(tmp, "counsel"))
+        control_red, _ = judge_pair(tmp, pair, None)
+        for name in (pair["md"], pair["txt"]):
+            path = os.path.join(tmp, pair["dir"], name)
+            text = open(path, encoding="utf-8").read()
+            keep = [l for l in text.splitlines(keepends=True)
+                    if not re.match(r"^(\*\*)?%d\. " % n, l)]
+            assert len(keep) < len(text.splitlines(keepends=True)), \
+                "the plant changed nothing in %s - the mutation itself is broken" % name
+            open(path, "w", encoding="utf-8").write("".join(keep))
+        planted_red, _ = judge_pair(tmp, pair, None)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    if control_red:
+        failures.append("the plant's CONTROL reddened on an unedited copy (%s), so the plant cannot "
+                        "say anything about the deletion" % control_red[0])
+        lines.append("  control (an unedited copy)      : RED - %s" % control_red[0])
+    else:
+        lines.append("  control (an unedited copy)      : no red, as required")
+    if not planted_red:
+        failures.append("deleting KSA item %d from both files did NOT redden this checker - the "
+                        "item-count assertion cannot fail, so it proves nothing" % n)
+        lines.append("  plant (KSA item %d deleted)      : NO RED - the assertion is vacuous" % n)
+    elif not any("numbered item" in r for r in planted_red):
+        failures.append("the plant reddened, but not on the item count: %s" % planted_red[0])
+        lines.append("  plant (KSA item %d deleted)      : RED for the wrong reason - %s"
+                     % (n, planted_red[0]))
+    else:
+        lines.append("  plant (KSA item %d deleted)      : RED - %s" % (n, planted_red[0]))
+    return failures, lines
 
 
 def main(argv):
@@ -365,12 +456,21 @@ def main(argv):
                    "instrument that cannot redden proves nothing"
                    % (st["caught"], st["not_caught"]))
 
+    # ---- the plant: the item-count assertion must be proved able to fail ----
+    plant_fail, plant_lines = plant_deleted_item()
+    print("--- the plant: is the KSA item count really asserted? (a scratch copy, never this tree) ---")
+    for line in plant_lines:
+        print(line)
+    print()
+    red.extend(plant_fail)
+
     pins_holding = len([l for l in pin_lines if l.rstrip().endswith("holds")])
     print("counts: package %d/%d files; %d pairs judged per-pair above; send-index pins %d/%d hold; "
+          "item-count plant %d failure(s); "
           "appendix-b %s checks, %s failing; in-letter %s checks, %s failing; "
           "in-letter selftest %s caught / %s missed"
           % (len(REQUIRED) - len(missing), len(REQUIRED), len(PAIRS),
-             pins_holding, len(PAIRS), ab["checks"], ab["failing"],
+             pins_holding, len(PAIRS), len(plant_fail), ab["checks"], ab["failing"],
              lv["passed"], lv["failed"], st["caught"], st["not_caught"]))
 
     if red:
