@@ -325,7 +325,7 @@ CHECKS = [
               "they were approved. Six assertions, each with its own counts: (1) all 9 files of the UAE "
               "package are present in counsel/uae-2026-11/ - a missing one is RED and named, never a skip; "
               "(2) EACH OF THE FOUR PAIRS is judged on its own with its counts printed PER PAIR, never as "
-              "one aggregate (an aggregate hides which letter moved): a `twin` pair - uae 1912/1912 tokens, "
+              "one aggregate (an aggregate hides which letter moved): a `twin` pair - uae 1916/1916 tokens, "
               "ksa 1436/1436 - must be WORD-IDENTICAL once `##`, `**` and backticks are stripped, so a "
               "one-word edit shows up as a differing region with its position; a `document+letter` pair - "
               "pdpl 2337 md / 1412 txt, access 1628/720, which were never twins - must still NAME the "

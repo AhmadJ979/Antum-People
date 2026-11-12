@@ -13,8 +13,8 @@ authorisation: a file being in the repository says nothing about whether it may 
 
 | Directory | The letter | Numbered items | Its pair's shape | The `.txt` that gets sent — md5 |
 |---|---|---|---|---|
-| `uae-2026-11/` | UAE end-of-service benefit, + Appendix B and a 9-file package (cover email, send index, D1–D5 record, the checklist-strings draft, two verifiers) | 8 | **twin** | `uae-counsel-confirmation-request--send-ready.txt` — `0403bea40326350faf793156465cbad9` |
-| `ksa-2026-11/` | KSA end-of-service benefit, + Appendix A (16 rows) | 7 | **twin** | `ksa-counsel-confirmation-request--send-ready.txt` — `99a74b94208cf7d6579d20d3f0cae786` |
+| `uae-2026-11/` | UAE end-of-service benefit, + Appendix B and a 9-file package (cover email, send index, D1–D5 record, the checklist-strings draft, two verifiers) | 8 | **twin** | `uae-counsel-confirmation-request--send-ready.txt` — `7737c39222ab447c3094795b6519db2e` |
+| `ksa-2026-11/` | KSA end-of-service benefit, + Appendix A (16 rows) | 7 | **twin** | `ksa-counsel-confirmation-request--send-ready.txt` — `2caeffade23e6d7ab594772ddcee20a2` |
 | `pdpl-2026-11/` | UAE PDPL — the notice and the lawful-basis record, + Appendix A (P1–P15) | 5 | **document+letter** | `pdpl-counsel-request--send-ready.txt` — `e20c67ae8a462586d14a616d7811b0ef` |
 | `access-2026-11/` | Access to personnel records (decision 27, `docs/access-model.md` §8 items 3–5) | 3 | **document+letter** | `access-model-counsel-request--send-ready.txt` — `3baa46aba857ef275e9750b7abeb4c56` |
 
@@ -31,7 +31,7 @@ have the same shape, and the row declares which is which rather than pretending 
 
 | Pair | md tokens | txt tokens | differing regions | shape |
 |---|---|---|---|---|
-| uae | 1912 | 1912 | 0 | **twin** — word-identity REQUIRED |
+| uae | 1916 | 1916 | 0 | **twin** — word-identity REQUIRED |
 | ksa | 1436 | 1436 | 0 | **twin** — word-identity REQUIRED |
 | pdpl | 2337 | 1412 | 70 | **document+letter** — the `.md` contains the letter |
 | access | 1628 | 720 | 38 | **document+letter** — the `.md` contains the letter |

@@ -104,7 +104,9 @@ REQUIRED = [
 
 # THE FOUR PAIRS. `shape` is measured, not assumed, and the evidence for each is recorded here
 # so a later reader can re-check the classification instead of trusting it:
-#   uae, ksa    -> twin.  Measured 2026-11-12: 1912/1912 and 1436/1436 tokens, 0 differing
+#   uae, ksa    -> twin.  Measured 2026-11-12: 1916/1916 and 1436/1436 tokens, 0 differing
+#                  (1912/1912 earlier the same day, before the probation item was re-stated in the
+#                  tense of the shipped control)
 #                  (2026-11-07, before the probation item was added as UAE item 8 / KSA item 7:
 #                  1681/1681 and 1154/1154).
 #   pdpl,access -> document+letter.  Measured 2026-11-12: pdpl 2337 md / 1412 txt tokens and 70

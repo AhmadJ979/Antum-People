@@ -135,8 +135,8 @@ ck(qs == {"Which article governs this, or is the claim wrong?"},
 #    Since the move of 2026-11-07 these are read from THIS directory (the repository copy), so the
 #    pin follows the letter into the repository instead of naming a shared-directory path.
 import hashlib
-for f, want in (("uae-counsel-confirmation-request.md", "a0c77beb858eb070b20d57734c0e40d6"),
-                ("uae-counsel-confirmation-request--send-ready.txt", "0403bea40326350faf793156465cbad9")):
+for f, want in (("uae-counsel-confirmation-request.md", "67c70e31db4e19cb15c86c10cdc8a275"),
+                ("uae-counsel-confirmation-request--send-ready.txt", "7737c39222ab447c3094795b6519db2e")):
     p = os.path.join(HERE, f)
     got = hashlib.md5(open(p, "rb").read()).hexdigest() if os.path.isfile(p) else "MISSING"
     ck(got == want, "%s md5 is %s, not the %s this draft recorded" % (f, got, want))
