@@ -31,12 +31,14 @@ The email states, truthfully and in its second sentence, that **the legal entity
 
 | # | Attach this file | Asks | Items | Appendix A |
 |---|---|---|---|---|
-| 1 | `uae-counsel-confirmation-request--send-ready.txt` | UAE end-of-service benefit | 7 | U1–U17 + U18 (settlement waiver) = **18 rows** |
-| 2 | `ksa-counsel-confirmation-request--send-ready.txt` | KSA end-of-service benefit | 6 | S1–S15 + S16 (same waiver) = **16 rows** |
+| 1 | `uae-counsel-confirmation-request--send-ready.txt` | UAE end-of-service benefit | 8 | U1–U17 + U18 (settlement waiver) = **18 rows** |
+| 2 | `ksa-counsel-confirmation-request--send-ready.txt` | KSA end-of-service benefit | 7 | S1–S15 + S16 (same waiver) = **16 rows** |
 | 3 | `pdpl-counsel-request--send-ready.txt` | UAE PDPL — the notice and the lawful-basis record | 5 | P1–P15 = **15 citations** |
 | 4 | `access-model-counsel-request--send-ready.txt` | Access to personnel records | 3 | none |
 
-**21 numbered items and 49 appendix rows.** The register's own row convention (`docs/statutory-claim-register.md:42`) matches this shape, and all 79 register rows are now `asked`.
+**23 numbered items and 49 appendix rows.** The register's own row convention (`docs/statutory-claim-register.md:42`) matches this shape, and all 79 register rows are now `asked`.
+
+*Annotated 2026-11-12: this table read **7 / 6** and this line read **21 numbered items** as recorded on 2026-10-29. The probation item was added to both letters that day — UAE item 8, KSA item 7 — so the three figures were re-counted to 8 / 7 / 23. The 2026-10-29 figures were correct for their day; the letters were longer afterwards. Appendix A does not move: no row was added, so 49 stays 49.*
 
 **Never send the `.md` twins.** They carry material no recipient should see: `pdpl-counsel-request.md:3` opens "draft, not sent" and the file carries the internal cross-walk, decision numbers and repository paths; `access-model-counsel-request.md:5` says "Do not send from either file until a name is given". The twins are word-identical to their `.txt` by construction, so **any edit must land in both** — this is how the `S18`/`U18` slip (below) had to be fixed.
 
@@ -67,7 +69,7 @@ The notice (`templates/privacy-notice.md:20`) carries three: entity name and suf
 3. Answer Question 1 (below) and, per that answer, keep or delete the email's "we will send them straight away" line.
 4. Answer Question 2 (reply address) — **do not send with an address that cannot receive mail.**
 5. Attach the four `.txt` files, nothing else.
-6. Re-hash all four at send time and record the tree they were measured from. Current **2026-11-07**: UAE `89b2bd58b1e8d33ef348a534cdb084ea` (the twin `.md` is `7bd134df0e532950a7e1c5949927e660`), KSA `9c7d63dd2ffcf48d1de8686e70ad72cd`, PDPL `e20c67ae8a462586d14a616d7811b0ef`, access `3baa46aba857ef275e9750b7abeb4c56`. The UAE figure this line carried on 2026-10-29 (`6ab0e40263e380ea5cbcd42d51b40fd1`) was correct for its day: **Appendix B was added to the letter after it**, and the letter was re-worded again on 2026-11-07 (points 3, 4, 5, 7 and the Appendix A preamble). Those edits superseded the hash; they did not contradict it.
+6. Re-hash all four at send time and record the tree they were measured from. Current **2026-11-12**: UAE `0403bea40326350faf793156465cbad9` (the twin `.md` is `a0c77beb858eb070b20d57734c0e40d6`), KSA `99a74b94208cf7d6579d20d3f0cae786`, PDPL `e20c67ae8a462586d14a616d7811b0ef`, access `3baa46aba857ef275e9750b7abeb4c56`. The 2026-11-07 pair this line carried (UAE `89b2bd58…` send copy / `7bd134df…` twin, KSA `9c7d63dd…`) was correct for its day: **the probation item was applied on 2026-11-12** as UAE item 8 and KSA item 7, which superseded those two hashes and left the PDPL and access letters untouched. Those edits superseded the hashes; they did not contradict them. The UAE figure this line carried on 2026-10-29 (`6ab0e40263e380ea5cbcd42d51b40fd1`) was correct for its day: **Appendix B was added to the letter after it**, and the letter was re-worded again on 2026-11-07 (points 3, 4, 5, 7 and the Appendix A preamble). Those edits superseded the hash; they did not contradict it.
 7. Read the email once for the two sentences that carry the most weight: the registration admission (first paragraph) and the fee paragraph. Neither may be softened — they are what makes the letter safe to send.
 
 ## 7. Three questions the owner must answer

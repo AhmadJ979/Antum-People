@@ -12,8 +12,8 @@ and the owner's approval refer to.
 
 | File | What it is | md5 (unchanged by the move) |
 |---|---|---|
-| `uae-counsel-confirmation-request--send-ready.txt` | **the file that gets sent**, 65 lines | `89b2bd58b1e8d33ef348a534cdb084ea` |
-| `uae-counsel-confirmation-request.md` | the twin — word-identical, keeps `##` and `**` | `7bd134df0e532950a7e1c5949927e660` |
+| `uae-counsel-confirmation-request--send-ready.txt` | **the file that gets sent**, 67 lines | `0403bea40326350faf793156465cbad9` |
+| `uae-counsel-confirmation-request.md` | the twin — word-identical, keeps `##` and `**` | `a0c77beb858eb070b20d57734c0e40d6` |
 | `counsel-package-cover-email-2026-10-29.txt` | the paste-ready cover email | `df273054c733922330446363050c2547` |
 | `counsel-package-send-index-2026-10-29.md` | the send index and pre-send checklist | `3784115914cd6ed192b9c65f2cddd1ac` on 2026-11-07 **before** the custody note; see below |
 | `uae-counsel-letter-d1-d5-applied-2026-11-07.md` | the before→after record of the D1–D5 corrections | `9eaa26744b5e76adfa4c65cbb30dd54c` |
@@ -26,7 +26,8 @@ The verifiers were the only files whose bytes changed in these moves, and only i
 resolve a path: they read their subject from **their own directory** and the source from the
 worktree they sit in, instead of a hardcoded `/home/team/shared` prefix. Their logic, their
 checks and their counts are untouched (40 checks / 0 failing; 21 checks / 0 failing with 4 of
-4 selftest mutations caught; 1681 tokens either side / 0 differing).
+4 selftest mutations caught; 1912 tokens either side / 0 differing; and the new item-count
+plant caught its deletion).
 
 **Two verifiers, not one, and neither is a superset of the other.** `appendix-b-verify.py`
 judges the **draft** — 9 quoted B/K rows, the draft's own header-count sentences, the revision
@@ -85,5 +86,5 @@ python3 scripts/check-all.py --only counsel-letter # the same thing through the 
 python3 counsel/uae-2026-11/appendix-b-verify.py   # the DRAFT: 40 checks, 0 failing
 python3 counsel/uae-2026-11/verify-appendix-b-in-letter.py            # the LETTERS: 21 checks, 0 failing
 python3 counsel/uae-2026-11/verify-appendix-b-in-letter.py --selftest # 4 mutations caught, 0 missed
-python3 counsel/uae-2026-11/uae-letter-wordstream-check.py   # 1681 tokens, 0 differing
+python3 counsel/uae-2026-11/uae-letter-wordstream-check.py   # 1912 tokens, 0 differing
 ```
